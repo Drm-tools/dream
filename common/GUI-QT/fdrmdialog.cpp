@@ -32,6 +32,9 @@
 FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	: FDRMDialogBase(parent, name, modal, f), AboutDlg(parent, 0, TRUE)
 {
+	/* Set help text for the controls */
+	AddWhatsThisHelp();
+
 	/* Set version number in about dialog */
 	QString strVersionText;
 	strVersionText = "<center><b>Dream, Version ";
@@ -154,12 +157,12 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Evaluation window ("WGroupLeader" flag enabels that in both windows 
 	   controls can be clicked) */
 	pSysEvalDlg = new systemevalDlg(this, "System Evaluation", FALSE, 
-		Qt::WGroupLeader | Qt::WStyle_MinMax);
+		Qt::WGroupLeader | Qt::WStyle_ContextHelp);
 	pSysEvalDlg->hide();
 
 	/* Multimedia window */
 	pMultiMediaDlg = new MultimediaDlg(this, "Multimedia", FALSE, 
-			Qt::WGroupLeader | Qt::WStyle_MinMax);
+		Qt::WGroupLeader | Qt::WStyle_MinMax);
 	pMultiMediaDlg->hide();
 
 	/* Enable multimedia */
@@ -784,4 +787,88 @@ void FDRMDialog::customEvent(QCustomEvent* Event)
 			}
 		}
 	}
+}
+
+void FDRMDialog::AddWhatsThisHelp()
+{
+/*
+	This text was taken from the only documentation of Dream software
+*/
+	/* Text Message */
+	QWhatsThis::add(TextTextMessage,
+		"<b>Text Message:</b> On the top right the text message label is "
+		"shown. This label only appears when an actual text message is "
+		"transmitted. If the current service does not transmit a text "
+		"message, the label will be invisible.");
+
+	/* Input Level */
+	const QString strInputLevel =
+		"<b>Input Level:</b> The input level meter shows the relative input "
+		"signal peak level in dB. If the level is too high, the meter turns "
+		"from green to red. The red region should be avoided since overload "
+		"causes distortions which degrade the reception performance. Too low "
+		"levels should be avoided too, since in this case the Signal-to-Noise "
+		"Ratio (SNR) degrades.";
+
+	QWhatsThis::add(TextLabelInputLevel, strInputLevel);
+	QWhatsThis::add(ProgrInputLevel, strInputLevel);
+
+	/* Status LEDs */
+	const QString strStatusLEDS =
+		"<b>Status LEDs:</b> The three status LEDs show the current CRC status "
+		"of the three logical channels of a DRM stream. These LEDs are the same "
+		"as the top LEDs on the Evaluation Dialog.";
+
+	QWhatsThis::add(TextLabelStatusLEDs, strStatusLEDS);
+	QWhatsThis::add(CLED_MSC, strStatusLEDS);
+	QWhatsThis::add(CLED_SDC, strStatusLEDS);
+	QWhatsThis::add(CLED_FAC, strStatusLEDS);
+
+	/* Station Label and Info Display */
+	const QString strStationLabelOther =
+		"<b>Station Label and Info Display:</b> In the big label with the "
+		"black background the station label and some other information about "
+		"the current selected service is displayed. The red text on the top "
+		"shows the audio compression format (e.g. AAC), the sample rate of the "
+		"core coder without SBR (e.g. 24 kHz), if SBR is used and what audio "
+		"mode is used (mono, stereo, P-stereo -> low-complexity or parametric "
+		"stereo). In case SBR is used, the actual sample rate is twice the "
+		"sample rate of the core AAC decoder. The next two types of "
+		"information are the language and the program type of the service "
+		"(e.g. German / News).<br>The big turquoise text in the middle is "
+		"the station label. This label may appear later than the red text "
+		"since this information is transmitted in a different logical channel "
+		"of DRM.<br>The turquoise text on the bottom shows the gross bit-rate "
+		"in kbits per second of the current selected service. The abbreviation "
+		"EEP and UEP stands for Equal Error Protection and Unequal Error "
+		"Protection. UEP is a feature of DRM for a graceful degradation of "
+		"the decoded audio signal in case of a bad reception situation. UEP "
+		"means that some parts of the audio is higher protected and some parts "
+		"are lower protected. On the right the ID number connected with this "
+		"service is shown.";
+
+	QWhatsThis::add(TextServiceAudio, strStationLabelOther);
+	QWhatsThis::add(TextServiceLabel, strStationLabelOther);
+	QWhatsThis::add(TextServiceIDRate, strStationLabelOther);
+
+	/* Service Selectors */
+	const QString strServiceSel =
+		"<b>Service Selectors:</b> In a DRM stream up to four services can be "
+		"carried. The service type can either be audio, data or audio and "
+		"data. If a data service is selected, the Multimedia Dialog will "
+		"automatically show up. On the right of each service selection button "
+		"a short description of the service is shown. If a service is an audio "
+		"and data service, a \"+ MM\" is added to this text. If a service is "
+		"an audio and data service and this service is selected, by opening "
+		"the Multimedia Dialog, the data can be viewed while the audio is "
+		"still playing.";
+
+	QWhatsThis::add(PushButtonService1, strServiceSel);
+	QWhatsThis::add(PushButtonService2, strServiceSel);
+	QWhatsThis::add(PushButtonService3, strServiceSel);
+	QWhatsThis::add(PushButtonService4, strServiceSel);
+	QWhatsThis::add(TextMiniService1, strServiceSel);
+	QWhatsThis::add(TextMiniService2, strServiceSel);
+	QWhatsThis::add(TextMiniService3, strServiceSel);
+	QWhatsThis::add(TextMiniService4, strServiceSel);
 }

@@ -32,6 +32,9 @@
 systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	WFlags f) : systemevalDlgBase(parent, name, modal, f)
 {
+	/* Set help text for the controls */
+	AddWhatsThisHelp();
+
 	MainPlot->setMargin(1);
 
 	/* Default chart (at startup) */
@@ -856,4 +859,371 @@ QString	systemevalDlg::GetSpecOccStr()
 	default:
 		return "10 kHz";
 	}
+}
+
+void systemevalDlg::AddWhatsThisHelp()
+{
+/*
+	This text was taken from the only documentation of Dream software
+*/
+	/* DC Frequency Offset */
+	QWhatsThis::add(TextFreqOffset,
+		"<b>DC Frequency Offset:</b> This is the estimation of the "
+		"DC frequency offset. This offset corresponds to the resulting "
+		"sound card intermedia frequency of the front-end. This frequency "
+		"is not restricted to a certain value. The only restriction is "
+		"that the DRM spectrum must be completely inside the bandwidth "
+		"of the sound card.");
+
+	/* Sample Frequency Offset */
+	QWhatsThis::add(TextSampFreqOffset,
+		"<b>Sample Frequency Offset:</b> This is the estimation of "
+		"the sample rate offset between the sound card sample rate of "
+		"the local computer and the sample rate of the D / A (digital "
+		"to analog) converter in the transmitter. Usually the sample rate "
+		"offset is very constant for a given sound card. Therefore it is "
+		"useful to inform the Dream software about this value at application "
+		"startup to increase the acquisition speed and reliability.");
+
+	/* Doppler / Delay */
+	QWhatsThis::add(TextWiener,
+		"<b>Doppler / Delay:</b> The Doppler frequency of the channel is estimated "
+		"for the Wiener filter design of channel estimation in time direction. "
+		"If linear interpolation is set for channel estimation in time "
+		"direction, this estimation is not updated. The Doppler frequency is "
+		"an indication of how fast the channel varies with time. The higher "
+		"the frequency, the faster the channel changes are.<br>The total delay "
+		"of the Power Delay Spectrum (PDS) is estimated from the impulse "
+		"response estimation derived from the channel estimation. This delay "
+		"corresponds to the range between the two vertical dashed black lines "
+		"in the Impulse Response (IR) plot.");
+
+	/* I / O Interface LED */
+	const QString strLEDIOInterface =
+		"<b>I / O Interface LED:</b> This LED shows the current status of the "
+		"sound card interface. The yellow light shows that the audio output "
+		"was corrected. Since the sample rate of the transmitter and local "
+		"computer are different, from time to time the audio buffers will "
+		"overflow or under run and a correction is necessary. When a "
+		"correction occurs, a \"click\" sound can be heard. The red light "
+		"shows that a buffer was lost in the sound card input stream. This can "
+		"happen if a thread with a higher priority is at 100% and the Dream "
+		"software cannot read the provided blocks fast enough. In this case, "
+		"the Dream software will instantly loose the synchronization and has "
+		"to re-synchronize. Another reason for red light is that the processor "
+		"is to slow for running the Dream software.";
+
+	QWhatsThis::add(TextLabelLEDIOInterface, strLEDIOInterface);
+	QWhatsThis::add(LEDIOInterface, strLEDIOInterface);
+
+	/* Time Sync Acq LED */
+	const QString strLEDTimeSyncAcq =
+		"<b>Time Sync Acq LED:</b> This LED shows the state of the timing "
+		"acquisition (search for the beginning of an OFDM symbol). If the "
+		"acquisition is done, this LED will stay green.";
+
+	QWhatsThis::add(TextLabelLEDTimeSyncAcq, strLEDTimeSyncAcq);
+	QWhatsThis::add(LEDTimeSync, strLEDTimeSyncAcq);
+
+	/* Frame Sync LED */
+	const QString strLEDFrameSync =
+		"<b>Frame Sync LED:</b> The DRM frame synchronization status is shown "
+		"with this LED. This LED is also only active during acquisition state "
+		"of the Dream receiver. In tracking mode, this LED is always green.";
+
+	QWhatsThis::add(TextLabelLEDFrameSync, strLEDFrameSync);
+	QWhatsThis::add(LEDFrameSync, strLEDFrameSync);
+
+	/* FAC CRC LED */
+	const QString strLEDFACCRC =
+		"<b>FAC CRC LED:</b> This LED shows the Cyclic Redundancy Check (CRC) "
+		"of the Fast Access Channel (FAC) of DRM. FAC is one of the three "
+		"logical channels and is always modulated with a 4-QAM. If the FAC CRC "
+		"check was successful, the receiver changes to tracking mode. The FAC "
+		"LED is the indication whether the receiver is synchronized to a DRM "
+		"transmission or not.";
+
+	QWhatsThis::add(TextLabelLEDFACCRC, strLEDFACCRC);
+	QWhatsThis::add(LEDFAC, strLEDFACCRC);
+
+	/* SDC CRC LED */
+	const QString strLEDSDCCRC =
+		"<b>SDC CRC LED:</b> This LED shows the CRC check result of the "
+		"Service Description Channel (SDC) which is one logical channel of the "
+		"DRM stream. This data is transmitted in approx. 1 second intervals "
+		"and contains information about station label, audio and data format, "
+		"etc. The error protection is normally lower than the protection of "
+		"the FAC. Therefore this LED will turn to red earlier than the FAC LED "
+		"in general.";
+
+	QWhatsThis::add(TextLabelLEDSDCCRC, strLEDSDCCRC);
+	QWhatsThis::add(LEDSDC, strLEDSDCCRC);
+
+	/* MSC CRC LED */
+	const QString strLEDMSCCRC =
+		"<b>MSC CRC LED:</b> This LED shows the status of the Main Service "
+		"Channel (MSC). This channel contains the actual audio and data bits. "
+		"The LED shows the CRC check of the AAC core decoder. The SBR has a "
+		"separate CRC, but this status is not shown with this LED. If SBR CRC "
+		"is wrong but the AAC CRC is ok one can still hear something (of "
+		"course, the high frequencies are not there in this case). If this "
+		"LED turns red, interruptions of the audio are heard. The yellow light "
+		"shows that only one 40 ms audio frame CRC was wrong. This causes "
+		"usually no hearable artifacts.";
+
+	QWhatsThis::add(TextLabelLEDMSCCRC, strLEDMSCCRC);
+	QWhatsThis::add(LEDMSC, strLEDMSCCRC);
+
+	/* MLC, Number of Iterations */
+	const QString strNumOfIterations =
+		"<b>MLC, Number of Iterations:</b> In DRM, a multilevel channel coder "
+		"is used. Which this code it is possible to iterate the decoding "
+		"process in the decoder to improve the decoding result. The more "
+		"iterations are used the better the result will be. But switching to "
+		"more iterations will increase the CPU load. Simulations showed that "
+		"the first iteration (number of iterations = 1) gives the most "
+		"improvement (approx. 1.5 dB at a BER of 10-4 on a Gaussian channel, "
+		"Mode A, 10 kHz bandwidth). The improvement of the second iteration "
+		"will be as small as 0.3 dB.<br>The recommended number of iterations "
+		"given in the DRM standard is one iteration "
+		"(number of iterations = 1).";
+
+	QWhatsThis::add(TextNumOfIterations, strNumOfIterations);
+	QWhatsThis::add(SliderNoOfIterations, strNumOfIterations);
+
+	/* Flip Input Spectrum */
+	QWhatsThis::add(CheckBoxFlipSpec,
+		"<b>Flip Input Spectrum:</b> Checking this box will flip or invert the "
+		"input spectrum. This is necessary if the mixer in the front-end uses "
+		"the lower side band.");
+
+	/* Mute Audio */
+	QWhatsThis::add(CheckBoxMuteAudio,
+		"<b>Mute Audio:</b> The audio can be muted by checking this box. "
+		"The reaction of checking or unchecking this box is delayed by "
+		"approx. 1 second due to the audio buffers.");
+
+	/* Log File */
+	QWhatsThis::add(CheckBoxWriteLog,
+		"<b>Log File:</b> Checking this box brings the Dream software to write "
+		"a log file about the current reception. Every minute the average SNR, "
+		"number of correct decoded FAC and number of correct decoded MSC "
+		"blocks are logged including some additional information, e.g. the "
+		"station label and bit-rate. The log mechanism works only for audio "
+		"services using AAC source coding. During the logging no Dream windows "
+		"should be moved or re-sized. This can lead to incorrect log files "
+		"(problem with QT timer implementation under Windows). This problem "
+		"does not exist in the Linux version of Dream.<br>The log file will be "
+		"written in the directory were the Dream application was started and "
+		"the name of this file is always DreamLog.txt");
+
+	/* Freq */
+	QWhatsThis::add(EdtFrequency,
+		"<b>Freq:</b> In this edit control, the current selected frequency "
+		"on the front-end can be specified. This frequency will be written "
+		"into the log file.");
+
+	/* Wiener */
+	const QString strWienerChanEst =
+		"<b>Channel Estimation Settings:</b> With these settings, the channel "
+		"estimation method in time and frequency direction can be selected. "
+		"The default values use the most powerful algorithms. For more "
+		"detailed information about the estimation algorithms there are a lot "
+		"of papers and books available.<br>"
+		"<b>Wiener:</b> Wiener interpolation method uses estimation of the "
+		"statistics of the channel to design an optimal filter for noise "
+		"reduction.";
+
+	QWhatsThis::add(RadioButtonFreqWiener, strWienerChanEst);
+	QWhatsThis::add(RadioButtonTiWiener, strWienerChanEst);
+
+	/* Linear */
+	const QString strLinearChanEst =
+		"<b>Channel Estimation Settings:</b> With these settings, the channel "
+		"estimation method in time and frequency direction can be selected. "
+		"The default values use the most powerful algorithms. For more "
+		"detailed information about the estimation algorithms there are a lot "
+		"of papers and books available.<br>"
+		"<b>Linear:</b> Simple linear interpolation method to get the "
+		"channel estimate. The real and imaginary parts of the estimated "
+		"channel at the pilot positions are linearly interpolated. This "
+		"algorithm causes the lowest CPU load but performs much worse than "
+		"the Wiener interpolation at low SNRs.";
+
+	QWhatsThis::add(RadioButtonFreqLinear, strLinearChanEst);
+	QWhatsThis::add(RadioButtonTiLinear, strLinearChanEst);
+
+	/* DFT Zero Pad */
+	QWhatsThis::add(RadioButtonFreqDFT,
+		"<b>Channel Estimation Settings:</b> With these settings, the channel "
+		"estimation method in time and frequency direction can be selected. "
+		"The default values use the most powerful algorithms. For more "
+		"detailed information about the estimation algorithms there are a lot "
+		"of papers and books available.<br>"
+		"<b>DFT Zero Pad:</b> Channel estimation method for the frequency "
+		"direction using Discrete Fourier Transformation (DFT) to transform "
+		"the channel estimation at the pilot positions to the time domain. "
+		"There, a zero padding is applied to get a higher resolution in the "
+		"frequency domain -> estimates at the data cells. This algorithm is "
+		"very speed efficient but has problems at the edges of the OFDM "
+		"spectrum due to the leakage effect.");
+
+	/* Guard Energy */
+	QWhatsThis::add(RadioButtonTiSyncEnergy,
+		"<b>Guard Energy:</b> Time synchronization tracking algorithm utilizes "
+		"the estimation of the impulse response. This method tries to maximize "
+		"the energy in the guard-interval to set the correct timing.");
+
+	/* First Peak */
+	QWhatsThis::add(RadioButtonTiSyncFirstPeak,
+		"<b>First Peak:</b> This algorithms searches for the first peak in the "
+		"estimated impulse response and moves this peak to the beginning of "
+		"the guard-interval (timing tracking algorithm).");
+
+	/* SNR */
+	const QString strSNREst =
+		"<b>SNR:</b> Signal to Noise Ratio (SNR) estimation is plotted as a "
+		"bar and as a value.";
+
+	QWhatsThis::add(ThermoSNR, strSNREst);
+	QWhatsThis::add(TextSNR, strSNREst);
+
+	/* Input Spectrum */
+	QWhatsThis::add(ButtonInpSpec,
+		"<b>Input Spectrum:</b> This plot shows the Fast Fourier "
+		"Transformation (FFT) of the input signal. This plot is active in "
+		"both modes, analog and digital. There is no averaging applied. The "
+		"screen shot of the Evaluation Dialog shows the significant shape of "
+		"a DRM signal (almost rectangular). The dashed vertical line shows the "
+		"estimated DC frequency. This line is very important for the analog AM "
+		"demodulation. Each time a new carrier frequency is acquired, the red "
+		"line shows the selected AM spectrum. If more than one AM spectrums "
+		"are within the sound card frequency range, the strongest signal is "
+		"chosen.");
+
+	/* Input Spectrum */
+	QWhatsThis::add(ButtonPSD,
+		"<b>Shifted PSD:</b> This plot shows the estimated Power Spectrum "
+		"Density (PSD) of the input signal. The DC frequency (red dashed "
+		"vertical line) is fixed at 6 kHz. If the frequency offset acquisition "
+		"was successful, the rectangular DRM spectrum should show up with a "
+		"center frequency of 6 kHz. This plot represents the frequency "
+		"synchronized OFDM spectrum. If the frequency synchronization was "
+		"successful, the useful signal really shows up only inside the actual "
+		"DRM bandwidth since the side loops have in this case only energy "
+		"between the samples in the frequency domain. On the sample positions "
+		"outside the actual DRM spectrum, the DRM signal has zero crossings "
+		"because of the orthogonality. Therefore this spectrum represents NOT "
+		"the actual spectrum but the \"idealized\" OFDM spectrum.");
+
+	/* Transfer Function */
+	QWhatsThis::add(ButtonTransFct,
+		"<b>Transfer Function:</b> This plot shows the squared magnitude of "
+		"the channel estimation at each sub carrier.");
+
+	/* Impulse Response */
+	QWhatsThis::add(ButtonAvIR,
+		"<b>Impulse Response:</b> This plot shows the estimated Impulse "
+		"Response (IR) of the channel based on the channel estimation. It is "
+		"the averaged, Hamming Window weighted Fourier back transformation of "
+		"the transfer function. The length of PDS estimation and time "
+		"synchronization tracking is based on this function. The two red "
+		"dashed vertical lines show the beginning and the end of the "
+		"guard-interval. The two black dashed vertical lines show the "
+		"estimated beginning and end of the PDS of the channel (derived from "
+		"the averaged impulse response estimation). If the \"First Peak\" "
+		"timing tracking method is chosen, a bound for peak estimation "
+		"(horizontal dashed red line) is shown. Only peaks above this bound "
+		"are used for timing estimation.");
+
+	/* FAC, SDC, MSC constellations */
+	const QString strFACSDCMSCConst =
+		"<b>FAC, SDC, MSC:</b> The plots show the constellations of the FAC, "
+		"SDC and MSC logical channel of the DRM stream. Depending on the "
+		"current transmitter settings, the SDC and MSC can have 4-QAM, 16-QAM "
+		"or 64-QAM modulation.";
+
+	QWhatsThis::add(ButtonFACConst, strFACSDCMSCConst);
+	QWhatsThis::add(ButtonSDCConst, strFACSDCMSCConst);
+	QWhatsThis::add(ButtonMSCConst, strFACSDCMSCConst);
+
+	/* DRM Mode / Bandwidth */
+	const QString strRobustnessMode =
+		"<b>DRM Mode / Bandwidth:</b> In a DRM system, four possible "
+		"robustness modes are defined to adapt the system to different "
+		"channel conditions. According to the DRM standard:<ul>"
+		"<li><i>Mode A:</i> Gaussian channels, with minor fading</li>"
+		"<li><i>Mode B:</i> Time and frequency selective channels, with longer "
+		"delay spread</li>"
+		"<li><i>Mode C:</i> As robustness mode B, but with higher Doppler "
+		"spread</li>"
+		"<li><i>Mode D:</i> As robustness mode B, but with severe delay and "
+		"Doppler spread</li></ul>The bandwith is the gross bandwidth of the "
+		"current DRM signal";
+
+	QWhatsThis::add(FACDRMModeBWL, strRobustnessMode);
+	QWhatsThis::add(FACDRMModeBWV, strRobustnessMode);
+
+	/* Interleaver Depth */
+	const QString strInterleaver =
+		"<b>Interleaver Depth:</b> The symbol interleaver depth can be "
+		"either short (approx. 400 ms) or long (approx. 2 s). The longer "
+		"the interleaver the better the channel decoder can correct errors "
+		"from slow fading signals. But the longer the interleaver length "
+		"the longer the delay until (after a re-synchronization) audio can "
+		"be heard.";
+
+	QWhatsThis::add(FACInterleaverDepthL, strInterleaver);
+	QWhatsThis::add(FACInterleaverDepthV, strInterleaver);
+
+	/* SDC / MSC Mode */
+	const QString strSDCMSCMode =
+		"<b>SDC / MSC Mode:</b> Shows the modulation type of the SDC and "
+		"MSC channel. For the MSC channel, some hierarchical modes are "
+		"defined which can provide a very strong protected service channel.";
+
+	QWhatsThis::add(FACSDCMSCModeL, strSDCMSCMode);
+	QWhatsThis::add(FACSDCMSCModeV, strSDCMSCMode);
+
+	/* Prot. Level (B/A) */
+	const QString strProtLevel =
+		"<b>Prot. Level (B/A):</b> The error protection level of the channel "
+		"coder. For 64-QAM, there are four protection levels defined in the "
+		"DRM standard. Protection level 0 has the highest protection whereas "
+		"level 3 has the lowest protection. The letters A and B are the names "
+		"of the higher and lower protected parts of a DRM block when Unequal "
+		"Error Protection (UEP) is used. If Equal Error Protection (EEP) is "
+		"used, only the protection level of part B is valid.";
+
+	QWhatsThis::add(FACCodeRateL, strProtLevel);
+	QWhatsThis::add(FACCodeRateV, strProtLevel);
+
+	/* Number of Services */
+	const QString strNumServices =
+		"<b>Number of Services:</b> This shows the number of audio and data "
+		"services transmitted in the DRM stream. The maximum number of streams "
+		"is four.";
+
+	QWhatsThis::add(FACNumServicesL, strNumServices);
+	QWhatsThis::add(FACNumServicesV, strNumServices);
+
+	/* Received time - date */
+	const QString strTimeDate =
+		"<b>Received time - date:</b> This label shows the received time "
+		"and date in UTC. This information is carried in the SDC channel.";
+
+	QWhatsThis::add(FACTimeDateL, strTimeDate);
+	QWhatsThis::add(FACTimeDateV, strTimeDate);
+
+	/* Save audio as wave */
+	QWhatsThis::add(CheckBoxSaveAudioWave,
+		"<b>Save Audio as WAV:</b> Save the audio signal as stereo, 16-bit, "
+		"48 kHz sample rate PCM wave file. Checking this box will let the "
+		"user choose a file name for the recording.");
+
+	/* Main plot */
+	QWhatsThis::add(MainPlot,
+		"<b>Main plot:</b> Graphical display of different vectors of the DRM "
+		"decoder. Activate the help text on the selection buttons on the right "
+		"to get more information on the specific plot types.");
 }

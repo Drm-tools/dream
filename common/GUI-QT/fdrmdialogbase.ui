@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>582</width>
+            <width>574</width>
             <height>460</height>
         </rect>
     </property>
@@ -22,6 +22,10 @@
     <property stdset="1">
         <name>icon</name>
         <pixmap>image0</pixmap>
+    </property>
+    <property stdset="1">
+        <name>sizeGripEnabled</name>
+        <bool>true</bool>
     </property>
     <vbox>
         <property stdset="1">
@@ -291,7 +295,7 @@ Institute for Communication Technology</string>
                             <class>QLabel</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>TextLabel1_2</cstring>
+                                <cstring>TextLabelInputLevel</cstring>
                             </property>
                             <property stdset="1">
                                 <name>text</name>
@@ -339,7 +343,7 @@ Level [dB]</string>
                                     <class>QLabel</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>TextLabel3</cstring>
+                                        <cstring>TextLabelStatusLEDs</cstring>
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
@@ -715,7 +719,7 @@ Level [dB]</string>
                             <class>QLayoutWidget</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>Layout3</cstring>
+                                <cstring>LayoutStationLabelOtherInfo</cstring>
                             </property>
                             <vbox>
                                 <property stdset="1">

@@ -38,6 +38,7 @@
 #include <qlineedit.h>
 #include <qtooltip.h>
 #include <qfiledialog.h>
+#include <qwhatsthis.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"
@@ -88,6 +89,7 @@ protected:
     virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
+	void			AddWhatsThisHelp();
 
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();

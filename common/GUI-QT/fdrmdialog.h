@@ -36,6 +36,7 @@
 #include <qevent.h>
 #include <qcstring.h>
 #include <qlayout.h>
+#include <qwhatsthis.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/fdrmdialogbase.h"
@@ -96,6 +97,7 @@ protected:
 	QString			SetBitrIDStr(int iServiceID);
 	virtual void	customEvent(QCustomEvent* Event);
 	void			SetService(int iNewServiceID);
+	void			AddWhatsThisHelp();
 
 public slots:
 	void OnTimer();
