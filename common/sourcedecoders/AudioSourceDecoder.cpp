@@ -30,6 +30,115 @@
 
 
 /* Implementation *************************************************************/
+/******************************************************************************\
+* Encoder                                                                      *
+\******************************************************************************/
+void CAudioSourceEncoder::ProcessDataInternal(CParameter& TransmParam)
+{
+	int i;
+
+	/* Here, the AAC encoder must be put in --------------------------------- */
+	/* Here is the recorded data. Now, the DRM AAC encoder must be put in to
+	   encode this material and generate the _BINARY output data */
+	for (i = 0; i < iInputBlockSize; i++)
+		const _SAMPLE sIn = (*pvecInputData)[i];
+
+	/* TEST: Just write 0 in the output buffer */
+	for (i = 0; i < iOutputBlockSize; i++)
+		(*pvecOutputData)[i] = 0;
+	/* ---------------------------------------------------------------------- */
+
+
+
+
+	if (bIsDataService == TRUE)
+	{
+// TODO: make a separate modul for data encoding
+		/* Write data packets in stream */
+		CVector<_BINARY> vecbiData;
+		const int iNumPack = iOutputBlockSize / iTotPacketSize;
+		int iPos = 0;
+
+		for (int j = 0; j < iNumPack; j++)
+		{
+			/* Get new packet */
+			DataEncoder.GeneratePacket(vecbiData);
+
+			/* Put it on stream */
+			for (i = 0; i < iTotPacketSize; i++)
+			{
+				(*pvecOutputData)[iPos] = vecbiData[i];
+				iPos++;
+			}
+		}
+	}
+	else
+	{
+		/* Text message application. Last four bytes in stream are written */
+		if (bUsingTextMessage == TRUE)
+		{
+			/* Always four bytes for text message "piece" */
+			CVector<_BINARY> vecbiTextMessBuf(
+				SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
+			
+			/* Get a "piece" */
+			TextMessage.Encode(vecbiTextMessBuf);
+
+			/* Total number of bytes which are actually used. The number is
+			   specified by iLenPartA + iLenPartB which is set in
+			   "SDCTransmit.cpp". There is currently no "nice" solution for
+			   setting these values. TODO: better solution */
+			/* Padding to byte as done in SDCTransmit.cpp line 138ff */
+			int iTotByt = (iOutputBlockSize / SIZEOF__BYTE) * SIZEOF__BYTE;
+
+			for (i = iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+				 i < iTotByt; i++)
+			{
+				(*pvecOutputData)[i] = vecbiTextMessBuf[i -
+					(iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR)];
+			}
+		}
+	}
+}
+
+void CAudioSourceEncoder::InitInternal(CParameter& TransmParam)
+{
+	if (TransmParam.iNumDataService == 1)
+	{
+		bIsDataService = TRUE;
+		iTotPacketSize = DataEncoder.Init(TransmParam);
+	}
+	else
+		bIsDataService = FALSE;
+
+	/* Define input and output block size */
+	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
+	iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+		(_REAL) 0.4 /* 400 ms */);
+}
+
+void CAudioSourceEncoder::SetTextMessage(const string& strText)
+{
+	/* Set text message in text message object */
+	TextMessage.SetMessage(strText);
+
+	/* Set text message flag */
+	bUsingTextMessage = TRUE;
+}
+
+void CAudioSourceEncoder::ClearTextMessage()
+{
+	/* Clear all text segments */
+	TextMessage.ClearAllText();
+
+	/* Clear text message flag */
+	bUsingTextMessage = FALSE;
+}
+
+
+/******************************************************************************\
+* Decoder                                                                      *
+\******************************************************************************/
 void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i;

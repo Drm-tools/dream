@@ -35,6 +35,7 @@
 #include "../CRC.h"
 #include "../TextMessage.h"
 #include "../resample/Resample.h"
+#include "../datadecoding/DataDecoder.h"
 
 #ifdef USE_FAAD2_LIBRARY
 # include "faad.h"
@@ -47,11 +48,33 @@
 
 
 /* Classes ********************************************************************/
+class CAudioSourceEncoder : public CTransmitterModul<_SAMPLE, _BINARY>
+{
+public:
+	CAudioSourceEncoder() : bUsingTextMessage(FALSE) {};
+	virtual ~CAudioSourceEncoder() {};
+
+	void SetTextMessage(const string& strText);
+	void ClearTextMessage();
+
+
+protected:
+	CTextMessageEncoder TextMessage;
+	_BOOLEAN			bUsingTextMessage;
+	CDataEncoder		DataEncoder;
+	int					iTotPacketSize;
+	_BOOLEAN			bIsDataService;
+
+	virtual void InitInternal(CParameter& TransmParam);
+	virtual void ProcessDataInternal(CParameter& TransmParam);
+};
+
 class CAudioSourceDecoder : public CReceiverModul<_BINARY, _SAMPLE>
 {
 public:
 	CAudioSourceDecoder();
 	virtual ~CAudioSourceDecoder();
+
 
 protected:
 	enum EInitErr {ET_ALL, ET_AAC}; /* ET: Error type */
