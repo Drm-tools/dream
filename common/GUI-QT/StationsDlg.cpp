@@ -279,10 +279,23 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	pRemoteMenu = new QPopupMenu(this);
 	CHECK_PTR(pRemoteMenu);
 	pRemoteMenu->insertItem("None", this, SLOT(OnRemoteMenu(int)), 0, 0);
-	pRemoteMenu->insertItem("Winradio G3", this, SLOT(OnRemoteMenu(int)), 0, 1);
-	pRemoteMenu->insertItem("AOR 7030", this, SLOT(OnRemoteMenu(int)), 0, 2);
-	pRemoteMenu->
-		insertItem("Elektor 3/04", this, SLOT(OnRemoteMenu(int)), 0, 3);
+#ifdef _WIN32
+	pRemoteMenu->insertItem("Winradio G3",
+		this, SLOT(OnRemoteMenu(int)), 0, 1);
+	pRemoteMenu->insertItem("AOR 7030 [COM1]",
+		this, SLOT(OnRemoteMenu(int)), 0, 2);
+	pRemoteMenu->insertItem("AOR 7030 [COM2]",
+		this, SLOT(OnRemoteMenu(int)), 0, 3);
+#endif
+	pRemoteMenu->insertItem("Elektor 3/04 [COM1]",
+		this, SLOT(OnRemoteMenu(int)), 0, 4);
+	pRemoteMenu->insertItem("Elektor 3/04 [COM2]",
+		this, SLOT(OnRemoteMenu(int)), 0, 5);
+#ifndef _WIN32
+	pRemoteMenu->insertItem("JRC NRD-535",
+		this, SLOT(OnRemoteMenu(int)), 0, 6);
+#endif
+
 
 	/* Set WINRADIO to default, because I own such a device :-) */
 	eWhichRemoteControl = RC_WINRADIO;
@@ -540,12 +553,24 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		SetFrequencyWinradio(iCurFreqkHz);
 		break;
 
-	case RC_AOR7030:
-		SetFrequencyAOR7030(iCurFreqkHz);
+	case RC_AOR7030_COM1:
+		SetFrequencyAOR7030(CN_COM1, iCurFreqkHz);
 		break;
 
-	case RC_ELEKTOR304:
-		SetFrequencyElektor304(iCurFreqkHz);
+	case RC_AOR7030_COM2:
+		SetFrequencyAOR7030(CN_COM2, iCurFreqkHz);
+		break;
+
+	case RC_ELEKTOR304_COM1:
+		SetFrequencyElektor304(CN_COM1, iCurFreqkHz);
+		break;
+
+	case RC_ELEKTOR304_COM2:
+		SetFrequencyElektor304(CN_COM2, iCurFreqkHz);
+		break;
+
+	case RC_JRC_NRD535:
+		SetFrequencyNRD535(iCurFreqkHz);
 		break;
 	}
 
@@ -569,11 +594,23 @@ void StationsDlg::OnRemoteMenu(int iID)
 		break;
 
 	case 2:
-		eWhichRemoteControl = RC_AOR7030;
+		eWhichRemoteControl = RC_AOR7030_COM1;
 		break;
 
 	case 3:
-		eWhichRemoteControl = RC_ELEKTOR304;
+		eWhichRemoteControl = RC_AOR7030_COM2;
+		break;
+
+	case 4:
+		eWhichRemoteControl = RC_ELEKTOR304_COM1;
+		break;
+
+	case 5:
+		eWhichRemoteControl = RC_ELEKTOR304_COM2;
+		break;
+
+	case 6:
+		eWhichRemoteControl = RC_JRC_NRD535;
 		break;
 	}
 
@@ -582,6 +619,9 @@ void StationsDlg::OnRemoteMenu(int iID)
 	pRemoteMenu->setItemChecked(1, 1 == iID);
 	pRemoteMenu->setItemChecked(2, 2 == iID);
 	pRemoteMenu->setItemChecked(3, 3 == iID);
+	pRemoteMenu->setItemChecked(4, 4 == iID);
+	pRemoteMenu->setItemChecked(5, 5 == iID);
+	pRemoteMenu->setItemChecked(6, 6 == iID);
 }
 
 
@@ -639,20 +679,26 @@ _BOOLEAN StationsDlg::SetFrequencyWinradio(const int iFreqkHz)
 
 
 /******************************************************************************\
-* AOR 7030 serial interface													   *
+* AOR 7030, serial interface												   *
 \******************************************************************************/
-_BOOLEAN StationsDlg::SetFrequencyAOR7030(const int iFreqkHz)
+_BOOLEAN StationsDlg::SetFrequencyAOR7030(const ECOMNumber eCOMNumber,
+										  const int iFreqkHz)
 {
+/*
+	This code is based on a Delphi code by Carsten Knuetter. Special thanks for
+	his help on testing the code.
+*/
 	_BOOLEAN bSucceeded = FALSE;
 
 #ifdef _WIN32
-	/* Open serial interface (COM1) */
-	HANDLE hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE,
-		0 /* comm devices must be opened w/exclusive-access */,
-		NULL /* no security attributes  */,
-		OPEN_EXISTING /* comm devices must use OPEN_EXISTING */,
-		0 /* not overlapped I/O */,
-		NULL  /* hTemplate must be NULL for comm devices */);
+	/* Open serial interface */
+	FILE_HANDLE hCom;
+	if (eCOMNumber == CN_COM1)
+		hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+	else
+		hCom = CreateFile("COM2", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
 
 	if (hCom != INVALID_HANDLE_VALUE)
 	{
@@ -740,42 +786,58 @@ _BOOLEAN StationsDlg::SetFrequencyAOR7030(const int iFreqkHz)
 
 
 /******************************************************************************\
-* Elektor DRM receiver (3/04)												   *
+* Elektor DRM receiver (3/04), serial interface								   *
 \******************************************************************************/
 /*
 	The Elektor DRM Receiver 3/04 COM interface is based on the Visual Basic
 	source code by Burkhard Kainka which can be downloaded from
 	www.b-kainka.de
+	Linux support is based on a code written by Markus Maerz:
+	http://mitglied.lycos.de/markusmaerz/drm
 */
-_BOOLEAN StationsDlg::SetFrequencyElektor304(const int iFreqkHz)
+_BOOLEAN StationsDlg::SetFrequencyElektor304(const ECOMNumber eCOMNumber,
+											 const int iFreqkHz)
 {
 	_BOOLEAN bSucceeded = FALSE;
 
+	/* Open serial interface */
+	FILE_HANDLE hCom;
+
 #ifdef _WIN32
-	/* Open serial interface (COM1) */
-	HANDLE hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE,
-		0 /* comm devices must be opened w/exclusive-access */,
-		NULL /* no security attributes  */,
-		OPEN_EXISTING /* comm devices must use OPEN_EXISTING */,
-		0 /* not overlapped I/O */,
-		NULL  /* hTemplate must be NULL for comm devices */);
+	if (eCOMNumber == CN_COM1)
+		hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+	else
+		hCom = CreateFile("COM2", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
 
 	if (hCom != INVALID_HANDLE_VALUE)
 	{
+#else
+	if (eCOMNumber == CN_COM1)
+		FILE_HANDLE hCom = ::open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
+	else
+		FILE_HANDLE hCom = ::open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NDELAY);
+
+	if (hCom != -1)
+	{
+#endif
 		/* Initialization */
-		EscapeCommFunction(hCom, CLRDTR); // DTR 0
-		EscapeCommFunction(hCom, CLRRTS); // RTS 0
-		EscapeCommFunction(hCom, CLRBREAK); // TXD 0
+		SetOutStateElektor304(hCom, OW_TXD, 0); // TXD 0
+		SetOutStateElektor304(hCom, OW_RTS, 0); // RTS 0
+		SetOutStateElektor304(hCom, OW_DTR, 0); // DTR 0
 
-		const _REAL rNFreq = iFreqkHz + 454.3; // add IF1 (IF1 = 454.3)
+		/* Set up frequency */
+		const CReal rOscFreq = 50000.0;
+		const CReal rIFMixFreq = 454.3;
 
-		const _UINT32BIT iFrg = (_UINT32BIT) (rNFreq / 50000.0 * 4294967296.0);
-		const _UINT32BIT iFreqHi = iFrg / 0x10000;
-		const _UINT32BIT iFreqLo = iFrg - iFreqHi * 0x10000;
-		const _UINT32BIT iFreqLoL = iFreqLo & 0xFF;
-		const _UINT32BIT iFreqLoH = iFreqLo / 0x100;
-		const _UINT32BIT iFreqHiL = iFreqHi & 0xFF;
-		const _UINT32BIT iFreqHiH = iFreqHi / 0x100;
+		const _UINT32BIT iNewFreq = (_UINT32BIT)
+			(((CReal) iFreqkHz + rIFMixFreq) / rOscFreq * (CReal) 4294967296.0);
+
+		const _UINT32BIT iFreqLoL = iNewFreq & 0xFF;
+		const _UINT32BIT iFreqLoH = (iNewFreq & 0xFF00) >> 8;
+		const _UINT32BIT iFreqHiL = (iNewFreq & 0xFF0000) >> 16;
+		const _UINT32BIT iFreqHiH = (iNewFreq & 0xFF000000) >> 24;
 
 		OutputElektor304(hCom, 0xF800); // Reset
 		OutputElektor304(hCom, (0x3000 + iFreqLoL)); // 4 Bytes to FREQ0
@@ -785,52 +847,185 @@ _BOOLEAN StationsDlg::SetFrequencyElektor304(const int iFreqkHz)
 		OutputElektor304(hCom, 0x8000); // Sync
 		OutputElektor304(hCom, 0xC000); // Reset end
 
+#ifdef _WIN32
 		CloseHandle(hCom);
+	}
+#else
+		::close(hCom);
 	}
 #endif
 
 	return bSucceeded;
 }
 
-#ifdef _WIN32
-void StationsDlg::OutputElektor304(HANDLE hCom, const _UINT32BIT iData)
+void StationsDlg::OutputElektor304(FILE_HANDLE hCom, const _UINT32BIT iData)
 {
-	EscapeCommFunction(hCom, CLRBREAK); // TXD 0
-	DelayElektor304(1.0);
-	EscapeCommFunction(hCom, SETDTR); // DTR 1 // CE
-	DelayElektor304(1.0);
-	_UINT32BIT BitValue = 0x8000;
+	SetOutStateElektor304(hCom, OW_TXD, 0); // TXD 0
+	SetOutStateElektor304(hCom, OW_DTR, 1); // DTR 1 // CE
+
+	_UINT32BIT iMask = 0x8000;
 	for (int n = 0; n < 16; n++)
 	{
-		if ((iData & BitValue) > 0)
+		if ((iData & iMask) > 0)
+			SetOutStateElektor304(hCom, OW_RTS, 0); // RTS 0
+		else
+			SetOutStateElektor304(hCom, OW_RTS, 1); // RTS 1
+
+		SetOutStateElektor304(hCom, OW_TXD, 1); // TXD 1 // clock
+		SetOutStateElektor304(hCom, OW_TXD, 0); // TXD 0
+
+		iMask >>= 1; /* Next bit for masking */
+	}
+
+	SetOutStateElektor304(hCom, OW_DTR, 0); // DTR 0
+}
+
+void StationsDlg::SetOutStateElektor304(FILE_HANDLE hCom, EOutWire eOutWire,
+										_BINARY biState)
+{
+#ifdef _WIN32
+	switch (eOutWire)
+	{
+	case OW_TXD:
+		if (biState == 0)
+			EscapeCommFunction(hCom, CLRBREAK); // TXD 0
+		else
+			EscapeCommFunction(hCom, SETBREAK); // TXD 1
+		break;
+
+	case OW_DTR:
+		if (biState == 0)
+			EscapeCommFunction(hCom, CLRDTR); // DTR 0
+		else
+			EscapeCommFunction(hCom, SETDTR); // DTR 1
+		break;
+
+	case OW_RTS:
+		if (biState == 0)
 			EscapeCommFunction(hCom, CLRRTS); // RTS 0
 		else
 			EscapeCommFunction(hCom, SETRTS); // RTS 1
-
-		DelayElektor304(1.0);
-		EscapeCommFunction(hCom, SETBREAK); // TXD 1 // clock
-		DelayElektor304(1.0);
-		EscapeCommFunction(hCom, CLRBREAK); // TXD 0
-		DelayElektor304(1.0);
-		DelayElektor304(1.0);
-		BitValue >>= 1; /* Next bit for masking */
+		break;
 	}
-	DelayElektor304(1.0);
-	EscapeCommFunction(hCom, CLRDTR); // DTR 0
-	DelayElektor304(1.0);
-}
+#else
+	int status;
 
-_REAL StationsDlg::TimeReadElektor304()
-{
-	LARGE_INTEGER t;
-	_REAL TimeUnit = 0.000838096515;
-	QueryPerformanceCounter(&t);
-	return (t.HighPart * 4294967296 + t.LowPart) * TimeUnit;
-}
+	switch (eOutWire)
+	{
+	case OW_TXD:
+		if (biState == 0)
+			ioctl(hCom, TIOCCBRK, 0); // TXD 0
+		else
+			ioctl(hCom, TIOCSBRK, 0); // TXD 1
+		break;
 
-void StationsDlg::DelayElektor304(_REAL rDelay)
-{
-	_REAL TimeStart = TimeReadElektor304();
-	while (TimeReadElektor304() < (TimeStart + rDelay));
-}
+	case OW_DTR:
+		ioctl(hCom, TIOCMGET, &status);
+		if (biState == 0)
+			status &= ~TIOCM_DTR; // DTR 0
+		else
+			status |= TIOCM_DTR; // DTR 1
+
+		ioctl(hCom, TIOCMSET, &status);
+		break;
+
+	case OW_RTS:
+		ioctl(hCom, TIOCMGET, &status);
+		if (biState == 0)
+			status &= ~TIOCM_RTS; // RTS 0
+		else
+			status |= TIOCM_RTS; // RTS 1
+
+		ioctl(hCom, TIOCMSET, &status);
+		break;
+	}
 #endif
+
+	/* Introduce delay after changing the bit state */
+	/* This implementation may not work for very fast computers: TODO */
+	int iDelay = 4000;
+
+	while (iDelay > 0)
+		iDelay--;
+}
+
+
+/******************************************************************************\
+* JRC NRD-535D																   *
+\******************************************************************************/
+/*
+	This code was written by Mark J. Fine (Virginia, USA)
+	http://www.fineware-swl.com/drm.html
+*/
+#ifndef _WIN32
+#include <sys/termios.h>
+int sFile = -1;
+#endif
+
+_BOOLEAN StationsDlg::SetFrequencyNRD535(const int iFreqkHz)
+{
+	_BOOLEAN bSucceeded = FALSE;
+
+#ifndef _WIN32
+	QString sFreqHz;
+	const int iFreqHz = (iFreqkHz + 3) * 1000;    // freq in Hz, add 3kHz offset
+	struct termios tty;
+
+	sFreqHz = QString("%1").arg(iFreqHz).rightJustify(8,'0',TRUE).
+		prepend('F').append('\x0d');
+
+	if (sFile < 0)
+		sFile = ::open("/dev/ttyUSB0", O_RDWR);     // open only once
+
+	if (sFile >= 0)
+	{
+		tcgetattr(sFile, &tty);
+		cfsetospeed(&tty, (speed_t)B4800);        // set baud rate to 4800
+		cfsetispeed(&tty, (speed_t)B4800);
+		tty.c_lflag = 0;
+		tty.c_oflag = 0;                          // set OutX off;
+		tty.c_iflag = IGNBRK;                     // set no echo mode
+		tty.c_iflag &= ~(IXON|IXOFF|IXANY);       // set InX off
+		tty.c_cflag = (tty.c_cflag & ~CSIZE)|CS8; // set 8 bits
+		tty.c_cflag |= CLOCAL | CREAD;            // set no wait
+		tty.c_cflag &= ~(PARENB | PARODD);        // set no parity
+		tty.c_cflag &= ~CSTOPB;                   // set 1 stop bit
+		tty.c_cflag &= ~HUPCL;                    // set no hangup
+		tty.c_cflag |= CRTSCTS;                   // set DCD Flow
+		tty.c_cc[VMIN] = 1;                       // set timeout constants
+		tty.c_cc[VTIME] = 5;
+		tcsetattr(sFile, TCSANOW, &tty);
+
+		ioctl(sFile, TCFLSH, 2);                  // flush buffers
+
+		write(sFile, "H1\x0d", 3);                // send control on
+		usleep(500);
+
+		write(sFile, "U2-5000\x0d", 8);           // set BFO to -5kHz
+		usleep(17);
+
+		write(sFile, "D1\x0d", 3);                // set mode to CW
+		usleep(10);
+
+		write(sFile, "B3\x0d", 3);                // set BW to AUX
+		usleep(10);
+
+		write(sFile, "P-2000\x0d", 7);            // set PBS to -2kHz
+		usleep(15);
+
+		write(sFile, "G0\x0d", 3);                // set AGC slow
+		usleep(10);
+
+		write(sFile, sFreqHz.ascii(), 10);        // send frequency cmd
+		usleep(22);
+
+		write(sFile, "H0\x0d", 3);                // send control off
+		usleep(500);
+
+		// ::close(sFile);
+		bSucceeded = TRUE;
+	}
+#endif
+
+	return bSucceeded;
+}

@@ -62,6 +62,13 @@ extern CDRMReceiver	DRMReceiver;
    www.drm-dx.de */
 #define DRM_SCHEDULE_UPDATE_FILE		"ftp://216.92.35.131/DRMSchedule.ini"
 
+/* File handle type */
+#ifdef _WIN32
+# define FILE_HANDLE					HANDLE
+#else
+# define FILE_HANDLE					int
+#endif
+
 
 /* Classes ********************************************************************/
 class CStationsItem
@@ -139,15 +146,17 @@ public:
 	virtual ~StationsDlg() {}
 
 protected:
-	enum ERemotecntr {RC_NOREMCNTR, RC_WINRADIO, RC_AOR7030, RC_ELEKTOR304};
+	enum ERemotecntr {RC_NOREMCNTR, RC_WINRADIO, RC_AOR7030_COM1, RC_AOR7030_COM2,
+		RC_ELEKTOR304_COM1, RC_ELEKTOR304_COM2, RC_JRC_NRD535};
+	enum ECOMNumber {CN_COM1, CN_COM2};
 	_BOOLEAN		SetFrequencyWinradio(const int iFreqkHz);
-	_BOOLEAN		SetFrequencyAOR7030(const int iFreqkHz);
-	_BOOLEAN		SetFrequencyElektor304(const int iFreqkHz);
-#ifdef _WIN32
-	void			OutputElektor304(HANDLE hCom, const _UINT32BIT iData);
-	_REAL			TimeReadElektor304();
-	void			DelayElektor304(_REAL rDelay);
-#endif
+	_BOOLEAN		SetFrequencyAOR7030(const ECOMNumber eCOMNumber, const int iFreqkHz);
+	_BOOLEAN		SetFrequencyNRD535(const int iFreqkHz);
+
+	enum EOutWire {OW_TXD, OW_DTR, OW_RTS};
+	_BOOLEAN		SetFrequencyElektor304(const ECOMNumber eCOMNumber, const int iFreqkHz);
+	void			OutputElektor304(FILE_HANDLE hCom, const _UINT32BIT iData);
+	void			SetOutStateElektor304(FILE_HANDLE hCom, EOutWire eOutWire, _BINARY biState);
 
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
