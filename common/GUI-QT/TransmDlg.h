@@ -38,7 +38,10 @@
 #include <qstring.h>
 #include <qbuttongroup.h>
 #include <qmultilineedit.h>
-
+#include <qlistview.h>
+#include <qfiledialog.h>
+#include <qfileinfo.h>
+#include <qstringlist.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"
@@ -106,12 +109,19 @@ protected:
 	int					iIDCurrentText;
 	_BOOLEAN			GetMessageText(const int iID);
 	void				UpdateMSCProtLevCombo();
+	void				EnableTextMessage(const _BOOLEAN bFlag);
+	void				EnableAudio(const _BOOLEAN bFlag);
+	void				EnableData(const _BOOLEAN bFlag);
 
 
 public slots:
 	void OnButtonStartStop();
 	void OnPushButtonAddText();
 	void OnButtonClearAllText();
+	void OnPushButtonAddFileName();
+	void OnButtonClearAllFileNames();
+	void OnToggleCheckBoxEnableData(bool bState);
+	void OnToggleCheckBoxEnableAudio(bool bState);
 	void OnToggleCheckBoxEnableTextMessage(bool bState);
 	void OnComboBoxMSCInterleaverHighlighted(int iID);
 	void OnComboBoxMSCConstellationHighlighted(int iID);
@@ -122,6 +132,7 @@ public slots:
 	void OnComboBoxMSCProtLevHighlighted(int iID);
 	void OnRadioRobustnessMode(int iID);
 	void OnRadioBandwidth(int iID);
+	void OnRadioOutput(int iID);
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
 	void OnTextChangedSndCrdIF(const QString& strIF);

@@ -42,29 +42,14 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	ComboBoxTextMessage->insertItem("new", 0);
 	UpdateMSCProtLevCombo();
 
-
-	/* Add example text message at startup ---------------------------------- */
-	/* Activate text message */
-	OnToggleCheckBoxEnableTextMessage(TRUE);
-	CheckBoxEnableTextMessage->setChecked(TRUE);
-
-	/* Add example text in internal container */
-	vecstrTextMessage.Enlarge(1);
-	vecstrTextMessage[1] =
-		"Dream DRM Transmitter\x0B\x0AThis is a test transmission";
-
-	/* Insert item in combo box, display text and set item to our text */
-	ComboBoxTextMessage->insertItem(QString().setNum(1), 1);
-	ComboBoxTextMessage->setCurrentItem(1);
-	MultiLineEditTextMessage->insertLine(vecstrTextMessage[1].c_str());
-
-	/* Now make sure that the text message flag is activated in global struct */
-	TransThread.DRMTransmitter.GetParameters()->
-		Service[0].AudioParam.bTextflag = TRUE;
-
-
 	/* Init controls with default settings */
 	ButtonStartStop->setText("&Start");
+
+	/* Output mode (real valued or I / Q) */
+	if (TransThread.DRMTransmitter.GetTransData()->GetIQOutput() == TRUE)
+		RadioButtonOutIQ->setChecked(TRUE);
+	else
+		RadioButtonOutReal->setChecked(TRUE);
 
 	/* Robustness mode */
 	switch (TransThread.DRMTransmitter.GetParameters()->GetWaveMode())
@@ -188,7 +173,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	/* Program type */
 	for (i = 0; i < LEN_TABLE_PROG_TYPE_CODE; i++)
 		ComboBoxProgramType->insertItem(strTableProgTypCod[i].c_str(), i);
-	
+
 	ComboBoxProgramType->setCurrentItem(TransThread.DRMTransmitter.
 		GetParameters()->Service[0].iServiceDescr);
 
@@ -196,6 +181,13 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	LineEditSndCrdIF->setText(QString().number(
 		TransThread.DRMTransmitter.GetOFDMMod()->GetCarOffset(), 'f', 2));
 
+	/* Clear list box for file names and set up columns */
+	ListViewFileNames->clear();
+
+	/* We assume that one column is already there */
+	ListViewFileNames->setColumnText(0, "File Name");
+	ListViewFileNames->addColumn("Size [KB]");
+	ListViewFileNames->addColumn("Full Path");
 
 	/* Disable other three services */
 	TabWidgetServices->setTabEnabled(tabService2, FALSE);
@@ -205,6 +197,35 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	CheckBoxEnableService->setEnabled(FALSE);
 
 
+	/* Let this service be an audio service for initialization */
+	/* Set audio enable check box */
+	CheckBoxEnableAudio->setChecked(TRUE);
+	EnableAudio(TRUE);
+	CheckBoxEnableData->setChecked(FALSE);
+	EnableData(FALSE);
+
+
+	/* Add example text message at startup ---------------------------------- */
+	/* Activate text message */
+	EnableTextMessage(TRUE);
+	CheckBoxEnableTextMessage->setChecked(TRUE);
+
+	/* Add example text in internal container */
+	vecstrTextMessage.Enlarge(1);
+	vecstrTextMessage[1] =
+		"Dream DRM Transmitter\x0B\x0AThis is a test transmission";
+
+	/* Insert item in combo box, display text and set item to our text */
+	ComboBoxTextMessage->insertItem(QString().setNum(1), 1);
+	ComboBoxTextMessage->setCurrentItem(1);
+	iIDCurrentText = 1;
+	MultiLineEditTextMessage->insertLine(vecstrTextMessage[1].c_str());
+
+	/* Now make sure that the text message flag is activated in global struct */
+	TransThread.DRMTransmitter.GetParameters()->
+		Service[0].AudioParam.bTextflag = TRUE;
+
+
 	/* Connections ---------------------------------------------------------- */
 	connect(ButtonStartStop, SIGNAL(clicked()),
 		this, SLOT(OnButtonStartStop()));
@@ -212,8 +233,16 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnPushButtonAddText()));
 	connect(PushButtonClearAllText, SIGNAL(clicked()),
 		this, SLOT(OnButtonClearAllText()));
+	connect(PushButtonAddFile, SIGNAL(clicked()),
+		this, SLOT(OnPushButtonAddFileName()));
+	connect(PushButtonClearAllFileNames, SIGNAL(clicked()),
+		this, SLOT(OnButtonClearAllFileNames()));
 	connect(CheckBoxEnableTextMessage, SIGNAL(toggled(bool)),
 		this, SLOT(OnToggleCheckBoxEnableTextMessage(bool)));
+	connect(CheckBoxEnableAudio, SIGNAL(toggled(bool)),
+		this, SLOT(OnToggleCheckBoxEnableAudio(bool)));
+	connect(CheckBoxEnableData, SIGNAL(toggled(bool)),
+		this, SLOT(OnToggleCheckBoxEnableData(bool)));
 
 	/* Combo boxes */
 	connect(ComboBoxMSCInterleaver, SIGNAL(highlighted(int)),
@@ -236,6 +265,10 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnRadioRobustnessMode(int)));
 	connect(ButtonGroupBandwidth, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioBandwidth(int)));
+	connect(ButtonGroupBandwidth, SIGNAL(clicked(int)),
+		this, SLOT(OnRadioBandwidth(int)));
+	connect(ButtonGroupOutput, SIGNAL(clicked(int)),
+		this, SLOT(OnRadioOutput(int)));
 
 	/* Line edits */
 	connect(LineEditServiceLabel, SIGNAL(textChanged(const QString&)),
@@ -255,6 +288,8 @@ TransmDialog::~TransmDialog()
 
 void TransmDialog::OnButtonStartStop()
 {
+	int i;
+
 	if (bIsStarted == TRUE)
 	{
 		/* Stop transmitter */
@@ -272,10 +307,29 @@ void TransmDialog::OnButtonStartStop()
 		/* Set text message */
 		TransThread.DRMTransmitter.GetAudSrcEnc()->ClearTextMessage();
 
-		for (int i = 1; i < vecstrTextMessage.Size(); i++)
+		for (i = 1; i < vecstrTextMessage.Size(); i++)
 			TransThread.DRMTransmitter.GetAudSrcEnc()->
 				SetTextMessage(vecstrTextMessage[i]);
 
+		/* Set file names for data application */
+		TransThread.DRMTransmitter.GetAudSrcEnc()->ClearPicFileNames();
+
+		/* Iteration through list view items. Code based on QT sample code for
+		   list view items */
+		QListViewItemIterator it(ListViewFileNames);
+
+		for (; it.current(); it++)
+		{
+			/* Complete file path is in third column */
+			const QString strFileName = it.current()->text(2);
+
+			/* Extract format string */
+			QFileInfo FileInfo(strFileName);
+			const QString strFormat = FileInfo.extension(FALSE);
+
+			TransThread.DRMTransmitter.GetAudSrcEnc()->
+				SetPicFileName(strFileName.latin1(), strFormat.latin1());
+		}
 
 		TransThread.start();
 
@@ -289,7 +343,12 @@ void TransmDialog::OnButtonStartStop()
 
 void TransmDialog::OnToggleCheckBoxEnableTextMessage(bool bState)
 {
-	if (bState)
+	EnableTextMessage(bState);
+}
+
+void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
+{
+	if (bFlag == TRUE)
 	{
 		/* Enable text message controls */
 		ComboBoxTextMessage->setEnabled(TRUE);
@@ -312,6 +371,121 @@ void TransmDialog::OnToggleCheckBoxEnableTextMessage(bool bState)
 		/* Set text message flag in global struct */
 		TransThread.DRMTransmitter.GetParameters()->
 			Service[0].AudioParam.bTextflag = FALSE;
+	}
+}
+
+void TransmDialog::OnToggleCheckBoxEnableAudio(bool bState)
+{
+	EnableAudio(bState);
+
+	if (bState)
+	{
+		/* Set audio enable check box */
+		CheckBoxEnableData->setChecked(FALSE);
+		EnableData(FALSE);
+	}
+	else
+	{
+		/* Set audio enable check box */
+		CheckBoxEnableData->setChecked(TRUE);
+		EnableData(TRUE);
+	}
+}
+
+void TransmDialog::EnableAudio(const _BOOLEAN bFlag)
+{
+	if (bFlag == TRUE)
+	{
+		/* Enable audio controls */
+		GroupBoxTextMessage->setEnabled(TRUE);
+		ComboBoxProgramType->setEnabled(TRUE);
+
+		/* Only one audio service */
+		TransThread.DRMTransmitter.GetParameters()->
+			iNumAudioService = 1;
+		TransThread.DRMTransmitter.GetParameters()->
+			iNumDataService = 0;
+
+		/* Audio flag of this service */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].eAudDataFlag = CParameter::SF_AUDIO;
+
+		/* Always use stream number 0 right now, TODO */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].AudioParam.iStreamID = 0;
+
+		/* Programme Type code, get it from combo box */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].iServiceDescr = ComboBoxProgramType->currentItem();
+	}
+	else
+	{
+		/* Disable audio controls */
+		GroupBoxTextMessage->setEnabled(FALSE);
+		ComboBoxProgramType->setEnabled(FALSE);
+	}
+}
+
+void TransmDialog::OnToggleCheckBoxEnableData(bool bState)
+{
+	EnableData(bState);
+
+	if (bState)
+	{
+		/* Set audio enable check box */
+		CheckBoxEnableAudio->setChecked(FALSE);
+		EnableAudio(FALSE);
+	}
+	else
+	{
+		/* Set audio enable check box */
+		CheckBoxEnableAudio->setChecked(TRUE);
+		EnableAudio(TRUE);
+	}
+}
+
+void TransmDialog::EnableData(const _BOOLEAN bFlag)
+{
+	if (bFlag == TRUE)
+	{
+		/* Enable data controls */
+		ListViewFileNames->setEnabled(TRUE);
+		PushButtonClearAllFileNames->setEnabled(TRUE);
+		PushButtonAddFile->setEnabled(TRUE);
+
+		/* Only one data service */
+		TransThread.DRMTransmitter.GetParameters()->
+			iNumAudioService = 0;
+		TransThread.DRMTransmitter.GetParameters()->
+			iNumDataService = 1;
+
+		/* Data flag for this service */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].eAudDataFlag = CParameter::SF_DATA;
+
+		/* Always use stream number 0, TODO */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].DataParam.iStreamID = 0;
+
+		/* Init SlideShow application */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].DataParam.iPacketLen = 45; /* TEST */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
+
+		/* The value 0 indicates that the application details are provided
+		   solely by SDC data entity type 5 */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].iServiceDescr = 0;
+	}
+	else
+	{
+		/* Disable data controls */
+		ListViewFileNames->setEnabled(FALSE);
+		PushButtonClearAllFileNames->setEnabled(FALSE);
+		PushButtonAddFile->setEnabled(FALSE);
 	}
 }
 
@@ -385,6 +559,37 @@ void TransmDialog::OnButtonClearAllText()
 	/* Clear multi line edit */
 	MultiLineEditTextMessage->clear();
 	MultiLineEditTextMessage->setEdited(FALSE);
+}
+
+void TransmDialog::OnPushButtonAddFileName()
+{
+	/* Show "open file" dialog. Let the user select more than one file */
+	QStringList list = QFileDialog::getOpenFileNames(
+		"Image Files (*.png *.jpg *.jpeg *.jfif)", NULL, this);
+
+	/* Check if user not hit the cancel button */
+	if (!list.isEmpty())
+	{
+		/* Insert all selected file names */
+		for (QStringList::Iterator it = list.begin(); it != list.end(); it++)
+		{
+			QFileInfo FileInfo((*it));
+
+			/* Insert list view item. The object which is created here will be
+			   automatically destroyed by QT when the parent
+			   ("ListViewFileNames") is destroyed */
+			ListViewFileNames->insertItem(
+				new QListViewItem(ListViewFileNames, FileInfo.fileName(),
+				QString().setNum((float) FileInfo.size() / 1000.0, 'f', 2),
+				FileInfo.filePath()));
+		}
+	}
+}
+
+void TransmDialog::OnButtonClearAllFileNames()
+{
+	/* Clear list box for file names */
+	ListViewFileNames->clear();
 }
 
 void TransmDialog::OnComboBoxTextMessageHighlighted(int iID)
@@ -525,6 +730,20 @@ void TransmDialog::OnComboBoxProgramTypeHighlighted(int iID)
 	TransThread.DRMTransmitter.GetParameters()->Service[0].iServiceDescr = iID;
 }
 
+void TransmDialog::OnRadioOutput(int iID)
+{
+	if (iID == 0)
+	{
+		/* Button "Real Valued" */
+		TransThread.DRMTransmitter.GetTransData()->SetIQOutput(FALSE);
+	}
+	else
+	{
+		/* Button "I / Q" */
+		TransThread.DRMTransmitter.GetTransData()->SetIQOutput(TRUE);
+	}
+}
+
 void TransmDialog::OnRadioRobustnessMode(int iID)
 {
 	/* Check, which bandwith's are possible with this robustness mode */
@@ -647,10 +866,12 @@ void TransmDialog::DisableAllControls()
 {
 	GroupBoxChanParam->setEnabled(FALSE);
 	TabWidgetServices->setEnabled(FALSE);
+	ButtonGroupOutput->setEnabled(FALSE);
 }
 
 void TransmDialog::EnableAllControls()
 {
 	GroupBoxChanParam->setEnabled(TRUE);
 	TabWidgetServices->setEnabled(TRUE);
+	ButtonGroupOutput->setEnabled(TRUE);
 }
