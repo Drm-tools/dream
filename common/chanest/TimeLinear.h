@@ -56,6 +56,8 @@ public:
 
 protected:
 	int					iNoCarrier;
+	int					iNoIntpFreqPil;
+	int					iScatPilFreqInt;
 	CMatrix<_COMPLEX>	matcChanEstHist;
 
 	int					iLenHistBuff;

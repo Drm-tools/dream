@@ -32,7 +32,7 @@
 /* Implementation *************************************************************/
 void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int			i, j;
+	int			i, j, k;
 	int			iModSymNum;
 	_COMPLEX	cModChanEst;
 	_REAL		rSNRAftTiInt;
@@ -54,18 +54,11 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Get symbol-counter for next symbol. Use the count from the frame 
 	   synchronization (in OFDM.cpp). Call estimation routine */
 	rSNRAftTiInt = 
-		pTimeInt->Estimate(pvecInputData, veccChanEst, 
+		pTimeInt->Estimate(pvecInputData, veccPilots, 
 						   ReceiverParam.matiMapTab[(*pvecInputData).
 						   GetExData().iSymbolNo],
 						   ReceiverParam.matcPilotCells[(*pvecInputData).
 						   GetExData().iSymbolNo], rSNREstimate);
-
-
-	/* Extract interpolated pilots for frequency interpolation -------------- */
-	/* Put all pilots in one vector vector */
-	/* Use pilot positions */
-	veccPilots = veccChanEst(1, iScatPilFreqInt, Size(veccChanEst) 
-		/* MATLAB: (1:iScatPilFreqInt:end) */);
 
 	/* Special case with robustness mode D: since "iScatPilFreqInt" is "1", we
 	   get the DC carrier as a pilot position. We have to interpolate this
@@ -74,7 +67,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		/* Actual linear interpolation with carrieres left and right from DC */
 		veccPilots[iDCPos] = veccPilots[iDCPos - 1] + 
-			(veccPilots[iDCPos + 1] - veccPilots[iDCPos - 1]) / (_REAL) 2;
+			(veccPilots[iDCPos + 1] - veccPilots[iDCPos - 1]) / (_REAL) 2.0;
 	}
 
 
@@ -92,8 +85,15 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/**********************************************************************\
 		 * Linear interpolation												  *
 		\**********************************************************************/
-		for (j = 0; j < iNoCarrier - iScatPilFreqInt; j += iScatPilFreqInt)
+		/* Set first pilot position */
+		veccChanEst[0] = veccPilots[0];
+
+		for (j = 0, k = 1; j < iNoCarrier - iScatPilFreqInt;
+			j += iScatPilFreqInt, k++)
 		{
+			/* Set values at second time pilot position in cluster */
+			veccChanEst[j + iScatPilFreqInt] = veccPilots[k];
+
 			/* Interpolation cluster */
 			for (i = 1; i < iScatPilFreqInt; i++)
 			{
@@ -132,8 +132,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			Zeros(iLongLenFreq - 2 * iStartZeroPadding)), 
 			/* Set the second part of the actual spectrum at the end of the new
 			   vector */
-			veccPilots(Size(veccPilots) - iStartZeroPadding + 1, 
-			Size(veccPilots)));
+			veccPilots(iNoIntpFreqPil - iStartZeroPadding + 1, 
+			iNoIntpFreqPil));
 
 		/* Transform back in frequency-domain */
 		veccIntPil = Fft(veccIntPil, FftPlanLong);
