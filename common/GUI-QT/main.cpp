@@ -71,8 +71,6 @@ public:
 	}
 };
 
-
-/* Implementation *************************************************************/
 int main(int argc, char** argv)
 {
 try
@@ -197,6 +195,8 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 	exit(1);
 }
 
+
+/* Command line argument parser ***********************************************/
 void ParseArguments(QApplication& app)
 {
 	/* QT docu: argv()[0] is the program name, argv()[1] is the first
@@ -205,7 +205,8 @@ void ParseArguments(QApplication& app)
 	for (int i = 1; i < app.argc(); i++)
 	{
 		/* Flip spectrum flag ----------------------------------------------- */
-		if (!strcmp(app.argv()[i], "-flipspectrum"))
+		if ((!strcmp(app.argv()[i], "--flipspectrum")) ||
+			(!strcmp(app.argv()[i], "-p")))
 		{
 			DRMReceiver.GetReceiver()->SetFlippedSpectrum(TRUE);
 			continue;
@@ -213,7 +214,8 @@ void ParseArguments(QApplication& app)
 
 
 		/* Mute audio flag -------------------------------------------------- */
-		if (!strcmp(app.argv()[i], "-muteaudio"))
+		if ((!strcmp(app.argv()[i], "--muteaudio")) ||
+			(!strcmp(app.argv()[i], "-m")))
 		{
 			DRMReceiver.GetWriteData()->MuteAudio(TRUE);
 			continue;
@@ -221,7 +223,8 @@ void ParseArguments(QApplication& app)
 
 
 		/* Do not use sound card, read from file ---------------------------- */
-		if (!strcmp(app.argv()[i], "-fromfile"))
+		if ((!strcmp(app.argv()[i], "--fromfile")) ||
+			(!strcmp(app.argv()[i], "-f")))
 		{
 			DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
 			continue;
@@ -229,12 +232,13 @@ void ParseArguments(QApplication& app)
 
 
 		/* Number of iterations for MLC setting ----------------------------- */
-		if (!strcmp(app.argv()[i], "-mlciter"))
+		if ((!strcmp(app.argv()[i], "--mlciter")) ||
+			(!strcmp(app.argv()[i], "-i")))
 		{
 			if (++i >= app.argc())
 			{
 				cerr << app.argv()[0] << ": ";
-				cerr << "'-mlciter' needs a numeric argument between 0 and 4." << endl;
+				cerr << "'--mlciter' needs a numeric argument between 0 and 4." << endl;
 				exit(1);
 			}
 
@@ -243,7 +247,7 @@ void ParseArguments(QApplication& app)
 			if (*p || n < 0 || n > 4)
 			{
 				cerr << app.argv()[0] << ": ";
-				cerr << "'-mlciter' needs a numeric argument between 0 and 4." << endl;
+				cerr << "'--mlciter' needs a numeric argument between 0 and 4." << endl;
 				exit(1);
 			}
 
@@ -253,12 +257,13 @@ void ParseArguments(QApplication& app)
 
 
 		/* Sample rate offset start value ----------------------------------- */
-		if (!strcmp(app.argv()[i], "-sampleoff"))
+		if ((!strcmp(app.argv()[i], "--sampleoff")) ||
+			(!strcmp(app.argv()[i], "-l")))
 		{
 			if (++i >= app.argc())
 			{
 				cerr << app.argv()[0] << ": ";
-				cerr << "'-sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
+				cerr << "'--sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
 				exit(1);
 			}
 
@@ -267,7 +272,7 @@ void ParseArguments(QApplication& app)
 			if (*p || r < (_REAL) -200.0 || r > (_REAL) 200.0)
 			{
 				cerr << app.argv()[0] << ": ";
-				cerr << "'-sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
+				cerr << "'--sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
 				exit(1);
 			}
 
@@ -277,7 +282,9 @@ void ParseArguments(QApplication& app)
 
 
 		/* Help (usage) flag ------------------------------------------------ */
-		if (!strcmp(app.argv()[i], "-help"))
+		if ((!strcmp(app.argv()[i], "--help")) ||
+			(!strcmp(app.argv()[i], "-h")) ||
+			(!strcmp(app.argv()[i], "-?")))
 		{
 			UsageArguments();
 			exit(1);
@@ -286,7 +293,7 @@ void ParseArguments(QApplication& app)
 
 		/* Unknown option --------------------------------------------------- */
 		cerr << app.argv()[0] << ": ";
-		cerr << "Unknown option '" << app.argv()[i] << "' -- use '-help' for help" << endl;
+		cerr << "Unknown option '" << app.argv()[i] << "' -- use '--help' for help" << endl;
 		exit(1);
 	}
 }
@@ -297,15 +304,17 @@ void UsageArguments(void)
 	cerr << endl;
 	cerr << "Recognized options:" << endl;
 	cerr << endl;
-	cerr << "  -flipspectrum              flip input spectrum" << endl;
-	cerr << "  -mlciter <n>               number of MLC iterations" << endl;
+	cerr << "  -p, --flipspectrum         flip input spectrum" << endl;
+	cerr << "  -i <n>, --mlciter <n>      number of MLC iterations" << endl;
 	cerr << "                             allowed range: 0...4" << endl;
 	cerr << "                             default: 1" << endl;
-	cerr << "  -sampleoff <r>             sample rate offset init value [Hz]" << endl;
+	cerr << "  -s <r>, --sampleoff <r>    sample rate offset initial value [Hz]" << endl;
 	cerr << "                             allowed range: -200.0...200.0" << endl;
-	cerr << "                             default: 0.0" << endl;
-	cerr << "  -muteaudio                 mute audio output" << endl;
-	cerr << "  -fromfile                  disable sound card" << endl;
+	cerr << "  -m, --muteaudio            mute audio output" << endl;
+	cerr << "  -f, --fromfile             disable sound card," << endl;
 	cerr << "                             read from file instead" << endl;
+	cerr << "  -h, -?, --help             this help text" << endl;
+	cerr << endl;
+	cerr << "Example: " << qApp->argv()[0] << " -p --sampleoff -0.23 -i 2" << endl;
 	cerr << endl;
 }
