@@ -67,7 +67,7 @@ public:
 	AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
-	virtual ~AnalogDemDlg();
+	virtual ~AnalogDemDlg() {}
 
 protected:
 	CDRMReceiver*	pDRMRec;
@@ -77,7 +77,7 @@ protected:
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
     virtual void	showEvent(QShowEvent* pEvent) {UpdateControls();}
-	virtual void	closeEvent(QCloseEvent* pEvent) {emit Closed();}
+	virtual void	closeEvent(QCloseEvent* pEvent);
 
 	int iBwAM;
 	int iBwLSB;

@@ -158,7 +158,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 }
 
-AnalogDemDlg::~AnalogDemDlg()
+void AnalogDemDlg::closeEvent(QCloseEvent* pEvent)
 {
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
@@ -167,6 +167,9 @@ AnalogDemDlg::~AnalogDemDlg()
 	pDRMRec->GeomAnalogDemDlg.iYPos = WinGeom.y();
 	pDRMRec->GeomAnalogDemDlg.iHSize = WinGeom.height();
 	pDRMRec->GeomAnalogDemDlg.iWSize = WinGeom.width();
+
+	/* Tell the invisible main window to close, too */
+	emit Closed();
 }
 
 void AnalogDemDlg::UpdateControls()
