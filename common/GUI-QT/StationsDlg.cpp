@@ -1072,6 +1072,9 @@ try
 	/* Set value for current selected model ID */
 	iCurSelModelID = newModID;
 
+	/* Set new model ID in receiver object which is needed for init-file */
+	DRMReceiver.SetHamlibModel(newModID);
+
 	/* If rig was already open, close it first */
 	if (pRig != NULL)
 	{
@@ -1235,9 +1238,6 @@ try
 			EnableSMeter(FALSE);
 		}
 	}
-
-	/* Set new model ID in receiver object which is needed for init-file */
-	DRMReceiver.SetHamlibModel(newModID);
 }
 
 catch (CGenErr GenErr)
