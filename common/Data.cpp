@@ -255,10 +255,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 		iShiftRegister |= (biPRBSbit & 1);
 
 		/* Use PRBS output */
-		if (biPRBSbit == 0)
-			(*pvecOutputData)[i] = FALSE;
-		else
-			(*pvecOutputData)[i] = TRUE;
+		(*pvecOutputData)[i] = biPRBSbit;
 	}
 }
 
