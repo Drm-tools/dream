@@ -113,6 +113,10 @@ extern CDRMReceiver	DRMReceiver;
 class CStationsItem
 {
 public:
+	CStationsItem() : iStartHour(0), iStartMinute(0), iStopHour(0),
+		iStopMinute(0), iFreq(0), iDays(0), strName(""), strTarget(""),
+		strLanguage(""), strSite(""), strCountry(""), rPower((_REAL) 0.0) {}
+
 	int GetStartTimeNum() {return iStartHour * 100 + iStartMinute;}
 	int GetStopTimeNum() {return iStopHour * 100 + iStopMinute;}
 	void SetStartTimeNum(const int iStartTime)
