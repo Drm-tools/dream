@@ -34,6 +34,7 @@
 #include "../Vector.h"
 #include "../matlib/Matlib.h"
 #include "TimeSyncFilter.h"
+#include "../ReceiverFilter.h"
 
 
 /* Definitions ****************************************************************/

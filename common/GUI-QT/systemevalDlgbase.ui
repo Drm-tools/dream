@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>702</width>
+            <width>698</width>
             <height>557</height>
         </rect>
     </property>
@@ -58,7 +58,7 @@
                     <class>QFrame</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Frame3_2</cstring>
+                        <cstring>FrameParamStatusLEDs</cstring>
                     </property>
                     <property stdset="1">
                         <name>sizePolicy</name>
@@ -603,7 +603,7 @@
                     <class>QFrame</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Frame3</cstring>
+                        <cstring>FrameFACParams</cstring>
                     </property>
                     <property stdset="1">
                         <name>sizePolicy</name>
@@ -830,7 +830,7 @@
             <class>QButtonGroup</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>ButtonGroup1</cstring>
+                <cstring>ButtonGroupPlotSNR</cstring>
             </property>
             <property stdset="1">
                 <name>title</name>
@@ -1104,7 +1104,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout23</cstring>
+                <cstring>Layout26</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -1376,7 +1376,7 @@
                             <class>QGroupBox</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>GroupBox11</cstring>
+                                <cstring>GroupBoxMiscSettings</cstring>
                             </property>
                             <property stdset="1">
                                 <name>title</name>
@@ -1534,7 +1534,7 @@
                             <class>QGroupBox</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>GroupBox12</cstring>
+                                <cstring>GroupBoxLogFileSaveData</cstring>
                             </property>
                             <property stdset="1">
                                 <name>title</name>
@@ -1634,7 +1634,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout22</cstring>
+                        <cstring>Layout25</cstring>
                     </property>
                     <vbox>
                         <property stdset="1">
@@ -1645,6 +1645,51 @@
                             <name>spacing</name>
                             <number>6</number>
                         </property>
+                        <widget>
+                            <class>QGroupBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>GroupBoxIFFilter</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>title</name>
+                                <string>Filter</string>
+                            </property>
+                            <property stdset="1">
+                                <name>alignment</name>
+                                <set>AlignVCenter|AlignLeft</set>
+                            </property>
+                            <property>
+                                <name>layoutMargin</name>
+                            </property>
+                            <property>
+                                <name>layoutSpacing</name>
+                            </property>
+                            <property>
+                                <name>vAlign</name>
+                            </property>
+                            <vbox>
+                                <property stdset="1">
+                                    <name>margin</name>
+                                    <number>11</number>
+                                </property>
+                                <property stdset="1">
+                                    <name>spacing</name>
+                                    <number>6</number>
+                                </property>
+                                <widget>
+                                    <class>QCheckBox</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>CheckBoxRecFilter</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>BP</string>
+                                    </property>
+                                </widget>
+                            </vbox>
+                        </widget>
                         <spacer>
                             <property>
                                 <name>name</name>
@@ -1662,7 +1707,7 @@
                                 <name>sizeHint</name>
                                 <size>
                                     <width>20</width>
-                                    <height>120</height>
+                                    <height>70</height>
                                 </size>
                             </property>
                         </spacer>

@@ -117,4 +117,5 @@ public slots:
 	void OnCheckBoxMuteAudio();
 	void OnCheckWriteLog();
 	void OnCheckSaveAudioWAV();
+	void OnCheckRecFilter();
 };

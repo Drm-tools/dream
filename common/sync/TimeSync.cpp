@@ -473,12 +473,16 @@ fflush(pFile);
 	/* Check range of "iStartIndex" to prevent from vector overwrites. It must
 	   be larger than "0" since then the input block size would be also "0" and
 	   than the processing routine of the modul would not be called any more */
-	if (iStartIndex <= 0)
-		iStartIndex = 1;
-	if (iStartIndex >= iSymbolBlockSize + iSymbolBlockSize)
-		iStartIndex = iSymbolBlockSize + iSymbolBlockSize;
-	for (k = iStartIndex; k < iStartIndex + iDFTSize; k++)
-		(*pvecOutputData)[k - iStartIndex] = HistoryBuf[k];
+	const int i2SymBlSize = iSymbolBlockSize + iSymbolBlockSize;
+	if (iStartIndex < HALF_MAX_NUM_TAPS_RECFILTER)
+		iStartIndex = HALF_MAX_NUM_TAPS_RECFILTER;
+	if (iStartIndex > i2SymBlSize - HALF_MAX_NUM_TAPS_RECFILTER)
+		iStartIndex = i2SymBlSize - HALF_MAX_NUM_TAPS_RECFILTER;
+
+	const int iStart = iStartIndex - HALF_MAX_NUM_TAPS_RECFILTER;
+	const int iStop = iStartIndex + iDFTSize + HALF_MAX_NUM_TAPS_RECFILTER;
+	for (k = iStart; k < iStop; k++)
+		(*pvecOutputData)[k - iStart] = HistoryBuf[k];
 
 	/* If synchronized DRM input stream is used, overwrite the detected
 	   timing */
@@ -489,10 +493,22 @@ fflush(pFile);
 
 		/* Cut out guard-interval at right position -> no channel estimation
 		   needed when having only one path. No delay introduced in this
-		   module  */
+		   module. In case of synchronized data, no receiver filter should
+		   be applied in the OFDM module, therefore add zeros at the beginning
+		   and end to get output size which is needed for the case with using
+		   a filter */
 		for (k = iGuardSize; k < iSymbolBlockSize; k++)
-			(*pvecOutputData)[k - iGuardSize] = 
+		{
+			(*pvecOutputData)[k - iGuardSize + HALF_MAX_NUM_TAPS_RECFILTER] =
 				HistoryBuf[iTotalBufferSize - iInputBlockSize + k];
+		}
+
+		for (k = 0; k < HALF_MAX_NUM_TAPS_RECFILTER; k++)
+		{
+			(*pvecOutputData)[k] = (_REAL) 0.0;
+			(*pvecOutputData)[k + iDFTSize + HALF_MAX_NUM_TAPS_RECFILTER] =
+				(_REAL) 0.0;
+		}
 	}
 
 
@@ -707,7 +723,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iSymbolBlockSize; /* For the first loop */
-	iOutputBlockSize = iDFTSize;
+	iOutputBlockSize = iDFTSize + 2 * HALF_MAX_NUM_TAPS_RECFILTER;
 }
 
 void CTimeSync::StartAcquisition()

@@ -118,6 +118,8 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnCheckWriteLog()));
 	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()),
 		this, SLOT(OnCheckSaveAudioWAV()));
+	connect(CheckBoxRecFilter, SIGNAL(clicked()),
+		this, SLOT(OnCheckRecFilter()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
@@ -210,6 +212,8 @@ void systemevalDlg::UpdateControls()
 		setChecked(DRMReceiver.GetReceiver()->GetFlippedSpectrum());
 	CheckBoxSaveAudioWave->
 		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+
+	CheckBoxRecFilter->setChecked(DRMReceiver.GetOFDMDemod()->GetRecFilter());
 
 	/* Update frequency edit control (frequency could be changed by
 	   schedule dialog */
@@ -706,6 +710,13 @@ void systemevalDlg::OnCheckFlipSpectrum()
 	/* Set parameter in working thread module */
 	DRMReceiver.GetReceiver()->
 		SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
+}
+
+void systemevalDlg::OnCheckRecFilter()
+{
+	/* Set parameter in working thread module */
+	DRMReceiver.GetOFDMDemod()->
+		SetRecFilter(CheckBoxRecFilter->isChecked());
 }
 
 void systemevalDlg::OnCheckBoxMuteAudio()
