@@ -104,26 +104,45 @@ public:
 	void SetPlotStyle(const int iNewStyleID);
 
 protected:
-	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-				 const int  size = 0);
+	enum ECharType {DISABLE_PLOT, AVERAGED_IR, TRANSFERFUNCTION,
+					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
+					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
+					FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION};
+
+	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
-				 CVector<_REAL>& vecrScale, const int  size = 0,
-				 const int size2 = 0);
-	void SetData(CVector<_COMPLEX>& veccData, QColor color, const int  size);
+				 CVector<_REAL>& vecrScale);
+	void SetData(CVector<_COMPLEX>& veccData);
 	void SetData(CVector<_COMPLEX>& veccMSCConst,
 				 CVector<_COMPLEX>& veccSDCConst,
-				 CVector<_COMPLEX>& veccFACConst,
-				 QColor colorMSC, QColor colorSDC, QColor colorFAC);
+				 CVector<_COMPLEX>& veccFACConst);
 	void SetQAM4Grid();
 	void SetQAM16Grid();
 	void SetQAM64Grid();
 
+	void SetupAvIR();
+	void SetupTranFct();
+	void SetupAudioSpec();
+	void SetupFreqSamOffsHist();
+	void SetupDopplerDelayHist();
+	void SetupPSD();
+	void SetupInpSpec();
+	void SetupFACConst();
+	void SetupSDCConst(const CParameter::ECodScheme eNewCoSc);
+	void SetupMSCConst(const CParameter::ECodScheme eNewCoSc);
+	void SetupAllConst();
+
 	/* Colors */
-	QColor MainPenColorPlot;
-	QColor MainPenColorConst;
-	QColor MainGridColorPlot;
-	QColor SpecLine1ColorPlot;
-	QColor SpecLine2ColorPlot;
+	QColor		MainPenColorPlot;
+	QColor		MainPenColorConst;
+	QColor		MainGridColorPlot;
+	QColor		SpecLine1ColorPlot;
+	QColor		SpecLine2ColorPlot;
+
+	ECharType	CurCharType;
+	long		main1curve, main2curve;
+	long		curve1, curve2, curve3, curve4, curve5, curve6;
+	QwtSymbol	MarkerSym1, MarkerSym2, MarkerSym3;
 
 public slots:
 	void OnClicked(const QMouseEvent& e);
