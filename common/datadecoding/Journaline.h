@@ -68,6 +68,10 @@ public:
 
 	void GetNews(const int iObjID, CNews& News);
 	void AddDataUnit(CVector<_BINARY>& vecbiNewData);
+	void Reset() {ResetOpenJournalineDecoder();}
+
+protected:
+	void ResetOpenJournalineDecoder();
 };
 #else
 /* No implementation for Linux yet */
@@ -79,6 +83,7 @@ public:
 
 	void GetNews(const int iObjID, CNews& News) {}
 	void AddDataUnit(CVector<_BINARY>& vecbiNewData) {}
+	void Reset() {}
 };
 #endif
 

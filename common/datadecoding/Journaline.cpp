@@ -55,19 +55,12 @@ void dg_cb(const DAB_DATAGROUP_DECODER_msc_datagroup_header_t*,
 
 CJournaline::CJournaline()
 {
-	/* 1 MB memory for news decoder */
-	unsigned long max_memory = 1024 * 1024;
-
-	/* No limit for number of NML objects (except max_memory limitation) */
-	unsigned long max_objects = 0;
-
-	/* No extended header will be used */
-	unsigned long extended_header_len = 0;
-
-	/* Create decoder instance */
-	dgdec = DAB_DATAGROUP_DECODER_createDec(dg_cb, NULL);
-	newsdec = NEWS_SVC_DEC_createDec(obj_avail_cb, max_memory, &max_objects,
-		extended_header_len, NULL);
+	/* This will be the first call to the Journaline decoder open function, set
+	   pointer to the decoders to defined value (NULL) to avoid unpredictable
+	   behaviour in the "ResetOpenJournalineDecoder()" function */
+	dgdec = NULL;
+	newsdec = NULL;
+	ResetOpenJournalineDecoder();
 }
 
 CJournaline::~CJournaline()
@@ -82,19 +75,46 @@ CJournaline::~CJournaline()
 */
 }
 
+void CJournaline::ResetOpenJournalineDecoder()
+{
+	/* 1 MB memory for news decoder */
+	unsigned long max_memory = 1024 * 1024;
+
+	/* No limit for number of NML objects (except max_memory limitation) */
+	unsigned long max_objects = 0;
+
+	/* No extended header will be used */
+	unsigned long extended_header_len = 0;
+
+	/* If decoder was initialized before, delete old instance */
+	if (newsdec != NULL)
+		NEWS_SVC_DEC_deleteDec(newsdec);
+
+	if (dgdec != NULL)
+		DAB_DATAGROUP_DECODER_deleteDec(dgdec);
+
+	/* Create decoder instance */
+	dgdec = DAB_DATAGROUP_DECODER_createDec(dg_cb, NULL);
+	newsdec = NEWS_SVC_DEC_createDec(obj_avail_cb, max_memory, &max_objects,
+		extended_header_len, NULL);
+}
+
 void CJournaline::AddDataUnit(CVector<_BINARY>& vecbiNewData)
 {
 	const int iSizeBytes = vecbiNewData.Size() / SIZEOF__BYTE;
 
-	/* Bits to byte conversion */
-	CVector<_BYTE> vecbyData(iSizeBytes);
-	vecbiNewData.ResetBitAccess();
+	if (iSizeBytes > 0)
+	{
+		/* Bits to byte conversion */
+		CVector<_BYTE> vecbyData(iSizeBytes);
+		vecbiNewData.ResetBitAccess();
 
-	for (int i = 0; i < iSizeBytes; i++)
-		vecbyData[i] = (_BYTE) vecbiNewData.Separate(SIZEOF__BYTE);
+		for (int i = 0; i < iSizeBytes; i++)
+			vecbyData[i] = (_BYTE) vecbiNewData.Separate(SIZEOF__BYTE);
 
-	/* Add new data unit to Journaline decoder library */
-	DAB_DATAGROUP_DECODER_putData(dgdec, iSizeBytes, &vecbyData[0]);
+		/* Add new data unit to Journaline decoder library */
+		DAB_DATAGROUP_DECODER_putData(dgdec, iSizeBytes, &vecbyData[0]);
+	}
 }
 
 void CJournaline::GetNews(const int iObjID, CNews& News)
@@ -154,11 +174,11 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 				News.vecItem[i].iLink = JOURNALINE_IS_NO_LINK; /* No link */
 		}
 
-		if (iAvailIDs.Size() > 0)
+		const int iAvailIDsSize = iAvailIDs.Size();
+		if (iAvailIDsSize > 0)
 		{
 			/* Tell the decoder to keep the linked objects in cache */
-			NEWS_SVC_DEC_keep_in_cache(newsdec, iAvailIDs.Size(),
-				&iAvailIDs[0]);
+			NEWS_SVC_DEC_keep_in_cache(newsdec, iAvailIDsSize, &iAvailIDs[0]);
 		}
 
 		delete nml;
