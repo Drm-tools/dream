@@ -368,7 +368,6 @@ void CDRMReceiver::SetInTrackingModeDelayed()
 
 void CDRMReceiver::StartParameters(CParameter& Param)
 {
-	int i;
 /*
 	Reset all parameters to starting values. This is done at the startup of the
 	application and also when the S/N of the received signal is too low and
