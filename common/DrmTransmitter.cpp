@@ -52,9 +52,9 @@ void CDRMTransmitter::Stop()
 void CDRMTransmitter::Run()
 {
 /*
- The hand over of data is done via an intermediate-buffer. The calling
- convention is always "input-buffer, output-buffer". Additional, the
- DRM-parameters are fed to the function
+	The hand over of data is done via an intermediate-buffer. The calling
+	convention is always "input-buffer, output-buffer". Additional, the
+	DRM-parameters are fed to the function
 */
 	while (TransmParam.bRunThread)
 	{
