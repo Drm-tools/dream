@@ -28,6 +28,15 @@
 
 
 #include <qpushbutton.h>
+#include <qstring.h>
+#include <qlabel.h>
+#include <qradiobutton.h>
+#include <qcheckbox.h>
+#include <qlineedit.h>
+#include <qtabwidget.h>
+#include <qcombobox.h>
+#include <qstring.h>
+#include <qbuttongroup.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"
@@ -35,6 +44,7 @@
 # include "moc/TransmDlgbase.h"
 #endif
 #include "../DrmTransmitter.h"
+#include "../Parameter.h"
 
 
 /* Classes ********************************************************************/
@@ -72,7 +82,6 @@ public:
 		}
 	}
 
-protected:
 	CDRMTransmitter	DRMTransmitter;
 };
 
@@ -86,9 +95,22 @@ public:
 	virtual ~TransmDialog();
 
 protected:
+	void DisableAllControls();
+	void EnableAllControls();
+
 	CTransmitterThread	TransThread; /* Working thread object */
 	_BOOLEAN			bIsStarted;
 
 public slots:
 	void OnButtonStartStop();
+	void OnComboBoxMSCInterleaverHighlighted(int iID);
+	void OnComboBoxMSCConstellationHighlighted(int iID);
+	void OnComboBoxSDCConstellationHighlighted(int iID);
+	void OnComboBoxLanguageHighlighted(int iID);
+	void OnComboBoxProgramTypeHighlighted(int iID);
+	void OnRadioRobustnessMode(int iID);
+	void OnRadioBandwidth(int iID);
+	void OnTextChangedServiceLabel(const QString& strLabel);
+	void OnTextChangedServiceID(const QString& strID);
+	void OnTextChangedSndCrdIF(const QString& strIF);
 };
