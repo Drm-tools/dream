@@ -84,7 +84,8 @@ inline CReal				Max(const CReal& rA, const CReal& rB)
 inline CMatlibVector<CReal>	Max(const CMatlibVector<CReal>& fvA, const CMatlibVector<CReal>& fvB)
 								{_VECOP(CReal, fvA.GetSize(), Max(fvA[i], fvB[i]));}
 template<class T> T			Max(const CMatlibVector<T>& vecI);
-template<class T> void		Max(T& tMaxVal, int& iMaxInd, const CMatlibVector<T>& vecI);
+template<class T> void		Max(T& tMaxVal /* out */, int& iMaxInd /* out */,
+								const CMatlibVector<T>& vecI /* in */);
 
 
 inline CMatlibVector<CReal>	Ones(const int iLen)
