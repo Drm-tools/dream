@@ -87,10 +87,10 @@ using namespace std; /* Because of the library: "complex" */
    CPU usage. Also, the frequency tracking range is smaller */
 #undef USE_FRQOFFS_TRACK_GUARDCORR
 
-/* The frequency offset estimation can be done using the frequency pilots or the
-   movement of the estimated impulse response. Defining this macro will enable
-   the frequency pilot based estimation. Simulations showed that this method is
-   more vulnerable to bad channel situations */
+/* The sample rate offset estimation can be done using the frequency pilots or
+   the movement of the estimated impulse response. Defining this macro will
+   enable the frequency pilot based estimation. Simulations showed that this
+   method is more vulnerable to bad channel situations */
 #undef USE_SAMOFFS_TRACK_FRE_PIL
 
 /* Using max-log MAP decoder. A lot more memory and CPU is needed for this
