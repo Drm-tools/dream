@@ -62,16 +62,16 @@ void CDRMSimulation::SimScript()
 		Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
 
-		Param.iDRMChannelNo = 4;
+		Param.iDRMChannelNo = 1;
 
-		rStartSNR = (_REAL) 200.0;
-		rEndSNR = (_REAL) 200.0;
-		rStepSNR = (_REAL) 1.0;
+		rStartSNR = (_REAL) 14.0;
+		rEndSNR = (_REAL) 26.0;
+		rStepSNR = (_REAL) 0.2;
 		strSpecialRemark = "test";
 
 		/* Length of simulation */
-		iSimTime = 5;
-//		iSimNumErrors = 400000;
+		iSimTime = 2000;
+//		iSimNumErrors = 100000;
 
 
 ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
