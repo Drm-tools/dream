@@ -238,7 +238,8 @@ void ParseArguments(int argc, char** argv)
 			if (++i >= argc)
 			{
 				cerr << argv[0] << ": ";
-				cerr << "'--mlciter' needs a numeric argument between 0 and 4." << endl;
+				cerr << "'--mlciter' needs a numeric argument between 0 and 4."
+					<< endl;
 				exit(1);
 			}
 
@@ -247,11 +248,82 @@ void ParseArguments(int argc, char** argv)
 			if (*p || n < 0 || n > 4)
 			{
 				cerr << argv[0] << ": ";
-				cerr << "'--mlciter' needs a numeric argument between 0 and 4." << endl;
+				cerr << "'--mlciter' needs a numeric argument between 0 and 4."
+					<< endl;
 				exit(1);
 			}
 
 			DRMReceiver.GetMSCMLC()->SetNumIterations(n);
+			continue;
+		}
+
+
+		/* Start log file flag ---------------------------------------------- */
+		if ((!strcmp(argv[i], "--startlog")) ||
+			(!strcmp(argv[i], "-l")))
+		{
+			DRMReceiver.GetParameters()->ReceptLog.SetDelLogStart();
+			continue;
+		}
+
+
+		/* Frequency for log file ------------------------------------------- */
+		if ((!strcmp(argv[i], "--frequency")) ||
+			(!strcmp(argv[i], "-r")))
+		{
+			if (++i >= argc)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--frequency' needs a numeric argument."
+					<< endl;
+				exit(1);
+			}
+
+			char *p;
+			int n = strtol(argv[i], &p, 10);
+			if (*p || n < 0)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--frequency' needs a numeric argument."
+					<< endl;
+				exit(1);
+			}
+
+			DRMReceiver.GetParameters()->ReceptLog.SetFrequency(n);
+			continue;
+		}
+
+
+		/* Latitude string for log file ------------------------------------- */
+		if ((!strcmp(argv[i], "--latitude")) ||
+			(!strcmp(argv[i], "-a")))
+		{
+			if (++i >= argc)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--latitude' needs a string argument."
+					<< endl;
+				exit(1);
+			}
+
+			DRMReceiver.GetParameters()->ReceptLog.SetLatitude(argv[i]);
+			continue;
+		}
+
+
+		/* Longitude string for log file ------------------------------------ */
+		if ((!strcmp(argv[i], "--longitude")) ||
+			(!strcmp(argv[i], "-o")))
+		{
+			if (++i >= argc)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--longitude' needs a string argument."
+					<< endl;
+				exit(1);
+			}
+
+			DRMReceiver.GetParameters()->ReceptLog.SetLongitude(argv[i]);
 			continue;
 		}
 
@@ -263,7 +335,8 @@ void ParseArguments(int argc, char** argv)
 			if (++i >= argc)
 			{
 				cerr << argv[0] << ": ";
-				cerr << "'--sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
+				cerr << "'--sampleoff' needs a numeric argument between -200.0"
+					" and 200.0." << endl;
 				exit(1);
 			}
 
@@ -272,7 +345,8 @@ void ParseArguments(int argc, char** argv)
 			if (*p || r < (_REAL) -200.0 || r > (_REAL) 200.0)
 			{
 				cerr << argv[0] << ": ";
-				cerr << "'--sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
+				cerr << "'--sampleoff' needs a numeric argument between -200.0"
+					" and 200.0." << endl;
 				exit(1);
 			}
 
@@ -293,7 +367,9 @@ void ParseArguments(int argc, char** argv)
 
 		/* Unknown option --------------------------------------------------- */
 		cerr << argv[0] << ": ";
-		cerr << "Unknown option '" << argv[i] << "' -- use '--help' for help" << endl;
+		cerr << "Unknown option '" << argv[i] << "' -- use '--help' for help"
+			<< endl;
+
 		exit(1);
 	}
 }
@@ -308,13 +384,24 @@ void UsageArguments(char** argv)
 	cerr << "  -i <n>, --mlciter <n>      number of MLC iterations" << endl;
 	cerr << "                             allowed range: 0...4" << endl;
 	cerr << "                             default: 1" << endl;
-	cerr << "  -s <r>, --sampleoff <r>    sample rate offset initial value [Hz]" << endl;
-	cerr << "                             allowed range: -200.0...200.0" << endl;
+	cerr << "  -s <r>, --sampleoff <r>    sample rate offset initial value [Hz]"
+		<< endl;
+	cerr << "                             allowed range: -200.0...200.0"
+		<< endl;
 	cerr << "  -m, --muteaudio            mute audio output" << endl;
 	cerr << "  -f, --fromfile             disable sound card," << endl;
 	cerr << "                             read from file instead" << endl;
+	cerr << "  -r <n>, --frequency <n>    set frequency [kHz] for log file"
+		<< endl;
+	cerr << "  -a <s>, --latitude <s>     set latitude string for log file"
+		<< endl;
+	cerr << "  -o <s>, --longitude <s>    set longitude string for log file"
+		<< endl;
+	cerr << "  -l, --startlog             start log file (delayed)" << endl;
+	cerr << endl;
 	cerr << "  -h, -?, --help             this help text" << endl;
 	cerr << endl;
-	cerr << "Example: " << argv[0] << " -p --sampleoff -0.23 -i 2" << endl;
+	cerr << "Example: " << argv[0] <<
+		" -p --sampleoff -0.23 -i 2 -r 6140 -a 50°13\\'N -o 8°34\\'E" << endl;
 	cerr << endl;
 }
