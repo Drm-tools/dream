@@ -392,6 +392,8 @@ public:
 		string			strLatitude;
 		string			strLongitude;
 		_BOOLEAN		bDelayedLogStart;
+
+		CMutex			Mutex;
 	} ReceptLog;
 
 

@@ -567,10 +567,14 @@ void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
 	{
+		Mutex.Lock();
+
 		if (bCRCOk == TRUE)
 			iNumSyncOk++;
 
 		iNumSync++;
+
+		Mutex.Unlock();
 	}
 }
 
@@ -578,10 +582,14 @@ void CParameter::CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
 	{
+		Mutex.Lock();
+
 		if (bCRCOk == TRUE)
 			iNumCRCOkFAC++;
 
 		iNumCRCFAC++;
+
+		Mutex.Unlock();
 	}
 }
 
@@ -589,10 +597,14 @@ void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
 	{
+		Mutex.Lock();
+
 		if (bCRCOk == TRUE)
 			iNumCRCOkMSC++;
 
 		iNumCRCMSC++;
+
+		Mutex.Unlock();
 	}
 }
 
@@ -600,10 +612,14 @@ void CParameter::CReceptLog::SetSNR(const _REAL rCurSNR)
 {
 	if (bLogActivated == TRUE)
 	{
+		Mutex.Lock();
+
 		iNumSNR++;
 
 		/* Average SNR values */
 		rAvSNR += rCurSNR;
+
+		Mutex.Unlock();
 	}
 }
 
@@ -626,6 +642,8 @@ void CParameter::CReceptLog::SetLog(const _BOOLEAN bLog)
 	/* Open or close the file */
 	if (bLogActivated == TRUE)
 	{
+		Mutex.Lock();
+
 		/* Get time and date */
 		time(&ltime);
 		today = gmtime(&ltime); /* Should be UTC time */
@@ -667,6 +685,8 @@ void CParameter::CReceptLog::SetLog(const _BOOLEAN bLog)
 
 		/* Reset time count */
 		iTimeCnt = 0;
+
+		Mutex.Unlock();
 	}
 	else
 		CloseFile();
@@ -695,6 +715,8 @@ void CParameter::CReceptLog::WriteParameters()
 	{
 		if (bLogActivated == TRUE)
 		{
+			Mutex.Lock();
+
 			/* Avoid division by zero */
 			if (iNumSNR == 0)
 				iAverageSNR = 0;
@@ -731,10 +753,12 @@ void CParameter::CReceptLog::WriteParameters()
 
 			fprintf(pFile, "\n"); /* New line */
 			fflush(pFile);
-		}
 
-		ResetLog();
-		iTimeCnt++;
+			ResetLog();
+			iTimeCnt++;
+
+			Mutex.Unlock();
+		}
 	}
 
 	catch (...)
