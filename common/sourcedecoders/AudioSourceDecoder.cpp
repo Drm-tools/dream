@@ -39,7 +39,7 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	_BOOLEAN			bGoodValues;
 	short*				psDecOutSampleBuf;
 	int					iResOutLength;
-    faacDecFrameInfo	DecFrameInfo;
+	faacDecFrameInfo	DecFrameInfo;
 
 
 	/* Text Message ***********************************************************/
@@ -158,8 +158,21 @@ fflush(pFile2);
 
 		if (DecFrameInfo.error != 0)
 		{
-			/* Post message to show that CRC was wrong */
-			PostWinMessage(MS_MSC_CRC, 2);
+			/* Set AAC in log file */
+			ReceiverParam.ReceptLog.SetMSC(FALSE);
+
+			if (bAudioWasOK == TRUE)
+			{
+				bAudioWasOK = FALSE;
+
+				/* Post message to show that CRC was wrong (yellow light) */
+				PostWinMessage(MS_MSC_CRC, 1);
+			}
+			else
+			{
+				/* Post message to show that CRC was wrong (red light) */
+				PostWinMessage(MS_MSC_CRC, 2);
+			}
 
 			/* Average block with flipped block for smoother transition */
 			for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH / 2; i++)
@@ -171,7 +184,7 @@ fflush(pFile2);
 					vecTempResBufInRight[AUD_DEC_TRANSFROM_LENGTH - i - 1]) / 2;
 			}
 
-			/* Attenuated the gain exponentially */
+			/* Attenuate the gain exponentially */
 			for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH; i++)
 			{
 				vecTempResBufInLeft[i] *= FORFACT_AUD_BL_BAD_CRC;
@@ -180,8 +193,12 @@ fflush(pFile2);
 		}
 		else
 		{
-			/* Post message to show that CRC was OK */
+			/* Set AAC in log file */
+			ReceiverParam.ReceptLog.SetMSC(TRUE);
+
+			/* Post message to show that CRC was OK and reset flag */
 			PostWinMessage(MS_MSC_CRC, 0);
+			bAudioWasOK = TRUE;
 
 			/* Conversion from _SAMPLE vector to _REAL vector for resampling. 
 			   ATTENTION: We use a vector which was allocated inside 
@@ -269,8 +286,14 @@ try
 			break;
 		}
 
+		/* Set number of AAC frames for log file */
+		ReceiverParam.ReceptLog.SetNumAAC(iNumAACFrames);
+
 		/* Set number of boarders */
 		iNoBorders = iNumAACFrames - 1;
+
+		/* Init "audio was ok" flag */
+		bAudioWasOK = TRUE;
 
 		/* If text message application is used or not */
 		switch (ReceiverParam.Service[iCurSelServ].AudioParam.bTextflag)

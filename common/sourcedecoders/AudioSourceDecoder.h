@@ -88,6 +88,8 @@ protected:
 
 	CVector<_BINARY>	vecbiTextMessBuf;
 
+	_BOOLEAN			bAudioWasOK;
+
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
