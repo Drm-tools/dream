@@ -151,28 +151,40 @@ void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 	}
 }
 
-_REAL CParameter::GetBitRateKbps(int iServiceID)
+_REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 {
 	int iNoBitsPerFrame;
-	int iLenPartA;
-	int iLenPartB;
+			
+	/* Init lengths to zero in case the stream is not yet assigned */
+	int iLenPartA = 0;
+	int iLenPartB = 0;
 
 	/* First, check if audio or data service and get lengths */
 	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
-		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
+		/* Check if we want to get the data stream connected to an audio
+		   stream */
+		if (bAudData == TRUE)
 		{
-			iLenPartA =
-				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
+			if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
+			{
+				iLenPartA =
+					Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
 
-			iLenPartB =
-				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
+				iLenPartB =
+					Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
+			}
 		}
 		else
 		{
-			/* Stream is not yet assigned, set lengths to zero */
-			iLenPartA = 0;
-			iLenPartB = 0;
+			if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
+			{
+				iLenPartA =
+					Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
+
+				iLenPartB =
+					Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
+			}
 		}
 	}
 	else
@@ -184,12 +196,6 @@ _REAL CParameter::GetBitRateKbps(int iServiceID)
 
 			iLenPartB =
 				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
-		}
-		else
-		{
-			/* Stream is not yet assigned, set lengths to zero */
-			iLenPartA = 0;
-			iLenPartB = 0;
 		}
 	}
 

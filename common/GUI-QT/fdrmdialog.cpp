@@ -453,9 +453,10 @@ void FDRMDialog::OnTimer()
 		/* Service selector ------------------------------------------------- */
 		QString strSpace = "   |   ";
 
-		/* Enable only so many number of channel switches as present in the 
+		/* Enable only so many number of channel switches as present in the
 		   stream */
-		int iNumServices = DRMReceiver.GetParameters()->GetTotNumServices();
+		const int iNumServices =
+			DRMReceiver.GetParameters()->GetTotNumServices();
 
 		QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
 
@@ -485,7 +486,8 @@ void FDRMDialog::OnTimer()
 
 				/* Bit-rate */
 				m_StaticService[i] += " (" + QString().setNum(DRMReceiver.
-					GetParameters()->GetBitRateKbps(i), 'f', 2) + " kbps)";
+					GetParameters()->GetBitRateKbps(i, FALSE), 'f', 2) +
+					" kbps)";
 
 				/* Show, if a multimedia stream is connected to this service */
 				if ((DRMReceiver.GetParameters()->Service[i].
@@ -494,6 +496,11 @@ void FDRMDialog::OnTimer()
 					DataParam.iStreamID != STREAM_ID_NOT_USED))
 				{
 					m_StaticService[i] += " + MM";
+
+					/* Bit-rate of connected data stream */
+					m_StaticService[i] += " (" + QString().setNum(DRMReceiver.
+						GetParameters()->GetBitRateKbps(i, TRUE), 'f', 2) +
+						" kbps)";
 				}
 
 				switch (i)
@@ -876,7 +883,7 @@ QString	FDRMDialog::SetBitrIDStr(int iServiceID)
 {
 	/* Bit-rate */
 	QString strServIDBitrate = "Bit Rate:" + QString().setNum(DRMReceiver.
-		GetParameters()->GetBitRateKbps(iServiceID), 'f', 2) + " kbps";
+		GetParameters()->GetBitRateKbps(iServiceID, FALSE), 'f', 2) + " kbps";
 
 	/* Equal or unequal error protection */
 	if (DRMReceiver.GetParameters()->IsEEP(iServiceID) == TRUE)
