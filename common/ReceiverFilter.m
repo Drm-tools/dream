@@ -29,24 +29,25 @@
 function [] = ReceiverFilter()
 PLOT = 1;
 
-nTaps4_5 = 320;
-nTaps5 = 320;
-nTaps9 = 250;
-nTaps10 = 250;
-nTaps18 = 200;
-nTaps20 = 200;
-ftrans5 = 500; % Size of transition region
-ftrans10 = 650; % Size of transition region
-ftrans20 = 800; % Size of transition region
+nTaps4_5 = 250;
+nTaps5 = 250;
+nTaps9 = 230;
+nTaps10 = 230;
+nTaps18 = 210;
+nTaps20 = 210;
+ftrans5 = 300; % Size of transition region
+ftrans10 = 400; % Size of transition region
+ftrans20 = 500; % Size of transition region
 fs = 48000; % Constant for all cases
 
 % Actual filter design for all DRM modes
-h4_5 = DesignFilter(0, 4500, ftrans5, nTaps4_5, fs); % 4.5 kHz
-h5 = DesignFilter(0, 5000, ftrans5, nTaps5, fs); % 5 kHz
-h9 = DesignFilter(0, 9000, ftrans10, nTaps9, fs); % 9 kHz
-h10 = DesignFilter(0, 10000, ftrans10, nTaps10, fs); % 10 kHz
-h18 = DesignFilter(0, 18000, ftrans20, nTaps18, fs); % 18 kHz
-h20 = DesignFilter(0, 20000, ftrans20, nTaps20, fs); % 20 kHz
+Offset = -500;
+h4_5 = DesignFilter(0, 4500 + Offset, ftrans5, nTaps4_5, fs); % 4.5 kHz
+h5 = DesignFilter(0, 5000 + Offset, ftrans5, nTaps5, fs); % 5 kHz
+h9 = DesignFilter(0, 9000 + Offset, ftrans10, nTaps9, fs); % 9 kHz
+h10 = DesignFilter(0, 10000 + Offset, ftrans10, nTaps10, fs); % 10 kHz
+h18 = DesignFilter(0, 18000 + Offset, ftrans20, nTaps18, fs); % 18 kHz
+h20 = DesignFilter(0, 20000 + Offset, ftrans20, nTaps20, fs); % 20 kHz
 
 if (PLOT == 1)
     close all;
@@ -146,11 +147,16 @@ return;
 
 
 function [b] = DesignFilter(fstart, fstop, ftrans, nhil, fs)
-    % Parks-McClellan optimal equiripple FIR filter design
 	B = fstop - fstart;
-
 	f = [0  B / 2  B / 2 + ftrans  fs / 2];
-	m = [2 2 0 0];
 
-	b = remez(nhil - 1, f * 2 / fs, m, [1 50]);
+if 0    
+    % Parks-McClellan optimal equiripple FIR filter design
+	m = [2 2 0 0];
+	b = remez(nhil - 1, f * 2 / fs, m, [1 0.3]);
+else
+    % FIR least squares design
+    beta = 3;
+    b = firls(nhil - 1, f * 2 / fs, [1 1 0 0]) .* kaiser(nhil, beta)' .* 2;
+end
 return;
