@@ -36,8 +36,6 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	int				i;
 	int				iDistCnt;
 	int				iCurDecState;
-	_VITMETRTYPE	rAccMetricPrev0;
-	_VITMETRTYPE	rAccMetricPrev1;
 	_VITMETRTYPE*	pCurTrelMetric;
 	_VITMETRTYPE*	pOldTrelMetric;
 
@@ -121,13 +119,13 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			/* Calculate "subsets" of bit-combinations. "rIRxx00" means that
 			   the fist two bits are used, others are x-ed. "IR" stands for
 			   "intermediate result" */
-			_REAL rIRxx00 =
+			const _REAL rIRxx00 =
 				vecNewDistance[iPos1].rTow0 + vecNewDistance[iPos0].rTow0;
-			_REAL rIRxx10 =
+			const _REAL rIRxx10 =
 				vecNewDistance[iPos1].rTow1 + vecNewDistance[iPos0].rTow0;
-			_REAL rIRxx01 =
+			const _REAL rIRxx01 =
 				vecNewDistance[iPos1].rTow0 + vecNewDistance[iPos0].rTow1;
-			_REAL rIRxx11 =
+			const _REAL rIRxx11 =
 				vecNewDistance[iPos1].rTow1 + vecNewDistance[iPos0].rTow1;
 
 			if (veciTablePuncPat[i] == PP_TYPE_0101)
@@ -182,13 +180,13 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 					/* Calculate "subsets" of bit-combinations. "rIRxx00" means
 					   that the last two bits are used, others are x-ed.
 					   "IR" stands for "intermediate result" */
-					_REAL rIR00xx = vecNewDistance[iPos3].rTow0 +
+					const _REAL rIR00xx = vecNewDistance[iPos3].rTow0 +
 						vecNewDistance[iPos2].rTow0;
-					_REAL rIR10xx = vecNewDistance[iPos3].rTow1 +
+					const _REAL rIR10xx = vecNewDistance[iPos3].rTow1 +
 						vecNewDistance[iPos2].rTow0;
-					_REAL rIR01xx = vecNewDistance[iPos3].rTow0 +
+					const _REAL rIR01xx = vecNewDistance[iPos3].rTow0 +
 						vecNewDistance[iPos2].rTow1;
-					_REAL rIR11xx = vecNewDistance[iPos3].rTow1 +
+					const _REAL rIR11xx = vecNewDistance[iPos3].rTow1 +
 						vecNewDistance[iPos2].rTow1;
 
 					vecrMetricSet[ 0] = rIR00xx + rIRxx00; /* 0 */
@@ -222,39 +220,43 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			/* First state in this set ------------------------------------ */ \
 			/* Calculate metrics from the two previous states, use the old
 			   metric from the previous states plus the "transition-metric" */ \
-			rAccMetricPrev0 = pOldTrelMetric[prev0] + vecrMetricSet[met0]; \
-			rAccMetricPrev1 = pOldTrelMetric[prev1] + vecrMetricSet[met1]; \
+			const _VITMETRTYPE rFiStAccMetricPrev0 = \
+				pOldTrelMetric[prev0] + vecrMetricSet[met0]; \
+			const _VITMETRTYPE  rFiStAccMetricPrev1 = \
+				pOldTrelMetric[prev1] + vecrMetricSet[met1]; \
 			\
 			/* Take path with smallest metric */ \
-			if (rAccMetricPrev0 < rAccMetricPrev1) \
+			if (rFiStAccMetricPrev0 < rFiStAccMetricPrev1) \
 			{ \
 				/* Save minimum metric for this state and store decision */ \
-				pCurTrelMetric[cur] = rAccMetricPrev0; \
+				pCurTrelMetric[cur] = rFiStAccMetricPrev0; \
 				matbiDecisions[i][cur] = 0; \
 			} \
 			else \
 			{ \
 				/* Save minimum metric for this state and store decision */ \
-				pCurTrelMetric[cur] = rAccMetricPrev1; \
+				pCurTrelMetric[cur] = rFiStAccMetricPrev1; \
 				matbiDecisions[i][cur] = 1; \
 			} \
 			\
 			/* Second state in this set ----------------------------------- */ \
 			/* The only difference is that we swapped the matric sets */ \
-			rAccMetricPrev0 = pOldTrelMetric[prev0] + vecrMetricSet[met1]; \
-			rAccMetricPrev1 = pOldTrelMetric[prev1] + vecrMetricSet[met0]; \
+			const _VITMETRTYPE rSecStAccMetricPrev0 = \
+				pOldTrelMetric[prev0] + vecrMetricSet[met1]; \
+			const _VITMETRTYPE  rSecStAccMetricPrev1 = \
+				pOldTrelMetric[prev1] + vecrMetricSet[met0]; \
 			\
 			/* Take path with smallest metric */ \
-			if (rAccMetricPrev0 < rAccMetricPrev1) \
+			if (rSecStAccMetricPrev0 < rSecStAccMetricPrev1) \
 			{ \
 				/* Save minimum metric for this state and store decision */ \
-				pCurTrelMetric[next] = rAccMetricPrev0; \
+				pCurTrelMetric[next] = rSecStAccMetricPrev0; \
 				matbiDecisions[i][next] = 0; \
 			} \
 			else \
 			{ \
 				/* Save minimum metric for this state and store decision */ \
-				pCurTrelMetric[next] = rAccMetricPrev1; \
+				pCurTrelMetric[next] = rSecStAccMetricPrev1; \
 				matbiDecisions[i][next] = 1; \
 			} \
 		}
