@@ -285,8 +285,9 @@ void systemevalDlg::OnTimerChart()
 
 void systemevalDlg::OnTimer()
 {
-	/* SNR estimation ------------------------------------------------------- */
 	_REAL rSNREstimate;
+	QString strTextWiener = "Doppler / Delay: \t\n";
+	QString strTextFreqOffs = "Sample Frequency Offset: \t\n";
 
 	/* Show SNR if receiver is in tracking mode */
 	if (DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
@@ -305,12 +306,26 @@ void systemevalDlg::OnTimer()
 
 		/* Set SNR for log file */
 		DRMReceiver.GetParameters()->ReceptLog.SetSNR(rSNREstimate);
+
+		/* Doppler estimation (assuming Gaussian doppler spectrum) */
+		TextWiener->setText(strTextWiener +
+			QString().setNum(
+			DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz / " +
+			QString().setNum(
+			DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
+
+		/* Sample frequency offset estimation */
+		TextSampFreqOffset->setText(strTextFreqOffs + QString().
+			setNum(DRMReceiver.GetParameters()->GetSampFreqEst(), 'f', 2) +	" Hz");
 	}
 	else
 	{
 		rSNREstimate = 0;
 
 		TextSNR->setText("SNR<br><b>---</b>");
+
+		TextWiener->setText(strTextWiener + "--- / ---");
+		TextSampFreqOffset->setText(strTextFreqOffs + "---");
 	}
 	ThermoSNR->setValue(rSNREstimate);
 
@@ -332,19 +347,6 @@ void systemevalDlg::OnTimer()
 		QString().setNum(
 		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
 #endif
-
-
-	/* Doppler estimation (assuming Gaussian doppler spectrum) */
-	TextWiener->setText("Doppler / Delay: \t\n" +
-		QString().setNum(
-		DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz / " +
-		QString().setNum(
-		DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
-
-
-	/* Sample frequency offset estimation */
-	TextSampFreqOffset->setText("Sample Frequency Offset: \t\n" + QString().
-		setNum(DRMReceiver.GetParameters()->GetSampFreqEst(), 'f', 2) +	" Hz");
 
 
 	/* FAC info static ------------------------------------------------------ */
