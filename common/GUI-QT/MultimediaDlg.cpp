@@ -334,7 +334,7 @@ void MultimediaDlg::SetSlideShowPicture()
 
 	/* Load picture in QT format */
 	bPicLoadSuccess = NewImage.loadFromData(&vecbyCurPict.vecbRawData[0],
-		iPicSize, QString(vecbyCurPict.strFormat.c_str()));
+		iPicSize);
 
 	if (bPicLoadSuccess == TRUE)
 	{
