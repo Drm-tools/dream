@@ -89,10 +89,10 @@ void CDRMSimulation::Run()
 		/**********************************************************************\
 		* Receiver    														   *
 		\**********************************************************************/
-switch (eSimType)
+switch (Param.eSimType)
 {
-case ST_MSECHANEST:
-case ST_BER_IDEALCHAN:
+case CParameter::ST_MSECHANEST:
+case CParameter::ST_BER_IDEALCHAN:
 		/* MSE of channel estimation, ideal channel estimation -------------- */
 		/* Special OFDM demodulation for channel estimation tests (with guard-
 		   interval removal) */
@@ -108,7 +108,7 @@ case ST_BER_IDEALCHAN:
 	break;
 
 
-case ST_BITERROR:
+case CParameter::ST_BITERROR:
 		/* Bit error rate (we can use all synchronization units here!) ------ */
 		/* This module converts the "CChanSimDataMod" data type of "DRMChannel"
 		   to the "_REAL" data type, because a regular module can only have ONE
@@ -208,10 +208,10 @@ void CDRMSimulation::Init()
 	DRMChannel.Init(Param, RecDataBuf);
 
 	/* Mode dependent initializations */
-	switch (eSimType)
+	switch (Param.eSimType)
 	{
-	case ST_MSECHANEST:
-	case ST_BER_IDEALCHAN:
+	case CParameter::ST_MSECHANEST:
+	case CParameter::ST_BER_IDEALCHAN:
 		/* Init OFDM demod before IdealChanEst, because the timing offset of
 		   useful part extraction is set here */
 		OFDMDemodSimulation.Init(Param, ChanEstInBufSim, OFDMDemodBufChan2);
@@ -222,7 +222,7 @@ void CDRMSimulation::Init()
 		IdealChanEst.Init(Param, ChanEstBuf);
 		break;
 
-	case ST_BITERROR:
+	case CParameter::ST_BITERROR:
 		DataConvChanResam.Init(Param, ChanResInBuf);
 
 		OFDMDemodulation.Init(Param, OFDMDemodBuf);
@@ -233,6 +233,11 @@ void CDRMSimulation::Init()
 	TimeSync.StopTimingAcqu();
 	TimeSync.StopRMDetAcqu(); /* Robustness mode detection */
 	ChannelEstimation.GetTimeSyncTrack()->StartTracking();
+
+	/* We stop tracking of time wiener interpolation since during acquisition,
+	   no automatic update of the statistic estimates is done. We need that
+	   because we set the correct parameters once in the init routine */
+	ChannelEstimation.GetTimeWiener()->StopTracking();
 
 	/* Disable FAC evaluation to make sure that no mistakenly correct CRC
 	   sets false parameters which can cause run-time errors */

@@ -53,8 +53,6 @@
 class CDRMSimulation
 {
 public:
-	enum ESimType {ST_NONE, ST_BITERROR, ST_MSECHANEST, ST_BER_IDEALCHAN};
-
 	CDRMSimulation();
 	virtual ~CDRMSimulation() {}
 
@@ -65,9 +63,7 @@ public:
 protected:
 	void Run();
 	void Init();
-	string SimFileName(CParameter& Param, ESimType eNewType, string strAddInf);
-
-	ESimType				eSimType;
+	string SimFileName(CParameter& Param, string strAddInf);
 
 	/* Parameters */
 	CParameter				Param;

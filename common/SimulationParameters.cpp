@@ -49,29 +49,40 @@ void CDRMSimulation::SimScript()
 	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
-	eSimType = ST_MSECHANEST;
-	eSimType = ST_BITERROR;
-	eSimType = ST_BER_IDEALCHAN;
-	eSimType = ST_NONE;
+	Param.eSimType = CParameter::ST_MSECHANEST;
+	Param.eSimType = CParameter::ST_BER_IDEALCHAN;
+	Param.eSimType = CParameter::ST_BITERROR;
+	Param.eSimType = CParameter::ST_NONE;
 	
-	if (eSimType != ST_NONE)
+	if (Param.eSimType != CParameter::ST_NONE)
 	{
-		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
-		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-		Param.MSCPrLe.iPartB = 1;
-		Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
-		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
+		Param.iDRMChannelNo = 2;
 
-		Param.iDRMChannelNo = 1;
-
-		rStartSNR = (_REAL) 14.0;
-		rEndSNR = (_REAL) 26.0;
-		rStepSNR = (_REAL) 0.2;
-		strSpecialRemark = "test";
+		rStartSNR = (_REAL) 12.0;
+		rEndSNR = (_REAL) 16.5;
+		rStepSNR = (_REAL) 0.3;
+		strSpecialRemark = "blunaNM";
 
 		/* Length of simulation */
-		iSimTime = 2000;
-//		iSimNumErrors = 100000;
+//		iSimTime = 10;
+		iSimNumErrors = 200000;
+
+		
+		
+		if (Param.iDRMChannelNo < 3)
+		{
+			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2);
+			Param.eSymbolInterlMode = CParameter::SI_SHORT;
+		}
+		else
+		{
+			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+			Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
+		}
+
+		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
+		Param.MSCPrLe.iPartB = 1;
+		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
 
 
 ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
@@ -115,16 +126,16 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		/* Set simulation time or number of errors */
 		if (iSimTime != 0)
 			GenSimData.SetSimTime(iSimTime, 
-				SimFileName(Param, eSimType, strSpecialRemark));
+				SimFileName(Param, strSpecialRemark));
 		else
 			GenSimData.SetNoErrors(iSimNumErrors, 
-				SimFileName(Param, eSimType, strSpecialRemark));
+				SimFileName(Param, strSpecialRemark));
 
-		if (eSimType == ST_MSECHANEST)
+		if (Param.eSimType == CParameter::ST_MSECHANEST)
 		{
 			/* Open simulation file */
 			strSimFile = string("test/") +
-				SimFileName(Param, eSimType, strSpecialRemark) + string(".dat");
+				SimFileName(Param, strSpecialRemark) + string(".dat");
 			pFileMSE = fopen(strSimFile.c_str(), "w");
 
 			Param.rSimSNRdB = rStartSNR;
@@ -144,7 +155,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		{
 			/* Open simulation file */
 			strSimFile = string("test/") +
-				SimFileName(Param, eSimType, strSpecialRemark) + string(".dat");
+				SimFileName(Param, strSpecialRemark) + string(".dat");
 			pFileBitEr = fopen(strSimFile.c_str(), "w");
 
 			for (rSNRCnt = rStartSNR; rSNRCnt <= rEndSNR; rSNRCnt += rStepSNR)
@@ -153,12 +164,12 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 
 				Run();
 
+				/* Show results directly */
+				printf("%e %e\n", rSNRCnt, Param.rBitErrRate);
+
 				/* Save results */
 				fprintf(pFileBitEr, "%e %e\n", rSNRCnt, Param.rBitErrRate);
 				fflush(pFileBitEr);
-
-				/* Additionally, show results directly */
-				printf("%e %e\n", rSNRCnt, Param.rBitErrRate);
 			}
 
 			fclose(pFileBitEr);
@@ -167,12 +178,11 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 
 
 	/* At the end of the simulation, exit the application */
-	if (eSimType != ST_NONE)
+	if (Param.eSimType != CParameter::ST_NONE)
 		exit(1);
 }
 
-string CDRMSimulation::SimFileName(CParameter& Param, ESimType eNewType,
-								   string strAddInf)
+string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 {
 	/* File naming convention:
 	   BER: Bit error rate simulation
@@ -187,18 +197,25 @@ string CDRMSimulation::SimFileName(CParameter& Param, ESimType eNewType,
 	string strFileName = "";
 
 	/* What type of simulation */
-	switch (eNewType)
+	switch (Param.eSimType)
 	{
-	case ST_BITERROR:
+	case CParameter::ST_BITERROR:
 		strFileName += "BER_";
 		break;
-	case ST_MSECHANEST:
+	case CParameter::ST_MSECHANEST:
 		strFileName += "MSE_";
 		break;
-	case ST_BER_IDEALCHAN:
+	case CParameter::ST_BER_IDEALCHAN:
 		strFileName += "BERIDEAL_";
 		break;
 	}
+
+	/* Channel number */
+	strFileName += "CH";
+	char chNumTmp;
+	sprintf(&chNumTmp, "%d", Param.iDRMChannelNo);
+	strFileName += chNumTmp;
+	strFileName += "_";
 
 	/* Robustness mode and spectrum occupancy */
 	switch (Param.GetWaveMode())
@@ -237,13 +254,6 @@ string CDRMSimulation::SimFileName(CParameter& Param, ESimType eNewType,
 		strFileName += "5_";
 		break;
 	}
-
-	/* Channel number */
-	strFileName += "CH";
-	char chNumTmp;
-	sprintf(&chNumTmp, "%d", Param.iDRMChannelNo);
-	strFileName += chNumTmp;
-	strFileName += "_";
 
 	/* Number of error events */
 	char chNumTmpLong[10];

@@ -86,7 +86,10 @@ public:
 	enum ESymIntMod {SI_LONG, SI_SHORT};
 
 	/* CT: Channel Type */
-	enum EChanType {CT_MSC, CT_SDC, CT_FAC};	
+	enum EChanType {CT_MSC, CT_SDC, CT_FAC};
+
+	/* ST: Simulation Type */
+	enum ESimType {ST_NONE, ST_BITERROR, ST_MSECHANEST, ST_BER_IDEALCHAN};
 
 
 	/* Classes -------------------------------------------------------------- */
@@ -372,6 +375,8 @@ public:
 
 
 	/* Simulation ----------------------------------------------------------- */
+	ESimType			eSimType;
+
 	int					iDRMChannelNo;
 	_REAL				rSimSNRdB;
 	_REAL				rBitErrRate;
