@@ -93,6 +93,9 @@ protected:
 	_REAL					rUsefPowAv;
 	_REAL					rSNREstimate;
 
+	CReal					rLamPSD;
+	CReal					rLamSNREst;
+
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };

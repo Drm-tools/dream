@@ -13,16 +13,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -55,7 +55,7 @@ void COFDMModulation::ProcessDataInternal(CParameter& TransmParam)
 
 	/* Copy complex FFT output in output buffer */
 	for (i = 0; i < iDFTSize; i++)
-		(*pvecOutputData)[i + iGuardSize] = 
+		(*pvecOutputData)[i + iGuardSize] =
 			_COMPLEX(veccFFTWOutput[i].re, veccFFTWOutput[i].im);
 
 	/* Copy data from the end to the guard-interval (Add guard-interval) */
@@ -69,7 +69,7 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	iDFTSize = TransmParam.iFFTSizeN;
 	iGuardSize = TransmParam.iGuardSize;
 	iShiftedKmin = TransmParam.iShiftedKmin;
-	iShiftedKmax = TransmParam.iShiftedKmax; 
+	iShiftedKmax = TransmParam.iShiftedKmax;
 	
 	/* Create plan for fftw */
 	if (FFTWPlan != NULL)
@@ -107,14 +107,16 @@ COFDMModulation::~COFDMModulation()
 void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int			i;
+	int			iNoAve;
 	_REAL		rNormCurFreqOffset;
 	_REAL		rSkipGuardIntPhase;
-	_COMPLEX	cExpStep;
 	_REAL		rCurPower;
+	_REAL		rPowLeftVCar, rPowRightVCar, rAvNoisePow, rUsNoPower;
+	_COMPLEX	cExpStep;
 
 	/* Total frequency offset from acquisition and tracking (we calculate the
 	   normalized frequency offset) */
-	rNormCurFreqOffset = (_REAL) 2 * crPi * (ReceiverParam.rFreqOffsetAcqui + 
+	rNormCurFreqOffset = (_REAL) 2.0 * crPi * (ReceiverParam.rFreqOffsetAcqui +
 		ReceiverParam.rFreqOffsetTrack);
 
 	/* New rotation vector for exp() calculation */
@@ -122,7 +124,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* To get a continuous counter we need to take the guard-interval and
 	   timing corrections into account */
-	rSkipGuardIntPhase = rNormCurFreqOffset * 
+	rSkipGuardIntPhase = rNormCurFreqOffset *
 		(iGuardSize - (*pvecInputData).GetExData().iCurTimeCorr);
 
 	/* Apply correction */
@@ -134,9 +136,9 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		veccFFTWInput[i].re = (*pvecInputData)[i] * real(cCurExp);
 		veccFFTWInput[i].im = -(*pvecInputData)[i] * imag(cCurExp);
 		
-		/* Rotate exp-pointer on step further by complex multiplication with 
+		/* Rotate exp-pointer on step further by complex multiplication with
 		   precalculated rotation vector cExpStep. This saves us from
-		   calling sin() and cos() functions all the time (iterative 
+		   calling sin() and cos() functions all the time (iterative
 		   calculation of these functions) */
 		cCurExp *= cExpStep;
 	}
@@ -146,15 +148,11 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Use only useful carriers and normalize with the block-size ("N") */
 	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
-		(*pvecOutputData)[i - iShiftedKmin] = _COMPLEX(veccFFTWOutput[i].re / 
+		(*pvecOutputData)[i - iShiftedKmin] = _COMPLEX(veccFFTWOutput[i].re /
 			iDFTSize, veccFFTWOutput[i].im / iDFTSize);
 
 
-	/* SNR estimation. Use virtual carriers at the end of spectrum ---------- */
-	_REAL		rPowLeftVCar, rPowRightVCar, rAvNoisePow, rUsNoPower;
-	int			iNoAve;
-	const _REAL rLam = 0.999;
-
+	/* SNR estimation. Use virtual carriers at the edges of the spectrum ---- */
 	/* Power of useful part plus noise */
 	rUsNoPower = (_REAL) 0.0;
 	iNoAve = 0;
@@ -170,7 +168,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Normalize and average result */
-	IIR1(rUsefPowAv, rUsNoPower / iNoAve, rLam);
+	IIR1(rUsefPowAv, rUsNoPower / iNoAve, rLamSNREst);
 
 	/* Estimate power of noise */
 	/* First, check if virtual carriers are in range */
@@ -188,8 +186,8 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			veccFFTWOutput[iShiftedKmax + 1].im;
 
 		/* Average results */
-		IIR1(rNoisePowAvLeft, rPowLeftVCar, rLam);
-		IIR1(rNoisePowAvRight, rPowRightVCar, rLam);
+		IIR1(rNoisePowAvLeft, rPowLeftVCar, rLamSNREst);
+		IIR1(rNoisePowAvRight, rPowRightVCar, rLamSNREst);
 
 		/* Take the smallest value of both to avoid getting sinusoid 
 		   interferer in the measurement */
@@ -197,7 +195,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Calculate SNR estimate (\hat{s} - \hat{n}) / \hat{n}. The result
-	   must be multiplicated with squared "iDFTSize" because of the 
+	   must be multiplicated with squared "iDFTSize" because of the
 	   FFT operation */
 	rSNREstimate = (rUsefPowAv / rAvNoisePow * iDFTSize * iDFTSize - 1) / 2;
 
@@ -206,11 +204,11 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iLenPowSpec; i++)
 	{
 		/* Power of this tap */
-		rCurPower = veccFFTWOutput[i].re * veccFFTWOutput[i].re + 
+		rCurPower = veccFFTWOutput[i].re * veccFFTWOutput[i].re +
 			veccFFTWOutput[i].im * veccFFTWOutput[i].im;
 
 		/* Averaging (first order IIR filter) */
-		IIR1(vecrPowSpec[i], rCurPower, (_REAL) 0.99);
+		IIR1(vecrPowSpec[i], rCurPower, rLamPSD);
 	}
 }
 
@@ -229,6 +227,8 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	rNoisePowAvLeft = (_REAL) 0.0;
 	rNoisePowAvRight = (_REAL) 0.0;
 	rUsefPowAv = (_REAL) 0.0;
+	rLamSNREst = IIR1Lam((CReal) 30.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+		ReceiverParam.iSymbolBlockSize); /* Lambda for IIR filter */
 
 	/* Init SNR estimate */
 	rSNREstimate = (_REAL) 0.0;
@@ -245,6 +245,8 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Vector for power density spectrum of input signal */
 	iLenPowSpec = iDFTSize / 2;
 	vecrPowSpec.Init(iLenPowSpec, (_REAL) 0.0);
+	rLamPSD = IIR1Lam((CReal) 1.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+		ReceiverParam.iSymbolBlockSize); /* Lambda for IIR filter */
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iDFTSize;
@@ -259,7 +261,7 @@ COFDMDemodulation::~COFDMDemodulation()
 }
 
 void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
-									  CVector<_REAL>& vecrScale) 
+									  CVector<_REAL>& vecrScale)
 {
 	/* Init output vectors */
 	vecrData.Init(iLenPowSpec, (_REAL) 0.0);
@@ -287,7 +289,7 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 	}
 }
 
-_REAL COFDMDemodulation::GetSNREstdB() const 
+_REAL COFDMDemodulation::GetSNREstdB() const
 {
 	/* Bound the SNR at 0 dB */
 	if (rSNREstimate > (_REAL) 1.0)
@@ -320,7 +322,7 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Use only useful carriers and normalize with the block-size ("N") */
 	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
-		(*pvecOutputData2)[i - iShiftedKmin].tOut = 
+		(*pvecOutputData2)[i - iShiftedKmin].tOut =
 			_COMPLEX(veccFFTWOutput[i].re /	iDFTSize,
 			veccFFTWOutput[i].im / iDFTSize);
 
@@ -330,10 +332,10 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* Channel-in signal ******************************************************/
-	/* Convert input vector in fft-vector type and cut out the guard-interval.
+	/* Convert input vector in fft-vector type and cut out the guard-interval
 	   We have to cut out the FFT window at the correct position, because the
-	   channel estimation has information only about the original pilots 
-	   which are not phase shifted due to a timing-offset. To be able to 
+	   channel estimation has information only about the original pilots
+	   which are not phase shifted due to a timing-offset. To be able to
 	   compare reference signal and channel estimation output we have to use
 	   the synchronous reference signal for input */
 	for (i = iGuardSize; i < iSymbolBlockSize; i++)
@@ -345,7 +347,7 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Use only useful carriers and normalize with the block-size ("N") */
 	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
-		(*pvecOutputData2)[i - iShiftedKmin].tIn = 
+		(*pvecOutputData2)[i - iShiftedKmin].tIn =
 			_COMPLEX(veccFFTWOutput[i].re / iDFTSize,
 			veccFFTWOutput[i].im / iDFTSize);
 
@@ -374,10 +376,10 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 		   guard-interval */
 		for (i = iStartPointGuardRemov; i < iEndPointGuardRemov; i++)
 		{
-			veccFFTWInput[i - iStartPointGuardRemov].re = 
+			veccFFTWInput[i - iStartPointGuardRemov].re =
 				(*pvecInputData)[i].veccTap[j].real();
 
-			veccFFTWInput[i - iStartPointGuardRemov].re = 
+			veccFFTWInput[i - iStartPointGuardRemov].im =
 				(*pvecInputData)[i].veccTap[j].imag();
 		}
 
@@ -386,10 +388,16 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 		fftw_one(FFTWPlan, &veccFFTWInput[0], &veccFFTWOutput[0]);
 
 		/* Use only useful carriers and normalize with the block-size ("N") */
-		for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
-			(*pvecOutputData2)[i - iShiftedKmin].veccTap[j] =
+		for (i = 0; i < iNoCarrier; i++)
+			(*pvecOutputData2)[i].veccTap[j] =
 				_COMPLEX(veccFFTWOutput[i].re /	iDFTSize,
 				veccFFTWOutput[i].im / iDFTSize);
+	
+		/* Store the end of the vector, too */
+		for (i = 0; i < iNoCarrier; i++)
+			(*pvecOutputData2)[i].veccTapBackw[j] =
+				_COMPLEX(veccFFTWOutput[iDFTSize - i - 1].re /	iDFTSize,
+				veccFFTWOutput[iDFTSize - i - 1].im / iDFTSize);
 	}
 
 
@@ -409,9 +417,6 @@ void COFDMDemodSimulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 {
-	int iStartGR;
-	int iChanDelSpLen;
-
 	/* Set internal parameters */
 	iDFTSize = ReceiverParam.iFFTSizeN;
 	iGuardSize = ReceiverParam.iGuardSize;
@@ -441,55 +446,19 @@ void COFDMDemodSimulation::InitInternal(CParameter& ReceiverParam)
 	   a "0" for the first time */
 	iSymbolCounterTiSy = iNoSymPerFrame - 1;
 
-	/* Set guard-interval removal start index. Adapt this parameter to the 
-	   channel which was chosen. Place the delay spread centered in the 
+
+	/* Set guard-interval removal start index. Adapt this parameter to the
+	   channel which was chosen. Place the delay spread centered in the
 	   middle of the guard-interval */
-	switch (ReceiverParam.iDRMChannelNo)
-	{
-	case 1:
-		/* AWGN */
-		iChanDelSpLen = 0;
-		break;
+	iStartPointGuardRemov =
+		(iGuardSize + ReceiverParam.iPathDelay[iNumTapsChan - 1]) / 2;
 
-	case 2:
-		/* Rice with delay */
-		iChanDelSpLen = (int) ((_REAL) 1.0 * SOUNDCRD_SAMPLE_RATE / 1000);
-		break;
+	/* Check the case if impulse response is longer than guard-interval */
+	if (iStartPointGuardRemov > iGuardSize)
+		iStartPointGuardRemov = iGuardSize;
 
-	case 3:
-		/* US Consortium */
-		iChanDelSpLen = (int) ((_REAL) 2.2 * SOUNDCRD_SAMPLE_RATE / 1000);
-		break;
-
-	case 4:
-		/* CCIR Poor */
-		iChanDelSpLen = (int) ((_REAL) 2.0 * SOUNDCRD_SAMPLE_RATE / 1000);
-		break;
-		
-	case 5:
-		/* Channel no 5 */
-		iChanDelSpLen = (int) ((_REAL) 4.0 * SOUNDCRD_SAMPLE_RATE / 1000);
-		break;
-		
-	case 6:
-		/* Channel no 6 */
-		iChanDelSpLen = (int) ((_REAL) 6.0 * SOUNDCRD_SAMPLE_RATE / 1000);
-		break;
-
-	default:
-		/* My own channels */
-		iChanDelSpLen = iGuardSize;
-		break;
-	}
-
-	iStartGR = (iGuardSize - iChanDelSpLen) / 2;
-	if (iStartGR < 0)
-	{
-		/* In this case we get Inter-Symbol-Interference (ISI) */
-		iStartGR = 0;
-	}
-
-	iStartPointGuardRemov = iGuardSize - iStartGR;
+	/* Set start point of useful part extraction in global struct */
+	ReceiverParam.iOffUsfExtr = iGuardSize - iStartPointGuardRemov;
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iSymbolBlockSize;
