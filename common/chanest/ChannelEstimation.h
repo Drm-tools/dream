@@ -58,7 +58,6 @@ public:
 	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
 	enum ETypeIntTime {TLINEAR, TWIENER, TDECIDIR};
 
-	void GetImpulseResponse(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void GetTransferFunction(CVector<_REAL>& vecrData, 
 		CVector<_REAL>& vecrScale);
 

@@ -159,12 +159,12 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 
 	case 3:
 		/* US Consortium: slowest 0.1 Hz */
-		iMinNoBlocks = (int) ((_REAL) 1000.0 / (_REAL) 0.4);
+		iMinNoBlocks = (int) ((_REAL) 5000.0 / (_REAL) 0.4);
 		break;
 
 	case 4:
-		/* CCIR Poor: 1 Hz -> 200 seconds should be ok */
-		iMinNoBlocks = (int) ((_REAL) 200.0 / (_REAL) 0.4);
+		/* CCIR Poor: 1 Hz */
+		iMinNoBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
 		break;
 
 	case 5:
@@ -214,6 +214,17 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 	int				iNoBitErrors;
 	int				i;
 
+	/* First check if incoming block is valid (because of long interleaving
+	   the first blocks are not valid */
+	if (iIntDelCnt > 0)
+	{
+		iIntDelCnt--;
+
+		/* We have an invalid block, return function immediately */
+		return;
+	}
+
+
 	/* -------------------------------------------------------------------------
 	   Generate a pseudo-noise test-signal (PRBS) for comparison with
 	   received signal */
@@ -257,6 +268,13 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CEvaSimData::InitInternal(CParameter& ReceiverParam)
 {
+	/* In case long symbol interleaving was set, the first blocks must be 
+	   debarred. Set an interleaver delay count */
+	if (ReceiverParam.eSymbolInterlMode == CParameter::SI_LONG)
+		iIntDelCnt = D_LENGTH_LONG_INTERL - 1;
+	else
+		iIntDelCnt = 0;
+
 	/* Reset bit error rate parameters */
 	rAccBitErrRate = (_REAL) 0.0;
 	iNoAccBitErrRate = 0;

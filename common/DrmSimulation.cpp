@@ -302,9 +302,6 @@ CDRMSimulation::CDRMSimulation()
 	Param.iDRMChannelNo = 1;
 	Param.rSimSNRdB = 25;
 
-	/* Simulation type */
-	eSimType = ST_CHANEST;
-
 	/* Length of simulation */
 	GenSimData.SetSimTime(300);
 }

@@ -61,10 +61,11 @@ void CDRMSimulation::SimScript()
 		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 		Param.MSCPrLe.iPartB = 1;
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;
+		Param.eSymbolInterlMode = CParameter::SI_LONG;
 
 //Param.eMSCCodingScheme = CParameter::CS_3_HMMIX;//CS_3_HMSYM;
 
-		Param.iDRMChannelNo = 5;
+		Param.iDRMChannelNo = 4;
 
 		/* Init the modules to adapt to the new parameters. We need to do that
 		   because the following routines call modul internal functions which
@@ -75,22 +76,22 @@ void CDRMSimulation::SimScript()
 		/* Define which synchronization algorithms we want to use */
 		/* In case of bit error simulations, a synchronized DRM data stream is
 		   used. Set corresponding modules to synchronized mode */
-	InputResample.SetSyncInput(TRUE);
+		InputResample.SetSyncInput(TRUE);
 		FreqSyncAcq.SetSyncInput(TRUE);
-	SyncUsingPil.SetSyncInput(TRUE);
+		SyncUsingPil.SetSyncInput(TRUE);
 		TimeSync.SetSyncInput(TRUE);
 
-
-
 //ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
+//ChannelEstimation.SetFreqInt(CChannelEstimation::FDFTFILTER);
+
 
 		/* No of blocks for simulation */
 //		GenSimData.SetSimTime(20);
-		GenSimData.SetNoErrors(1000);
+		GenSimData.SetNoErrors(10000);
 
 		MSCMLCDecoder.SetNoIterations(1);
 
-		for (rSNRCnt = 20; rSNRCnt <= 30; rSNRCnt += 0.5)
+		for (rSNRCnt = 20; rSNRCnt <= 30; rSNRCnt += 0.3)
 		{
 			Param.rSimSNRdB = rSNRCnt;
 

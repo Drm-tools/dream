@@ -212,8 +212,8 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		break;
 
 	case 7:
-		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! This channel
-		   has only one fading path */
+		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! 
+		   This channel has only one fading path */
 		rMyFading = 0.5;
 
 		iNoTaps = 1;
@@ -225,7 +225,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	case 8:
 		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! */
-		rMyFading = 1;
+		rMyFading = 1.0;
 
 		iNoTaps = 2;
 		tap[0].Init(/* Delay: */	(_REAL) 0.0, 

@@ -218,14 +218,6 @@ void systemevalDlg::OnTimer()
 	/* CHART ******************************************************************/
 	switch (CharType)
 	{
-	case IMPULSERESPONSE:
-		/* Get data from module */
-		DRMReceiver.GetChanEst()->GetImpulseResponse(vecrData, vecrScale);
-
-		/* Prepare graph and set data */
-		MainPlot->SetIR(vecrData, vecrScale);
-		break;
-
 	case AVERAGED_IR:
 		/* Get data from module */
 		DRMReceiver.GetChanEst()->GetTimeSyncTrack()->

@@ -403,46 +403,6 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iOutputBlockSize = iNoCarrier;
 }
 
-void CChannelEstimation::GetImpulseResponse(CVector<_REAL>& vecrData, 
-											CVector<_REAL>& vecrScale)
-{
-	int				i;
-	CComplexVector	veccImpResp;
-	_REAL			rScaleIncr;
-	_REAL			rScaleAbs;
-
-	/* Init output vectors */
-	vecrData.Init(iGuardSizeFFT, (_REAL) 0.0);
-	vecrScale.Init(iGuardSizeFFT, (_REAL) 0.0);
-
-	if (IsInInit() == FALSE)
-	{
-		/* Init vector */
-		veccImpResp.Init(iNoCarrier);
-
-		/* Init scale (in "ms") */
-		rScaleIncr = 
-			(_REAL) iFFTSizeN / (SOUNDCRD_SAMPLE_RATE * iNoCarrier) * 1000;
-		rScaleAbs = (_REAL) 0.0;
-
-		/* Get impulse response by transforming transfer function in time 
-		   domain */
-		veccImpResp = Ifft(veccChanEst);
-
-		/* Copy data in output vector */
-		for (i = 0; i < iGuardSizeFFT; i++)
-		{
-			/* Data */
-			vecrData[i] = 
-				(_REAL) 20.0 * log10(abs(veccImpResp[i]) / (_REAL) iNoCarrier);
-
-			/* Scale */
-			vecrScale[i] = rScaleAbs;
-			rScaleAbs += rScaleIncr;
-		}
-	}
-}
-
 void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 											 CVector<_REAL>& vecrScale)
 {

@@ -46,7 +46,7 @@ void CSymbInterleaver::ProcessDataInternal(CParameter& TransmParam)
 	for (i = 0; i < iInputBlockSize; i++)
 		veccInterlMemory[iCurIndex[0]][i] = (*pvecInputData)[i];
 
-	/* Interleave data according the interleaver table. Use the
+	/* Interleave data according to the interleaver table. Use the
 	   the interleaver-blocks described in the DRM-standard 
 	   (Ro(i) = i (mod D)  -> "i % iD") */
 	for (i = 0; i < iInputBlockSize; i++)
@@ -114,7 +114,7 @@ void CSymbDeinterleaver::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int i, j;
 
-	/* Deinterleave data according the deinterleaver table. Use the
+	/* Deinterleave data according to the deinterleaver table. Use the
 	   the interleaver-blocks described in the DRM-standard 
 	   (Ro(i) = i (mod D)  -> "i % iD") */
 	for (i = 0; i < iInputBlockSize; i++)

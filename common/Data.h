@@ -33,6 +33,7 @@
 #include "Modul.h"
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
+#include "interleaver/SymbolInterleaver.h"
 #include <time.h>
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -108,6 +109,7 @@ public:
 	virtual ~CEvaSimData() {}
 
 protected:
+	int		iIntDelCnt;
 	int		iIniCnt;
 	int		iNoAccBitErrRate;
 	_REAL	rAccBitErrRate;
