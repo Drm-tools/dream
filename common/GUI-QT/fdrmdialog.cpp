@@ -394,15 +394,36 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 			AudioParam.eAudioCoding)
 		{
 		case CParameter::AC_AAC:	
-			strReturn = "AAC";
+			strReturn = "AAC(";
 			break;
 
 		case CParameter::AC_CELP:
-			strReturn = "Celp";
+			strReturn = "Celp(";
 			break;
 
 		case CParameter::AC_HVXC:
-			strReturn = "HVXC";
+			strReturn = "HVXC(";
+			break;
+		}
+
+		/* Sample rate */
+		switch (DRMReceiver.GetParameters()->Service[iServiceID].
+			AudioParam.eAudioSamplRate)
+		{
+		case CParameter::AS_8_KHZ:	
+			strReturn += "8 kHz)";
+			break;
+
+		case CParameter::AS_12KHZ:	
+			strReturn += "12 kHz)";
+			break;
+
+		case CParameter::AS_16KHZ:	
+			strReturn += "16 kHz)";
+			break;
+
+		case CParameter::AS_24KHZ:	
+			strReturn += "24 kHz)";
 			break;
 		}
 
@@ -411,27 +432,6 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 			AudioParam.eSBRFlag == CParameter::SB_USED)
 		{
 			strReturn += "+SBR";
-		}
-
-		/* Sample rate */
-		switch (DRMReceiver.GetParameters()->Service[iServiceID].
-			AudioParam.eAudioSamplRate)
-		{
-		case CParameter::AS_8_KHZ:	
-			strReturn += " 8 kHz";
-			break;
-
-		case CParameter::AS_12KHZ:	
-			strReturn += " 12 kHz";
-			break;
-
-		case CParameter::AS_16KHZ:	
-			strReturn += " 16 kHz";
-			break;
-
-		case CParameter::AS_24KHZ:	
-			strReturn += " 24 kHz";
-			break;
 		}
 
 		/* Mono-Stereo */
