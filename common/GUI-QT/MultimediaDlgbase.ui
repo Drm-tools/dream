@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>392</width>
+            <width>384</width>
             <height>361</height>
         </rect>
     </property>
@@ -175,6 +175,13 @@
                         <name>text</name>
                         <string>0/0</string>
                     </property>
+                    <property stdset="1">
+                        <name>alignment</name>
+                        <set>AlignCenter</set>
+                    </property>
+                    <property>
+                        <name>hAlign</name>
+                    </property>
                 </widget>
                 <widget>
                     <class>QPushButton</class>
@@ -235,7 +242,7 @@
                     </property>
                     <property stdset="1">
                         <name>text</name>
-                        <string>&amp;OK</string>
+                        <string>&amp;Close</string>
                     </property>
                     <property stdset="1">
                         <name>autoDefault</name>
