@@ -166,10 +166,7 @@ void MultimediaDlg::OnTimer()
 		{
 			/* Store received picture */
 			iCurNumPict = vecRawImages.Size();
-			vecRawImages.Enlarge(1);
-
-			/* Copy new picture in storage container */
-			vecRawImages[iCurNumPict] = NewPic;
+			vecRawImages.Add(NewPic);
 
 			/* If the last received picture was selected, automatically show
 			   new picture */

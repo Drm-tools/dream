@@ -231,9 +231,8 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	CheckBoxEnableTextMessage->setChecked(TRUE);
 
 	/* Add example text in internal container */
-	vecstrTextMessage.Enlarge(1);
-	vecstrTextMessage[1] =
-		"Dream DRM Transmitter\x0B\x0AThis is a test transmission";
+	vecstrTextMessage.Add("Dream DRM Transmitter\x0B\x0AThis is a test "
+		"transmission");
 
 	/* Insert item in combo box, display text and set item to our text */
 	ComboBoxTextMessage->insertItem(QString().setNum(1), 1);
