@@ -476,7 +476,7 @@ void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody,
 			break;
 
 		case 1: /* 01 */
-			AudParam.eAudioMode = CParameter::AM_LC_STEREO;
+			AudParam.eAudioMode = CParameter::AM_P_STEREO;
 			break;
 
 		case 2: /* 10 */

@@ -600,8 +600,8 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 				strReturn += " Mono";
 				break;
 
-			case CParameter::AM_LC_STEREO:
-				strReturn += " LC Stereo";
+			case CParameter::AM_P_STEREO:
+				strReturn += " P-Stereo";
 				break;
 
 			case CParameter::AM_STEREO:

@@ -500,7 +500,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		/* Set number of AAC frames for log file */
 		ReceiverParam.ReceptLog.SetNumAAC(iNumAACFrames);
 
-		/* Number of channels for AAC: Mono, LC Stereo, Stereo */
+		/* Number of channels for AAC: Mono, PStereo, Stereo */
 		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioMode)
 		{
 		case CParameter::AM_MONO:
@@ -515,7 +515,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 				iDRMchanMode = DRMCH_MONO;
 			break;
 
-		case CParameter::AM_LC_STEREO:
+		case CParameter::AM_P_STEREO:
 			/* Low-complexity only defined in SBR mode */
 			iNumChannelsAAC = 1;
 			iDRMchanMode = DRMCH_SBR_LC_STEREO;

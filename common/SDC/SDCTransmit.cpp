@@ -406,7 +406,7 @@ int CSDCTransmit::DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID,
 			(*pbiData).Enqueue(0 /* 00 */, 2);
 			break;
 
-		case CParameter::AM_LC_STEREO:
+		case CParameter::AM_P_STEREO:
 			(*pbiData).Enqueue(1 /* 01 */, 2);
 			break;
 
