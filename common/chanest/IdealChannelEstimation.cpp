@@ -1,0 +1,147 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001
+ *
+ * Author(s):
+ *	Volker Fischer
+ *
+ * Description:
+ *	
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#include "IdealChannelEstimation.h"
+
+
+/* Implementation *************************************************************/
+void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
+{
+	int i, j;
+
+	/* Calculation of channel tranfer function ------------------------------ */
+	/*	pvecInputData.cSig		equalized signal \hat{s}(t)
+		pvecInputData2.tOut		received signal r(t)
+		pvecInputData2.tIn		transmitted signal s(t)
+		pvecInputData2.tRef		received signal without noise (channel
+									reference signal) */
+	for (i = 0; i < iNoCarrier; i++)
+	{
+		veccEstChan[i] = (*pvecInputData2)[i].tOut / (*pvecInputData)[i].cSig;
+		veccRefChan[i] = (*pvecInputData2)[i].tRef / (*pvecInputData2)[i].tIn;
+	}
+
+	/* Debar DC carriers, set them to zero */
+	for (i = 0; i < iNoDCCarriers; i++)
+	{
+		veccEstChan[i + iStartDCCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+		veccRefChan[i + iStartDCCar] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+	}
+
+	/* Start evaluation results after exceeding the start count */
+	if (iStartCnt > 0)
+		iStartCnt--;
+	else
+	{
+		/* MSE for all carriers */
+		for (i = 0; i < iNoCarrier; i++)
+			vecrMSEAverage[i] += SqMag(veccEstChan[i] - veccRefChan[i]);
+
+		/* New values have been added, increase counter for final result
+		   calculation */
+		lAvCnt++;
+	}
+
+
+	/* Equalize the output vector ------------------------------------------- */
+	/* Write to output vector. Also, ship the channel state at a certain cell */
+	for (i = 0; i < iNoCarrier; i++)
+	{
+		(*pvecOutputData)[i].cSig = (*pvecInputData2)[i].tOut / veccRefChan[i];
+		(*pvecOutputData)[i].rChan = SqMag(veccRefChan[i]);
+	}
+
+	/* Set symbol number for output vector */
+	(*pvecOutputData).GetExData().iSymbolNo = 
+		(*pvecInputData).GetExData().iSymbolNo;
+}
+
+void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
+{
+	int m, k;
+
+	/* Init base class for modifying the pilots (rotation) */
+	CPilotModiClass::InitRot(ReceiverParam);
+
+	/* Get local parameters */
+	iNoCarrier = ReceiverParam.iNoCarrier;
+	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
+	iDFTSize = ReceiverParam.iFFTSizeN;
+
+	/* Parameters for debaring the DC carriers from evaluation. First check if
+	   we have only useful part on the right side of the DC carrier */
+	if (ReceiverParam.iCarrierKmin > 0)
+	{
+		/* In this case, no DC carriers are in the useful spectrum */
+		iNoDCCarriers = 0;
+		iStartDCCar = 0;
+	}
+	else
+	{
+		if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_A)
+		{
+			iNoDCCarriers = 3;
+			iStartDCCar = abs(ReceiverParam.iCarrierKmin) - 1;
+		}
+		else
+		{
+			iNoDCCarriers = 1;
+			iStartDCCar = abs(ReceiverParam.iCarrierKmin);
+		}
+	}
+
+	/* Init average counter */
+	lAvCnt = 0;
+
+	/* Init start count (debar initialization of channel estimation) */
+	iStartCnt = 20;
+
+	/* Additional delay from long interleaving has to be considered */
+	if (ReceiverParam.GetInterleaverDepth() == CParameter::SI_LONG)
+		iStartCnt += ReceiverParam.iNoSymPerFrame * D_LENGTH_LONG_INTERL;
+
+
+	/* Allocate memory for intermedia results */
+	veccEstChan.Init(iNoCarrier);
+	veccRefChan.Init(iNoCarrier);
+	vecrMSEAverage.Init(iNoCarrier, (_REAL) 0.0); /* Reset average with zeros */
+
+	/* Define block-sizes for inputs and output */
+	iInputBlockSize = iNoCarrier;
+	iInputBlockSize2 = iNoCarrier;
+	iOutputBlockSize = iNoCarrier;
+}
+
+void CIdealChanEst::GetResults(CVector<_REAL>& vecrResults)
+{
+	vecrResults.Init(iNoCarrier, (_REAL) 0.0);
+
+	/* Copy data in return vector */
+	for (int i = 0; i < iNoCarrier; i++)
+		vecrResults[i] = vecrMSEAverage[i] / lAvCnt;
+}
