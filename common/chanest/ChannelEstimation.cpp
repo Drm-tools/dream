@@ -60,15 +60,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 						   ReceiverParam.matcPilotCells[(*pvecInputData).
 						   GetExData().iSymbolNo], rSNREstimate);
 
-	/* Special case with robustness mode D: since "iScatPilFreqInt" is "1", we
-	   get the DC carrier as a pilot position. We have to interpolate this
-	   position since there are no pilots (we do a linear interpolation) */
+	/* Define DC carrier for robustness mode D because there is not pilot */
 	if (iDCPos != 0)
-	{
-		/* Actual linear interpolation with carrieres left and right from DC */
-		veccPilots[iDCPos] = veccPilots[iDCPos - 1] + 
-			(veccPilots[iDCPos + 1] - veccPilots[iDCPos - 1]) / (_REAL) 2.0;
-	}
+		veccPilots[iDCPos] = (CReal) 0.0;
 
 
 	/* -------------------------------------------------------------------------
@@ -275,16 +269,14 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* If robustness mode D is active, get DC position. This position cannot
 	   be "0" since in mode D no 5 kHz mode is defined (see DRM-standard). 
-	   Therefor we can also use this variable to get information whether
-	   mode D is active or not (by simply do: "if (iDCPos != 0)" */
+	   Therefore we can also use this variable to get information whether
+	   mode D is active or not (by simply write: "if (iDCPos != 0)") */
 	if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
 	{
 		/* Identify CD carrier position */
 		for (int i = 0; i < iNoCarrier; i++)
-		{
 			if (_IsDC(ReceiverParam.matiMapTab[0][i]))
 				iDCPos = i;
-		}
 	}
 	else
 		iDCPos = 0;
@@ -547,6 +539,24 @@ fflush(pFile);
 		{
 			/* In the middle */
 			veciPilOffTab[j] = iCurPil - iPilOffset;
+		}
+
+		/* Special case for robustness mode D, since the DC carrier is not used
+		   as a pilot and therefore we use the same method for the edges of the
+		   spectrum also in the middle of robustness mode D */
+		if (iDCPos != 0)
+		{
+			if ((iDCPos - iCurPil < iLengthWiener) && (iDCPos - iCurPil > 0))
+			{
+				/* Left side of DC carrier */
+				veciPilOffTab[j] = iDCPos - iLengthWiener;
+			}
+
+			if ((iCurPil - iDCPos < iLengthWiener) && (iCurPil - iDCPos > 0))
+			{
+				/* Right side of DC carrier */
+				veciPilOffTab[j] = iDCPos;
+			}
 		}
 
 		/* Difference between the position of the first pilot (for filtering)
