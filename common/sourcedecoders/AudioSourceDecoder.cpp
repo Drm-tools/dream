@@ -152,11 +152,6 @@ fflush(pFile2);
 #endif
 
 
-// TEST
-//for (i = 0; i < iMaxLenOneAudFrame; i++)
-//	vecbyPrepAudioFrame[i] = (_BYTE) ((_REAL) rand() / RAND_MAX * 255);
-
-
 		/* Call decoder routine */
 		psDecOutSampleBuf = (short*) faacDecDecode(HandleAACDecoder, 
 			&DecFrameInfo, &vecbyPrepAudioFrame[0], veciFrameLength[j] + 1);
