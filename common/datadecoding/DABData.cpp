@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Doyle Richard
  *
  * Description:
  *	DAB data decoding (MOT)
@@ -32,27 +32,32 @@
 /* Implementation *************************************************************/
 void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 {
-	_BINARY		biExtensionFlag;
-	_BINARY		biCRCFlag;
-	_BINARY		biSegmentFlag;
-	_BINARY		biUserAccFlag;
-	_BINARY		biLastFlag;
-	_BINARY		biTransportIDFlag;
-	int			iDataGroupType;
-	int			iNewContInd;
-	int			iRepitiIndex;
-	int			iSegmentNum;
-	int			iLenIndicat;
-	int			iLenGroupDataField;
-	int			iSegmentSize;
-	int			iTransportID;
-	int			iOldDataSize;
-	int			iContentType;
-	int			iContentSubType;
-	int			iDaSiBytes;
-	CCRC		CRCObject;
-	_BOOLEAN	bCRCOk;
-	FILE*		pFiBody;
+	_BINARY			biExtensionFlag;
+	_BINARY			biCRCFlag;
+	_BINARY			biSegmentFlag;
+	_BINARY			biUserAccFlag;
+	_BINARY			biLastFlag;
+	_BINARY			biTransportIDFlag;
+	unsigned char	ucParamId;
+	unsigned char	ucDatafield;
+	int				i;
+	int				iBodySize;
+	int				iHeaderSize;
+	int				iDataGroupType;
+	int				iNewContInd;
+	int				iRepitiIndex;
+	int				iSegmentNum;
+	int				iLenIndicat;
+	int				iLenGroupDataField;
+	int				iSegmentSize;
+	int				iTransportID;
+	int				iOldDataSize;
+	int				iContentType;
+	int				iContentSubType;
+	int				iDaSiBytes;
+	CCRC			CRCObject;
+	_BOOLEAN		bCRCOk;
+	FILE*			pFiBody;
 
 	/* Get length of data unit */
 	iLenGroupDataField = vecbiNewData.Size();
@@ -68,7 +73,7 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 	CRCObject.Reset(16);
 
 	/* "- 2": 16 bits for CRC at the end */
-	for (int i = 0; i < (iLenGroupDataField / SIZEOF__BYTE) - 2; i++)
+	for (i = 0; i < (iLenGroupDataField / SIZEOF__BYTE) - 2; i++)
 		CRCObject.AddByte((_BYTE) vecbiNewData.Separate(SIZEOF__BYTE));
 
 	if (CRCObject.CheckCRC(vecbiNewData.Separate(16)) == TRUE)
@@ -276,13 +281,117 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 			if ((MOTObject.Header.bReady == TRUE) &&
 				(MOTObject.Body.bReady == TRUE))
 			{
-				/* Get relevant data from header */
 				MOTObject.Header.vecbiData.ResetBitAccess();
-				MOTObject.Header.vecbiData.Separate(41);
+
+				/* HeaderSize and BodySize */
+				iBodySize = (int) MOTObject.Header.vecbiData.Separate(28);
+				iHeaderSize = (int) MOTObject.Header.vecbiData.Separate(13);
+
+				/* 7 bytes for header core */
+				int iSizeRec = iHeaderSize - 7;
 
 				/* Content type and content sup-type */
 				iContentType = (int) MOTObject.Header.vecbiData.Separate(6);
 				iContentSubType = (int) MOTObject.Header.vecbiData.Separate(9);
+
+				/* Use all header extension data blocks,
+				   added by Doyle Richard 2003/12/22 */
+				while (iSizeRec > 0)
+				{
+					/* PLI (Parameter Length Indicator) */
+					int iPLI = (int) MOTObject.Header.vecbiData.Separate(2);
+
+					switch(iPLI)
+					{
+					case 0:
+						/* Total parameter length = 1 byte; no DataField
+						   available */
+						ucParamId = (unsigned char)
+							MOTObject.Header.vecbiData.Separate(6);
+
+						/* TODO: Use "ucParamId" */
+
+						iSizeRec -= 1; /* 6 + 2 (PLI) bits */
+						break;
+
+					case 1:
+						/* Total parameter length = 2 bytes, length of DataField
+						   is 1 byte */
+						ucParamId = (unsigned char)
+							MOTObject.Header.vecbiData.Separate(6);
+
+						ucDatafield = (unsigned char)
+							MOTObject.Header.vecbiData.Separate(8);
+
+						/* TODO: Use information in data field */
+
+						iSizeRec -= 2; /* 6 + 8 + 2 (PLI) bits */
+						break;
+
+					case 2:
+						/* Total parameter length = 5 bytes; length of DataField
+						   is 4 bytes */
+						ucParamId = (unsigned char)
+							MOTObject.Header.vecbiData.Separate(6);
+
+						for (i = 0; i < 4; i++)
+						{
+							ucDatafield = (unsigned char)
+								MOTObject.Header.vecbiData.Separate(8);
+
+							/* TODO: Use information in data field */
+						}
+						iSizeRec -= 5; /* 6 + 4 * 8 + 2 (PLI) bits */
+						break;
+
+					case 3:
+						/* Total parameter length depends on the DataFieldLength
+						   indicator (the maximum parameter length is
+						   32770 bytes) */
+						ucParamId = (unsigned char)
+							MOTObject.Header.vecbiData.Separate(6);
+
+						iSizeRec -= 1; /* 2 (PLI) + 6 bits */
+
+						/* Ext (ExtensionFlag): This 1-bit field specifies the
+						   length of the DataFieldLength Indicator and is coded
+						   as follows:
+						   - 0: the total parameter length is derived from the
+								next 7 bits;
+						   - 1: the total parameter length is derived from the
+								next 15 bits */
+						unsigned char ucExt = (unsigned char)
+							MOTObject.Header.vecbiData.Separate(1);
+
+						int iDataFieldLen = 0;
+
+						/* Get data field length */
+						if (ucExt == 0)
+						{
+							iDataFieldLen = (int)
+								MOTObject.Header.vecbiData.Separate(7);
+
+							iSizeRec -= 1;
+						}
+						else
+						{
+							iDataFieldLen = (int)
+								MOTObject.Header.vecbiData.Separate(15);
+							
+							iSizeRec -= 2;
+						}
+
+						/* Get data */
+						for (i = 0; i < iDataFieldLen; i++)
+						{
+							ucDatafield = (unsigned char)
+								MOTObject.Header.vecbiData.Separate(8);
+
+							/* TODO: Use information in data field */
+						}
+						break;
+					}
+				}
 
 				/* We only use images */
 				if (iContentType == 2 /* image */)
