@@ -42,6 +42,7 @@
 #include <qftp.h>
 #include <qthread.h>
 #include <qwt_counter.h>
+#include <qaction.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/StationsDlgbase.h"
@@ -50,6 +51,11 @@
 #endif
 #include "../DrmReceiver.h"
 #include "../Vector.h"
+
+#ifdef HAVE_LIBHAMLIB
+# include <hamlib/rig.h>
+#endif
+
 
 extern CDRMReceiver	DRMReceiver;
 
@@ -143,7 +149,7 @@ class StationsDlg : public CStationsDlgBase
 public:
 	StationsDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
-	virtual ~StationsDlg() {}
+	virtual ~StationsDlg();
 
 protected:
 	enum ERemotecntr {RC_NOREMCNTR, RC_WINRADIO, RC_AOR7030, RC_ELEKTOR304,
@@ -159,31 +165,76 @@ protected:
 
 	enum EOutWire {OW_TXD, OW_DTR, OW_RTS};
 	_BOOLEAN		SetFrequencyElektor304(const ECOMNumber eCOMNumber, const int iFreqkHz);
-	void			OutputElektor304(FILE_HANDLE hCom, const _UINT32BIT iData);
+	void			OutputElektor304(FILE_HANDLE hCom, const uint32_t iData);
 	void			SetOutStateElektor304(FILE_HANDLE hCom, EOutWire eOutWire, _BINARY biState);
 
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
 
-	CDRMSchedule	DRMSchedule;
-	QPixmap			BitmCubeGreen;
-	QPixmap			BitmCubeYellow;
-	QPixmap			BitmCubeRed;
-	QTimer			Timer;
-	_BOOLEAN		bShowAll;
-	ERemotecntr		eWhichRemoteControl;
-	QUrlOperator	UrlUpdateSchedule;
-	QPopupMenu*		pViewMenu;
-	QPopupMenu*		pRemoteMenu;
-	ECOMNumber		eComNumber;
+	CDRMSchedule		DRMSchedule;
+	QPixmap				BitmCubeGreen;
+	QPixmap				BitmCubeYellow;
+	QPixmap				BitmCubeRed;
+	QTimer				Timer;
+	_BOOLEAN			bShowAll;
+	QUrlOperator		UrlUpdateSchedule;
+	QPopupMenu*			pViewMenu;
+
+	/* Remote selection */
+	QPopupMenu*			pRemoteMenu;
+	ERemotecntr			eWhichRemoteControl;
+
+	/* Com port selection */
+	QAction*			pacMenuCOM1;
+	QAction*			pacMenuCOM2;
+	QAction*			pacMenuCOM3;
+	QActionGroup*		agCOMPortSel;
+	ECOMNumber			eComNumber;
+
+#ifdef HAVE_LIBHAMLIB
+	class CSpecDRMRig
+	{
+	public:
+		CSpecDRMRig() : iModelID(0), strDRMSet("") {}
+		CSpecDRMRig(const CSpecDRMRig& nSpec) : iModelID(nSpec.iModelID),
+			strDRMSet(nSpec.strDRMSet) {}
+		CSpecDRMRig(rig_model_t newID, QString sSet) :
+		  iModelID(newID), strDRMSet(sSet) {}
+
+		rig_model_t		iModelID; /* Model ID for hamlib */
+		string			strDRMSet; /* Special DRM settings string */	
+	};
+	CVector<CSpecDRMRig>	vecSpecDRMRigs;
+
+	QPopupMenu*				pRemoteMenuOther;
+	CVector<rig_model_t>	veciModelID;
+
+
+	struct SDrRigCaps
+	{
+		rig_model_t		iModelID;
+		QString			strManufacturer;
+		QString			strModelName;
+		rig_status_e	eRigStatus;
+	};
+	CVector<SDrRigCaps>	veccapsHamlibModels;
+
+	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
+	const QString		StrStatusHamlib(enum rig_status_e status);
+	_BOOLEAN			CheckForSpecDRMFE(const rig_model_t iID, int& iIndex);
+	_BOOLEAN			SetFrequencyHamlib(const int iFreqkHz);
+	void				InitHamlib(const rig_model_t newModID);
+
+	RIG*				pRig;
+#endif
 
 public slots:
+	void OnRemoteMenu(int iID);
 	void OnTimer();
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 	void OnShowStationsMenu(int iID);
-	void OnRemoteMenu(int iID);
-	void OnComPortMenu(int iID);
+	void OnComPortMenu(QAction* action);
 	void OnGetUpdate();
 	void OnFreqCntNewValue(double dVal);
 };

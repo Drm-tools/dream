@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer, Mark J. Fine, Markus Maerz
+ *	Volker Fischer, Mark J. Fine, Markus Maerz, Tomi Manninen, Stephane Fillod
  *
  * Description:
  *
@@ -28,7 +28,7 @@
 
 #include "StationsDlg.h"
 #ifndef _WIN32
-#include <sys/termios.h>
+# include <sys/termios.h>
 #endif
 
 
@@ -216,6 +216,9 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 
 StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	WFlags f) :	CStationsDlgBase(parent, name, modal, f)
+#ifdef HAVE_LIBHAMLIB
+	, pRig(NULL)
+#endif
 {
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
@@ -277,6 +280,9 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Remote menu  --------------------------------------------------------- */
 	pRemoteMenu = new QPopupMenu(this);
 	CHECK_PTR(pRemoteMenu);
+
+
+#ifndef HAVE_LIBHAMLIB
 	pRemoteMenu->insertItem("None", this, SLOT(OnRemoteMenu(int)), 0, 0);
 #ifdef _WIN32
 	pRemoteMenu->insertItem("Winradio G3",
@@ -290,40 +296,146 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnRemoteMenu(int)), 0, 4);
 	pRemoteMenu->insertItem("TenTec RX320D",
 		this, SLOT(OnRemoteMenu(int)), 0, 5);
+#endif
+
+
+#ifdef HAVE_LIBHAMLIB
+	pRemoteMenuOther = new QPopupMenu(this);
+	CHECK_PTR(pRemoteMenuOther);
+
+	/* Special DRM front-end list */
+	vecSpecDRMRigs.Init(0);
+
+	/* Winradio G3 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(1508, "" /* switch it on, TODO! */));
+
+	/* AOR 7030 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(503, "" /* TODO */));
+
+	/* Elektor 3/04 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(2501, ""));
+
+	/* JRC NRD 535 */
+	vecSpecDRMRigs.Add(CSpecDRMRig(606,
+		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3")); /* AGC=slow */
+
+	/* TenTec RX320D */
+	vecSpecDRMRigs.Add(CSpecDRMRig(1603, "" /* TODO */));
+
+
+	/* Load all possible front-end remotes in hamlib library */
+	rig_load_all_backends();
+
+	/* Get all models which are available. First, the vector for storing the
+	   data has to be initialized with zero length! A call-back function is
+	   called to return the different rigs */
+	veccapsHamlibModels.Init(0);
+	const int status = rig_list_foreach(PrintHamlibModelList, this);
+
+
+	/* Init vector for storing the model IDs with zero length */
+	veciModelID.Init(0);
+
+	/* Add menu entry "none" */
+	pRemoteMenu->insertItem("None", this, SLOT(OnRemoteMenu(int)), 0, 0);
+	veciModelID.Add(0); /* ID 0 for "none" */
+
+	/* Only add menu entries if list was correctly received */
+	_BOOLEAN bCheckWasSet = FALSE;
+	if (status == RIG_OK)
+	{
+		for (int j = 0; j < veccapsHamlibModels.Size(); j++)
+		{
+			/* Create menu objects which belong to an action group. We hope that
+			   QT takes care of all the new objects and deletes them... */
+			const int iCurModelID = veccapsHamlibModels[j].iModelID;
+		
+			/* Store model ID */
+			veciModelID.Add(iCurModelID);
+
+			int iDummy;
+			if (CheckForSpecDRMFE(iCurModelID, iDummy) == TRUE)
+			{
+				pRemoteMenu->insertItem(
+					/* Set menu string. Should look like:
+					   [ID] Manuf. Model */
+					"[" + QString().setNum(iCurModelID) + "] " +
+					veccapsHamlibModels[j].strManufacturer + " " +
+					veccapsHamlibModels[j].strModelName,
+					this, SLOT(OnRemoteMenu(int)), 0, veciModelID.Size() - 1);
+
+				/* Check for checking and init if necessary */
+				if (DRMReceiver.GetHamlibModel() == iCurModelID)
+				{
+					pRemoteMenu->setItemChecked(veciModelID.Size() - 1, TRUE);
+					bCheckWasSet = TRUE;
+					InitHamlib(iCurModelID); /* Init hamlib */
+				}
+			}
+			else
+			{
+				/* "Other" menu */
+				pRemoteMenuOther->insertItem(
+					/* Set menu string. Should look like:
+					   [ID] Manuf. Model (status) */
+					"[" + QString().setNum(iCurModelID) + "] " +
+					veccapsHamlibModels[j].strManufacturer + " " +
+					veccapsHamlibModels[j].strModelName +
+					" (" + StrStatusHamlib(veccapsHamlibModels[j].eRigStatus) +
+					")",
+					this, SLOT(OnRemoteMenu(int)), 0, veciModelID.Size() - 1);
+
+				/* Check for checking and init if necessary */
+				if (DRMReceiver.GetHamlibModel() == iCurModelID)
+				{
+					pRemoteMenuOther->
+						setItemChecked(veciModelID.Size() - 1, TRUE);
+					bCheckWasSet = TRUE;
+					InitHamlib(iCurModelID); /* Init hamlib */
+				}
+			}
+		}
+	}
+
+	/* Only add "other" menu if front-ends are available */
+	if (status == RIG_OK)
+		pRemoteMenu->insertItem("Other", pRemoteMenuOther);
+
+	if (bCheckWasSet == FALSE)
+#endif
+	{
+		/* No remote as default */
+		eWhichRemoteControl = RC_NOREMCNTR;
+		pRemoteMenu->setItemChecked(0, TRUE);
+	}
 
 	/* Separator */
 	pRemoteMenu->insertSeparator();
 
-	/* Which COM port. Start menu IDs from ID = 100 */
-	pRemoteMenu->insertItem("COM1",
-		this, SLOT(OnComPortMenu(int)), 0, 100);
-	pRemoteMenu->insertItem("COM2",
-		this, SLOT(OnComPortMenu(int)), 0, 101);
-#ifdef _WIN32
-	pRemoteMenu->insertItem("COM3",
-		this, SLOT(OnComPortMenu(int)), 0, 102);
-#else
-	pRemoteMenu->insertItem("USB",
-		this, SLOT(OnComPortMenu(int)), 0, 102);
-#endif
+
+	/* COM port selection --------------------------------------------------- */
+	/* Toggle action for com port selection menu entries */
+	agCOMPortSel = new QActionGroup(this, "Com port", TRUE);
+
+	pacMenuCOM1 = new QAction("COM1", "COM1", 0, agCOMPortSel, 0, TRUE);
+	pacMenuCOM2 = new QAction("COM2", "COM2", 0, agCOMPortSel, 0, TRUE);
+	pacMenuCOM3 = new QAction("COM3", "COM3", 0, agCOMPortSel, 0, TRUE);
+
+	/* Add COM port selection menu group to remote menu */
+	agCOMPortSel->addTo(pRemoteMenu);
 
 	/* Default com number */
 	eComNumber = CN_COM1;
-	pRemoteMenu->setItemChecked(100, TRUE);
 
-#ifdef _WIN32
-	/* Set WINRADIO to default, because I own such a device :-) */
-	eWhichRemoteControl = RC_WINRADIO;
-	pRemoteMenu->setItemChecked(1, TRUE);
-
-	/* No com number needed for Winrado receiver */
-	pRemoteMenu->setItemEnabled(100, FALSE);
-	pRemoteMenu->setItemEnabled(101, FALSE);
-	pRemoteMenu->setItemEnabled(102, FALSE);
-#else
-	eWhichRemoteControl = RC_NOREMCNTR;
-	pRemoteMenu->setItemChecked(0, TRUE);
+#ifdef HAVE_LIBHAMLIB
+	/* If a config string was set via the command line, we would have to parse
+	   the string to identify the port number which was set (if any) which we
+	   do not want to do. We simply do not set any check in this case */
+	if (DRMReceiver.GetHamlibConf().empty())
 #endif
+	{
+		pacMenuCOM1->setOn(TRUE);
+	}
 
 
 	/* Update menu ---------------------------------------------------------- */
@@ -337,7 +449,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	CHECK_PTR(pMenu);
 	pMenu->insertItem("&View", pViewMenu);
 	pMenu->insertItem("&Remote", pRemoteMenu);
-	pMenu->insertItem("&Update", pUpdateMenu);
+	pMenu->insertItem("&Update", pUpdateMenu); /* String "Udate" used below */
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
@@ -346,13 +458,18 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 	/* Register the network protokol (ftp). This is needed for the DRMSchedule
 	   download */
-	QNetworkProtocol::registerNetworkProtocol("ftp", new
-		QNetworkProtocolFactory<QFtp>);
+	QNetworkProtocol::registerNetworkProtocol("ftp",
+		new QNetworkProtocolFactory<QFtp>);
 
 
 	/* Connections ---------------------------------------------------------- */
+	/* Action groups */
+	connect(agCOMPortSel, SIGNAL(selected(QAction*)),
+		this, SLOT(OnComPortMenu(QAction*)));
+
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
+
 	connect(ListViewStations, SIGNAL(clicked(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
 	connect(&UrlUpdateSchedule, SIGNAL(finished(QNetworkOperation*)),
@@ -366,18 +483,25 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	Timer.start(GUI_TIMER_LIST_VIEW_STAT);
 }
 
+StationsDlg::~StationsDlg()
+{
+#ifdef HAVE_LIBHAMLIB
+	if (pRig != NULL)
+	{
+		/* close everything */
+		rig_close(pRig);
+		rig_cleanup(pRig);
+	}
+#endif
+}
+
 void StationsDlg::OnShowStationsMenu(int iID)
 {
+	/* Show only active stations if ID is 0, else show all */
 	if (iID == 0)
-	{
-		/* Show only active stations */
 		bShowAll = FALSE;
-	}
 	else
-	{
-		/* Show all stations */
 		bShowAll = TRUE;
-	}
 
 	/* Update list view */
 	SetStationsView();
@@ -608,6 +732,28 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 
 void StationsDlg::OnRemoteMenu(int iID)
 {
+#ifdef HAVE_LIBHAMLIB
+	/* Set ID if valid */
+	const int iNewModelID = veciModelID[iID];
+
+	if (iNewModelID != 0)
+	{
+		/* A rig was selected via the menu, delete all previous settings from
+		   the command line (if any) */
+		DRMReceiver.SetHamlibConf("");
+
+		InitHamlib(iNewModelID);
+	}
+
+	/* Take care of check */
+	for (int i = 0; i < veciModelID.Size(); i++)
+	{
+		/* We don't care here that not all IDs are in each menu. If there is a
+		   non-valid ID for the menu item, there is simply nothing done */
+		pRemoteMenu->setItemChecked(i, i == iID);
+		pRemoteMenuOther->setItemChecked(i, i == iID);
+	}
+#else
 	switch (iID)
 	{
 	case 0:
@@ -649,44 +795,40 @@ void StationsDlg::OnRemoteMenu(int iID)
 	{
 	case 0:
 	case 1:
-		pRemoteMenu->setItemEnabled(100, FALSE);
-		pRemoteMenu->setItemEnabled(101, FALSE);
-		pRemoteMenu->setItemEnabled(102, FALSE);
+		agCOMPortSel->setEnabled(FALSE);
 		break;
 
 	default:
-		pRemoteMenu->setItemEnabled(100, TRUE);
-		pRemoteMenu->setItemEnabled(101, TRUE);
-		pRemoteMenu->setItemEnabled(102, TRUE);
+		agCOMPortSel->setEnabled(TRUE);
 		break;
 	}
+#endif
 }
 
-void StationsDlg::OnComPortMenu(int iID)
+void StationsDlg::OnComPortMenu(QAction* action)
 {
-	switch (iID)
-	{
-	case 100:
+	/* We cannot use the switch command for the non constant expressions here */
+	if (action == pacMenuCOM1)
 		eComNumber = CN_COM1;
-		break;
 
-	case 101:
+	if (action == pacMenuCOM2)
 		eComNumber = CN_COM2;
-		break;
 
-	case 102:
+	if (action == pacMenuCOM3)
 		eComNumber = CN_COM3;
-		break;
-	}
 
-	/* Taking care of checks in the menu */
-	pRemoteMenu->setItemChecked(100, 100 == iID);
-	pRemoteMenu->setItemChecked(101, 101 == iID);
-	pRemoteMenu->setItemChecked(102, 102 == iID);
+#ifdef HAVE_LIBHAMLIB
+	/* A com port was selected via the menu, delete all previous settings from
+	   the command line (if any) */
+	DRMReceiver.SetHamlibConf("");
+#endif
 }
 
 void StationsDlg::SetFrequency(const int iFreqkHz)
-{	
+{
+#ifdef HAVE_LIBHAMLIB
+	SetFrequencyHamlib(iFreqkHz);
+#else
 	switch (eWhichRemoteControl)
 	{
 	case RC_WINRADIO:
@@ -709,7 +851,271 @@ void StationsDlg::SetFrequency(const int iFreqkHz)
 		SetFrequencyRX320D(eComNumber, iFreqkHz);
 		break;
 	}
+#endif
 }
+
+
+#ifdef HAVE_LIBHAMLIB
+/******************************************************************************\
+* HAMLIB                                                                       *
+\******************************************************************************/
+/*
+	This code is based on patches and example code from Tomi Manninen and
+	Stephane Fillod (developer of hamlib)
+*/
+#ifndef HAVE_RIG_PARSE_MODE
+extern "C"
+{
+	extern rmode_t parse_mode(const char *s);
+	extern vfo_t parse_vfo(const char *s);
+	extern setting_t parse_func(const char *s);
+	extern setting_t parse_level(const char *s);
+	extern setting_t parse_parm(const char *s);
+}
+# define parse_mode rig_parse_mode
+# define parse_vfo rig_parse_vfo
+# define parse_func rig_parse_func
+# define parse_level rig_parse_level
+# define parse_parm rig_parse_parm
+#endif
+
+const QString StationsDlg::StrStatusHamlib(enum rig_status_e status)
+{
+	switch (status)
+	{
+	case RIG_STATUS_ALPHA:		return "Alpha";
+	case RIG_STATUS_UNTESTED:	return "Untested";
+	case RIG_STATUS_BETA:		return "Beta";
+	case RIG_STATUS_STABLE:		return "Stable";
+	case RIG_STATUS_BUGGY:		return "Buggy";
+	case RIG_STATUS_NEW:		return "New";
+	}
+	return "";
+}
+
+int StationsDlg::PrintHamlibModelList(const struct rig_caps* caps, void* data)
+{
+	/* Access data members of class through pointer */
+	StationsDlg* pInstStDlg = (StationsDlg*) data;
+
+	/* Store new model in string vector. Enlarge first and append new value */
+	const int iCurNumModels = pInstStDlg->veccapsHamlibModels.Size();
+	pInstStDlg->veccapsHamlibModels.Enlarge(1);
+
+	/* Store relevant data in vector */
+	pInstStDlg->veccapsHamlibModels[iCurNumModels].iModelID = caps->rig_model;
+	pInstStDlg->veccapsHamlibModels[iCurNumModels].strManufacturer = caps->mfg_name;
+	pInstStDlg->veccapsHamlibModels[iCurNumModels].strModelName = caps->model_name;
+	pInstStDlg->veccapsHamlibModels[iCurNumModels].eRigStatus = caps->status;
+
+	return 1;  /* !=0, we want them all! */
+}
+
+_BOOLEAN StationsDlg::CheckForSpecDRMFE(const rig_model_t iID, int& iIndex)
+{
+	_BOOLEAN bIsSpecialDRMrig = FALSE;
+
+	/* Check for special DRM front-end */
+	for (int i = 0; i < vecSpecDRMRigs.Size(); i++)
+	{
+		if (vecSpecDRMRigs[i].iModelID == iID)
+		{
+			bIsSpecialDRMrig = TRUE;
+			iIndex = i;
+		}
+	}
+
+	return bIsSpecialDRMrig;
+}
+
+_BOOLEAN StationsDlg::SetFrequencyHamlib(const int iFreqkHz)
+{
+	_BOOLEAN bSucceeded = FALSE;
+
+	/* Check if rig was opend properly */
+	if (pRig != NULL)
+	{
+		/* Set frequency */
+		if (rig_set_freq(pRig, RIG_VFO_CURR, iFreqkHz * 1000) == RIG_OK)
+			bSucceeded = TRUE;
+	}
+
+	return bSucceeded;
+}
+
+void StationsDlg::InitHamlib(const rig_model_t newModID)
+{
+	int ret;
+
+	/* If rig was already open, close it first */
+	if (pRig != NULL)
+	{
+		/* Close everything */
+		rig_close(pRig);
+		rig_cleanup(pRig);
+		pRig = NULL;
+	}
+
+	/* Init rig */
+	pRig = rig_init(newModID);
+	if (pRig == NULL)
+		return;
+
+	/* Set config for hamlib. Check if config string was added with command line
+	   argument */
+	string strHamlibConfig = DRMReceiver.GetHamlibConf();
+
+	if (strHamlibConfig.empty())
+	{
+		/* Generate string for port selection */
+#ifdef _WIN32
+		switch (eComNumber)
+		{
+		case CN_COM1:
+			strHamlibConfig = "rig_pathname=COM1";
+			break;
+
+		case CN_COM2:
+			strHamlibConfig = "rig_pathname=COM2";
+			break;
+
+		case CN_COM3:
+			strHamlibConfig = "rig_pathname=COM3";
+			break;
+		}
+#else
+		switch (eComNumber)
+		{
+		case CN_COM1:
+			strHamlibConfig = "rig_pathname=/dev/ttyS0";
+			break;
+
+		case CN_COM2:
+			strHamlibConfig = "rig_pathname=/dev/ttyS1";
+			break;
+
+		case CN_COM3:
+			strHamlibConfig = "rig_pathname=/dev/ttyUSB0";
+			break;
+		}
+#endif
+	}
+
+	/* Config setup */
+	char *p_dup, *p, *q, *n;
+	for (p = p_dup = strdup(strHamlibConfig.c_str()); p && *p != '\0'; p = n)
+	{
+		if ((q = strchr(p, '=')) == NULL)
+		{
+			/* Malformatted config string */
+			cerr << "Malformatted config string" << endl;
+			rig_cleanup(pRig);
+			pRig = NULL;
+			return;
+		}
+		*q++ = '\0';
+
+		if ((n = strchr(q, ',')) != NULL)
+			*n++ = '\0';
+
+		ret = rig_set_conf(pRig, rig_token_lookup(pRig, p), q);
+		if (ret != RIG_OK)
+		{
+			/* Rig set conf failed */
+			cerr << "Rig set conf failed: " << rigerror(ret) << endl;
+			rig_cleanup(pRig);
+			pRig = NULL;
+			return;
+		}
+	}
+	if (p_dup)
+		free(p_dup);
+
+	/* Open rig */
+	if (ret = rig_open(pRig) != RIG_OK)
+	{
+		/* fail! */
+		cerr << "Rig open failed: " << rigerror(ret) << endl;
+		rig_cleanup(pRig);
+		pRig = NULL;
+	}
+
+	/* ignore result, some rigs don't have support for this */
+	rig_set_powerstat(pRig, RIG_POWER_ON);
+
+	/* Check for special DRM front-end selection */
+	int iIndex;
+	if (CheckForSpecDRMFE(newModID, iIndex) == TRUE)
+	{
+		/* Parse special settings */
+		char *p_dup, *p, *q, *n;
+		for (p = p_dup = strdup(vecSpecDRMRigs[iIndex].strDRMSet.c_str());+
+			p && *p != '\0'; p = n)
+		{
+			if ((q = strchr(p, '=')) == NULL)
+			{
+				/* Malformatted config string */
+				cerr << "Malformatted config string" << endl;
+				rig_cleanup(pRig);
+				pRig = NULL;
+				return;
+			}
+			*q++ = '\0';
+
+			if ((n = strchr(q, ',')) != NULL)
+				*n++ = '\0';
+
+			rmode_t mode;
+			setting_t setting;
+			value_t val;
+
+			if (p[0] == 'm' && (mode = rig_parse_mode(p+2)) != RIG_MODE_NONE)
+			{
+				ret = rig_set_mode(pRig, RIG_VFO_CURR, mode, atoi(q));
+				if (ret != RIG_OK)
+					cerr << "Rig set mode failed: " << rigerror(ret) << endl;
+
+			}
+			else if (p[0] == 'l' && (setting = rig_parse_level(p + 2)) !=
+				RIG_LEVEL_NONE)
+			{
+				if (RIG_LEVEL_IS_FLOAT(setting))
+					val.f = atof(q);
+				else
+					val.i = atoi(q);
+
+				ret = rig_set_level(pRig, RIG_VFO_CURR, setting, val);
+				if (ret != RIG_OK)
+					cerr << "Rig set level failed: " << rigerror(ret) << endl;
+			}
+			else if (p[0] == 'f' && (setting = rig_parse_func(p + 2)) !=
+				RIG_FUNC_NONE)
+			{
+
+				ret = rig_set_func(pRig, RIG_VFO_CURR, setting, atoi(q));
+				if (ret != RIG_OK)
+					cerr << "Rig set func failed: " << rigerror(ret) << endl;
+			}
+			else if (p[0] == 'p' && (setting = rig_parse_parm(p + 2)) !=
+				RIG_PARM_NONE)
+			{
+				if (RIG_PARM_IS_FLOAT(setting))
+					val.f = atof(q);
+				else
+					val.i = atoi(q);
+
+				ret = rig_set_parm(pRig, setting, val);
+				if (ret != RIG_OK)
+					cerr << "Rig set parm failed: " << rigerror(ret) << endl;
+			}
+			else
+				cerr << "Rig unknown setting: " << p << "=" << q << endl;
+		}
+		if (p_dup)
+			free(p_dup);
+	}
+}
+#endif
 
 
 /******************************************************************************\
@@ -950,13 +1356,13 @@ _BOOLEAN StationsDlg::SetFrequencyElektor304(const ECOMNumber eCOMNumber,
 		const CReal rOscFreq = 50000.0;
 		const CReal rIFMixFreq = 454.3;
 
-		const _UINT32BIT iNewFreq = (_UINT32BIT)
+		const uint32_t iNewFreq = (uint32_t)
 			(((CReal) iFreqkHz + rIFMixFreq) / rOscFreq * (CReal) 4294967296.0);
 
-		const _UINT32BIT iFreqLoL = iNewFreq & 0xFF;
-		const _UINT32BIT iFreqLoH = (iNewFreq & 0xFF00) >> 8;
-		const _UINT32BIT iFreqHiL = (iNewFreq & 0xFF0000) >> 16;
-		const _UINT32BIT iFreqHiH = (iNewFreq & 0xFF000000) >> 24;
+		const uint32_t iFreqLoL = iNewFreq & 0xFF;
+		const uint32_t iFreqLoH = (iNewFreq & 0xFF00) >> 8;
+		const uint32_t iFreqHiL = (iNewFreq & 0xFF0000) >> 16;
+		const uint32_t iFreqHiH = (iNewFreq & 0xFF000000) >> 24;
 
 		OutputElektor304(hCom, 0xF800); // Reset
 		OutputElektor304(hCom, (0x3000 + iFreqLoL)); // 4 Bytes to FREQ0
@@ -977,12 +1383,12 @@ _BOOLEAN StationsDlg::SetFrequencyElektor304(const ECOMNumber eCOMNumber,
 	return bSucceeded;
 }
 
-void StationsDlg::OutputElektor304(FILE_HANDLE hCom, const _UINT32BIT iData)
+void StationsDlg::OutputElektor304(FILE_HANDLE hCom, const uint32_t iData)
 {
 	SetOutStateElektor304(hCom, OW_TXD, 0); // TXD 0
 	SetOutStateElektor304(hCom, OW_DTR, 1); // DTR 1 // CE
 
-	_UINT32BIT iMask = 0x8000;
+	uint32_t iMask = 0x8000;
 	for (int n = 0; n < 16; n++)
 	{
 		if ((iData & iMask) > 0)
