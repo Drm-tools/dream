@@ -98,7 +98,7 @@ try
 
 	if (bIsReceiver == FALSE)
 	{
-		TransmDialog MainDlg(0, 0, FALSE, Qt::WStyle_MinMax);
+		TransmDialog MainDlg(0, 0, FALSE, Qt::WStyle_ContextHelp);
 
 		/* Set main window */
 		app.setMainWidget(&MainDlg);
