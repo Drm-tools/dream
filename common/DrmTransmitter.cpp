@@ -112,7 +112,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	/* Init streams */
 	Param.ResetServicesStreams();
 
-	/* Use 6.3.6 to set this two parameters! */
+	/* Use 6.3.6 to set these two parameters! */
 	Param.FACRepitition[0] = 0;
 	Param.FACNumRep = 1;
 
