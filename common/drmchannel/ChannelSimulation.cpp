@@ -252,6 +252,21 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		rMyFading);
 		break;
+
+	case 9:
+		/* Two moderate fading taps close to each other with equal gain */
+		iNoTaps = 4;
+
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) 1.0);
+
+		tap[1].Init(/* Delay: */	(_REAL) 0.7,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) 1.0);
+		break;
 	}
 
 
