@@ -89,21 +89,14 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 	else
 	{
-		/* Adjust estimated carrier frequency if the input spectrum was
-		   inverted */
-		if (bFlipFreqOffset == TRUE)
+		/* Check, if new demodulation type was chosen */
+		if (bNewDemodType == TRUE)
 		{
-			/* Flip normalized frequency */
-			rNormCurFreqOffset = (CReal) 0.5 - rNormCurFreqOffset;
-
 			/* Generate filter taps and set mixing constant */
 			SetCarrierFrequency(rNormCurFreqOffset);
 
-			/* Set new carrier frequency as global parameter for GUI */
-			ReceiverParam.rFreqOffsetAcqui = rNormCurFreqOffset;
-
 			/* Reset flag */
-			bFlipFreqOffset = FALSE;
+			bNewDemodType = FALSE;
 		}
 
 
@@ -129,11 +122,21 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			cCurExp *= cExpStep;
 		}
 
-		/* Make signal real and write mono signal in both channels (left and
-		   right) */
-		for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
-			(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
-				Real2Sample(Real(cvecHilbert[j]) * 4);
+		if ((eDemodType == DT_AM_10) || (eDemodType == DT_AM_5))
+		{
+			/* Use envelope of signal and write in both output channels */
+			for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
+				(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
+					Real2Sample(Abs(cvecHilbert[j]) * 2);
+		}
+		else
+		{
+			/* Make signal real and write mono signal in both channels (left and
+			   right) */
+			for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
+				(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
+					Real2Sample(Real(cvecHilbert[j]) * 4);
+		}
 	}
 }
 
@@ -171,15 +174,6 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	iAquisitionCounter = NUM_BLOCKS_CARR_ACQUISITION;
 	/* Reset FFT-history */
 	vecrFFTHistory.Reset((CReal) 0.0);
-
-	/* Reset flag for flipping carrier frequency estimation. This should be done
-	   in the init routine because the receiver could have been in DRM mode and
-	   the user had switched the "flip input spectrum" check. In this case, also
-	   this flag in the AM demodulation would have been set but AM demodulation
-	   was not activated at this time. When the user switches to AM
-	   demodulation, the estimated carrier frequency would be changed right
-	   after acquisition which is, of course, not correct */
-	bFlipFreqOffset = FALSE;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iTotalBufferSize);
@@ -223,29 +217,74 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 {
 	/* Calculate filter taps for complex Hilbert filter --------------------- */
-	rvecBReal.Init(NUM_TAPS_HILB_FILT_5);
-	rvecBImag.Init(NUM_TAPS_HILB_FILT_5);
-	rvecA.Init(1);
+	CReal rFiltCentOffs;
 
-	/* The filter should be on the right side of the DC carrier */
-	const CReal rFiltCentOffs = rNormCurFreqOffset +
-		(CReal) HILB_FILT_BNDWIDTH_5 / 2 / SOUNDCRD_SAMPLE_RATE;
-
-	for (int i = 0; i < NUM_TAPS_HILB_FILT_5; i++)
+	/* Adjust center of filter for respective demodulation types */
+	switch (eDemodType)
 	{
-		rvecBReal[i] =
-			fHilLPProt5[i] * Cos((CReal) 2.0 * crPi * rFiltCentOffs * i);
+	case DT_AM_10:
+	case DT_AM_5:
+		/* No offset in normal AM mode */
+		rFiltCentOffs = rNormCurFreqOffset;
+		break;
 
-		rvecBImag[i] =
-			fHilLPProt5[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffs * i);
+	case DT_LSB:
+		/* Shift filter to the left side of the carrier */
+		rFiltCentOffs = rNormCurFreqOffset -
+			(CReal) HILB_FILT_BNDWIDTH_5 / 2 / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case DT_USB:
+		/* Shift filter to the right side of the carrier */
+		rFiltCentOffs = rNormCurFreqOffset +
+			(CReal) HILB_FILT_BNDWIDTH_5 / 2 / SOUNDCRD_SAMPLE_RATE;
+		break;
+	}
+
+
+	/* Set filter coefficients */
+	if (eDemodType == DT_AM_10)
+	{
+		/* Use 10 kHz filter for normal AM demodulation */
+		rvecBReal.Init(NUM_TAPS_HILB_FILT_10);
+		rvecBImag.Init(NUM_TAPS_HILB_FILT_10);
+
+		for (int i = 0; i < NUM_TAPS_HILB_FILT_10; i++)
+		{
+			rvecBReal[i] =
+				fHilLPProt10[i] * Cos((CReal) 2.0 * crPi * rFiltCentOffs * i);
+
+			rvecBImag[i] =
+				fHilLPProt10[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffs * i);
+		}
+
+		/* Init state vector for filtering with zeros */
+		rvecZReal.Init(NUM_TAPS_HILB_FILT_10 - 1, (CReal) 0.0);
+		rvecZImag.Init(NUM_TAPS_HILB_FILT_10 - 1, (CReal) 0.0);
+	}
+	else
+	{
+		/* 5 kHz filter for LSB and USB and narrow AM mode */
+		rvecBReal.Init(NUM_TAPS_HILB_FILT_5);
+		rvecBImag.Init(NUM_TAPS_HILB_FILT_5);
+
+		for (int i = 0; i < NUM_TAPS_HILB_FILT_5; i++)
+		{
+			rvecBReal[i] =
+				fHilLPProt5[i] * Cos((CReal) 2.0 * crPi * rFiltCentOffs * i);
+
+			rvecBImag[i] =
+				fHilLPProt5[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffs * i);
+		}
+
+		/* Init state vector for filtering with zeros */
+		rvecZReal.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
+		rvecZImag.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
 	}
 
 	/* Only FIR filter */
+	rvecA.Init(1);
 	rvecA[0] = (CReal) 1.0;
-
-	/* Init state vector for filtering with zeros */
-	rvecZReal.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
-	rvecZImag.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
 
 
 	/* Set mixing constant -------------------------------------------------- */

@@ -11,6 +11,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/systemevalDlgbase.cpp \
 	moc/moc_MultimediaDlg.cpp moc/moc_MultimediaDlgbase.cpp moc/MultimediaDlgbase.h moc/MultimediaDlgbase.cpp \
 	moc/moc_StationsDlg.cpp moc/moc_StationsDlgbase.cpp moc/StationsDlgbase.h moc/StationsDlgbase.cpp \
+	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp
 
 # and should be cleaned by make clean
@@ -72,6 +73,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/GUI-QT/systemevalDlg.cpp \
 	../common/GUI-QT/MultimediaDlg.cpp \
 	../common/GUI-QT/StationsDlg.cpp \
+	../common/GUI-QT/AnalogDemDlg.cpp \
 	source/sound.cpp \
 	../common/Buffer.h \
 	../common/CRC.h \
@@ -143,6 +145,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/GUI-QT/systemevalDlg.h \
 	../common/GUI-QT/DRMPlot.h \
 	../common/GUI-QT/StationsDlg.h \
+	../common/GUI-QT/AnalogDemDlg.h \
 	source/sound.h
 	
 nodist_drm_SOURCES=$(BUILT_SOURCES)
@@ -233,3 +236,16 @@ moc/StationsDlgbase.h: ../common/GUI-QT/StationsDlgbase.ui
 
 moc/StationsDlgbase.cpp: ../common/GUI-QT/StationsDlgbase.ui moc/StationsDlgbase.h
 	$(UIC) ../common/GUI-QT/StationsDlgbase.ui -i moc/StationsDlgbase.h -o moc/StationsDlgbase.cpp
+
+
+moc/moc_AnalogDemDlg.cpp: ../common/GUI-QT/AnalogDemDlg.h
+	$(MOC) ../common/GUI-QT/AnalogDemDlg.h -o moc/moc_AnalogDemDlg.cpp
+		
+moc/moc_AnalogDemDlgbase.cpp: moc/AnalogDemDlgbase.h
+	$(MOC) moc/AnalogDemDlgbase.h -o moc/moc_AnalogDemDlgbase.cpp
+	
+moc/AnalogDemDlgbase.h: ../common/GUI-QT/AnalogDemDlgbase.ui
+	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -o moc/AnalogDemDlgbase.h
+
+moc/AnalogDemDlgbase.cpp: ../common/GUI-QT/AnalogDemDlgbase.ui moc/AnalogDemDlgbase.h
+	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -i moc/AnalogDemDlgbase.h -o moc/AnalogDemDlgbase.cpp	

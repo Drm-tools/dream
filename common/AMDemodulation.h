@@ -56,11 +56,15 @@ class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
 	CAMDemodulation() : bAcquisition(TRUE), bSearWinWasSet(FALSE),
-		bFlipFreqOffset(FALSE) {}
+		bNewDemodType(FALSE), eDemodType(DT_AM_10) {}
 	virtual ~CAMDemodulation() {}
 
+	enum EDemodType {DT_AM_10, DT_AM_5, DT_LSB, DT_USB};
+
 	void SetAcqFreq(const CReal rNewNormCenter);
-	void SetFlipCarrierFreq() {bFlipFreqOffset = TRUE;}
+	EDemodType GetDemodType() {return eDemodType;}
+	void SetDemodType(EDemodType eNewType)
+		{eDemodType = eNewType; bNewDemodType = TRUE;}
 
 protected:
 	void SetCarrierFrequency(const CReal rNormCurFreqOffset);
@@ -96,7 +100,9 @@ protected:
 	CReal						rNormCenter;
 
 	CReal						rNormCurFreqOffset;
-	_BOOLEAN					bFlipFreqOffset;
+
+	_BOOLEAN					bNewDemodType;
+	EDemodType					eDemodType;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

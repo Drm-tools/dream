@@ -141,6 +141,11 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
 
+	/* Analog demodulation window */
+	pAnalogDemDlg = new AnalogDemDlg(this, "Analog Demodulation", FALSE, 
+		Qt::WGroupLeader | Qt::WStyle_MinMax);
+	pAnalogDemDlg->hide();
+
 	/* Stations window */
 	pStationsDlg = new StationsDlg(this, "Stations", FALSE, 
 		Qt::WGroupLeader | Qt::WStyle_MinMax);
@@ -400,6 +405,21 @@ void FDRMDialog::OnTimer()
 				"Ctrl+D for DRM");
 		}
 	}
+
+	/* Check the receiver mode for showing the correct evaluation window */
+	if ((DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM) &&
+		(pAnalogDemDlg->isVisible()))
+	{
+		pAnalogDemDlg->hide();
+		pSysEvalDlg->show();
+	}
+
+	if ((DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_AM) &&
+		(pSysEvalDlg->isVisible()))
+	{
+		pSysEvalDlg->hide();
+		pAnalogDemDlg->show();
+	}
 }
 
 void FDRMDialog::OnReceiverMode(int id)
@@ -408,10 +428,21 @@ void FDRMDialog::OnReceiverMode(int id)
 	{
 	case 0:
 		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+		if (pAnalogDemDlg->isVisible())
+		{
+			pAnalogDemDlg->hide();
+			pSysEvalDlg->show();
+		}
+
 		break;
 
 	case 1:
 		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_AM);
+		if (pSysEvalDlg->isVisible())
+		{
+			pSysEvalDlg->hide();
+			pAnalogDemDlg->show();
+		}
 		break;
 	}
 
@@ -518,8 +549,16 @@ void FDRMDialog::SetService(int iNewServiceID)
 
 void FDRMDialog::OnViewEvalDlg()
 {
-	/* Show evauation window */
-	pSysEvalDlg->show();
+	if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM)
+	{
+		/* Show evauation window in DRM mode */
+		pSysEvalDlg->show();
+	}
+	else
+	{
+		/* Show AM demodulation window in AM mode */
+		pAnalogDemDlg->show();
+	}
 }
 
 void FDRMDialog::OnViewMultiMediaDlg()

@@ -39,16 +39,15 @@
 
 #ifdef _WIN32
 # include "../../Windows/moc/fdrmdialogbase.h"
-# include "../../Windows/moc/AboutDlgbase.h"
-# include "../../Windows/moc/MultimediaDlgbase.h"
+# include "../../Windows/moc/AboutDlgbase.h" /* no regular .cpp and .h file */
 #else
 # include "moc/fdrmdialogbase.h"
-# include "moc/AboutDlgbase.h"
-# include "moc/MultimediaDlgbase.h"
+# include "moc/AboutDlgbase.h" /* no regular .cpp and .h file */
 #endif
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"
 #include "StationsDlg.h"
+#include "AnalogDemDlg.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../Vector.h"
@@ -81,6 +80,7 @@ protected:
 	systemevalDlg*	pSysEvalDlg;
 	MultimediaDlg*	pMultiMediaDlg;
 	StationsDlg*	pStationsDlg;
+	AnalogDemDlg*	pAnalogDemDlg;
 	QMenuBar*		pMenu;
 	QPopupMenu*		pSoundInMenu;
 	QPopupMenu*		pSoundOutMenu;

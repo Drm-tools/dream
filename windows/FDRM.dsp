@@ -104,11 +104,23 @@ SOURCE=.\moc\AboutDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\AnalogDemDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\moc\moc_AboutDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_AnalogDemDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_AnalogDemDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -175,6 +187,10 @@ SOURCE=.\moc\systemevalDlgbase.cpp
 SOURCE=.\moc\TransmDlgbase.cpp
 # End Source File
 # End Group
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\AnalogDemDlg.cpp"
+# End Source File
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\DRMPlot.cpp"
@@ -471,6 +487,10 @@ SOURCE=..\common\TextMessage.cpp
 # Begin Group "Header GUI, App"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\AnalogDemDlg.h"
+# End Source File
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\DRMPlot.h"
