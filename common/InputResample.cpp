@@ -52,7 +52,7 @@ void CInputResample::ProcessDataInternal(CParameter& ReceiverParam)
 			rSamRateOffset = MAX_RESAMPLE_OFFSET;
 		if (rSamRateOffset < -MAX_RESAMPLE_OFFSET)
 			rSamRateOffset = -MAX_RESAMPLE_OFFSET;
-		
+
 		/* Do actual resampling */
 		iOutputBlockSize = ResampleObj.Resample(pvecInputData, pvecOutputData,
 			(_REAL) 48000 / (48000 - rSamRateOffset));
