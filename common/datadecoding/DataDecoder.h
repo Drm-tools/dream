@@ -78,6 +78,8 @@ protected:
 
 	CMOTPicture				MOTPicture;
 
+	_BOOLEAN				DoNotProcessData;
+
 	int						iContInd[MAX_NUM_PACK_PER_STREAM];
 	CDataUnit				DataUnit[MAX_NUM_PACK_PER_STREAM];
 	CDABData				DABData[MAX_NUM_PACK_PER_STREAM];

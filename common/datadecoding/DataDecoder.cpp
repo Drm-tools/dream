@@ -44,6 +44,11 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	_BINARY		biPadPackInd;
 	CCRC		CRCObject;
 
+	/* Check if something went wrong in the initialization routine */
+	if (DoNotProcessData == TRUE)
+		return;
+
+
 	/* CRC check for all packets -------------------------------------------- */
 	/* Reset bit extraction access */
 	(*pvecInputData).ResetBitAccess();
@@ -219,17 +224,15 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 	int	iCurDataStreamID;
 	int iCurSelDataServ;
 
+	/* Init error flag */
+	DoNotProcessData = FALSE;
+
 	/* Get current selected data service */
 	iCurSelDataServ = ReceiverParam.GetCurSelDataService();
 
-	if (ReceiverParam.bUsingMultimedia)
-	{
-		/* Get current data stream ID */
-		iCurDataStreamID =
-			ReceiverParam.Service[iCurSelDataServ].DataParam.iStreamID;
-	}
-	else
-		iCurDataStreamID = STREAM_ID_NOT_USED;
+	/* Get current data stream ID */
+	iCurDataStreamID =
+		ReceiverParam.Service[iCurSelDataServ].DataParam.iStreamID;
 
 	/* Check, if service is activated */
 	if (iCurDataStreamID != STREAM_ID_NOT_USED)
@@ -238,49 +241,60 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 		iLenDataHigh = ReceiverParam.Stream[iCurDataStreamID].iLenPartA;
 		iLenDataLow = ReceiverParam.Stream[iCurDataStreamID].iLenPartB;
 
-		/* Calculate total packet size. DRM standard: packet length: this field
-		   indicates the length in bytes of the data field of each packet specified
-		   as an unsigned binary number (the total packet length is three bytes
-		   longer as it includes the header and CRC fields) */
-		iTotalPacketSize =
-			ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketLen + 3;
-
-		/* Check total packet size, could be wrong due to wrong SDC */
-		if ((iTotalPacketSize == 0) ||
-			(iTotalPacketSize > iLenDataHigh + iLenDataLow))
+		/* Only packet services can be decoded */
+		if (ReceiverParam.Service[iCurSelDataServ].DataParam.
+			ePacketModInd != CParameter::PM_PACKET_MODE)
 		{
-			/* False parameter, set everyting to zero and disable this module */
-			iLenDataHigh = 0;
-			iLenDataLow = 0;
+			/* Set error flag */
+			DoNotProcessData = TRUE;
 		}
 		else
 		{
-			/* Number of data packets in one data block */
-			iNumDataPackets = (iLenDataHigh + iLenDataLow) / iTotalPacketSize;
+			/* Calculate total packet size. DRM standard: packet length: this
+			   field indicates the length in bytes of the data field of each
+			   packet specified as an unsigned binary number (the total packet
+			   length is three bytes longer as it includes the header and CRC
+			   fields) */
+			iTotalPacketSize =
+				ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketLen + 3;
 
-			/* Get the packet ID of the selected service */
-			iServPacketID =
-				ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
-
-			/* Get application domain of selected service */
-			eServAppDomain =
-				ReceiverParam.Service[iCurSelDataServ].DataParam.eAppDomain;
-
-			/* Get application identifier of current selected service, only used
-			   with DAB */
-			iDABUserAppIdent =
-				ReceiverParam.Service[iCurSelDataServ].DataParam.iUserAppIdent;
-
-			/* Vector for storing the CRC results for each packet */
-			veciCRCOk.Init(iNumDataPackets);
-
-			/* Reset data units for all possible data IDs */
-			for (int i = 0; i < MAX_NUM_PACK_PER_STREAM; i++)
+			/* Check total packet size, could be wrong due to wrong SDC */
+			if ((iTotalPacketSize == 0) ||
+				(iTotalPacketSize > iLenDataHigh + iLenDataLow))
 			{
-				DataUnit[i].Reset();
+				/* Set error flag */
+				DoNotProcessData = TRUE;
+			}
+			else
+			{
+				/* Number of data packets in one data block */
+				iNumDataPackets =
+					(iLenDataHigh + iLenDataLow) / iTotalPacketSize;
 
-				/* Reset continuity index (CI) */
-				iContInd[i] = 0;
+				/* Get the packet ID of the selected service */
+				iServPacketID =
+					ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
+
+				/* Get application domain of selected service */
+				eServAppDomain =
+					ReceiverParam.Service[iCurSelDataServ].DataParam.eAppDomain;
+
+				/* Get application identifier of current selected service, only
+				   used with DAB */
+				iDABUserAppIdent = ReceiverParam.Service[iCurSelDataServ].
+					DataParam.iUserAppIdent;
+
+				/* Vector for storing the CRC results for each packet */
+				veciCRCOk.Init(iNumDataPackets);
+
+				/* Reset data units for all possible data IDs */
+				for (int i = 0; i < MAX_NUM_PACK_PER_STREAM; i++)
+				{
+					DataUnit[i].Reset();
+
+					/* Reset continuity index (CI) */
+					iContInd[i] = 0;
+				}
 			}
 		}
 	}
