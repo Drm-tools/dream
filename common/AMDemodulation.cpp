@@ -97,7 +97,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		for (i = 0; i < iInputBlockSize; i++)
 			rvecInpTmp[i] = (*pvecInputData)[i];
 
-		/* Cut out a spectrum part of bandwidth "HILB_FILT_BNDWIDTH" */
+		/* Cut out a spectrum part of bandwidth "HILB_FILT_BNDWIDTH_5" */
 		cvecHilbert = CComplexVector(
 			Filter(rvecBReal, rvecA, rvecInpTmp, rvecZReal),
 			Filter(rvecBImag, rvecA, rvecInpTmp, rvecZImag));
@@ -173,26 +173,26 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 void CAMDemodulation::SetFilterTaps(_REAL rNewOffsetNorm)
 {
 	/* Calculate filter taps for complex Hilbert filter */
-	rvecBReal.Init(NUM_TAPS_HILB_FILT);
-	rvecBImag.Init(NUM_TAPS_HILB_FILT);
+	rvecBReal.Init(NUM_TAPS_HILB_FILT_5);
+	rvecBImag.Init(NUM_TAPS_HILB_FILT_5);
 	rvecA.Init(1);
 
 	/* The filter should be on the right of the DC carrier */
-	rNewOffsetNorm += (_REAL) HILB_FILT_BNDWIDTH / 2 / SOUNDCRD_SAMPLE_RATE;
+	rNewOffsetNorm += (_REAL) HILB_FILT_BNDWIDTH_5 / 2 / SOUNDCRD_SAMPLE_RATE;
 
-	for (int i = 0; i < NUM_TAPS_HILB_FILT; i++)
+	for (int i = 0; i < NUM_TAPS_HILB_FILT_5; i++)
 	{
 		rvecBReal[i] =
-			fHilLPProt[i] * Cos((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
+			fHilLPProt5[i] * Cos((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
 
 		rvecBImag[i] =
-			fHilLPProt[i] * Sin((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
+			fHilLPProt5[i] * Sin((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
 	}
 
 	/* Only FIR filter */
 	rvecA[0] = (CReal) 1.0;
 
 	/* Init state vector for filtering with zeros */
-	rvecZReal.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
-	rvecZImag.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
+	rvecZReal.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
+	rvecZImag.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
 }
