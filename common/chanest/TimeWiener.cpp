@@ -85,9 +85,9 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 					iTimeDiffNew);
 
 				/* Use IIR filtering for averaging */
-				IIR1(vecrTiCorrEst[j],
-					Real(Conj(matcChanAtPilPos[0][iPiHiIndex]) * cNewPilot),
-						rLamTiCorrAv);
+				IIR1(veccTiCorrEst[j],
+					Conj(matcChanAtPilPos[0][iPiHiIndex]) * cNewPilot,
+					rLamTiCorrAv);
 			}
 		}
 	}
@@ -108,7 +108,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		else
 		{
 			/* Actual estimation of sigma */
-			rSigma = ModLinRegr(vecrTiCorrEst);
+			rSigma = ModLinRegr(veccTiCorrEst);
 
 			/* Use overestimated sigma for filter update */
 			_REAL rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
@@ -259,7 +259,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 	/* Init vector for estimation of the correlation function in time direction
 	   (IIR average) */
-	vecrTiCorrEst.Init(iNumTapsSigEst, (CReal) 0.0);
+	veccTiCorrEst.Init(iNumTapsSigEst, (CReal) 0.0);
 
 	/* Init time constant for IIR filter for averaging correlation estimation.
 	   Consider averaging over frequency axis, too. Pilots in frequency
@@ -438,12 +438,12 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	return rMMSE;
 }
 
-CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
+CReal CTimeWiener::ModLinRegr(CComplexVector& veccCorrEst)
 {
 	/* Modified linear regression to estimate the "sigma" of the Gaussian
 	   correlation function */
 	/* Get vector length */
-	int iVecLen = Size(vecrCorrEst);
+	int iVecLen = Size(veccCorrEst);
 
 	/* Init vectors and variables */
 	CReal		rSigmaRet;
@@ -456,20 +456,12 @@ CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 
 	/* Generate the tau vector */
 	for (int i = 0; i < iVecLen; i++)
-	{
 		Tau[i] = (CReal) (i * iScatPilTimeInt);
-
-		/* Check the input vector. It is not possible to have negative input
-		   values. If we detect negative values, return highest possible
-		   sigma value, since we cannot estimate a new sigma */
-		if (vecrCorrEst[i] < 0)
-			return rSigmaMax;
-	}
 
 	/* Linearize acf equation:  y = a * exp(-b * x^2)
 	   z = ln(y);   w = x^2
 	   -> z = a0 + a1 * w */
-	Z = Log(vecrCorrEst);
+	Z = Log(Abs(veccCorrEst));
 
 	W = Tau * Tau;
 
