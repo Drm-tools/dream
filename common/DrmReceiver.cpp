@@ -311,6 +311,7 @@ void CDRMReceiver::SetInStartMode()
 	FreqSyncAcq.StartAcquisition();
 	TimeSync.StartAcquisition();
 	ChannelEstimation.GetTimeSyncTrack()->StopTracking();
+	ChannelEstimation.StartSaRaOffAcq();
 	ChannelEstimation.GetTimeWiener()->StopTracking();
 
 	SyncUsingPil.StartAcquisition();

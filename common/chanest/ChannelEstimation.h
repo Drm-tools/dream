@@ -112,6 +112,8 @@ public:
 	_REAL GetSigma() {return TimeWiener.GetSigma();}
 	_REAL GetDelay() const;
 
+	void StartSaRaOffAcq() {TimeSyncTrack.StartSaRaOffAcq(); SetInitFlag();}
+
 protected:
 	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM};
 	EDFTWinType			eDFTWindowingMethod;
