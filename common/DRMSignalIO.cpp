@@ -334,12 +334,11 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	}
 
 
-	/* Copy data in buffer for spectrum calculation ------------------------- */
+	/* Copy data in buffer for spectrum calculation */
 	vecrInpData.AddEnd((*pvecOutputData), iOutputBlockSize);
 
-
-	/* Update level meter --------------------------------------------------- */
-	LevelMeter();
+	/* Update level meter */
+	SignalLevelMeter.Update((*pvecOutputData));
 }
 
 void CReceiveData::InitInternal(CParameter& Parameter)
@@ -375,6 +374,9 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 			throw CGenErr("The file " + strInFileName + " must exist.");
 	}
 
+	/* Init signal meter */
+	SignalLevelMeter.Init(0);
+
 	/* Define output block-size */
 	iOutputBlockSize = Parameter.iSymbolBlockSize;
 }
@@ -384,37 +386,6 @@ CReceiveData::~CReceiveData()
 	/* Close file (if opened) */
 	if (pFileReceiver != NULL)
 		fclose(pFileReceiver);
-}
-
-void CReceiveData::LevelMeter()
-{
-	/* Search for maximum. Decrease this max with time */
-	for (int i = 0; i < iOutputBlockSize; i++)
-	{
-		/* Decrease max with time */
-		if (iCurMicMeterLev >= METER_FLY_BACK)
-			iCurMicMeterLev -= METER_FLY_BACK;
-		else
-		{
-			if ((iCurMicMeterLev <= METER_FLY_BACK) && (iCurMicMeterLev > 1))
-				iCurMicMeterLev -= 2;
-		}
-
-		/* Search for max */
-		if (fabs((*pvecOutputData)[i]) > iCurMicMeterLev)
-			iCurMicMeterLev = Real2Sample(fabs((*pvecOutputData)[i]));
-	}
-}
-
-_REAL CReceiveData::GetLevelMeter()
-{
-	_REAL rNormMicLevel = (_REAL) iCurMicMeterLev / _MAXSHORT;
-
-	/* Logarithmic measure */
-	if (rNormMicLevel > 0)
-		return (_REAL) 20.0 * log10(rNormMicLevel);
-	else
-		return RET_VAL_LOG_0;
 }
 
 void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
@@ -469,4 +440,51 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 
 	/* Release resources */
 	Unlock();
+}
+
+
+/* Level meter -------------------------------------------------------------- */
+void CSignalLevelMeter::Update(_REAL rVal)
+{
+	/* Search for maximum. Decrease this max with time */
+	/* Decrease max with time */
+	if (rCurLevel >= METER_FLY_BACK)
+		rCurLevel -= METER_FLY_BACK;
+	else
+	{
+		if ((rCurLevel <= METER_FLY_BACK) && (rCurLevel > 1))
+			rCurLevel -= 2;
+	}
+
+	/* Search for max */
+	const _REAL rCurAbsVal = Abs(rVal);
+	if (rCurAbsVal > rCurLevel)
+		rCurLevel = rCurAbsVal;
+}
+
+void CSignalLevelMeter::Update(CVector<_REAL> vecrVal)
+{
+	/* Do the update for entire vector */
+	const int iVecSize = vecrVal.Size();
+	for (int i = 0; i < iVecSize; i++)
+		Update(vecrVal[i]);
+}
+
+void CSignalLevelMeter::Update(CVector<_SAMPLE> vecsVal)
+{
+	/* Do the update for entire vector, convert to real */
+	const int iVecSize = vecsVal.Size();
+	for (int i = 0; i < iVecSize; i++)
+		Update((_REAL) vecsVal[i]);
+}
+
+_REAL CSignalLevelMeter::Level()
+{
+	const _REAL rNormMicLevel = rCurLevel / _MAXSHORT;
+
+	/* Logarithmic measure */
+	if (rNormMicLevel > 0)
+		return (_REAL) 20.0 * log10(rNormMicLevel);
+	else
+		return RET_VAL_LOG_0;
 }

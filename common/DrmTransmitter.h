@@ -66,6 +66,7 @@ public:
 	/* Get pointer to internal modules */
 	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
 	CTransmitData*			GetTransData() {return &TransmitData;}
+	CReadData*				GetReadData() {return &ReadData;}
 
 	CSound*					GetSoundInterface() {return &SoundInterface;}
 	CParameter*				GetParameters() {return &TransmParam;}

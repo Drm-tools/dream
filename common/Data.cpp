@@ -42,6 +42,9 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 	/* Write data to output buffer */
 	for (int i = 0; i < iOutputBlockSize; i++)
 		(*pvecOutputData)[i] = vecsSoundBuffer[i];
+
+	/* Update level meter */
+	SignalLevelMeter.Update((*pvecOutputData));
 }
 
 void CReadData::InitInternal(CParameter& TransmParam)
@@ -54,6 +57,9 @@ void CReadData::InitInternal(CParameter& TransmParam)
 	/* Init sound interface and intermediate buffer */
 	pSound->InitRecording(iOutputBlockSize, FALSE);
 	vecsSoundBuffer.Init(iOutputBlockSize);
+
+	/* Init level meter */
+	SignalLevelMeter.Init(0);
 }
 
 

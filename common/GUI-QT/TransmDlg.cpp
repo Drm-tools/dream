@@ -45,6 +45,13 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	/* Init controls with default settings */
 	ButtonStartStop->setText("&Start");
 
+	/* Init progress bar for input signal level */
+	ProgrInputLevel->setRange(-50.0, 0.0);
+	ProgrInputLevel->setOrientation(QwtThermo::Horizontal, QwtThermo::Bottom);
+	ProgrInputLevel->setFillColor(QColor(0, 190, 0));
+	ProgrInputLevel->setAlarmLevel(-5.0);
+	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
+
 	/* Output mode (real valued, I / Q or E / P) */
 	switch (TransThread.DRMTransmitter.GetTransData()->GetIQOutput())
 	{
@@ -344,6 +351,13 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnTextChangedServiceID(const QString&)));
 	connect(LineEditSndCrdIF, SIGNAL(textChanged(const QString&)),
 		this, SLOT(OnTextChangedSndCrdIF(const QString&)));
+
+	connect(&Timer, SIGNAL(timeout()), 
+		this, SLOT(OnTimer()));
+
+
+	/* Set timer for real-time controls */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 TransmDialog::~TransmDialog()
@@ -351,6 +365,13 @@ TransmDialog::~TransmDialog()
 	/* Stop transmitter */
 	if (bIsStarted == TRUE)
 		TransThread.Stop();
+}
+
+void TransmDialog::OnTimer()
+{
+	/* Set value for input level meter */
+	ProgrInputLevel->
+		setValue(TransThread.DRMTransmitter.GetReadData()->GetLevelMeter());
 }
 
 void TransmDialog::OnButtonStartStop()
@@ -962,6 +983,8 @@ void TransmDialog::DisableAllControls()
 	GroupBoxChanParam->setEnabled(FALSE);
 	TabWidgetServices->setEnabled(FALSE);
 	ButtonGroupOutput->setEnabled(FALSE);
+
+	GroupInput->setEnabled(TRUE); /* For run-mode */
 }
 
 void TransmDialog::EnableAllControls()
@@ -969,4 +992,6 @@ void TransmDialog::EnableAllControls()
 	GroupBoxChanParam->setEnabled(TRUE);
 	TabWidgetServices->setEnabled(TRUE);
 	ButtonGroupOutput->setEnabled(TRUE);
+
+	GroupInput->setEnabled(FALSE); /* For run-mode */
 }

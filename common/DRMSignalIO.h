@@ -64,6 +64,22 @@
 
 
 /* Classes ********************************************************************/
+class CSignalLevelMeter
+{
+public:
+	CSignalLevelMeter() : rCurLevel((_REAL) 0.0) {}
+	virtual ~CSignalLevelMeter() {}
+
+	void Init(_REAL rStartVal) {rCurLevel = Abs(rStartVal);}
+	void Update(_REAL rVal);
+	void Update(CVector<_REAL> vecrVal);
+	void Update(CVector<_SAMPLE> vecsVal);
+	_REAL Level();
+
+protected:
+	_REAL rCurLevel;
+};
+
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
@@ -123,7 +139,7 @@ public:
 		vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0) {}
 	virtual ~CReceiveData();
 
-	_REAL GetLevelMeter();
+	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
 	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
 	void SetFlippedSpectrum(const _BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
@@ -133,9 +149,7 @@ public:
 		{bNewUseSoundcard = FALSE; strInFileName = strNFN; SetInitFlag();}
 
 protected:
-	void LevelMeter();
-
-	int						iCurMicMeterLev;
+	CSignalLevelMeter		SignalLevelMeter;
 	
 	FILE*					pFileReceiver;
 

@@ -36,6 +36,7 @@
 #include "TextMessage.h"
 #include "AudioFile.h"
 #include <time.h>
+#include "DRMSignalIO.h" /* For signal meter */
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -56,9 +57,12 @@ public:
 	CReadData(CSound* pNS) : pSound(pNS) {}
 	virtual ~CReadData() {}
 
+	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
+
 protected:
 	CSound*				pSound;
 	CVector<_SAMPLE>	vecsSoundBuffer;
+	CSignalLevelMeter	SignalLevelMeter;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);

@@ -46,6 +46,8 @@
 #include <qpopupmenu.h>
 #include <qlayout.h>
 #include <qthread.h>
+#include <qtimer.h>
+#include <qwt_thermo.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"
@@ -112,6 +114,7 @@ protected:
 	QPopupMenu*			pSoundOutMenu;
 	QPopupMenu*			pSettingsMenu;
 	int					iNumSoundDev;
+	QTimer				Timer;
 
 	CTransmitterThread	TransThread; /* Working thread object */
 	_BOOLEAN			bIsStarted;
@@ -148,4 +151,5 @@ public slots:
 	void OnTextChangedSndCrdIF(const QString& strIF);
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
+	void OnTimer();
 };
