@@ -144,11 +144,23 @@ SOURCE=.\moc\moc_systemevalDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_TransmDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_TransmDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\MultimediaDlgbase.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\moc\systemevalDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\TransmDlgbase.cpp
 # End Source File
 # End Group
 # Begin Source File
@@ -196,6 +208,10 @@ SOURCE="..\common\GUI-QT\systemevalDlg.cpp"
 
 !ENDIF 
 
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\TransmDlg.cpp"
 # End Source File
 # End Group
 # Begin Group "Source MLC"
@@ -458,6 +474,10 @@ SOURCE="..\common\GUI-QT\MultimediaDlg.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\systemevalDlg.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\TransmDlg.h"
 # End Source File
 # End Group
 # Begin Group "Header MLC"
