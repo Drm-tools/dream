@@ -252,12 +252,10 @@ public:
 	void			SetCurSelectedService(const int iNewService);
 	int				GetCurSelectedService() const {return iCurSelService;}
 
-	_REAL			GetFrequencyOffset() const {return SOUNDCRD_SAMPLE_RATE *
-						(rFreqOffsetAcqui + rFreqOffsetTrack);}
+	_REAL			GetDCFrequency() const {return SOUNDCRD_SAMPLE_RATE *
+						(rFreqOffsetAcqui + rFreqOffsetTrack + 
+						(_REAL) iIndexDCFreq / iFFTSizeN);}
 	_REAL			GetSampFreqEst() const {return rResampleOffset;}
-
-
-
 
 
 	/* Parameters controlled by FAC ----------------------------------------- */

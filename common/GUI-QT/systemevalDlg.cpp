@@ -170,12 +170,7 @@ void systemevalDlg::OnTimer()
 	ThermoSNR->setValue(Min(DRMReceiver.GetChanEst()->GetSNREstdB(),
 		DRMReceiver.GetOFDMDemod()->GetSNREstdB()));
 
-#if 0
-	/* Frequency-offset */
-	TextFreqOffset->setText("Estimated Frequency Offset: \t\n" + 
-		QString().setNum(
-		DRMReceiver.GetParameters()->GetFrequencyOffset(), 'f', 2) +	" Hz");
-#else
+#ifdef _DEBUG_
 	/* Metric values */
 	TextFreqOffset->setText("Metrics [dB]: \t\nMSC: " + 
 		QString().setNum(
@@ -184,9 +179,14 @@ void systemevalDlg::OnTimer()
 		DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2) +	" / FAC: "+ 
 		QString().setNum(
 		DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2));
+#else
+	/* DC frequency */
+	TextFreqOffset->setText("DC Frequency of DRM signal: \t\n" + 
+		QString().setNum(
+		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
 #endif
 
-	/* Sample frequency estimation */
+	/* Sample frequency offset estimation */
 	TextSampFreqOffset->setText("Sample Frequency Offset: \t\n" + QString().
 		setNum(DRMReceiver.GetParameters()->GetSampFreqEst(), 'f', 2) +	" Hz");
 

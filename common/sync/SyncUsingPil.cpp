@@ -195,7 +195,8 @@ fflush(pFile);
 		ReceiverParam.rFreqOffsetTrack = (_REAL) 0.0;	
 	}
 
-	/* Copy data from input to the output. Data is not modified in this module */
+	/* Copy data from input to the output. Data is not modified in this 
+	   module */
 	for (i = 0; i < iOutputBlockSize; i++)
 		(*pvecOutputData)[i] = (*pvecInputData)[i];
 }
