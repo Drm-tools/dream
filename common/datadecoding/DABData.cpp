@@ -44,7 +44,6 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 	int			iSegmentNum;
 	int			iLenIndicat;
 	int			iLenGroupDataField;
-	int			iRepetitionCount;
 	int			iSegmentSize;
 	int			iTransportID;
 	int			iOldDataSize;
@@ -106,7 +105,7 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 	/* Repetition index */
 	iRepitiIndex = (int) vecbiNewData.Separate(4);
 
-	/* Extension field (NOT USED) */
+	/* Extension field (not used) */
 	if (biExtensionFlag == TRUE)
 		vecbiNewData.Separate(16);
 
@@ -137,7 +136,7 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 		/* Transport Id */
 		iTransportID = (int) vecbiNewData.Separate(16);
 			
-		/* End user address field NOT USED */
+		/* End user address field (not used) */
 		vecbiNewData.Separate((iLenIndicat - 2) * SIZEOF__BYTE);
 	}
 
@@ -148,8 +147,8 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 	if ((biCRCFlag == FALSE) || ((biCRCFlag == TRUE) && (bCRCOk == TRUE)))
 	{
 		/* Segmentation header ---------------------------------------------- */
-		/* Repetition count */
-		iRepetitionCount = (int) vecbiNewData.Separate(3);
+		/* Repetition count (not used) */
+		vecbiNewData.Separate(3);
 
 		/* Segment size */
 		iSegmentSize = (int) vecbiNewData.Separate(13);
