@@ -478,6 +478,39 @@ void systemevalDlg::OnTimer()
 	}
 
 	FACTimeDate->setText(strFACInfo);
+
+
+	/* Check the receiver mode. In case of AM demodulation, only show spectrum */
+	if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_AM)
+	{
+		/* Set spectrum plot */
+		OnlyThisButDown(ButtonInpSpec);
+		CharType = INPUTSPECTRUM_NO_AV;
+
+		/* Deactivate all other buttons */
+		ButtonAvIR->setEnabled(FALSE);
+		ButtonTransFct->setEnabled(FALSE);
+		ButtonFACConst->setEnabled(FALSE);
+		ButtonSDCConst->setEnabled(FALSE);
+		ButtonMSCConst->setEnabled(FALSE);
+		ButtonPSD->setEnabled(FALSE);
+
+		/* Add tool tip to show the user the possibility of choosing the AM IF */
+		QToolTip::add(MainPlot, "Click on the plot to set the demod. frequency");
+	}
+	else
+	{
+		/* All buttons are activated */
+		ButtonAvIR->setEnabled(TRUE);
+		ButtonTransFct->setEnabled(TRUE);
+		ButtonFACConst->setEnabled(TRUE);
+		ButtonSDCConst->setEnabled(TRUE);
+		ButtonMSCConst->setEnabled(TRUE);
+		ButtonPSD->setEnabled(TRUE);
+
+		/* Remove tool tip */
+		QToolTip::remove(MainPlot);
+	}
 }
 
 void systemevalDlg::OnRadioTimeLinear() 

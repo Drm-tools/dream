@@ -36,6 +36,7 @@
 #include <qwt_thermo.h>
 #include <qdatetime.h>
 #include <qlineedit.h>
+#include <qtooltip.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"
