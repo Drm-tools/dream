@@ -64,6 +64,7 @@ protected:
 	QTimer			TimerChart;
     virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
+	void			UpdateControls();
 
 public slots:
 	void OnTimer();

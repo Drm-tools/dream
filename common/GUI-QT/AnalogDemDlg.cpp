@@ -36,32 +36,8 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	QToolTip::add(MainPlot, "Click on the plot to set the demod. frequency");
 	MainPlot->setMargin(1);
 
-
-	/* Set default demodulation type */
-	switch (DRMReceiver.GetAMDemod()->GetDemodType())
-	{
-	case CAMDemodulation::DT_AM_10:
-		RadioButtonDemAM10->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::DT_AM_5:
-		RadioButtonDemAM5->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::DT_LSB:
-		RadioButtonDemLSB->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::DT_USB:
-		RadioButtonDemUSB->setChecked(TRUE);
-		break;
-	}
-
-
-	/* Init settings checkbuttons */
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
-	CheckBoxSaveAudioWave->
-		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+	/* Update controls */
+	UpdateControls();
 
 
 	/* Connect controls ----------------------------------------------------- */
@@ -90,6 +66,38 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	OnTimerChart();
 }
 
+void AnalogDemDlg::UpdateControls()
+{
+	/* Set default demodulation type */
+	switch (DRMReceiver.GetAMDemod()->GetDemodType())
+	{
+	case CAMDemodulation::DT_AM_10:
+		if (!RadioButtonDemAM10->isChecked())
+			RadioButtonDemAM10->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::DT_AM_5:
+		if (!RadioButtonDemAM5->isChecked())
+			RadioButtonDemAM5->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::DT_LSB:
+		if (!RadioButtonDemLSB->isChecked())
+			RadioButtonDemLSB->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::DT_USB:
+		if (!RadioButtonDemUSB->isChecked())
+			RadioButtonDemUSB->setChecked(TRUE);
+		break;
+	}
+
+	/* Update mute audio switch and write wave file */
+	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
+	CheckBoxSaveAudioWave->
+		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+}
+
 void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 {
 	/* Activte real-time timers when window is shown */
@@ -98,11 +106,8 @@ void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 	/* Update window */
 	OnTimerChart();
 
-	/* Update mute audio switch and write wave file, these can be changed
-	   by other windows */
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
-	CheckBoxSaveAudioWave->
-		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+	/* Update controls */
+	UpdateControls();
 }
 
 void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
@@ -161,6 +166,10 @@ void AnalogDemDlg::OnCheckBoxMuteAudio()
 
 void AnalogDemDlg::OnCheckSaveAudioWAV()
 {
+/*
+	This code is copied in systemevalDlg.cpp. If you do changes here, you should
+	apply the changes in the other file, too
+*/
 	if (CheckBoxSaveAudioWave->isChecked() == TRUE)
 	{
 		/* Show "save file" dialog */

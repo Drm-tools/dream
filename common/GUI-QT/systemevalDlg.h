@@ -87,6 +87,7 @@ protected:
 	void			OnlyThisButDown(QPushButton* pButton);
     virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
+	void			UpdateControls();
 
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();

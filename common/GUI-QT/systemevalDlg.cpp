@@ -29,15 +29,14 @@
 #include "systemevalDlg.h"
 
 
-systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFlags f )
-	: systemevalDlgBase( parent, name, modal, f )
+systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
+	WFlags f) : systemevalDlgBase(parent, name, modal, f)
 {
 	MainPlot->setMargin(1);
 
 	/* Default chart (at startup) */
 	ButtonInpSpec->setOn(TRUE);
 	CharType = INPUTSPECTRUM_NO_AV;
-
 
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
@@ -46,58 +45,10 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	TextNumOfIterations->setText("MLC: Number of Iterations: " +
 		QString().setNum(DRMReceiver.GetMSCMLC()->GetInitNumIterations()));
 
-
-	/* Inits for channel estimation and time sync switches */
-	switch (DRMReceiver.GetChanEst()->GetTimeInt())
-	{
-	case CChannelEstimation::TLINEAR:
-		RadioButtonTiLinear->setChecked(TRUE);
-		break;
-
-	case CChannelEstimation::TWIENER:
-		RadioButtonTiWiener->setChecked(TRUE);
-		break;
-	}
-
-	switch (DRMReceiver.GetChanEst()->GetFreqInt())
-	{
-	case CChannelEstimation::FLINEAR:
-		RadioButtonFreqLinear->setChecked(TRUE);
-		break;
-
-	case CChannelEstimation::FDFTFILTER:
-		RadioButtonFreqDFT->setChecked(TRUE);
-		break;
-
-	case CChannelEstimation::FWIENER:
-		RadioButtonFreqWiener->setChecked(TRUE);
-		break;
-	}
-
-	switch (DRMReceiver.GetChanEst()->GetTimeSyncTrack()->GetTiSyncTracType())
-	{
-	case CTimeSyncTrack::TSFIRSTPEAK:
-		RadioButtonTiSyncFirstPeak->setChecked(TRUE);
-		break;
-
-	case CTimeSyncTrack::TSENERGY:
-		RadioButtonTiSyncEnergy->setChecked(TRUE);
-		break;
-	}
-
-	/* Init settings checkbuttons */
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
-	CheckBoxFlipSpec->
-		setChecked(DRMReceiver.GetReceiver()->GetFlippedSpectrum());
-	CheckBoxSaveAudioWave->
-		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
-
-
 	/* Init progress bar for SNR */
 	ThermoSNR->setRange(0.0, 30.0);
 	ThermoSNR->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
 	ThermoSNR->setFillColor(QColor(0, 190, 0));
-
 
 	/* Update times for color LEDs */
 	LEDFAC->SetUpdateTime(1500);
@@ -107,11 +58,11 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	LEDTimeSync->SetUpdateTime(600);
 	LEDIOInterface->SetUpdateTime(2000); /* extra long -> red light stays long */
 
+	/* Init parameter for frequency edit for log file */
+	iCurFrequency = 0;
 
-	/* Init frequency edit for log file */
-	iCurFrequency = DRMReceiver.GetParameters()->ReceptLog.GetFrequency();
-	if (DRMReceiver.GetParameters()->ReceptLog.GetFrequency() != 0)
-		EdtFrequency->setText(QString().number(iCurFrequency));
+	/* Update controls */
+	UpdateControls();
 
 
 	/* Connect controls ----------------------------------------------------- */
@@ -187,6 +138,83 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	OnTimerChart();
 }
 
+void systemevalDlg::UpdateControls()
+{
+	/* Slider for MLC number of iterations */
+	const int iNumIt = DRMReceiver.GetMSCMLC()->GetInitNumIterations();
+	if (SliderNoOfIterations->value() != iNumIt)
+	{
+		/* Update slider and label */
+		SliderNoOfIterations->setValue(iNumIt);
+		TextNumOfIterations->setText("MLC: Number of Iterations: " +
+			QString().setNum(iNumIt));
+	}
+
+	/* Update for channel estimation and time sync switches */
+	switch (DRMReceiver.GetChanEst()->GetTimeInt())
+	{
+	case CChannelEstimation::TLINEAR:
+		if (!RadioButtonTiLinear->isChecked())
+			RadioButtonTiLinear->setChecked(TRUE);
+		break;
+
+	case CChannelEstimation::TWIENER:
+		if (!RadioButtonTiWiener->isChecked())
+			RadioButtonTiWiener->setChecked(TRUE);
+		break;
+	}
+
+	switch (DRMReceiver.GetChanEst()->GetFreqInt())
+	{
+	case CChannelEstimation::FLINEAR:
+		if (!RadioButtonFreqLinear->isChecked())
+			RadioButtonFreqLinear->setChecked(TRUE);
+		break;
+
+	case CChannelEstimation::FDFTFILTER:
+		if (!RadioButtonFreqDFT->isChecked())
+			RadioButtonFreqDFT->setChecked(TRUE);
+		break;
+
+	case CChannelEstimation::FWIENER:
+		if (!RadioButtonFreqWiener->isChecked())
+			RadioButtonFreqWiener->setChecked(TRUE);
+		break;
+	}
+
+	switch (DRMReceiver.GetChanEst()->GetTimeSyncTrack()->GetTiSyncTracType())
+	{
+	case CTimeSyncTrack::TSFIRSTPEAK:
+		if (!RadioButtonTiSyncFirstPeak->isChecked())
+			RadioButtonTiSyncFirstPeak->setChecked(TRUE);
+		break;
+
+	case CTimeSyncTrack::TSENERGY:
+		if (!RadioButtonTiSyncEnergy->isChecked())
+			RadioButtonTiSyncEnergy->setChecked(TRUE);
+		break;
+	}
+
+	/* Update settings checkbuttons */
+	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
+	CheckBoxFlipSpec->
+		setChecked(DRMReceiver.GetReceiver()->GetFlippedSpectrum());
+	CheckBoxSaveAudioWave->
+		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+
+	/* Update frequency edit control (frequency could be changed by
+	   schedule dialog */
+	QString strFreq = EdtFrequency->text();
+	const int iCurLogFreq =
+		DRMReceiver.GetParameters()->ReceptLog.GetFrequency();
+
+	if (iCurLogFreq != iCurFrequency)
+	{
+		EdtFrequency->setText(QString().setNum(iCurLogFreq));
+		iCurFrequency = iCurLogFreq;
+	}
+}
+
 void systemevalDlg::showEvent(QShowEvent* pEvent)
 {
 	/* Activte real-time timers when window is shown */
@@ -195,11 +223,8 @@ void systemevalDlg::showEvent(QShowEvent* pEvent)
 	/* Update window */
 	OnTimerChart();
 
-	/* Update mute audio switch and write wave file, these can be changed
-	   by other windows */
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
-	CheckBoxSaveAudioWave->
-		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+	/* Update controls */
+	UpdateControls();
 }
 
 void systemevalDlg::hideEvent(QHideEvent* pEvent)
@@ -514,49 +539,8 @@ void systemevalDlg::OnTimer()
 	FACTimeDateV->setText(strFACInfo); /* Value */
 
 
-	/* Check the receiver mode. In case of AM demodulation, only show spectrum */
-	if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_AM)
-	{
-		/* Set spectrum plot */
-		OnlyThisButDown(ButtonInpSpec);
-		CharType = INPUTSPECTRUM_NO_AV;
-
-		/* Deactivate all other buttons */
-		ButtonAvIR->setEnabled(FALSE);
-		ButtonTransFct->setEnabled(FALSE);
-		ButtonFACConst->setEnabled(FALSE);
-		ButtonSDCConst->setEnabled(FALSE);
-		ButtonMSCConst->setEnabled(FALSE);
-		ButtonPSD->setEnabled(FALSE);
-
-		/* Add tool tip to show the user the possibility of choosing the AM IF */
-		QToolTip::add(MainPlot, "Click on the plot to set the demod. frequency");
-	}
-	else
-	{
-		/* All buttons are activated */
-		ButtonAvIR->setEnabled(TRUE);
-		ButtonTransFct->setEnabled(TRUE);
-		ButtonFACConst->setEnabled(TRUE);
-		ButtonSDCConst->setEnabled(TRUE);
-		ButtonMSCConst->setEnabled(TRUE);
-		ButtonPSD->setEnabled(TRUE);
-
-		/* Remove tool tip */
-		QToolTip::remove(MainPlot);
-	}
-
-	/* Update frequency edit control (frequency could be changed by
-	   schedule dialog */
-	QString strFreq = EdtFrequency->text();
-	const int iCurLogFreq =
-		DRMReceiver.GetParameters()->ReceptLog.GetFrequency();
-
-	if (iCurLogFreq != iCurFrequency)
-	{
-		EdtFrequency->setText(QString().setNum(iCurLogFreq));
-		iCurFrequency = iCurLogFreq;
-	}
+	/* Update controls */
+	UpdateControls();
 }
 
 void systemevalDlg::OnRadioTimeLinear() 
@@ -706,6 +690,10 @@ void systemevalDlg::OnCheckBoxMuteAudio()
 
 void systemevalDlg::OnCheckSaveAudioWAV()
 {
+/*
+	This code is copied in AnalogDemDlg.cpp. If you do changes here, you should
+	apply the changes in the other file, too
+*/
 	if (CheckBoxSaveAudioWave->isChecked() == TRUE)
 	{
 		/* Show "save file" dialog */
