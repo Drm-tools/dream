@@ -213,6 +213,9 @@ public:
 typedef CChanSimData<_REAL>		CChanSimDataMod; /* OFDM modulated signals */
 typedef CChanSimData<_COMPLEX>	CChanSimDataDemod; /* Demodulated signals */
 
+/* Path for simulation output and status files */
+#define SIM_OUT_FILES_PATH				"test/"
+
 
 /* Prototypes for global functions ********************************************/
 /* Posting a window message */

@@ -133,7 +133,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		if (Param.eSimType == CParameter::ST_MSECHANEST)
 		{
 			/* Open simulation file */
-			strSimFile = string("test/") +
+			strSimFile = string(SIM_OUT_FILES_PATH) +
 				SimFileName(Param, strSpecialRemark) + string(".dat");
 			pFileMSE = fopen(strSimFile.c_str(), "w");
 
@@ -153,7 +153,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		else
 		{
 			/* Open simulation file */
-			strSimFile = string("test/") +
+			strSimFile = string(SIM_OUT_FILES_PATH) +
 				SimFileName(Param, strSpecialRemark) + string(".dat");
 			pFileBitEr = fopen(strSimFile.c_str(), "w");
 

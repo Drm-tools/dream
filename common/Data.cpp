@@ -320,8 +320,8 @@ void CGenSimData::SetSimTime(int iNewTi, string strNewFileName)
 	iCounter = 0;
 
 	/* Set file name */
-	strFileName =
-		string("test/") + strNewFileName + "__SIMTIME" + string(".dat");
+	strFileName = string(SIM_OUT_FILES_PATH) +
+		strNewFileName + "__SIMTIME" + string(".dat");
 }
 
 void CGenSimData::SetNumErrors(int iNewNE, string strNewFileName)
@@ -335,8 +335,8 @@ void CGenSimData::SetNumErrors(int iNewNE, string strNewFileName)
 	iCounter = 0;
 
 	/* Set file name */
-	strFileName =
-		string("test/") + strNewFileName + "__SIMTIME" + string(".dat");
+	strFileName = string(SIM_OUT_FILES_PATH) +
+		strNewFileName + "__SIMTIME" + string(".dat");
 }
 
 void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
