@@ -77,6 +77,7 @@ protected:
     QMenuBar*		pMenu;
 	QPopupMenu*		pSoundInMenu;
 	QPopupMenu*		pSoundOutMenu;
+	QPopupMenu*		pReceiverModeMenu;
 	int				iCurSelServiceGUI;
 	int				iOldNoServicesGUI;
 	int				iNumSoundDev;
@@ -97,5 +98,6 @@ public slots:
 	void OnHelpAbout();
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
+	void OnReceiverMode(int id);
 };
 

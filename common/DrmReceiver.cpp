@@ -42,6 +42,14 @@ void CDRMReceiver::Run()
 
 	do
 	{
+		/* Check for parameter changes from GUI thread ---------------------- */
+		/* The parameter changes are done through flags, the actual
+		   initialization is done in this (the working) thread to avoid
+		   problems with shared data */
+		if (eNewReceiverMode != RM_NONE)
+			InitReceiverMode();
+
+
 		/* Receive data ----------------------------------------------------- */
 		ReceiveData.ReadData(ReceiverParam, RecDataBuf);
 
@@ -52,137 +60,149 @@ void CDRMReceiver::Run()
 			/* Init flag */
 			bEnoughData = FALSE;
 
-			/* Frequency synchronization acquisition ------------------------ */
-			if (FreqSyncAcq.ProcessData(ReceiverParam, RecDataBuf,
-				FreqSyncAcqBuf))
+			if (eReceiverMode == RM_AM)
 			{
-				bEnoughData = TRUE;
-
-				if (FreqSyncAcq.GetAcquisition() == FALSE)
+				/* AM demodulation ------------------------------------------ */
+				if (AMDemodulation.ProcessData(ReceiverParam, RecDataBuf,
+					AudSoDecBuf))
 				{
-					/* This flag ensures that the following functions are
-					   called only once after frequency acquisition was done */
-					if (bWasFreqAcqu == TRUE)
-					{
-						/* Frequency acquisition is done, now the filter for 
-						   guard-interval correlation can be designed */
-						TimeSync.SetFilterTaps(ReceiverParam.rFreqOffsetAcqui +
-							(_REAL) ReceiverParam.iIndexDCFreq /
-							ReceiverParam.iFFTSizeN);
-
-						bWasFreqAcqu = FALSE;
-					}
+					bEnoughData = TRUE;
 				}
-				else
-					bWasFreqAcqu = TRUE;
 			}
-
-			/* Resample input DRM-stream ------------------------------------ */
-			if (InputResample.ProcessData(ReceiverParam, FreqSyncAcqBuf,
-				InpResBuf))
+			else
 			{
-				bEnoughData = TRUE;
-			}
+				/* Frequency synchronization acquisition -------------------- */
+				if (FreqSyncAcq.ProcessData(ReceiverParam, RecDataBuf,
+					FreqSyncAcqBuf))
+				{
+					bEnoughData = TRUE;
 
-			/* Time synchronization ----------------------------------------- */
-			if (TimeSync.ProcessData(ReceiverParam, InpResBuf,
-				TimeSyncBuf))
-			{
-				bEnoughData = TRUE;
-			}
+					if (FreqSyncAcq.GetAcquisition() == FALSE)
+					{
+						/* This flag ensures that the following functions are
+						   called only once after frequency acquisition was
+						   done */
+						if (bWasFreqAcqu == TRUE)
+						{
+							/* Frequency acquisition is done, now the filter for 
+							   guard-interval correlation can be designed */
+							TimeSync.
+								SetFilterTaps(ReceiverParam.rFreqOffsetAcqui);
 
-			/* OFDM-demodulation -------------------------------------------- */
-			if (OFDMDemodulation.ProcessData(ReceiverParam, TimeSyncBuf,
-				OFDMDemodBuf))
-			{
-				bEnoughData = TRUE;
-			}
+							bWasFreqAcqu = FALSE;
+						}
+					}
+					else
+						bWasFreqAcqu = TRUE;
+				}
 
-			/* Synchronization in the frequency domain (using pilots) ------- */
-			if (SyncUsingPil.ProcessData(ReceiverParam, OFDMDemodBuf,
-				SyncUsingPilBuf))
-			{
-				bEnoughData = TRUE;
-			}
+				/* Resample input DRM-stream -------------------------------- */
+				if (InputResample.ProcessData(ReceiverParam, FreqSyncAcqBuf,
+					InpResBuf))
+				{
+					bEnoughData = TRUE;
+				}
 
-			/* Channel estimation and equalisation -------------------------- */
-			if (ChannelEstimation.ProcessData(ReceiverParam, SyncUsingPilBuf,
-				ChanEstBuf))
-			{
-				bEnoughData = TRUE;
-			}
+				/* Time synchronization ------------------------------------- */
+				if (TimeSync.ProcessData(ReceiverParam, InpResBuf,
+					TimeSyncBuf))
+				{
+					bEnoughData = TRUE;
+				}
 
-			/* Demapping of the MSC, FAC, SDC and pilots off the carriers --- */
-			if (OFDMCellDemapping.ProcessData(ReceiverParam, ChanEstBuf,
-				MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf))
-			{
-				bEnoughData = TRUE;
-			}
+				/* OFDM-demodulation ---------------------------------------- */
+				if (OFDMDemodulation.ProcessData(ReceiverParam, TimeSyncBuf,
+					OFDMDemodBuf))
+				{
+					bEnoughData = TRUE;
+				}
 
-			/* FAC ---------------------------------------------------------- */
-			if (FACMLCDecoder.ProcessData(ReceiverParam, FACCarDemapBuf,
-				FACDecBuf))
-			{
-				bEnoughData = TRUE;
-			}
-			if (UtilizeFACData.WriteData(ReceiverParam, FACDecBuf))
-			{
-				bEnoughData = TRUE;
+				/* Synchronization in the frequency domain (using pilots) --- */
+				if (SyncUsingPil.ProcessData(ReceiverParam, OFDMDemodBuf,
+					SyncUsingPilBuf))
+				{
+					bEnoughData = TRUE;
+				}
 
-				/* Use information of FAC CRC for detecting the acquisition
-				   requirement */
-				DetectAcqui();
-			}
+				/* Channel estimation and equalisation ---------------------- */
+				if (ChannelEstimation.ProcessData(ReceiverParam,
+					SyncUsingPilBuf, ChanEstBuf))
+				{
+					bEnoughData = TRUE;
+				}
+
+				/* Demapping of the MSC, FAC, SDC and pilots off the carriers */
+				if (OFDMCellDemapping.ProcessData(ReceiverParam, ChanEstBuf,
+					MSCCarDemapBuf, FACCarDemapBuf, SDCCarDemapBuf))
+				{
+					bEnoughData = TRUE;
+				}
+
+				/* FAC ------------------------------------------------------ */
+				if (FACMLCDecoder.ProcessData(ReceiverParam, FACCarDemapBuf,
+					FACDecBuf))
+				{
+					bEnoughData = TRUE;
+				}
+				if (UtilizeFACData.WriteData(ReceiverParam, FACDecBuf))
+				{
+					bEnoughData = TRUE;
+
+					/* Use information of FAC CRC for detecting the acquisition
+					   requirement */
+					DetectAcqui();
+				}
 
 
-			/* SDC ---------------------------------------------------------- */
-			if (SDCMLCDecoder.ProcessData(ReceiverParam, SDCCarDemapBuf,
-				SDCDecBuf))
-			{
-				bEnoughData = TRUE;
-			}
-			if (UtilizeSDCData.WriteData(ReceiverParam, SDCDecBuf))
-				bEnoughData = TRUE;
+				/* SDC ------------------------------------------------------ */
+				if (SDCMLCDecoder.ProcessData(ReceiverParam, SDCCarDemapBuf,
+					SDCDecBuf))
+				{
+					bEnoughData = TRUE;
+				}
+				if (UtilizeSDCData.WriteData(ReceiverParam, SDCDecBuf))
+					bEnoughData = TRUE;
 
 
-			/* MSC ---------------------------------------------------------- */
-			/* Symbol de-interleaver */
-			if (SymbDeinterleaver.ProcessData(ReceiverParam, MSCCarDemapBuf,
-				DeintlBuf))
-			{
-				bEnoughData = TRUE;
-			}
+				/* MSC ------------------------------------------------------ */
+				/* Symbol de-interleaver */
+				if (SymbDeinterleaver.ProcessData(ReceiverParam, MSCCarDemapBuf,
+					DeintlBuf))
+				{
+					bEnoughData = TRUE;
+				}
 
-			/* MLC decoder */
-			if (MSCMLCDecoder.ProcessData(ReceiverParam, DeintlBuf,
-				MSCMLCDecBuf))
-			{
-				bEnoughData = TRUE;
-			}
+				/* MLC decoder */
+				if (MSCMLCDecoder.ProcessData(ReceiverParam, DeintlBuf,
+					MSCMLCDecBuf))
+				{
+					bEnoughData = TRUE;
+				}
 
-			/* MSC data/audio demultiplexer */
-			if (MSCDemultiplexer.ProcessData(ReceiverParam,
-				MSCMLCDecBuf, MSCDeMUXBufAud, MSCDeMUXBufData))
-			{
-				bEnoughData = TRUE;
-			}
+				/* MSC data/audio demultiplexer */
+				if (MSCDemultiplexer.ProcessData(ReceiverParam,
+					MSCMLCDecBuf, MSCDeMUXBufAud, MSCDeMUXBufData))
+				{
+					bEnoughData = TRUE;
+				}
 
-			/* Data decoding */
-			if (DataDecoder.WriteData(ReceiverParam, MSCDeMUXBufData))
-				bEnoughData = TRUE;
+				/* Data decoding */
+				if (DataDecoder.WriteData(ReceiverParam, MSCDeMUXBufData))
+					bEnoughData = TRUE;
 
-			/* Source decoding (audio) */
-			if (AudioSourceDecoder.ProcessData(ReceiverParam, MSCDeMUXBufAud,
-				AudSoDecBuf))
-			{
-				bEnoughData = TRUE;
+				/* Source decoding (audio) */
+				if (AudioSourceDecoder.ProcessData(ReceiverParam,
+					MSCDeMUXBufAud, AudSoDecBuf))
+				{
+					bEnoughData = TRUE;
+				}
 			}
 
 			/* Save or dump the data */
 			if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
 				bEnoughData = TRUE;
 		}
-	} while (ReceiverParam.bRunThread);
+	} while (ReceiverParam.bRunThread && (!bDoInitRun));
 }
 
 void CDRMReceiver::DetectAcqui()
@@ -232,11 +252,31 @@ void CDRMReceiver::DetectAcqui()
 
 void CDRMReceiver::Init()
 {
-	/* Set flag to FALSE to have only one loop in the Run() routine which is
+	/* Set flags so that we have only one loop in the Run() routine which is
 	   enough for initializing all modues */
-	ReceiverParam.bRunThread = FALSE;
+	bDoInitRun = TRUE;
+	ReceiverParam.bRunThread = TRUE;
 
+	/* Set init flags in all modules */
+	InitsForAllModules();
+
+	/* Now the actual initialization */
 	Run();
+
+	/* Reset flags */
+	bDoInitRun = FALSE;
+	ReceiverParam.bRunThread = FALSE;
+}
+
+void CDRMReceiver::InitReceiverMode()
+{
+	eReceiverMode = eNewReceiverMode;
+
+	/* Init all modules */
+	SetInStartMode();
+
+	/* Reset new mode flag */
+	eNewReceiverMode = RM_NONE;
 }
 
 void CDRMReceiver::Start()
@@ -392,7 +432,9 @@ void CDRMReceiver::InitsForAllModules()
 	AudioSourceDecoder.SetInitFlag();
 	DataDecoder.SetInitFlag();
 	WriteData.SetInitFlag();
+	AMDemodulation.SetInitFlag();
 }
+
 
 /* -----------------------------------------------------------------------------
    Initialization routines for the modules. We have to look into the modules
@@ -407,6 +449,7 @@ void CDRMReceiver::InitsForWaveMode()
 	ReceiveData.SetInitFlag();
 	InputResample.SetInitFlag();
 	FreqSyncAcq.SetInitFlag();
+	AMDemodulation.SetInitFlag();
 	TimeSync.SetInitFlag();
 	OFDMDemodulation.SetInitFlag();
 	SyncUsingPil.SetInitFlag();
@@ -489,6 +532,3 @@ void CDRMReceiver::InitsForDataParam()
 	MSCDemultiplexer.SetInitFlag();
 	DataDecoder.SetInitFlag();
 }
-
-
-
