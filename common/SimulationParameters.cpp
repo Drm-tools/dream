@@ -57,26 +57,21 @@ void CDRMSimulation::SimScript()
 	if (eSimType != ST_NONE)
 	{
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
-
-
-Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2); // SO_0 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-
-
+		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 		Param.MSCPrLe.iPartB = 1;
 		Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
 
-		Param.iDRMChannelNo = 2;
+		Param.iDRMChannelNo = 4;
 
-		rStartSNR = (_REAL) 12.0;
-		rEndSNR = (_REAL) 18.0;
-		rStepSNR = (_REAL) 0.3;
-		strSpecialRemark = "odin";
+		rStartSNR = (_REAL) 200.0;
+		rEndSNR = (_REAL) 200.0;
+		rStepSNR = (_REAL) 1.0;
+		strSpecialRemark = "test";
 
 		/* Length of simulation */
-//		iSimTime = 20;
-		iSimNumErrors = 200000;
+		iSimTime = 5;
+//		iSimNumErrors = 400000;
 
 
 ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
@@ -128,7 +123,8 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		if (eSimType == ST_MSECHANEST)
 		{
 			/* Open simulation file */
-			strSimFile = SimFileName(Param, eSimType, strSpecialRemark) + ".dat";
+			strSimFile = string("test/") +
+				SimFileName(Param, eSimType, strSpecialRemark) + string(".dat");
 			pFileMSE = fopen(strSimFile.c_str(), "w");
 
 			Param.rSimSNRdB = rStartSNR;
@@ -147,7 +143,8 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		else
 		{
 			/* Open simulation file */
-			strSimFile = SimFileName(Param, eSimType, strSpecialRemark) + ".dat";
+			strSimFile = string("test/") +
+				SimFileName(Param, eSimType, strSpecialRemark) + string(".dat");
 			pFileBitEr = fopen(strSimFile.c_str(), "w");
 
 			for (rSNRCnt = rStartSNR; rSNRCnt <= rEndSNR; rSNRCnt += rStepSNR)
@@ -159,7 +156,6 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 				/* Save results */
 				fprintf(pFileBitEr, "%e %e\n", rSNRCnt, Param.rBitErrRate);
 				fflush(pFileBitEr);
-// clear all;close all;load FileName.dat;semilogy(FileName(:,1), FileName(:,2));grid on
 
 				/* Additionally, show results directly */
 				printf("%e %e\n", rSNRCnt, Param.rBitErrRate);
@@ -188,7 +184,7 @@ string CDRMSimulation::SimFileName(CParameter& Param, ESimType eNewType,
 	   10k: Value set by "SetNoErrors()"
 
 	   example: BER_B3_Ch5_10k_NoSync */
-	string strFileName = "test/";
+	string strFileName = "";
 
 	/* What type of simulation */
 	switch (eNewType)

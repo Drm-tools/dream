@@ -141,6 +141,7 @@ public:
 	T					tOut; /* Output of the channel (with noise) */
 	T					tRef; /* Channel reference signal (without noise) */
 	_COMPLEX			veccTap[MAX_NUM_TAPS_DRM_CHAN]; /* Tap gains */
+	_COMPLEX			veccTapBackw[MAX_NUM_TAPS_DRM_CHAN];
 };
 typedef CChanSimData<_REAL>		CChanSimDataMod; /* OFDM modulated signals */
 typedef CChanSimData<_COMPLEX>	CChanSimDataDemod; /* Demodulated signals */

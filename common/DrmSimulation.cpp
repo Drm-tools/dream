@@ -115,14 +115,14 @@ case ST_BITERROR:
 		   type of input buffers */
 		DataConvChanResam.ProcessData(Param, RecDataBuf, ChanResInBuf);
 
-		/* Resample input DRM-stream */
-		InputResample.ProcessData(Param, ChanResInBuf, InpResBuf);
-
 		/* Frequency synchronization acquisition */
-		FreqSyncAcq.ProcessData(Param, InpResBuf, FreqSyncAcqBuf);
+		FreqSyncAcq.ProcessData(Param, ChanResInBuf, FreqSyncAcqBuf);
+
+		/* Resample input DRM-stream */
+		InputResample.ProcessData(Param, FreqSyncAcqBuf, InpResBuf);
 
 		/* Time synchronization */
-		TimeSync.ProcessData(Param, FreqSyncAcqBuf, TimeSyncBuf);
+		TimeSync.ProcessData(Param, InpResBuf, TimeSyncBuf);
 
 		/* OFDM-demodulation */
 		OFDMDemodulation.ProcessData(Param, TimeSyncBuf, OFDMDemodBuf);
@@ -212,6 +212,8 @@ void CDRMSimulation::Init()
 	{
 	case ST_MSECHANEST:
 	case ST_BER_IDEALCHAN:
+		/* Init OFDM demod before IdealChanEst, because the timing offset of
+		   useful part extraction is set here */
 		OFDMDemodSimulation.Init(Param, ChanEstInBufSim, OFDMDemodBufChan2);
 
 		/* Problem: "ChanEstBuf" is used for input and output buffer. That only

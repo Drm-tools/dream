@@ -98,8 +98,8 @@ protected:
 
 
 	/* Receiver buffers */
+	CSingleBuffer<_REAL>	FreqSyncAcqBuf;
 	CCyclicBuffer<_REAL>	InpResBuf;
-	CCyclicBuffer<_REAL>	FreqSyncAcqBuf;
 	CSingleBuffer<_REAL>	TimeSyncBuf;
 	CSingleBuffer<_COMPLEX>	OFDMDemodBuf;
 	CSingleBuffer<_COMPLEX>	SyncUsingPilBuf;
