@@ -90,7 +90,6 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		   calculated in the Init-routine. Additionally, the index of the first
 		   pilot in the pair is stored in ".iNumCarrier". We calculate and
 		   averaging the Euclidean-norm of the resulting complex values */
-
 		rResultPilPairEst = (_REAL) 0.0;
 		for (i = 0; i < iNumDiffFact; i++)
 		{
