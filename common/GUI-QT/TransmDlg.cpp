@@ -160,13 +160,13 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		ComboBoxMSCConstellation->setCurrentItem(1);
 		break;
 
-	case CParameter::CS_3_HMSYM:
-		ComboBoxMSCConstellation->setCurrentItem(2);
-		break;
-
-	case CParameter::CS_3_HMMIX:
-		ComboBoxMSCConstellation->setCurrentItem(3);
-		break;
+//	case CParameter::CS_3_HMSYM:
+//		ComboBoxMSCConstellation->setCurrentItem(2);
+//		break;
+//
+//	case CParameter::CS_3_HMMIX:
+//		ComboBoxMSCConstellation->setCurrentItem(3);
+//		break;
 	}
 
 	/* SDC Constellation Scheme */
