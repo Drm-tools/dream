@@ -82,6 +82,8 @@ void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 {
+	int	iCurDataStreamID;
+
 	/* Audio ---------------------------------------------------------------- */
 	/* Check if current selected service is an audio service and get stream
 	   position */
@@ -104,10 +106,14 @@ void CMSCDemultiplexer::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Data ----------------------------------------------------------------- */
+	if (ReceiverParam.bUsingMultimedia)
+		iCurDataStreamID = ReceiverParam.
+			Service[ReceiverParam.GetCurSelDataService()].DataParam.iStreamID;
+	else
+		iCurDataStreamID = STREAM_ID_NOT_USED;
+
 	/* Get stream position of current selected data service */
-	GetStreamPos(ReceiverParam, ReceiverParam.
-		Service[ReceiverParam.GetCurSelDataService()].DataParam.iStreamID,
-		DataStreamPos);
+	GetStreamPos(ReceiverParam, iCurDataStreamID, DataStreamPos);
 
 	/* Set data output block size */
 	iOutputBlockSize2 = DataStreamPos.iLenHigh + DataStreamPos.iLenLow;
