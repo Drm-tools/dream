@@ -80,6 +80,12 @@ CReal						Min(const CMatlibVector<CReal>& rvI);
 void						Min(CReal& rMinVal /* out */, int& iMinInd /* out */,
 								const CMatlibVector<CReal>& rvI /* in */);
 
+inline CReal				Min(const CReal& r1, const CReal& r2, const CReal& r3, const CReal& r4)
+								{return Min(Min(Min(r1, r2), r3), r4);}
+inline CReal				Min(const CReal& r1, const CReal& r2, const CReal& r3, const CReal& r4,
+								const CReal& r5, const CReal& r6, const CReal& r7, const CReal& r8)
+								{return Min(Min(Min(Min(Min(Min(Min(r1, r2), r3), r4), r5), r6), r7), r8);}
+
 
 inline CReal				Max(const CReal& rA, const CReal& rB)
 								{return rA > rB ? rA : rB;}
