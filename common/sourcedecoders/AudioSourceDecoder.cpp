@@ -614,6 +614,9 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		   now we do not correct and we could stay with a single buffer
 		   Maybe TODO: sample rate correction to avoid audio dropouts */
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
+#else
+		/* No audio output if AAC library is not used */
+		iOutputBlockSize = 0;
 #endif
 	}
 
@@ -634,6 +637,9 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		default:
 			DoNotProcessData = TRUE;
 		}
+
+		/* In all cases set output size to zero */
+		iOutputBlockSize = 0;
 	}
 }
 
