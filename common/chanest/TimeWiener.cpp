@@ -40,8 +40,6 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	int				iCurrFiltPhase;
 	int				iTimeDiffNew;
 	_COMPLEX		cNewPilot;
-	_COMPLEX		cCurChanEst;
-	_REAL			rSigOverEst;
 
 	/* Timing correction history -------------------------------------------- */
 	/* Shift old vaules and add a "0" at the beginning of the vector */
@@ -113,7 +111,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			rSigma = ModLinRegr(vecrTiCorrEst);
 
 			/* Use overestimated sigma for filter update */
-			rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
+			_REAL rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
 
 			/* Update the wiener filter, use averaged SNR */
 			if (rSigOverEst < rSigmaMax)
@@ -151,7 +149,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 			/* Convolution with one phase of the optimal filter */
 			/* Init sum */
-			cCurChanEst = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+			_COMPLEX cCurChanEst = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 			for (j = 0; j < iLengthWiener; j++)
 			{
 				/* We need to correct pilots due to timing corrections ------ */
@@ -270,10 +268,11 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	rLamTiCorrAv = IIR1Lam(TICONST_TI_CORREL_EST * iNumPilOneOFDMSym,
 		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
 
-	/* Init Update counter for wiener filter update. Wait aprox. half of the
-	   time of the time constant of the IIR filter */
-	iUpCntWienFilt = (int) ((CReal) iNumSymPerFrame * TICONST_TI_CORREL_EST *
-		NUM_DRM_FRAMES_PER_MIN / 60 / 2);
+	/* Init Update counter for wiener filter update. We immediatly use the
+	   filtered result although right at the beginning there is no averaging.
+	   But sine the estimation usually starts with bigger values and goes down
+	   to the correct one, this should be not critical */
+	iUpCntWienFilt = iNumSymPerFrame;
 
 	/* Init averaging of SNR values */
 	rAvSNR = (_REAL) 0.0;
