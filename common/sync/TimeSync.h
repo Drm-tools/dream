@@ -123,7 +123,6 @@ protected:
 
 	CComplexVector				cvecB;
 	CRealVector					rvecZ;
-	CRealVector					rvecInpTmp;
 	CVector<_COMPLEX>			cvecOutTmpInterm;
 
 	_REAL						rLambdaCoAv;

@@ -48,6 +48,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 	CReal			rSecHighPeak;
 	int				iDetectedRModeInd;
 	int				iDecInpuSize;
+	CRealVector		rvecInpTmp;
 	CRealVector		rResMode(NUM_ROBUSTNESS_MODES);
 	/* Max number of detected peaks ("5" for safety reasons. Could be "2") */
 	CVector<int>	iNewStartIndexField(5);
