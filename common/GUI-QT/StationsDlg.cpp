@@ -329,10 +329,6 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	pViewMenu->setItemChecked(0, TRUE);
 	SetStationsView();
 
-	/* Sort list by transmit power (5th column), most powerful on top */
-	ListViewStations->setSorting(4, FALSE);
-	ListViewStations->sort();
-
 
 #ifdef HAVE_LIBHAMLIB
 	/* If config string is empty, set default COM port 1 */
@@ -747,6 +743,20 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 
 	/* Init vector for storing the pointer to the list view items */
 	vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
+
+	/* Set sorting behaviour of the list */
+	switch (eNewSchM)
+	{
+	case CDRMSchedule::SM_DRM:
+		/* Sort list by transmit power (5th column), most powerful on top */
+		ListViewStations->setSorting(4, FALSE);
+		break;
+
+	case CDRMSchedule::SM_ANALOG:
+		/* Sort list by target (4th column), most powerful on top */
+		ListViewStations->setSorting(3, FALSE);
+		break;
+	}
 
 	/* Unlock BEFORE calling the stations view update because in this function
 	   the mutex is locked, too! */
