@@ -39,7 +39,7 @@ class CParameter : public CCellMappingTable
 {
 public:
 	CParameter() : bRunThread(FALSE), Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
-		FACRepitition(15) /* See 6.3.6 */, bUsingMultimedia(TRUE) {}
+		FACRepetition(15) /* See 6.3.6 */, bUsingMultimedia(TRUE) {}
 	virtual ~CParameter() {}
 
 	/* Enumerations --------------------------------------------------------- */
@@ -291,7 +291,7 @@ public:
 	void			SetServID(const int iServID, const _UINT32BIT iNewServID);
 
 	/* These two parameters are only intended for transmitter */
-	CVector<int>	FACRepitition; /* See 6.3.6 */
+	CVector<int>	FACRepetition; /* See 6.3.6 */
 	int				FACNumRep;
 
 	/* Symbol interleaver mode (long or short interleaving) */

@@ -37,7 +37,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 {
 	_UINT32BIT	iRfuDummy;
 	int			iCurShortID;
-	static int	FACRepititionCounter = 0;
+	static int	FACRepetitionCounter = 0;
 
 	/* Reset enqueue function */
 	(*pbiFACData).ResetBitAccess();
@@ -155,12 +155,12 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 
 	/* Service parameters --------------------------------------------------- */
-	/* Transmit service-information of service signalled in the FAC-repition
+	/* Transmit service-information of service signalled in the FAC-repetition
 	   array */
-	iCurShortID = Parameter.FACRepitition[FACRepititionCounter];
-	FACRepititionCounter++;
-	if (FACRepititionCounter == Parameter.FACNumRep)
-		FACRepititionCounter = 0;
+	iCurShortID = Parameter.FACRepetition[FACRepetitionCounter];
+	FACRepetitionCounter++;
+	if (FACRepetitionCounter == Parameter.FACNumRep)
+		FACRepetitionCounter = 0;
 
 	/* Service identifier */
 	(*pbiFACData).Enqueue(Parameter.Service[iCurShortID].iServiceID, 24);

@@ -259,7 +259,7 @@ CDRMSimulation::CDRMSimulation()
 	Param.ResetServicesStreams();
 
 	/* Use 6.3.6 to set this two parameters! */
-	Param.FACRepitition[0] = 0;
+	Param.FACRepetition[0] = 0;
 	Param.FACNumRep = 1;
 
 	/* Date, time */
