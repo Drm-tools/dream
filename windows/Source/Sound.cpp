@@ -147,7 +147,7 @@ void CSound::OpenInDevice()
 		(DWORD) m_WaveInEvent, NULL, CALLBACK_EVENT);
 	if (result != MMSYSERR_NOERROR)
 		throw CGenErr("Sound Interface Start, waveInOpen() failed. This error \
-			usually occurs if another application uses the sound in.");
+			usually occurs if another application blocks the sound in.");
 }
 
 void CSound::SetInDev(int iNewDev)
