@@ -264,7 +264,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Robustness mode detection ---------------------------------------- */
 		/* Correlation of guard-interval correlation with prepared cos-vector.
-		   store highest peak */
+		   Store highest peak */
 		rMaxValRMCorr = (CReal) 0.0;
 		for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
 		{
