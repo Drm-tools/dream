@@ -272,8 +272,8 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 	/* Init Update counter for wiener filter update. Wait aprox. half of the
 	   time of the time constant of the IIR filter */
-	iUpCntWienFilt = TICONST_TI_CORREL_EST * iNumSymPerFrame *
-		NUM_DRM_FRAMES_PER_MIN / 60 / 2;
+	iUpCntWienFilt = (int) ((CReal) iNumSymPerFrame * TICONST_TI_CORREL_EST *
+		NUM_DRM_FRAMES_PER_MIN / 60 / 2);
 
 	/* Init averaging of SNR values */
 	rAvSNR = (_REAL) 0.0;
