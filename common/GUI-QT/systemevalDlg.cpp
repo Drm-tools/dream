@@ -1105,7 +1105,7 @@ void systemevalDlg::AddWhatsThisHelp()
 		"are within the sound card frequency range, the strongest signal is "
 		"chosen.");
 
-	/* Input Spectrum */
+	/* Shifted PSD */
 	QWhatsThis::add(ButtonPSD,
 		"<b>Shifted PSD:</b> This plot shows the estimated Power Spectrum "
 		"Density (PSD) of the input signal. The DC frequency (red dashed "
