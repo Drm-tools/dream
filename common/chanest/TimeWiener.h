@@ -102,7 +102,7 @@ protected:
 							const int iLength);
 	int DisToNextPil(const int iPiHiIndex, const int iSymNum) const;
 	_REAL UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
-	CReal ModLinRegr(CComplexVector& veccCorrEst);
+	CReal ModLinRegr(const CComplexVector& veccCorrEst);
 
 	int					iNumCarrier;
 

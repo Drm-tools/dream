@@ -111,7 +111,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			rSigma = ModLinRegr(veccTiCorrEst);
 
 			/* Use overestimated sigma for filter update */
-			_REAL rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
+			const _REAL rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
 
 			/* Update the wiener filter, use averaged SNR */
 			if (rSigOverEst < rSigmaMax)
@@ -436,12 +436,12 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	return rMMSE;
 }
 
-CReal CTimeWiener::ModLinRegr(CComplexVector& veccCorrEst)
+CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
 {
 	/* Modified linear regression to estimate the "sigma" of the Gaussian
 	   correlation function */
 	/* Get vector length */
-	int iVecLen = Size(veccCorrEst);
+	const int iVecLen = Size(veccCorrEst);
 
 	/* Init vectors and variables */
 	CReal		rSigmaRet;
@@ -471,7 +471,7 @@ CReal CTimeWiener::ModLinRegr(CComplexVector& veccCorrEst)
 	A1 = Sum(Wmrem * (Z - Zm)) / Sum(Wmrem * Wmrem);
 
 	/* Final sigma calculation from estimation and assumed Gaussian model */
-	rSigmaRet = (CReal) 0.5 / crPi * sqrt((CReal) -2.0 * A1) / Ts;
+	rSigmaRet = (CReal) 0.5 / crPi * Sqrt((CReal) -2.0 * A1) / Ts;
 
 	/* Bound estimated sigma value */
 	if (rSigmaRet > rSigmaMax)
