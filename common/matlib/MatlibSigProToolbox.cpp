@@ -130,6 +130,49 @@ CMatlibVector<CReal> Nuttallwin(const int iLen)
 	return fvRet;
 }
 
+CMatlibVector<CReal> Bartlett(const int iLen)
+{
+	const int iHalf = Ceil((CReal) iLen / 2);
+	CMatlibVector<CReal> fvHalfWin(iHalf);
+	CMatlibVector<CReal> fvRet(iLen, VTY_TEMP);
+
+	for (int i = 0; i < iHalf; i++)
+		fvHalfWin[i] = (CReal) 2.0 * i / (iLen - 1);
+
+	/* Build complete output vector depending on odd or even input length */
+	if (iLen % 2)
+		fvRet.Merge(fvHalfWin, fvHalfWin(iHalf - 1, -1, 1)); /* Odd */
+	else
+		fvRet.Merge(fvHalfWin, fvHalfWin(iHalf, -1, 1)); /* Even */
+
+	return fvRet;
+}
+
+CMatlibVector<CReal> Triang(const int iLen)
+{
+	const int iHalf = Ceil((CReal) iLen / 2);
+	CMatlibVector<CReal> fvHalfWin(iHalf);
+	CMatlibVector<CReal> fvRet(iLen, VTY_TEMP);
+
+	/* Build complete output vector depending on odd or even input length */
+	if (iLen % 2)
+	{
+		for (int i = 0; i < iHalf; i++)
+			fvHalfWin[i] = (CReal) 2.0 * (i + 1) / (iLen + 1);
+
+		fvRet.Merge(fvHalfWin, fvHalfWin(iHalf - 1, -1, 1)); /* Odd */
+	}
+	else
+	{
+		for (int i = 0; i < iHalf; i++)
+			fvHalfWin[i] = ((CReal) 2.0 * (i + 1) - 1) / iLen;
+
+		fvRet.Merge(fvHalfWin, fvHalfWin(iHalf, -1, 1)); /* Even */
+	}
+
+	return fvRet;
+}
+
 CMatlibVector<CReal> Randn(const int iLength)
 {
 	/* Add some constant distributed random processes together */
