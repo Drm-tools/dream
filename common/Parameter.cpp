@@ -539,7 +539,7 @@ void CParameter::SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl)
 	}
 }
 
-void CParameter::SetServID(const int iServID, const _UINT32BIT iNewServID)
+void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 {
 	if (Service[iServID].iServiceID != iNewServID)
 	{
@@ -552,7 +552,7 @@ void CParameter::SetServID(const int iServID, const _UINT32BIT iNewServID)
 
 
 /* Implementaions for simulation -------------------------------------------- */
-void CParameter::CRawSimData::Add(_UINT32BIT iNewSRS) 
+void CParameter::CRawSimData::Add(uint32_t iNewSRS) 
 {
 	/* Attention, function does not take care of overruns, data will be
 	   lost if added to a filled shift register! */
@@ -560,12 +560,12 @@ void CParameter::CRawSimData::Add(_UINT32BIT iNewSRS)
 		veciShRegSt[iCurWritePos++] = iNewSRS;
 }
 
-_UINT32BIT CParameter::CRawSimData::Get() 
+uint32_t CParameter::CRawSimData::Get() 
 {
 	/* We always use the first value of the array for reading and do a
 	   shift of the other data by adding a arbitrary value (0) at the
 	   end of the whole shift register */
-	_UINT32BIT iRet = veciShRegSt[0];
+	uint32_t iRet = veciShRegSt[0];
 	veciShRegSt.AddEnd(0);
 	iCurWritePos--;
 

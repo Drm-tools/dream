@@ -41,15 +41,15 @@ public:
 
 	void Reset(const int iNewDegree);
 	void AddByte(const _BYTE byNewInput);
-	_BOOLEAN CheckCRC(const _UINT32BIT iCRC);
-	_UINT32BIT GetCRC();
+	_BOOLEAN CheckCRC(const uint32_t iCRC);
+	uint32_t GetCRC();
 
 protected:
 	int			iDegIndex;
-	_UINT32BIT	iBitOutPosMask;
+	uint32_t	iBitOutPosMask;
 
-	_UINT32BIT	iPolynMask[16];
-	_UINT32BIT	iStateShiftReg;
+	uint32_t	iPolynMask[16];
+	uint32_t	iStateShiftReg;
 };
 
 

@@ -197,7 +197,7 @@ public:
 
 		_BOOLEAN IsActive() {return iServiceID != SERV_ID_NOT_USED;}
 
-		_UINT32BIT	iServiceID;
+		uint32_t	iServiceID;
 		ECACond		eCAIndication;
 		int			iLanguage;
 		ETyOServ	eAudDataFlag;
@@ -293,7 +293,7 @@ public:
 						{return iNumAudioService + iNumDataService;}
 
 	void			SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl);
-	void			SetServID(const int iServID, const _UINT32BIT iNewServID);
+	void			SetServID(const int iServID, const uint32_t iNewServID);
 
 
 	/* Symbol interleaver mode (long or short interleaving) */
@@ -433,8 +433,8 @@ public:
 		CRawSimData() : ciMaxDelBlocks(50), iCurWritePos(0) 
 			{veciShRegSt.Init(ciMaxDelBlocks);}
 
-		void Add(_UINT32BIT iNewSRS);
-		_UINT32BIT Get();
+		void Add(uint32_t iNewSRS);
+		uint32_t Get();
 
 		void Reset() {iCurWritePos = 0;}
 
@@ -442,7 +442,7 @@ public:
 	protected:
 		/* Max number of delayed blocks */
 		int							ciMaxDelBlocks;
-		CShiftRegister<_UINT32BIT>	veciShRegSt;
+		CShiftRegister<uint32_t>	veciShRegSt;
 		int							iCurWritePos;
 	} RawSimDa;
 

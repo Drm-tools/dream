@@ -44,7 +44,7 @@ void CCRC::Reset(const int iNewDegree)
 
 	/* Init state shift-register with ones. Set all registers to "1" with
 	   bit-wise not operation */
-	iStateShiftReg = ~_UINT32BIT(0);
+	iStateShiftReg = ~uint32_t(0);
 }
 
 void CCRC::AddByte(const _BYTE byNewInput)
@@ -70,7 +70,7 @@ void CCRC::AddByte(const _BYTE byNewInput)
 	}
 }
 
-_UINT32BIT CCRC::GetCRC()
+uint32_t CCRC::GetCRC()
 {
 	/* Return inverted shift-register (1's complement) */
 	iStateShiftReg = ~iStateShiftReg;
@@ -79,7 +79,7 @@ _UINT32BIT CCRC::GetCRC()
 	return iStateShiftReg & (iBitOutPosMask - 1);
 }
 
-_BOOLEAN CCRC::CheckCRC(_UINT32BIT iCRC)
+_BOOLEAN CCRC::CheckCRC(uint32_t iCRC)
 {
 	if (iCRC == GetCRC())
 		return TRUE;

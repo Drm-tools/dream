@@ -118,9 +118,9 @@ void CWriteData::StopWriteWaveFile()
 void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 {
 	int			i;
-	_UINT32BIT	iTempShiftRegister1;
+	uint32_t	iTempShiftRegister1;
 	_BINARY		biPRBSbit;
-	_UINT32BIT	iShiftRegister;
+	uint32_t	iShiftRegister;
 	FILE*		pFileCurPos;
 	time_t		tiElTi;
 	long int	lReTi;
@@ -234,7 +234,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	/* Generate a pseudo-noise test-signal (PRBS) */
 	/* Init shift register with an arbitrary number (Must be known at the
 	   receiver AND transmitter!) */
-	iShiftRegister = (_UINT32BIT) (time(NULL) + rand());
+	iShiftRegister = (uint32_t) (time(NULL) + rand());
 	TransmParam.RawSimDa.Add(iShiftRegister);
 
 	for (i = 0; i < iOutputBlockSize; i++)
@@ -341,9 +341,9 @@ void CGenSimData::SetNumErrors(int iNewNE, string strNewFileName)
 
 void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	_UINT32BIT		iTempShiftRegister1;
+	uint32_t		iTempShiftRegister1;
 	_BINARY			biPRBSbit;
-	_UINT32BIT		iShiftRegister;
+	uint32_t		iShiftRegister;
 	int				iNumBitErrors;
 	int				i;
 

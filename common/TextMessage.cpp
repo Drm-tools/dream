@@ -171,12 +171,12 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 
 		/* Generate "beginning of segment" identification by "all 0xFF" ----- */
 		for (j = 0; j < NUM_BYTES_TEXT_MESS_IN_AUD_STR; j++)
-			vvbiSegment[i].Enqueue((_UINT32BIT) 0xFF, SIZEOF__BYTE);
+			vvbiSegment[i].Enqueue((uint32_t) 0xFF, SIZEOF__BYTE);
 
 
 		/* Header ----------------------------------------------------------- */
 		/* Toggle bit */
-		vvbiSegment[i].Enqueue((_UINT32BIT) biToggleBit, 1);
+		vvbiSegment[i].Enqueue((uint32_t) biToggleBit, 1);
 
 		/* Determine position of segment */
 		if (i == 0)
@@ -190,41 +190,41 @@ void CTextMessage::SetText(const string& strMessage, const _BINARY biToggleBit)
 			biLastFlag = 0;
 
 		/* Enqueue first flag */
-		vvbiSegment[i].Enqueue((_UINT32BIT) biFirstFlag, 1);
+		vvbiSegment[i].Enqueue((uint32_t) biFirstFlag, 1);
 
 		/* Enqueue last flag */
-		vvbiSegment[i].Enqueue((_UINT32BIT) biLastFlag, 1);
+		vvbiSegment[i].Enqueue((uint32_t) biLastFlag, 1);
 
 		/* Command flag. This is a data block -> command flag = 0 */
-		vvbiSegment[i].Enqueue((_UINT32BIT) 0, 1);
+		vvbiSegment[i].Enqueue((uint32_t) 0, 1);
 
 		/* Field 1: specify the number of bytes in the body minus 1 (It
 		   shall normally take the value 15 except in the last segment) */
-		vvbiSegment[i].Enqueue((_UINT32BIT) iNumBodyBytes - 1, 4);
+		vvbiSegment[i].Enqueue((uint32_t) iNumBodyBytes - 1, 4);
 
 		/* Field 2. If First flag = "1", this field shall contain the
 		   value "1111" */
 		if (biFirstFlag == 1)
-			vvbiSegment[i].Enqueue((_UINT32BIT) 15 /* 1111 */, 4);
+			vvbiSegment[i].Enqueue((uint32_t) 15 /* 1111 */, 4);
 		else
 		{
 			/* Rfa. The bit shall be set to zero until it is defined */
-			vvbiSegment[i].Enqueue((_UINT32BIT) 0, 1);
+			vvbiSegment[i].Enqueue((uint32_t) 0, 1);
 
 			/* SegNum: specify the sequence number of the current segment 
 			   minus 1. The value 0 is reserved for future use */
-			vvbiSegment[i].Enqueue((_UINT32BIT) i, 3);
+			vvbiSegment[i].Enqueue((uint32_t) i, 3);
 		}
 
 		/* Rfa. These bits shall be set to zero until they are defined */
-		vvbiSegment[i].Enqueue((_UINT32BIT) 0, 4);
+		vvbiSegment[i].Enqueue((uint32_t) 0, 4);
 
 
 		/* Body ------------------------------------------------------------- */
 		/* Set body bytes */
 		for (j = 0; j < iNumBodyBytes; j++)
 		{
-			vvbiSegment[i].Enqueue((_UINT32BIT) strMessage.at(iPosInStr),
+			vvbiSegment[i].Enqueue((uint32_t) strMessage.at(iPosInStr),
 				SIZEOF__BYTE);
 
 			iPosInStr++;

@@ -109,7 +109,7 @@ protected:
 	CDataUnit				DataUnit[MAX_NUM_PACK_PER_STREAM];
 	CMOTSlideShowDecoder	MOTSlideShow[MAX_NUM_PACK_PER_STREAM];
 	CJournaline				Journaline;
-	_UINT32BIT				iOldJournalineServiceID;
+	uint32_t				iOldJournalineServiceID;
 
 	EAppType				eAppType;
 

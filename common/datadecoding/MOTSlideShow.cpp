@@ -97,7 +97,7 @@ void CMOTSlideShowEncoder::AddFileName(const string& strFileName,
 			/* Add one byte = SIZEOF__BYTE bits */
 			vecMOTPicture[iOldNumObj].vecbRawData.Enlarge(SIZEOF__BYTE);
 			vecMOTPicture[iOldNumObj].vecbRawData.
-				Enqueue((_UINT32BIT) byIn, SIZEOF__BYTE);
+				Enqueue((uint32_t) byIn, SIZEOF__BYTE);
 		}
 
 		/* Close the file afterwards */
