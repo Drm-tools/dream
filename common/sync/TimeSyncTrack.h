@@ -42,7 +42,7 @@
 
 /* Weights for bound calculation. First parameter is for peak distance and 
    second for distance from minimum value */
-#define TETA1_DIST_FROM_MAX_DB				25
+#define TETA1_DIST_FROM_MAX_DB				20
 #define TETA2_DIST_FROM_MIN_DB				23
 #define TETA1_DIST_FROM_MAX_DB_RMD			20 /* Robustness mode D */
 #define TETA2_DIST_FROM_MIN_DB_RMD			15 /* Robustness mode D */
