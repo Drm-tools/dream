@@ -30,10 +30,10 @@
 
 
 /* Implementation *************************************************************/
-void CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
-						   CComplexVector& veccOutputData, 
-						   CVector<int>& veciMapTab, 
-						   CVector<_COMPLEX>& veccPilotCells)
+_REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+						    CComplexVector& veccOutputData, 
+						    CVector<int>& veciMapTab, 
+						    CVector<_COMPLEX>& veccPilotCells, _REAL rSNR)
 {
 	int			j, i;
 	int			iTimeDiffOld;
@@ -105,6 +105,9 @@ void CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	/* Copy channel estimation from current symbol in output buffer */
 	for (i = 0; i < iNoCarrier; i++)
 		veccOutputData[i] = matcChanEstHist[0][i];
+
+	/* No SNR improvement by linear interpolation */
+	return rSNR;
 }
 
 int CTimeLinear::Init(CParameter& Parameter)

@@ -80,17 +80,12 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 
 	/* Update times for color LEDs */
-	LEDFAC->SetUpdateTime(600);
+	LEDFAC->SetUpdateTime(1000);
 	LEDSDC->SetUpdateTime(1500);
 	LEDMSC->SetUpdateTime(600);
 	LEDFrameSync->SetUpdateTime(600);
 	LEDTimeSync->SetUpdateTime(600);
 
-
-	/* Set timer for real-time controls */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
-	connect(&Timer, SIGNAL(timeout()), 
-		this, SLOT(OnTimer()));
 
 	/* Connect controls */
 	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)), 
@@ -129,6 +124,21 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		this, SLOT(OnCheckFlipSpectrum()));
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()), 
 		this, SLOT(OnCheckBoxMuteAudio()));
+
+	connect(&Timer, SIGNAL(timeout()), 
+		this, SLOT(OnTimer()));
+}
+
+void systemevalDlg::showEvent(QShowEvent* pEvent)
+{
+	/* Activte real-time timers when window is shown */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
+}
+
+void systemevalDlg::hideEvent(QHideEvent* pEvent)
+{
+	/* Deactivate real-time timers when window is hide */
+	Timer.stop();
 }
 
 void systemevalDlg::SetStatus(int MessID, int iMessPara)

@@ -30,10 +30,10 @@
 
 
 /* Implementation *************************************************************/
-void CTimeDecDir::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
-						   CComplexVector& veccOutputData, 
-						   CVector<int>& veciMapTab, 
-						   CVector<_COMPLEX>& veccPilotCells)
+_REAL CTimeDecDir::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+						    CComplexVector& veccOutputData, 
+						    CVector<int>& veciMapTab, 
+						    CVector<_COMPLEX>& veccPilotCells, _REAL rSNR)
 {
 	int	i;
 
@@ -109,7 +109,8 @@ void CTimeDecDir::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 
 
-
+	/* No SNR improvement */
+	return rSNR;
 }
 
 int CTimeDecDir::Init(CParameter& Parameter)

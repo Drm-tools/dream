@@ -30,10 +30,10 @@
 
 
 /* Implementation *************************************************************/
-void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
-						   CComplexVector& veccOutputData, 
-						   CVector<int>& veciMapTab, 
-						   CVector<_COMPLEX>& veccPilotCells)
+_REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+						    CComplexVector& veccOutputData, 
+						    CVector<int>& veciMapTab, 
+						    CVector<_COMPLEX>& veccPilotCells, _REAL rSNR)
 {
 	int				j, i;
 	int				iPiHiIndex;
@@ -122,7 +122,7 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		rSigma = ModLinRegr(vecrTiCorrEst);
 
 		/* Update the wiener filter */
-		UpdateFilterCoef(rSNR, rSigma);
+		rMMSE = UpdateFilterCoef(rSNR, rSigma);
 
 		/* Reset counter */
 		iUpCntWienFilt = iNoSymPerFrame;
@@ -167,6 +167,13 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			veccOutputData[i] = veccChanEst[iPiHiIndex];
 		}
 	}
+
+	/* Return the SNR improvement by wiener interpolation in time direction. If
+	   no SNR improvent was achieved, just return old SNR */
+	if (1 / rMMSE < rSNR)
+		return rSNR;
+	else
+		return 1 / rMMSE;
 }
 
 int CTimeWiener::DisToNextPil(int iPiHiIndex, int iSymNo)
@@ -180,9 +187,10 @@ int CTimeWiener::DisToNextPil(int iPiHiIndex, int iSymNo)
 
 int CTimeWiener::Init(CParameter& ReceiverParam)
 {
-	int i, j;
-	int iNoPiFreqDirAll;
-	int iSymDelyChanEst;
+	int		i, j;
+	int		iNoPiFreqDirAll;
+	int		iSymDelyChanEst;
+	_REAL	rSNR;
 
 	/* Init base class, must be at the beginning of this init! */
 	CPilotModiClass::InitRot(ReceiverParam);
@@ -280,11 +288,12 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 
 	/* Calculate optimal filter --------------------------------------------- */
-	/* Significant parameters for Gaussian power density spectrum */
+	/* Init SNR value */
 	const _REAL rSNRdB = (_REAL) 25.0;
 	rSNR = pow(10, rSNRdB / 10);
 
-	ReceiverParam.rSNR4WienerFreq = UpdateFilterCoef(rSNR, rSigma);
+	/* Calculate initialization wiener filter taps and init MMSE */
+	rMMSE = UpdateFilterCoef(rSNR, rSigma);
 
 	/* Return delay of channel equalization */
 	return iLenHistBuff;

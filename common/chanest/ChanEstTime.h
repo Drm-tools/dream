@@ -62,10 +62,10 @@ public:
 	CChanEstTime() {}
 	virtual ~CChanEstTime() {}
 
-	virtual void Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+	virtual _REAL Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
 						  CComplexVector& veccOutputData, 
 						  CVector<int>& veciMapTab, 
-						  CVector<_COMPLEX>& veccPilotCells) = 0;
+						  CVector<_COMPLEX>& veccPilotCells, _REAL rSNR) = 0;
 
 	virtual int Init(CParameter& Parameter) = 0;
 };

@@ -35,6 +35,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	int			i, j;
 	int			iModSymNum;
 	_COMPLEX	cModChanEst;
+	_REAL		rSNRAftTiInt;
 
 	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
@@ -51,11 +52,12 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Time interpolation *****************************************************/
 	/* Get symbol-counter for next symbol. Use the count from the frame 
 	   synchronization (in OFDM.cpp). Call estimation routine */
-	pTimeInt->Estimate(pvecInputData, veccChanEst, 
-					   ReceiverParam.matiMapTab[(*pvecInputData).
-					   GetExData().iSymbolNo],
-					   ReceiverParam.matcPilotCells[(*pvecInputData).
-					   GetExData().iSymbolNo]);
+	rSNRAftTiInt = 
+		pTimeInt->Estimate(pvecInputData, veccChanEst, 
+						   ReceiverParam.matiMapTab[(*pvecInputData).
+						   GetExData().iSymbolNo],
+						   ReceiverParam.matcPilotCells[(*pvecInputData).
+						   GetExData().iSymbolNo], rSNREstimate);
 
 
 	/* Extract interpolated pilots for frequency interpolation -------------- */
@@ -143,6 +145,12 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/**********************************************************************\
 		 * Wiener filter													   *
 		\**********************************************************************/
+
+// TEST
+/* Update filter taps */
+UpdateWienerFiltCoef(rSNRAftTiInt, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
+	ReceiverParam.RatioTgTu.iDenom);
+
 		/* FIR filter of the pilots with filter taps. We need to filter the
 		   pilot positions as well to improve the SNR estimation (which 
 		   follows this procedure) */
@@ -211,7 +219,12 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				(1 - rLam) * SqMag(cModChanEst);
 
 			/* Calculate final result (signal to noise ratio) */
-			rSNREstimate = rSignalEst / rNoiseEst * rSNRCorrectFact;
+			if (rNoiseEst != 0)
+				rSNREstimate = rSignalEst / rNoiseEst;
+
+			/* Bound the SNR at 0 dB */
+			if (rSNREstimate < (_REAL) 1.0)
+				rSNREstimate = (_REAL) 1.0;
 		}
 	}
 
@@ -337,7 +350,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iInitCnt = iLenHistBuff - 1;
 
 	/* Inits for SNR estimation (noise and signal averages) */
-	rSNREstimate = (_REAL) 0.0;
+	rSNREstimate = (_REAL) 1.0;
 	rNoiseEst = (_REAL) 0.0;
 	rSignalEst = (_REAL) 0.0;
 
@@ -392,11 +405,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	const _REAL rSNRdB = (_REAL) 30.0;
 	_REAL rSNR = pow(10, rSNRdB / 10);
 
-// TEST
-rSNR = pow(10, - 10.0 * log10(ReceiverParam.rSNR4WienerFreq) / 10);
-
-
-	/* Update wiener filter */
+	/* Init wiener filter */
 	UpdateWienerFiltCoef(rSNR, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
 		ReceiverParam.RatioTgTu.iDenom);
 

@@ -66,9 +66,11 @@ public:
 	void SetStatus(int MessID, int iMessPara);
 
 protected:
-	QTimer		Timer;
-	ECharType	CharType;
-	void		OnlyThisButDown(QPushButton* pButton);
+	QTimer			Timer;
+	ECharType		CharType;
+	void			OnlyThisButDown(QPushButton* pButton);
+    virtual void	showEvent(QShowEvent* pEvent);
+	virtual void	hideEvent(QHideEvent* pEvent);
 
 public slots:
 	void OnTimer();

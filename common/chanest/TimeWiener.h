@@ -55,10 +55,10 @@ public:
 	virtual ~CTimeWiener() {}
 
 	virtual int Init(CParameter& ReceiverParam);
-	virtual void Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
-						  CComplexVector& veccOutputData, 
-						  CVector<int>& veciMapTab, 
-						  CVector<_COMPLEX>& veccPilotCells);
+	virtual _REAL Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
+						   CComplexVector& veccOutputData, 
+						   CVector<int>& veciMapTab, 
+						   CVector<_COMPLEX>& veccPilotCells, _REAL rSNR);
 
 	_REAL GetSigma() {return rSigma * 2;}
 
@@ -100,8 +100,9 @@ protected:
 	int					iUpCntWienFilt;
 
 	_REAL				Ts;
-	_REAL				rSNR;
 	_REAL				rSigma;
+
+	_REAL				rMMSE;
 };
 
 
