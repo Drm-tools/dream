@@ -67,7 +67,10 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		   Data must be band-pass-filtered before applying the algorithms,
 		   because we do not know which mode is active when we synchronize
 		   the timing and we must assume the worst-case, therefore use only
-		   from DC to 4.5 kHz */
+		   from DC to 4.5 kHz. If the macro "USE_10_KHZ_HILBFILT" is defined,
+		   a bandwith of approx. 10 kHz is used. In this case, we have better
+		   performance with the most probabale 10 kHz mode but may have worse
+		   performance with the 4.5 or 5 kHz modes (for the acquisition) */
 
 		/* The FIR filter intermediate buffer must be adjusted to the new 
 		   input block size since the size can be vary */

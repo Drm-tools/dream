@@ -39,7 +39,7 @@
 /* Definitions ****************************************************************/
 /* Use 5 or 10 kHz bandwidth for guard-interval correlation. 10 kHz bandwidth
    should be chosen when time domain freuqency offset estimation is used */
-#undef USE_10_KHZ_HILBFILT
+#define USE_10_KHZ_HILBFILT
 
 #define LAMBDA_LOW_PASS_START			((CReal) 0.99)
 #define TIMING_BOUND_ABS				150
