@@ -64,11 +64,6 @@ void CDRMReceiver::Run()
 					   called only once after frequency acquisition was done */
 					if (bWasFreqAcqu == TRUE)
 					{
-// FIXME maybe do this a little bit later...
-/* Start using pilots in frequency domain, when acquisition is
-   done (we assume that timing is also ready at this time!) */
-SyncUsingPil.StartTrackPil();
-
 						/* Frequency acquisition is done, now the filter for 
 						   guard-interval correlation can be designed */
 						TimeSync.SetFilterTaps(ReceiverParam.rFreqOffsetAcqui +
@@ -172,16 +167,16 @@ SyncUsingPil.StartTrackPil();
 				bEnoughData = TRUE;
 			}
 
+			/* Data decoding */
+			if (DataDecoder.WriteData(ReceiverParam, MSCDeMUXBufData))
+				bEnoughData = TRUE;
+
 			/* Source decoding (audio) */
 			if (AudioSourceDecoder.ProcessData(ReceiverParam, MSCDeMUXBufAud,
 				AudSoDecBuf))
 			{
 				bEnoughData = TRUE;
 			}
-
-			/* Data decoding */
-			if (DataDecoder.WriteData(ReceiverParam, MSCDeMUXBufData))
-				bEnoughData = TRUE;
 
 			/* Save or dump the data */
 			if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
@@ -261,6 +256,7 @@ void CDRMReceiver::SetInStartMode()
 	FreqSyncAcq.StartAcquisition();
 	TimeSync.StartAcquisition();
 	ChannelEstimation.GetTimeSyncTrack()->StopTracking();
+	ChannelEstimation.GetTimeWiener()->StopTracking();
 
 	SyncUsingPil.StartAcquisition();
 	SyncUsingPil.StopTrackPil();
@@ -294,9 +290,11 @@ void CDRMReceiver::SetInTrackingMode()
 		/* Acquisition is done, deactivate it now and start tracking */
 		TimeSync.StopTimingAcqu();
 		ChannelEstimation.GetTimeSyncTrack()->StartTracking();
+		ChannelEstimation.GetTimeWiener()->StartTracking();
 
 		/* Reset acquisition for frame synchronization */
 		SyncUsingPil.StopAcquisition();
+		SyncUsingPil.StartTrackPil();
 
 		/* Set receiver flag to tracking */
 		eReceiverState = RS_TRACKING;
