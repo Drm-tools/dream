@@ -56,217 +56,6 @@ CMatlibVector<CReal> Sort(const CMatlibVector<CReal>& rvI)
 	return fvRet;
 }
 
-CReal Ceil(const CReal& fI)
-{
-	CReal fRet = (int) fI;
-
-	if (fI > 0)
-		fRet += 1;
-
-	return fRet;
-}
-
-CMatlibVector<CReal> Ceil(const CMatlibVector<CReal>& fvI)
-{
-	CMatlibVector<CReal> fvRet(fvI.GetSize(), VTY_TEMP);
-
-	for (int i = 0; i < fvI.GetSize(); i++)
-	{
-		fvRet[i] = (int) fvI[i];
-
-		if (fvI[i] > 0)
-			fvRet[i] += 1;
-	}
-
-	return fvRet;
-}
-
-CReal Floor(const CReal& fI)
-{
-	CReal fRet = (int) fI;
-
-	if (fI < 0)
-		fRet -= 1;
-
-	return fRet;
-}
-
-CMatlibVector<CReal> Floor(const CMatlibVector<CReal>& fvI)
-{
-	CMatlibVector<CReal> fvRet(fvI.GetSize(), VTY_TEMP);
-
-	for (int i = 0; i < fvI.GetSize(); i++)
-	{
-		fvRet[i] = (int) fvI[i];
-
-		if (fvI[i] < 0)
-			fvRet[i] -= 1;
-	}
-
-	return fvRet;
-}
-
-CReal Fix(const CReal& fI)
-{
-	return (int) fI;
-}
-
-CMatlibVector<CReal> Fix(const CMatlibVector<CReal>& fvI)
-{
-	_VECOP(CReal, fvI.GetSize(), (int) fvI[i]);
-}
-
-CReal Sin(const CReal& fI) 
-{
-	return sin(fI);
-}
-
-CReal Cos(const CReal& fI) 
-{
-	return cos(fI);
-}
-
-CReal Tan(const CReal& fI) 
-{
-	return tan(fI);
-}
-
-CReal Sqrt(const CReal& fI) 
-{
-	return sqrt(fI);
-}
-
-CReal Exp(const CReal& fI) 
-{
-	return exp(fI);
-}
-
-CReal Log(const CReal& fI)
-{
-	return log(fI);
-}
-
-CReal Log10(const CReal& fI)
-{
-	return log10(fI);
-}
-
-CMatlibVector<CReal> Ones(const int iLen)
-{
-	_VECOP(CReal, iLen, 1);
-}
-
-CMatlibVector<CReal> Zeros(const int iLen)
-{
-	_VECOP(CReal, iLen, 0);
-}
-
-CMatlibVector<CReal> Real(const CMatlibVector<CComplex>& cvI)
-{
-	_VECOP(CReal, cvI.GetSize(), cvI[i].real());
-}
-
-CReal Real(const CComplex& cI) 
-{
-	return cI.real();
-}
-
-CMatlibVector<CReal> Imag(const CMatlibVector<CComplex>& cvI)
-{
-	_VECOP(CReal, cvI.GetSize(), cvI[i].imag());
-}
-
-CReal Imag(const CComplex& cI) 
-{
-	return cI.imag();
-}
-
-CMatlibVector<CComplex> Conj(const CMatlibVector<CComplex>& cvI)
-{
-	_VECOP(CComplex, cvI.GetSize(), conj(cvI[i]));
-}
-
-CComplex Conj(const CComplex& cI) 
-{
-	return conj(cI);
-}
-
-CMatlibVector<CReal> Abs(const CMatlibVector<CComplex>& cvI)
-{
-	_VECOP(CReal, cvI.GetSize(), abs(cvI[i]));
-}
-
-CMatlibVector<CReal> Abs(const CMatlibVector<CReal>& fvI)
-{
-	_VECOP(CReal, fvI.GetSize(), fabs(fvI[i]));
-}
-
-CReal Abs(const CComplex& cI)
-{
-	return abs(cI);
-}
-
-CReal Abs(const CReal& rI)
-{
-	return fabs(rI);
-}
-
-CMatlibVector<CReal> Angle(const CMatlibVector<CComplex>& cvI)
-{
-	_VECOP(CReal, cvI.GetSize(), arg(cvI[i]));
-}
-
-CReal Angle(const CComplex cI)
-{
-	return arg(cI);
-}
-
-CMatlibVector<CReal> Max(const CMatlibVector<CReal>& fvA, const CMatlibVector<CReal>& fvB)
-{
-	CMatlibVector<CReal> fvMaxReturn(fvA.GetSize(), VTY_TEMP);
-
-	for (int i = 0; i < fvA.GetSize(); i++)
-	{
-		if (fvA[i] > fvB[i])
-			fvMaxReturn[i] = fvA[i];
-		else
-			fvMaxReturn[i] = fvB[i];
-	}
-
-	return fvMaxReturn;
-}
-
-CReal Max(const CReal& rA, const CReal& rB)
-{
-	if (rA > rB)
-		return rA;
-	else
-		return rB;
-}
-
-CMatlibVector<CReal> Min(const CMatlibVector<CReal>& fvA, const CMatlibVector<CReal>& fvB)
-{
-	CMatlibVector<CReal> fvMinReturn(fvA.GetSize(), VTY_TEMP);
-
-	for (int i = 0; i < fvA.GetSize(); i++)
-	{
-		if (fvA[i] < fvB[i])
-			fvMinReturn[i] = fvA[i];
-		else
-			fvMinReturn[i] = fvB[i];
-	}
-
-	return fvMinReturn;
-}
-
-CReal Min(const CReal& rA, const CReal& rB)
-{
-	if (rA < rB)
-		return rA;
-	else
-		return rB;
-}
-
 CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
 	int						i;
@@ -275,7 +64,7 @@ CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPl
 	fftw_complex*			pFftwComplexIn = new fftw_complex[n];
 	fftw_complex*			pFftwComplexOut = new fftw_complex[n];
 
-	// fftw (Homepage: http://www.fftw.org/) 
+	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
 	{
 		pFftwComplexIn[i].re = cvI[i].real();
@@ -313,7 +102,7 @@ CMatlibVector<CComplex> Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftP
 	fftw_complex*			pFftwComplexIn = new fftw_complex[n];
 	fftw_complex*			pFftwComplexOut = new fftw_complex[n];
 
-	// fftw (Homepage: http://www.fftw.org/) 
+	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
 	{
 		pFftwComplexIn[i].re = cvI[i].real();
@@ -354,7 +143,7 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	fftw_real*				pFftwRealIn = new fftw_real[iLongLength];
 	fftw_real*				pFftwRealOut = new fftw_real[iLongLength];
 
-	// fftw (Homepage: http://www.fftw.org/)
+	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < fvI.GetSize(); i++)
 		pFftwRealIn[i] = fvI[i];
 
@@ -370,12 +159,12 @@ CMatlibVector<CComplex> rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlan
 	else
 		rfftw_one(FftPlans.RFFTPlForw, pFftwRealIn, pFftwRealOut);
 
-	// Now build complex output-vector
-	// Zero frequency
+	/* Now build complex output-vector */
+	/* Zero frequency */
 	cvReturn[0] = pFftwRealOut[0];
 	for (i = 1; i < iShortLength; i++)
 		cvReturn[i] = CComplex(pFftwRealOut[i], pFftwRealOut[iLongLength - i]);
-	// Nyquist frequency
+	/* Nyquist frequency */
 	cvReturn[iShortLength] = pFftwRealOut[iShortLength];
 
 	delete[] pFftwRealIn;
@@ -396,14 +185,14 @@ CMatlibVector<CReal> rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPla
 	fftw_real*				pFftwRealIn = new fftw_real[iLongLength];
 	fftw_real*				pFftwRealOut = new fftw_real[iLongLength];
 
-	// Now build half-complex-vector
+	/* Now build half-complex-vector */
 	pFftwRealIn[0] = cvI[0].real();
 	for (i = 1; i < iShortLength; i++)
 	{
 		pFftwRealIn[i] = cvI[i].real();
 		pFftwRealIn[iLongLength - i] = cvI[i].imag();
 	}
-	// Nyquist-frequency
+	/* Nyquist-frequency */
 	pFftwRealIn[iShortLength] = cvI[iShortLength].real(); 
 
 	/* Check, if plans are already created, else: create it */

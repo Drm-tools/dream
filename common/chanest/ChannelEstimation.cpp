@@ -36,6 +36,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	int			iModSymNum;
 	_COMPLEX	cModChanEst;
 	_REAL		rSNRAftTiInt;
+	_REAL		rCurSNREst;
 
 	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
@@ -232,11 +233,16 @@ UpdateWienerFiltCoef(rSNRAftTiInt, rDelaySprEstInd / iNoCarrier);
 
 			/* Calculate final result (signal to noise ratio) */
 			if (rNoiseEst != 0)
-				rSNREstimate = rSignalEst / rNoiseEst;
+				rCurSNREst = rSignalEst / rNoiseEst;
+			else
+				rCurSNREst = (_REAL) 1.0;
 
 			/* Bound the SNR at 0 dB */
-			if (rSNREstimate < (_REAL) 1.0)
-				rSNREstimate = (_REAL) 1.0;
+			if (rCurSNREst < (_REAL) 1.0)
+				rCurSNREst = (_REAL) 1.0;
+
+			/* Average the final result */
+			IIR1(rSNREstimate, rCurSNREst, rLam);
 		}
 	}
 
@@ -531,7 +537,6 @@ void CChannelEstimation::UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio)
 		for (i = 0; i < iLengthWiener; i++)
 			matcWienerFilter[j][i] = veccTempFilt[i];
 	}
-
 
 	/* Set matrix with filter taps, one filter for each carrier */
 	for (j = 0; j < iNoCarrier; j++)

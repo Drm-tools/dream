@@ -203,7 +203,6 @@ protected:
 
 	CVector<_COMPLEX>	veccEstChan;
 	CVector<_COMPLEX>	veccRefChan;
-	CVector<_REAL>		vecrMSE;
 	CVector<_REAL>		vecrMSEAverage;
 	long int			lAvCnt;
 

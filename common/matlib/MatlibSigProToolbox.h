@@ -38,17 +38,28 @@ CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI);
 CMatlibVector<CReal>	Hann(const int iLen);
 CMatlibVector<CReal>	Hamming(const int iLen);
 
+
 /* Filter data with a recursive (IIR) or nonrecursive (FIR) filter */
 CMatlibVector<CReal>	Filter(const CMatlibVector<CReal>& fvB, 
 							   const CMatlibVector<CReal>& fvA, 
 							   const CMatlibVector<CReal>& fvX, 
 							   CMatlibVector<CReal>& fvZ);
 
+
 /* Levinson durbin recursion */
 CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal>& vecrRx, 
 								 const CMatlibVector<CReal>& vecrB);
 CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx, 
 								 const CMatlibVector<CComplex>& veccB);
+
+
+/* Matrix inverse */
+CMatlibMatrix<CReal>	Inv(const CMatlibMatrix<CReal>& matrI);
+
+
+/* Identity matrix */
+CMatlibMatrix<CReal>	Eye(const int iLen);
+
 
 
 /* My own functions --------------------------------------------------------- */
@@ -58,31 +69,23 @@ CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB,
 								   CMatlibVector<CReal>& rvZ,
 								   const int iDecFact);
 
-/* Squared magnitude */
-CReal					SqMag(const CComplex& cI);
-CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI);
 
-/* One pole recursion (first order IIR) */
-template<class CReal> 
-void					IIR1(CReal& rY, const CReal& rX, const CReal rLambda);
-template<class CReal>
+/* Squared magnitude */
+inline CReal				SqMag(const CComplex& cI)
+								{return cI.real() * cI.real() + cI.imag() * cI.imag();}
+inline CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
+								{_VECOP(CReal, veccI.GetSize(), SqMag(veccI[i]));}
+
+
+/* One pole recursion (first order IIR)
+   y_n = lambda * y_{n - 1} + (1 - lambda) * x_n */
+template<class CReal> inline
+void					IIR1(CReal& rY, const CReal& rX, const CReal rLambda)
+							{rY = rLambda * (rY - rX) + rX;}
+template<class CReal> inline
 void					IIR1(CMatlibVector<CReal>& rY,
 							 const CMatlibVector<CReal>& rX,
-							 const CReal rLambda);
-
-
-/* Implementation **************************************************************
-   (the implementation of template classes must be in the header file!) */
-template<class CReal>
-void IIR1(CReal& rY, const CReal& rX, const CReal rLambda)
-{
-	/* y_n = lambda * y_{n - 1} + (1 - lambda) * x_n */
-	rY = rLambda * (rY - rX) + rX;
-}
-
-template<class CReal>
-void IIR1(CMatlibVector<CReal>& rY, const CMatlibVector<CReal>& rX,
-		  const CReal rLambda)
+							 const CReal rLambda)
 {
 	for (int i = 0; i < rY.GetSize(); i++)
 		IIR1(rY[i], rX[i], rLambda);

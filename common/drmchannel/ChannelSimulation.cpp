@@ -73,7 +73,7 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Get real output vector and correct global gain */
 	for (i = 0; i < iInputBlockSize; i++)
-		(*pvecOutputData)[i] = veccOutput[i].real() * 2 * rGainCorr;
+		(*pvecOutputData)[i] = veccOutput[i].real() * rGainCorr;
 
 	/* Additional white Gaussian noise (AWGN) */
 	for (i = 0; i < iInputBlockSize; i++)
@@ -86,13 +86,13 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 // nicer implementation of this!
 if (pvecOutputData2 != NULL){
 
-	/* Input reference signal */
+	/* Input reference signal. "* 2" due to the real-valued signal */
 	for (i = 0; i < iInputBlockSize; i++)
 		(*pvecOutputData2)[i] = (*pvecInputData)[i].real() * 2;
 
 	/* Channel reference signal (without additional noise) */
 	for (i = 0; i < iInputBlockSize; i++)
-		(*pvecOutputData3)[i] = veccOutput[i].real() * 2 * rGainCorr;
+		(*pvecOutputData3)[i] = veccOutput[i].real() * rGainCorr;
 }
 }
 
@@ -222,22 +222,6 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 					/* Fshift: */	(_REAL) 0.0, 
 					/* Fd: */		rMyFading);
 		break;
-
-	case 8:
-		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! */
-		rMyFading = 1.0;
-
-		iNoTaps = 2;
-		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
-					/* Fd: */		(_REAL) 0.0);
-
-		tap[1].Init(/* Delay: */	(_REAL) 0.1, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
-					/* Fd: */		rMyFading);
-		break;
 	}
 
 
@@ -255,8 +239,8 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		rGainCorr += tap[i].GetGain() * tap[i].GetGain();
 	}
 
-	/* Final gain correction value */
-	rGainCorr = (_REAL) 1.0 / sqrt(rGainCorr);
+	/* Final gain correction value. "* 2" due to the real-valued signals */
+	rGainCorr = (_REAL) 1.0 / sqrt(rGainCorr) * 2;
 
 
 	/* Memory allocation ---------------------------------------------------- */

@@ -310,7 +310,6 @@ protected:
 template<class TData> void CMatrix<TData>::Init(const int iNewRow,
 												const int iNewColumn)
 {
-	/* Set length of history-buffer */
 	iRow = iNewRow;
 
 	if (iRow > 0)

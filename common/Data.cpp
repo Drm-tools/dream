@@ -458,13 +458,7 @@ void CIdealChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		/* MSE for all carriers --------------------------------------------- */
 		for (i = 0; i < iNoCarrier; i++)
-		{
-			vecrMSE[i] = abs(veccEstChan[i] - veccRefChan[i]) *
-				abs(veccEstChan[i] - veccRefChan[i]);
-
-			/* Average results */
-			vecrMSEAverage[i] += vecrMSE[i];
-		}
+			vecrMSEAverage[i] += SqMag(veccEstChan[i] - veccRefChan[i]);
 
 		/* New values have been added, increase counter for final result
 		   calculation */
@@ -517,7 +511,6 @@ void CIdealChanEst::InitInternal(CParameter& ReceiverParam)
 	/* Allocate memory for intermedia results */
 	veccEstChan.Init(iNoCarrier);
 	veccRefChan.Init(iNoCarrier);
-	vecrMSE.Init(iNoCarrier);
 	vecrMSEAverage.Init(iNoCarrier, (_REAL) 0.0); /* Reset average with zeros */
 
 	/* Define block-sizes for inputs and output */
