@@ -406,3 +406,161 @@ _UINT32BIT CParameter::CRawSimData::Get()
 
 	return iRet;
 }
+
+
+/* Reception log implementation --------------------------------------------- */
+CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFile(NULL)
+{
+	ResetLog();
+}
+
+void CParameter::CReceptLog::ResetLog()
+{
+	iNumFAC = 0;
+	iNumMSC = 0;
+	iNumSNR = 0;
+	iNumCRCOkFAC = 0;
+	iNumCRCOkMSC = 0;
+	rAvSNR = (_REAL) 0.0;
+}
+
+void CParameter::CReceptLog::SetFAC(_BOOLEAN bCRCOk)
+{
+	iNumFAC++;
+
+	if (bCRCOk == TRUE)
+		iNumCRCOkFAC++;
+
+	if (iNumFAC > NUM_DRM_FRAMES_PER_MIN)
+	{
+		/* This should not happen, reset log and write zeros */
+		ResetLog();
+
+		WriteParameters();
+
+		iMinuteCnt++;
+
+		/* Increase FAC CRC count since the on good CRC which caused the overrun
+		   was for the next block */
+		iNumCRCOkFAC++;
+	}
+}
+
+void CParameter::CReceptLog::SetMSC(_BOOLEAN bCRCOk)
+{
+	iNumMSC++;
+
+	if (bCRCOk == TRUE)
+		iNumCRCOkMSC++;
+
+	if (iNumMSC == iNumAACFrames * NUM_DRM_FRAMES_PER_MIN)
+	{
+		/* Store results in file */
+		WriteParameters();
+
+		ResetLog();
+		iMinuteCnt++;
+	}
+}
+
+void CParameter::CReceptLog::SetSNR(_REAL rCurSNR)
+{
+	iNumSNR++;
+
+	/* Average SNR values */
+	rAvSNR += rCurSNR;
+}
+
+void CParameter::CReceptLog::SetNumAAC(int iNewNum)
+{
+	/* Set the number of AAC frames in one block */
+	iNumAACFrames = iNewNum;
+
+	ResetLog();
+}
+
+void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
+{
+	time_t		ltime;
+	char		tmpbuf[128];
+	struct tm*	today;
+
+	bLogActivated = bLog;
+
+	/* Open or close the file */
+	if (bLogActivated == TRUE)
+	{
+		/* Get time and date */
+		_strtime(tmpbuf);
+		time(&ltime);
+		today = gmtime(&ltime); /* Should be UTC time */
+
+		pFile = fopen("Log.txt", "a");
+
+		/* Beginning of new table (similar to standard DRM log file) */
+		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n",
+			DREAM_VERSION_NUMBER);
+
+		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %s\n",
+			today->tm_year + 1900, today->tm_mon, today->tm_mday, tmpbuf);
+
+		fprintf(pFile, "Frequency        \nLatitude         \nLongitude        \n\n");
+
+
+		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
+		fflush(pFile);
+
+		ResetLog();
+
+		/* Reset minute count */
+		iMinuteCnt = 0;
+	}
+	else
+		CloseFile();
+}
+
+void CParameter::CReceptLog::CloseFile()
+{
+	if (pFile != NULL)
+	{
+		fprintf(pFile, "\nCRC: \n<<<<\n\n");
+
+		fclose(pFile);
+
+		pFile = NULL;
+	}
+}
+
+void CParameter::CReceptLog::WriteParameters()
+{
+	int iAverageSNR;
+	int iTmpNumAAC;
+
+	try
+	{
+		if (bLogActivated == TRUE)
+		{
+			/* Avoid division by zero */
+			if (iNumSNR == 0)
+				iAverageSNR = 0;
+			else
+				iAverageSNR = (int) (rAvSNR / iNumSNR);
+
+			/* If no sync, do not print number of AAC frames */
+			if (iNumCRCOkFAC == 0)
+				iTmpNumAAC = 0;
+			else
+				iTmpNumAAC = iNumAACFrames;
+
+			fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0\n",
+				iMinuteCnt, iAverageSNR, iNumCRCOkFAC,
+				iNumCRCOkMSC, iTmpNumAAC);
+			fflush(pFile);
+		}
+	}
+
+	catch (...)
+	{
+		/* To prevent errors if user views the file during reception */
+	}
+}

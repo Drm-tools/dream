@@ -46,7 +46,10 @@ using namespace std;	// Because of the library: "complex"
    "test" MUST EXIST in the windows directory (or linux directory if you use
    Linux)! */
 #define _DEBUG_
-//#undef _DEBUG_
+#undef _DEBUG_
+
+
+#define DREAM_VERSION_NUMBER			"0.9.2"
 
 
 /* Define the application specific data-types ------------------------------- */
@@ -80,6 +83,8 @@ typedef uint32_t						_UINT32BIT;
 /* Define type-specific information */
 #define SIZEOF__BYTE					8
 #define _MAXSHORT						32767
+#define _MAXREAL						((_REAL) 3.4e38) /* Max value for float types */
+
 
 
 /* Definitions for window message system ------------------------------------ */

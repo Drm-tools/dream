@@ -345,6 +345,32 @@ public:
 	_REAL				rTimingOffsTrack;
 
 
+	/* Reception log -------------------------------------------------------- */
+	class CReceptLog
+	{
+	public:
+		CReceptLog();
+		virtual ~CReceptLog() {CloseFile();}
+
+		void SetFAC(_BOOLEAN bCRCOk);
+		void SetMSC(_BOOLEAN bCRCOk);
+		void SetSNR(_REAL rCurSNR);
+		void SetNumAAC(int iNewNum);
+		void SetLog(_BOOLEAN bLog);
+
+	protected:
+		void ResetLog();
+		void CloseFile();
+		void WriteParameters();
+		int				iNumFAC, iNumMSC, iNumSNR;
+		int				iNumCRCOkFAC, iNumCRCOkMSC;
+		int				iNumAACFrames, iMinuteCnt;
+		_REAL			rAvSNR;
+		_BOOLEAN		bLogActivated;
+		FILE*			pFile;
+	} ReceptLog;
+
+
 	/* Simulation ----------------------------------------------------------- */
 	int					iDRMChannelNo;
 	_REAL				rSimSNRdB;
@@ -384,9 +410,7 @@ public:
 		int							ciMaxDelBlocks;
 		CShiftRegister<_UINT32BIT>	veciShRegSt;
 		int							iCurWritePos;
-	};
-
-	CRawSimData			RawSimDa;
+	} RawSimDa;
 
 
 	/* General -------------------------------------------------------------- */
