@@ -56,7 +56,7 @@ void CParameter::ResetServicesStreams()
 		Service[i].AudioParam.bHVXCCRC = FALSE;
 
 		Service[i].DataParam.iStreamID = STREAM_ID_NOT_USED;
-		Service[i].DataParam.ePacketModInd = PM_SYNCHRON_STR_MODE;
+		Service[i].DataParam.ePacketModInd = PM_PACKET_MODE;
 		Service[i].DataParam.eDataUnitInd = DU_SINGLE_PACKETS;
 		Service[i].DataParam.iPacketID = 0;
 		Service[i].DataParam.iPacketLen = 0;
