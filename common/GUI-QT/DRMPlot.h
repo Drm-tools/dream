@@ -82,10 +82,10 @@ public:
 	void SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-					const _REAL rDCFreq, const _REAL rBWCenter = (_REAL) 0.0,
-					const _REAL rBWWidth = (_REAL) 0.0);
+					const _REAL rDCFreq);
 	void SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-				   const _REAL rDCFreq);
+				   const _REAL rDCFreq, const _REAL rBWCenter = (_REAL) 0.0,
+				   const _REAL rBWWidth = (_REAL) 0.0);
 	void SetFreqSamOffsHist(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 							CVector<_REAL>& vecrScale,
 							const _REAL rFreqOffAcquVal);

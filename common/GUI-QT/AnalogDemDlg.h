@@ -36,6 +36,8 @@
 #include <qpushbutton.h>
 #include <qcheckbox.h>
 #include <qfiledialog.h>
+#include <qslider.h>
+#include "../AMDemodulationFilter.h"
 
 #ifdef _WIN32
 # include "../../Windows/moc/AnalogDemDlgbase.h"
@@ -68,17 +70,17 @@ protected:
 	virtual void	hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
 
-	CAMDemodulation::EFilterBW fbwAM;
-	CAMDemodulation::EFilterBW fbwLSB;
-	CAMDemodulation::EFilterBW fbwUSB;
+	int iBwAM;
+	int iBwLSB;
+	int iBwUSB;
 
 public slots:
 	void OnTimer();
 	void OnTimerChart();
 	void OnRadioDemodulation(int iID);
-	void OnRadioBW(int iID);
 	void OnRadioAGC(int iID);
 	void OnCheckBoxMuteAudio();
 	void OnCheckSaveAudioWAV();
 	void OnChartxAxisValSet(double dVal);
+	void OnSliderBWChange(int value);
 };

@@ -39,8 +39,7 @@ fadd = 200; % Additional bandwidth. E.g. 10 kHz mode will be 10000 + fadd Hz
 
 fs = 48000; % Constant for all cases
 
-filterbws = [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, ...
-        10000, 11000, 12000, 13000, 14000, 15000];
+filterbws = [1000:1000:15000];
 
 
 % Generate filter coefficients
@@ -67,6 +66,9 @@ fprintf(fid, '#ifndef _AMDEMODULATION_H_\n');
 fprintf(fid, '#define _AMDEMODULATION_H_\n\n');
 
 
+fprintf(fid, '#define NUM_AM_DEMOD_FILTER             ');
+fprintf(fid, int2str(length(filterbws)));
+fprintf(fid, '\n');
 fprintf(fid, '#define NUM_TAPS_AM_DEMOD_FILTER        ');
 fprintf(fid, int2str(nhil));
 fprintf(fid, '\n');
@@ -76,15 +78,28 @@ fprintf(fid, '\n');
 fprintf(fid, '\n\n\n');
 
 
+% Write bandwidths
+fprintf(fid, '/* Bandwidths */\n');
+fprintf(fid, ['static int iHilLPProtAMDemodBW[NUM_AM_DEMOD_FILTER] =\n']);
+fprintf(fid, '{\n');
+fprintf(fid, '	%d,\n', filterbws(1:end - 1));
+fprintf(fid, '	%d\n', filterbws(end));
+fprintf(fid, '};\n\n');        
+
 % Write filter taps
 fprintf(fid, '/* Low pass prototypes for Hilbert-filter */\n');
+fprintf(fid, ['static float fHilLPProtAMDemod[NUM_AM_DEMOD_FILTER][NUM_TAPS_AM_DEMOD_FILTER] = {\n']);
 for i = 1:length(filterbws)
-	fprintf(fid, ['static float fHilLPProtAMDemod' int2str(filterbws(i) / 1000) '[NUM_TAPS_AM_DEMOD_FILTER] =\n']);
 	fprintf(fid, '{\n');
 	fprintf(fid, '	%.20ff,\n', b(i, 1:end - 1));
 	fprintf(fid, '	%.20ff\n', b(i, end));
-	fprintf(fid, '};\n\n');
+    if (i < length(filterbws))
+        fprintf(fid, '},\n');
+    else
+        fprintf(fid, '}\n');        
+    end
 end
+fprintf(fid, '};\n\n\n');
 
 fprintf(fid, '\n#endif /* _AMDEMODULATION_H_ */\n');
 fclose(fid);

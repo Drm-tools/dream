@@ -147,8 +147,8 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
 		pdScale[i] = vecrScale[i];
 	}
 
-	setCurveData(curve1, pdScale, pdData1, vecrData1.Size());
-	setCurveData(curve2, pdScale, pdData2, vecrData2.Size());
+	setCurveData(main1curve, pdScale, pdData1, vecrData1.Size());
+	setCurveData(main2curve, pdScale, pdData2, vecrData2.Size());
 
 	delete[] pdData1;
 	delete[] pdData2;
@@ -337,7 +337,8 @@ void CDRMPlot::SetupTranFct()
 	/* Add main curves */
 	clear();
 	main1curve = insertCurve(tr("Transf. Fct."));
-	main2curve = insertCurve("Group Del.", QwtPlot::xBottom, QwtPlot::yRight);
+	main2curve = insertCurve(tr("Group Del."),
+		QwtPlot::xBottom, QwtPlot::yRight);
 
 	/* Curve colors */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
@@ -420,8 +421,7 @@ void CDRMPlot::SetupFreqSamOffsHist()
 	/* Add main curves */
 	clear();
 	main1curve = insertCurve(tr("Freq."));
-	main2curve = insertCurve(tr("Samp."),
-		QwtPlot::xBottom, QwtPlot::yRight);
+	main2curve = insertCurve(tr("Samp."), QwtPlot::xBottom, QwtPlot::yRight);
 
 	/* Curve colors */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
@@ -688,10 +688,6 @@ void CDRMPlot::SetupInpSpec()
 	curve1 = insertCurve(tr("DC carrier"));
 	setCurvePen(curve1, QPen(SpecLine1ColorPlot, 1, DotLine));
 
-	/* Insert line for bandwidth marker */
-	curve2 = insertCurve(tr("Filter bandwidth"));
-	setCurvePen(curve2, QPen(SpecLine1ColorPlot, 6));
-
 	/* Add main curve */
 	main1curve = insertCurve(tr("Input spectrum"));
 	
@@ -701,8 +697,7 @@ void CDRMPlot::SetupInpSpec()
 }
 
 void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-						  const _REAL rDCFreq, const _REAL rBWCenter,
-						  const _REAL rBWWidth)
+						  const _REAL rDCFreq)
 {
 	/* First check if plot must be set up */
 	if (CurCharType != INPUTSPECTRUM_NO_AV)
@@ -726,21 +721,6 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 
 	setCurveData(curve1, dX, dY, 2);
 
-	/* Insert marker for filter bandwidth if required */
-	if (rBWWidth != (_REAL) 0.0)
-	{
-		dX[0] = (rBWCenter - rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
-		dX[1] = (rBWCenter + rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
-
-		/* Take the min-max values from scale to get vertical line */
-		dY[0] = cdAxMinLeft;
-		dY[1] = cdAxMinLeft;
-
-		setCurveData(curve2, dX, dY, 2);
-	}
-	else
-		setCurveData(curve2, NULL, NULL, 0);
-
 	/* Insert actual spectrum data */
 	SetData(vecrData, vecrScale);
 	replot();
@@ -760,21 +740,29 @@ void CDRMPlot::SetupInpPSD()
 	setAxisScale(QwtPlot::xBottom,
 		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
 
-	/* Insert line for DC carrier */
+	/* Insert line for bandwidth marker */
 	clear();
-	curve1 = insertCurve(tr("DC carrier"));
-	setCurvePen(curve1, QPen(SpecLine1ColorPlot, 1, DotLine));
+	curve1 = insertCurve(tr("Filter bandwidth"));
+
+	/* Make sure that line is bigger than the current plots height. Do this by
+	   setting the width to a very large value */
+	setCurvePen(curve1, QPen(MainGridColorPlot, 10000));
+
+	/* Insert line for DC carrier */
+	curve2 = insertCurve(tr("DC carrier"));
+	setCurvePen(curve2, QPen(SpecLine1ColorPlot, 1, DotLine));
 
 	/* Add main curve */
 	main1curve = insertCurve(tr("Input PSD"));
-	
+
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
 }
 
 void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-						  const _REAL rDCFreq)
+						  const _REAL rDCFreq, const _REAL rBWCenter,
+						  const _REAL rBWWidth)
 {
 	/* First check if plot must be set up */
 	if (CurCharType != INPUT_SIG_PSD)
@@ -796,7 +784,22 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	dY[0] = cdAxMinLeft;
 	dY[1] = cdAxMaxLeft;
 
-	setCurveData(curve1, dX, dY, 2);
+	setCurveData(curve2, dX, dY, 2);
+
+	/* Insert marker for filter bandwidth if required */
+	if (rBWWidth != (_REAL) 0.0)
+	{
+		dX[0] = (rBWCenter - rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
+		dX[1] = (rBWCenter + rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
+
+		/* Take the min-max values from scale to get vertical line */
+		dY[0] = cdAxMinLeft;
+		dY[1] = cdAxMinLeft;
+
+		setCurveData(curve1, dX, dY, 2);
+	}
+	else
+		setCurveData(curve1, NULL, NULL, 0);
 
 	/* Insert actual spectrum data */
 	SetData(vecrData, vecrScale);

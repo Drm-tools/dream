@@ -51,12 +51,17 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	MainPlot->setMargin(1);
 
 	/* Set default settings -> AM: 10 kHz; SSB: 5 kHz; medium AGC */
-	fbwLSB = CAMDemodulation::BW_5KHZ;
-	fbwUSB = CAMDemodulation::BW_5KHZ;
-	fbwAM = CAMDemodulation::BW_10KHZ;
+	iBwLSB = 5000; /* Hz */
+	iBwUSB = 5000; /* Hz */
+	iBwAM = 10000; /* Hz */
 	DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
-	DRMReceiver.GetAMDemod()->SetFilterBW(fbwAM);
+	DRMReceiver.GetAMDemod()->SetFilterBW(iBwAM);
 	DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
+
+	/* Init slider control for bandwidth setting */
+	SliderBandwidth->setRange(iHilLPProtAMDemodBW[0], SOUNDCRD_SAMPLE_RATE / 2);
+	SliderBandwidth->setTickmarks(QSlider::Both);
+	SliderBandwidth->setTickInterval(1000); /* Each kHz a tick */
 
 	/* Update controls */
 	UpdateControls();
@@ -74,6 +79,10 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 		this, SLOT(OnRadioBW(int)));
 	connect(ButtonGroupAGC, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioAGC(int)));
+
+	/* Slider */
+	connect(SliderBandwidth, SIGNAL(valueChanged(int)),
+		this, SLOT(OnSliderBWChange(int)));
 
 	/* Check boxes */
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
@@ -151,83 +160,10 @@ void AnalogDemDlg::UpdateControls()
 	}
 
 	/* Set filter bandwidth */
-	switch (DRMReceiver.GetAMDemod()->GetFilterBW())
-	{
-	case CAMDemodulation::BW_1KHZ:
-		if (!RadioButtonBW1->isChecked())
-			RadioButtonBW1->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_2KHZ:
-		if (!RadioButtonBW2->isChecked())
-			RadioButtonBW2->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_3KHZ:
-		if (!RadioButtonBW3->isChecked())
-			RadioButtonBW3->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_4KHZ:
-		if (!RadioButtonBW4->isChecked())
-			RadioButtonBW4->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_5KHZ:
-		if (!RadioButtonBW5->isChecked())
-			RadioButtonBW5->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_6KHZ:
-		if (!RadioButtonBW6->isChecked())
-			RadioButtonBW6->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_7KHZ:
-		if (!RadioButtonBW7->isChecked())
-			RadioButtonBW7->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_8KHZ:
-		if (!RadioButtonBW8->isChecked())
-			RadioButtonBW8->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_9KHZ:
-		if (!RadioButtonBW9->isChecked())
-			RadioButtonBW9->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_10KHZ:
-		if (!RadioButtonBW10->isChecked())
-			RadioButtonBW10->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_11KHZ:
-		if (!RadioButtonBW11->isChecked())
-			RadioButtonBW11->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_12KHZ:
-		if (!RadioButtonBW12->isChecked())
-			RadioButtonBW12->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_13KHZ:
-		if (!RadioButtonBW13->isChecked())
-			RadioButtonBW13->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_14KHZ:
-		if (!RadioButtonBW14->isChecked())
-			RadioButtonBW14->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::BW_15KHZ:
-		if (!RadioButtonBW15->isChecked())
-			RadioButtonBW15->setChecked(TRUE);
-		break;
-	}
+	SliderBandwidth->setValue(DRMReceiver.GetAMDemod()->GetFilterBW());
+	TextLabelBandWidth->setText(tr("Bandwidth: ") +
+		QString().setNum(DRMReceiver.GetAMDemod()->GetFilterBW()) +
+		tr("kHz"));
 
 	/* Update mute audio switch and write wave file */
 	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
@@ -238,7 +174,7 @@ void AnalogDemDlg::UpdateControls()
 void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 {
 	/* Activte real-time timers when window is shown */
-	TimerChart.start(GUI_CONTROL_UPDATE_TIME);
+	TimerChart.start(GUI_CONTROL_UPDATE_TIME_FAST);
 
 	/* Update window */
 	OnTimerChart();
@@ -259,13 +195,13 @@ void AnalogDemDlg::OnTimerChart()
 	CVector<_REAL>	vecrScale;
 
 	/* Get data from module */
-	DRMReceiver.GetReceiver()->GetInputSpec(vecrData, vecrScale);
+	DRMReceiver.GetReceiver()->GetInputPSD(vecrData, vecrScale);
 
 	/* Prepare graph and set data */
 	CReal rCenterFreq, rBW;
 	DRMReceiver.GetAMDemod()->GetBWParameters(rCenterFreq, rBW);
 
-	MainPlot->SetInpSpec(vecrData, vecrScale,
+	MainPlot->SetInpPSD(vecrData, vecrScale,
 		DRMReceiver.GetParameters()->GetDCFrequency(), rCenterFreq, rBW);
 }
 
@@ -282,17 +218,17 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 	{
 	case 0:
 		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
-		DRMReceiver.GetAMDemod()->SetFilterBW(fbwAM);
+		DRMReceiver.GetAMDemod()->SetFilterBW(iBwAM);
 		break;
 
 	case 1:
 		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_LSB);
-		DRMReceiver.GetAMDemod()->SetFilterBW(fbwLSB);
+		DRMReceiver.GetAMDemod()->SetFilterBW(iBwLSB);
 		break;
 
 	case 2:
 		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
-		DRMReceiver.GetAMDemod()->SetFilterBW(fbwUSB);
+		DRMReceiver.GetAMDemod()->SetFilterBW(iBwUSB);
 		break;
 	}
 
@@ -322,90 +258,31 @@ void AnalogDemDlg::OnRadioAGC(int iID)
 	}
 }
 
-void AnalogDemDlg::OnRadioBW(int iID)
+void AnalogDemDlg::OnSliderBWChange(int value)
 {
-	CAMDemodulation::EFilterBW eCurFBW;
-
-	switch (iID)
-	{
-	case 0:
-		eCurFBW = CAMDemodulation::BW_1KHZ;
-		break;
-
-	case 1:
-		eCurFBW = CAMDemodulation::BW_2KHZ;
-		break;
-
-	case 2:
-		eCurFBW = CAMDemodulation::BW_3KHZ;
-		break;
-
-	case 3:
-		eCurFBW = CAMDemodulation::BW_4KHZ;
-		break;
-
-	case 4:
-		eCurFBW = CAMDemodulation::BW_5KHZ;
-		break;
-
-	case 5:
-		eCurFBW = CAMDemodulation::BW_6KHZ;
-		break;
-
-	case 6:
-		eCurFBW = CAMDemodulation::BW_7KHZ;
-		break;
-
-	case 7:
-		eCurFBW = CAMDemodulation::BW_8KHZ;
-		break;
-
-	case 8:
-		eCurFBW = CAMDemodulation::BW_9KHZ;
-		break;
-
-	case 9:
-		eCurFBW = CAMDemodulation::BW_10KHZ;
-		break;
-
-	case 10:
-		eCurFBW = CAMDemodulation::BW_11KHZ;
-		break;
-
-	case 11:
-		eCurFBW = CAMDemodulation::BW_12KHZ;
-		break;
-
-	case 12:
-		eCurFBW = CAMDemodulation::BW_13KHZ;
-		break;
-
-	case 13:
-		eCurFBW = CAMDemodulation::BW_14KHZ;
-		break;
-
-	case 14:
-		eCurFBW = CAMDemodulation::BW_15KHZ;
-		break;
-	}
-
-	DRMReceiver.GetAMDemod()->SetFilterBW(eCurFBW);
+	/* Set new filter in processing module */
+	DRMReceiver.GetAMDemod()->SetFilterBW(value);
+	TextLabelBandWidth->setText(tr("Bandwidth: ") +
+		QString().setNum(value) + tr("kHz"));
 
 	/* Store filter bandwidth for this demodulation type */
 	switch (DRMReceiver.GetAMDemod()->GetDemodType())
 	{
 	case CAMDemodulation::DT_AM:
-		fbwAM = eCurFBW;
+		iBwAM = value;
 		break;
 
 	case CAMDemodulation::DT_LSB:
-		fbwLSB = eCurFBW;
+		iBwLSB = value;
 		break;
 
 	case CAMDemodulation::DT_USB:
-		fbwUSB = eCurFBW;
+		iBwUSB = value;
 		break;
 	}
+
+	/* Update chart */
+	OnTimerChart();
 }
 
 void AnalogDemDlg::OnCheckBoxMuteAudio()
