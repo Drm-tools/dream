@@ -33,7 +33,6 @@
 #include "Modul.h"
 #include <math.h>
 #include "matlib/Matlib.h"
-#include "TransmitterFilter.h"
 #include "IQInputFilter.h"
 #include "util/Utilities.h"
 
@@ -95,12 +94,12 @@ protected:
 	EOutFormat		eOutputFormat;
 
 	CReal			rDefCarOffset;
-	CRealVector		rvecA;
-	CRealVector		rvecB;
 	CRealVector		rvecZReal; /* State memory real part */
 	CRealVector		rvecZImag; /* State memory imaginary part */
 	CRealVector		rvecDataReal;
 	CRealVector		rvecDataImag;
+	CFftPlans		FftPlanBP;
+	CComplexVector	cvecB;
 
 	CReal			rNormFactor;
 
