@@ -51,8 +51,10 @@
 class COFDMModulation : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
-	COFDMModulation() {}
+	COFDMModulation() : rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}
 	virtual ~COFDMModulation() {}
+
+	void SetCarOffset(_REAL rNewCarOffset) {rDefCarOffset = rNewCarOffset;}
 
 protected:
 	CFftPlans				FftPlan;
@@ -61,9 +63,13 @@ protected:
 	CComplexVector			veccFFTOutput;
 
 	int						iShiftedKmin;
-	int						iShiftedKmax;
+	int						iEndIndex;
 	int						iDFTSize;
 	int						iGuardSize;
+
+	_COMPLEX				cCurExp;
+	_COMPLEX				cExpStep;
+	_REAL					rDefCarOffset;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);

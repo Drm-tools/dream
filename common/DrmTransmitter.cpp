@@ -220,6 +220,9 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	   16-QAM standard mapping (SM): CS_2_SM */
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
 
+	/* Set desired intermedia frequency (IF) in Hertz */
+	OFDMModulation.SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
+
 	/* Set the number of MSC frames we want to generate */
-	ReadData.SetNumTransBlocks(70);
+	ReadData.SetNumTransBlocks(200);
 }

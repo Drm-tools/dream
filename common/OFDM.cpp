@@ -36,12 +36,11 @@
 \******************************************************************************/
 void COFDMModulation::ProcessDataInternal(CParameter& TransmParam)
 {
-	int			i;
-	const int	iEndInd = iShiftedKmax + 1;
+	int	i;
 
 	/* Copy input vector in matlib vector and place bins at the correct
 	   position */
-	for (i = iShiftedKmin; i < iEndInd; i++)
+	for (i = iShiftedKmin; i < iEndIndex; i++)
 		veccFFTInput[i] = (*pvecInputData)[i - iShiftedKmin];
 
 	/* Calculate inverse fast Fourier transformation */
@@ -54,6 +53,23 @@ void COFDMModulation::ProcessDataInternal(CParameter& TransmParam)
 	/* Copy data from the end to the guard-interval (Add guard-interval) */
 	for (i = 0; i < iGuardSize; i++)
 		(*pvecOutputData)[i] = (*pvecOutputData)[iDFTSize + i];
+
+
+	/* Shift spectrum to desired IF ----------------------------------------- */
+	/* Only apply shifting if phase is not zero */
+	if (cExpStep != _COMPLEX((_REAL) 1.0, (_REAL) 0.0))
+	{
+		for (i = 0; i < iOutputBlockSize; i++)
+		{
+			(*pvecOutputData)[i] = (*pvecOutputData)[i] * Conj(cCurExp);
+			
+			/* Rotate exp-pointer on step further by complex multiplication
+			   with precalculated rotation vector cExpStep. This saves us from
+			   calling sin() and cos() functions all the time (iterative
+			   calculation of these functions) */
+			cCurExp *= cExpStep;
+		}
+	}
 }
 
 void COFDMModulation::InitInternal(CParameter& TransmParam)
@@ -62,7 +78,20 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 	iDFTSize = TransmParam.iFFTSizeN;
 	iGuardSize = TransmParam.iGuardSize;
 	iShiftedKmin = TransmParam.iShiftedKmin;
-	iShiftedKmax = TransmParam.iShiftedKmax;
+
+	/* Last index */
+	iEndIndex = TransmParam.iShiftedKmax + 1;
+
+	/* Normalized offset correction factor for IF shift. Subtract the
+	   default IF frequency ("VIRTUAL_INTERMED_FREQ") */
+	_REAL rNormCurFreqOffset = (_REAL) -2.0 * crPi *
+		(rDefCarOffset - VIRTUAL_INTERMED_FREQ) / SOUNDCRD_SAMPLE_RATE;
+
+	/* Rotation vector for exp() calculation */
+	cExpStep = _COMPLEX(cos(rNormCurFreqOffset), sin(rNormCurFreqOffset));
+
+	/* Start with phase null (can be arbitrarily chosen) */
+	cCurExp = (_REAL) 1.0;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iDFTSize);
