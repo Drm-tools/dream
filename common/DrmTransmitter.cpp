@@ -46,9 +46,7 @@ void CDRMTransmitter::Stop()
 {
 	TransmParam.bRunThread = FALSE;
 
-#ifndef WRITE_TRNSM_TO_FILE
 	SoundInterface.Close();
-#endif
 }
 
 void CDRMTransmitter::Run()
@@ -226,9 +224,4 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 	/* Set desired intermedia frequency (IF) in Hertz */
 	SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
-
-#ifdef WRITE_TRNSM_TO_FILE
-	/* Set the number of MSC frames we want to generate */
-	ReadData.SetNumTransBlocks(200);
-#endif
 }

@@ -40,12 +40,10 @@
 #include "DRMSignalIO.h"
 #include "sourcedecoders/AudioSourceDecoder.h"
 
-#ifndef WRITE_TRNSM_TO_FILE
-# ifdef _WIN32
-#  include "../../Windows/source/sound.h"
-# else
-#  include "source/sound.h"
-# endif
+#ifdef _WIN32
+# include "../../Windows/source/sound.h"
+#else
+# include "source/sound.h"
 #endif
 
 
@@ -53,10 +51,7 @@
 class CDRMTransmitter
 {
 public:
-	CDRMTransmitter() :
-#ifndef WRITE_TRNSM_TO_FILE
-		TransmitData(&SoundInterface),
-#endif
+	CDRMTransmitter() : TransmitData(&SoundInterface),
 		ReadData(&SoundInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 	{
 		StartParameters(TransmParam);
