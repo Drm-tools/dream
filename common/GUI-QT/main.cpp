@@ -5,7 +5,7 @@
  * Author(s):
  *	Volker Fischer
  *
- *	Thanks to Tomi Manninen / OH2BNS / KP20ME04 for the command line argument
+ *	Thanks to Tomi Manninen / OH2BNS for the command line argument
  *		parsing (argv)
  *
  * Description:
