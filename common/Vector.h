@@ -268,11 +268,14 @@ class CExtendedVecData
 public:
 	/* Symbol ID of the current block. This number only identyfies the
 	   position in a frame, NOT in a super-frame */
-	int iSymbolID;
+	int			iSymbolID;
+
+	/* This flag indicates that the symbol ID has changed */
+	_BOOLEAN	bSymbolIDHasChanged;
 
 	/* The channel estimation needs information about timing corrections, 
 	   because it is using information from the symbol memory */
-	int iCurTimeCorr;
+	int			iCurTimeCorr;
 };
 
 template<class TData> class CVectorEx : public CVector<TData>
