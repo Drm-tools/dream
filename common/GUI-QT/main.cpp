@@ -58,16 +58,16 @@ public:
 		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
 #endif
 
-try
-{
-		/* Call receiver main routine */
-		DRMReceiver.Start();
-}
+		try
+		{
+			/* Call receiver main routine */
+			DRMReceiver.Start();
+		}
 
-catch (CGenErr GenErr)
-{
-	ErrorMessage(GenErr.strError);
-}
+		catch (CGenErr GenErr)
+		{
+			ErrorMessage(GenErr.strError);
+		}
 	}
 };
 
@@ -252,6 +252,30 @@ void ParseArguments(QApplication& app)
 		}
 
 
+		/* Sample rate offset start value ----------------------------------- */
+		if (!strcmp(app.argv()[i], "-sampleoff"))
+		{
+			if (++i >= app.argc())
+			{
+				cerr << app.argv()[0] << ": ";
+				cerr << "'-sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
+				exit(1);
+			}
+
+			char *p;
+			_REAL r = strtod(app.argv()[i], &p);
+			if (*p || r < (_REAL) -200.0 || r > (_REAL) 200.0)
+			{
+				cerr << app.argv()[0] << ": ";
+				cerr << "'-sampleoff' needs a numeric argument between -200.0 and 200.0." << endl;
+				exit(1);
+			}
+
+			DRMReceiver.SetInitResOff(r);
+			continue;
+		}
+
+
 		/* Help (usage) flag ------------------------------------------------ */
 		if (!strcmp(app.argv()[i], "-help"))
 		{
@@ -269,7 +293,7 @@ void ParseArguments(QApplication& app)
 
 void UsageArguments(void)
 {
-	cerr << "Usage: " << qApp->argv()[0] << " [QT options] [options]" << endl;
+	cerr << "Usage: " << qApp->argv()[0] << " [option] [argument]" << endl;
 	cerr << endl;
 	cerr << "Recognized options:" << endl;
 	cerr << endl;
@@ -277,6 +301,9 @@ void UsageArguments(void)
 	cerr << "  -mlciter <n>               number of MLC iterations" << endl;
 	cerr << "                             allowed range: 0...4" << endl;
 	cerr << "                             default: 1" << endl;
+	cerr << "  -sampleoff <r>             sample rate offset init value [Hz]" << endl;
+	cerr << "                             allowed range: -200.0...200.0" << endl;
+	cerr << "                             default: 0.0" << endl;
 	cerr << "  -muteaudio                 mute audio output" << endl;
 	cerr << "  -fromfile                  disable sound card" << endl;
 	cerr << "                             read from file instead" << endl;
