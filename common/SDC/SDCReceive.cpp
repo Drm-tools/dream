@@ -148,6 +148,11 @@ void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	   by dividing the length field of the header by three (6.4.3.1) */
 	iNoStreams = iLengthOfBody / 3;
 
+	/* Check number of streams for overflow 
+	   TODO: Error handling at this point! */
+	if (iNoStreams > MAX_NO_STREAMS)
+		iNoStreams = MAX_NO_STREAMS;
+
 	/* Get protection levels */
 	/* Protection level for part A */
 	MSCPrLe.iPartA = (*pbiData).Separate(2);
