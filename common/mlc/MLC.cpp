@@ -36,7 +36,6 @@
 void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 {
 	int	i, j;
-	int	iNoBitsOutDec;
 	int iElementCounter;
 
 	/* Energy dispersal ----------------------------------------------------- */
@@ -57,6 +56,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 			for (i = 0; i < iM[j][0]; i++)
 			{
 				vecbiEncInBuffer[j][i] = (*pvecInputData)[iElementCounter];
+
 				iElementCounter++;
 			}
 		}
@@ -95,6 +95,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 			for (i = 0; i < iM[j][0]; i++)
 			{
 				vecbiEncInBuffer[j][i] = (*pvecInputData)[iElementCounter];
+
 				iElementCounter++;
 			}
 		}
@@ -116,17 +117,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 
 	/* Convolutional encoder ------------------------------------------------ */
 	for (j = 0; j < iLevels; j++)
-	{
-		iNoBitsOutDec =
-			ConvEncoder[j].Encode(vecbiEncInBuffer[j], vecbiEncOutBuffer[j]);
-#ifdef _DEBUG_
-if (iNoBitsOutDec != iNoEncBits)
-{
-	DebugError("MLC decoded bits test", "No bits decoder out",
-		iNoBitsOutDec, "No encoded bits", iNoEncBits);
-}
-#endif
-	}
+		ConvEncoder[j].Encode(vecbiEncInBuffer[j], vecbiEncOutBuffer[j]);
 
 
 	/* Bit interleaver ------------------------------------------------------ */
@@ -189,7 +180,7 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 		vecbiEncInBuffer[i].Init(iM[i][0] + iM[i][1]);
 	
 		/* Encoder output buffers for all levels. Must have the same length */
-		vecbiEncOutBuffer[i].Init(iNoEncBits);
+		vecbiEncOutBuffer[i].Init(iNumEncBits);
 	}
 
 	/* Define block-size for input and output */
@@ -288,6 +279,7 @@ fflush(pFile);
 			for (i = 0; i < iM[j][0]; i++)
 			{
 				(*pvecOutputData)[iElementCounter] = vecbiDecOutBits[j][i];
+
 				iElementCounter++;
 			}
 		}
@@ -314,6 +306,7 @@ fflush(pFile);
 		for (i = 0; i < iM[0][1]; i++)
 		{
 			(*pvecOutputData)[iElementCounter] = vecbiDecOutBits[0][i];
+
 			iElementCounter++;
 		}
 
@@ -324,6 +317,7 @@ fflush(pFile);
 			for (i = 0; i < iM[j][0]; i++)
 			{
 				(*pvecOutputData)[iElementCounter] = vecbiDecOutBits[j][i];
+
 				iElementCounter++;
 			}
 		}
@@ -408,7 +402,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Allocate memory for internal bit (metric) -buffers ------------------- */
-	vecMetric.Init(iNoEncBits);
+	vecMetric.Init(iNumEncBits);
 
 	/* Decoder output buffers for all levels. Have different length */
 	for (i = 0; i < iLevels; i++)
@@ -416,7 +410,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 
 	/* Buffers for subset definition (always number of encoded bits long) */
 	for (i = 0; i < MC_MAX_NUM_LEVELS; i++)
-		vecbiSubsetDef[i].Init(iNoEncBits);
+		vecbiSubsetDef[i].Init(iNumEncBits);
 
 	/* Init buffer for signal space */
 	vecSigSpacBuf.Init(iN_mux);
@@ -468,7 +462,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		eCodingScheme = CParameter::CS_1_SM;
 		iN_mux = NUM_FAC_CELLS;
 
-		iNoEncBits = NUM_FAC_CELLS * 2;
+		iNumEncBits = NUM_FAC_CELLS * 2;
 
 		iLevels = 1;
 
@@ -510,7 +504,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		eCodingScheme = Parameter.eSDCCodingScheme;
 		iN_mux = Parameter.iNumSDCCellsPerSFrame;
 
-		iNoEncBits = iN_mux * 2;
+		iNumEncBits = iN_mux * 2;
 
 		switch (eCodingScheme)
 		{
@@ -636,7 +630,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* Define interleaver sequence for all levels */
 			piInterlSequ = iInterlSequ16SM;
 
-			iNoEncBits = iN_mux * 2;
+			iNumEncBits = iN_mux * 2;
 
 
 			/* iN: No of OFDM-cells of each protection level ---------------- */
@@ -715,7 +709,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* Define interleaver sequence for all levels */
 			piInterlSequ = iInterlSequ64SM;
 
-			iNoEncBits = iN_mux * 2;
+			iNumEncBits = iN_mux * 2;
 
 
 			/* iN: No of OFDM-cells of each protection level ---------------- */
@@ -804,7 +798,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* Define interleaver sequence for all levels */
 			piInterlSequ = iInterlSequ64HMsym;
 
-			iNoEncBits = iN_mux * 2;
+			iNumEncBits = iN_mux * 2;
 
 
 			/* iN: No of OFDM-cells of each protection level ---------------- */
@@ -900,7 +894,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 			/* Define interleaver sequence for all levels */
 			piInterlSequ = iInterlSequ64HMmix;
 
-			iNoEncBits = iN_mux;
+			iNumEncBits = iN_mux;
 
 
 			/* iN: No of OFDM-cells of each protection level ---------------- */

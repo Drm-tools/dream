@@ -65,7 +65,7 @@ protected:
 
 	const int* piInterlSequ;
 
-	int	iNoEncBits;
+	int	iNumEncBits;
 
 	CParameter::EChanType	eChannelType;
 	CParameter::ECodScheme	eCodingScheme;
