@@ -95,6 +95,9 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Update time for color LED */
 	LEDStatus->SetUpdateTime(1000);
 
+	/* Init slide-show (needed for setting up vectors and indices) */
+	ClearAllSlideShow();
+
 	/* Init container and GUI */
 	InitApplication(pDRMRec->GetDataDecoder()->GetAppType());
 
@@ -419,6 +422,14 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 
 	LabelCurPicNum->setText(QString().setNum(iCurImagePos + 1) + "/" +
 		QString().setNum(GetIDLastPicture() + 1));
+
+	/* If no picture was received, show the following text */
+	if (iCurImagePos < 0)
+	{
+		/* Init text browser window */
+		TextBrowser->setText("<center><h2>" +
+			tr("MOT Slideshow Viewer") + "</h2></center>");
+	}
 }
 
 void MultimediaDlg::OnSave()
@@ -467,8 +478,10 @@ void MultimediaDlg::SavePicture(const int iPicID, const QString& strFileName)
 	if (pFiBody != NULL)
 	{
 		for (int i = 0; i < iPicSize; i++)
+		{
 			fwrite((void*) &vecRawImages[iPicID].vecbRawData[i],
 				size_t(1), size_t(1), pFiBody);
+		}
 
 		/* Close the file afterwards */
 		fclose(pFiBody);
@@ -485,10 +498,6 @@ void MultimediaDlg::ClearAllSlideShow()
 
 	/* Update GUI */
 	UpdateAccButtonsSlideShow();
-
-	/* Init text browser window */
-	TextBrowser->setText("<center><h2>" +
-		tr("MOT Slideshow Viewer") + "</h2></center>");
 }
 
 void MultimediaDlg::InitNotSupported()
@@ -517,14 +526,14 @@ void MultimediaDlg::InitMOTSlideShow()
 	PushButtonJumpEnd->show();
 	LabelCurPicNum->show();
 
-	/* Enable "clear all" menu item */
-	pFileMenu->setItemEnabled(0, TRUE);
+	/* Set current image position to the last picture and display it (if at
+	   least one picture is available) */
+	iCurImagePos = GetIDLastPicture();
+	if (iCurImagePos >= 0)
+		SetSlideShowPicture();
 
-	/* Enable "save" menu items */
-	pFileMenu->setItemEnabled(1, TRUE);
-	pFileMenu->setItemEnabled(2, TRUE);
-
-	ClearAllSlideShow();
+	/* Update buttons and menu */
+	UpdateAccButtonsSlideShow();
 }
 
 void MultimediaDlg::InitJournaline()
