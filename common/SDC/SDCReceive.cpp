@@ -302,7 +302,9 @@ void CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody,
 			DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
 			break;
 
-		/* 2 - 15 reserved */
+		default: /* 2 - 15 reserved */
+			DataParam.eAppDomain = CParameter::AD_OTHER_SPEC_APP;
+			break;
 		}
 
 		/* Packet length */
@@ -420,6 +422,10 @@ void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody,
 {
 	int						iTempShortID;
 	CParameter::CAudioParam	AudParam;
+	_BOOLEAN				bError;
+
+	/* Init error flag with "no error" */
+	bError = FALSE;
 
 	/* Short ID (the short ID is the index of the service-array) */
 	iTempShortID = (*pbiData).Separate(2);
@@ -443,6 +449,10 @@ void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody,
 
 	case 2: /* 10 */
 		AudParam.eAudioCoding = CParameter::AC_HVXC;
+		break;
+
+	default: /* reserved */
+		bError = TRUE;
 		break;
 	}
 
@@ -475,6 +485,10 @@ void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody,
 
 		case 2: /* 10 */
 			AudParam.eAudioMode = CParameter::AM_STEREO;
+			break;
+
+		default: /* reserved */
+			bError = TRUE;
 			break;
 		}
 		break;
@@ -541,6 +555,10 @@ void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	case 3: /* 011 */
 		AudParam.eAudioSamplRate = CParameter::AS_24KHZ;
 		break;
+
+	default: /* reserved */
+		bError = TRUE;
+		break;
 	}
 
 	/* Text flag */
@@ -583,5 +601,6 @@ void CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	(*pbiData).Separate(1);
 
 	/* Set new parameters in global struct */
-	Parameter.SetAudioParam(iTempShortID, AudParam);
+	if (bError == FALSE)
+		Parameter.SetAudioParam(iTempShortID, AudParam);
 }
