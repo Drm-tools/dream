@@ -54,6 +54,10 @@ using namespace std; /* Because of the library: "complex" */
 #define USE_QT_GUI
 //#undef USE_QT_GUI
 
+/* Activate or disable faad2 library (AAC decoding) */
+#define USE_FAAD2_LIBRARY
+//#undef USE_FAAD2_LIBRARY
+
 
 /* Define the application specific data-types ------------------------------- */
 typedef	double							_REAL;

@@ -31,11 +31,14 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "faad.h"
 #include "../Modul.h"
 #include "../CRC.h"
 #include "../TextMessage.h"
 #include "../resample/Resample.h"
+
+#ifdef USE_FAAD2_LIBRARY
+# include "faad.h"
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -51,48 +54,59 @@ public:
 	virtual ~CAudioSourceDecoder();
 
 protected:
-	class CInitErr {};
+	enum EInitErr {ET_ALL, ET_AAC}; /* ET: Error type */
+	class CInitErr 
+	{
+	public:
+		CInitErr(EInitErr eNewErrType) : eErrType(eNewErrType) {}
+		EInitErr eErrType;
+	};
+
+	/* General */
+	_BOOLEAN			DoNotProcessData;
+	_BOOLEAN			DoNotProcessAAC;
+
+	/* Text message */
 	_BOOLEAN			bTextMessageUsed;
-	int					iNumAACFrames;
-	int					iNumBorders;
-
 	CTextMessage		TextMessage;
+	CVector<_BINARY>	vecbiTextMessBuf;
 
+	int					iTotalFrameSize;
+
+
+#ifdef USE_FAAD2_LIBRARY
+	/* AAC decoding */
 	faacDecHandle		HandleAACDecoder;
-
-	CVector<_BYTE>		vecbyPrepAudioFrame;
 
 	CAudioResample		ResampleObjL;
 	CAudioResample		ResampleObjR;
-	int					iResOutBlockSize;
 		
+
 	CVector<_REAL>		vecTempResBufInLeft;
 	CVector<_REAL>		vecTempResBufInRight;
 	CVector<_REAL>		vecTempResBufOutLeft;
 	CVector<_REAL>		vecTempResBufOutRight;
 
-	int					iNumHigherProtectedBytes;
-
+	CVector<_BYTE>		vecbyPrepAudioFrame;
 	CVector<_BYTE>		aac_crc_bits;
 	CMatrix<_BYTE>		audio_frame;
+
 	CVector<int>		veciFrameLength;
 
+	int					iNumAACFrames;
+	int					iNumBorders;
+	int					iResOutBlockSize;
+	int					iNumHigherProtectedBytes;
 	int					iMaxLenOneAudFrame;
-
 	int					iNumChannelsAAC;
-
 	int					iLenDecOutPerChan;
-
 	int					iBadBlockCount;
-	int					iTotalFrameSize;
 	int					iAudioPayloadLen;
 	int					iLenAudLow;
 
-	CVector<_BINARY>	vecbiTextMessBuf;
-
 	_BOOLEAN			bAudioWasOK;
+#endif
 
-	_BOOLEAN			DoNotProcessData;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

@@ -32,13 +32,7 @@
 /* Implementation *************************************************************/
 void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int					i, j;
-	int					iNumLowerProtectedBytes;
-	int					iPrevBorder;
-	int					iFrameBorder;
-	short*				psDecOutSampleBuf;
-	_BOOLEAN			bGoodValues;
-	faacDecFrameInfo	DecFrameInfo;
+	int i;
 
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == TRUE)
@@ -57,17 +51,28 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 
+#ifdef USE_FAAD2_LIBRARY
+	faacDecFrameInfo	DecFrameInfo;
+	_BOOLEAN			bGoodValues;
+	short*				psDecOutSampleBuf;
+	int					j;
+
+	/* Check if AAC should not be decoded */
+	if (DoNotProcessAAC == TRUE)
+		return;
+
+
 	/* Extract audio data from stream *****************************************/
 	/* Reset bit extraction access */
 	(*pvecInputData).ResetBitAccess();
 
 
 	/* AAC super-frame-header ----------------------------------------------- */
-	iPrevBorder = 0;
+	int iPrevBorder = 0;
 	for (i = 0; i < iNumBorders; i++)
 	{
 		/* Frame border in bytes (12 bits) */
-		iFrameBorder = (*pvecInputData).Separate(12);
+		const int iFrameBorder = (*pvecInputData).Separate(12);
 
 		/* The lenght is difference between borders */
 		veciFrameLength[i] = iFrameBorder - iPrevBorder;
@@ -111,7 +116,7 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			/* First calculate frame length, derived from higher protected part
 			   frame length and total size */
-			iNumLowerProtectedBytes = 
+			const int iNumLowerProtectedBytes = 
 				veciFrameLength[i] - iNumHigherProtectedBytes;
 
 			/* Extract lower protected part bytes (8 bits per byte) */
@@ -263,12 +268,19 @@ fflush(pFile2);
 		/* Add new block to output block size ("* 2" for stereo output block) */
 		iOutputBlockSize += iResOutBlockSize * 2;
 	}
+#endif
 }
 
 void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 {
+/*
+	Since we use the exception mechanism in this init routine, the sequence of
+	the individual initializations is very important!
+	Requirement for text message is "stream is used" and "audio service".
+	Requirement for AAC decoding are the requirements above plus "audio coding
+	is AAC"
+*/
 	int iCurAudioStreamID;
-	int iTotalNumInputBits;
 	int iMaxLenResamplerOutput;
 	int iCurSelServ;
 	int iDRMchanMode;
@@ -277,36 +289,73 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	int	iLenAudHigh;
 	int	iNumHeaderBytes;
 
-	/* Init error flag */
-	DoNotProcessData = FALSE;
-
-	/* Get current selected audio service */
-	iCurSelServ = ReceiverParam.GetCurSelAudioService();
-
-	/* Current audio stream ID */
-	iCurAudioStreamID = ReceiverParam.Service[iCurSelServ].AudioParam.iStreamID;
-
-	/* Get number of total input bits for this module */
-	iTotalNumInputBits = ReceiverParam.iNumAudioDecoderBits;
-
-	/* Define input block size of this module */
-	iInputBlockSize = iTotalNumInputBits;
-
-	/* Init output block size for the first time. This parameter is set in the
-	   processing routine, too */
-	iOutputBlockSize = 0;
-
-try
-{
-	/* Check if current selected service is an audio service and check if a
-	   stream is attached. Additionally, check if AAC (this is the only audio
-	   decoding we offer right now) */
-	if ((ReceiverParam.Service[iCurSelServ].
-		eAudDataFlag == CParameter::SF_AUDIO) &&
-		(iCurAudioStreamID != STREAM_ID_NOT_USED) &&
-		(ReceiverParam.Service[iCurSelServ].AudioParam.
-		eAudioCoding == CParameter::AC_AAC))
+	try
 	{
+		/* Init error flags and output block size parameter. The output block
+		   size is set in the processing routine. We must set it here in case
+		   of an error in the initialization, this part in the processing
+		   routine is not being called */
+		DoNotProcessAAC = FALSE;
+		DoNotProcessData = FALSE;
+		iOutputBlockSize = 0;
+
+		/* Get number of total input bits for this module */
+		iInputBlockSize = ReceiverParam.iNumAudioDecoderBits;
+
+		/* Get current selected audio service */
+		iCurSelServ = ReceiverParam.GetCurSelAudioService();
+
+		/* Current audio stream ID */
+		iCurAudioStreamID =
+			ReceiverParam.Service[iCurSelServ].AudioParam.iStreamID;
+
+		/* The requirement for this module is that the stream is used and the
+		   service is an audio service. Check it here */
+		if ((ReceiverParam.Service[iCurSelServ].
+			eAudDataFlag != CParameter::SF_AUDIO) ||
+			(iCurAudioStreamID == STREAM_ID_NOT_USED))
+		{
+			throw CInitErr(ET_ALL);
+		}
+
+
+		/* Init text message application ------------------------------------ */
+		switch (ReceiverParam.Service[iCurSelServ].AudioParam.bTextflag)
+		{
+		case TRUE:
+			bTextMessageUsed = TRUE;
+
+			/* Get a pointer to the string */
+			TextMessage.Init(&ReceiverParam.Service[iCurSelServ].AudioParam.
+				strTextMessage);
+
+			/* Total frame size is input block size minus the bytes for the text
+			   message */
+			iTotalFrameSize = iInputBlockSize -
+				SIZEOF__BYTE * NO_BYTES_TEXT_MESS_IN_AUD_STR;
+
+			/* Init vector for text message bytes */
+			vecbiTextMessBuf.Init(SIZEOF__BYTE * NO_BYTES_TEXT_MESS_IN_AUD_STR);
+			break;
+
+		case FALSE:
+			bTextMessageUsed = FALSE;
+
+			/* All bytes are used for AAC data, no text message present */
+			iTotalFrameSize = iInputBlockSize;
+			break;
+		}
+
+
+#ifdef USE_FAAD2_LIBRARY
+		/* Init for AAC decoding -------------------------------------------- */
+		/* Check, if AAC is used */
+		if (ReceiverParam.Service[iCurSelServ].AudioParam.
+			eAudioCoding != CParameter::AC_AAC)
+		{
+			throw CInitErr(ET_AAC);
+		}
+
 		/* Init "audio was ok" flag */
 		bAudioWasOK = TRUE;
 
@@ -331,7 +380,7 @@ try
 
 		default:
 			/* Some error occurred, throw error */
-			throw CInitErr();
+			throw CInitErr(ET_AAC);
 			break;
 		}
 
@@ -340,33 +389,6 @@ try
 
 		/* Set number of AAC frames for log file */
 		ReceiverParam.ReceptLog.SetNumAAC(iNumAACFrames);
-
-		/* If text message application is used or not */
-		switch (ReceiverParam.Service[iCurSelServ].AudioParam.bTextflag)
-		{
-		case TRUE:
-			bTextMessageUsed = TRUE;
-
-			/* Get a pointer to the string */
-			TextMessage.Init(&ReceiverParam.Service[iCurSelServ].AudioParam.
-				strTextMessage);
-
-			/* Total frame size is input block size minus the bytes for the text
-			   message */
-			iTotalFrameSize = iTotalNumInputBits -
-				SIZEOF__BYTE * NO_BYTES_TEXT_MESS_IN_AUD_STR;
-
-			/* Init vector for text message bytes */
-			vecbiTextMessBuf.Init(SIZEOF__BYTE * NO_BYTES_TEXT_MESS_IN_AUD_STR);
-			break;
-
-		case FALSE:
-			bTextMessageUsed = FALSE;
-
-			/* All bytes are used for AAC data, no text message present */
-			iTotalFrameSize = iTotalNumInputBits;
-			break;
-		}
 
 		/* Number of channels for AAC: Mono, LC Stereo, Stereo */
 		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioMode)
@@ -427,7 +449,7 @@ try
 
 		/* Check iAudioPayloadLen value, only positive values make sense */
 		if (iAudioPayloadLen < 0)
-			throw CInitErr();
+			throw CInitErr(ET_AAC);
 
 		/* Calculate number of bytes for higher protected blocks */
 		iNumHigherProtectedBytes =
@@ -487,30 +509,45 @@ try
 		   now we do not correct and we could stay with a single buffer
 		   Maybe TODO: sample rate correction to avoid audio dropouts */
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
+#endif
 	}
-	else
-		throw CInitErr();
-}
 
-catch (CInitErr)
-{
-	/* An init error occurred, do not process data in this module */
-	DoNotProcessData = TRUE;
-}
+	catch (CInitErr CurErr)
+	{
+		switch (CurErr.eErrType)
+		{
+		case ET_ALL:
+			/* An init error occurred, do not process data in this module */
+			DoNotProcessData = TRUE;
+			break;
+
+		case ET_AAC:
+			/* AAC part should not be decdoded, set flag */
+			DoNotProcessAAC = TRUE;
+			break;
+
+		default:
+			DoNotProcessData = TRUE;
+		}
+	}
 }
 
 CAudioSourceDecoder::CAudioSourceDecoder()
 {
+#ifdef USE_FAAD2_LIBRARY
 	/* Open AACEncoder instance */
 	HandleAACDecoder = faacDecOpen();
 
 	/* Decoder MUST be initialized at least once, therefore do it here in the
 	   constructor with arbitrary values to be sure that this is satisfied */
 	faacDecInitDRM(HandleAACDecoder, 24000, DRMCH_MONO);
+#endif
 }
 
 CAudioSourceDecoder::~CAudioSourceDecoder()
 {
+#ifdef USE_FAAD2_LIBRARY
 	/* Close decoder handle */
 	faacDecClose(HandleAACDecoder);
+#endif
 }
