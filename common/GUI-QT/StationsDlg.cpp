@@ -566,6 +566,8 @@ void StationsDlg::EnableSMeter(_BOOLEAN bStatus)
 
 		ProgrSigStrength->setEnabled(TRUE);
 		TextLabelSMeter->setEnabled(TRUE);
+
+		bSMeterEnabled = TRUE;
 	}
 	else
 	{
@@ -576,6 +578,8 @@ void StationsDlg::EnableSMeter(_BOOLEAN bStatus)
 
 		ProgrSigStrength->setEnabled(FALSE);
 		TextLabelSMeter->setEnabled(FALSE);
+
+		bSMeterEnabled = FALSE;
 	}
 }
 
@@ -598,11 +602,19 @@ void StationsDlg::SetUTCTimeLabel()
 void StationsDlg::OnTimerSMeter()
 {
 #ifdef HAVE_LIBHAMLIB
-	if (pRig != 0)
+	if ((bSMeterEnabled == TRUE) && (pRig != 0))
 	{
 		value_t tValue;
-		if (!rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue))
+
+		const int iRetVal =
+			rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue);
+
+		if (!iRetVal)
 			ProgrSigStrength->setValue((_REAL) tValue.i);
+
+		/* If a time-out happened, do not update s-meter anymore (disable it) */
+		if (iRetVal == -RIG_ETIMEOUT)
+			EnableSMeter(FALSE);
 	}
 #endif
 }

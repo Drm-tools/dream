@@ -255,6 +255,7 @@ protected:
 	void				InitHamlib(const rig_model_t newModID);
 
 	RIG*				pRig;
+	_BOOLEAN			bSMeterEnabled;
 #endif
 
 public slots:
