@@ -126,5 +126,5 @@ function [b] = DesignFilter(fstart, fstop, ftrans, nhil, fs)
 	f = [0  B / 2  B / 2 + ftrans  fs / 2];
 	m = [2 2 0 0];
 
-	b = remez(nhil - 1, f * 2 / fs, m, [1 10]);
+	b = remez(nhil - 1, f * 2 / fs, m, [1 50]);
 return;
