@@ -81,7 +81,10 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 		/* Using sound card ------------------------------------------------- */
 		/* Get data from sound interface. The read function must be a
 		   blocking function! */
-		pSound->Read(vecsSoundBuffer);
+		if (pSound->Read(vecsSoundBuffer) == FALSE)
+			PostWinMessage(MS_IOINTERFACE, 0); /* green light */
+		else
+			PostWinMessage(MS_IOINTERFACE, 2); /* red light */
 
 		/* Write data to output buffer */
 		for (i = 0; i < iOutputBlockSize; i++)

@@ -63,7 +63,12 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	/* Send data to sound interface if audio is not muted */
 	if (bMuteAudio == FALSE)
-		pSound->Write((*pvecInputData));
+	{
+		if (pSound->Write((*pvecInputData)) == FALSE)
+			PostWinMessage(MS_IOINTERFACE, 0); /* green light */
+		else
+			PostWinMessage(MS_IOINTERFACE, 1); /* yellow light */
+	}
 }
 
 void CWriteData::InitInternal(CParameter& ReceiverParam)

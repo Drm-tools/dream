@@ -102,6 +102,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	LEDMSC->SetUpdateTime(600);
 	LEDFrameSync->SetUpdateTime(600);
 	LEDTimeSync->SetUpdateTime(600);
+	LEDIOInterface->SetUpdateTime(2000); /* extra long -> red light stays long */
 
 
 	/* Connect controls */
@@ -201,12 +202,17 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 		LEDTimeSync->SetLight(iMessPara);
 		break;
 
+	case MS_IOINTERFACE:
+		LEDIOInterface->SetLight(iMessPara);
+		break;
+
 	case MS_RESET_ALL:
 		LEDFAC->Reset();
 		LEDSDC->Reset();
 		LEDMSC->Reset();
 		LEDFrameSync->Reset();
 		LEDTimeSync->Reset();
+		LEDIOInterface->Reset();
 		break;
 	}
 }

@@ -596,7 +596,7 @@ if (rstream != NULL) printf("ups\n");
 }
 
 
-void CSound::Read(CVector< _SAMPLE >& psData)
+_BOOLEAN CSound::Read(CVector< _SAMPLE >& psData)
 {
 	CVectorEx<_SAMPLE>*	p;
 
@@ -621,6 +621,8 @@ void CSound::Read(CVector< _SAMPLE >& psData)
 		psData[i] = (*p)[i];
 	
 	SoundBufR.unlock();
+
+	return FALSE;
 }
 
 
@@ -696,7 +698,7 @@ void CSound::InitPlayback(int iNewBufferSize)
 }
 
 
-void CSound::Write(CVector< _SAMPLE >& psData)
+_BOOLEAN CSound::Write(CVector< _SAMPLE >& psData)
 {
 
 #if 0
@@ -725,6 +727,8 @@ while(1){
 	}
 	
 	SoundBufP.unlock();
+
+	return FALSE;
 }
 
 #endif

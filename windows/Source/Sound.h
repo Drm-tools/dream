@@ -67,25 +67,25 @@ public:
 	CSound();
 	virtual ~CSound();
 
-	void	InitRecording(int iNewBufferSize);
-	void	InitPlayback(int iNewBufferSize);
-	void	Read(CVector<short>& psData);
-	void	Write(CVector<short>& psData);
+	void		InitRecording(int iNewBufferSize);
+	void		InitPlayback(int iNewBufferSize);
+	_BOOLEAN	Read(CVector<short>& psData);
+	_BOOLEAN	Write(CVector<short>& psData);
 
-	int		GetNumDev() {return iNumDevs;}
-	string	GetDeviceName(int iDiD) {return pstrDevices[iDiD];}
-	void	SetOutDev(int iNewDev);
-	void	SetInDev(int iNewDev);
+	int			GetNumDev() {return iNumDevs;}
+	string		GetDeviceName(int iDiD) {return pstrDevices[iDiD];}
+	void		SetOutDev(int iNewDev);
+	void		SetInDev(int iNewDev);
 
-	void	Close();
+	void		Close();
 
 protected:
-	void	OpenInDevice();
-	void	OpenOutDevice();
-	void	PrepareInBuffer(int iBufNum);
-	void	PrepareOutBuffer(int iBufNum);
-	void	AddInBuffer();
-	void	AddOutBuffer(int iBufNum);
+	void		OpenInDevice();
+	void		OpenOutDevice();
+	void		PrepareInBuffer(int iBufNum);
+	void		PrepareOutBuffer(int iBufNum);
+	void		AddInBuffer();
+	void		AddOutBuffer(int iBufNum);
 
 	WAVEFORMATEX	sWaveFormatEx;
 	UINT			iNumDevs;

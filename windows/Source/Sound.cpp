@@ -33,8 +33,11 @@
 /******************************************************************************\
 * Wave in                                                                      *
 \******************************************************************************/
-void CSound::Read(CVector<short>& psData)
+_BOOLEAN CSound::Read(CVector<short>& psData)
 {
+	int			i;
+	_BOOLEAN	bError;
+
 	/* Check if device must be opened or reinitialized */
 	if (bChangDevIn == TRUE)
 	{
@@ -51,8 +54,21 @@ void CSound::Read(CVector<short>& psData)
 	if (!(m_WaveInHeader[iWhichBufferIn].dwFlags & WHDR_DONE))
 		 WaitForSingleObject(m_WaveInEvent, INFINITE);
 
+	/* Check if buffers got lost */
+	int iNumInBufDone = 0;
+	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
+		if (m_WaveInHeader[i].dwFlags & WHDR_DONE)
+			iNumInBufDone++;
+
+	/* If the number of done buffers equals the total number of buffers, it is
+	   very likely that a buffer got lost -> set error flag */
+	if (iNumInBufDone == NUM_SOUND_BUFFERS_IN)
+		bError = TRUE;
+	else
+		bError = FALSE;
+
 	/* Copy data from sound card in output buffer */
-	for (int i = 0; i < iBufferSizeIn; i++)
+	for (i = 0; i < iBufferSizeIn; i++)
 	{
 #ifdef MIX_INPUT_CHANNELS
 		/* Mix left and right channel together. Prevent overflow! First,
@@ -75,6 +91,8 @@ void CSound::Read(CVector<short>& psData)
 
 	/* In case more than one buffer was ready, reset event */
 	ResetEvent(m_WaveInEvent);
+
+	return bError;
 }
 
 void CSound::AddInBuffer()
@@ -198,11 +216,12 @@ void CSound::SetInDev(int iNewDev)
 /******************************************************************************\
 * Wave out                                                                     *
 \******************************************************************************/
-void CSound::Write(CVector<short>& psData)
+_BOOLEAN CSound::Write(CVector<short>& psData)
 {
-	int		i, j;
-	int		iCntPrepBuf;
-	int		iIndexDoneBuf;
+	int			i, j;
+	int			iCntPrepBuf;
+	int			iIndexDoneBuf;
+	_BOOLEAN	bError;
 
 	/* Check if device must be opened or reinitialized */
 	if (bChangDevOut == TRUE)
@@ -233,7 +252,7 @@ void CSound::Write(CVector<short>& psData)
 		/* All buffers are filled, dump new block --------------------------- */
 // It would be better to kill half of the buffer blocks to set the start
 // back to the middle: TODO
-		return;
+		return TRUE; /* An error occurred */
 	}
 	else if (iCntPrepBuf == NUM_SOUND_BUFFERS_OUT)
 	{
@@ -253,7 +272,11 @@ void CSound::Write(CVector<short>& psData)
 
 		/* Set index for done buffer */
 		iIndexDoneBuf = NUM_SOUND_BUFFERS_OUT / 2;
+
+		bError = TRUE;
 	}
+	else
+		bError = FALSE;
 
 	/* Copy stereo data from input in soundcard buffer */
 	for (i = 0; i < iBufferSizeOut; i++)
@@ -261,6 +284,8 @@ void CSound::Write(CVector<short>& psData)
 
 	/* Now, send the current block */
 	AddOutBuffer(iIndexDoneBuf);
+
+	return bError;
 }
 
 void CSound::AddOutBuffer(int iBufNum)

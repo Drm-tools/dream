@@ -64,8 +64,8 @@ public:
 #if WITH_SOUND
 	void InitRecording(int iNewBufferSize);
 	void InitPlayback(int iNewBufferSize);
-	void Read(CVector<short>& psData);
-	void Write(CVector<short>& psData);
+	_BOOLEAN Read(CVector<short>& psData);
+	_BOOLEAN Write(CVector<short>& psData);
 
 	void Close();
 	
@@ -81,8 +81,8 @@ protected:
 	/* Dummy definitions */
 	void InitRecording(int iNewBufferSize){}
 	void InitPlayback(int iNewBufferSize){}
-	void Read(CVector<short>& psData){}
-	void Write(CVector<short>& psData){}
+	_BOOLEAN Read(CVector<short>& psData){return FALSE;}
+	_BOOLEAN Write(CVector<short>& psData){return FALSE;}
 	void Close(){}
 #endif
 };

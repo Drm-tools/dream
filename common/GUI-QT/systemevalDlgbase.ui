@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>721</width>
+            <width>717</width>
             <height>534</height>
         </rect>
     </property>
@@ -138,9 +138,9 @@
                             <class>QLayoutWidget</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>Layout42</cstring>
+                                <cstring>Layout21</cstring>
                             </property>
-                            <hbox>
+                            <vbox>
                                 <property stdset="1">
                                     <name>margin</name>
                                     <number>0</number>
@@ -153,9 +153,9 @@
                                     <class>QLayoutWidget</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>Layout26</cstring>
+                                        <cstring>Layout55</cstring>
                                     </property>
-                                    <vbox>
+                                    <hbox>
                                         <property stdset="1">
                                             <name>margin</name>
                                             <number>0</number>
@@ -165,358 +165,411 @@
                                             <number>6</number>
                                         </property>
                                         <widget>
-                                            <class>QLayoutWidget</class>
+                                            <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>Layout55</cstring>
+                                                <cstring>TextLabel1_2_2</cstring>
                                             </property>
-                                            <hbox>
-                                                <property stdset="1">
-                                                    <name>margin</name>
-                                                    <number>0</number>
-                                                </property>
-                                                <property stdset="1">
-                                                    <name>spacing</name>
-                                                    <number>6</number>
-                                                </property>
-                                                <widget>
-                                                    <class>QLabel</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>TextLabel1_2_2</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>3</hsizetype>
-                                                            <vsizetype>1</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>text</name>
-                                                        <string>MSC CRC:</string>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>alignment</name>
-                                                        <set>AlignVCenter|AlignRight</set>
-                                                    </property>
-                                                    <property>
-                                                        <name>hAlign</name>
-                                                    </property>
-                                                </widget>
-                                                <widget>
-                                                    <class>CMultColorLED</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>LEDMSC</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>0</hsizetype>
-                                                            <vsizetype>0</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>minimumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>maximumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                </widget>
-                                            </hbox>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>3</hsizetype>
+                                                    <vsizetype>1</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>MSC CRC:</string>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>alignment</name>
+                                                <set>AlignVCenter|AlignRight</set>
+                                            </property>
+                                            <property>
+                                                <name>hAlign</name>
+                                            </property>
                                         </widget>
                                         <widget>
-                                            <class>QLayoutWidget</class>
+                                            <class>CMultColorLED</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>Layout54</cstring>
+                                                <cstring>LEDMSC</cstring>
                                             </property>
-                                            <hbox>
-                                                <property stdset="1">
-                                                    <name>margin</name>
-                                                    <number>0</number>
-                                                </property>
-                                                <property stdset="1">
-                                                    <name>spacing</name>
-                                                    <number>6</number>
-                                                </property>
-                                                <widget>
-                                                    <class>QLabel</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>TextLabel1_2</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>3</hsizetype>
-                                                            <vsizetype>1</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>text</name>
-                                                        <string>SDC CRC:</string>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>alignment</name>
-                                                        <set>AlignVCenter|AlignRight</set>
-                                                    </property>
-                                                    <property>
-                                                        <name>hAlign</name>
-                                                    </property>
-                                                </widget>
-                                                <widget>
-                                                    <class>CMultColorLED</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>LEDSDC</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>0</hsizetype>
-                                                            <vsizetype>0</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>minimumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>maximumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                </widget>
-                                            </hbox>
-                                        </widget>
-                                        <widget>
-                                            <class>QLayoutWidget</class>
                                             <property stdset="1">
-                                                <name>name</name>
-                                                <cstring>Layout53</cstring>
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
                                             </property>
-                                            <hbox>
-                                                <property stdset="1">
-                                                    <name>margin</name>
-                                                    <number>0</number>
-                                                </property>
-                                                <property stdset="1">
-                                                    <name>spacing</name>
-                                                    <number>6</number>
-                                                </property>
-                                                <widget>
-                                                    <class>QLabel</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>TextLabel1</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>3</hsizetype>
-                                                            <vsizetype>1</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>text</name>
-                                                        <string>FAC CRC:</string>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>alignment</name>
-                                                        <set>AlignVCenter|AlignRight</set>
-                                                    </property>
-                                                    <property>
-                                                        <name>hAlign</name>
-                                                    </property>
-                                                </widget>
-                                                <widget>
-                                                    <class>CMultColorLED</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>LEDFAC</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>0</hsizetype>
-                                                            <vsizetype>0</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>minimumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>maximumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                </widget>
-                                            </hbox>
-                                        </widget>
-                                        <widget>
-                                            <class>QLayoutWidget</class>
                                             <property stdset="1">
-                                                <name>name</name>
-                                                <cstring>Layout56</cstring>
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
                                             </property>
-                                            <hbox>
-                                                <property stdset="1">
-                                                    <name>margin</name>
-                                                    <number>0</number>
-                                                </property>
-                                                <property stdset="1">
-                                                    <name>spacing</name>
-                                                    <number>6</number>
-                                                </property>
-                                                <widget>
-                                                    <class>QLabel</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>TextLabel1_2_2_2</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>3</hsizetype>
-                                                            <vsizetype>1</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>text</name>
-                                                        <string>Frame Sync:</string>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>alignment</name>
-                                                        <set>AlignVCenter|AlignRight</set>
-                                                    </property>
-                                                    <property>
-                                                        <name>hAlign</name>
-                                                    </property>
-                                                </widget>
-                                                <widget>
-                                                    <class>CMultColorLED</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>LEDFrameSync</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>0</hsizetype>
-                                                            <vsizetype>0</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>minimumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>maximumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                </widget>
-                                            </hbox>
-                                        </widget>
-                                        <widget>
-                                            <class>QLayoutWidget</class>
                                             <property stdset="1">
-                                                <name>name</name>
-                                                <cstring>Layout57</cstring>
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
                                             </property>
-                                            <hbox>
-                                                <property stdset="1">
-                                                    <name>margin</name>
-                                                    <number>0</number>
-                                                </property>
-                                                <property stdset="1">
-                                                    <name>spacing</name>
-                                                    <number>6</number>
-                                                </property>
-                                                <widget>
-                                                    <class>QLabel</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>TextLabel1_2_2_2_2</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>3</hsizetype>
-                                                            <vsizetype>1</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>text</name>
-                                                        <string>Time Sync Acq:</string>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>alignment</name>
-                                                        <set>AlignVCenter|AlignRight</set>
-                                                    </property>
-                                                    <property>
-                                                        <name>hAlign</name>
-                                                    </property>
-                                                </widget>
-                                                <widget>
-                                                    <class>CMultColorLED</class>
-                                                    <property stdset="1">
-                                                        <name>name</name>
-                                                        <cstring>LEDTimeSync</cstring>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>sizePolicy</name>
-                                                        <sizepolicy>
-                                                            <hsizetype>0</hsizetype>
-                                                            <vsizetype>0</vsizetype>
-                                                        </sizepolicy>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>minimumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                    <property stdset="1">
-                                                        <name>maximumSize</name>
-                                                        <size>
-                                                            <width>13</width>
-                                                            <height>13</height>
-                                                        </size>
-                                                    </property>
-                                                </widget>
-                                            </hbox>
                                         </widget>
-                                    </vbox>
+                                    </hbox>
                                 </widget>
-                            </hbox>
+                                <widget>
+                                    <class>QLayoutWidget</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>Layout54</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>6</number>
+                                        </property>
+                                        <widget>
+                                            <class>QLabel</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>TextLabel1_2</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>3</hsizetype>
+                                                    <vsizetype>1</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>SDC CRC:</string>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>alignment</name>
+                                                <set>AlignVCenter|AlignRight</set>
+                                            </property>
+                                            <property>
+                                                <name>hAlign</name>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>CMultColorLED</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>LEDSDC</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget>
+                                    <class>QLayoutWidget</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>Layout53</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>6</number>
+                                        </property>
+                                        <widget>
+                                            <class>QLabel</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>TextLabel1</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>3</hsizetype>
+                                                    <vsizetype>1</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>FAC CRC:</string>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>alignment</name>
+                                                <set>AlignVCenter|AlignRight</set>
+                                            </property>
+                                            <property>
+                                                <name>hAlign</name>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>CMultColorLED</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>LEDFAC</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget>
+                                    <class>QLayoutWidget</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>Layout56</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>6</number>
+                                        </property>
+                                        <widget>
+                                            <class>QLabel</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>TextLabel1_2_2_2</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>3</hsizetype>
+                                                    <vsizetype>1</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>Frame Sync:</string>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>alignment</name>
+                                                <set>AlignVCenter|AlignRight</set>
+                                            </property>
+                                            <property>
+                                                <name>hAlign</name>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>CMultColorLED</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>LEDFrameSync</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget>
+                                    <class>QLayoutWidget</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>Layout57</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>6</number>
+                                        </property>
+                                        <widget>
+                                            <class>QLabel</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>TextLabel1_2_2_2_2</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>3</hsizetype>
+                                                    <vsizetype>1</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>Time Sync Acq:</string>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>alignment</name>
+                                                <set>AlignVCenter|AlignRight</set>
+                                            </property>
+                                            <property>
+                                                <name>hAlign</name>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>CMultColorLED</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>LEDTimeSync</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <widget>
+                                    <class>QLayoutWidget</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>Layout57_2</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>6</number>
+                                        </property>
+                                        <widget>
+                                            <class>QLabel</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>TextLabel1_2_2_2_2_2</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>3</hsizetype>
+                                                    <vsizetype>1</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>I/O Interface:</string>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>alignment</name>
+                                                <set>AlignVCenter|AlignRight</set>
+                                            </property>
+                                            <property>
+                                                <name>hAlign</name>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>CMultColorLED</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>LEDIOInterface</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>sizePolicy</name>
+                                                <sizepolicy>
+                                                    <hsizetype>0</hsizetype>
+                                                    <vsizetype>0</vsizetype>
+                                                </sizepolicy>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>minimumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>maximumSize</name>
+                                                <size>
+                                                    <width>13</width>
+                                                    <height>13</height>
+                                                </size>
+                                            </property>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                            </vbox>
                         </widget>
                     </hbox>
                 </widget>
