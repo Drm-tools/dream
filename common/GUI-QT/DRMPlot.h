@@ -32,6 +32,9 @@
 #include <qwt_plot.h>
 #include "../Vector.h"
 #include "../Parameter.h"
+#include "../DrmReceiver.h"
+
+extern CDRMReceiver	DRMReceiver;
 
 
 /* Definitions ****************************************************************/
@@ -88,6 +91,9 @@ protected:
 	void SetQAM4Grid();
 	void SetQAM16Grid();
 	void SetQAM64Grid();
+
+public slots:
+	void OnClicked(const QMouseEvent& e);
 };
 
 

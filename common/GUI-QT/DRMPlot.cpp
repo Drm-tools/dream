@@ -56,7 +56,11 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 
 	/* Canvas */
 	setCanvasLineWidth(0);
-	setCanvasBackground(QColor(BCKGRD_COLOR_PLOT)); 
+	setCanvasBackground(QColor(BCKGRD_COLOR_PLOT));
+
+	/* Connections */
+	connect(this, SIGNAL(plotMouseReleased(const QMouseEvent&)),
+		this, SLOT(OnClicked(const QMouseEvent&)));
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -515,4 +519,16 @@ void CDRMPlot::SetQAM64Grid()
 	curve = insertCurve("line");
 	setCurvePen(curve, ScalePen);
 	setCurveData(curve, dXMax, dX, 2);
+}
+
+void CDRMPlot::OnClicked(const QMouseEvent& e)
+{
+	/* Get frequency from current cursor position */
+	const double dFreq = invTransform(QwtPlot::xBottom, e.x());
+
+	/* Send normalized frequency to receiver */
+	const double dMaxxBottom = axisScale(QwtPlot::xBottom)->hBound();
+
+	if (dMaxxBottom != (double) 0.0)
+		DRMReceiver.SetAMDemodAcq(dFreq / dMaxxBottom);
 }
