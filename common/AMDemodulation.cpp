@@ -51,15 +51,16 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 		else
 		{
-			/* Real-valued FFTW */
-			rfftw_one(RFFTWPlan, &vecrFFTHistory[0], &vecrFFTOutput[0]);
+			/* Copy vector to matlib vector and calculate real-valued FFTW */
+			for (i = 0; i < iTotalBufferSize; i++)
+				vecrFFTInput[i] = vecrFFTHistory[i];
+
+			veccFFTOutput = rfft(vecrFFTInput, FftPlan);
 
 			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) and average
 			   results */
 			for (i = 1; i < iHalfBuffer; i++)
-				vecrPSD[i] += vecrFFTOutput[i] * vecrFFTOutput[i] + 
-					vecrFFTOutput[iTotalBufferSize - i] * 
-					vecrFFTOutput[iTotalBufferSize - i];
+				vecrPSD[i] += SqMag(veccFFTOutput[i]);
 
 			/* Calculate frequency from maximum peak in spectrum */
 			rMaxPeak = (CReal) 0.0;
@@ -138,14 +139,17 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Total buffer size */
 	iTotalBufferSize = NUM_BLOCKS_CARR_ACQUISITION * iSymbolBlockSize;
 
-	/* Center of maximum possible search window */
-	iHalfBuffer = (iTotalBufferSize + 1) / 2;
+	/* Length of the half of the spectrum of real input signal (the other half
+	   is the same because of the real input signal). We have to consider the
+	   Nyquist frequency ("iTotalBufferSize" is always even!) */
+	iHalfBuffer = iTotalBufferSize / 2 + 1;
 
 	/* Allocate memory for FFT-histories and init with zeros */
 	vecrFFTHistory.Init(iTotalBufferSize, (_REAL) 0.0);
-	vecrFFTOutput.Init(iTotalBufferSize, (_REAL) 0.0);
-	vecrPSD.Init(iHalfBuffer);
+	vecrFFTInput.Init(iTotalBufferSize);
+	veccFFTOutput.Init(iHalfBuffer);
 
+	vecrPSD.Init(iHalfBuffer);
 
 	/* Set flag for aquisition */
 	bAcquisition = TRUE;
@@ -153,11 +157,8 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Reset FFT-history */
 	vecrFFTHistory.Reset((_REAL) 0.0);
 
-	/* Create plan for rfftw */
-	if (RFFTWPlan != NULL)
-		fftw_destroy_plan(RFFTWPlan);
-	RFFTWPlan = rfftw_create_plan(iTotalBufferSize,
-		FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
+	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
+	FftPlan.Init(iTotalBufferSize);
 
 
 	/* Define block-sizes for input and output */
@@ -194,11 +195,4 @@ void CAMDemodulation::SetFilterTaps(_REAL rNewOffsetNorm)
 	/* Init state vector for filtering with zeros */
 	rvecZReal.Init(NO_TAPS_HILB_FILT - 1, (CReal) 0.0);
 	rvecZImag.Init(NO_TAPS_HILB_FILT - 1, (CReal) 0.0);
-}
-
-CAMDemodulation::~CAMDemodulation()
-{
-	/* Destroy FFTW plan */
-	if (RFFTWPlan != NULL)
-		fftw_destroy_plan(RFFTWPlan);
 }

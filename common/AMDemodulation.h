@@ -52,7 +52,7 @@ class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
 	CAMDemodulation() : bAcquisition(TRUE) {}
-	virtual ~CAMDemodulation();
+	virtual ~CAMDemodulation() {}
 
 	void SetFilterTaps(_REAL rNewOffsetNorm);
 
@@ -72,8 +72,11 @@ protected:
 
 	_BOOLEAN					bAcquisition;
 	CShiftRegister<fftw_real>	vecrFFTHistory;
-	CVector<fftw_real>			vecrFFTOutput;
-	rfftw_plan					RFFTWPlan;
+
+	CFftPlans					FftPlan;
+	CRealVector					vecrFFTInput;
+	CComplexVector				veccFFTOutput;
+
 	int							iTotalBufferSize;
 	int							iAquisitionCounter;
 	CRealVector					vecrPSD;

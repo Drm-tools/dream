@@ -65,10 +65,10 @@
 class CFreqSyncAcq : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	CFreqSyncAcq() : RFFTWPlan(NULL), bSyncInput(FALSE), bAquisition(FALSE), 
+	CFreqSyncAcq() : bSyncInput(FALSE), bAquisition(FALSE), 
 		rCenterFreq((_REAL) 0.0),
 		rWinSize((_REAL) 0.0) {}
-	virtual ~CFreqSyncAcq();
+	virtual ~CFreqSyncAcq() {}
 
 	void SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize);
 
@@ -81,8 +81,11 @@ public:
 protected:
 	int							piTableFreqPilots[3]; /* 3 freqency pilots */
 	CShiftRegister<fftw_real>	vecrFFTHistory;
-	CVector<fftw_real>			vecrFFTOutput;
-	rfftw_plan					RFFTWPlan;
+
+	CFftPlans					FftPlan;
+	CRealVector					vecrFFTInput;
+	CComplexVector				veccFFTOutput;
+
 	int							iSymbolBlockSize;
 	int							iTotalBufferSize;
 
