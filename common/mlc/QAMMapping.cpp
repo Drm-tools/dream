@@ -69,13 +69,16 @@ void CQAMMapping::Map(CVector<_BINARY>& vecbiInputData1,
 		   {i_0  i_1  q_0  q_1} = (y_0,0  y_1,0  y_0,1  y_1,1) */
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
+			const int i2i = 2 * i;
+			const int i2ip1 = 2 * i + 1;
+
 			/* Filling indices [y_0,0, y_1,0]. Incoming bits are shifted to 
 			   their desired positions in the integer variables "iIndexImag" 
 			   and "iIndexReal" and combined */
-			iIndexReal = ((vecbiInputData1[2 * i] & 1) << 1) | 
-						  (vecbiInputData2[2 * i] & 1);
-			iIndexImag = ((vecbiInputData1[2 * i + 1] & 1) << 1) | 
-						  (vecbiInputData2[2 * i + 1] & 1);
+			iIndexReal = ((vecbiInputData1[i2i] & 1) << 1) | 
+						  (vecbiInputData2[i2i] & 1);
+			iIndexImag = ((vecbiInputData1[i2ip1] & 1) << 1) | 
+						  (vecbiInputData2[i2ip1] & 1);
 	
 			(*pcOutputData)[i] = 
 						 /* Odd entries (second column in "rTableQAM16") */
@@ -92,15 +95,18 @@ void CQAMMapping::Map(CVector<_BINARY>& vecbiInputData1,
 		   (y_0,0  y_1,0  y_2,0  y_0,1  y_1,1  y_2,1) */
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
+			const int i2i = 2 * i;
+			const int i2ip1 = 2 * i + 1;
+
 			/* Filling indices [y_0,0, y_1,0, y_2,0]. Incoming bits 
 			   are shifted to their desired positions in the integer variables 
 			   "iIndexImag" and "iIndexReal" and combined */
-			iIndexReal = ((vecbiInputData1[2 * i] & 1) << 2) |
-						 ((vecbiInputData2[2 * i] & 1) << 1) | 
-						  (vecbiInputData3[2 * i] & 1);
-			iIndexImag = ((vecbiInputData1[2 * i + 1] & 1) << 2) |
-						 ((vecbiInputData2[2 * i + 1] & 1) << 1) | 
-						  (vecbiInputData3[2 * i + 1] & 1);
+			iIndexReal = ((vecbiInputData1[i2i] & 1) << 2) |
+						 ((vecbiInputData2[i2i] & 1) << 1) | 
+						  (vecbiInputData3[i2i] & 1);
+			iIndexImag = ((vecbiInputData1[i2ip1] & 1) << 2) |
+						 ((vecbiInputData2[i2ip1] & 1) << 1) | 
+						  (vecbiInputData3[i2ip1] & 1);
 	
 			(*pcOutputData)[i] = 
 						 /* Odd entries (second column in "rTableQAM64SM") */
@@ -117,15 +123,18 @@ void CQAMMapping::Map(CVector<_BINARY>& vecbiInputData1,
 		   (y_0,0  y_1,0  y_2,0  y_0,1  y_1,1  y_2,1) */
 		for (i = 0; i < iOutputBlockSize; i++)
 		{
+			const int i2i = 2 * i;
+			const int i2ip1 = 2 * i + 1;
+
 			/* Filling indices [y_0,0, y_1,0, y_2,0]. Incoming bits 
 			   are shifted to their desired positions in the integer variables 
 			   "iIndexImag" and "iIndexReal" and combined */
-			iIndexReal = ((vecbiInputData1[2 * i] & 1) << 2) |
-						 ((vecbiInputData2[2 * i] & 1) << 1) | 
-						  (vecbiInputData3[2 * i] & 1);
-			iIndexImag = ((vecbiInputData1[2 * i + 1] & 1) << 2) |
-						 ((vecbiInputData2[2 * i + 1] & 1) << 1) | 
-						  (vecbiInputData3[2 * i + 1] & 1);
+			iIndexReal = ((vecbiInputData1[i2i] & 1) << 2) |
+						 ((vecbiInputData2[i2i] & 1) << 1) | 
+						  (vecbiInputData3[i2i] & 1);
+			iIndexImag = ((vecbiInputData1[i2ip1] & 1) << 2) |
+						 ((vecbiInputData2[i2ip1] & 1) << 1) | 
+						  (vecbiInputData3[i2ip1] & 1);
 	
 			(*pcOutputData)[i] = 
 						 /* Odd entries (second column in "rTableQAM64HMsym") */
