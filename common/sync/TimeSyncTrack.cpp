@@ -89,7 +89,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	/* Apply hamming window, Eq (15) */
 	veccPilots = veccChanEst * vecrHammingWindow;
 
-	/* Transform in time-domain to get estimate for delay power profile,
+	/* Transform in time-domain to get an estimate for the delay power profile,
 	   Eq (15) */
 	veccPilots = Ifft(veccPilots, FftPlan);
 
