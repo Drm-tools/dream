@@ -98,19 +98,21 @@ try
 
 	if (bIsReceiver == FALSE)
 	{
-		TransmDialog MainDlg(0, 0, TRUE, Qt::WStyle_MinMax);
+		TransmDialog MainDlg(0, 0, FALSE, Qt::WStyle_MinMax);
 
 		/* Set main window */
 		app.setMainWidget(&MainDlg);
 		pApp = &app; /* Needed for post-event routine */
 
 		/* Show dialog */
-		MainDlg.exec();
+		MainDlg.show();
+		app.exec();
 	}
 	else
 	{
 		CReceiverThread	RecThread; /* Working thread object */
-		FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_ContextHelp);
+		FDRMDialog		MainDlg(0, 0, FALSE,
+			Qt::WStyle_ContextHelp | Qt::WStyle_MinMax);
 
 		/* First, initialize the working thread. This should be done in an extra
 		   routine since we cannot 100% assume that the working thread is ealier
@@ -126,7 +128,8 @@ try
 
 		/* Show dialog, working thread must be initialized before starting the 
 		   GUI! */
-		MainDlg.exec();
+		MainDlg.show();
+		app.exec();
 
 		RecThread.Stop();
 	}

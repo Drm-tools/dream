@@ -145,24 +145,23 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 
 
 	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(this, "Analog Demodulation", FALSE, 
-		Qt::WGroupLeader | Qt::WStyle_MinMax);
+	pAnalogDemDlg = new AnalogDemDlg(this, "Analog Demodulation", FALSE,
+		Qt::WStyle_MinMax);
 	pAnalogDemDlg->hide();
 
 	/* Stations window */
-	pStationsDlg = new StationsDlg(this, "Stations", FALSE, 
-		Qt::WGroupLeader | Qt::WStyle_MinMax);
+	pStationsDlg = new StationsDlg(this, "Stations", FALSE, Qt::WStyle_MinMax);
 	pStationsDlg->hide();
 
 	/* Evaluation window ("WGroupLeader" flag enabels that in both windows 
 	   controls can be clicked) */
-	pSysEvalDlg = new systemevalDlg(this, "System Evaluation", FALSE, 
-		Qt::WGroupLeader | Qt::WStyle_ContextHelp);
+	pSysEvalDlg = new systemevalDlg(this, "System Evaluation", FALSE,
+		Qt::WStyle_ContextHelp);
 	pSysEvalDlg->hide();
 
 	/* Multimedia window */
-	pMultiMediaDlg = new MultimediaDlg(this, "Multimedia", FALSE, 
-		Qt::WGroupLeader | Qt::WStyle_MinMax);
+	pMultiMediaDlg = new MultimediaDlg(this, "Multimedia", FALSE,
+		Qt::WStyle_MinMax);
 	pMultiMediaDlg->hide();
 
 	/* Enable multimedia */
