@@ -3,12 +3,14 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer, Tomi Manninen
+ *	Volker Fischer, Tomi Manninen, Stephane Fillod
  *
  * Description:
  *
  * 10/03/2003 Tomi Manninen / OH2BNS
  *  - Initial (basic) code for command line argument parsing (argv)
+ * 04/15/2004 Tomi Manninen, Stephane Fillod
+ *  - Hamlib
  *
  ******************************************************************************
  *
@@ -108,7 +110,7 @@ try
 	else
 	{
 		CReceiverThread	RecThread; /* Working thread object */
-		FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax);
+		FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_ContextHelp);
 
 		/* First, initialize the working thread. This should be done in an extra
 		   routine since we cannot 100% assume that the working thread is ealier
@@ -403,6 +405,49 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+#ifdef HAVE_LIBHAMLIB
+		/* Hamlib Model ID -------------------------------------------------- */
+		if ((!strcmp(argv[i], "--hamlib-config")) ||
+			(!strcmp(argv[i], "-C")))
+		{
+			if (++i >= argc)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--hamlib-config' needs a string argument."
+					<< endl;
+				exit(1);
+			}
+
+			DRMReceiver.SetHamlibConf(argv[i]);
+			continue;
+		}
+
+		/* Hamlib config string --------------------------------------------- */
+		if ((!strcmp(argv[i], "--hamlib-model")) ||
+			(!strcmp(argv[i], "-M")))
+		{
+			if (++i >= argc)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--hamlib-model' needs a numeric argument greater "
+					"than 0" << endl;
+				exit(1);
+			}
+
+			char *p;
+			int n = strtol(argv[i], &p, 10);
+			if (*p || n < 1)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--hamlib-model' needs a numeric argument greater "
+					"than 0" << endl;
+				exit(1);
+			}
+
+			DRMReceiver.SetHamlibModel(n);
+			continue;
+		}
+#endif
 
 		/* Help (usage) flag ------------------------------------------------ */
 		if ((!strcmp(argv[i], "--help")) ||
@@ -450,6 +495,12 @@ void UsageArguments(char** argv)
 	cerr << "  -o <s>, --longitude <s>    set longitude string for log file"
 		<< endl;
 	cerr << "  -l, --startlog             start log file (delayed)" << endl;
+
+#ifdef HAVE_LIBHAMLIB
+	cerr << "  -M <n>, --hamlib-model <n> set Hamlib radio model ID" << endl;
+	cerr << "  -C, --hamlib-config <s>    set Hamlib config parameter" << endl;
+#endif
+
 	cerr << endl;
 	cerr << "  -h, -?, --help             this help text" << endl;
 	cerr << endl;
