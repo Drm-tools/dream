@@ -52,10 +52,10 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* View menu ------------------------------------------------------------ */
 	QPopupMenu *EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
-	EvalWinMenu->insertItem("M&ultimedia Dialog...", this,
-		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U);
 	EvalWinMenu->insertItem("&Evaluation Dialog...", this,
 		SLOT(OnViewEvalDlg()), CTRL+Key_E);
+	EvalWinMenu->insertItem("M&ultimedia Dialog...", this,
+		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U);
 	EvalWinMenu->insertSeparator();
 	EvalWinMenu->insertItem("E&xit", this, SLOT(close()), CTRL+Key_Q);
 
