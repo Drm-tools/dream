@@ -343,8 +343,9 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		NUM_SAM_IR_FOR_MIN_STAT * OVER_EST_FACT_MIN_STAT;
 
 	/* Calculate signal energy by subtracting the noise energy from total
-	   energy */
-	const CReal rSigEnergyBound = rTotEgy - rSigmaNoise * iNumIntpFreqPil;
+	   energy (energy cannot by negative -> bound at zero) */
+	const CReal rSigEnergyBound =
+		Max(rTotEgy - rSigmaNoise * iNumIntpFreqPil, (CReal) 0.0);
 
 	/* From left to the right -> search for end of PDS */
 	rEstPDSEnd = (CReal) (iNumIntpFreqPil - 1);
@@ -386,6 +387,15 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 			/* Accumulate signal energy, subtract noise on each sample */
 			rCurEnergy += vecrAvPoDeSpRot[i] - rSigmaNoise;
 		}
+	}
+
+	/* If the signal energy is too low it can happen that the estimated
+	   beginning of the impulse response is before the end -> correct */
+	if (rEstPDSBegin > rEstPDSEnd)
+	{
+		/* Set beginning and end to their maximum (minimum) value */
+		rEstPDSBegin = (CReal) 0.0;
+		rEstPDSEnd = (CReal) (iNumIntpFreqPil - 1);
 	}
 
 	/* Correct estimates of begin and end of PDS by the rotation */
