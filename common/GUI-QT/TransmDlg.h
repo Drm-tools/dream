@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+
+#include <qpushbutton.h>
+
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"
 #else
@@ -34,10 +37,45 @@
 #include "../DrmTransmitter.h"
 
 
-extern CDRMTransmitter DRMTransmitter;
-
-
 /* Classes ********************************************************************/
+/* Thread class for the transmitter */
+class CTransmitterThread : public QThread 
+{
+public:
+	void Stop()
+	{
+		/* Stop working thread and wait until it is ready for terminating. We
+		   set a time-out of 5 seconds */
+		DRMTransmitter.Stop();
+
+		if (wait(5000) == FALSE)
+			ErrorMessage("Termination of sound interface thread failed.");
+	}
+
+	virtual void run()
+	{
+		/* Set thread priority (The working thread should have a higher priority
+		   than the GUI) */
+#ifdef _WIN32
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
+#endif
+
+		try
+		{
+			/* Call receiver main routine */
+			DRMTransmitter.Start();
+		}
+
+		catch (CGenErr GenErr)
+		{
+			ErrorMessage(GenErr.strError);
+		}
+	}
+
+protected:
+	CDRMTransmitter	DRMTransmitter;
+};
+
 class TransmDialog : public TransmDlgBase
 {
 	Q_OBJECT
@@ -45,5 +83,12 @@ class TransmDialog : public TransmDlgBase
 public:
 	TransmDialog(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
-};
+	virtual ~TransmDialog();
 
+protected:
+	CTransmitterThread	TransThread; /* Working thread object */
+	_BOOLEAN			bIsStarted;
+
+public slots:
+	void OnButtonStartStop();
+};

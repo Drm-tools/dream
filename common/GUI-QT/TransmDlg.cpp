@@ -30,8 +30,37 @@
 
 
 TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal, WFlags f)
-	: TransmDlgBase(parent, name, modal, f)
+	: TransmDlgBase(parent, name, modal, f), bIsStarted(FALSE)
 {
+	ButtonStartStop->setText("&Start");
 
+	connect(ButtonStartStop, SIGNAL(clicked()),
+		this, SLOT(OnButtonStartStop()));
 }
 
+TransmDialog::~TransmDialog()
+{
+	/* Stop transmitter */
+	if (bIsStarted == TRUE)
+		TransThread.Stop();
+}
+
+void TransmDialog::OnButtonStartStop()
+{
+	if (bIsStarted == TRUE)
+	{
+		/* Stop transmitter */
+		TransThread.Stop();
+
+		ButtonStartStop->setText("&Start");
+		bIsStarted = FALSE;
+	}
+	else
+	{
+		/* Start transmitter */
+		TransThread.start();
+
+		ButtonStartStop->setText("&Stop");
+		bIsStarted = TRUE;
+	}
+}

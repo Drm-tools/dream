@@ -31,26 +31,35 @@
 
 #include "main.h"
 
-/* The receiver, transmitter and simulation are global objects */
-CDRMReceiver	DRMReceiver; 
-CDRMTransmitter	DRMTransmitter;
-CDRMSimulation	DRMSimulation;
-
 
 /* Implementation *************************************************************/
 #ifdef USE_QT_GUI
 /******************************************************************************\
 * Using GUI with QT                                                            *
 \******************************************************************************/
+/* The receiver, transmitter and simulation are global objects */
+CDRMReceiver	DRMReceiver; 
+CDRMSimulation	DRMSimulation;
 
 /* This pointer is only used for the post-event routine */
-QApplication*	pApp = NULL;	
+QApplication*	pApp = NULL;
+
 
 /* Thread class for the receiver */
 class CReceiverThread : public QThread 
 {
 public:
-	virtual void run() 
+	void Stop()
+	{
+		/* Stop working thread and wait until it is ready for terminating. We
+		   set a time-out of 5 seconds */
+		DRMReceiver.Stop();
+
+		if (wait(5000) == FALSE)
+			ErrorMessage("Termination of sound interface thread failed.");
+	}
+
+	virtual void run()
 	{
 		/* Set thread priority (The working thread should have a higher priority
 		   than the GUI) */
@@ -71,30 +80,6 @@ public:
 	}
 };
 
-/* Thread class for the transmitter */
-class CTransmitterThread : public QThread 
-{
-public:
-	virtual void run() 
-	{
-		/* Set thread priority (The working thread should have a higher priority
-		   than the GUI) */
-#ifdef _WIN32
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
-#endif
-
-		try
-		{
-			/* Call receiver main routine */
-			DRMTransmitter.Start();
-		}
-
-		catch (CGenErr GenErr)
-		{
-			ErrorMessage(GenErr.strError);
-		}
-	}
-};
 
 int main(int argc, char** argv)
 {
@@ -112,11 +97,7 @@ try
 
 	if (bIsReceiver == FALSE)
 	{
-		CTransmitterThread	TransThread; /* Working thread object */
-		TransmDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax);
-
-		/* Start thread */
-		TransThread.start();
+		TransmDialog MainDlg(0, 0, TRUE, Qt::WStyle_MinMax);
 
 		/* Set main window */
 		app.setMainWidget(&MainDlg);
@@ -124,14 +105,6 @@ try
 
 		/* Show dialog */
 		MainDlg.exec();
-
-		/* Stop working thread and wait until it is ready for terminating. We
-		   set a time-out of 5 seconds. If thread was not ready in that time,
-		   the program will terminate anyway, but this can lead to an error
-		   message */
-		DRMTransmitter.Stop();
-
-		TransThread.wait(5000);
 	}
 	else
 	{
@@ -154,13 +127,7 @@ try
 		   GUI! */
 		MainDlg.exec();
 
-		/* Stop working thread and wait until it is ready for terminating. We
-		   set a time-out of 5 seconds. If thread was not ready in that time,
-		   the program will terminate anyway, but this can lead to an error
-		   message */
-		DRMReceiver.Stop();
-
-		RecThread.wait(5000);
+		RecThread.Stop();
 	}
 }
 
@@ -214,8 +181,13 @@ void ErrorMessage(string strErrorString)
 /******************************************************************************\
 * No GUI                                                                       *
 \******************************************************************************/
+CDRMReceiver DRMReceiver; /* Must be a global object */
+
 int main(int argc, char** argv)
 {
+	CDRMTransmitter	DRMTransmitter;
+	CDRMSimulation	DRMSimulation;
+
 	_BOOLEAN bIsReceiver = ParseArguments(argc, argv);
 	DRMSimulation.SimScript();
 
