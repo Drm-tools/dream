@@ -89,6 +89,7 @@ typedef uint32_t						_UINT32BIT;
 #define MS_MSC_CRC						3
 #define MS_FRAME_SYNC					4
 #define MS_TIME_SYNC					5
+#define MS_RESET_ALL					6
 
 #define GUI_CONTROL_UPDATE_TIME			500	// Milliseconds
 
@@ -151,7 +152,7 @@ typedef CChanSimData<_COMPLEX>	CChanSimDataDemod; /* Demodulated signals */
 
 /* Prototypes for global functions ********************************************/
 /* Posting a window message */
-void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam);
+void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam = 0);
 
 /* Debug error handling */
 void DebugError(const char* pchErDescr, const char* pchPar1Descr,

@@ -50,9 +50,7 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) :
 	setIndent(0);
 
 	/* Init color flags */
-	bFlagRedLi = false;
-	bFlagGreenLi = false;
-	bFlagYellowLi = false;
+	Reset();
 
 	/* Set init-bitmap */
 	setPixmap(BitmCubeGrey);
@@ -86,6 +84,16 @@ void CMultColorLED::OnTimerGreenLight()
 
 void CMultColorLED::OnTimerYellowLight() 
 {
+	bFlagYellowLi = false;
+
+	UpdateColor();
+}
+
+void CMultColorLED::Reset()
+{
+	/* Reset color flags */
+	bFlagRedLi = false;
+	bFlagGreenLi = false;
 	bFlagYellowLi = false;
 
 	UpdateColor();

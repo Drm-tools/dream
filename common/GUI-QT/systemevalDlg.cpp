@@ -133,6 +133,9 @@ void systemevalDlg::showEvent(QShowEvent* pEvent)
 {
 	/* Activte real-time timers when window is shown */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
+
+	/* Update window */
+	OnTimer();
 }
 
 void systemevalDlg::hideEvent(QHideEvent* pEvent)
@@ -164,6 +167,14 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 	case MS_TIME_SYNC:
 		LEDTimeSync->SetLight(iMessPara);
 		break;
+
+	case MS_RESET_ALL:
+		LEDFAC->Reset();
+		LEDSDC->Reset();
+		LEDMSC->Reset();
+		LEDFrameSync->Reset();
+		LEDTimeSync->Reset();
+		break;
 	}
 }
 
@@ -178,18 +189,25 @@ void systemevalDlg::OnTimer()
 	_REAL				rSNREstimate;
 	_REAL				rEstEndIR;
 
-	/* SNR estimate. Problem: the SNR estimation from the
-	   channel estimation only works if wiener interpolation is activated. If,
-	   e.g., linear interpolation is chosen, the SNR from this estimation will
-	   be wrong */
-	if (DRMReceiver.GetChanEst()->GetTimeInt() == CChannelEstimation::TWIENER)
-		rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
+	/* Show SNR if receiver is in tracking mode */
+	if (DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
+	{
+		/* SNR estimate. Problem: the SNR estimation from the
+		   channel estimation only works if wiener interpolation is activated.
+		   If, e.g., linear interpolation is chosen, the SNR from this
+		   estimation will be wrong */
+		if (DRMReceiver.GetChanEst()->GetTimeInt() == CChannelEstimation::TWIENER)
+			rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
+		else
+			rSNREstimate = DRMReceiver.GetOFDMDemod()->GetSNREstdB();
+	}
 	else
-		rSNREstimate = DRMReceiver.GetOFDMDemod()->GetSNREstdB();
-
-	ThermoSNR->setValue(rSNREstimate);
+		rSNREstimate = 0;
+	
 	TextSNR->setText("<center>SNR<br><b>" + 
 		QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");
+
+	ThermoSNR->setValue(rSNREstimate);
 
 
 #ifdef _DEBUG_

@@ -52,6 +52,7 @@ public:
 
 	void SetUpdateTime(int iNUTi);
 	void SetLight(int iNewStatus);
+	void Reset();
 
 
 protected:

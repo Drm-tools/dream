@@ -278,6 +278,9 @@ void CDRMReceiver::SetInStartMode()
 	/* Reset counters for acquisition decision and "good signal" */
 	iAcquDetecCnt = 0;
 	iGoodSignCnt = 0;
+
+	/* Reset GUI lights */
+	PostWinMessage(MS_RESET_ALL);
 }
 
 void CDRMReceiver::SetInTrackingMode()
