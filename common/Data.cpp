@@ -237,27 +237,27 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 
 	case 3:
 		/* US Consortium: slowest 0.1 Hz */
-		iMinNoBlocks = (int) ((_REAL) 5000.0 / (_REAL) 0.4);
+		iMinNoBlocks = (int) ((_REAL) 10000.0 / (_REAL) 0.4);
 		break;
 
 	case 4:
 		/* CCIR Poor: 1 Hz */
-		iMinNoBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
+		iMinNoBlocks = (int) ((_REAL) 4000.0 / (_REAL) 0.4);
 		break;
 
 	case 5:
 		/* Channel no 5: 2 Hz -> 30 sec */
-		iMinNoBlocks = (int) ((_REAL) 1000.0 / (_REAL) 0.4);
+		iMinNoBlocks = (int) ((_REAL) 3000.0 / (_REAL) 0.4);
 		break;
 
 	case 6:
 		/* Channel no 6: same as case "2" */
-		iMinNoBlocks = (int) ((_REAL) 1000.0 / (_REAL) 0.4);
+		iMinNoBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
 		break;
 
 	default:
 		/* My own channels */
-		iMinNoBlocks = (int) ((_REAL) 1000.0 / (_REAL) 0.4);
+		iMinNoBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
 		break;
 	}
 
