@@ -89,9 +89,6 @@ public:
 			     int iPunctPatPartA, int iPunctPatPartB, int iLevel);
 
 protected:
-	/* We need to analyze 2^(MC_CONSTRAINT_LENGTH - 1) states in the trellis */
-	CTrellis				vecTrellis[MC_NO_STATES];
-
 	/* Two trellis data vectors are needed for current and old state */
 	CTrellisData			vecTrelData1[MC_NO_STATES];
 	CTrellisData			vecTrelData2[MC_NO_STATES];
