@@ -683,12 +683,9 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 		   be possible that these are the correct parameters. Therefore
 		   try to decode SDC even in case FAC wasn't decoded. That might
 		   speed up the DRM signal acqisition. But quite often it is the
-		   case that the parameters are not correct. In this case show a
-		   yellow light for the first decoding result instead of a red
-		   light to show that this was just "a guess" result */
-		if (bFirstBlock == TRUE)
-			PostWinMessage(MS_SDC_CRC, 1); /* Yellow light */
-		else
+		   case that the parameters are not correct. In this case do not
+		   show a red light if SDC CRC was not ok */
+		if (bFirstBlock == FALSE)
 			PostWinMessage(MS_SDC_CRC, 2); /* Red light */
 	}
 
