@@ -620,12 +620,13 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 	memIO.Reset();
 
 	/* Actual conversion */
-	FreeImage_SaveToHandle(FIF_PNG, fbmp, &memIO, (fi_handle) &memIO);
-
-	/* Get converted data and set new format string */
-	NewPic.vecbRawData.Init(memIO.GetData().Size()); /* Size has certainly
-														changed */
-	NewPic.vecbRawData = memIO.GetData(); /* Actual copying */
-	NewPic.strFormat = "png"; /* New format string */
+	if (FreeImage_SaveToHandle(FIF_PNG, fbmp, &memIO, (fi_handle) &memIO))
+	{
+		/* Get converted data and set new format string */
+		NewPic.vecbRawData.Init(memIO.GetData().Size()); /* Size has certainly
+															changed */
+		NewPic.vecbRawData = memIO.GetData(); /* Actual copying */
+		NewPic.strFormat = "png"; /* New format string */
+	}
 #endif
 }
