@@ -5,12 +5,12 @@
 #ifndef _RESAMPLEFILTER_H_
 #define _RESAMPLEFILTER_H_
 
-#define NUM_TAPS_PER_PHASE           12
+#define RES_FILT_NUM_TAPS_PER_PHASE  12
 #define INTERP_DECIM_I_D             10
 
 
 /* Filter for ratios close to 1 */
-static float fResTaps1To1[INTERP_DECIM_I_D][NUM_TAPS_PER_PHASE] = {
+static float fResTaps1To1[INTERP_DECIM_I_D][RES_FILT_NUM_TAPS_PER_PHASE] = {
 {
 	-0.00129181992672801360f,
 	0.00561586829442904840f,
@@ -150,7 +150,7 @@ static float fResTaps1To1[INTERP_DECIM_I_D][NUM_TAPS_PER_PHASE] = {
 	-0.01349857823816511800f,
 	0.00561586829442904840f,
 	-0.00129181992672801360f
-},
+}
 };
 
 
