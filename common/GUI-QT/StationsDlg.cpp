@@ -747,8 +747,10 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 	   "vecpListItems" was initialized to 0 at creation of the global object
 	   otherwise this may cause an segmentation fault) */
 	for (int i = 0; i < vecpListItems.Size(); i++)
+	{
 		if (vecpListItems[i] != NULL)
 			delete vecpListItems[i];
+	}
 
 	/* Read initialization file */
 	DRMSchedule.ReadStatTabFromFile(eNewSchM);
@@ -819,19 +821,6 @@ void StationsDlg::SetStationsView()
 					DRMSchedule.GetItem(i).strSite.c_str()     /* site */,
 					DRMSchedule.GetItem(i).strLanguage.c_str() /* language */);
 
-				/* Check, if station is currently transmitting. If yes, set
-				   special pixmap */
-				if (DRMSchedule.IsActive(i) == TRUE)
-				{
-					/* Check for "special case" transmissions */
-					if (DRMSchedule.GetItem(i).iDays == 0)
-						vecpListItems[i]->setPixmap(0, BitmCubeYellow);
-					else
-						vecpListItems[i]->setPixmap(0, BitmCubeGreen);
-				}
-				else
-					vecpListItems[i]->setPixmap(0, BitmCubeRed);
-
 				/* Insert this new item in list. The item object is destroyed by
 				   the list view control when this is destroyed */
 				ListViewStations->insertItem(vecpListItems[i]);
@@ -839,6 +828,19 @@ void StationsDlg::SetStationsView()
 				/* Set flag for sorting the list */
 				bListHastChanged = TRUE;
 			}
+
+			/* Check, if station is currently transmitting. If yes, set
+			   special pixmap */
+			if (DRMSchedule.IsActive(i) == TRUE)
+			{
+				/* Check for "special case" transmissions */
+				if (DRMSchedule.GetItem(i).iDays == 0)
+					vecpListItems[i]->setPixmap(0, BitmCubeYellow);
+				else
+					vecpListItems[i]->setPixmap(0, BitmCubeGreen);
+			}
+			else
+				vecpListItems[i]->setPixmap(0, BitmCubeRed);
 		}
 		else
 		{
