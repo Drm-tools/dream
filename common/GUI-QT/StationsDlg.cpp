@@ -616,15 +616,20 @@ _BOOLEAN StationsDlg::SetFrequencyWinradio(const int iFreqkHz)
 		/* Open Winradio receiver handle */
 		int hRadio = OpenRadioDevice(0);
 
-		/* Make sure the receiver is switched on */
-		SetPower(hRadio, 1);
+		if (hRadio != 0)
+		{
+			/* Make sure the receiver is switched on */
+			SetPower(hRadio, 1);
 
-		/* Set the frequency ("* 1000", because frequency is in kHz) */
-		if (G3SetFrequency(hRadio, (DWORD) (iFreqkHz * 1000)) == TRUE)
-			bSucceeded = TRUE;
+			/* Set the frequency ("* 1000", because frequency is in kHz) */
+			if (G3SetFrequency(hRadio, (DWORD) (iFreqkHz * 1000)) == TRUE)
+				bSucceeded = TRUE;
 
-		/* Close device afterwards and also clean up the dll access */
-		CloseRadioDevice(hRadio);
+			/* Close device */
+			CloseRadioDevice(hRadio);
+		}
+
+		/* Clean up the dll access */
 		FreeLibrary(dll);
 	}
 #endif
