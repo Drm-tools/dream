@@ -80,9 +80,18 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Write data as wave in file */
 	if (bDoWriteWaveFile == TRUE)
 	{
-		for (i = 0; i < iInputBlockSize; i += 2)
-			WaveFileAudio.AddStereoSample((*pvecInputData)[i] /* left */,
-				(*pvecInputData)[i + 1] /* right */);
+		/* Write audio data to file only if it is not zero */
+		_BOOLEAN bDoNotWrite = TRUE;
+		for (i = 0; i < iInputBlockSize; i++)
+			if ((*pvecInputData)[i] != 0)
+				bDoNotWrite = FALSE;
+
+		if (bDoNotWrite == FALSE)
+		{
+			for (i = 0; i < iInputBlockSize; i += 2)
+				WaveFileAudio.AddStereoSample((*pvecInputData)[i] /* left */,
+					(*pvecInputData)[i + 1] /* right */);
+		}
 	}
 
 	/* Store data in buffer for spectrum calculation */
