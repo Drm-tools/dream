@@ -114,6 +114,9 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Help menu ------------------------------------------------------------ */
 	QPopupMenu* HelpMenu = new QPopupMenu(this);
 	CHECK_PTR(HelpMenu);
+    HelpMenu->insertItem("What's &This", this ,
+		SLOT(OnHelpWhatsThis()), SHIFT+Key_F1);
+	HelpMenu->insertSeparator();
 	HelpMenu->insertItem("&About...", this, SLOT(OnHelpAbout()));
 
 
@@ -158,26 +161,18 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	pSoundOutMenu->insertItem("Wave &Mapper Playback", this,
 		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
 
-	/* Set default device. If no device was selected, select "Wave mapper" */
-	int iDefaultInDev = DRMReceiver.GetSoundCrdDevIn();
-	int iDefaultOutDev = DRMReceiver.GetSoundCrdDevOut();
-
-	if ((iDefaultInDev == NO_SOUND_CRD_DEVICE_SEL) ||
-		(iDefaultInDev > iNumSoundDev) || (iDefaultInDev < 0))
-	{
+	/* Set default device. If no valid device was selected, select
+	   "Wave mapper" */
+	int iDefaultInDev = DRMReceiver.GetSoundInterface()->GetInDev();
+	if ((iDefaultInDev > iNumSoundDev) || (iDefaultInDev < 0))
 		iDefaultInDev = iNumSoundDev;
-	}
 
-	if ((iDefaultOutDev == NO_SOUND_CRD_DEVICE_SEL) ||
-		(iDefaultOutDev > iNumSoundDev) || (iDefaultInDev < 0))
-	{
+	int iDefaultOutDev = DRMReceiver.GetSoundInterface()->GetOutDev();
+	if ((iDefaultOutDev > iNumSoundDev) || (iDefaultOutDev < 0))
 		iDefaultOutDev = iNumSoundDev;
-	}
 
 	pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
 	pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
-	DRMReceiver.GetSoundInterface()->SetInDev(iDefaultInDev);
-	DRMReceiver.GetSoundInterface()->SetOutDev(iDefaultOutDev);
 
 	/* Reiceiver mode menu */
 	pReceiverModeMenu->insertItem("DRM (digital)", this,
@@ -237,7 +232,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Evaluation window ("WGroupLeader" flag enabels that in both windows 
 	   controls can be clicked) */
 	pSysEvalDlg = new systemevalDlg(this, "System Evaluation", FALSE,
-		Qt::WStyle_ContextHelp);
+		Qt::WStyle_MinMax);
 	pSysEvalDlg->hide();
 
 	/* Multimedia window */

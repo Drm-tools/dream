@@ -123,6 +123,7 @@ public slots:
 	void OnViewMultiMediaDlg();
 	void OnViewStationsDlg();
 	void OnHelpAbout() {AboutDlg.exec();}
+	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
 	void OnReceiverMode(int id);
