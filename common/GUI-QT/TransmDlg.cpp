@@ -415,7 +415,7 @@ void TransmDialog::OnTimer()
 
 			/* Show current file name and percentage */
 			TextLabelCurPict->setText(FileInfo.fileName());
-			ProgressBarCurPict->setProgress((int) rCPercent * 100); /* % */
+			ProgressBarCurPict->setProgress((int) (rCPercent * 100)); /* % */
 		}
 		else
 		{
