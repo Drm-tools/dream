@@ -50,11 +50,11 @@ public:
 	void Init(const int iNewSize, const TData tIniVal);
 	void Reset(const TData tResetVal);
 
-	int Size() const {return iVectorSize;}
+	inline int Size() const {return iVectorSize;}
 
 	/* This operator allows for a l-value assignment of this object:
 	   CVector[x] = y is possible */
-	TData& operator[](const int iPos) {
+	inline TData& operator[](const int iPos) {
 #ifdef _DEBUG_
 		if ((iPos < 0) || (iPos > iVectorSize - 1))
 		{
@@ -65,7 +65,7 @@ public:
 		return pData[iPos];}
 
 #ifdef _DEBUG_
-	TData operator[](const int iPos) const {
+	inline TData operator[](const int iPos) const {
 		if ((iPos < 0) || (iPos > iVectorSize - 1))
 		{
 			DebugError("Reading vector out of bounds", "Vector size",
@@ -280,7 +280,7 @@ public:
 	void Init(const int iNewRow, const int iNewColumn, const TData tIniVal);
 	void Reset(const TData tResetVal);
 
-	CVector<TData>& operator[](const int iPos) {
+	inline CVector<TData>& operator[](const int iPos) {
 #ifdef _DEBUG_
 		if ((iPos < 0) || (iPos > iRow - 1))
 		{
@@ -291,7 +291,7 @@ public:
 		return ppData[iPos];}
 
 #ifdef _DEBUG_
-	CVector<TData> operator[](const int iPos) const {
+	inline CVector<TData> operator[](const int iPos) const {
 		if ((iPos < 0) || (iPos > iRow - 1))
 		{
 			DebugError("Matrix: Reading vector out of bounds", "Row size",
