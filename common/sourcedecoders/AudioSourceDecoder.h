@@ -54,6 +54,7 @@ protected:
 	class CInitErr {};
 	_BOOLEAN			bTextMessageUsed;
 	int					iNumAACFrames;
+	int					iNumBorders;
 
 	CTextMessage		TextMessage;
 
@@ -75,11 +76,10 @@ protected:
 	CVector<_BYTE>		aac_crc_bits;
 	CMatrix<_BYTE>		audio_frame;
 	CVector<int>		veciFrameLength;
-	CVector<int>		veciBorders;
 
 	int					iMaxLenOneAudFrame;
 
-	int					iNoChannelsAAC;
+	int					iNumChannelsAAC;
 
 	int					iLenDecOutPerChan;
 
