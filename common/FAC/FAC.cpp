@@ -375,16 +375,9 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		/* Search table for entry */
 		int iNoServTabEntry = (*pbiFACData).Separate(4);
 		for (int i = 0; i < 5; i++)
-		{
 			for (int j = 0; j < 5; j++)
-			{
 				if (iNoServTabEntry == iTableNoOfServices[i][j])
-				{
-					Parameter.SetNoAudioServ(i);
-					Parameter.SetNoDataServ(j);
-				}
-			}
-		}
+					Parameter.SetNumOfServices(i, j);
 
 		/* Reconfiguration index */
 		Parameter.iReConfigIndex = (*pbiFACData).Separate(3);

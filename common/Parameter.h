@@ -193,6 +193,8 @@ public:
 	public:
 		CService() : strLabel("") {}
 
+		_BOOLEAN IsActive() {return iServiceID != SERV_ID_NOT_USED;}
+
 		_UINT32BIT	iServiceID;
 		ECACond		eCAIndication;
 		int			iLanguage;
@@ -251,6 +253,7 @@ public:
 
 	void			ResetServicesStreams();
 	void			GetActiveStreams(CVector<int>& veciActStr);
+	int				GetNumActiveServices();
 	void			InitCellMapTable(const ERobMode eNewWaveMode, const ESpecOcc eNewSpecOcc);
 
 	void			SetNoDecodedBitsMSC(const int iNewNoDecodedBitsMSC);
@@ -281,8 +284,9 @@ public:
 	void			SetSpectrumOccup(ESpecOcc eNewSpecOcc);
 	ESpecOcc		GetSpectrumOccup() const {return eSpectOccup;}
 
-	void			SetNoAudioServ(const int iNewNoAuSe);
-	void			SetNoDataServ(const int iNewNoDaSe);
+	void			SetNumOfServices(const int iNNoAuSe, const int iNNoDaSe);
+	int				GetTotNumServices()
+						{return iNoAudioService + iNoDataService;}
 
 	void			SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl);
 	void			SetServID(const int iServID, const _UINT32BIT iNewServID);

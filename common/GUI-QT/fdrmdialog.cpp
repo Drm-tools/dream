@@ -223,8 +223,7 @@ void FDRMDialog::OnTimer()
 		}
 
 		/* Check whether service parameters were not transmitted yet */
-		if (DRMReceiver.GetParameters()->Service[iCurSelServ].
-			iServiceID != SERV_ID_NOT_USED)
+		if (DRMReceiver.GetParameters()->Service[iCurSelServ].IsActive())
 		{
 			/* Service label (UTF-8 encoded string -> convert) */
 			TextServiceLabel->setText(QString().fromUtf8(QCString(
@@ -285,8 +284,7 @@ void FDRMDialog::OnTimer()
 
 		/* Enable only so many number of channel switches as present in the 
 		   stream */
-		int iNoServices = DRMReceiver.GetParameters()->iNoAudioService + 
-			DRMReceiver.GetParameters()->iNoDataService;
+		int iNoServices = DRMReceiver.GetParameters()->GetTotNumServices();
 
 		QString m_StaticService[MAX_NO_SERVICES] = {"", "", "", ""};
 
@@ -303,8 +301,7 @@ void FDRMDialog::OnTimer()
 		for (int i = 0; i < MAX_NO_SERVICES; i++)
 		{
 			/* Check, if service is used */
-			if (DRMReceiver.GetParameters()->Service[i].
-				iServiceID != SERV_ID_NOT_USED)
+			if (DRMReceiver.GetParameters()->Service[i].IsActive())
 			{
 				/* Do UTF-8 to string converion with the label strings */
 				QString strLabel = QString().fromUtf8(QCString(DRMReceiver.

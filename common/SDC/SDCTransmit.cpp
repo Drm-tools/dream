@@ -110,8 +110,7 @@ int CSDCTransmit::DataEntityType0(CVector<_BINARY>* pbiData,
 	const int iNoBitsHeader = 12; /* Data entity header */
 
 	/* 24 bits for each stream description + 4 bits for protection levels */
-	iNoBitsTotal = 4 + (Parameter.iNoAudioService + 
-		Parameter.iNoDataService) * 24;
+	iNoBitsTotal = 4 + Parameter.GetTotNumServices() * 24;
 
 	/**** Multiplex description data entity - type 0 ****/
 	/* Length of the body, excluding the initial 4 bits ("- 4"), 
@@ -133,7 +132,7 @@ int CSDCTransmit::DataEntityType0(CVector<_BINARY>* pbiData,
 	/* Protection level for part B */
 	(*pbiData).Enqueue((_UINT32BIT) Parameter.MSCPrLe.iPartB, 2);
 
-	for (int i = 0; i < Parameter.iNoAudioService + Parameter.iNoDataService; i++)
+	for (int i = 0; i < Parameter.GetTotNumServices(); i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hirarchical data */

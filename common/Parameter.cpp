@@ -77,6 +77,17 @@ void CParameter::ResetServicesStreams()
 	}
 }
 
+int CParameter::GetNumActiveServices()
+{
+	int iNumAcServ = 0;
+
+	for (int i = 0; i < MAX_NO_SERVICES; i++)
+		if (Service[i].IsActive())
+			iNumAcServ++;
+
+	return iNumAcServ;
+}
+
 void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 {
 	int					i;
@@ -86,7 +97,7 @@ void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 	/* Determine which streams are active */
 	for (i = 0; i < MAX_NO_SERVICES; i++)
 	{
-		if (Service[i].iServiceID != SERV_ID_NOT_USED)
+		if (Service[i].IsActive())
 		{
 			/* Audio stream */
 			if (Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED)
@@ -363,22 +374,19 @@ void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
 	}
 }
 
-void CParameter::SetNoAudioServ(const int iNewNoAuSe)
+void CParameter::SetNumOfServices(const int iNNoAuSe, const int iNNoDaSe)
 {
-	if (iNoAudioService != iNewNoAuSe)
+	if ((iNoAudioService != iNNoAuSe) || (iNoDataService != iNNoDaSe))
 	{
-		iNoAudioService = iNewNoAuSe;
+		iNoAudioService = iNNoAuSe;
+		iNoDataService = iNNoDaSe;
 
-		/* Set init flags */
-		DRMReceiver.InitsForMSCDemux();
-	}
-}
-
-void CParameter::SetNoDataServ(const int iNewNoDaSe)
-{
-	if (iNoDataService != iNewNoDaSe)
-	{
-		iNoDataService = iNewNoDaSe;
+		/* Check whether number of activated services is not greater than the
+		   number of services signalled by the FAC because it can happen that
+		   a false CRC check (it is only a 8 bit CRC) of the FAC block
+		   initializes a wrong service */
+		if (GetNumActiveServices() > GetTotNumServices())
+			ResetServicesStreams();
 
 		/* Set init flags */
 		DRMReceiver.InitsForMSCDemux();
