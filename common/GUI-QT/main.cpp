@@ -43,7 +43,7 @@ CDRMTransmitter	DRMTransmitter;
 CDRMSimulation	DRMSimulation;
 
 /* This pointer is only used for the post-event routine */
-QApplication*	pApp;	
+QApplication*	pApp = NULL;	
 
 
 /* Thread class for the receiver */
@@ -75,6 +75,8 @@ catch (CGenErr GenErr)
 /* Implementation *************************************************************/
 int main(int argc, char** argv)
 {
+try
+{
 	QApplication	app(argc, argv); // Application object
 	ReceiverThread	RecThread; // Working thread object
 	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_Minimize); // Main dialog
@@ -85,12 +87,6 @@ int main(int argc, char** argv)
 // Activate this to start the transmitter and generate a DRM stream
 //DRMTransmitter.StartTransmitter();
 
-	/* Set main window */
-	app.setMainWidget(&MainDlg);
-	pApp = &app;
-
-try
-{
 	/* Call simulation script. If simulation is activated, application is 
 	   automatically exit in that routine. If in the script no simulation is
 	   activated, this function will immediately return */
@@ -103,6 +99,10 @@ try
 
 	/* Start thread */
 	RecThread.start();
+
+	/* Set main window */
+	app.setMainWidget(&MainDlg);
+	pApp = &app;
 
 	/* Show dialog, working thread must be initialized before starting the 
 	   GUI! */
@@ -129,10 +129,14 @@ catch (CGenErr GenErr)
 /* Implementation of global functions *****************************************/
 void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam)
 {
-	DRMEvent* DRMEv = new DRMEvent(MessID, iMessageParam);
+	/* In case of simulation no events should be generated */
+	if (pApp != NULL)
+	{
+		DRMEvent* DRMEv = new DRMEvent(MessID, iMessageParam);
 
-	/* Qt will delete the event object when done */
-	QThread::postEvent(pApp->mainWidget(), DRMEv);
+		/* Qt will delete the event object when done */
+		QThread::postEvent(pApp->mainWidget(), DRMEv);
+	}
 }
 
 void DebugError(const char* pchErDescr, const char* pchPar1Descr, 

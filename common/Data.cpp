@@ -134,7 +134,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				/* Estimate remaining time */
 				lReTi =
 					(long int) (((_REAL) iNoErrors - TransmParam.iNoBitErrors) /
-					iNoErrors * tiElTi);
+					TransmParam.iNoBitErrors * tiElTi);
 
 				/* Store current counter position in file */
 				pFileCurPos = fopen(strFileName.c_str(), "w");
@@ -160,7 +160,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 					iCounter, iMinNoBlocks, tiElTi / 60, lReTi / 60);
 
 				lReTi = (long int) (((_REAL) iNoErrors - TransmParam.iNoBitErrors) /
-					iNoErrors * tiElTi);
+					TransmParam.iNoBitErrors * tiElTi);
 				fprintf(pFileCurPos,
 					"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
 					TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
