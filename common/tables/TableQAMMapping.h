@@ -29,6 +29,7 @@
 #if !defined(QAM_MAPPING_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_)
 #define QAM_MAPPING_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_
 
+#include "../matlib/Matlib.h"
 #include "../GlobalDefinitions.h"
 
 
@@ -80,6 +81,116 @@ const _REAL rTableQAM4[2][2] = {
 	{ 0.7071067811f,  0.7071067811f},
 	{-0.7071067811f, -0.7071067811f}
 };
+
+
+/* Global functions ***********************************************************/
+/*
+	Implementation of hard decision for all QAM types
+*/
+inline CComplex Dec4QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   2 possible constellation points for real and imaginary axis */
+	return
+		CComplex(
+			/* Real axis minimum distance */
+			Min(
+				Abs(rTableQAM4[0][0] - Real(cI)),
+				Abs(rTableQAM4[1][0] - Real(cI))
+			),
+			/* Imaginary axis minimum distance */
+			Min(
+				Abs(rTableQAM4[0][1] - Imag(cI)),
+				Abs(rTableQAM4[1][1] - Imag(cI))
+			)
+		);
+}
+
+inline CComplex Dec16QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   4 possible constellation points for real and imaginary axis */
+	return
+		CComplex(
+			/* Real axis minimum distance */
+			Min(
+				Min(
+					Min(
+						Abs(rTableQAM16[0][0] - Real(cI)),
+						Abs(rTableQAM16[1][0] - Real(cI))
+					),
+					Abs(rTableQAM16[2][0] - Real(cI))
+				),
+				Abs(rTableQAM16[3][0] - Real(cI))
+			),
+			/* Imaginary axis minimum distance */
+			Min(
+				Min(
+					Min(
+						Abs(rTableQAM16[0][1] - Imag(cI)),
+						Abs(rTableQAM16[1][1] - Imag(cI))
+					),
+					Abs(rTableQAM16[2][1] - Imag(cI))
+				),
+				Abs(rTableQAM16[3][1] - Imag(cI))
+			)
+		);
+}
+
+inline CComplex Dec64QAM(const CComplex cI)
+{
+	/* Return vector pointing to nearest signal point of this constellation.
+	   8 possible constellation points for real and imaginary axis */
+	return
+		CComplex(
+			/* Real axis minimum distance */
+			Min(
+				Min(
+					Min(
+						Min(
+							Min(
+								Min(
+									Min(
+										Abs(rTableQAM64SM[0][0] - Real(cI)),
+										Abs(rTableQAM64SM[1][0] - Real(cI))
+									),
+									Abs(rTableQAM64SM[2][0] - Real(cI))
+								),
+								Abs(rTableQAM64SM[3][0] - Real(cI))
+							),
+							Abs(rTableQAM64SM[4][0] - Real(cI))
+						),
+						Abs(rTableQAM64SM[5][0] - Real(cI))
+					),
+					Abs(rTableQAM64SM[6][0] - Real(cI))
+				),
+				Abs(rTableQAM64SM[7][0] - Real(cI))
+			),
+			/* Imaginary axis minimum distance */
+			Min(
+				Min(
+					Min(
+						Min(
+							Min(
+								Min(
+									Min(
+										Abs(rTableQAM64SM[0][1] - Imag(cI)),
+										Abs(rTableQAM64SM[1][1] - Imag(cI))
+									),
+									Abs(rTableQAM64SM[2][1] - Imag(cI))
+								),
+								Abs(rTableQAM64SM[3][1] - Imag(cI))
+							),
+							Abs(rTableQAM64SM[4][1] - Imag(cI))
+						),
+						Abs(rTableQAM64SM[5][1] - Imag(cI))
+					),
+					Abs(rTableQAM64SM[6][1] - Imag(cI))
+				),
+				Abs(rTableQAM64SM[7][1] - Imag(cI))
+			)
+		);
+}
 
 
 #endif // !defined(QAM_MAPPING_H__3B0_CA63_4344_BB2B_23E7912__INCLUDED_)

@@ -172,7 +172,6 @@ protected:
 
 	int					iStartZeroPadding;
 
-	CReal				TentativeFACDec(const CComplex cCurRec) const;
 
 	/* Wiener interpolation in frequency direction */
 	void UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,

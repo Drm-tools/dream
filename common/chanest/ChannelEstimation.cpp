@@ -300,9 +300,12 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				/* Only use FAC cells for this SNR estimation method */
 				if (_IsFAC(ReceiverParam.matiMapTab[iModSymNum][i]))
 				{
-					/* Get tentative decision for current FAC cell (squared) */
-					CReal rCurErrPow =
-						TentativeFACDec((*pvecOutputData)[i].cSig);
+					/* Get tentative decision for this FAC QAM symbol. FAC is
+					   always 4-QAM. Calculate all distances to the four
+					   possible constellation points of a 4-QAM and use the
+					   squared result of the returned distance vector */
+					const CReal rCurErrPow =
+						SqMag(Dec4QAM((*pvecOutputData)[i].cSig));
 
 					/* Use decision together with channel estimate to get
 					   estimates for signal and noise */
@@ -650,27 +653,6 @@ fflush(pFile);
 		for (i = 0; i < iLengthWiener; i++)
 			matcFiltFreq[j][i] = matcWienerFilter[iDiff][i];
 	}
-}
-
-CReal CChannelEstimation::TentativeFACDec(const CComplex cCurRec) const
-{
-/* 
-	Get tentative decision for this FAC QAM symbol. FAC is always 4-QAM.
-	First calculate all distances to the four possible constellation points
-	of a 4-QAM
-*/
-	/* Real axis minimum distance */
-	const CReal rDistReal = Min(
-		Abs(rTableQAM4[0][0] - Real(cCurRec)),
-		Abs(rTableQAM4[1][0] - Real(cCurRec)));
-
-	/* Imaginary axis minimum distance */
-	const CReal rDistImag = Min(
-		Abs(rTableQAM4[0][1] - Imag(cCurRec)),
-		Abs(rTableQAM4[1][1] - Imag(cCurRec)));
-
-	/* Return squared minimum distance */
-	return SqMag(CComplex(rDistReal, rDistImag));
 }
 
 _REAL CChannelEstimation::GetSNREstdB() const
