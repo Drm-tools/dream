@@ -68,8 +68,8 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	enum ECharType {AVERAGED_IR, TRANSFERFUNCTION, 
-					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION, 
+	enum ECharType {AVERAGED_IR, TRANSFERFUNCTION,
+					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
 					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV};
 
 	systemevalDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,

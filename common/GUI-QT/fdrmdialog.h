@@ -122,7 +122,7 @@ public slots:
 	void OnViewEvalDlg();
 	void OnViewMultiMediaDlg();
 	void OnViewStationsDlg();
-	void OnHelpAbout();
+	void OnHelpAbout() {AboutDlg.exec();}
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
 	void OnReceiverMode(int id);
