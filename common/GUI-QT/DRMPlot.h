@@ -77,7 +77,8 @@ public:
 	void SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-					const _REAL rDCFreq);
+					const _REAL rDCFreq, const _REAL rBWCenter = (_REAL) 0.0,
+					const _REAL rBWWidth = (_REAL) 0.0);
 	void SetFACConst(CVector<_COMPLEX>& veccData);
 	void SetSDCConst(CVector<_COMPLEX>& veccData,
 					 CParameter::ECodScheme eNewCoSc);

@@ -268,10 +268,10 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 }
 
 void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
-						  const _REAL rDCFreq)
+						  const _REAL rDCFreq, const _REAL rBWCenter,
+						  const _REAL rBWWidth)
 {
-	long	lCurveDC;
-	double	dX[2], dY[2];
+	double dX[2], dY[2];
 
 	/* Init chart for power spectram density estimation */
 	setTitle("Input Spectrum");
@@ -290,7 +290,7 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	clear();
 
 	/* Insert line for DC carrier */
-	lCurveDC = insertCurve("DC carrier");
+	long lCurveDC = insertCurve("DC carrier");
 	setCurvePen(lCurveDC, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
 
 	dX[0] = dX[1] = rDCFreq / 1000;
@@ -301,6 +301,25 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 
 	setCurveData(lCurveDC, dX, dY, 2);
 
+	/* Insert marker for filter bandwidth if required */
+	if (rBWWidth != (_REAL) 0.0)
+	{
+		/* Insert line for bandwidth marker */
+		long lCurveBW = insertCurve("BW");
+		setCurvePen(lCurveBW, QPen(SPEC_LINE1_COLOR_PLOT, 6));
+
+		dX[0] = (rBWCenter - rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
+		dX[1] = (rBWCenter + rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
+
+		/* Take the min-max values from scale to get vertical line */
+		dY[0] = cdAxMinLeft;
+		dY[1] = cdAxMinLeft;
+
+		setCurveData(lCurveBW, dX, dY, 2);
+	}
+
+
+	/* Insert actual spectrum data */
 	SetData(vecrData, vecrScale);
 	replot();
 }
