@@ -697,10 +697,21 @@ void StationsDlg::showEvent(QShowEvent* pEvent)
 	/* If number of stations is zero, we assume that the ini file is missing */
 	if (DRMSchedule.GetStationNumber() == 0)
 	{
-		QMessageBox::information(this, "Dream", tr("The file DRMSchedule.ini "
-			"could not be found or contains no data.\nNo stations can be "
-			"displayed.\nTry to download this file by using the 'Update' "
-			"menu."), QMessageBox::Ok);
+		if (DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM)
+		{
+			QMessageBox::information(this, "Dream", tr("The file "
+				DRMSCHEDULE_INI_FILE_NAME
+				" could not be found or contains no data.\nNo "
+				"stations can be displayed.\nTry to download this file by "
+				"using the 'Update' menu."), QMessageBox::Ok);
+		}
+		else
+		{
+			QMessageBox::information(this, "Dream", tr("The file "
+				AMSCHEDULE_INI_FILE_NAME
+				" could not be found or contains no data.\nNo "
+				"stations can be displayed."), QMessageBox::Ok);
+		}
 	}
 }
 
