@@ -104,6 +104,9 @@ if test "x$WITHQTGUI" = xyes; then
 	AC_SUBST(QWTINCL, "-I/usr/include/qwt")
 
 	AC_DEFINE(USE_QT_GUI, 1, [Define if you want to use the QT GUI])
+	AM_CONDITIONAL(USE_QT, true)
+else
+	AM_CONDITIONAL(USE_QT, false)
 fi
 
 dnl Hamlib (optional) -----------------------------------------------------------
@@ -127,14 +130,6 @@ if test "x$WITHFAAD2" = xyes; then
 	AC_DEFINE(USE_FAAD2_LIBRARY, 1, [Define if you want to use the faad2 library])
 fi
 
-dnl Journaline (optional) -------------------------------------------------------
-if test "x$WITHJOURNALINE" = xyes; then
-	dnl can't check the library, as it has unresolved symbols
-	AC_CHECK_HEADERS(journaline/NML.h, ,exit 1)
-	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libfhgjournaline])
-	LIBS="-lfhgjournaline $LIBS"
-fi
-
 dnl FreeImage (optional) --------------------------------------------------------
 if test "x$WITHFREEIMAGE" = xyes; then
 	AC_CHECK_HEADER(FreeImage.h, , have_freeimage=no)
@@ -143,6 +138,15 @@ if test "x$WITHFREEIMAGE" = xyes; then
 	if test "x$have_freeimage" = "xno"; then
 		AC_MSG_ERROR( "FreeImage library not found" )
 	fi
+fi
+
+dnl PUT THIS AT THE END, because FhG Journaline library has undefined symbols
+dnl Journaline (optional) -------------------------------------------------------
+if test "x$WITHJOURNALINE" = xyes; then
+	dnl can't check the library, as it has unresolved symbols
+	AC_CHECK_HEADERS(journaline/NML.h, ,exit 1)
+	AC_DEFINE(HAVE_JOURNALINE, 1, [Define if you have libfhgjournaline])
+	LIBS="-lfhgjournaline $LIBS"
 fi
 
 
