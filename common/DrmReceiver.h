@@ -90,7 +90,7 @@ public:
 #ifdef HAVE_LIBHAMLIB
 		, strHamlibConf(""), iHamlibModelID(0), bEnableSMeter(TRUE)
 #endif
-#ifdef USE_QT_GUI
+#if defined(USE_QT_GUI) || defined(_WIN32)
 		, iMainPlotColorStyle(0) /* default color scheme: blue-white */
 #endif
 		{}
@@ -161,7 +161,9 @@ public:
 	_BOOLEAN				GetEnableSMeter() const {return bEnableSMeter;}
 #endif
 
-#ifdef USE_QT_GUI
+/* _WIN32 check because in Visual c++ the GUI files are always compiled even
+   if USE_QT_GUI is set or not */
+#if defined(USE_QT_GUI) || defined(_WIN32)
 	/* DRMReceiver object serves as a storage a "exchange platform" for the
 	   window size and position parameters for init-file usage. This is not
 	   nice but it works for now. TODO: better solution */

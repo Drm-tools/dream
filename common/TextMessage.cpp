@@ -488,7 +488,7 @@ void CTextMessageDecoder::SetText()
 					for (int j = 0; j < Segment[i].iNumBytes; j++)
 					{
 						/* Get character */
-						const char cNewChar = Segment[i].byData[j];
+						char cNewChar = Segment[i].byData[j];
 
 						switch (cNewChar)
 						{
