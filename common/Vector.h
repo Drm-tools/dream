@@ -205,6 +205,9 @@ template<class TData> class CShiftRegister : public CVector<TData>
 {
 public:
 	CShiftRegister() {}
+	CShiftRegister(const int iNeSi) : CVector<TData>(iNeSi) {}
+	CShiftRegister(const int iNeSi, const TData tInVa) :
+		CVector<TData>(iNeSi, tInVa) {}
 	virtual ~CShiftRegister() {}
 
 	/* Add one value at the beginning, shift the others to the right */
