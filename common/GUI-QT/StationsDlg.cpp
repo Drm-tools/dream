@@ -674,7 +674,7 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 					"Due to network problems with the Windows version of QT, "
 					"the Dream software must be restarted after a DRMSchedule "
 					"update.\nPlease exit Dream now."),
-					"Ok");
+					tr("Ok"));
 #else
 				QMessageBox::information(this, "Dream",
 					tr("Update successful."), QMessageBox::Ok);
