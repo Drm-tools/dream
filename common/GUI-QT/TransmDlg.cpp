@@ -67,8 +67,12 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		RadioButtonOutReal->setChecked(TRUE);
 		break;
 
-	case CTransmitData::OF_IQ:
-		RadioButtonOutIQ->setChecked(TRUE);
+	case CTransmitData::OF_IQ_POS:
+		RadioButtonOutIQPos->setChecked(TRUE);
+		break;
+
+	case CTransmitData::OF_IQ_NEG:
+		RadioButtonOutIQNeg->setChecked(TRUE);
 		break;
 
 	case CTransmitData::OF_EP:
@@ -899,12 +903,18 @@ void TransmDialog::OnRadioOutput(int iID)
 		break;
 
 	case 1:
-		/* Button "I / Q" */
+		/* Button "I / Q (pos)" */
 		TransThread.DRMTransmitter.GetTransData()->
-			SetIQOutput(CTransmitData::OF_IQ);
+			SetIQOutput(CTransmitData::OF_IQ_POS);
 		break;
 
 	case 2:
+		/* Button "I / Q (neg)" */
+		TransThread.DRMTransmitter.GetTransData()->
+			SetIQOutput(CTransmitData::OF_IQ_NEG);
+		break;
+
+	case 3:
 		/* Button "E / P" */
 		TransThread.DRMTransmitter.GetTransData()->
 			SetIQOutput(CTransmitData::OF_EP);
@@ -1130,7 +1140,8 @@ void TransmDialog::AddWhatsThisHelp()
 		"channel.") + "</li></ul>";
 
 	QWhatsThis::add(RadioButtonOutReal, strOutputFormat);
-	QWhatsThis::add(RadioButtonOutIQ, strOutputFormat);
+	QWhatsThis::add(RadioButtonOutIQPos, strOutputFormat);
+	QWhatsThis::add(RadioButtonOutIQNeg, strOutputFormat);
 	QWhatsThis::add(RadioButtonOutEP, strOutputFormat);
 
 	/* MSC interleaver mode */

@@ -839,15 +839,30 @@ Institute for Communication Technology</string>
                                     <class>QRadioButton</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>RadioButtonOutIQ</cstring>
+                                        <cstring>RadioButtonOutIQPos</cstring>
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>I / Q</string>
+                                        <string>I / Q (pos)</string>
                                     </property>
                                     <property>
                                         <name>buttonGroupId</name>
                                         <number>1</number>
+                                    </property>
+                                </widget>
+                                <widget>
+                                    <class>QRadioButton</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>RadioButtonOutIQNeg</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>I / Q (neg)</string>
+                                    </property>
+                                    <property>
+                                        <name>buttonGroupId</name>
+                                        <number>2</number>
                                     </property>
                                 </widget>
                                 <widget>
@@ -862,7 +877,7 @@ Institute for Communication Technology</string>
                                     </property>
                                     <property>
                                         <name>buttonGroupId</name>
-                                        <number>2</number>
+                                        <number>3</number>
                                     </property>
                                 </widget>
                             </hbox>
