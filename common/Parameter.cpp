@@ -151,7 +151,7 @@ void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 	}
 }
 
-_REAL CParameter::GetBitRate(int iServiceID)
+_REAL CParameter::GetBitRateKbps(int iServiceID)
 {
 	int iNoBitsPerFrame;
 	int iLenPartA;

@@ -274,7 +274,7 @@ public:
 						(rFreqOffsetAcqui + rFreqOffsetTrack);}
 	_REAL			GetSampFreqEst() const {return rResampleOffset;}
 
-	_REAL			GetBitRate(int iServiceID);
+	_REAL			GetBitRateKbps(int iServiceID);
 	_BOOLEAN		IsEEP(int iServiceID); /* Is service equal error protection */
 
 
