@@ -47,10 +47,12 @@
 /* Bound for sinusoid interferer cancellation algorithm */
 #define LEVEL_DIFF_EQU_DIST_FRPI		((CReal) 0.8)
 
-#define NO_BLOCKS_4_FREQ_ACQU			4
+/* This value MUST BE AT LEAST 2, because otherwise we would get an overrun
+   when we try to add a complete symbol to the buffer! */
+#define NO_BLOCKS_4_FREQ_ACQU			5
 
 /* Number of blocks before using the average of input spectrum */
-#define NO_BLOCKS_BEFORE_US_AV			8
+#define NO_BLOCKS_BEFORE_US_AV			10
 
 /* The average symbol duration of all possible robustness modes is 22.5 ms. A
    timeout of approx. 2 seconds corresponds from that to 100 */
@@ -66,8 +68,8 @@ class CFreqSyncAcq : public CReceiverModul<_REAL, _REAL>
 {
 public:
 	CFreqSyncAcq() : bSyncInput(FALSE), bAquisition(FALSE), 
-		rCenterFreq((_REAL) 0.0),
-		rWinSize((_REAL) 0.0) {}
+		rWinSize((_REAL) 0.0), veciTableFreqPilots(3), /* 3 freqency pilots */
+		rCenterFreq((_REAL) 0.0) {}
 	virtual ~CFreqSyncAcq() {}
 
 	void SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize);
@@ -79,14 +81,13 @@ public:
 	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
 
 protected:
-	int							piTableFreqPilots[3]; /* 3 freqency pilots */
+	CVector<int>				veciTableFreqPilots;
 	CShiftRegister<fftw_real>	vecrFFTHistory;
 
 	CFftPlans					FftPlan;
 	CRealVector					vecrFFTInput;
 	CComplexVector				veccFFTOutput;
 
-	int							iSymbolBlockSize;
 	int							iTotalBufferSize;
 
 	int							iFFTSize;

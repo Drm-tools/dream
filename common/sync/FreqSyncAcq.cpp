@@ -47,7 +47,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	if (bAquisition == TRUE)
 	{
 		/* Add new symbol in history (shift register) */
-		vecrFFTHistory.AddEnd((*pvecInputData), iSymbolBlockSize);
+		vecrFFTHistory.AddEnd((*pvecInputData), iInputBlockSize);
 
 
 		/* Start algorithm when history memory is filled -------------------- */
@@ -93,9 +93,9 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				   spectrum */
 				for (i = 0; i < iSearchWinSize; i++)
 					vecrPSDPilCor[i] = 
-						vecrPSD[i + piTableFreqPilots[0]] +
-						vecrPSD[i + piTableFreqPilots[1]] +
-						vecrPSD[i + piTableFreqPilots[2]];
+						vecrPSD[i + veciTableFreqPilots[0]] +
+						vecrPSD[i + veciTableFreqPilots[1]] +
+						vecrPSD[i + veciTableFreqPilots[2]];
 
 
 				/* -------------------------------------------------------------
@@ -149,11 +149,11 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 						/* Fill the vector with the values at the desired 
 						   pilot positions */
 						vecrPSDPilPoin[0] =
-							vecrPSD[veciPeakIndex[i] + piTableFreqPilots[0]];
+							vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[0]];
 						vecrPSDPilPoin[1] =
-							vecrPSD[veciPeakIndex[i] + piTableFreqPilots[1]];
+							vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[1]];
 						vecrPSDPilPoin[2] =
-							vecrPSD[veciPeakIndex[i] + piTableFreqPilots[2]];
+							vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[2]];
 
 						/* Sort, to extract the highest and second highest
 						   peak */
@@ -288,68 +288,18 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	_REAL	rNormDesPos;
 	_REAL	rNormWinSize;
 
-	/* Get frequency pilot table (750 Hz, 2250 Hz, and 3000 Hz) */
-	switch (ReceiverParam.GetWaveMode())
-	{
-	case RM_ROBUSTNESS_MODE_A:
-		/* The number stored in table "iTableFreqPilRobModA" must be
-		   adjusted to the new fft-window-size */
-		piTableFreqPilots[0] = (int) ((_REAL) iTableFreqPilRobModA[0][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		piTableFreqPilots[1] = (int) ((_REAL) iTableFreqPilRobModA[1][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		piTableFreqPilots[2] = (int) ((_REAL) iTableFreqPilRobModA[2][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		break;
-
-	case RM_ROBUSTNESS_MODE_B:
-		piTableFreqPilots[0] = (int) ((_REAL) iTableFreqPilRobModB[0][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		piTableFreqPilots[1] = (int) ((_REAL) iTableFreqPilRobModB[1][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		piTableFreqPilots[2] = (int) ((_REAL) iTableFreqPilRobModB[2][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		break;
-
-	case RM_ROBUSTNESS_MODE_C:
-		piTableFreqPilots[0] = (int) ((_REAL) iTableFreqPilRobModC[0][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		piTableFreqPilots[1] = (int) ((_REAL) iTableFreqPilRobModC[1][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		piTableFreqPilots[2] = (int) ((_REAL) iTableFreqPilRobModC[2][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		break;
-
-	case RM_ROBUSTNESS_MODE_D:
-		piTableFreqPilots[0] = (int) ((_REAL) iTableFreqPilRobModD[0][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		piTableFreqPilots[1] = (int) ((_REAL) iTableFreqPilRobModD[1][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		piTableFreqPilots[2] = (int) ((_REAL) iTableFreqPilRobModD[2][0] *
-			NO_BLOCKS_4_FREQ_ACQU * ((_REAL) ReceiverParam.RatioTgTu.iEnum /
-			ReceiverParam.RatioTgTu.iDenom + 1));
-		break;
-	}
-
-	/* Needed for calculating offset in Hertz */
+	/* Needed for calculating offset in Hertz in case of synchronized input
+	   (for simulation) */
 	iFFTSize = ReceiverParam.iFFTSizeN;
-	
-	/* Symbol block size is the guard-interval plus the useful part */
-	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+
+	/* We using parameters from robustness mode B as pattern for the desired
+	   frequency pilot positions */
+	veciTableFreqPilots[0] = iTableFreqPilRobModB[0][0] * NO_BLOCKS_4_FREQ_ACQU;
+	veciTableFreqPilots[1] = iTableFreqPilRobModB[1][0] * NO_BLOCKS_4_FREQ_ACQU;
+	veciTableFreqPilots[2] = iTableFreqPilRobModB[2][0] * NO_BLOCKS_4_FREQ_ACQU;
 
 	/* Total buffer size */
-	iTotalBufferSize = NO_BLOCKS_4_FREQ_ACQU * iSymbolBlockSize;
+	iTotalBufferSize = RMB_FFT_SIZE_N * NO_BLOCKS_4_FREQ_ACQU;
 
 
 	/* -------------------------------------------------------------------------
@@ -366,7 +316,7 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 
 	/* Search window is smaller than haft-buffer size because of correlation
 	   with pilot positions */
-	iSearchWinSize = iHalfBuffer - piTableFreqPilots[2];
+	iSearchWinSize = iHalfBuffer - veciTableFreqPilots[2];
 
 	iStartDCSearch = (int) ((rNormDesPos - rWinSize / 2) * iHalfBuffer);
 	iEndDCSearch = (int) ((rNormDesPos + rWinSize / 2) * iHalfBuffer);
@@ -379,6 +329,7 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 		iEndDCSearch = iHalfBuffer;
 
 
+	/* Init vectors and fft plan -------------------------------------------- */
 	/* Allocate memory for FFT-histories and init with zeros */
 	vecrFFTHistory.Init(iTotalBufferSize, (_REAL) 0.0);
 	vecrFFTInput.Init(iTotalBufferSize);
@@ -401,9 +352,10 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	FftPlan.Init(iTotalBufferSize);
 
 	/* Define block-sizes for input (The output block size is set inside
-	   the processing routine) */
-	iInputBlockSize = iSymbolBlockSize;
-	iMaxOutputBlockSize = iSymbolBlockSize; // Because output can be 0 sometimes
+	   the processing routine, therefore only a maximum block size is set
+	   here) */
+	iInputBlockSize = ReceiverParam.iSymbolBlockSize;
+	iMaxOutputBlockSize = ReceiverParam.iSymbolBlockSize;
 }
 
 void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)
