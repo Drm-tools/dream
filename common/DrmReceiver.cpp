@@ -134,25 +134,10 @@ void CDRMReceiver::Run()
 				{
 					bEnoughData = TRUE;
 
-
-					MutexHist.Lock(); /* MUTEX vvvvvvvvvv */
-
 					/* If this module has finished, all synchronization units
 					   have also finished their OFDM symbol based estimates.
 					   Update synchronization parameters histories */
-					/* TODO: do not use the shift register class, build a new
-					   one which just incremets a pointer in a buffer and put
-					   the new value at the position of the pointer instead of
-					   moving the total data all the time -> special care has
-					   to be taken when reading out the data */
-					/* Frequency offset tracking values */
-					vecrFreqSyncValHist.AddEnd(ReceiverParam.rFreqOffsetTrack *
-						SOUNDCRD_SAMPLE_RATE);
-
-					/* Sample rate offset estimation */
-					vecrSamOffsValHist.AddEnd(ReceiverParam.GetSampFreqEst());
-
-					MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
+					UpdateParamHistories();
 				}
 
 				/* Demapping of the MSC, FAC, SDC and pilots off the carriers */
@@ -382,15 +367,6 @@ void CDRMReceiver::SetInStartMode()
 
 	/* Reset GUI lights */
 	PostWinMessage(MS_RESET_ALL);
-
-
-	MutexHist.Lock(); /* MUTEX vvvvvvvvvv */
-
-	/* Reset synchronization parameter histories */
-	vecrFreqSyncValHist.Reset((_REAL) 0.0);
-	vecrSamOffsValHist.Reset((_REAL) 0.0);
-
-	MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
 }
 
 void CDRMReceiver::SetInTrackingMode()
@@ -518,6 +494,12 @@ void CDRMReceiver::InitsForAllModules()
    and decide on which parameters the modules depend on */
 void CDRMReceiver::InitsForWaveMode()
 {
+	/* Reset averaging of the parameter histories (needed, e.g., because the
+	   number of OFDM symbols per DRM frame might have changed) */
+	iAvCntParamHist = 0;
+	rAvLenIRHist = (_REAL) 0.0;
+	rAvDopplerHist = (_REAL) 0.0;
+
 	/* After a new robustness mode was detected, give the time synchronization
 	   a bit more time for its job */
 	iAcquDetecCnt = 0;
@@ -608,6 +590,59 @@ void CDRMReceiver::InitsForDataParam()
 	DataDecoder.SetInitFlag();
 }
 
+
+/* Parameter histories for plot --------------------------------------------- */
+void CDRMReceiver::UpdateParamHistories()
+{
+	/* TODO: do not use the shift register class, build a new
+	   one which just incremets a pointer in a buffer and put
+	   the new value at the position of the pointer instead of
+	   moving the total data all the time -> special care has
+	   to be taken when reading out the data */
+
+	/* Only update histories if the receiver is in tracking mode */
+	if (eReceiverState == RS_TRACKING)
+	{
+		MutexHist.Lock(); /* MUTEX vvvvvvvvvv */
+
+		/* Frequency offset tracking values */
+		vecrFreqSyncValHist.AddEnd(
+			ReceiverParam.rFreqOffsetTrack *
+			SOUNDCRD_SAMPLE_RATE);
+
+		/* Sample rate offset estimation */
+		vecrSamOffsValHist.AddEnd(ReceiverParam.
+			GetSampFreqEst());
+
+		/* Get estimated Doppler value */
+		_REAL rDoppler;
+		ChannelEstimation.GetSigma(rDoppler);
+
+		/* Average Doppler and delay estimates */
+		rAvLenIRHist += ChannelEstimation.GetDelay();
+		rAvDopplerHist += rDoppler;
+
+		/* Only evalute Doppler and delay once in one DRM
+		   frame */
+		iAvCntParamHist++;
+		if (iAvCntParamHist == ReceiverParam.iNumSymPerFrame)
+		{
+			/* Apply averaged values to the history vectors */
+			vecrLenIRHist.AddEnd(
+				rAvLenIRHist / ReceiverParam.iNumSymPerFrame);
+			vecrDopplerHist.AddEnd(
+				rAvDopplerHist / ReceiverParam.iNumSymPerFrame);
+
+			/* Reset parameters used for averaging */
+			iAvCntParamHist = 0;
+			rAvLenIRHist = (_REAL) 0.0;
+			rAvDopplerHist = (_REAL) 0.0;
+		}
+
+		MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
+	}
+}
+
 void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
 									  CVector<_REAL>& vecrSamOffs,
 									  CVector<_REAL>& vecrScale,
@@ -635,6 +670,35 @@ void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
 
 	/* Value from frequency acquisition */
 	rFreqAquVal = ReceiverParam.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
+
+	/* Release resources */
+	MutexHist.Unlock();
+}
+
+void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
+									 CVector<_REAL>& vecrDoppler,
+									 CVector<_REAL>& vecrScale)
+{
+	/* Init output vectors */
+	vecrLenIR.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrDoppler.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+
+	/* Lock resources */
+	MutexHist.Lock();
+
+	/* Simply copy history buffers in output buffers */
+	vecrLenIR = vecrLenIRHist;
+	vecrDoppler = vecrDopplerHist;
+
+	/* Duration of DRM frame */
+	const _REAL rDRMFrameDur = (CReal) (ReceiverParam.iFFTSizeN +
+		ReceiverParam.iGuardSize) / SOUNDCRD_SAMPLE_RATE *
+		ReceiverParam.iNumSymPerFrame;
+
+	/* Calculate time scale */
+	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
+		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur;
 
 	/* Release resources */
 	MutexHist.Unlock();

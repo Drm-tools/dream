@@ -120,6 +120,10 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnButtonAudioSpec()));
 	connect(ButtonFreqSamHist, SIGNAL(clicked()),
 		this, SLOT(OnButtonFreqSamHist()));
+	connect(ButtonDelDoppHist, SIGNAL(clicked()),
+		this, SLOT(OnButtonDelDoppHist()));
+	connect(ButtonAllConst, SIGNAL(clicked()),
+		this, SLOT(OnButtonAllConst()));
 
 	connect(buttonOk, SIGNAL(clicked()),
 		this, SLOT(accept()));
@@ -315,7 +319,7 @@ void systemevalDlg::OnTimerChart()
 {
 	CVector<_REAL>		vecrData;
 	CVector<_REAL>		vecrData2;
-	CVector<_COMPLEX>	veccData;
+	CVector<_COMPLEX>	veccData1, veccData2, veccData3;
 	CVector<_REAL>		vecrScale;
 	_REAL				rLowerBound, rHigherBound;
 	_REAL				rStartGuard, rEndGuard;
@@ -380,30 +384,48 @@ void systemevalDlg::OnTimerChart()
 			rFreqAcquVal);
 		break;
 
-	case FAC_CONSTELLATION:
-		/* Get data vector */
-		DRMReceiver.GetFACMLC()->GetVectorSpace(veccData);
+	case DOPPLER_DELAY_HIST:
+		/* Get data from module */
+		DRMReceiver.GetDopplerDelHist(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
-		MainPlot->SetFACConst(veccData);
+		MainPlot->SetDopplerDelayHist(vecrData, vecrData2, vecrScale);
+		break;
+
+	case FAC_CONSTELLATION:
+		/* Get data vector */
+		DRMReceiver.GetFACMLC()->GetVectorSpace(veccData1);
+
+		/* Prepare graph and set data */
+		MainPlot->SetFACConst(veccData1);
 		break;
 
 	case SDC_CONSTELLATION:
 		/* Get data vector */
-		DRMReceiver.GetSDCMLC()->GetVectorSpace(veccData);
+		DRMReceiver.GetSDCMLC()->GetVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
-		MainPlot->SetSDCConst(veccData, 
+		MainPlot->SetSDCConst(veccData1, 
 			DRMReceiver.GetParameters()->eSDCCodingScheme);
 		break;
 
 	case MSC_CONSTELLATION:
 		/* Get data vector */
-		DRMReceiver.GetMSCMLC()->GetVectorSpace(veccData);
+		DRMReceiver.GetMSCMLC()->GetVectorSpace(veccData1);
 
 		/* Prepare graph and set data */
-		MainPlot->SetMSCConst(veccData, 
+		MainPlot->SetMSCConst(veccData1, 
 			DRMReceiver.GetParameters()->eMSCCodingScheme);
+		break;
+
+	case ALL_CONSTELLATION:
+		/* Get data vectors */
+		DRMReceiver.GetMSCMLC()->GetVectorSpace(veccData1);
+		DRMReceiver.GetSDCMLC()->GetVectorSpace(veccData2);
+		DRMReceiver.GetFACMLC()->GetVectorSpace(veccData3);
+
+		/* Prepare graph and set data */
+		MainPlot->SetAllConst(veccData1, veccData2, veccData3);
 		break;
 	}
 }
@@ -696,9 +718,11 @@ void systemevalDlg::SetupChart(const ECharType eNewType)
 	case FAC_CONSTELLATION:
 	case SDC_CONSTELLATION:
 	case MSC_CONSTELLATION:
+	case ALL_CONSTELLATION:
 	case INPUTSPECTRUM_NO_AV:
 	case AUDIO_SPECTRUM:
 	case FREQ_SAM_OFFS_HIST:
+	case DOPPLER_DELAY_HIST:
 		/* Slow update of plot */
 		TimerChart.start(GUI_CONTROL_UPDATE_TIME);
 		break;

@@ -90,11 +90,17 @@ public:
 	void SetFreqSamOffsHist(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 							CVector<_REAL>& vecrScale,
 							const _REAL rFreqOffAcquVal);
+	void SetDopplerDelayHist(CVector<_REAL>& vecrData,
+							 CVector<_REAL>& vecrData2,
+							 CVector<_REAL>& vecrScale);
 	void SetFACConst(CVector<_COMPLEX>& veccData);
 	void SetSDCConst(CVector<_COMPLEX>& veccData,
 					 CParameter::ECodScheme eNewCoSc);
 	void SetMSCConst(CVector<_COMPLEX>& veccData,
 					 CParameter::ECodScheme eNewCoSc);
+	void SetAllConst(CVector<_COMPLEX>& veccMSC,
+					 CVector<_COMPLEX>& veccSDC,
+					 CVector<_COMPLEX>& veccFAC);
 	void SetPlotStyle(const int iNewStyleID);
 
 protected:
@@ -104,6 +110,10 @@ protected:
 				 CVector<_REAL>& vecrScale, const int  size = 0,
 				 const int size2 = 0);
 	void SetData(CVector<_COMPLEX>& veccData, QColor color, const int  size);
+	void SetData(CVector<_COMPLEX>& veccMSCConst,
+				 CVector<_COMPLEX>& veccSDCConst,
+				 CVector<_COMPLEX>& veccFACConst,
+				 QColor colorMSC, QColor colorSDC, QColor colorFAC);
 	void SetQAM4Grid();
 	void SetQAM16Grid();
 	void SetQAM64Grid();

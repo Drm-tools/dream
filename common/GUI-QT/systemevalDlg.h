@@ -68,7 +68,7 @@ public:
 	enum ECharType {AVERAGED_IR, TRANSFERFUNCTION,
 					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
 					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
-					FREQ_SAM_OFFS_HIST};
+					FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION};
 
 	systemevalDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
@@ -112,6 +112,8 @@ public slots:
 	void OnButtonAvIR() {SetupChart(AVERAGED_IR);}
 	void OnButtonTransFct() {SetupChart(TRANSFERFUNCTION);}
 	void OnButtonFreqSamHist() {SetupChart(FREQ_SAM_OFFS_HIST);}
+	void OnButtonDelDoppHist() {SetupChart(DOPPLER_DELAY_HIST);}
+	void OnButtonAllConst() {SetupChart(ALL_CONSTELLATION);}
 	void OnButtonFACConst() {SetupChart(FAC_CONSTELLATION);}
 	void OnButtonSDCConst() {SetupChart(SDC_CONSTELLATION);}
 	void OnButtonMSCConst() {SetupChart(MSC_CONSTELLATION);}
