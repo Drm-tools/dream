@@ -347,6 +347,9 @@ void systemevalDlg::hideEvent(QHideEvent* pEvent)
 	/* Close all additional chart windows if this dialog is not shown */
 	for (int i = 0; i < vecpDRMPlots.Size(); i++)
 		vecpDRMPlots[i]->close();
+
+	/* We do not need the pointers anymore, reset vector */
+	vecpDRMPlots.Init(0);
 }
 
 void systemevalDlg::SetStatus(int MessID, int iMessPara)
@@ -674,8 +677,9 @@ void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
 void systemevalDlg::OnListRightButClicked(QListViewItem* NewSelIt,
 										  const QPoint& iPnt, int iCol)
 {
-	/* Show menu at mouse position */
-	pListViewContextMenu->exec(QCursor::pos());
+	/* Show menu at mouse position only if selectable item was chosen */
+	if (NewSelIt->isSelectable())
+		pListViewContextMenu->exec(QCursor::pos());
 }
 
 void systemevalDlg::OnListViContMenu()
@@ -688,6 +692,9 @@ void systemevalDlg::OnListViContMenu()
 		/* Open new chart window */
 		CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
 		pNewChartWin->setCaption(tr("Chart Window"));
+
+		/* Set color scheme */
+		pNewChartWin->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
 
 		/* Set correct icon (use the same as this dialog) */
 		pNewChartWin->setIcon(*this->icon());
