@@ -108,7 +108,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	_REAL	rMyFading;
 
 	/* Set channel parameter according to selected channel number (table B.1) */
-	switch (ReceiverParam.iDRMChannelNo)
+	switch (ReceiverParam.iDRMChannelNum)
 	{
 	case 1:
 		/* AWGN */

@@ -50,25 +50,25 @@ void CDRMSimulation::SimScript()
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
 	Param.eSimType = CParameter::ST_BITERROR;
-	Param.eSimType = CParameter::ST_BER_IDEALCHAN;
 	Param.eSimType = CParameter::ST_MSECHANEST;
+	Param.eSimType = CParameter::ST_BER_IDEALCHAN;
 	Param.eSimType = CParameter::ST_NONE;
 	
 	if (Param.eSimType != CParameter::ST_NONE)
 	{
-		Param.iDRMChannelNo = 5;
+		Param.iDRMChannelNum = 5;
 
 		rStartSNR = (_REAL) 20.0;
 		rEndSNR = (_REAL) 20.0;
 		rStepSNR = (_REAL) 0.5;
-		strSpecialRemark = "wienertest";
+		strSpecialRemark = "test";
 
 		/* Length of simulation */
-		iSimTime = 200;
-//		iSimNumErrors = 1000000;
+//		iSimTime = 200;
+		iSimNumErrors = 1000000;
 
 
-		if (Param.iDRMChannelNo < 3)
+		if (Param.iDRMChannelNum < 3)
 		{
 			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2);
 			Param.eSymbolInterlMode = CParameter::SI_SHORT;
@@ -212,7 +212,7 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf)
 	/* Channel number */
 	strFileName += "CH";
 	char chNumTmp;
-	sprintf(&chNumTmp, "%d", Param.iDRMChannelNo);
+	sprintf(&chNumTmp, "%d", Param.iDRMChannelNum);
 	strFileName += chNumTmp;
 	strFileName += "_";
 

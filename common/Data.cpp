@@ -300,7 +300,7 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
 
 	/* Minimum simulation time depends on the selected channel */
-	switch (TransmParam.iDRMChannelNo)
+	switch (TransmParam.iDRMChannelNum)
 	{
 	case 1:
 		/* AWGN: No fading */

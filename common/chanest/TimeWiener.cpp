@@ -316,7 +316,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 		rSNR = pow(10, ReceiverParam.rSimSNRdB / 10);
 	
 		/* Sigma from channel profiles */
-		switch (ReceiverParam.iDRMChannelNo)
+		switch (ReceiverParam.iDRMChannelNum)
 		{
 		case 1:
 		case 2:

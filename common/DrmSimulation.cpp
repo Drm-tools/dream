@@ -294,6 +294,6 @@ CDRMSimulation::CDRMSimulation()
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
 
 	/* DRM channel parameters */
-	Param.iDRMChannelNo = 1;
+	Param.iDRMChannelNum = 1;
 	Param.rSimSNRdB = 25;
 }

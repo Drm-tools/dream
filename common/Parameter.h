@@ -400,7 +400,7 @@ public:
 	/* Simulation ----------------------------------------------------------- */
 	ESimType			eSimType;
 
-	int					iDRMChannelNo;
+	int					iDRMChannelNum;
 	_REAL				rSimSNRdB;
 	_REAL				rBitErrRate;
 	int					iNumBitErrors;
