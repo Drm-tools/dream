@@ -92,7 +92,8 @@ protected:
 	CReal			rDefCarOffset;
 	CRealVector		rvecA;
 	CRealVector		rvecB;
-	CRealVector		rvecZ; /* State memory */
+	CRealVector		rvecZReal; /* State memory real part */
+	CRealVector		rvecZImag; /* State memory imaginary part */
 	CRealVector		rvecDataReal;
 	CRealVector		rvecDataImag;
 

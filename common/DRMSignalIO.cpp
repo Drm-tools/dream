@@ -69,10 +69,10 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 	}
 
 	/* Actual filter routine (use saved state vector) */
-	rvecDataReal = Filter(rvecB, rvecA, rvecDataReal, rvecZ);
+	rvecDataReal = Filter(rvecB, rvecA, rvecDataReal, rvecZReal);
 
 	if (eOutputFormat == OF_IQ)
-		rvecDataImag = Filter(rvecB, rvecA, rvecDataImag, rvecZ);
+		rvecDataImag = Filter(rvecB, rvecA, rvecDataImag, rvecZImag);
 
 
 	/* Convert vector type. Fill vector with symbols (collect them) */
@@ -220,7 +220,8 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	rvecA[0] = (CReal) 1.0;
 
 	/* State memory (init with zeros) and data vector */
-	rvecZ.Init(NUM_TAPS_TRANSMFILTER - 1, (CReal) 0.0);
+	rvecZReal.Init(NUM_TAPS_TRANSMFILTER - 1, (CReal) 0.0);
+	rvecZImag.Init(NUM_TAPS_TRANSMFILTER - 1, (CReal) 0.0);
 	rvecDataReal.Init(TransmParam.iSymbolBlockSize);
 	rvecDataImag.Init(TransmParam.iSymbolBlockSize);
 
