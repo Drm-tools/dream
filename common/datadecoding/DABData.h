@@ -33,12 +33,72 @@
 #include "../Vector.h"
 #include "../CRC.h"
 
-#ifdef _WIN32
-# include <windows.h>
-#endif
-
 
 /* Classes ********************************************************************/
+class CMOTObjSegm
+{
+public:
+	CVector<CVector<_BINARY> > vvbiHeader;
+	CVector<CVector<_BINARY> > vvbiBody;
+};
+
+class CDataUnit
+{
+public:
+	CDataUnit() {Reset();}
+
+	void Reset();
+	void Add(CVector<_BINARY>& vecbiNewData, int iSegmentSize, int iSegNum);
+
+	CVector<_BINARY>	vecbiData;
+	_BOOLEAN			bOK;
+	_BOOLEAN			bReady;
+	int					iDataSegNum;
+};
+
+class CMOTObject
+{
+public:
+	int					iTransportID;
+	CDataUnit			Header;
+	CDataUnit			Body;
+};
+
+
+/* Encoder ------------------------------------------------------------------ */
+class CDABDataEnc
+{
+public:
+	CDABDataEnc() {}
+	virtual ~CDABDataEnc() {}
+
+	void Init();
+	void GetDataUnit(CVector<_BINARY>& vecbiNewData);
+
+
+protected:
+	void GenMOTSegments(CMOTObjSegm& MOTObjSegm);
+	void PartitionUnits(CVector<_BINARY>& vecbiSource,
+						CVector<CVector<_BINARY> >& vecbiDest,
+						const int iPartiSize);
+
+	void GenMOTObj(CVector<_BINARY>& vecbiData, CVector<_BINARY>& vecbiSeg,
+				   const _BOOLEAN bHeader, const int iSegNum,
+				   const int iTranspID, const _BOOLEAN bLastSeg);
+
+	CMOTObjSegm MOTObjSegments;
+
+	int			iSegmCnt;
+	_BOOLEAN	bCurSegHeader;
+
+	int			iContIndexHeader;
+	int			iContIndexBody;
+
+	int			iTransportID;
+};
+
+
+/* Decoder ------------------------------------------------------------------ */
 class CMOTPicture
 {
 public:
@@ -57,29 +117,8 @@ public:
 
 	void AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic);
 
+
 protected:
-	class CDataUnit
-	{
-	public:
-		CDataUnit() {Reset();}
-
-		void Reset();
-		void Add(CVector<_BINARY>& vecbiNewData, int iSegmentSize, int iSegNum);
-
-		CVector<_BINARY>	vecbiData;
-		_BOOLEAN			bOK;
-		_BOOLEAN			bReady;
-		int					iDataSegNum;
-	};
-
-	class CMOTObject
-	{
-	public:
-		int					iTransportID;
-		CDataUnit			Header;
-		CDataUnit			Body;
-	};
-
 	CMOTObject MOTObject;
 };
 

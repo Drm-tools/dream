@@ -256,11 +256,11 @@ int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID,
 	switch (Parameter.Service[ServiceID].DataParam.ePacketModInd)
 	{
 	case CParameter::PM_SYNCHRON_STR_MODE:
-		iNumBitsTotal = 12 /* + application data TODO! */;
+		iNumBitsTotal = 12 + 16 /* TEST */ /* + application data TODO! */;
 		break;
 
 	case CParameter::PM_PACKET_MODE:
-		iNumBitsTotal = 20 /* + application data TODO! */;
+		iNumBitsTotal = 20 + 16 /* TEST */ /* + application data TODO! */;
 		break;
 	}
 
@@ -334,6 +334,16 @@ int CSDCTransmit::DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID,
 
 	/* Application data */
 // Not used
+
+// TEST
+/* Fixed implementation for MOTSlideshow application which is the one and
+   only supported application right now. TODO */
+/* rfu */
+(*pbiData).Enqueue((_UINT32BIT) 0, 5);
+
+/* User application identifier. SlideShow = 2 */
+(*pbiData).Enqueue((_UINT32BIT) 2, 11);
+
 
 	return iNumBitsTotal + NUM_BITS_HEADER_SDC;
 }

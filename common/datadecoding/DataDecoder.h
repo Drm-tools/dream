@@ -38,11 +38,35 @@
 
 
 /* Definitions ****************************************************************/
-/* Maximum number of packtes per stream */
+/* Maximum number of packets per stream */
 #define MAX_NUM_PACK_PER_STREAM					4
 
 
 /* Classes ********************************************************************/
+/* Encoder ------------------------------------------------------------------ */
+class CDataEncoder
+{
+public:
+	CDataEncoder() {}
+	virtual ~CDataEncoder() {}
+
+	int Init(CParameter& Param);
+	void GeneratePacket(CVector<_BINARY>& vecbiPacket);
+
+
+protected:
+	CDABDataEnc			DABDataEncoder;
+	CVector<_BINARY>	vecbiCurDataUnit;
+
+	int					iPacketLen;
+	int					iTotalPacketSize;
+	int					iCurDataPointer;
+	int					iPacketID;
+	int					iContinInd;
+};
+
+
+/* Decoder ------------------------------------------------------------------ */
 class CDataDecoder : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
@@ -50,6 +74,7 @@ public:
 	virtual ~CDataDecoder() {}
 
 	void GetSlideShowPicture(CMOTPicture& NewPic);
+
 
 protected:
 	class CDataUnit
