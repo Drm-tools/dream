@@ -299,8 +299,10 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 				iLenCorrectionHist - (iResOffAcqCntMax - iSymDelay)],
 				iResOffAcqCntMax - iSymDelay - 1);
 
+#ifndef USE_SAMOFFS_TRACK_FRE_PIL
 			/* Apply initial sample rate offset estimation */
-			Parameter.rResampleOffset = -rInitSamOffset;
+			Parameter.rResampleOffset -= rInitSamOffset;
+#endif
 
 			/* Reset estimation history (init with zeros) since the sample
 			   rate offset was changed */
@@ -314,8 +316,10 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 			CReal rSamOffset = GetSamOffHz(iCurRes - veciSRTiCorrHist[0],
 				iLenCorrectionHist - 1);
 
+#ifndef USE_SAMOFFS_TRACK_FRE_PIL
 			/* Apply result from sample rate offset estimation */
 			Parameter.rResampleOffset -= CONTR_SAMP_OFF_INT_FTI * rSamOffset;
+#endif
 		}
 	}
 
