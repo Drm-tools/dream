@@ -194,12 +194,12 @@ void MultimediaDlg::SetJournalineText()
 		QString strCurItem = QString().fromUtf8(
 			QCString(News.vecItem[i].sText.c_str()));
 
-		if (News.vecItem[i].iLink == -2)
+		if (News.vecItem[i].iLink == JOURNALINE_IS_NO_LINK)
 		{
 			/* Only text, no link */
 			strItems += strCurItem + QString("<br>");
 		}
-		else if (News.vecItem[i].iLink == -1)
+		else if (News.vecItem[i].iLink == JOURNALINE_LINK_NOT_ACTIVE)
 		{
 			/* Un-ordered list item without link */
 			strItems += QString("<li>") + strCurItem + QString("</li>");
