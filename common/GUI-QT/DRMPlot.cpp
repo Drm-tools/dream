@@ -961,17 +961,17 @@ void CDRMPlot::SetupAllConst()
 	clear();
 	curve1 = insertCurve("MSC");
 	setCurveSymbol(curve1, MarkerSym1);
-	setCurvePen(curve1, QPen(PenStyle::NoPen));
+	setCurvePen(curve1, QPen(Qt::NoPen));
 	enableLegend(TRUE, curve1);
 
 	curve2 = insertCurve("SDC");
 	setCurveSymbol(curve2, MarkerSym2);
-	setCurvePen(curve2, QPen(PenStyle::NoPen));
+	setCurvePen(curve2, QPen(Qt::NoPen));
 	enableLegend(TRUE, curve2);
 
 	curve3 = insertCurve("FAC");
 	setCurveSymbol(curve3, MarkerSym3);
-	setCurvePen(curve3, QPen(PenStyle::NoPen));
+	setCurvePen(curve3, QPen(Qt::NoPen));
 	enableLegend(TRUE, curve3);
 }
 
