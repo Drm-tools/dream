@@ -1,3 +1,10 @@
+1.0.6
+	- Improved AM demodulation (introduced new window) -> AM, USB, LSB; different filters
+	- Stations dialog with update function (using DRM schedule powered by Klaus Schneider www.drm-dx.de)
+	- Remote control for different front-ends (e.g., Winradio, AOR7030, Elektor)
+	- GUI for DRM transmitter (start with command line flag '-t')
+	- MOT Slide Show encoder + lots of fixes for DRM transmitter
+
 1.0
 	- New SNR estimation
 	- New algorithm for sample rate offset estimation
