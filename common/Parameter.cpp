@@ -208,27 +208,41 @@ _REAL CParameter::GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData)
 	return (_REAL) iNoBitsPerFrame * 3 / 1.2 / 1000;
 }
 
-_BOOLEAN CParameter::IsEEP(int iServiceID)
+_REAL CParameter::PartABLenRatio(const int iServiceID)
 {
 	/* Check the length of protection part A */
 	if (Service[iServiceID].eAudDataFlag == SF_AUDIO)
 	{
 		if (Service[iServiceID].AudioParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			if (Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA != 0)
-				return FALSE;
+			const int iLenA =
+				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartA;
+
+			const int iLenB =
+				Stream[Service[iServiceID].AudioParam.iStreamID].iLenPartB;
+
+			const int iTotLen = iLenA + iLenB;
+
+			return (_REAL) iLenA / iTotLen;
 		}
 	}
 	else
 	{
 		if (Service[iServiceID].DataParam.iStreamID != STREAM_ID_NOT_USED)
 		{
-			if (Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA != 0)
-				return FALSE;
+			const int iLenA =
+				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartA;
+
+			const int iLenB =
+				Stream[Service[iServiceID].DataParam.iStreamID].iLenPartB;
+
+			const int iTotLen = iLenA + iLenB;
+
+			return (_REAL) iLenA / iTotLen;
 		}
 	}
 
-	return TRUE;
+	return (_REAL) 0.0;
 }
 
 void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,

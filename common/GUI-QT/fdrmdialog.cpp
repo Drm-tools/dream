@@ -918,10 +918,20 @@ QString	FDRMDialog::SetBitrIDStr(int iServiceID)
 		tr(" kbps");
 
 	/* Equal or unequal error protection */
-	if (pDRMRec->GetParameters()->IsEEP(iServiceID) == TRUE)
-		strServIDBitrate += " EEP";
+	const _REAL rPartABLenRat =
+		pDRMRec->GetParameters()->PartABLenRatio(iServiceID);
+
+	if (rPartABLenRat != (_REAL) 0.0)
+	{
+		/* Print out the percentage of part A length to total length */
+		strServIDBitrate += " UEP (" +
+			QString().setNum(rPartABLenRat * 100, 'f', 1) + " %)";
+	}
 	else
-		strServIDBitrate += " UEP";
+	{
+		/* If part A is zero, equal error protection (EEP) is used */
+		strServIDBitrate += " EEP";
+	}
 
 	/* Service ID */
 	strServIDBitrate += " / ID:";
@@ -1024,8 +1034,9 @@ void FDRMDialog::AddWhatsThisHelp()
 		"UEP is a feature of DRM for a graceful degradation of the decoded "
 		"audio signal in case of a bad reception situation. UEP means that "
 		"some parts of the audio is higher protected and some parts are lower "
-		"protected. On the right, the ID number connected with this service "
-		"is shown.");
+		"protected (the ratio of higher protected part length to total length "
+		"is shown in the brackets). On the right, the ID number connected with "
+		"this service is shown.");
 
 	QWhatsThis::add(TextServiceAudio, strStationLabelOther);
 	QWhatsThis::add(TextServiceLabel, strStationLabelOther);

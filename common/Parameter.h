@@ -275,7 +275,7 @@ public:
 	_REAL			GetSampFreqEst() const {return rResampleOffset;}
 
 	_REAL			GetBitRateKbps(const int iServiceID, const _BOOLEAN bAudData);
-	_BOOLEAN		IsEEP(int iServiceID); /* Is service equal error protection */
+	_REAL			PartABLenRatio(const int iServiceID);
 
 
 	/* Parameters controlled by FAC ----------------------------------------- */
