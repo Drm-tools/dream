@@ -375,10 +375,12 @@ public:
 		void SetFrequency(const int iNewFreq) {iFrequency = iNewFreq;}
 		int GetFrequency() {return iFrequency;}
 		void SetLatitude(const string strLat) {strLatitude = strLat;}
+		string GetLatitude() {return strLatitude;}
 		void SetLongitude(const string strLon) {strLongitude = strLon;}
+		string GetLongitude() {return strLongitude;}
 		void SetAdditText(const string strNewTxt) {strAdditText = strNewTxt;}
 		void WriteParameters(const _BOOLEAN bIsLong);
-		void SetDelLogStart(const int iSecDel) {bDelayedLogStart = TRUE; iSecDelLogStart = iSecDel;}
+		void SetDelLogStart(const int iSecDel);
 		_BOOLEAN IsDelLogStart() {return bDelayedLogStart;}
 		int GetDelLogStart() {return iSecDelLogStart;}
 

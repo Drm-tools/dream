@@ -582,6 +582,16 @@ CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFileLong(NULL),
 	ResetLog(FALSE);
 }
 
+void CParameter::CReceptLog::SetDelLogStart(const int iSecDel)
+{
+	/* If the parameter is 0, no delayed log file shall be used */
+	if (iSecDel > 0)
+	{
+		bDelayedLogStart = TRUE;
+		iSecDelLogStart = iSecDel;
+	}
+}
+
 void CParameter::CReceptLog::ResetLog(const _BOOLEAN bIsLong)
 {
 	if (bIsLong == TRUE)
