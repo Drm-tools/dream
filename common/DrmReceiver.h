@@ -71,7 +71,7 @@
 #define NUM_FAC_DEL_TRACK_SWITCH		2
 
 /* Length of the history for synchronization parameters (used for the plot) */
-#define LEN_HIST_PLOT_SYNC_PARMS		1500
+#define LEN_HIST_PLOT_SYNC_PARMS		2250
 
 
 /* Classes ********************************************************************/

@@ -723,9 +723,9 @@ void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 		ReceiverParam.iGuardSize) / SOUNDCRD_SAMPLE_RATE *
 		ReceiverParam.iNumSymPerFrame;
 
-	/* Calculate time scale */
+	/* Calculate time scale in minutes */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
-		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur;
+		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur / 60;
 
 	/* Release resources */
 	MutexHist.Unlock();
@@ -755,8 +755,8 @@ void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
 	   be transformed from "int" to "real", therefore we need a for-loop */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
 	{
-		/* Scale */
-		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur;
+		/* Scale in minutes */
+		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur / 60;
 
 		/* Correctly decoded audio blocks */
 		vecrCDAud[i] = (_REAL) veciCDAudHist[i];
