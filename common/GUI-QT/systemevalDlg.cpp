@@ -450,7 +450,7 @@ void systemevalDlg::OnTimer()
 
 	/* Number of services #################### */
 	strFACInfo = "Audio: ";
-	strFACInfo = QString().setNum(DRMReceiver.GetParameters()->iNumAudioService);
+	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->iNumAudioService);
 	strFACInfo += " / Data: ";
 	strFACInfo +=QString().setNum(DRMReceiver.GetParameters()->iNumDataService);
 
