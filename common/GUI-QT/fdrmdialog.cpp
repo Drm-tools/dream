@@ -38,7 +38,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Set version number in about dialog */
 	QString strVersionText;
 	strVersionText = "<center><b>Dream, Version ";
-	strVersionText += DREAM_VERSION_NUMBER;
+	strVersionText += VERSION;
 	strVersionText += "</b><br> Open-Source Software Implementation of a "
 		"DRM-Receiver<br>";
 	strVersionText += "Under the GNU General Public License (GPL)</center>";

@@ -721,8 +721,7 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 	if (pFile != NULL)
 	{
 		/* Beginning of new table (similar to standard DRM log file) */
-		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n",
-			DREAM_VERSION_NUMBER);
+		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n", VERSION);
 
 		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
 			today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
