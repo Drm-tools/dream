@@ -119,7 +119,7 @@ drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
 
 if USE_QT
 
-drm_SOURCES = $(drmwithoutqt_SOURCES) \
+drmqtonly_SOURCES = \
 	../common/GUI-QT/DRMPlot.cpp \
 	../common/GUI-QT/fdrmdialog.cpp \
 	../common/GUI-QT/TransmDlg.cpp \
@@ -145,6 +145,9 @@ drm_SOURCES = $(drmwithoutqt_SOURCES) \
 	../common/GUI-QT/StationsDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/MDI.h
+	
+drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES)
+
 
 # these need to be generated before the rest can be compiled
 
@@ -264,6 +267,14 @@ moc/AnalogDemDlgbase.h: ../common/GUI-QT/AnalogDemDlgbase.ui
 
 moc/AnalogDemDlgbase.cpp: ../common/GUI-QT/AnalogDemDlgbase.ui moc/AnalogDemDlgbase.h
 	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -i moc/AnalogDemDlgbase.h -o moc/AnalogDemDlgbase.cpp	
+
+
+# QT translation file (added by Stephane Fillod 11/10/2004)
+
+LUPDATE=lupdate
+
+drm.ts: $(drmqtonly_SOURCES)
+	$(LUPDATE) $(drmqtonly_SOURCES) -ts $@
 
 else
 drm_SOURCES = $(drmwithoutqt_SOURCES)

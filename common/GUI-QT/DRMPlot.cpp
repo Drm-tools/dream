@@ -205,27 +205,27 @@ void CDRMPlot::SetData(CVector<_COMPLEX>& veccMSCConst,
 void CDRMPlot::SetupAvIR()
 {
 	/* Init chart for averaged impulse response */
-	setTitle("Channel Impulse Response");
+	setTitle(tr("Channel Impulse Response"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Time [ms]");
-	setAxisTitle(QwtPlot::yLeft, "IR [dB]");
+	setAxisTitle(QwtPlot::xBottom, tr("Time [ms]"));
+	setAxisTitle(QwtPlot::yLeft, tr("IR [dB]"));
 
 	/* Insert curves */
 	clear();
-	curve1 = insertCurve("Guard-interval beginning");
-	curve2 = insertCurve("Guard-interval end");
-	curve3 = insertCurve("Estimated begin of impulse response");
-	curve4 = insertCurve("Estimated end of impulse response");
+	curve1 = insertCurve(tr("Guard-interval beginning"));
+	curve2 = insertCurve(tr("Guard-interval end"));
+	curve3 = insertCurve(tr("Estimated begin of impulse response"));
+	curve4 = insertCurve(tr("Estimated end of impulse response"));
 	setCurvePen(curve1, QPen(SpecLine1ColorPlot, 1, DotLine));
 	setCurvePen(curve2, QPen(SpecLine1ColorPlot, 1, DotLine));
 	setCurvePen(curve3, QPen(SpecLine2ColorPlot, 1, DotLine));
 	setCurvePen(curve4, QPen(SpecLine2ColorPlot, 1, DotLine));
 
-	curve5 = insertCurve("Higher Bound");
+	curve5 = insertCurve(tr("Higher Bound"));
 #ifdef _DEBUG_
-	curve6 = insertCurve("Lower bound");
+	curve6 = insertCurve(tr("Lower bound"));
 	setCurvePen(curve5, QPen(SpecLine1ColorPlot));
 	setCurvePen(curve6, QPen(SpecLine2ColorPlot));
 #else
@@ -233,7 +233,7 @@ void CDRMPlot::SetupAvIR()
 #endif
 
 	/* Add main curve */
-	main1curve = insertCurve("Channel Impulse Response");
+	main1curve = insertCurve(tr("Channel Impulse Response"));
 	
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
@@ -321,14 +321,14 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 void CDRMPlot::SetupTranFct()
 {
 	/* Init chart for transfer function */
-	setTitle("Channel Transfer Function / Group Delay");
+	setTitle(tr("Channel Transfer Function / Group Delay"));
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Carrier Index");
-	setAxisTitle(QwtPlot::yLeft, "TF [dB]");
+	setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
+	setAxisTitle(QwtPlot::yLeft, tr("TF [dB]"));
 
-	setAxisTitle(QwtPlot::yRight, "Group Delay [ms]");
+	setAxisTitle(QwtPlot::yRight, tr("Group Delay [ms]"));
 	setAxisScale(QwtPlot::yRight, (double) -50.0, (double) 50.0);
 
 	/* Fixed scale */
@@ -336,7 +336,7 @@ void CDRMPlot::SetupTranFct()
 
 	/* Add main curves */
 	clear();
-	main1curve = insertCurve("Transf. Fkt.");
+	main1curve = insertCurve(tr("Transf. Fkt."));
 	main2curve = insertCurve("Group Del.", QwtPlot::xBottom, QwtPlot::yRight);
 
 	/* Curve colors */
@@ -370,11 +370,11 @@ void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 void CDRMPlot::SetupAudioSpec()
 {
 	/* Init chart for audio spectrum */
-	setTitle("Audio Spectrum");
+	setTitle(tr("Audio Spectrum"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
+	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
 	setAxisTitle(QwtPlot::yLeft, "AS [dB]");
 
 	/* Fixed scale */
@@ -387,7 +387,7 @@ void CDRMPlot::SetupAudioSpec()
 
 	/* Add main curve */
 	clear();
-	main1curve = insertCurve("Audio Spectrum");
+	main1curve = insertCurve(tr("Audio Spectrum"));
 	
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
@@ -410,17 +410,17 @@ void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 void CDRMPlot::SetupFreqSamOffsHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
-	setTitle("Rel. Frequency Offset / Sample Rate Offset History");
+	setTitle(tr("Rel. Frequency Offset / Sample Rate Offset History"));
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Time [s]");
-	setAxisTitle(QwtPlot::yRight, "Sample Rate Offset [Hz]");
+	setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
+	setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
 
 	/* Add main curves */
 	clear();
-	main1curve = insertCurve("Freq.");
-	main2curve = insertCurve("Samp.",
+	main1curve = insertCurve(tr("Freq."));
+	main2curve = insertCurve(tr("Samp."),
 		QwtPlot::xBottom, QwtPlot::yRight);
 
 	/* Curve colors */
@@ -446,7 +446,7 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 		SetupFreqSamOffsHist();
 	}
 
-	QString strYLeftLabel = "Freq. Offset [Hz] rel. to " +
+	QString strYLeftLabel = tr("Freq. Offset [Hz] rel. to ") +
 		QString().setNum(rFreqOffAcquVal) + " Hz";
 	setAxisTitle(QwtPlot::yLeft, strYLeftLabel);
 
@@ -490,13 +490,13 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 void CDRMPlot::SetupDopplerDelayHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
-	setTitle("Delay / Doppler History");
+	setTitle(tr("Delay / Doppler History"));
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Time [min]");
-	setAxisTitle(QwtPlot::yLeft, "Delay [ms]");
-	setAxisTitle(QwtPlot::yRight, "Doppler [Hz]");
+	setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
+	setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
+	setAxisTitle(QwtPlot::yRight, tr("Doppler [Hz]"));
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 10.0);
@@ -504,8 +504,8 @@ void CDRMPlot::SetupDopplerDelayHist()
 
 	/* Add main curves */
 	clear();
-	main1curve = insertCurve("Delay");
-	main2curve = insertCurve("Doppler", QwtPlot::xBottom, QwtPlot::yRight);
+	main1curve = insertCurve(tr("Delay"));
+	main2curve = insertCurve(tr("Doppler"), QwtPlot::xBottom, QwtPlot::yRight);
 
 	/* Curve colors */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
@@ -539,13 +539,13 @@ void CDRMPlot::SetDopplerDelayHist(CVector<_REAL>& vecrData,
 void CDRMPlot::SetupSNRAudHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
-	setTitle("SNR / Correctly Decoded Audio History");
+	setTitle(tr("SNR / Correctly Decoded Audio History"));
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Time [min]");
-	setAxisTitle(QwtPlot::yLeft, "SNR [dB]");
-	setAxisTitle(QwtPlot::yRight, "Corr. Dec. Audio / DRM-Frame");
+	setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
+	setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
+	setAxisTitle(QwtPlot::yRight, tr("Corr. Dec. Audio / DRM-Frame"));
 
 	/* Add main curves */
 	clear();
@@ -617,12 +617,12 @@ void CDRMPlot::SetSNRAudHist(CVector<_REAL>& vecrData,
 void CDRMPlot::SetupPSD()
 {
 	/* Init chart for power spectram density estimation */
-	setTitle("Shifted Power Spectral Density of Input Signal");
+	setTitle(tr("Shifted Power Spectral Density of Input Signal"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
-	setAxisTitle(QwtPlot::yLeft, "PSD [dB]");
+	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+	setAxisTitle(QwtPlot::yLeft, tr("PSD [dB]"));
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
@@ -630,11 +630,11 @@ void CDRMPlot::SetupPSD()
 
 	/* Insert line for DC carrier */
 	clear();
-	curve1 = insertCurve("DC carrier");
+	curve1 = insertCurve(tr("DC carrier"));
 	setCurvePen(curve1, QPen(SpecLine1ColorPlot, 1, DotLine));
 
 	/* Add main curve */
-	main1curve = insertCurve("Shifted PSD");
+	main1curve = insertCurve(tr("Shifted PSD"));
 	
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 1, SolidLine, RoundCap,
@@ -672,12 +672,12 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 void CDRMPlot::SetupInpSpec()
 {
 	/* Init chart for power spectram density estimation */
-	setTitle("Input Spectrum");
+	setTitle(tr("Input Spectrum"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
-	setAxisTitle(QwtPlot::yLeft, "Input Spectrum [dB]");
+	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+	setAxisTitle(QwtPlot::yLeft, tr("Input Spectrum [dB]"));
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
@@ -685,15 +685,15 @@ void CDRMPlot::SetupInpSpec()
 
 	/* Insert line for DC carrier */
 	clear();
-	curve1 = insertCurve("DC carrier");
+	curve1 = insertCurve(tr("DC carrier"));
 	setCurvePen(curve1, QPen(SpecLine1ColorPlot, 1, DotLine));
 
 	/* Insert line for bandwidth marker */
-	curve2 = insertCurve("Filter bandwidth");
+	curve2 = insertCurve(tr("Filter bandwidth"));
 	setCurvePen(curve2, QPen(SpecLine1ColorPlot, 6));
 
 	/* Add main curve */
-	main1curve = insertCurve("Input spectrum");
+	main1curve = insertCurve(tr("Input spectrum"));
 	
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 1, SolidLine, RoundCap,
@@ -749,12 +749,12 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 void CDRMPlot::SetupInpPSD()
 {
 	/* Init chart for power spectram density estimation */
-	setTitle("Input PSD");
+	setTitle(tr("Input PSD"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
-	setAxisTitle(QwtPlot::yLeft, "Input PSD [dB]");
+	setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
+	setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
@@ -762,11 +762,11 @@ void CDRMPlot::SetupInpPSD()
 
 	/* Insert line for DC carrier */
 	clear();
-	curve1 = insertCurve("DC carrier");
+	curve1 = insertCurve(tr("DC carrier"));
 	setCurvePen(curve1, QPen(SpecLine1ColorPlot, 1, DotLine));
 
 	/* Add main curve */
-	main1curve = insertCurve("Input PSD");
+	main1curve = insertCurve(tr("Input PSD"));
 	
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
@@ -806,12 +806,12 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 void CDRMPlot::SetupFACConst()
 {
 	/* Init chart for FAC constellation */
-	setTitle("FAC Constellation");
+	setTitle(tr("FAC Constellation"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(FALSE);
 	enableGridY(FALSE);
-	setAxisTitle(QwtPlot::xBottom, "Real");
-	setAxisTitle(QwtPlot::yLeft, "Imaginary");
+	setAxisTitle(QwtPlot::xBottom, tr("Real"));
+	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Fixed scale (2 / sqrt(2)) */
 	setAxisScale(QwtPlot::xBottom, (double) -1.4142, (double) 1.4142);
@@ -845,12 +845,12 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 void CDRMPlot::SetupSDCConst(const CParameter::ECodScheme eNewCoSc)
 {
 	/* Init chart for SDC constellation */
-	setTitle("SDC Constellation");
+	setTitle(tr("SDC Constellation"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(FALSE);
 	enableGridY(FALSE);
-	setAxisTitle(QwtPlot::xBottom, "Real");
-	setAxisTitle(QwtPlot::yLeft, "Imaginary");
+	setAxisTitle(QwtPlot::xBottom, tr("Real"));
+	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Fixed scale (4 / sqrt(10)) */
 	setAxisScale(QwtPlot::xBottom, (double) -1.2649, (double) 1.2649);
@@ -886,12 +886,12 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
 void CDRMPlot::SetupMSCConst(const CParameter::ECodScheme eNewCoSc)
 {
 	/* Init chart for MSC constellation */
-	setTitle("MSC Constellation");
+	setTitle(tr("MSC Constellation"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(FALSE);
 	enableGridY(FALSE);
-	setAxisTitle(QwtPlot::xBottom, "Real");
-	setAxisTitle(QwtPlot::yLeft, "Imaginary");
+	setAxisTitle(QwtPlot::xBottom, tr("Real"));
+	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Fixed scale (8 / sqrt(42)) */
 	setAxisScale(QwtPlot::xBottom, (double) -1.2344, (double) 1.2344);
@@ -927,12 +927,12 @@ void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData,
 void CDRMPlot::SetupAllConst()
 {
 	/* Init chart for constellation */
-	setTitle("MSC / SDC / FAC Constellation");
+	setTitle(tr("MSC / SDC / FAC Constellation"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Real");
-	setAxisTitle(QwtPlot::yLeft, "Imaginary");
+	setAxisTitle(QwtPlot::xBottom, tr("Real"));
+	setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom, (double) -1.5, (double) 1.5);

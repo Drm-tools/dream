@@ -45,7 +45,8 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 
 	/* Init main plot */
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
-	QToolTip::add(MainPlot, "Click on the plot to set the demod. frequency");
+	QToolTip::add(MainPlot,
+		tr("Click on the plot to set the demod. frequency"));
 	MainPlot->SetPlotStyle(DRMReceiver.iMainPlotColorStyle);
 	MainPlot->setMargin(1);
 
@@ -263,7 +264,7 @@ void AnalogDemDlg::OnTimerChart()
 void AnalogDemDlg::OnTimer()
 {
 	/* Carrier frequency of AM signal */
-	TextFreqOffset->setText("Carrier Frequency: " + QString().setNum(
+	TextFreqOffset->setText(tr("Carrier Frequency: ") + QString().setNum(
 		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
 }
 
