@@ -207,8 +207,8 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	vecrHammingWindow = Hamming(iNoIntpFreqPil);
 
 	/* Weights for peak bound calculation, in Eq. (19) */
-	rConst1 = exp((_REAL) -TETA1_DIST_FROM_MAX_DB / 10 * log(10));
-	rConst2 = exp((_REAL) TETA2_DIST_FROM_MIN_DB / 10 * log(10));
+	rConst1 = pow(10, (_REAL) -TETA1_DIST_FROM_MAX_DB / 10);
+	rConst2 = pow(10, (_REAL) TETA2_DIST_FROM_MIN_DB / 10);
 
 	/* Init first path delay estimation */
 	iFirstPathDelay = 0;

@@ -77,14 +77,14 @@ if test "$enable_alsa" = "yes"; then
 		AC_MSG_WARN( "*** Could not find libasound. Switching to --disable-alsa" )
 	else
 		AC_DEFINE(USE_ALSA, 1, [Define if you want to use the ALSA audio lib])
-		enable_sound=no
+		enable_sound=yes
 	fi
 fi
 
 if test "$enable_sound" = "yes"; then
 
 	AC_DEFINE(WITH_SOUND, 1, [Define if you want to use sound])
-	if test "$enable_arts" = "no"
+	if (test "$enable_arts" = "no") && (test "$enable_alsa" = "no")
 	then
 		
 		dnl fall back is to use /dev/dsp

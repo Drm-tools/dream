@@ -126,8 +126,7 @@ exit(1);
 		iAvCntSigmaEst = 0;
 
 		/* Reset estimation vector */
-		for (i = 0; i < iLengthWiener; i++)
-			vecrTiCorrEst[i] = (_REAL) 0.0;
+		vecrTiCorrEst.Reset((_REAL) 0.0);
 	}
 
 
@@ -289,7 +288,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	/* Calculate optimal filter --------------------------------------------- */
 	/* Significant parameters for Gaussian power density spectrum */
 	const _REAL rSNRdB = (_REAL) 25.0;
-	rSNR = exp(rSNRdB / 10 * log(10));       
+	rSNR = pow(10, rSNRdB / 10);
 
 	/* Update filter coefficiants */
 	UpdateFilterCoef(rSNR, rSigma);

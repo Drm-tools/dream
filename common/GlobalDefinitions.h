@@ -45,8 +45,8 @@ using namespace std;	// Because of the library: "complex"
 /* When you define one (or both) of the following flags, a directory called
    "test" MUST EXIST in the windows directory (or linux directory if you use
    Linux)! */
-//#define _DEBUG_
-//#define _PRINT_TABLES_
+#define _DEBUG_
+#define _PRINT_TABLES_
 
 
 /* Define the application specific data-types ------------------------------- */

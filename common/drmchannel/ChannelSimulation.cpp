@@ -284,7 +284,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	rBWFactor = (_REAL) SOUNDCRD_SAMPLE_RATE / 2 / rSpecOcc;
 
 	/* Calculation of the gain factor for noise generator */
-	rNoisepwrFactor = sqrt(exp(-ReceiverParam.rSimSNRdB / 10 * log(10)) * 
+	rNoisepwrFactor = sqrt(pow(10, -ReceiverParam.rSimSNRdB / 10) * 
 		ReceiverParam.rAvPowPerSymbol * 2 * rBWFactor);
 
 

@@ -92,6 +92,24 @@ void CSound::Read(CVector<short>& psData)
 
 	/* In case more than one buffer was ready, reset event */
 	ResetEvent(m_WaveInEvent);
+
+
+// TEST
+#ifdef _DEBUG_
+// Store states of the buffers, because sometimes the sound interface makes the
+// application run into 100% CPU load. We monitor this to write a protection 
+// against this.
+static FILE* pFile = fopen("test/soundin.dat", "w");
+for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
+{
+	if (m_WaveInHeader[i].dwFlags & WHDR_DONE)
+		fprintf(pFile, "0");
+	if (m_WaveInHeader[i].dwFlags & WHDR_INQUEUE)
+		fprintf(pFile, "1");
+}
+fprintf(pFile, "\n");
+fflush(pFile);
+#endif
 }
 
 void CSound::AddInBuffer()

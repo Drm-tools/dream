@@ -48,7 +48,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 // TEST
-//TimeWiener.SetSNR(exp(rSNREstimate / 10 * log(10)));
+//TimeWiener.SetSNR(pow(10, rSNREstimate / 10));
 //
 //ThermoSNR->setValue(Min(DRMReceiver.GetChanEst()->GetSNREstdB(),
 //	DRMReceiver.GetOFDMDemod()->GetSNREstdB()));
@@ -328,7 +328,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
 	/* SNR definition */
 	const _REAL rSNRdB = (_REAL) 30.0;
-	_REAL rSNR = exp(rSNRdB / 10 * log(10));       
+	_REAL rSNR = pow(10, rSNRdB / 10);       
 
 	/* Length of wiener filter */
 	switch (ReceiverParam.GetWaveMode())
