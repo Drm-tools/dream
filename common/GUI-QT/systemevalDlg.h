@@ -78,7 +78,8 @@ public:
 protected:
 	QTimer			Timer;
 	QTimer			TimerChart;
-	QTimer			TimerLogFile;
+	QTimer			TimerLogFileLong;
+	QTimer			TimerLogFileShort;
 	QTimer			TimerLogFileStart;
 	ECharType		CharType;
 	void			OnlyThisButDown(QPushButton* pButton);
@@ -91,7 +92,8 @@ protected:
 public slots:
 	void OnTimer();
 	void OnTimerChart();
-	void OnTimerLogFile();
+	void OnTimerLogFileLong();
+	void OnTimerLogFileShort();
 	void OnTimerLogFileStart();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();

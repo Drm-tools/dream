@@ -79,11 +79,6 @@ using namespace std; /* Because of the library: "complex" */
    defined, the data is written to file */
 #define WRITE_TRNSM_TO_FILE
 
-/* Which type of log file. The standard log file does log every minute, the
-   fast log file (which is activated by undefining the following macro) stores
-   the parameters every second */
-#define USE_STANDARD_LOG_FILE
-
 
 /* Define the application specific data-types ------------------------------- */
 typedef	double							_REAL;

@@ -203,7 +203,8 @@ _BOOLEAN CParameter::IsEEP(int iServiceID)
 	return TRUE;
 }
 
-void CParameter::InitCellMapTable(const ERobMode eNewWaveMode, const ESpecOcc eNewSpecOcc)
+void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
+								  const ESpecOcc eNewSpecOcc)
 {
 	/* Set new values and make table */
 	eRobustnessMode = eNewWaveMode;
@@ -355,7 +356,8 @@ void CParameter::SetNumDataDecoderBits(const int iNewNumDataDecoderBits)
 	}
 }
 
-void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWithHierarch)
+void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
+							   const _BOOLEAN bWithHierarch)
 {
 	_BOOLEAN bParamersHaveChanged = FALSE;
 
@@ -384,7 +386,8 @@ void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWit
 		DRMReceiver.InitsForMSC();
 }
 
-void CParameter::SetAudioParam(const int iShortID, const CAudioParam NewAudParam)
+void CParameter::SetAudioParam(const int iShortID,
+							   const CAudioParam NewAudParam)
 {
 	/* Apply changes only if parameters have changed */
 	if (Service[iShortID].AudioParam != NewAudParam)
@@ -544,23 +547,31 @@ _UINT32BIT CParameter::CRawSimData::Get()
 
 
 /* Reception log implementation --------------------------------------------- */
-CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFile(NULL),
-	iFrequency(0), strAdditText(""), strLatitude(""), strLongitude(""),
-	bDelayedLogStart(FALSE)
+CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFileLong(NULL),
+	pFileShort(NULL), iFrequency(0), strAdditText(""), strLatitude(""),
+	strLongitude(""), bDelayedLogStart(FALSE)
 {
-	ResetLog();
+	ResetLog(TRUE);
+	ResetLog(FALSE);
 }
 
-void CParameter::CReceptLog::ResetLog()
+void CParameter::CReceptLog::ResetLog(const _BOOLEAN bIsLong)
 {
-	iNumSyncOk = 0;
-	iNumCRCOkFAC = 0;
-	iNumCRCOkMSC = 0;
-	iNumSync = 0;
-	iNumCRCFAC = 0;
-	iNumCRCMSC = 0;
-	iNumSNR = 0;
-	rAvSNR = (_REAL) 0.0;
+	if (bIsLong == TRUE)
+	{
+		bSyncOK = TRUE;
+		bFACOk = TRUE;
+		bMSCOk = TRUE;
+
+		rCurSNR = (_REAL) 0.0;
+	}
+	else
+	{
+		iNumCRCOkFAC = 0;
+		iNumCRCOkMSC = 0;
+		iNumSNR = 0;
+		rAvSNR = (_REAL) 0.0;
+	}
 }
 
 void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
@@ -569,10 +580,9 @@ void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
 	{
 		Mutex.Lock();
 
-		if (bCRCOk == TRUE)
-			iNumSyncOk++;
-
-		iNumSync++;
+		/* If one of the syncs were wrong in one second, set to false */
+		if (bCRCOk == FALSE)
+			bSyncOK = FALSE;
 
 		Mutex.Unlock();
 	}
@@ -586,8 +596,8 @@ void CParameter::CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
 
 		if (bCRCOk == TRUE)
 			iNumCRCOkFAC++;
-
-		iNumCRCFAC++;
+		else
+			bFACOk = FALSE;
 
 		Mutex.Unlock();
 	}
@@ -601,23 +611,26 @@ void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 
 		if (bCRCOk == TRUE)
 			iNumCRCOkMSC++;
-
-		iNumCRCMSC++;
+		else
+			bMSCOk = FALSE;
 
 		Mutex.Unlock();
 	}
 }
 
-void CParameter::CReceptLog::SetSNR(const _REAL rCurSNR)
+void CParameter::CReceptLog::SetSNR(const _REAL rNewCurSNR)
 {
 	if (bLogActivated == TRUE)
 	{
 		Mutex.Lock();
 
+		/* Set parameter for long log file version */
+		rCurSNR = rNewCurSNR;
+
 		iNumSNR++;
 
 		/* Average SNR values */
-		rAvSNR += rCurSNR;
+		rAvSNR += rNewCurSNR;
 
 		Mutex.Unlock();
 	}
@@ -628,15 +641,12 @@ void CParameter::CReceptLog::SetNumAAC(const int iNewNum)
 	/* Set the number of AAC frames in one block */
 	iNumAACFrames = iNewNum;
 
-	ResetLog();
+	ResetLog(TRUE);
+	ResetLog(FALSE);
 }
 
 void CParameter::CReceptLog::SetLog(const _BOOLEAN bLog)
 {
-	time_t		ltime;
-	char		tmpbuf[128];
-	struct tm*	today;
-
 	bLogActivated = bLog;
 
 	/* Open or close the file */
@@ -644,61 +654,83 @@ void CParameter::CReceptLog::SetLog(const _BOOLEAN bLog)
 	{
 		Mutex.Lock();
 
-		/* Get time and date */
-		time(&ltime);
-		today = gmtime(&ltime); /* Should be UTC time */
+		/* Init long and short version of log file. Open output file, write
+		   header and reset log file parameters */
+		/* Short */
+		pFileShort = fopen("DreamLog.txt", "a");
+		SetLogHeader(pFileShort, FALSE);
+		ResetLog(FALSE);
+		iTimeCntShort = 0;
 
-		pFile = fopen("DreamLog.txt", "a");
+		/* Long */
+		pFileLong = fopen("DreamLogLong.csv", "a");
+		SetLogHeader(pFileLong, TRUE);
+		ResetLog(TRUE);
 
-		if (pFile != NULL)
-		{
-			/* Beginning of new table (similar to standard DRM log file) */
-			fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n",
-				DREAM_VERSION_NUMBER);
-
-			fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
-				today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
-				today->tm_hour, today->tm_min, today->tm_sec);
-
-			fprintf(pFile, "Frequency        ");
-			if (iFrequency != 0)
-				fprintf(pFile, "%d kHz", iFrequency);
-			
-			fprintf(pFile, "\nLatitude         %7s", strLatitude.c_str());
-			fprintf(pFile, "\nLongitude        %7s", strLongitude.c_str());
-
-			/* Write additional text */
-			if (strAdditText != "")
-				fprintf(pFile, "\n%s\n\n", strAdditText.c_str());
-			else
-				fprintf(pFile, "\n\n");
-
-#ifdef USE_STANDARD_LOG_FILE
-			fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
-#else
-			fprintf(pFile, "SECOND, SNR,    SYNC, FAC CRC, MSC CRC\n");
-#endif
-			fflush(pFile);
-		}
-
-		ResetLog();
-
-		/* Reset time count */
-		iTimeCnt = 0;
+		/* Init time with current time. The time function returns the number of
+		   seconds elapsed since midnight (00:00:00), January 1, 1970,
+		   coordinated universal time, according to the system clock */
+		time(&TimeCntLong);
 
 		Mutex.Unlock();
 	}
 	else
-		CloseFile();
+	{
+		/* Close both types of log files */
+		CloseFile(pFileLong, TRUE);
+		CloseFile(pFileShort, FALSE);
+	}
 }
 
-void CParameter::CReceptLog::CloseFile()
+void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
+{
+	time_t		ltime;
+	struct tm*	today;
+
+	/* Get time and date */
+	time(&ltime);
+	today = gmtime(&ltime); /* Should be UTC time */
+
+	if (pFile != NULL)
+	{
+		/* Beginning of new table (similar to standard DRM log file) */
+		fprintf(pFile, "\n>>>>\nDream\nSoftware Version %s\n",
+			DREAM_VERSION_NUMBER);
+
+		fprintf(pFile, "Starttime (UTC)  %d-%02d-%02d %02d:%02d:%02d\n",
+			today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
+			today->tm_hour, today->tm_min, today->tm_sec);
+
+		fprintf(pFile, "Frequency        ");
+		if (iFrequency != 0)
+			fprintf(pFile, "%d kHz", iFrequency);
+		
+		fprintf(pFile, "\nLatitude         %7s", strLatitude.c_str());
+		fprintf(pFile, "\nLongitude        %7s", strLongitude.c_str());
+
+		/* Write additional text */
+		if (strAdditText != "")
+			fprintf(pFile, "\n%s\n\n", strAdditText.c_str());
+		else
+			fprintf(pFile, "\n\n");
+
+		/* The long version of log file has different header */
+		if (bIsLong == TRUE)
+			fprintf(pFile, "DATE,       TIME,     SNR, SYNC, FAC, MSC\n");
+		else
+			fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
+
+		fflush(pFile);
+	}
+}
+
+void CParameter::CReceptLog::CloseFile(FILE* pFile, const _BOOLEAN bIsLong)
 {
 	if (pFile != NULL)
 	{
-#ifdef USE_STANDARD_LOG_FILE
-		fprintf(pFile, "\nCRC: \n");
-#endif
+		if (bIsLong == FALSE)
+			fprintf(pFile, "\nCRC: \n");
+
 		fprintf(pFile, "<<<<\n\n");
 		fclose(pFile);
 
@@ -706,56 +738,90 @@ void CParameter::CReceptLog::CloseFile()
 	}
 }
 
-void CParameter::CReceptLog::WriteParameters()
+void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 {
-	int iAverageSNR;
-	int iTmpNumAAC;
-
 	try
 	{
 		if (bLogActivated == TRUE)
 		{
 			Mutex.Lock();
 
-			/* Avoid division by zero */
-			if (iNumSNR == 0)
-				iAverageSNR = 0;
-			else
-				iAverageSNR = (int) Round(rAvSNR / iNumSNR);
+			if (bIsLong == TRUE)
+			{
+				int			iSyncInd, iFACInd, iMSCInd;
+				struct tm*	TimeNow;
 
-			/* If no sync, do not print number of AAC frames. If the number of
-			   correct FAC CRCs is lower than 10%, we assume that receiver is
-			   not synchronized */
-			if (iNumCRCOkFAC < 15)
-				iTmpNumAAC = 0;
-			else
-				iTmpNumAAC = iNumAACFrames;
+				if (bSyncOK == TRUE)
+					iSyncInd = 1;
+				else
+					iSyncInd = 0;
 
-#ifdef USE_STANDARD_LOG_FILE
-			fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0",
-				iTimeCnt, iAverageSNR, iNumCRCOkFAC,
-				iNumCRCOkMSC, iTmpNumAAC);
+				if (bFACOk == TRUE)
+					iFACInd = 1;
+				else
+					iFACInd = 0;
+
+				if (bMSCOk == TRUE)
+					iMSCInd = 1;
+				else
+					iMSCInd = 0;
+
+				TimeNow = gmtime(&TimeCntLong); /* Should be UTC time */
+
+				/* This data can be read by Microsoft Excel */
+				fprintf(pFileLong,
+					"%d-%02d-%02d, %02d:%02d:%02d, %3d,    %1d,   %1d,   %1d\n",
+					TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
+					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
+					TimeNow->tm_sec, (int) rCurSNR, iSyncInd, iFACInd, iMSCInd);
+			}
+			else
+			{
+				int iAverageSNR, iTmpNumAAC;
+
+				/* Avoid division by zero */
+				if (iNumSNR == 0)
+					iAverageSNR = 0;
+				else
+					iAverageSNR = (int) Round(rAvSNR / iNumSNR);
+
+				/* If no sync, do not print number of AAC frames. If the number
+				   of correct FAC CRCs is lower than 10%, we assume that
+				   receiver is not synchronized */
+				if (iNumCRCOkFAC < 15)
+					iTmpNumAAC = 0;
+				else
+					iTmpNumAAC = iNumAACFrames;
+
+				fprintf(pFileShort, "  %04d   %2d      %3d  %4d/%02d        0",
+					iTimeCntShort, iAverageSNR, iNumCRCOkFAC,
+					iNumCRCOkMSC, iTmpNumAAC);
 
 #ifdef _DEBUG_
-			/* Save additional system parameter for debugging performance */
-			fprintf(pFile, "   Dopp: %.2f Hz   FreOff  %.2f Hz   SamOff %.2f Hz",
-				DRMReceiver.GetChanEst()->GetSigma(),
-				DRMReceiver.GetParameters()->GetDCFrequency(),
-				DRMReceiver.GetParameters()->GetSampFreqEst());
+				/* Save additional system parameter for debugging performance */
+				fprintf(pFileShort,
+					"   Dopp: %.2f Hz   FreOff  %.2f Hz   SamOff %.2f Hz",
+					DRMReceiver.GetChanEst()->GetSigma(),
+					DRMReceiver.GetParameters()->GetDCFrequency(),
+					DRMReceiver.GetParameters()->GetSampFreqEst());
 #endif
+				fprintf(pFileShort, "\n"); /* New line */
+			}
 
-#else
-			/* This can be read with Microsoft Excel */
-			fprintf(pFile, " %05d  %3d  %3d/%3d     %2d/%1d    %2d/%2d",
-				iTimeCnt, iAverageSNR, iNumSyncOk, iNumSync,
-				iNumCRCOkFAC, iNumCRCFAC, iNumCRCOkMSC, iNumCRCMSC);
-#endif
+			fflush(pFileLong);
+			fflush(pFileShort);
 
-			fprintf(pFile, "\n"); /* New line */
-			fflush(pFile);
+			ResetLog(bIsLong);
 
-			ResetLog();
-			iTimeCnt++;
+			if (bIsLong == TRUE)
+			{
+				/* This is a time_t type variable. It contains the number of
+				   seconds from a certain defined date. We simply increment
+				   this number for the next second instance */
+				TimeCntLong++;
+			}
+			else
+				iTimeCntShort++;
 
 			Mutex.Unlock();
 		}

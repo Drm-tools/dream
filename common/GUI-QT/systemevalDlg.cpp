@@ -159,8 +159,10 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		this, SLOT(OnTimer()));
 	connect(&TimerChart, SIGNAL(timeout()),
 		this, SLOT(OnTimerChart()));
-	connect(&TimerLogFile, SIGNAL(timeout()),
-		this, SLOT(OnTimerLogFile()));
+	connect(&TimerLogFileLong, SIGNAL(timeout()),
+		this, SLOT(OnTimerLogFileLong()));
+	connect(&TimerLogFileShort, SIGNAL(timeout()),
+		this, SLOT(OnTimerLogFileShort()));
 	connect(&TimerLogFileStart, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFileStart()));
 
@@ -684,12 +686,9 @@ void systemevalDlg::OnCheckWriteLog()
 {
 	if (CheckBoxWriteLog->isChecked())
 	{
-		/* Activte log file timer */
-#ifdef USE_STANDARD_LOG_FILE
-		TimerLogFile.start(60000); /* Every minute (i.e. 60000 ms) */
-#else
-		TimerLogFile.start(1000); /* Every second */
-#endif
+		/* Activte log file timer for long and short log file */
+		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
+		TimerLogFileLong.start(1000); /* Every second */
 
 		/* Get frequency from front-end edit control */
 		QString strFreq = EdtFrequency->text();
@@ -737,16 +736,23 @@ void systemevalDlg::OnCheckWriteLog()
 	else
 	{
 		/* Deactivate log file timer */
-		TimerLogFile.stop();
+		TimerLogFileShort.stop();
+		TimerLogFileLong.stop();
 
 		DRMReceiver.GetParameters()->ReceptLog.SetLog(FALSE);
 	}
 }
 
-void systemevalDlg::OnTimerLogFile()
+void systemevalDlg::OnTimerLogFileShort()
 {
-	/* Write new parameters in log file */
-	DRMReceiver.GetParameters()->ReceptLog.WriteParameters();
+	/* Write new parameters in log file (short version) */
+	DRMReceiver.GetParameters()->ReceptLog.WriteParameters(FALSE);
+}
+
+void systemevalDlg::OnTimerLogFileLong()
+{
+	/* Write new parameters in log file (long version) */
+	DRMReceiver.GetParameters()->ReceptLog.WriteParameters(TRUE);
 }
 
 QString	systemevalDlg::GetRobModeStr()
