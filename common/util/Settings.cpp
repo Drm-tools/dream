@@ -55,44 +55,26 @@ void CSettings::Save()
 /* Read and write init-file ***************************************************/
 void CSettings::ReadIniFile()
 {
-	string	strGetIni;
-	int		iValue;
+	int			iValue;
+	_BOOLEAN	bValue;
 
 	/* Load data from init-file */
 	INIFile ini = LoadIni(DREAM_INIT_FILE_NAME);
 
 
 	/* Flip spectrum flag --------------------------------------------------- */
-	strGetIni = GetIniSetting(ini, "Receiver", "flipspectrum");
-	if (!strGetIni.empty())
-	{
-		if (atoi(strGetIni.c_str()))
-			DRMReceiver.GetReceiver()->SetFlippedSpectrum(TRUE);
-		else
-			DRMReceiver.GetReceiver()->SetFlippedSpectrum(FALSE);
-	}
+	if (GetFlagIniSet(ini, "Receiver", "flipspectrum", bValue) == TRUE)
+		DRMReceiver.GetReceiver()->SetFlippedSpectrum(bValue);
 
 
 	/* Mute audio flag ------------------------------------------------------ */
-	strGetIni = GetIniSetting(ini, "Receiver", "muteaudio");
-	if (!strGetIni.empty())
-	{
-		if (atoi(strGetIni.c_str()))
-			DRMReceiver.GetWriteData()->MuteAudio(TRUE);
-		else
-			DRMReceiver.GetWriteData()->MuteAudio(FALSE);
-	}
+	if (GetFlagIniSet(ini, "Receiver", "muteaudio", bValue) == TRUE)
+		DRMReceiver.GetWriteData()->MuteAudio(bValue);
 
 
 	/* Bandpass filter flag ------------------------------------------------- */
-	strGetIni = GetIniSetting(ini, "Receiver", "filter");
-	if (!strGetIni.empty())
-	{
-		if (atoi(strGetIni.c_str()))
-			DRMReceiver.GetOFDMDemod()->SetRecFilter(TRUE);
-		else
-			DRMReceiver.GetOFDMDemod()->SetRecFilter(FALSE);
-	}
+	if (GetFlagIniSet(ini, "Receiver", "filter", bValue) == TRUE)
+		DRMReceiver.GetOFDMDemod()->SetRecFilter(bValue);
 
 
 	/* Sound In device ------------------------------------------------------ */
@@ -151,6 +133,8 @@ void CSettings::ReadIniFile()
 		DRMReceiver.GeomSystemEvalDlg.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "sysevwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
 		DRMReceiver.GeomSystemEvalDlg.iWSize = iValue;
+	if (GetFlagIniSet(ini, "Window geometry", "sysevvis", bValue) == TRUE)
+		DRMReceiver.GeomSystemEvalDlg.bVisible = bValue;
 
 	/* Multimedia window */
 	if (GetNumericIniSet(ini, "Window geometry", "multdlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
@@ -161,6 +145,8 @@ void CSettings::ReadIniFile()
 		DRMReceiver.GeomMultimediaDlg.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "multdlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
 		DRMReceiver.GeomMultimediaDlg.iWSize = iValue;
+	if (GetFlagIniSet(ini, "Window geometry", "multdlgvis", bValue) == TRUE)
+		DRMReceiver.GeomMultimediaDlg.bVisible = bValue;
 
 	/* Stations dialog */
 	if (GetNumericIniSet(ini, "Window geometry", "statdlgxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
@@ -171,6 +157,8 @@ void CSettings::ReadIniFile()
 		DRMReceiver.GeomStationsDlg.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "statdlgwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
 		DRMReceiver.GeomStationsDlg.iWSize = iValue;
+	if (GetFlagIniSet(ini, "Window geometry", "statdlgvis", bValue) == TRUE)
+		DRMReceiver.GeomStationsDlg.bVisible = bValue;
 
 	/* Analog demodulation dialog */
 	if (GetNumericIniSet(ini, "Window geometry", "analdemxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
@@ -181,6 +169,8 @@ void CSettings::ReadIniFile()
 		DRMReceiver.GeomAnalogDemDlg.iHSize = iValue;
 	if (GetNumericIniSet(ini, "Window geometry", "analdemwsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
 		DRMReceiver.GeomAnalogDemDlg.iWSize = iValue;
+	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
+		DRMReceiver.GeomAnalogDemDlg.bVisible = bValue;
 #endif
 
 
@@ -196,24 +186,18 @@ void CSettings::WriteIniFile()
 	INIFile ini;
 
 	/* Flip spectrum flag --------------------------------------------------- */
-	if (DRMReceiver.GetReceiver()->GetFlippedSpectrum() == TRUE)
-		PutIniSetting(ini, "Receiver", "flipspectrum", "1");
-	else
-		PutIniSetting(ini, "Receiver", "flipspectrum", "0");
+	SetFlagIniSet(ini, "Receiver", "flipspectrum",
+		DRMReceiver.GetReceiver()->GetFlippedSpectrum());
 
 
 	/* Mute audio flag ------------------------------------------------------ */
-	if (DRMReceiver.GetWriteData()->GetMuteAudio() == TRUE)
-		PutIniSetting(ini, "Receiver", "muteaudio", "1");
-	else
-		PutIniSetting(ini, "Receiver", "muteaudio", "0");
+	SetFlagIniSet(ini, "Receiver", "muteaudio",
+		DRMReceiver.GetWriteData()->GetMuteAudio());
 
 
 	/* Bandpass filter flag ------------------------------------------------- */
-	if (DRMReceiver.GetOFDMDemod()->GetRecFilter() == TRUE)
-		PutIniSetting(ini, "Receiver", "filter", "1");
-	else
-		PutIniSetting(ini, "Receiver", "filter", "0");
+	SetFlagIniSet(ini, "Receiver", "filter",
+		DRMReceiver.GetOFDMDemod()->GetRecFilter());
 
 
 	/* Sound In device ------------------------------------------------------ */
@@ -264,24 +248,28 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Window geometry", "sysevypos", DRMReceiver.GeomSystemEvalDlg.iYPos);
 	SetNumericIniSet(ini, "Window geometry", "sysevhsize", DRMReceiver.GeomSystemEvalDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "sysevwsize", DRMReceiver.GeomSystemEvalDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "sysevvis", DRMReceiver.GeomSystemEvalDlg.bVisible);
 
 	/* Multimedia window */
 	SetNumericIniSet(ini, "Window geometry", "multdlgxpos", DRMReceiver.GeomMultimediaDlg.iXPos);
 	SetNumericIniSet(ini, "Window geometry", "multdlgypos", DRMReceiver.GeomMultimediaDlg.iYPos);
 	SetNumericIniSet(ini, "Window geometry", "multdlghsize", DRMReceiver.GeomMultimediaDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "multdlgwsize", DRMReceiver.GeomMultimediaDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "multdlgvis", DRMReceiver.GeomMultimediaDlg.bVisible);
 
 	/* Stations dialog */
 	SetNumericIniSet(ini, "Window geometry", "statdlgxpos", DRMReceiver.GeomStationsDlg.iXPos);
 	SetNumericIniSet(ini, "Window geometry", "statdlgypos", DRMReceiver.GeomStationsDlg.iYPos);
 	SetNumericIniSet(ini, "Window geometry", "statdlghsize", DRMReceiver.GeomStationsDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "statdlgwsize", DRMReceiver.GeomStationsDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "statdlgvis", DRMReceiver.GeomStationsDlg.bVisible);
 
 	/* Analog demodulation dialog */
 	SetNumericIniSet(ini, "Window geometry", "analdemxpos", DRMReceiver.GeomAnalogDemDlg.iXPos);
 	SetNumericIniSet(ini, "Window geometry", "analdemypos", DRMReceiver.GeomAnalogDemDlg.iYPos);
 	SetNumericIniSet(ini, "Window geometry", "analdemhsize", DRMReceiver.GeomAnalogDemDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "analdemwsize", DRMReceiver.GeomAnalogDemDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "analdemvis", DRMReceiver.GeomAnalogDemDlg.bVisible);
 #endif
 
 
@@ -326,6 +314,37 @@ void CSettings::SetNumericIniSet(INIFile& theINI, string strSection,
 
 	sprintf(cString, "%d", iValue);
 	PutIniSetting(theINI, strSection.c_str(), strKey.c_str(), cString);
+}
+
+_BOOLEAN CSettings::GetFlagIniSet(INIFile& theINI, string strSection,
+								  string strKey, _BOOLEAN& bValue)
+{
+	/* Init return value */
+	_BOOLEAN bReturn = FALSE;
+
+	const string strGetIni =
+		GetIniSetting(theINI, strSection.c_str(), strKey.c_str());
+
+	if (!strGetIni.empty())
+	{
+		if (atoi(strGetIni.c_str()))
+			bValue = TRUE;
+		else
+			bValue = FALSE;
+
+		bReturn = TRUE;
+	}
+
+	return bReturn;
+}
+
+void CSettings::SetFlagIniSet(INIFile& theINI, string strSection, string strKey,
+							  _BOOLEAN bValue)
+{
+	if (bValue == TRUE)
+		PutIniSetting(theINI, strSection.c_str(), strKey.c_str(), "1");
+	else
+		PutIniSetting(theINI, strSection.c_str(), strKey.c_str(), "0");
 }
 
 

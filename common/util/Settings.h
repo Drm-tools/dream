@@ -122,6 +122,10 @@ protected:
 						  int iValue);
 	_BOOLEAN GetNumericIniSet(INIFile& theINI, string strSection, string strKey,
 							  int iRangeStart, int iRangeStop, int& iValue);
+	void SetFlagIniSet(INIFile& theINI, string strSection, string strKey,
+					   _BOOLEAN bValue);
+	_BOOLEAN GetFlagIniSet(INIFile& theINI, string strSection, string strKey,
+						   _BOOLEAN& bValue);
 };
 
 #endif // !defined(SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_)
