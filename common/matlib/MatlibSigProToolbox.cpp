@@ -42,10 +42,12 @@ CMatlibVector<CReal> Hann(const int iLen)
 		/* Hanning window */
 		CMatlibVector<CReal> vecTemp(iHalf);
 		CMatlibVector<CReal> w(iHalf);
-		for (i = 0; i < iHalf; i++) vecTemp[i] = (CReal) i;
+		for (i = 0; i < iHalf; i++)
+			vecTemp[i] = (CReal) i;
+
 		w = (CReal) 0.5 * (1 - Cos((CReal) 2.0 * crPi * vecTemp / (iLen - 1)));
 
-		/* [w; w(end - 1:-1:1)] */
+		/* Make symmetric window */
 		return fvRet.Merge(w, w(iHalf - 1, -1, 1));
 	}
 	else
@@ -56,10 +58,12 @@ CMatlibVector<CReal> Hann(const int iLen)
 		/* Hanning window */
 		CMatlibVector<CReal> vecTemp(iHalf);
 		CMatlibVector<CReal> w(iHalf);
-		for (i = 0; i < iHalf; i++) vecTemp[i] = (CReal) i;
+		for (i = 0; i < iHalf; i++)
+			vecTemp[i] = (CReal) i;
+
 		w = (CReal) 0.5 * (1 - Cos((CReal) 2.0 * crPi * vecTemp / (iLen - 1)));
 
-		/* [w; w(end:-1:1)] */
+		/* Make symmetric window */
 		return fvRet.Merge(w, w(iHalf, -1, 1));
 	}
 }
@@ -77,11 +81,13 @@ CMatlibVector<CReal> Hamming(const int iLen)
 		/* Hanning window */
 		CMatlibVector<CReal> vecTemp(iHalf);
 		CMatlibVector<CReal> w(iHalf);
-		for (i = 0; i < iHalf; i++) vecTemp[i] = (CReal) i;
+		for (i = 0; i < iHalf; i++)
+			vecTemp[i] = (CReal) i;
+
 		w = (CReal) 0.54 - (CReal) 0.46 * 
 			Cos((CReal) 2.0 * crPi * vecTemp / (iLen - 1));
 
-		/* [w; w(end - 1:-1:1)] */
+		/* Make symmetric window */
 		return fvRet.Merge(w, w(iHalf - 1, -1, 1));
 	}
 	else
@@ -92,11 +98,13 @@ CMatlibVector<CReal> Hamming(const int iLen)
 		/* Hanning window */
 		CMatlibVector<CReal> vecTemp(iHalf);
 		CMatlibVector<CReal> w(iHalf);
-		for (i = 0; i < iHalf; i++) vecTemp[i] = (CReal) i;
+		for (i = 0; i < iHalf; i++)
+			vecTemp[i] = (CReal) i;
+
 		w = (CReal) 0.54 - (CReal) 0.46 * 
 			Cos((CReal) 2.0 * crPi * vecTemp / (iLen - 1));
 
-		/* [w; w(end:-1:1)] */
+		/* Make symmetric window */
 		return fvRet.Merge(w, w(iHalf, -1, 1));
 	}
 }
