@@ -79,7 +79,7 @@ try
 {
 	QApplication	app(argc, argv); // Application object
 	ReceiverThread	RecThread; // Working thread object
-	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_Minimize); // Main dialog
+	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax); // Main dialog
 
 // Activate this to read DRM data from file
 //DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
