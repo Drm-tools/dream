@@ -177,6 +177,7 @@ moc/moc_DRMPlot.cpp: ../common/GUI-QT/DRMPlot.h
 moc/moc_MDI.cpp: ../common/MDI.h
 	$(MOC) ../common/MDI.h -o moc/moc_MDI.cpp
 
+
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp
 	
