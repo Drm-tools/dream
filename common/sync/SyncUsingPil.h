@@ -108,6 +108,7 @@ protected:
 	CComplexVector			veccChan;
 	CRealVector				vecrTestImpResp;
 	int						iNoCarrier;
+	CFftPlans				FftPlan;
 
 	ERobMode				eCurRobMode;
 

@@ -77,7 +77,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 
 		/* Calculate abs(IFFT) for getting estimate of impulse response */
-		vecrTestImpResp = Abs(Ifft(veccChan));
+		vecrTestImpResp = Abs(Ifft(veccChan, FftPlan));
 
 		/* Calculate peak to average, we need to add a minus since the following
 		   algorithm searches for a minimum */
@@ -317,6 +317,9 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Init vector for "test" channel estimation result */
 	veccChan.Init(iNumPilInFirstSym);
 	vecrTestImpResp.Init(iNumPilInFirstSym);
+
+	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
+	FftPlan.Init(iNumPilInFirstSym);
 
 	
 	/* DRM frame synchronization based on time pilots, inits ---------------- */
