@@ -261,8 +261,10 @@ fflush(pFile);
 
 				/* Bit interleaver ------------------------------------------ */
 				if (piInterlSequ[j] != -1)
+				{
 					BitInterleaver[piInterlSequ[j]].
 						Interleave(vecSubsetDef[j]);
+				}
 			}
 		}
 	}
