@@ -238,11 +238,6 @@ void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
 	eRobustnessMode = eNewWaveMode;
 	eSpectOccup = eNewSpecOcc;
 	MakeTable(eRobustnessMode, eSpectOccup);
-
-
-// Should be done but is no good for simulation, TODO
-///* Set init flags */
-//DRMReceiver.InitsForAllModules();
 }
 
 _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
@@ -867,10 +862,12 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 		{
 #ifdef _DEBUG_
 			/* In case of debug mode, use more paramters */
-			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY,  DC-FREQ, SAMRATEOFFS\n");
+			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, "
+				"MSC, AUDIO, AUDIOOK, DOPPLER, DELAY,  DC-FREQ, SAMRATEOFFS\n");
 #else
 			/* The long version of log file has different header */
-			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY\n");
+			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, "
+				"MSC, AUDIO, AUDIOOK, DOPPLER, DELAY\n");
 #endif
 		}
 
@@ -955,7 +952,9 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 #ifdef _DEBUG_
 				/* Some more parameters in debug mode */
 				fprintf(pFileLong,
-					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f, %8.2f,       %5.2f\n",
+					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   "
+					"%1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f, %8.2f,       "
+					"%5.2f\n",
 					iFrequency,	TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
 					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
 					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
@@ -966,7 +965,8 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 #else
 				/* This data can be read by Microsoft Excel */
 				fprintf(pFileLong,
-					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f\n",
+					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   "
+					"%1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f\n",
 					iFrequency,	TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
 					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
 					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
