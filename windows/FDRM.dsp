@@ -320,6 +320,10 @@ SOURCE=..\common\ofdmcellmapping\OFDMCellMapping.cpp
 # PROP Default_Filter ".c .cpp"
 # Begin Source File
 
+SOURCE=..\common\datadecoding\DABData.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\datadecoding\DataDecoder.cpp
 # End Source File
 # End Group
@@ -591,6 +595,10 @@ SOURCE=..\common\ofdmcellmapping\OFDMCellMapping.h
 # Begin Group "Header datadecoding"
 
 # PROP Default_Filter ".h"
+# Begin Source File
+
+SOURCE=..\common\datadecoding\DABData.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\common\datadecoding\DataDecoder.h
