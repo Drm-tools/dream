@@ -40,6 +40,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	int				iCurrFiltPhase;
 	int				iTimeDiffNew;
 	_COMPLEX		cNewPilot;
+	_COMPLEX		cCurChanEst;
 	CVector<_REAL>	vecrTiCorrEstSym;
 	_REAL			rSigOverEst;
 
@@ -144,7 +145,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	for (i = 0; i < iNoCarrier; i += iScatPilFreqInt)
 	{
 		/* This check is for robustness mode D since "iScatPilFreqInt" is "1"
-		   in this case which would include the DC carrier in the for-loop */
+		   in this case it would include the DC carrier in the for-loop */
 		if (!_IsDC(veciMapTab[i]))
 		{
 			/* Pilots are only every "iScatPilFreqInt"'th carrier */
@@ -156,7 +157,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 			/* Convolution with one phase of the optimal filter */
 			/* Init sum */
-			veccChanEst[iPiHiIndex] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+			cCurChanEst = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 			for (j = 0; j < iLengthWiener; j++)
 			{
 				/* We need to correct pilots due to timing corrections ------ */
@@ -170,13 +171,13 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 					Rotate(matcChanAtPilPos[j][iPiHiIndex], i, iTimeDiffNew);
 
 				/* Actual convolution with filter phase */
-				veccChanEst[iPiHiIndex] +=
+				cCurChanEst +=
 					cNewPilot * matrFiltTime[iCurrFiltPhase][j];
 			}
 
 			
 			/* Copy channel estimation from current symbol in output buffer - */
-			veccOutputData[i] = veccChanEst[iPiHiIndex];
+			veccOutputData[i] = cCurChanEst;
 		}
 	}
 
@@ -279,9 +280,6 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	/* Allocate memory for filter phases (Matrix) */
 	matrFiltTime.Init(iNoFiltPhasTi, iLengthWiener);
 
-	/* Allocate memory for channel estimation */
-	veccChanEst.Init(iNoPiFreqDirAll);
-
 	/* Length of the timing correction history buffer */
 	iLenTiCorrHist = iLengthWiener * iNoFiltPhasTi;
 
@@ -357,14 +355,14 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 									 const CReal rNewSigma, const CReal rTs,
 									 const int iLength)
 {
+	int			i;
+	CReal		rFactorArgExp;
+	CReal		rMMSE;
+	int			iCurPos;
+
 	CRealVector	vecrReturn(iLength);
 	CRealVector vecrRpp(iLength);
 	CRealVector vecrRhp(iLength);
-	CReal		rMMSE;
-
-	int			i;
-	CReal		rFactorArgExp;
-	int			iCurPos;
 
 	/* Factor for the argument of the exponetial function to generate the
 	   correlation function */

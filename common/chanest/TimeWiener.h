@@ -107,7 +107,6 @@ protected:
 	CReal ModLinRegr(CRealVector& vecrCorrEst);
 
 	int					iNoCarrier;
-	CVector<_COMPLEX>	veccChanEst;
 
 	int					iLengthWiener;
 	int					iNoFiltPhasTi;
