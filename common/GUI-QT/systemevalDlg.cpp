@@ -1284,6 +1284,16 @@ void systemevalDlg::AddWhatsThisHelp()
 		"48 kHz sample rate PCM wave file. Checking this box will let the "
 		"user choose a file name for the recording.");
 
+	/* Chart Selector */
+	QWhatsThis::add(ListViewCharSel,
+		"<b>Chart Selector:</b> With the chart selector different types of "
+		"graphical display of parameters and receiver states can be chosen. "
+		"The different plot types are sorted in different groups. To open a "
+		"group just double-click on the group or click on the plus left of "
+		"the group name. After clicking on an item it is possible to choose "
+		"other items by using the up / down arrow keys. With these keys it is "
+		"also possible to open and close the groups by using the left / right "
+		"arrow keys.");
 }
 
 void systemevalDlg::AddWhatsThisHelpChar(const ECharType NCharType)
