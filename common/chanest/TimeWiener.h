@@ -52,11 +52,11 @@
    "rSigma" are set to the maximum possible doppler frequency which can be
    interpolated by the pilot frequency grid. Since we have a Gaussian
    power spectral density, the power is never exactely zero. Therefore we
-   determine the point where the PDS has fallen below a 30 dB limit */
-#define MAX_SIGMA_RMA					((_REAL) 2.0 /* Hz */ / 2)
-#define MAX_SIGMA_RMB					((_REAL) 3.36 /* Hz */ / 2)
-#define MAX_SIGMA_RMC					((_REAL) 6.73 /* Hz */ / 2)
-#define MAX_SIGMA_RMD					((_REAL) 5.38 /* Hz */ / 2)
+   determine the point where the PDS has fallen below a 50 dB limit */
+#define MAX_SIGMA_RMA					((_REAL) 1.6 /* Hz */ / 2)
+#define MAX_SIGMA_RMB					((_REAL) 2.7 /* Hz */ / 2)
+#define MAX_SIGMA_RMC					((_REAL) 5.7 /* Hz */ / 2)
+#define MAX_SIGMA_RMD					((_REAL) 4.5 /* Hz */ / 2)
 
 /* Define a lower bound for the doppler */
 #define LOW_BOUND_SIGMA					((_REAL) 0.1 /* Hz */ / 2)
