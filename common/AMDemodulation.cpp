@@ -413,7 +413,7 @@ void CAMDemodulation::GetBWFilter(const int iFiltBW, CReal& rFreq,
 	}
 
 	/* Return normalized frequency */
-	rFreq = (rFreq + HILB_FILT_BNDWIDTH_ADD) / SOUNDCRD_SAMPLE_RATE;
+	rFreq /= SOUNDCRD_SAMPLE_RATE;
 }
 
 CVector<CReal> CAMDemodulation::ResampleFilterCoeff(const float* pfFilt,

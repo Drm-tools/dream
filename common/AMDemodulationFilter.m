@@ -30,24 +30,23 @@ function [] = AMDemodulationFilter()
 PLOT = 1;
 
 % Number of taps
-nhil = 101;
+nhil = 181;
 
 % Other filter parameters
-fstart = 800;
-ftrans = 800; % Size of transition region
-fadd = 200; % Additional bandwidth. E.g. 10 kHz mode will be 10000 + fadd Hz
+ftrans = 700; % Size of transition region
 
 fs = 48000; % Constant for all cases
 
-filterbws = [1000:1000:15000];
+filterbws = [1000:500:15000];
 
 
 % Generate filter coefficients
 for i = 1:length(filterbws)
-    b(i, :) = DesignFilter(fstart, filterbws(i) + fadd, ftrans, nhil, fs);
+    b(i, :) = DesignFilter(filterbws(i), ftrans, nhil, fs);
 end
 
 if (PLOT == 1)
+    close all;
     for i = 1:length(filterbws)
         figure;
         freqz(b(i, :), 1);
@@ -71,10 +70,6 @@ fprintf(fid, int2str(length(filterbws)));
 fprintf(fid, '\n');
 fprintf(fid, '#define NUM_TAPS_AM_DEMOD_FILTER        ');
 fprintf(fid, int2str(nhil));
-fprintf(fid, '\n');
-fprintf(fid, '#define HILB_FILT_BNDWIDTH_ADD          ');
-fprintf(fid, int2str(fadd));
-fprintf(fid, '\n');
 fprintf(fid, '\n\n\n');
 
 
@@ -106,12 +101,14 @@ fclose(fid);
 return;
 
 
-function [b] = DesignFilter(fstart, fstop, ftrans, nhil, fs)
-    % Parks-McClellan optimal equiripple FIR filter design
-	B = fstop - fstart;
-
-	f = [0  B / 2  B / 2 + ftrans  fs / 2];
+function [b] = DesignFilter(B, ftrans, nhil, fs)
+	f = [0  B / 2 - ftrans / 2  B / 2  fs / 2];
 	m = [2 2 0 0];
 
-	b = remez(nhil - 1, f * 2 / fs, m, [1 10]);
+    % Different types of filter prototype generation
+%	b = remez(nhil - 1, f * 2 / fs, m, [1 150]);
+%   b = fir1(nhil - 1, B / fs, 'low', blackmanharris(nhil));
+%   b = fir1(nhil - 1, B / fs, 'low', blackman(nhil));
+%   b = fir1(nhil - 1, B / fs, 'low', bartlett(nhil));
+    b = firls(nhil - 1, f * 2 / fs, m, [1 5000]);
 return;
