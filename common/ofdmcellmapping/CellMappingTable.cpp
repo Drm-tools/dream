@@ -11,9 +11,9 @@
  *	identify the symbol for this place. E.g. if the flag "CM_MSC" is set for
  *	one table entry this is the cell for a MSC-symbol. The name of the table
  *	is matiMapTab.
- *  We use the table "matcPilotCells" for storing the complex values for the
- *  pilots. For simplicity we allocate memory for all blocks but only the
- *  pilot positions are used.
+ *	We use the table "matcPilotCells" for storing the complex values for the
+ *	pilots. For simplicity we allocate memory for all blocks but only the
+ *	pilot positions are used.
  *
  ******************************************************************************
  *
@@ -50,7 +50,6 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	int				iTimePilotsCounter;
 	int				iFreqPilotsCounter;
 	int				iScatPilotsCounter;
-	int				iMSCCounter;
 	int				iFACCounter;
 	int				iScatPilPhase;
 	int				iCarArrInd;
@@ -376,7 +375,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				if (bIsBoostedPilot)
 				{
 					matcPilotCells[iSym][iCarArrInd] =
-						Polar2Cart(2, iScatPilPhase);
+						Polar2Cart(sqrt(AV_BOOSTED_PIL_POWER), iScatPilPhase);
 
 					/* Add flag for boosted pilot */
 					matiMapTab[iSym][iCarArrInd] |= CM_BOOSTED_PI;
@@ -384,7 +383,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				else
 				{
 					matcPilotCells[iSym][iCarArrInd] =
-						Polar2Cart(sqrt((_REAL) 2.0), iScatPilPhase);
+						Polar2Cart(sqrt(AV_PILOT_POWER), iScatPilPhase);
 				}
 			}
 
@@ -405,7 +404,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 					/* Set complex value for this pilot */
 					matcPilotCells[iSym][iCarArrInd] =
-						Polar2Cart(sqrt((_REAL) 2.0),
+						Polar2Cart(sqrt(AV_PILOT_POWER),
 						piTableTimePilots[iTimePilotsCounter * 2 + 1]);
 
 					if (iTimePilotsCounter == iNumTimePilots - 1)
@@ -451,12 +450,12 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				/* Apply complex value */
 				if (bIsFreqPilSpeciCase)
 					matcPilotCells[iSym][iCarArrInd] =
-						Polar2Cart(sqrt((_REAL) 2.0), mod(
+						Polar2Cart(sqrt(AV_PILOT_POWER), mod(
 						piTableFreqPilots[iFreqPilotsCounter * 2 + 1] +
 						512, 1024));
 				else
 					matcPilotCells[iSym][iCarArrInd] =
-						Polar2Cart(sqrt((_REAL) 2.0),
+						Polar2Cart(sqrt(AV_PILOT_POWER),
 						piTableFreqPilots[iFreqPilotsCounter * 2 + 1]);
 
 				/* Increase counter and wrap if needed */
@@ -490,10 +489,11 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	/* Init all counters */
 	iMaxNumMSCSym = 0;
 	iNumSDCCellsPerSFrame = 0;
-	iMSCCounter = 0;
+	int iMSCCounter = 0;
+	int iScatPilotCellCnt = 0;
 
 	rAvPowPerSymbol = (_REAL) 0.0;
-	rAvPilPowPerSym = (_REAL) 0.0;
+	rAvScatPilPow = (_REAL) 0.0;
 
 	for (iSym = 0; iSym < iNumSymbolsPerSuperframe; iSym++)
 	{
@@ -501,7 +501,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		veciNumMSCSym[iSym] = 0;
 		veciNumFACSym[iSym] = 0;
 		veciNumSDCSym[iSym] = 0;
-		
+
 		for (iCar = 0; iCar < iNumCarrier; iCar++)
 		{
 			/* MSC */
@@ -534,7 +534,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				if (_IsData(matiMapTab[iSym][iCar]))
 				{
 					/* Data cells have average power of 1 */
-					rAvPowPerSymbol += (_REAL) 1.0;
+					rAvPowPerSymbol += AV_DATA_CELLS_POWER;
 				}
 				else
 				{
@@ -542,14 +542,26 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 					   at the edges of the spectrum (they have power of 4) */
 					if (_IsBoosPil(matiMapTab[iSym][iCar]))
 					{
-						rAvPowPerSymbol += (_REAL) 4.0;
-						rAvPilPowPerSym += (_REAL) 4.0;
+						rAvPowPerSymbol += AV_BOOSTED_PIL_POWER;
+
+						if (_IsScatPil(matiMapTab[iSym][iCar]))
+						{
+							/* Boosted scattered pilots power */
+							rAvScatPilPow += AV_BOOSTED_PIL_POWER;
+							iScatPilotCellCnt++;
+						}
 					}
 					else
 					{
 						/* Regular pilot has power of 2 */
-						rAvPowPerSymbol += (_REAL) 2.0;
-						rAvPilPowPerSym += (_REAL) 2.0;
+						rAvPowPerSymbol += AV_PILOT_POWER;
+
+						if (_IsScatPil(matiMapTab[iSym][iCar]))
+						{
+							/* Scattered pilots power */
+							rAvScatPilPow += AV_PILOT_POWER;
+							iScatPilotCellCnt++;
+						}
 					}
 				}
 			}
@@ -574,7 +586,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 	/* Normalize the average powers */
 	rAvPowPerSymbol /= iNumSymbolsPerSuperframe;
-	rAvPilPowPerSym /= iNumSymbolsPerSuperframe;
+	rAvScatPilPow /= iScatPilotCellCnt;
 
 
 /* ########################################################################## */

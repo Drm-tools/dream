@@ -160,7 +160,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		for (rSNRCnt = rStartSNR; rSNRCnt <= rEndSNR; rSNRCnt += rStepSNR)
 		{
 			/* Set SNR in global struct and run simulation */
-			Param.rSimSNRdB = rSNRCnt;
+			Param.SetNominalSNRdB(rSNRCnt);
 			Run();
 
 			/* Store results in file */

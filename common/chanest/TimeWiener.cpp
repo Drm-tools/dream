@@ -312,8 +312,8 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	}
 	else
 	{
-		/* Get SNR */
-		rSNR = pow(10, ReceiverParam.rSimSNRdB / 10);
+		/* Get SNR on the pilot positions */
+		rSNR = pow(10, ReceiverParam.GetSysSNRdBPilPos() / 10);
 	
 		/* Sigma from channel profiles */
 		switch (ReceiverParam.iDRMChannelNum)

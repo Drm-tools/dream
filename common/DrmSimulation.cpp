@@ -306,5 +306,5 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
 
 	/* DRM channel parameters */
 	Param.iDRMChannelNum = 1;
-	Param.rSimSNRdB = 25;
+	Param.SetNominalSNRdB(25);
 }

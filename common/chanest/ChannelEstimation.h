@@ -163,7 +163,10 @@ protected:
 	_REAL					rNoiseEst;
 	_REAL					rSignalEst;
 	_REAL					rSNREstimate;
-	_REAL					rSNRCorrectFact;
+	_REAL					rSNRChanEstCorrFact;
+	_REAL					rSNRFACSigCorrFact;
+	_REAL					rSNRTotToPilCorrFact;
+	_REAL					rSNRSysToNomBWCorrFact;
 	int						iUpCntWienFilt;
 
 	_REAL					rLenPDSEst; /* Needed for GetDelay() */

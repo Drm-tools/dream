@@ -572,6 +572,74 @@ uint32_t CParameter::CRawSimData::Get()
 	return iRet;
 }
 
+_REAL CParameter::GetSysSNRdBPilPos() const
+{
+/*
+	Get system SNR in dB for the pilot positions. Since the average power of
+	the pilots is higher than the data cells, the SNR is also higher at these
+	positions compared to the total SNR of the DRM signal.
+*/
+	return (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) /
+		rAvPowPerSymbol * rAvScatPilPow * (_REAL) iNumCarrier);
+}
+
+_REAL CParameter::GetNominalSNRdB()
+{
+	/* Convert SNR from system bandwidth to nominal bandwidth */
+	return (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) *
+		GetSysToNomBWCorrFact());
+}
+
+void CParameter::SetNominalSNRdB(const _REAL rSNRdBNominal)
+{
+	/* Convert SNR from nominal bandwidth to system bandwidth */
+	rSysSimSNRdB = (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSNRdBNominal / 10) /
+		GetSysToNomBWCorrFact());
+}
+
+_REAL CParameter::GetSysToNomBWCorrFact()
+{
+	_REAL rNomBW;
+
+	/* Nominal bandwidth as defined in the DRM standard */
+	switch (eSpectOccup)
+	{
+	case SO_0:
+		rNomBW = (_REAL) 4500.0; // Hz
+		break;
+
+	case SO_1:
+		rNomBW = (_REAL) 5000.0; // Hz
+		break;
+
+	case SO_2:
+		rNomBW = (_REAL) 9000.0; // Hz
+		break;
+
+	case SO_3:
+		rNomBW = (_REAL) 10000.0; // Hz
+		break;
+
+	case SO_4:
+		rNomBW = (_REAL) 18000.0; // Hz
+		break;
+
+	case SO_5:
+		rNomBW = (_REAL) 20000.0; // Hz
+		break;
+
+	default:
+		rNomBW = (_REAL) 10000.0; // Hz
+		break;
+	}
+
+	/* Calculate system bandwidth (N / T_u) */
+	const _REAL rSysBW = (_REAL) iNumCarrier /
+		iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+
+	return rSysBW / rNomBW;
+}
+
 
 /* Reception log implementation --------------------------------------------- */
 CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFileLong(NULL),

@@ -34,8 +34,6 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int			i, j, k;
 	int			iModSymNum;
-	_COMPLEX	cModChanEst;
-	_REAL		rSNRAftTiInt;
 	_REAL		rCurSNREst;
 	_REAL		rOffsPDSEst;
 
@@ -63,12 +61,15 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Time interpolation *****************************************************/
 	/* Get symbol-counter for next symbol. Use the count from the frame 
 	   synchronization (in OFDM.cpp). Call estimation routine */
-	rSNRAftTiInt = 
+	const _REAL rSNRAftTiInt = 
 		pTimeInt->Estimate(pvecInputData, veccPilots, 
 						   ReceiverParam.matiMapTab[(*pvecInputData).
 						   GetExData().iSymbolID],
 						   ReceiverParam.matcPilotCells[(*pvecInputData).
-						   GetExData().iSymbolID], rSNREstimate);
+						   GetExData().iSymbolID],
+						   /* The channel estimation is based on the pilots so
+						      it needs the SNR on the pilots. Do a correction */
+						   rSNREstimate * rSNRTotToPilCorrFact);
 
 	/* Debar initialization of channel estimation in time direction */
 	if (iInitCnt > 0)
@@ -260,7 +261,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				   noise free (e.g., the wiener interpolation does noise
 				   reduction). Thus, we have an estimate of the received signal
 				   power \hat{r} = s * \hat{h}_{wiener} */
-				cModChanEst = veccChanEst[i] *
+				const _COMPLEX cModChanEst = veccChanEst[i] *
 					ReceiverParam.matcPilotCells[iModSymNum][i];
 
 
@@ -277,9 +278,10 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				/* Calculate final result (signal to noise ratio) */
 				rCurSNREst = CalAndBoundSNR(rSignalEst, rNoiseEst);
 
-				/* Average the SNR with a two sided recursion */
-				IIR1TwoSided(rSNREstimate, rCurSNREst, rLamSNREstFast,
-					rLamSNREstSlow);
+				/* Average the SNR with a two sided recursion. Apply correction
+				   factor, too */
+				IIR1TwoSided(rSNREstimate, rCurSNREst / rSNRTotToPilCorrFact,
+					rLamSNREstFast,	rLamSNREstSlow);
 			}
 			break;
 
@@ -351,9 +353,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 					/* Calculate final result (signal to noise ratio) */
 					rCurSNREst = CalAndBoundSNR(rSignalEst, rNoiseEst);
 
-					/* The channel estimation algorithms need the SNR normalized
-					   to the energy of the pilots */
-					rSNREstimate = rCurSNREst / rSNRCorrectFact;
+					/* Consider correction factor for average signal energy */
+					rSNREstimate = rCurSNREst * rSNRFACSigCorrFact;
 				}
 			}
 			break;
@@ -480,17 +481,22 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	   of the channel estimation delay have been processed */
 	iInitCnt = iLenHistBuff - 1;
 
-	/* SNR correction factor. We need this factor since we evalute the 
-	   signal-to-noise ratio only on the pilots and these have a higher power as
-	   the other cells */
-	rSNRCorrectFact =
-		ReceiverParam.rAvPilPowPerSym /	ReceiverParam.rAvPowPerSymbol;
+	/* SNR correction factor for the different SNR estimation types. For the
+	   FAC method, the average signal power has to be considered. For the pilot
+	   based method, only the SNR on the pilots are evaluated. Therefore, to get
+	   the total SNR, a correction has to be applied */
+	rSNRFACSigCorrFact = ReceiverParam.rAvPowPerSymbol / CReal(iNumCarrier);
+	rSNRTotToPilCorrFact = ReceiverParam.rAvScatPilPow *
+		(_REAL) iNumCarrier / ReceiverParam.rAvPowPerSymbol;
+
+	/* Correction factor for transforming the estimated system SNR in the SNR
+	   where the noise bandwidth is according to the nominal DRM bandwidth */
+	rSNRSysToNomBWCorrFact = ReceiverParam.GetSysToNomBWCorrFact();
 
 	/* Inits for SNR estimation (noise and signal averages) */
 	rSignalEst = (_REAL) 0.0;
 	rNoiseEst = (_REAL) 0.0;
-	rSNREstimate =
-		(_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10) / rSNRCorrectFact;
+	rSNREstimate = (_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10);
 
 	/* For SNR estimation initialization */
 	iSNREstIniSigAvCnt = 0;
@@ -577,8 +583,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	}
 	else
 	{
-		/* Get simulation SNR and set PDS to entire guard-interval length */
-		UpdateWienerFiltCoef(pow(10, ReceiverParam.rSimSNRdB / 10),
+		/* Get simulation SNR on the pilot positions and set PDS to entire
+		   guard-interval length */
+		UpdateWienerFiltCoef(pow(10, ReceiverParam.GetSysSNRdBPilPos() / 10),
 			(_REAL) ReceiverParam.RatioTgTu.iEnum /
 			ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
 	}
@@ -720,12 +727,11 @@ fflush(pFile);
 
 _BOOLEAN CChannelEstimation::GetSNREstdB(_REAL& rSNREstRes) const
 {
+	const _REAL rNomBWSNR = rSNREstimate * rSNRSysToNomBWCorrFact;
+
 	/* Bound the SNR at 0 dB */
-	if ((rSNREstimate * rSNRCorrectFact > (_REAL) 1.0) &&
-		(bSNRInitPhase == FALSE))
-	{
-		rSNREstRes = 10 * log10(rSNREstimate * rSNRCorrectFact);
-	}
+	if ((rNomBWSNR > (_REAL) 1.0) && (bSNRInitPhase == FALSE))
+		rSNREstRes = (_REAL) 10.0 * log10(rNomBWSNR);
 	else
 		rSNREstRes = (_REAL) 0.0;
 

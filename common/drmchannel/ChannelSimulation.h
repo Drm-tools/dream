@@ -35,11 +35,6 @@
 
 
 /* Definitions ****************************************************************/
-/* Set this parameter to "0" if you want to use the spectrum occupancies given
-   in the drm-standard (e.g., exactely 9 or 10 kHz). Set it to "1" if you want
-   to simulate the system bandwith, occupied by the active carriers */
-#define USE_SYSTEM_BANDWIDTH		0
-
 #define FIRLENGTH					24
         
 #define fsqr(a)						((a) * (a))

@@ -102,10 +102,7 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 {
-	int		i;
-	_REAL	rSpecOcc;
-	_REAL	rBWFactor;
-	_REAL	rMyFading;
+	_REAL rMyFading;
 
 	/* Set channel parameter according to selected channel number (table B.1) */
 	switch (ReceiverParam.iDRMChannelNum)
@@ -272,7 +269,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	/* Init exponent steps (for doppler shift) and gain correction ---------- */
 	rGainCorr = (_REAL) 0.0;
-	for (i = 0; i < iNoTaps; i++)
+	for (int i = 0; i < iNoTaps; i++)
 	{
 		/* Exponent function for shifting (doppler shift) */
 		cCurExp[i] = (_REAL) 1.0;
@@ -304,49 +301,20 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	iLenHist = ReceiverParam.iSymbolBlockSize + iMaxDelay;
 	veccHistory.Init(iLenHist, _COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
-	/* Allocate memory for temporary output vector for complex interim values */
+	/* Allocate memory for temporary output vector for complex values */
 	veccOutput.Init(ReceiverParam.iSymbolBlockSize);
 
 
 	/* Calculate noise power factors for a given SNR ------------------------ */
-#if (USE_SYSTEM_BANDWIDTH)
 	/* Spectrum width (N / T_u) */
-	rSpecOcc = (_REAL) ReceiverParam.iNumCarrier /
+	const _REAL rSpecOcc = (_REAL) ReceiverParam.iNumCarrier /
 		ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
-#else
-	switch (ReceiverParam.GetSpectrumOccup())
-	{
-	case SO_0:
-		rSpecOcc = (_REAL) 4500.0; // Hz
-		break;
-
-	case SO_1:
-		rSpecOcc = (_REAL) 5000.0; // Hz
-		break;
-
-	case SO_2:
-		rSpecOcc = (_REAL) 9000.0; // Hz
-		break;
-
-	case SO_3:
-		rSpecOcc = (_REAL) 10000.0; // Hz
-		break;
-
-	case SO_4:
-		rSpecOcc = (_REAL) 18000.0; // Hz
-		break;
-
-	case SO_5:
-		rSpecOcc = (_REAL) 20000.0; // Hz
-		break;
-	}
-#endif
 
 	/* Bandwidth correction factor for noise (f_s / (2 * B))*/
-	rBWFactor = (_REAL) SOUNDCRD_SAMPLE_RATE / 2 / rSpecOcc;
+	const _REAL rBWFactor = (_REAL) SOUNDCRD_SAMPLE_RATE / 2 / rSpecOcc;
 
 	/* Calculation of the gain factor for noise generator */
-	rNoisepwrFactor = sqrt(pow(10, -ReceiverParam.rSimSNRdB / 10) *
+	rNoisepwrFactor = sqrt(pow(10, -ReceiverParam.GetSystemSNRdB() / 10) *
 		ReceiverParam.rAvPowPerSymbol * 2 * rBWFactor);
 
 

@@ -414,7 +414,6 @@ public:
 	ESimType			eSimType;
 
 	int					iDRMChannelNum;
-	_REAL				rSimSNRdB;
 	_REAL				rBitErrRate;
 	_REAL				rSyncTestParam; /* For any other simulations, used
 										   with "ST_SYNC_PARAM" type */
@@ -426,6 +425,11 @@ public:
 	_REAL				rGainCorr;
 	int					iOffUsfExtr;
 
+	void SetNominalSNRdB(const _REAL rSNRdBNominal);
+	_REAL GetNominalSNRdB();
+	void SetSystemSNRdB(const _REAL rSNRdBSystem) {rSysSimSNRdB = rSNRdBSystem;}
+	_REAL GetSystemSNRdB() const {return rSysSimSNRdB;}
+	_REAL GetSysSNRdBPilPos() const;
 
 	/* Simulation raw-data management. We have to implement a shift register
 	   with varying size. We do that by adding a variable for storing the
@@ -447,7 +451,6 @@ public:
 
 		void Reset() {iCurWritePos = 0;}
 
-
 	protected:
 		/* Max number of delayed blocks */
 		int							ciMaxDelBlocks;
@@ -457,10 +460,13 @@ public:
 
 
 	/* General -------------------------------------------------------------- */
+	_REAL				GetSysToNomBWCorrFact();
 	_BOOLEAN			bRunThread;
 	_BOOLEAN			bUsingMultimedia;
 
 protected:
+	_REAL				rSysSimSNRdB;
+
 	/* Current selected audio service for processing */
 	int					iCurSelAudioService;
 	int					iCurSelDataService;

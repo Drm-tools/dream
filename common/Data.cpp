@@ -258,7 +258,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				iCounter, iNumSimBlocks, tiElTi / 60, lReTi / 60);
 
 			/* Add current value of BER */
-			fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
+			fprintf(pFileCurPos, "\n%e %e", TransmParam.GetNominalSNRdB(),
 				TransmParam.rBitErrRate);
 			fclose(pFileCurPos);
 		}
@@ -293,7 +293,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 					tiElTi / 60, lReTi / 60);
 
 				/* Add current value of BER */
-				fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
+				fprintf(pFileCurPos, "\n%e %e", TransmParam.GetNominalSNRdB(),
 					TransmParam.rBitErrRate);
 				fclose(pFileCurPos);
 			}
@@ -320,7 +320,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 					lReTi / 60);
 
 				/* Add current value of BER */
-				fprintf(pFileCurPos, "\n%e %e", TransmParam.rSimSNRdB,
+				fprintf(pFileCurPos, "\n%e %e", TransmParam.GetNominalSNRdB(),
 					TransmParam.rBitErrRate);
 				fclose(pFileCurPos);
 			}

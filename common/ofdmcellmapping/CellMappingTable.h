@@ -36,32 +36,38 @@
 
 
 /* Definitions ****************************************************************/
+/* Power definitions for pilots, boosted pilots and data cells (average) */
+#define AV_DATA_CELLS_POWER		((_REAL) 1.0)
+#define AV_PILOT_POWER			((_REAL) 2.0)
+#define AV_BOOSTED_PIL_POWER	((_REAL) 4.0)
+
+
 /* We define a bit for each flag to allow multiple assignments */
-#define	CM_DC			1	/* Bit 0 */ // CM: Carrier Mapping
-#define	CM_MSC			2	/* Bit 1 */
-#define	CM_SDC			4	/* Bit 2 */
-#define	CM_FAC			8	/* Bit 3 */
-#define	CM_TI_PI		16	/* Bit 4 */
-#define	CM_FRE_PI		32	/* Bit 5 */
-#define	CM_SCAT_PI		64	/* Bit 6 */
-#define	CM_BOOSTED_PI	128	/* Bit 7 */
+#define	CM_DC					1	/* Bit 0 */ // CM: Carrier Mapping
+#define	CM_MSC					2	/* Bit 1 */
+#define	CM_SDC					4	/* Bit 2 */
+#define	CM_FAC					8	/* Bit 3 */
+#define	CM_TI_PI				16	/* Bit 4 */
+#define	CM_FRE_PI				32	/* Bit 5 */
+#define	CM_SCAT_PI				64	/* Bit 6 */
+#define	CM_BOOSTED_PI			128	/* Bit 7 */
 
 /* Definitions for checking the cells */
-#define _IsDC(a)		((a) & CM_DC)
+#define _IsDC(a)				((a) & CM_DC)
 
-#define _IsMSC(a)		((a) & CM_MSC)
-#define _IsSDC(a)		((a) & CM_SDC)
-#define _IsFAC(a)		((a) & CM_FAC)
+#define _IsMSC(a)				((a) & CM_MSC)
+#define _IsSDC(a)				((a) & CM_SDC)
+#define _IsFAC(a)				((a) & CM_FAC)
 
-#define _IsData(a)		(((a) & CM_MSC) || ((a) & CM_SDC) || ((a) & CM_FAC))
+#define _IsData(a)				(((a) & CM_MSC) || ((a) & CM_SDC) || ((a) & CM_FAC))
 
 
-#define _IsTiPil(a)		((a) & CM_TI_PI)
-#define _IsFreqPil(a)	((a) & CM_FRE_PI)
-#define _IsScatPil(a)	((a) & CM_SCAT_PI)
+#define _IsTiPil(a)				((a) & CM_TI_PI)
+#define _IsFreqPil(a)			((a) & CM_FRE_PI)
+#define _IsScatPil(a)			((a) & CM_SCAT_PI)
 
-#define _IsPilot(a)		(((a) & CM_TI_PI) || ((a) & CM_FRE_PI) || ((a) & CM_SCAT_PI))
-#define _IsBoosPil(a)	((a) & CM_BOOSTED_PI)
+#define _IsPilot(a)				(((a) & CM_TI_PI) || ((a) & CM_FRE_PI) || ((a) & CM_SCAT_PI))
+#define _IsBoosPil(a)			((a) & CM_BOOSTED_PI)
 
 
 /* Classes ********************************************************************/
@@ -112,8 +118,7 @@ public:
 
 	/* Needed for SNR estimation and simulation */
 	_REAL				rAvPowPerSymbol; /* Total average power per symbol */
-	_REAL				rAvPilPowPerSym; /* Average power of pilots per symbol */
-
+	_REAL				rAvScatPilPow; /* Average power of scattered pilots per cell */
 
 protected:
 	/* Internal parameters for MakeTable function --------------------------- */
