@@ -67,9 +67,6 @@
    for initalizing the channel estimation */
 #define NUM_FAC_DEL_TRACK_SWITCH		2
 
-/* Set this sound card device if you don't have selected any */
-#define NO_SOUND_CRD_DEVICE_SEL			-1
-
 
 /* Classes ********************************************************************/
 class CDRMReceiver
@@ -89,9 +86,7 @@ public:
 		iGoodSignCnt(0), bWasFreqAcqu(TRUE), bDoInitRun(FALSE),
 		eReceiverMode(RM_DRM), 	eNewReceiverMode(RM_NONE),
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
-		rInitResampleOffset((_REAL) 0.0),
-		iSoundCrdDevIn(NO_SOUND_CRD_DEVICE_SEL),
-		iSoundCrdDevOut(NO_SOUND_CRD_DEVICE_SEL)
+		rInitResampleOffset((_REAL) 0.0)
 #ifdef HAVE_LIBHAMLIB
 		, strHamlibConf(""), iHamlibModelID(0)
 #endif
@@ -159,13 +154,6 @@ public:
 								{strHamlibConf = strNewC;}
 	string					GetHamlibConf() const {return strHamlibConf;}
 #endif
-
-	void					SetSoundCrdDevIn(const int iNDev)
-								{iSoundCrdDevIn = iNDev;}
-	int						GetSoundCrdDevIn() {return iSoundCrdDevIn;}
-	void					SetSoundCrdDevOut(const int iNDev)
-								{iSoundCrdDevOut = iNDev;}
-	int						GetSoundCrdDevOut() {return iSoundCrdDevOut;}
 
 protected:
 	void					Run();
