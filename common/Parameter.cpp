@@ -785,11 +785,14 @@ void CParameter::CReceptLog::SetSNR(const _REAL rNewCurSNR)
 
 void CParameter::CReceptLog::SetNumAAC(const int iNewNum)
 {
-	/* Set the number of AAC frames in one block */
-	iNumAACFrames = iNewNum;
+	if (iNumAACFrames != iNewNum)
+	{
+		/* Set the number of AAC frames in one block */
+		iNumAACFrames = iNewNum;
 
-	ResetLog(TRUE);
-	ResetLog(FALSE);
+		ResetLog(TRUE);
+		ResetLog(FALSE);
+	}
 }
 
 void CParameter::CReceptLog::SetLog(const _BOOLEAN bLog)
