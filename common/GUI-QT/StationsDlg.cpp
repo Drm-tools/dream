@@ -297,11 +297,16 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 #endif
 
 
+#ifdef _WIN32
 	/* Set WINRADIO to default, because I own such a device :-) */
 	eWhichRemoteControl = RC_WINRADIO;
 	pRemoteMenu->setItemChecked(1, TRUE);
+#else
+	eWhichRemoteControl = RC_NOREMCNTR;
+	pRemoteMenu->setItemChecked(0, TRUE);
+#endif
 
-	
+
 	/* Update menu ---------------------------------------------------------- */
 	QPopupMenu* pUpdateMenu = new QPopupMenu(this);
 	CHECK_PTR(pUpdateMenu);
