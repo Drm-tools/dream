@@ -278,13 +278,11 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Remote menu  --------------------------------------------------------- */
 	pRemoteMenu = new QPopupMenu(this);
 	CHECK_PTR(pRemoteMenu);
-	pRemoteMenu->insertItem("None", this, SLOT(OnRemoteMenu(int)), NULL, 0);
-	pRemoteMenu->insertItem("Winradio G3", this, SLOT(OnRemoteMenu(int)),
-		NULL, 1);
-	pRemoteMenu->insertItem("AOR 7030", this, SLOT(OnRemoteMenu(int)),
-		NULL, 2);
-	pRemoteMenu->insertItem("Elektor 3/04", this, SLOT(OnRemoteMenu(int)),
-		NULL, 3);
+	pRemoteMenu->insertItem("None", this, SLOT(OnRemoteMenu(int)), 0, 0);
+	pRemoteMenu->insertItem("Winradio G3", this, SLOT(OnRemoteMenu(int)), 0, 1);
+	pRemoteMenu->insertItem("AOR 7030", this, SLOT(OnRemoteMenu(int)), 0, 2);
+	pRemoteMenu->
+		insertItem("Elektor 3/04", this, SLOT(OnRemoteMenu(int)), 0, 3);
 
 	/* Set WINRADIO to default, because I own such a device :-) */
 	eWhichRemoteControl = RC_WINRADIO;
