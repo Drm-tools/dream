@@ -156,7 +156,7 @@ void CSound::InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking)
 
 		AddInBuffer();
 	}
-		
+
 	/* Notify that sound capturing can start now */
 	waveInStart(m_WaveIn);
 
@@ -476,10 +476,16 @@ CSound::CSound()
 
 	/* Init buffer pointer to zero */
 	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
+	{
+		memset(&m_WaveInHeader[i], 0, sizeof(WAVEHDR));
 		psSoundcardBuffer[i] = NULL;
+	}
 
 	for (i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
+	{
+		memset(&m_WaveOutHeader[i], 0, sizeof(WAVEHDR));
 		psPlaybackBuffer[i] = NULL;
+	}
 
 	/* Init wave-format structure */
 	sWaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
