@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>673</width>
+            <width>665</width>
             <height>413</height>
         </rect>
     </property>
@@ -23,6 +23,10 @@
         </sizepolicy>
     </property>
     <property stdset="1">
+        <name>cursor</name>
+        <cursor>13</cursor>
+    </property>
+    <property stdset="1">
         <name>caption</name>
         <string>Stations</string>
     </property>
@@ -32,7 +36,7 @@
     </property>
     <property stdset="1">
         <name>sizeGripEnabled</name>
-        <bool>false</bool>
+        <bool>true</bool>
     </property>
     <property>
         <name>layoutMargin</name>
