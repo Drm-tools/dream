@@ -40,6 +40,9 @@
 #ifdef USE_FAAD2_LIBRARY
 # include "faad.h"
 #endif
+#ifdef USE_FAAC_LIBRARY
+# include "faac.h"
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -51,8 +54,8 @@
 class CAudioSourceEncoder : public CTransmitterModul<_SAMPLE, _BINARY>
 {
 public:
-	CAudioSourceEncoder() : bUsingTextMessage(FALSE) {};
-	virtual ~CAudioSourceEncoder() {};
+	CAudioSourceEncoder() : bUsingTextMessage(FALSE) {}
+	virtual ~CAudioSourceEncoder() {}
 
 	void SetTextMessage(const string& strText);
 	void ClearTextMessage();
@@ -62,13 +65,30 @@ public:
 	void ClearPicFileNames()
 		{DataEncoder.GetSliShowEnc()->ClearAllFileNames();}
 
-
 protected:
-	CTextMessageEncoder TextMessage;
-	_BOOLEAN			bUsingTextMessage;
-	CDataEncoder		DataEncoder;
-	int					iTotPacketSize;
-	_BOOLEAN			bIsDataService;
+	CTextMessageEncoder		TextMessage;
+	_BOOLEAN				bUsingTextMessage;
+	CDataEncoder			DataEncoder;
+	int						iTotPacketSize;
+	_BOOLEAN				bIsDataService;
+
+#ifdef USE_FAAC_LIBRARY
+	faacEncHandle			hEncoder;
+	faacEncConfigurationPtr CurEncFormat;
+	unsigned long			lNumSampEncIn;
+	unsigned long			lMaxBytesEncOut;
+	unsigned long			lEncSamprate;
+	CVector<_BYTE>			aac_crc_bits;
+	CVector<_SAMPLE>		vecsEncInData;
+	CMatrix<_BYTE>			audio_frame;
+	CVector<int>			veciFrameLength;
+	int						iNumAACFrames;
+	int						iAudioPayloadLen;
+
+	CAudioResample			ResampleObj;
+	CVector<_REAL>			vecTempResBufIn;
+	CVector<_REAL>			vecTempResBufOut;
+#endif
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
@@ -79,7 +99,6 @@ class CAudioSourceDecoder : public CReceiverModul<_BINARY, _SAMPLE>
 public:
 	CAudioSourceDecoder();
 	virtual ~CAudioSourceDecoder();
-
 
 protected:
 	enum EInitErr {ET_ALL, ET_AAC}; /* ET: Error type */
@@ -101,14 +120,12 @@ protected:
 
 	int					iTotalFrameSize;
 
-
 #ifdef USE_FAAD2_LIBRARY
 	/* AAC decoding */
 	faacDecHandle		HandleAACDecoder;
 
 	CAudioResample		ResampleObjL;
 	CAudioResample		ResampleObjR;
-		
 
 	CVector<_REAL>		vecTempResBufInLeft;
 	CVector<_REAL>		vecTempResBufInRight;
@@ -133,7 +150,6 @@ protected:
 
 	_BOOLEAN			bAudioWasOK;
 #endif
-
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

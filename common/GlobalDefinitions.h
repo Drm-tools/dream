@@ -62,6 +62,9 @@ using namespace std; /* Because of the library: "complex" */
 # define USE_FAAD2_LIBRARY
 //# undef USE_FAAD2_LIBRARY
 
+# define USE_FAAC_LIBRARY
+# undef USE_FAAC_LIBRARY
+
 # define HAVE_JOURNALINE
 //# undef HAVE_JOURNALINE
 
