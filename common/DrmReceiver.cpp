@@ -377,10 +377,8 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 
 	/* Define with which parameters the receiver should try to decode the
 	   signal. If we are correct with our assumptions, the receiver does not
-	   need to reinitialize. We have to assume that the smallest frequency
-	   bandwidth was chosen because we also have an IIR filter with that
-	   bandwidth */
-	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_0);
+	   need to reinitialize */
+	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 
 	/* Set initial MLC parameters */
 	Param.SetInterleaverDepth(CParameter::SI_LONG);
@@ -398,7 +396,7 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 
 	/* Protection levels */
 	Param.MSCPrLe.iPartA = 0;
-	Param.MSCPrLe.iPartB = 0;
+	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
 
 	/* Number of audio and data services */
