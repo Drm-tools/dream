@@ -85,7 +85,7 @@ int main(int argc, char** argv)
 try
 {
 	/* Parse arguments */
-	_BOOLEAN bIsReceiver = ParseArguments(argc, argv);
+	const _BOOLEAN bIsReceiver = ParseArguments(argc, argv);
 
 	/* Call simulation script. If simulation is activated, application is 
 	   automatically exit in that routine. If in the script no simulation is
@@ -167,8 +167,8 @@ void ErrorMessage(string strErrorString)
 #endif
 
 /*
-// Does not work correctly. If it is called by a different thread, the application
-// hangs! FIXME
+// Does not work correctly. If it is called by a different thread, the
+// application hangs! FIXME
 	QMessageBox::critical(0, "Dream",
 		QString("The following error occured:<br><b>") + 
 		QString(strErrorString.c_str()) +
@@ -189,7 +189,7 @@ int main(int argc, char** argv)
 
 try
 {
-	_BOOLEAN bIsReceiver = ParseArguments(argc, argv);
+	const _BOOLEAN bIsReceiver = ParseArguments(argc, argv);
 	DRMSimulation.SimScript();
 
 	if (bIsReceiver == TRUE)
@@ -338,8 +338,7 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 				exit(1);
 			}
 
-			DRMReceiver.GetReceiver()->SetIOFileName(argv[i]);
-			DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
+			DRMReceiver.SetReadDRMFromFile(argv[i]);
 			continue;
 		}
 
