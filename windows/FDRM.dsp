@@ -790,6 +790,10 @@ SOURCE=..\common\InputResample.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\IQInputFilter.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI.h
 # End Source File
 # Begin Source File

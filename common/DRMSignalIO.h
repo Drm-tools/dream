@@ -34,6 +34,7 @@
 #include <math.h>
 #include "matlib/Matlib.h"
 #include "TransmitterFilter.h"
+#include "IQInputFilter.h"
 #include "util/Utilities.h"
 
 #ifdef _WIN32
@@ -115,7 +116,8 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN};
+	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
+		CS_IQ_NEG};
 
 	CReceiveData(CSound* pNS) : strInFileName("test/TransmittedData.txt"),
 		bUseSoundcard(TRUE), bNewUseSoundcard(TRUE), pSound(pNS),
@@ -154,6 +156,11 @@ protected:
 	string					strInFileName;
 
 	EInChanSel				eInChanSelection;
+
+	CVector<_REAL>			vecrReHist;
+	CVector<_REAL>			vecrImHist;
+	_REAL HilbertFilt(const _REAL rRe, const _REAL rIm,
+		const _BOOLEAN bUSBFlag);
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

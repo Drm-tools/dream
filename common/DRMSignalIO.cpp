@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Cesco (HB9TLK)
  *
  * Description:
  *	Transmit and receive data
@@ -293,6 +293,25 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 				(*pvecOutputData)[i] = (_REAL) ((iLeftChan + iRightChan) / 2);
 			}
 			break;
+
+		/* I / Q input */
+		case CS_IQ_POS:
+			for (i = 0; i < iOutputBlockSize; i++)
+			{
+				(*pvecOutputData)[i] =
+					HilbertFilt((_REAL) vecsSoundBuffer[2 * i],
+					(_REAL) vecsSoundBuffer[2 * i + 1], TRUE);
+			}
+			break;
+
+		case CS_IQ_NEG:
+			for (i = 0; i < iOutputBlockSize; i++)
+			{
+				(*pvecOutputData)[i] =
+					HilbertFilt((_REAL) vecsSoundBuffer[2 * i],
+					(_REAL) vecsSoundBuffer[2 * i + 1], FALSE);
+			}
+			break;
 		}
 	}
 	else
@@ -394,8 +413,42 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	/* Init signal meter */
 	SignalLevelMeter.Init(0);
 
+	/* Inits for I / Q input */
+	vecrReHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
+	vecrImHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
+
 	/* Define output block-size */
 	iOutputBlockSize = Parameter.iSymbolBlockSize;
+}
+
+_REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm,
+								const _BOOLEAN bUSBFlag)
+{
+/*
+	Hilbert filter for I / Q input data. This code is based on code written
+	by Cesco (HB9TLK)
+*/
+    int i;
+
+	/* Move old data */
+    for (i = 0; i < NUM_TAPS_IQ_INPUT_FILT - 1; i++)
+	{
+		vecrReHist[i] = vecrReHist[i + 1];
+		vecrImHist[i] = vecrImHist[i + 1];
+	}
+
+    vecrReHist[NUM_TAPS_IQ_INPUT_FILT - 1] = rRe;
+    vecrImHist[NUM_TAPS_IQ_INPUT_FILT - 1] = rIm;
+
+	/* Filter */
+    _REAL rSum = (_REAL) 0.0;
+    for (i = 1; i < NUM_TAPS_IQ_INPUT_FILT; i += 2)
+		rSum += fHilFiltIQ[i] * vecrImHist[i];
+
+	if (bUSBFlag == TRUE)
+		return rSum + vecrReHist[IQ_INP_HIL_FILT_DELAY];
+	else
+		return rSum - vecrReHist[IQ_INP_HIL_FILT_DELAY];
 }
 
 CReceiveData::~CReceiveData()
