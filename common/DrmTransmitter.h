@@ -63,6 +63,11 @@ public:
 	void Start();
 	void Stop();
 
+	/* Get pointer to internal modules */
+	COFDMModulation*	GetOFDMMod() {return &OFDMModulation;}
+
+	CParameter*			GetParameters() {return &TransmParam;}
+
 
 protected:
 	void StartParameters(CParameter& Param);
