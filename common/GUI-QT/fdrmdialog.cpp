@@ -36,13 +36,13 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 {
 	/* Set the text for the about dialog html text control */
 	TextViewCredits->setText(
-		"<p>"
+		"<p>" /* General description of Dream software */
 		"<big><b>Dream</b> is a software implementation of a Digital Radio "
 		"Mondiale (DRM) receiver. All what is needed to receive DRM "
 		"transmissions is a PC with a sound card and a modified analog "
 		"short-wave (MW, LW) receiver.</big>"
 		"</p><br>"
-		"<p><font face=\"courier\">"
+		"<p><font face=\"courier\">" /* GPL header text */
 		"This program is free software; you can redistribute it and/or modify "
 		"it under the terms of the GNU General Public License as published by "
 		"the Free Software Foundation; either version 2 of the License, or "
@@ -54,15 +54,15 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"License along with his program; if not, write to the Free Software "
 		"Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 "
 		"USA"
-		"</font></p><br>"
+		"</font></p><br>" /* Our warning text */
 		"<p><font color=\"#ff0000\" face=\"courier\">"
 		"Although this software is going to be "
 		"distributed as free software under the terms of the GPL this does not "
 		"mean that its use is free of rights of others. The use may infringe "
 		"third party IP and thus may not be legal in some countries."
 		"</font></p><br>"
-		"<p>"
-		"<b>This version of Dream uses the following libraries:</b>"
+		"<p>" /* Libraries used by this compilation of Dream */
+		"<b>This compilation of Dream uses the following libraries:</b>"
 		"</p>"
 		"<ul>"
 		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
