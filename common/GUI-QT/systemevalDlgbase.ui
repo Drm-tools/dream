@@ -12,7 +12,7 @@
             <x>0</x>
             <y>0</y>
             <width>738</width>
-            <height>587</height>
+            <height>559</height>
         </rect>
     </property>
     <property stdset="1">
@@ -1049,7 +1049,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout21</cstring>
+                <cstring>Layout22</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -1579,7 +1579,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout20</cstring>
+                        <cstring>Layout21</cstring>
                     </property>
                     <vbox>
                         <property stdset="1">
@@ -1598,7 +1598,7 @@
                             </property>
                             <property stdset="1">
                                 <name>title</name>
-                                <string>Interferer Rej.</string>
+                                <string>Interferer Rejection</string>
                             </property>
                             <property stdset="1">
                                 <name>alignment</name>
@@ -1630,7 +1630,7 @@
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>BP-Filter</string>
+                                        <string>Bandpass Filter</string>
                                     </property>
                                 </widget>
                                 <widget>
@@ -1641,7 +1641,7 @@
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Mod. Metric</string>
+                                        <string>Modificated Metric</string>
                                     </property>
                                 </widget>
                             </vbox>
@@ -1668,27 +1668,65 @@
                             </property>
                         </spacer>
                         <widget>
-                            <class>QPushButton</class>
+                            <class>QLayoutWidget</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>buttonOk</cstring>
+                                <cstring>Layout20</cstring>
                             </property>
-                            <property stdset="1">
-                                <name>caption</name>
-                                <string></string>
-                            </property>
-                            <property stdset="1">
-                                <name>text</name>
-                                <string>&amp;Close</string>
-                            </property>
-                            <property stdset="1">
-                                <name>autoDefault</name>
-                                <bool>true</bool>
-                            </property>
-                            <property stdset="1">
-                                <name>default</name>
-                                <bool>true</bool>
-                            </property>
+                            <hbox>
+                                <property stdset="1">
+                                    <name>margin</name>
+                                    <number>0</number>
+                                </property>
+                                <property stdset="1">
+                                    <name>spacing</name>
+                                    <number>6</number>
+                                </property>
+                                <spacer>
+                                    <property>
+                                        <name>name</name>
+                                        <cstring>Spacer3</cstring>
+                                    </property>
+                                    <property>
+                                        <name>orientation</name>
+                                        <enum>Horizontal</enum>
+                                    </property>
+                                    <property>
+                                        <name>sizeType</name>
+                                        <enum>Expanding</enum>
+                                    </property>
+                                    <property>
+                                        <name>sizeHint</name>
+                                        <size>
+                                            <width>20</width>
+                                            <height>20</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                                <widget>
+                                    <class>QPushButton</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>buttonOk</cstring>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>caption</name>
+                                        <string></string>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>text</name>
+                                        <string>&amp;Close</string>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>autoDefault</name>
+                                        <bool>true</bool>
+                                    </property>
+                                    <property stdset="1">
+                                        <name>default</name>
+                                        <bool>true</bool>
+                                    </property>
+                                </widget>
+                            </hbox>
                         </widget>
                     </vbox>
                 </widget>
