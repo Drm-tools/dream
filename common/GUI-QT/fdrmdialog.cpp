@@ -409,6 +409,7 @@ void FDRMDialog::OnTimer()
 	/* Check the receiver mode for showing the correct evaluation window */
 	if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_DRM)
 	{
+		/* DRM: 0, AM: 1 */
 		if (pReceiverModeMenu->isItemChecked(1) == TRUE)
 		{
 			pReceiverModeMenu->setItemChecked(1, FALSE);
@@ -424,6 +425,7 @@ void FDRMDialog::OnTimer()
 
 	if (DRMReceiver.GetReceiverMode() == CDRMReceiver::RM_AM)
 	{
+		/* DRM: 0, AM: 1 */
 		if (pReceiverModeMenu->isItemChecked(0) == TRUE)
 		{
 			pReceiverModeMenu->setItemChecked(0, FALSE);
@@ -449,7 +451,6 @@ void FDRMDialog::OnReceiverMode(int id)
 			pAnalogDemDlg->hide();
 			pSysEvalDlg->show();
 		}
-
 		break;
 
 	case 1:
