@@ -88,6 +88,29 @@ int CParameter::GetNumActiveServices()
 	return iNumAcServ;
 }
 
+void CParameter::GetActiveServices(CVector<int>& veciActServ)
+{
+	int				i;
+	CVector<int>	vecbServices(MAX_NUM_SERVICES, 0);
+
+	/* Init return vector */
+	veciActServ.Init(0);
+
+	/* Get active services */
+	int iNumServices = 0;
+	for (i = 0; i < MAX_NUM_SERVICES; i++)
+	{
+		if (Service[i].IsActive())
+		{
+			/* A service is active, enlarge return vector and store ID */
+			veciActServ.Enlarge(1);
+			veciActServ[iNumServices] = i;
+
+			iNumServices++;
+		}
+	}
+}
+
 void CParameter::GetActiveStreams(CVector<int>& veciActStr)
 {
 	int					i;

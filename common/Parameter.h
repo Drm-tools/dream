@@ -39,7 +39,7 @@ class CParameter : public CCellMappingTable
 {
 public:
 	CParameter() : bRunThread(FALSE), Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
-		FACRepetition(15) /* See 6.3.6 */, bUsingMultimedia(TRUE) {}
+		bUsingMultimedia(TRUE) {}
 	virtual ~CParameter() {}
 
 	/* Enumerations --------------------------------------------------------- */
@@ -245,6 +245,7 @@ public:
 	};
 
 	void			ResetServicesStreams();
+	void			GetActiveServices(CVector<int>& veciActServ);
 	void			GetActiveStreams(CVector<int>& veciActStr);
 	int				GetNumActiveServices();
 	void			InitCellMapTable(const ERobMode eNewWaveMode, const ESpecOcc eNewSpecOcc);
@@ -290,9 +291,6 @@ public:
 	void			SetAudDataFlag(const int iServID, const ETyOServ iNewADaFl);
 	void			SetServID(const int iServID, const _UINT32BIT iNewServID);
 
-	/* These two parameters are only intended for transmitter */
-	CVector<int>	FACRepetition; /* See 6.3.6 */
-	int				FACNumRep;
 
 	/* Symbol interleaver mode (long or short interleaving) */
 	ESymIntMod		eSymbolInterlMode; 
