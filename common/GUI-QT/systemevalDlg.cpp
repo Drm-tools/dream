@@ -47,8 +47,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 
 	/* Inits for channel estimation and time sync switches */
-	switch (DRMReceiver.
-		GetChanEst()->GetTimeInt())
+	switch (DRMReceiver.GetChanEst()->GetTimeInt())
 	{
 	case CChannelEstimation::TLINEAR:
 		RadioButtonTiLinear->setChecked(TRUE);
@@ -84,6 +83,10 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		RadioButtonTiSyncEnergy->setChecked(TRUE);
 		break;
 	}
+
+	/* Init settings checkbuttons */
+	CheckBoxFlipSpec->setChecked(DRMReceiver.GetReceiver()->GetFlippedSpectrum());
+	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
 
 
 	/* Init progress bar for SNR */

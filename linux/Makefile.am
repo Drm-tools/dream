@@ -118,6 +118,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/tables/TableFAC.h \
 	../common/tables/TableMLC.h \
 	../common/tables/TableQAMMapping.h \
+	../common/GUI-QT/main.h \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialogbase.ui \
 	../common/GUI-QT/AboutDlgbase.ui \

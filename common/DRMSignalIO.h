@@ -75,6 +75,8 @@ public:
 	void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
 	void SetFlippedSpectrum(_BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
+	_BOOLEAN GetFlippedSpectrum() {return bFippedSpectrum;}
+
 	void SetUseSoundcard(_BOOLEAN bNewUS) {bUseSoundcard = bNewUS;
 		SetInitFlag();}
 

@@ -5,6 +5,9 @@
  * Author(s):
  *	Volker Fischer
  *
+ *	Thanks to Tomi Manninen / OH2BNS / KP20ME04 for the command line argument
+ *		parsing (argv)
+ *
  * Description:
  *	
  *
@@ -26,18 +29,7 @@
  *
 \******************************************************************************/
 
-#include "../GlobalDefinitions.h"
-#include "../DrmReceiver.h"
-#include "../DrmTransmitter.h"
-#include "../DrmSimulation.h"
-
-#ifdef USE_QT_GUI
-# include <qapplication.h>
-# include <qthread.h>
-# include <qmessagebox.h>
-# include "fdrmdialog.h"
-#endif
-
+#include "main.h"
 
 /* The receiver, transmitter and simulation are global objects */
 CDRMReceiver	DRMReceiver; 
@@ -45,6 +37,7 @@ CDRMTransmitter	DRMTransmitter;
 CDRMSimulation	DRMSimulation;
 
 
+/* Implementation *************************************************************/
 #ifdef USE_QT_GUI
 /******************************************************************************\
 * Using GUI with QT                                                            *
@@ -90,6 +83,10 @@ try
 	DRMSimulation.SimScript();
 
 	QApplication	app(argc, argv); // Application object
+
+	/* Parse arguments */
+	ParseArguments(app);
+
 	ReceiverThread	RecThread; // Working thread object
 	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax); // Main dialog
 
@@ -198,4 +195,90 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 	fclose(pFile);
 	printf("\nDebug error, exit! For more information see DebugError.dat\n");
 	exit(1);
+}
+
+void ParseArguments(QApplication& app)
+{
+	/* QT docu: argv()[0] is the program name, argv()[1] is the first
+	   argument and argv()[argc()-1] is the last argument.
+	   Start with first argument, therefore "i = 1" */
+	for (int i = 1; i < app.argc(); i++)
+	{
+		/* Flip spectrum flag ----------------------------------------------- */
+		if (!strcmp(app.argv()[i], "-flipspectrum"))
+		{
+			DRMReceiver.GetReceiver()->SetFlippedSpectrum(TRUE);
+			continue;
+		}
+
+
+		/* Mute audio flag -------------------------------------------------- */
+		if (!strcmp(app.argv()[i], "-muteaudio"))
+		{
+			DRMReceiver.GetWriteData()->MuteAudio(TRUE);
+			continue;
+		}
+
+
+		/* Do not use sound card, read from file ---------------------------- */
+		if (!strcmp(app.argv()[i], "-fromfile"))
+		{
+			DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
+			continue;
+		}
+
+
+		/* Number of iterations for MLC setting ----------------------------- */
+		if (!strcmp(app.argv()[i], "-mlciter"))
+		{
+			if (++i >= app.argc())
+			{
+				cerr << app.argv()[0] << ": ";
+				cerr << "'-mlciter' needs a numeric argument between 0 and 4." << endl;
+				exit(1);
+			}
+
+			char *p;
+			int n = strtol(app.argv()[i], &p, 10);
+			if (*p || n < 0 || n > 4)
+			{
+				cerr << app.argv()[0] << ": ";
+				cerr << "'-mlciter' needs a numeric argument between 0 and 4." << endl;
+				exit(1);
+			}
+
+			DRMReceiver.GetMSCMLC()->SetNumIterations(n);
+			continue;
+		}
+
+
+		/* Help (usage) flag ------------------------------------------------ */
+		if (!strcmp(app.argv()[i], "-help"))
+		{
+			UsageArguments();
+			exit(1);
+		}
+
+
+		/* Unknown option --------------------------------------------------- */
+		cerr << app.argv()[0] << ": ";
+		cerr << "Unknown option '" << app.argv()[i] << "' -- use '-help' for help" << endl;
+		exit(1);
+	}
+}
+
+void UsageArguments(void)
+{
+	cerr << "Usage: " << qApp->argv()[0] << " [QT options] [options]" << endl;
+	cerr << endl;
+	cerr << "Recognized options:" << endl;
+	cerr << endl;
+	cerr << "  -flipspectrum              flip input spectrum" << endl;
+	cerr << "  -mlciter <n>               number of MLC iterations" << endl;
+	cerr << "                             allowed range: 0...4" << endl;
+	cerr << "                             default: 1" << endl;
+	cerr << "  -muteaudio                 mute audio output" << endl;
+	cerr << "  -fromfile                  disable sound card" << endl;
+	cerr << "                             read from file instead" << endl;
+	cerr << endl;
 }

@@ -70,6 +70,7 @@ public:
 	virtual ~CWriteData() {}
 
 	void MuteAudio(_BOOLEAN bNewMA) {bMuteAudio = bNewMA;}
+	_BOOLEAN GetMuteAudio() {return bMuteAudio;}
 
 protected:
 	CSound*		pSound;
