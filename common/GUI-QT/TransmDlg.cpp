@@ -808,9 +808,9 @@ void TransmDialog::UpdateMSCProtLevCombo()
 		ComboBoxMSCProtLev->insertItem("3", 3);
 	}
 
-	/* Set protection level to 0 */
-	ComboBoxTextMessage->setCurrentItem(0);
-	TransThread.DRMTransmitter.GetParameters()->MSCPrLe.iPartB = 0;
+	/* Set protection level to 1 */
+	ComboBoxMSCProtLev->setCurrentItem(1);
+	TransThread.DRMTransmitter.GetParameters()->MSCPrLe.iPartB = 1;
 }
 
 void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
