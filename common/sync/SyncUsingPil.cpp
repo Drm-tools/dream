@@ -34,7 +34,9 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int			i;
 	int			iMinIndex;
-	_REAL		rTimePilotCorr;
+	int			iCurIndex;
+	_REAL		rResultIREst;
+	_REAL		rResultPilPairEst;
 	_REAL		rMinValue;
 	_REAL		rSampFreqOffsetEst;
 	_COMPLEX	cOldFreqPilCorr;
@@ -50,12 +52,46 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	\**************************************************************************/
 	if ((bSyncInput == FALSE) && (bAquisition == TRUE))
 	{
+		/* DRM frame synchronization using impulse response ----------------- */
+		/* This algorithm uses all scattered pilots in a symbol. We extract the
+		   signal at the pilot positions (the positions of pilots in the first
+		   OFDM symbol in a DRM frame) and calculate a channel estimate.
+		   Afterwards we go into the time domain and check, if this is really
+		   a possible impulse response by calculating the peak-to-average ratio
+		   of the given transformed signal */
+
+		/* Pick pilot positions and calculate "test" channel estimation */
+		iCurIndex = 0;
+		for (i = 0; i < iNoCarrier; i++)
+		{
+			if (_IsScatPil(ReceiverParam.matiMapTab[0][i]))
+			{
+				/* Get channel estimate */
+				veccChan[iCurIndex] =
+					(*pvecInputData)[i] / ReceiverParam.matcPilotCells[0][i];
+
+				/* We have to introduce a new index because not on all carriers
+				   is a pilot */
+				iCurIndex++;
+			}
+		}
+
+		/* Calculate abs(IFFT) for getting estimate of impulse response */
+		vecrTestImpResp = Abs(Ifft(veccChan));
+
+		/* Calculate peak to average, we need to add a minus since the following
+		   algorithm searches for a minimum */
+		rResultIREst = - Max(vecrTestImpResp) / Sum(vecrTestImpResp);
+
+
+		/* DRM frame synchronization based on time pilots ------------------- */
 		/* We use a differential demodulation of the time-pilots, because there
 		   is no channel-estimation done, yet. The differential factors are pre-
 		   calculated in the Init-routine. Additionally, the index of the first
 		   pilot in the pair is stored in ".iNoCarrier". We calculate and
 		   averaging the Euclidean-norm of the resulting complex values */
-		rTimePilotCorr = (_REAL) 0.0;
+
+		rResultPilPairEst = (_REAL) 0.0;
 		for (i = 0; i < iNoDiffFact; i++)
 		{
 			cErrVec = ((*pvecInputData)[vecDiffFact[i].iNoCarrier] *
@@ -63,11 +99,18 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 				(*pvecInputData)[vecDiffFact[i].iNoCarrier + 1]);
 
 			/* Add squard magnitude of error vector */
-			rTimePilotCorr += SqMag(cErrVec);
+			rResultPilPairEst += SqMag(cErrVec);
 		}
 
-		/* Store correlation results in a shift register for finding the peak */
-		vecrCorrHistory.AddEnd(rTimePilotCorr);
+
+		/* Finding beginning of DRM frame in results ------------------------ */
+		/* Store correlation results in a shift register for finding the peak.
+		   Method of IR should not be used with robustness mode A because the
+		   guard-interval is too short in this mode */
+		if (eCurRobMode == RM_ROBUSTNESS_MODE_A)
+			vecrCorrHistory.AddEnd(rResultPilPairEst);
+		else
+			vecrCorrHistory.AddEnd(rResultIREst);
 
 		/* Search for minimum distance. Init value with a high number */
 		iMinIndex = 0;
@@ -232,7 +275,6 @@ fflush(pFile);
 void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 {
 	int			i;
-	int			iTotalNoUsefCarr;
 	_COMPLEX	cPhaseCorTermDivi;
 	_REAL		rArgumentTemp;
 
@@ -240,7 +282,8 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Init internal parameters from global struct */
-	iTotalNoUsefCarr = ReceiverParam.iNoCarrier;
+	iNoCarrier = ReceiverParam.iNoCarrier;
+	eCurRobMode = ReceiverParam.GetWaveMode();
 
 	/* Check if symbol number per frame has changed. If yes, reset the
 	   symbol counter */
@@ -256,16 +299,37 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* After an initialization the frame sync must be adjusted */
 	bBadFrameSync = TRUE;
 
+	/* Allocate memory for histories. Init history with large values, because
+	   we search for minimum! */
+	vecrCorrHistory.Init(iNoSymPerFrame, _MAXREAL);
+
+	/* Set middle of observation interval */
+	iMiddleOfInterval = iNoSymPerFrame / 2;
+
+
+	/* DRM frame synchronization using impulse response, inits--------------- */
+	/* Get number of pilots in first symbol of a DRM frame */
+	iNumPilInFirstSym = 0;
+	for (i = 0; i < iNoCarrier; i++)
+		if (_IsScatPil(ReceiverParam.matiMapTab[0][i]))
+			iNumPilInFirstSym++;
+
+	/* Init vector for "test" channel estimation result */
+	veccChan.Init(iNumPilInFirstSym);
+	vecrTestImpResp.Init(iNumPilInFirstSym);
+
+	
+	/* DRM frame synchronization based on time pilots, inits ---------------- */
 	/* Allocate memory for storing differential complex factors. Since we do
 	   not know the resulting "iNoDiffFact" we allocate memory for the
-	   worst case, i.e. "iTotalNoUsefCarr" */
-	vecDiffFact.Init(iTotalNoUsefCarr);
+	   worst case, i.e. "iNoCarrier" */
+	vecDiffFact.Init(iNoCarrier);
 
 	/* Calculate differential complex factors for time-synchronization pilots
 	   Use only first symbol of "matcPilotCells", because there are the pilots
 	   for Frame-synchronization */
 	iNoDiffFact = 0;
-	for (i = 0; i < iTotalNoUsefCarr - 1; i++)
+	for (i = 0; i < iNoCarrier - 1; i++)
 	{
 		/* Only successive pilots (in frequency direction) are used */
 		if (_IsPilot(ReceiverParam.matiMapTab[0][i]) &&
@@ -291,12 +355,11 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 		}
 	}
 
-	/* Set middle of observation interval */
-	iMiddleOfInterval = iNoSymPerFrame / 2;
 
+	/* Frequency and sample rate offset estimation -------------------------- */
 	/* Get position of frequency pilots */
 	int iFreqPilCount = 0;
-	for (i = 0; i < iTotalNoUsefCarr - 1; i++)
+	for (i = 0; i < iNoCarrier - 1; i++)
 	{
 		if (_IsFreqPil(ReceiverParam.matiMapTab[0][i]))
 		{
@@ -316,7 +379,6 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	rNormConstFOE =
 		(_REAL) 1.0 / ((_REAL) 2.0 * crPi * ReceiverParam.iSymbolBlockSize);
 
-
 	/* Init time constant for IIR filter for frequency offset estimation */
 	rLamFreqOff = IIR1Lam(TICONST_FREQ_OFF_EST, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize);
@@ -330,19 +392,18 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
 
 
-	/* Allocate memory for histories. Init history with large values, because
-	   we search for minimum! */
-	vecrCorrHistory.Init(iNoSymPerFrame, _MAXREAL);
-
 	/* Define block-sizes for input and output */
-	iInputBlockSize = iTotalNoUsefCarr;
-	iOutputBlockSize = iTotalNoUsefCarr;
+	iInputBlockSize = iNoCarrier;
+	iOutputBlockSize = iNoCarrier;
 }
 
 void CSyncUsingPil::StartAcquisition()
 {
 	/* Init internal counter for symbol number */
 	iSymbCntFraSy = 0;
+
+	/* Reset correlation history */
+	vecrCorrHistory.Reset(_MAXREAL);
 
 	bAquisition = TRUE;
 }

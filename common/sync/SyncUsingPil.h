@@ -103,6 +103,14 @@ protected:
 	_REAL					rLamFreqOff;
 	_COMPLEX				cFreqOffVec;
 
+	/* DRM frame synchronization using impulse response */
+	int						iNumPilInFirstSym;
+	CComplexVector			veccChan;
+	CRealVector				vecrTestImpResp;
+	int						iNoCarrier;
+
+	ERobMode				eCurRobMode;
+
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
