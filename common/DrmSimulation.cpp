@@ -258,9 +258,19 @@ CDRMSimulation::CDRMSimulation()
 	/* Init streams */
 	Param.ResetServicesStreams();
 
-	/* Use 6.3.6 to set this two parameters! */
-	Param.FACRepetition[0] = 0;
-	Param.FACNumRep = 1;
+
+	/* Service paramters (only use service 0) ------------------------------- */
+	/* Data service */
+	Param.iNumAudioService = 0;
+	Param.iNumDataService = 1;
+
+	Param.Service[0].eAudDataFlag = CParameter::SF_DATA;
+	Param.Service[0].DataParam.iStreamID = 0;
+	Param.Service[0].DataParam.ePacketModInd = CParameter::PM_SYNCHRON_STR_MODE;
+
+	/* Stream */
+	Param.Stream[0].iLenPartA = 0; // EEP, if "= 0"
+
 
 	/* Date, time */
 	Param.iDay = 0;
@@ -288,7 +298,6 @@ CDRMSimulation::CDRMSimulation()
 	Param.MSCPrLe.iPartB = 1;
 	Param.MSCPrLe.iHierarch = 0;
 
-	Param.Stream[0].iLenPartA = 0; // EEP, if "= 0"
 	Param.eSymbolInterlMode = CParameter::SI_SHORT;
 	Param.eMSCCodingScheme = CParameter::CS_3_SM;
 	Param.eSDCCodingScheme = CParameter::CS_2_SM;
