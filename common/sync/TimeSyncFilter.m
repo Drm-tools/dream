@@ -27,37 +27,67 @@
 %*
 %******************************************************************************/
 
+function [] = TimeSyncFilter()
+PLOT = 1;
+
 % Length of hilbert filter and characteristic frequencies
-nhil = 81;
-fstart = 800;
-fstop = 5200;
-ftrans = 800; % Size of transition region
-f0 = 3000;
+% 5 kHz bandwidth
+nhil5 = 81;
+fstart5 = 800;
+fstop5 = 5200;
+ftrans5 = 800; % Size of transition region
 
-PLOT = 0;
+% 10 kHz bandwidth
+nhil10 = 81;
+fstart10 = 800;
+fstop10 = 10200;
+ftrans10 = 800; % Size of transition region
 
-fs = 48000;
-B = fstop - fstart;
 
-f = [0  B / 2  B / 2 + ftrans  fs / 2];
-m = [2 2 0 0];
+fs = 48000; % Constant for all cases
 
-b = remez(nhil - 1, f * 2 / fs, m, [1 10]);
+% Actual filter design
+b5 = DesignFilter(fstart5, fstop5, ftrans5, nhil5, fs);
+b10 = DesignFilter(fstart10, fstop10, ftrans10, nhil10, fs);
 
 if (PLOT == 1)
-    t = linspace(0, (nhil - 1) / fs, nhil);
-    hr = b .* cos(2 * pi * f0 * t);
-    hi = b .* sin(2 * pi * f0 * t);
-    
+    close all;
+
+    % 5 kHz bandwidth filter
+    subplot(2, 1, 1)
+    f05 = (fstop5 + ftrans5) / 2;
+    t = linspace(0, (nhil5 - 1) / fs, nhil5);
+    hr = b5 .* cos(2 * pi * f05 * t);
+    hi = b5 .* sin(2 * pi * f05 * t);
+
     % Complex hilbert filter
     hbp = hr + hi * j;
-    
-    [h1,f]= freqz(hbp, 1, 512, 'whole', fs);
+
+    [h1, f]= freqz(hbp, 1, 512, 'whole', fs);
     plot(f - fs / 2, 20 * log10(abs([h1(257:512); h1(1:256)])));
-    axis([-1000 6000 -90 10]);
+    axis([-fstart5 fstop5 + ftrans5 -90 10]);
     grid;
     zoom on;
-    title('Hilbert-transformer');
+    title('Hilbert-transformer 5 kHz bandwidth');
+    xlabel('Frequency [Hz]');
+    ylabel('Attenuation [dB]');
+
+    % 10 kHz bandwidth filter
+    subplot(2, 1, 2)
+    f010 = (fstop10 + ftrans10) / 2;
+    t = linspace(0, (nhil10 - 1) / fs, nhil10);
+    hr = b10 .* cos(2 * pi * f010 * t);
+    hi = b10 .* sin(2 * pi * f010 * t);
+
+    % Complex hilbert filter
+    hbp = hr + hi * j;
+
+    [h1, f]= freqz(hbp, 1, 512, 'whole', fs);
+    plot(f - fs / 2, 20 * log10(abs([h1(257:512); h1(1:256)])));
+    axis([-fstart10 fstop10 + ftrans5 -90 10]);
+    grid;
+    zoom on;
+    title('Hilbert-transformer 10 kHz bandwidth');
     xlabel('Frequency [Hz]');
     ylabel('Attenuation [dB]');
 end
@@ -74,20 +104,45 @@ fprintf(fid, '#ifndef _TIMESYNCFILTER_H_\n');
 fprintf(fid, '#define _TIMESYNCFILTER_H_\n\n');
 
 
-fprintf(fid, '#define NUM_TAPS_HILB_FILT            ');
-fprintf(fid, int2str(nhil));
+fprintf(fid, '#define NUM_TAPS_HILB_FILT_5            ');
+fprintf(fid, int2str(nhil5));
 fprintf(fid, '\n');
-fprintf(fid, '#define HILB_FILT_BNDWIDTH            ');
-fprintf(fid, int2str(fstop - fstart + ftrans));
+fprintf(fid, '#define HILB_FILT_BNDWIDTH_5            ');
+fprintf(fid, int2str(fstop5 - fstart5 + ftrans5));
+fprintf(fid, '\n');
+fprintf(fid, '#define NUM_TAPS_HILB_FILT_10           ');
+fprintf(fid, int2str(nhil10));
+fprintf(fid, '\n');
+fprintf(fid, '#define HILB_FILT_BNDWIDTH_10           ');
+fprintf(fid, int2str(fstop10 - fstart10 + ftrans10));
 fprintf(fid, '\n\n\n');
 
+
 % Write filter taps
-fprintf(fid, '/* Low pass prototype for Hilbert-filter */\n');
-fprintf(fid, 'static float fHilLPProt[NUM_TAPS_HILB_FILT] =\n');
+fprintf(fid, '/* Low pass prototype for Hilbert-filter 5 kHz bandwidth */\n');
+fprintf(fid, 'static float fHilLPProt5[NUM_TAPS_HILB_FILT_5] =\n');
 fprintf(fid, '{\n');
-fprintf(fid, '	%.20ff,\n', b(1:end - 1));
-fprintf(fid, '	%.20ff\n', b(end));
+fprintf(fid, '	%.20ff,\n', b5(1:end - 1));
+fprintf(fid, '	%.20ff\n', b5(end));
+fprintf(fid, '};\n\n');
+fprintf(fid, '/* Low pass prototype for Hilbert-filter 10 kHz bandwidth */\n');
+fprintf(fid, 'static float fHilLPProt10[NUM_TAPS_HILB_FILT_10] =\n');
+fprintf(fid, '{\n');
+fprintf(fid, '	%.20ff,\n', b10(1:end - 1));
+fprintf(fid, '	%.20ff\n', b10(end));
 fprintf(fid, '};\n\n\n');
 
 fprintf(fid, '#endif	/* _TIMESYNCFILTER_H_ */\n');
 fclose(fid);
+return;
+
+
+function [b] = DesignFilter(fstart, fstop, ftrans, nhil, fs)
+    % Parks-McClellan optimal equiripple FIR filter design
+	B = fstop - fstart;
+
+	f = [0  B / 2  B / 2 + ftrans  fs / 2];
+	m = [2 2 0 0];
+
+	b = remez(nhil - 1, f * 2 / fs, m, [1 10]);
+return;
