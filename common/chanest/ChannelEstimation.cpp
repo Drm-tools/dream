@@ -108,8 +108,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/* ---------------------------------------------------------------------
 		   Put all pilots at the beginning of the vector. The "real" length of
 		   the vector "pcFFTWInput" is longer than the No of pilots, but we 
-		   calculate the FFT only over "iNumCarrier / iScatPilFreqInt + 1" values
-		   (this is the number of pilot positions) */
+		   calculate the FFT only over "iNumCarrier / iScatPilFreqInt + 1"
+		   values (this is the number of pilot positions) */
 		/* Weighting pilots with window */
 		veccPilots *= vecrDFTWindow;
 
@@ -117,7 +117,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		veccPilots = Ifft(veccPilots, FftPlanShort);
 
 		/* Set values outside a defined bound to zero, zero padding (noise
-		   filtering). Copy second half of spectrum at the end of the new vector 
+		   filtering). Copy second half of spectrum at the end of the new vector
 		   length and zero out samples between the two parts of the spectrum */
 		veccIntPil.Merge(
 			/* First part of spectrum */
