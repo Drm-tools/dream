@@ -5,12 +5,12 @@
 #ifndef _TIMESYNCFILTER_H_
 #define _TIMESYNCFILTER_H_
 
-#define NO_TAPS_HILB_FILT             81
+#define NUM_TAPS_HILB_FILT            81
 #define HILB_FILT_BNDWIDTH            5200
 
 
 /* Low pass prototype for Hilbert-filter */
-static float fHilLPProt[NO_TAPS_HILB_FILT] =
+static float fHilLPProt[NUM_TAPS_HILB_FILT] =
 {
 	-0.00023478690135631867f,
 	-0.01413273123257518000f,

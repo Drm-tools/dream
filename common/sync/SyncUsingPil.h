@@ -50,9 +50,9 @@ class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>,
 {
 public:
 	CSyncUsingPil() : bSyncInput(FALSE), bAquisition(FALSE), bTrackPil(FALSE),
-		iSymbCntFraSy(0), iNoSymPerFrame(0),
-		iPosFreqPil(NO_FREQ_PILOTS), cOldFreqPil(NO_FREQ_PILOTS),
-		cFreqPilotPhDiff(NO_FREQ_PILOTS) {}
+		iSymbCntFraSy(0), iNumSymPerFrame(0),
+		iPosFreqPil(NUM_FREQ_PILOTS), cOldFreqPil(NUM_FREQ_PILOTS),
+		cFreqPilotPhDiff(NUM_FREQ_PILOTS) {}
 	virtual ~CSyncUsingPil() {}
 
 	/* To set the module up for synchronized DRM input data stream */
@@ -68,14 +68,14 @@ protected:
 	class CPilotDiff
 	{
 	public:
-		_COMPLEX			cDiff;
-		int					iNoCarrier;
+		_COMPLEX	cDiff;
+		int			iNumCarrier;
 	};
 
 
 	/* Variables for frame synchronization */
 	CVector<CPilotDiff>		vecDiffFact;
-	int						iNoDiffFact;
+	int						iNumDiffFact;
 	CShiftRegister<_REAL>	vecrCorrHistory;
 
 	/* Variables for frequency pilot estimation */
@@ -88,7 +88,7 @@ protected:
 
 	int						iSymbCntFraSy;
 
-	int						iNoSymPerFrame;
+	int						iNumSymPerFrame;
 
 	_BOOLEAN				bBadFrameSync;
 
@@ -107,7 +107,7 @@ protected:
 	int						iNumPilInFirstSym;
 	CComplexVector			veccChan;
 	CRealVector				vecrTestImpResp;
-	int						iNoCarrier;
+	int						iNumCarrier;
 	CFftPlans				FftPlan;
 
 	ERobMode				eCurRobMode;

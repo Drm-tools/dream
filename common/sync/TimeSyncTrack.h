@@ -83,10 +83,10 @@ public:
 
 protected:
 	CComplexVector			veccPilots;
-	int						iNoIntpFreqPil;
+	int						iNumIntpFreqPil;
 	CFftPlans				FftPlan;
 	int						iScatPilFreqInt;
-	int						iNoCarrier;
+	int						iNumCarrier;
 	CRealVector				vecrAvPoDeSp;
 	CReal					rLamAvPDS;
 

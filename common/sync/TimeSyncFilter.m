@@ -74,7 +74,7 @@ fprintf(fid, '#ifndef _TIMESYNCFILTER_H_\n');
 fprintf(fid, '#define _TIMESYNCFILTER_H_\n\n');
 
 
-fprintf(fid, '#define NO_TAPS_HILB_FILT             ');
+fprintf(fid, '#define NUM_TAPS_HILB_FILT            ');
 fprintf(fid, int2str(nhil));
 fprintf(fid, '\n');
 fprintf(fid, '#define HILB_FILT_BNDWIDTH            ');
@@ -83,7 +83,7 @@ fprintf(fid, '\n\n\n');
 
 % Write filter taps
 fprintf(fid, '/* Low pass prototype for Hilbert-filter */\n');
-fprintf(fid, 'static float fHilLPProt[NO_TAPS_HILB_FILT] =\n');
+fprintf(fid, 'static float fHilLPProt[NUM_TAPS_HILB_FILT] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', b(1:end - 1));
 fprintf(fid, '	%.20ff\n', b(end));

@@ -41,10 +41,10 @@
 #define TIMING_BOUND_ABS				150
 
 /* Non-linear correction of the timing if variation is too big */
-#define NO_SYM_BEFORE_RESET				5
+#define NUM_SYM_BEFORE_RESET			5
 
 /* Definitions for robustness mode detection */
-#define NO_BLOCKS_FOR_RM_CORR			16
+#define NUM_BLOCKS_FOR_RM_CORR			16
 #define THRESHOLD_RELI_MEASURE			((_REAL) 8.0)
 
 /* Downsampling factor. We only use approx. 6 kHz for correlation, therefore

@@ -250,7 +250,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							/* Compensate for Hilbert-filter delay. The delay is
 							   introduced in the downsampled domain, therefore
 							   devide it by "GRDCRR_DEC_FACT" */
-							NO_TAPS_HILB_FILT / 2 / GRDCRR_DEC_FACT;
+							NUM_TAPS_HILB_FILT / 2 / GRDCRR_DEC_FACT;
 
 						iNewStIndCount++;
 					}
@@ -336,15 +336,15 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				   filter-output */
 				iCorrCounter++;
 
-				/* Average the NO_SYM_BEFORE_RESET measurements for reset
+				/* Average the NUM_SYM_BEFORE_RESET measurements for reset
 				   rStartIndex */
 				iAveCorr += iNewStartIndexField[i];
 
 				/* If pre-defined number of outliers is exceed, correct */
-				if (iCorrCounter > NO_SYM_BEFORE_RESET)
+				if (iCorrCounter > NUM_SYM_BEFORE_RESET)
 				{
 					/* Correct filter-output */
-					rStartIndex = (_REAL) iAveCorr / (NO_SYM_BEFORE_RESET + 1);
+					rStartIndex = (_REAL) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
 
 					/* Reset counter */
 					iCorrCounter = 0;
@@ -508,7 +508,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	/* Some inits */
 	/* Set correction counter to limit to get a non-linear correction 
 	   the first time of a new acquisition block */
-	iCorrCounter = NO_SYM_BEFORE_RESET;
+	iCorrCounter = NUM_SYM_BEFORE_RESET;
 	iAveCorr = 0;
 
 	/* Allocate memory for vectors and zero out */
@@ -529,7 +529,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 	/* Inits for guard-interval correlation and robustness mode detection --- */
 	/* Size for robustness mode correlation buffer */
-	iRMCorrBufSize = (int) ((_REAL) NO_BLOCKS_FOR_RM_CORR * iDecSymBS
+	iRMCorrBufSize = (int) ((_REAL) NUM_BLOCKS_FOR_RM_CORR * iDecSymBS
 		/ STEP_SIZE_GUARD_CORR);
 
 	for (i = 0; i < NUM_ROBUSTNESS_MODES; i++)
@@ -631,7 +631,7 @@ void CTimeSync::StartAcquisition()
 
 	/* Set correction counter so that a non-linear correction is performed right
 	   at the beginning */
-	iCorrCounter = NO_SYM_BEFORE_RESET;
+	iCorrCounter = NUM_SYM_BEFORE_RESET;
 
 	/* Reset the buffers which are storing data for correlation (for robustness
 	   mode detection) */
@@ -646,18 +646,18 @@ void CTimeSync::StartAcquisition()
 void CTimeSync::SetFilterTaps(_REAL rNewOffsetNorm)
 {
 	/* Calculate filter taps for complex Hilbert filter */
-	cvecB.Init(NO_TAPS_HILB_FILT);
+	cvecB.Init(NUM_TAPS_HILB_FILT);
 
 	/* The filter should be on the right of the DC carrier */
 	rNewOffsetNorm += (_REAL) HILB_FILT_BNDWIDTH / 2 / SOUNDCRD_SAMPLE_RATE;
 
-	for (int i = 0; i < NO_TAPS_HILB_FILT; i++)
+	for (int i = 0; i < NUM_TAPS_HILB_FILT; i++)
 		cvecB[i] = CComplex(
 			fHilLPProt[i] * Cos((_REAL) 2.0 * crPi * rNewOffsetNorm * i),
 			fHilLPProt[i] * Sin((_REAL) 2.0 * crPi * rNewOffsetNorm * i));
 
 	/* Init state vector for filtering with zeros */
-	rvecZ.Init(NO_TAPS_HILB_FILT - 1, (CReal) 0.0);
+	rvecZ.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
 }
 
 int CTimeSync::GetIndFromRMode(ERobMode eNewMode)

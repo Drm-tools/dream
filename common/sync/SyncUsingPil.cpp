@@ -62,7 +62,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Pick pilot positions and calculate "test" channel estimation */
 		iCurIndex = 0;
-		for (i = 0; i < iNoCarrier; i++)
+		for (i = 0; i < iNumCarrier; i++)
 		{
 			if (_IsScatPil(ReceiverParam.matiMapTab[0][i]))
 			{
@@ -88,15 +88,15 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		/* We use a differential demodulation of the time-pilots, because there
 		   is no channel-estimation done, yet. The differential factors are pre-
 		   calculated in the Init-routine. Additionally, the index of the first
-		   pilot in the pair is stored in ".iNoCarrier". We calculate and
+		   pilot in the pair is stored in ".iNumCarrier". We calculate and
 		   averaging the Euclidean-norm of the resulting complex values */
 
 		rResultPilPairEst = (_REAL) 0.0;
-		for (i = 0; i < iNoDiffFact; i++)
+		for (i = 0; i < iNumDiffFact; i++)
 		{
-			cErrVec = ((*pvecInputData)[vecDiffFact[i].iNoCarrier] *
+			cErrVec = ((*pvecInputData)[vecDiffFact[i].iNumCarrier] *
 				vecDiffFact[i].cDiff -
-				(*pvecInputData)[vecDiffFact[i].iNoCarrier + 1]);
+				(*pvecInputData)[vecDiffFact[i].iNumCarrier + 1]);
 
 			/* Add squard magnitude of error vector */
 			rResultPilPairEst += SqMag(cErrVec);
@@ -115,7 +115,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Search for minimum distance. Init value with a high number */
 		iMinIndex = 0;
 		rMinValue = _MAXREAL;
-		for (i = 0; i < iNoSymPerFrame; i++)
+		for (i = 0; i < iNumSymPerFrame; i++)
 		{
 			if (vecrCorrHistory[i] < rMinValue)
 			{
@@ -127,7 +127,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		/* If minimum is in the middle of the interval -> check frame sync */
 		if (iMinIndex == iMiddleOfInterval)
 		{
-			if (iSymbCntFraSy == iNoSymPerFrame - iMiddleOfInterval - 1)
+			if (iSymbCntFraSy == iNumSymPerFrame - iMiddleOfInterval - 1)
 			{
 				/* Reset flag */
 				bBadFrameSync = FALSE;
@@ -140,7 +140,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 				if (bBadFrameSync == TRUE)
 				{
 					/* Reset symbol counter according to received data */
-					iSymbCntFraSy = iNoSymPerFrame - iMiddleOfInterval - 1;
+					iSymbCntFraSy = iNumSymPerFrame - iMiddleOfInterval - 1;
 
 					/* Reset flag */
 					bBadFrameSync = FALSE;
@@ -171,12 +171,12 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		PostWinMessage(MS_FRAME_SYNC, 0);
 	}
 
-	/* Set current symbol number in extended data of output vector */
-	(*pvecOutputData).GetExData().iSymbolNo = iSymbCntFraSy;
+	/* Set current symbol ID in extended data of output vector */
+	(*pvecOutputData).GetExData().iSymbolID = iSymbCntFraSy;
 
 	/* Increase symbol counter and take care of wrap around */
 	iSymbCntFraSy++;
-	if (iSymbCntFraSy >= iNoSymPerFrame)
+	if (iSymbCntFraSy >= iNumSymPerFrame)
 		iSymbCntFraSy = 0;
 
 
@@ -187,7 +187,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	{
 		cFreqOffEstVecSym = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 
-		for (i = 0; i < NO_FREQ_PILOTS; i++)
+		for (i = 0; i < NUM_FREQ_PILOTS; i++)
 		{
 			/* The old pilots must be rotated due to timing corrections */
 			cOldFreqPilCorr = Rotate(cOldFreqPil[i], iPosFreqPil[i],
@@ -282,18 +282,18 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Init internal parameters from global struct */
-	iNoCarrier = ReceiverParam.iNoCarrier;
+	iNumCarrier = ReceiverParam.iNumCarrier;
 	eCurRobMode = ReceiverParam.GetWaveMode();
 
 	/* Check if symbol number per frame has changed. If yes, reset the
 	   symbol counter */
-	if (iNoSymPerFrame != ReceiverParam.iNoSymPerFrame)
+	if (iNumSymPerFrame != ReceiverParam.iNumSymPerFrame)
 	{
 		/* Init internal counter for symbol number */
 		iSymbCntFraSy = 0;
 
 		/* Refresh parameter */
-		iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
+		iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
 	}
 
 	/* After an initialization the frame sync must be adjusted */
@@ -301,16 +301,16 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* Allocate memory for histories. Init history with large values, because
 	   we search for minimum! */
-	vecrCorrHistory.Init(iNoSymPerFrame, _MAXREAL);
+	vecrCorrHistory.Init(iNumSymPerFrame, _MAXREAL);
 
 	/* Set middle of observation interval */
-	iMiddleOfInterval = iNoSymPerFrame / 2;
+	iMiddleOfInterval = iNumSymPerFrame / 2;
 
 
 	/* DRM frame synchronization using impulse response, inits--------------- */
 	/* Get number of pilots in first symbol of a DRM frame */
 	iNumPilInFirstSym = 0;
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 		if (_IsScatPil(ReceiverParam.matiMapTab[0][i]))
 			iNumPilInFirstSym++;
 
@@ -324,22 +324,22 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	
 	/* DRM frame synchronization based on time pilots, inits ---------------- */
 	/* Allocate memory for storing differential complex factors. Since we do
-	   not know the resulting "iNoDiffFact" we allocate memory for the
-	   worst case, i.e. "iNoCarrier" */
-	vecDiffFact.Init(iNoCarrier);
+	   not know the resulting "iNumDiffFact" we allocate memory for the
+	   worst case, i.e. "iNumCarrier" */
+	vecDiffFact.Init(iNumCarrier);
 
 	/* Calculate differential complex factors for time-synchronization pilots
 	   Use only first symbol of "matcPilotCells", because there are the pilots
 	   for Frame-synchronization */
-	iNoDiffFact = 0;
-	for (i = 0; i < iNoCarrier - 1; i++)
+	iNumDiffFact = 0;
+	for (i = 0; i < iNumCarrier - 1; i++)
 	{
 		/* Only successive pilots (in frequency direction) are used */
 		if (_IsPilot(ReceiverParam.matiMapTab[0][i]) &&
 			_IsPilot(ReceiverParam.matiMapTab[0][i + 1]))
 		{
 			/* Store index of first pilot of the couple */
-			vecDiffFact[iNoDiffFact].iNoCarrier = i;
+			vecDiffFact[iNumDiffFact].iNumCarrier = i;
 
 			/* Calculate phase correction term. This term is needed, because the
 			   desired position of the main peak (line of sight) is the middle
@@ -350,11 +350,11 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 				_COMPLEX(cos(rArgumentTemp), -sin(rArgumentTemp));
 
 			/* Calculate differential factor */
-			vecDiffFact[iNoDiffFact].cDiff = 
+			vecDiffFact[iNumDiffFact].cDiff = 
 				ReceiverParam.matcPilotCells[0][i + 1] /
 				ReceiverParam.matcPilotCells[0][i] * cPhaseCorTermDivi;
 
-			iNoDiffFact++;
+			iNumDiffFact++;
 		}
 	}
 
@@ -362,7 +362,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* Frequency and sample rate offset estimation -------------------------- */
 	/* Get position of frequency pilots */
 	int iFreqPilCount = 0;
-	for (i = 0; i < iNoCarrier - 1; i++)
+	for (i = 0; i < iNumCarrier - 1; i++)
 	{
 		if (_IsFreqPil(ReceiverParam.matiMapTab[0][i]))
 		{
@@ -372,7 +372,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	}
 
 	/* Init memory for "old" frequency pilots and actual phase differences */
-	for (i = 0; i < NO_FREQ_PILOTS; i++)
+	for (i = 0; i < NUM_FREQ_PILOTS; i++)
 	{
 		cOldFreqPil[i] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 		cFreqPilotPhDiff[i] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
@@ -396,8 +396,8 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = iNoCarrier;
-	iOutputBlockSize = iNoCarrier;
+	iInputBlockSize = iNumCarrier;
+	iOutputBlockSize = iNumCarrier;
 }
 
 void CSyncUsingPil::StartAcquisition()

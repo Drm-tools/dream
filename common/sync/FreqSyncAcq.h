@@ -49,10 +49,10 @@
 
 /* This value MUST BE AT LEAST 2, because otherwise we would get an overrun
    when we try to add a complete symbol to the buffer! */
-#define NO_BLOCKS_4_FREQ_ACQU			5
+#define NUM_BLOCKS_4_FREQ_ACQU			5
 
 /* Number of blocks before using the average of input spectrum */
-#define NO_BLOCKS_BEFORE_US_AV			10
+#define NUM_BLOCKS_BEFORE_US_AV			10
 
 /* The average symbol duration of all possible robustness modes is 22.5 ms. A
    timeout of approx. 2 seconds corresponds from that to 100 */

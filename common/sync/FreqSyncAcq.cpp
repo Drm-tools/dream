@@ -38,7 +38,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	int			i, j;
 	int			iMaxIndex;
 	fftw_real	rMaxValue;
-	int			iNoDetPeaks;
+	int			iNumDetPeaks;
 	int			iDiffTemp;
 	CReal		rLevDiff;
 	_BOOLEAN	bNoPeaksLeft;
@@ -66,7 +66,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 			{
 				/* Reset counter and average vector */
 				iAverTimeOutCnt = 0;
-				iAverageCounter = NO_BLOCKS_BEFORE_US_AV;
+				iAverageCounter = NUM_BLOCKS_BEFORE_US_AV;
 				vecrPSD = Zeros(iHalfBuffer);
 			}
 
@@ -122,29 +122,29 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 
 				/* Detect peaks by the distance to the filtered curve ------- */
 				/* Get peak indices of detected peaks */
-				iNoDetPeaks = 0;
+				iNumDetPeaks = 0;
 				for (i = 0; i < iSearchWinSize; i++)
 				{
 					if (vecrPSDPilCor[i] / vecrFiltRes[i] >
 						PEAK_BOUND_FILT2SIGNAL)
 					{
-						veciPeakIndex[iNoDetPeaks] = i;
-						iNoDetPeaks++;
+						veciPeakIndex[iNumDetPeaks] = i;
+						iNumDetPeaks++;
 					}
 				}
 
 				/* Check, if at least one peak was detected */
-				if (iNoDetPeaks > 0)
+				if (iNumDetPeaks > 0)
 				{
 					/* ---------------------------------------------------------
 					   The following test shall exclude sinusoid interferers in
 					   the received spectrum */
-					CVector<int> vecbFlagVec(iNoDetPeaks, 1);
+					CVector<int> vecbFlagVec(iNumDetPeaks, 1);
 
 					/* Check all detected peaks in the "PSD-domain" if there are
 					   at least two peaks with approx the same power at the
 					   right places (positions of the desired pilots) */
-					for (i = 0; i < iNoDetPeaks; i++)
+					for (i = 0; i < iNumDetPeaks; i++)
 					{
 						/* Fill the vector with the values at the desired 
 						   pilot positions */
@@ -175,7 +175,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 					   maximum with this value. We also detect, if a peak is 
 					   left */
 					bNoPeaksLeft = TRUE;
-					for (i = 0; i < iNoDetPeaks; i++)
+					for (i = 0; i < iNumDetPeaks; i++)
 					{
 						if (vecbFlagVec[i] == 1)
 						{
@@ -192,7 +192,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 					{
 						/* Actual maximum detection, take the remaining peak
 						   which has the highest value */
-						for (i = 0; i < iNoDetPeaks; i++)
+						for (i = 0; i < iNumDetPeaks; i++)
 						{
 							if ((vecbFlagVec[i] == 1) &&
 								(vecrPSDPilCor[veciPeakIndex[i]] >
@@ -213,7 +213,7 @@ for (i = 1; i < iSearchWinSize; i++)
 {
 	_REAL rPeakMarker;
 	_REAL rFinPM;
-	if (iPeakCnt < iNoDetPeaks)
+	if (iPeakCnt < iNumDetPeaks)
 	{
 		if (i == veciPeakIndex[iPeakCnt])
 		{
@@ -294,12 +294,15 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 
 	/* We using parameters from robustness mode B as pattern for the desired
 	   frequency pilot positions */
-	veciTableFreqPilots[0] = iTableFreqPilRobModB[0][0] * NO_BLOCKS_4_FREQ_ACQU;
-	veciTableFreqPilots[1] = iTableFreqPilRobModB[1][0] * NO_BLOCKS_4_FREQ_ACQU;
-	veciTableFreqPilots[2] = iTableFreqPilRobModB[2][0] * NO_BLOCKS_4_FREQ_ACQU;
+	veciTableFreqPilots[0] =
+		iTableFreqPilRobModB[0][0] * NUM_BLOCKS_4_FREQ_ACQU;
+	veciTableFreqPilots[1] =
+		iTableFreqPilRobModB[1][0] * NUM_BLOCKS_4_FREQ_ACQU;
+	veciTableFreqPilots[2] =
+		iTableFreqPilRobModB[2][0] * NUM_BLOCKS_4_FREQ_ACQU;
 
 	/* Total buffer size */
-	iTotalBufferSize = RMB_FFT_SIZE_N * NO_BLOCKS_4_FREQ_ACQU;
+	iTotalBufferSize = RMB_FFT_SIZE_N * NUM_BLOCKS_4_FREQ_ACQU;
 
 
 	/* -------------------------------------------------------------------------
@@ -374,8 +377,8 @@ void CFreqSyncAcq::StartAcquisition()
 	bAquisition = TRUE;
 
 	/* Reset (or init) counters */
-	iAquisitionCounter = NO_BLOCKS_4_FREQ_ACQU;
-	iAverageCounter = NO_BLOCKS_BEFORE_US_AV;
+	iAquisitionCounter = NUM_BLOCKS_4_FREQ_ACQU;
+	iAverageCounter = NUM_BLOCKS_BEFORE_US_AV;
 	iAverTimeOutCnt = 0;
 
 	/* Reset vector for the averaged spectrum */

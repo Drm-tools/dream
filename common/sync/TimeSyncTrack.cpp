@@ -62,7 +62,7 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 	   spectrum is only one little part of the sound card frequency range)
 	   we have to correct the timing correction by a certain bandwidth factor */
 	rActShiftTiCor = rFracPartTiCor -
-		(_REAL) vecTiCorrHist[0] * iNoCarrier / iDFTSize;
+		(_REAL) vecTiCorrHist[0] * iNumCarrier / iDFTSize;
 
 	/* Extract the fractional part since we can only correct integer timing
 	   shifts */
@@ -71,16 +71,16 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 	/* Shift the values in the vector storing the averaged impulse response. We
 	   have to consider two cases for shifting (left and right shift) */
 	if (rActShiftTiCor < 0)
-		iIntShiftVal = (int) rActShiftTiCor + iNoIntpFreqPil;
+		iIntShiftVal = (int) rActShiftTiCor + iNumIntpFreqPil;
 	else
 		iIntShiftVal = (int) rActShiftTiCor;
 
 	/* If new correction is out of range, do not use it */
-	if ((iIntShiftVal >= iNoIntpFreqPil) || (iIntShiftVal < 0))
+	if ((iIntShiftVal >= iNumIntpFreqPil) || (iIntShiftVal < 0))
 		iIntShiftVal = 0;
 
 	/* Actual rotation of vector */
-	vecrAvPoDeSp.Merge(vecrAvPoDeSp(iIntShiftVal + 1, iNoIntpFreqPil),
+	vecrAvPoDeSp.Merge(vecrAvPoDeSp(iIntShiftVal + 1, iNumIntpFreqPil),
 		vecrAvPoDeSp(1, iIntShiftVal));
 
 
@@ -105,7 +105,7 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 	/* Rotate the averaged result vector to put the earlier peaks
 	   (which can also detected in a certain amount) at the beginning of
 	   the vector */
-	vecrAvPoDeSpRot.Merge(vecrAvPoDeSp(iStPoRot, iNoIntpFreqPil),
+	vecrAvPoDeSpRot.Merge(vecrAvPoDeSp(iStPoRot, iNumIntpFreqPil),
 		vecrAvPoDeSp(1, iStPoRot - 1));
 
 
@@ -123,7 +123,7 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 
 		/* Get final estimate, Eq (18) */
 		bDelayFound = FALSE; /* Init flag */
-		for (i = 0; i < iNoIntpFreqPil - 1; i++)
+		for (i = 0; i < iNumIntpFreqPil - 1; i++)
 		{
 			/* We are only interested in the first peak */
 			if (bDelayFound == FALSE)
@@ -149,7 +149,7 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 		   position */
 		rMaxWinEnergy = (CReal) 0.0;
 		iFirstPathDelay = 0;
-		for (i = 0; i < iNoIntpFreqPil - 1 - rGuardSizeFFT; i++)
+		for (i = 0; i < iNumIntpFreqPil - 1 - rGuardSizeFFT; i++)
 		{
 			rWinEnergy = (CReal) 0.0;
 
@@ -177,11 +177,11 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 	{
 		/* Consider the rotation introduced for earlier peaks in path delay.
 		   Since the "iStPoRot" is the position of the beginning of the block
-		   at the end for cutting out, "iNoIntpFreqPil" must be substracted.
+		   at the end for cutting out, "iNumIntpFreqPil" must be substracted.
 		   (Actually, a part of the following line should be look like this:
-		   "iStPoRot - 1 - iNoIntpFreqPil + 1" but the "- 1 + 1" compensate
+		   "iStPoRot - 1 - iNumIntpFreqPil + 1" but the "- 1 + 1" compensate
 		   each other) */
-		iFirstPathDelay += iStPoRot - iNoIntpFreqPil - iTargetTimingPos - 1;
+		iFirstPathDelay += iStPoRot - iNumIntpFreqPil - iTargetTimingPos - 1;
 
 
 		/* Correct timing offset -------------------------------------------- */
@@ -192,8 +192,8 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 		   compensated. The length of the history buffer (vecrNewMeasHist) must
 		   be equal to the delay of the channel estimation.
 		   The corrections must be quantized to the upsampled output sample
-		   rate ("* iDFTSize / iNoCarrier") */
-		rTiOffset = (_REAL) -iFirstPathDelay * iDFTSize / iNoCarrier -
+		   rate ("* iDFTSize / iNumCarrier") */
+		rTiOffset = (_REAL) -iFirstPathDelay * iDFTSize / iNumCarrier -
 			veciNewMeasHist[0];
 
 		/* Different controlling parameters for different types of tracking */
@@ -244,7 +244,7 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 	bDelSprLenFound = FALSE;
 	rEstDelay = rGuardSizeFFT;
 	
-	for (i = 0; i < iNoIntpFreqPil; i++)
+	for (i = 0; i < iNumIntpFreqPil; i++)
 	{
 		if (bDelSprLenFound == FALSE)
 		{
@@ -275,9 +275,9 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	   estimation in time direction */
 	iInitCnt = iNewSymbDelay * 2;
 
-	iNoCarrier = Parameter.iNoCarrier;
+	iNumCarrier = Parameter.iNumCarrier;
 	iScatPilFreqInt = Parameter.iScatPilFreqInt;
-	iNoIntpFreqPil = Parameter.iNoIntpFreqPil;
+	iNumIntpFreqPil = Parameter.iNumIntpFreqPil;
 	iDFTSize = Parameter.iFFTSizeN;
 
 	/* Timing correction history */
@@ -288,26 +288,26 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	veciNewMeasHist.Init(iSymDelay - 1, 0);
 
 	/* Init vector for received data at pilot positions */
-	veccPilots.Init(iNoIntpFreqPil);
+	veccPilots.Init(iNumIntpFreqPil);
 
 	/* Vector for averaged power delay spread estimation */
-	vecrAvPoDeSp.Init(iNoIntpFreqPil, (CReal) 0.0);
+	vecrAvPoDeSp.Init(iNumIntpFreqPil, (CReal) 0.0);
 
 	/* Lambda for IIR filter for averaging the PDS */
 	rLamAvPDS = IIR1Lam(TICONST_PDS_EST_TISYNC, (CReal) SOUNDCRD_SAMPLE_RATE /
 		Parameter.iSymbolBlockSize);
 
 	/* Vector for rotated result */
-	vecrAvPoDeSpRot.Init(iNoIntpFreqPil);
+	vecrAvPoDeSpRot.Init(iNumIntpFreqPil);
 
 	/* Length of guard-interval with respect to FFT-size! */
-	rGuardSizeFFT = (_REAL) iNoCarrier *
+	rGuardSizeFFT = (_REAL) iNumCarrier *
 		Parameter.RatioTgTu.iEnum / Parameter.RatioTgTu.iDenom;
 
 	/* Get the hamming window taps. The window is to reduce the leakage effect
 	   of a DFT transformation */
-	vecrHammingWindow.Init(iNoIntpFreqPil);
-	vecrHammingWindow = Hamming(iNoIntpFreqPil);
+	vecrHammingWindow.Init(iNumIntpFreqPil);
+	vecrHammingWindow = Hamming(iNumIntpFreqPil);
 
 	/* Weights for peak bound calculation, in Eq. (19), special values for
 	   robustness mode D! */
@@ -325,10 +325,10 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	/* Define start point for rotation of detection vector for acausal taps.
 	   Per definition is this point somewhere in the region after the
 	   actual guard-interval window */
-	if ((int) rGuardSizeFFT > iNoIntpFreqPil)
-		iStPoRot = iNoIntpFreqPil;
+	if ((int) rGuardSizeFFT > iNumIntpFreqPil)
+		iStPoRot = iNumIntpFreqPil;
 	else
-		iStPoRot = (int) (rGuardSizeFFT + (iNoIntpFreqPil - rGuardSizeFFT) / 2);
+		iStPoRot = (int) (rGuardSizeFFT + (iNumIntpFreqPil - rGuardSizeFFT) / 2);
 
 	/* Init fractional part of timing correction to zero and fractional part
 	   of controlling */
@@ -343,7 +343,7 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	rEstDelay = rGuardSizeFFT;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
-	FftPlan.Init(iNoIntpFreqPil);
+	FftPlan.Init(iNumIntpFreqPil);
 }
 
 void CTimeSyncTrack::SetTiSyncTracType(ETypeTiSyncTrac eNewTy)
@@ -381,8 +381,8 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	_REAL	rScaleAbs;
 
 	/* Init output vectors */
-	vecrData.Init(iNoIntpFreqPil);
-	vecrScale.Init(iNoIntpFreqPil);
+	vecrData.Init(iNumIntpFreqPil);
+	vecrScale.Init(iNumIntpFreqPil);
 	rHigherBound = (_REAL) 0.0;
 	rLowerBound = (_REAL) 0.0;
 	rStartGuard = 0;
@@ -390,11 +390,11 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 
 	/* With this setting we only define the position of the guard-interval
 	   in the plot. With this setting we position it centered */
-	iHalfSpec = (int) ((iNoIntpFreqPil - rGuardSizeFFT) / 2);
+	iHalfSpec = (int) ((iNumIntpFreqPil - rGuardSizeFFT) / 2);
 
 	/* Init scale (in "ms") */
 	rScaleIncr = (_REAL) iDFTSize /
-		(SOUNDCRD_SAMPLE_RATE * iNoIntpFreqPil) * 1000 / 2;
+		(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil) * 1000 / 2;
 
 	/* Let the target timing position be the "0" time */
 	rScaleAbs = -(iHalfSpec + iTargetTimingPos) * rScaleIncr;
@@ -402,9 +402,9 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	/* Copy first part of data in output vector */
 	for (i = 0; i < iHalfSpec; i++)
 	{
-		if (vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i] > 0)
+		if (vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i] > 0)
 			vecrData[i] = (_REAL) 10.0 *
-				log10(vecrAvPoDeSp[iNoIntpFreqPil - iHalfSpec + i]);
+				log10(vecrAvPoDeSp[iNumIntpFreqPil - iHalfSpec + i]);
 		else
 			vecrData[i] = RET_VAL_LOG_0;
 
@@ -417,7 +417,7 @@ void CTimeSyncTrack::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	rStartGuard = rScaleAbs;
 
 	/* Copy second part of data in output vector */
-	for (i = iHalfSpec; i < iNoIntpFreqPil; i++)
+	for (i = iHalfSpec; i < iNumIntpFreqPil; i++)
 	{
 		if (vecrAvPoDeSp[i - iHalfSpec] > 0)
 			vecrData[i] = (_REAL) 10.0 * log10(vecrAvPoDeSp[i - iHalfSpec]);
