@@ -209,15 +209,29 @@ protected:
 	QPopupMenu*				pRemoteMenuOther;
 	CVector<rig_model_t>	veciModelID;
 
-
-	struct SDrRigCaps
+	class SDrRigCaps
 	{
+	public:
+		SDrRigCaps() : iModelID(0), strManufacturer(""), strModelName(""),
+			eRigStatus(RIG_STATUS_ALPHA) {}
+		SDrRigCaps(rig_model_t tNID, QString strNMan, QString strNModN,
+			rig_status_e eNSt) : iModelID(tNID),  strManufacturer(strNMan),
+			strModelName(strNModN), eRigStatus(eNSt) {}
+
+		inline SDrRigCaps& operator=(const SDrRigCaps& cNew)
+			{iModelID = cNew.iModelID; strManufacturer = cNew.strManufacturer;
+			strModelName = cNew.strModelName; eRigStatus = cNew.eRigStatus;
+			return *this;}
+
 		rig_model_t		iModelID;
 		QString			strManufacturer;
 		QString			strModelName;
 		rig_status_e	eRigStatus;
 	};
 	CVector<SDrRigCaps>	veccapsHamlibModels;
+	void SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlibModels);
+
+	rig_model_t			iCurSelModelID;
 
 	static int			PrintHamlibModelList(const struct rig_caps* caps, void* data);
 	const QString		StrStatusHamlib(enum rig_status_e status);

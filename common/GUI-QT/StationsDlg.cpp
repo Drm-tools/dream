@@ -307,7 +307,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	vecSpecDRMRigs.Init(0);
 
 	/* Winradio G3 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(1508, "" /* switch it on, TODO! */));
+	vecSpecDRMRigs.Add(CSpecDRMRig(1508, "" /* TODO */));
 
 	/* AOR 7030 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(503, "" /* TODO */));
@@ -331,7 +331,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	   called to return the different rigs */
 	veccapsHamlibModels.Init(0);
 	const int status = rig_list_foreach(PrintHamlibModelList, this);
-
+	SortHamlibModelList(veccapsHamlibModels); /* Sort list */
 
 	/* Init vector for storing the model IDs with zero length */
 	veciModelID.Init(0);
@@ -821,6 +821,9 @@ void StationsDlg::OnComPortMenu(QAction* action)
 	/* A com port was selected via the menu, delete all previous settings from
 	   the command line (if any) */
 	DRMReceiver.SetHamlibConf("");
+
+	/* Init hamlib, use current selected model ID */
+	InitHamlib(iCurSelModelID);
 #endif
 }
 
@@ -895,20 +898,33 @@ const QString StationsDlg::StrStatusHamlib(enum rig_status_e status)
 
 int StationsDlg::PrintHamlibModelList(const struct rig_caps* caps, void* data)
 {
-	/* Access data members of class through pointer */
-	StationsDlg* pInstStDlg = (StationsDlg*) data;
+	/* Access data members of class through pointer ((StationsDlg*) data).
+	   Store new model in string vector. Use only relevant information */
+	((StationsDlg*) data)->veccapsHamlibModels.Add(SDrRigCaps(caps->rig_model,
+		caps->mfg_name, caps->model_name, caps->status));
 
-	/* Store new model in string vector. Enlarge first and append new value */
-	const int iCurNumModels = pInstStDlg->veccapsHamlibModels.Size();
-	pInstStDlg->veccapsHamlibModels.Enlarge(1);
+	return 1; /* !=0, we want them all! */
+}
 
-	/* Store relevant data in vector */
-	pInstStDlg->veccapsHamlibModels[iCurNumModels].iModelID = caps->rig_model;
-	pInstStDlg->veccapsHamlibModels[iCurNumModels].strManufacturer = caps->mfg_name;
-	pInstStDlg->veccapsHamlibModels[iCurNumModels].strModelName = caps->model_name;
-	pInstStDlg->veccapsHamlibModels[iCurNumModels].eRigStatus = caps->status;
+void StationsDlg::SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlibModels)
+{
+	/* Loop through the array one less than its total cell count */
+	const int iEnd = veccapsHamlibModels.Size() - 1;
 
-	return 1;  /* !=0, we want them all! */
+	for (int i = 0; i < iEnd; i++)
+	{
+		for (int j = 0; j < iEnd; j++)
+		{
+			/* Compare the values and switch if necessary */
+			if (veccapsHamlibModels[j].iModelID >
+				veccapsHamlibModels[j + 1].iModelID)
+			{
+				const SDrRigCaps instSwap = veccapsHamlibModels[j];
+				veccapsHamlibModels[j] = veccapsHamlibModels[j + 1];
+				veccapsHamlibModels[j + 1] = instSwap;
+			}
+		}
+	}
 }
 
 _BOOLEAN StationsDlg::CheckForSpecDRMFE(const rig_model_t iID, int& iIndex)
@@ -946,6 +962,9 @@ _BOOLEAN StationsDlg::SetFrequencyHamlib(const int iFreqkHz)
 void StationsDlg::InitHamlib(const rig_model_t newModID)
 {
 	int ret;
+
+	/* Set value for current selected model ID */
+	iCurSelModelID = newModID;
 
 	/* If rig was already open, close it first */
 	if (pRig != NULL)
@@ -1074,7 +1093,6 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 				ret = rig_set_mode(pRig, RIG_VFO_CURR, mode, atoi(q));
 				if (ret != RIG_OK)
 					cerr << "Rig set mode failed: " << rigerror(ret) << endl;
-
 			}
 			else if (p[0] == 'l' && (setting = rig_parse_level(p + 2)) !=
 				RIG_LEVEL_NONE)
@@ -1091,7 +1109,6 @@ void StationsDlg::InitHamlib(const rig_model_t newModID)
 			else if (p[0] == 'f' && (setting = rig_parse_func(p + 2)) !=
 				RIG_FUNC_NONE)
 			{
-
 				ret = rig_set_func(pRig, RIG_VFO_CURR, setting, atoi(q));
 				if (ret != RIG_OK)
 					cerr << "Rig set func failed: " << rigerror(ret) << endl;
