@@ -228,7 +228,8 @@ void CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	   variable length field of up to 16 bytes defining the label using UTF-8
 	   coding
 	   TODO: Error handling at this point! */
-	if (iLengthOfBody <= 16)
+// Some DRM test files do not follow the 16 byte restriction in the DRM standard!!!
+//	if (iLengthOfBody <= 16)
 	{
 		/* Get all characters from SDC-stream */
 		for (i = 0; i < iLengthOfBody; i++)
