@@ -109,7 +109,7 @@ public:
 	ETypeSNREst GetSNREst() {return TypeSNREst;}
 
 	_BOOLEAN GetSNREstdB(_REAL& rSNREstRes) const;
-	_REAL GetSigma() {return TimeWiener.GetSigma();}
+	_BOOLEAN GetSigma(_REAL& rSigma);
 	_REAL GetDelay() const;
 
 	void StartSaRaOffAcq() {TimeSyncTrack.StartSaRaOffAcq(); SetInitFlag();}

@@ -735,6 +735,22 @@ _BOOLEAN CChannelEstimation::GetSNREstdB(_REAL& rSNREstRes) const
 		return TRUE;
 }
 
+_BOOLEAN CChannelEstimation::GetSigma(_REAL& rSigma)
+{
+	/* Doppler estimation is only implemented in the Wiener time interpolation
+	   module */
+	if (TypeIntTime == TWIENER)
+	{
+		rSigma = TimeWiener.GetSigma();
+		return TRUE;
+	}
+	else
+	{
+		rSigma = (_REAL) 0.0;
+		return FALSE;
+	}
+}
+
 _REAL CChannelEstimation::GetDelay() const
 {
 	/* Delay in ms */

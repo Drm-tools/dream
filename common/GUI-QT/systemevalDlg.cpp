@@ -394,6 +394,7 @@ void systemevalDlg::OnTimerChart()
 void systemevalDlg::OnTimer()
 {
 	_REAL rSNREstimate;
+	_REAL rSigmaEst;
 	QString strTextWiener = "Doppler / Delay: \t\n";
 	QString strTextFreqOffs = "Sample Frequency Offset: \t\n";
 
@@ -413,11 +414,20 @@ void systemevalDlg::OnTimer()
 			TextSNR->setText("SNR<br><b>---</b>");
 
 		/* Doppler estimation (assuming Gaussian doppler spectrum) */
-		TextWiener->setText(strTextWiener +
-			QString().setNum(
-			DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz / " +
-			QString().setNum(
-			DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
+		if (DRMReceiver.GetChanEst()->GetSigma(rSigmaEst))
+		{
+			/* Plot delay and Doppler values */
+			TextWiener->setText(strTextWiener +
+				QString().setNum(rSigmaEst, 'f', 2) + " Hz / " +
+				QString().setNum(
+				DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
+		}
+		else
+		{
+			/* Plot only delay, Doppler not available */
+			TextWiener->setText(strTextWiener + "--- / " + QString().setNum(
+				DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
+		}
 
 		/* Sample frequency offset estimation */
 		TextSampFreqOffset->setText(strTextFreqOffs + QString().
