@@ -210,6 +210,9 @@ inline CReal				Round(const CReal& fI)
 inline CMatlibVector<CReal>	Round(const CMatlibVector<CReal>& fvI)
 								{_VECOP(CReal, fvI.GetSize(), Round(fvI[i]));}
 
+inline CReal				Sign(const CReal& rI)
+								{return rI == 0 ? 0 : rI > 0 ? 1 : -1;}
+
 
 template<class T> T			Sum(const CMatlibVector<T>& vecI);
 
@@ -235,6 +238,12 @@ CMatlibVector<CComplex>		Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftP
 CMatlibVector<CComplex>		Ifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
 CMatlibVector<CComplex>		rfft(CMatlibVector<CReal>& fvI, const CFftPlans& FftPlans = CFftPlans());
 CMatlibVector<CReal>		rifft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans = CFftPlans());
+
+
+/* Numerical integration */
+typedef CReal(MATLIB_CALLBACK_QAUD)(CReal rX); /* Callback function definition */
+CReal						Quad(MATLIB_CALLBACK_QAUD f, const CReal a,
+								 const CReal b, const CReal errorBound = 1.e-6);
 
 
 /* Implementation **************************************************************

@@ -190,6 +190,258 @@ if (row == iSize)
 	return matrRet;
 }
 
+/* This function is not listed in the header file. It shall be used only for
+   Matlib internal calculations */
+CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
+				const CReal errorBound, CReal& integralBound,
+				bool& integralError, const CReal ru)
+{
+/*
+	The following code (inclusive the actual Quad() function) is based on a
+	JavaScript Example written by Lucio Tavernini. The code is hosted at
+	http://tavernini.com/integral.shtml.
+
+	Description: Adaptive Simpson's Quadrature
+
+    _integral(f, a, b, errorBound) attempts to integrate f from
+    a to b while keeping the asymptotic error estimate below
+    errorBound using an adaptive implementation of Simpson's rule.
+
+    The integrand can be unbounded and the limits can be infinite.
+
+	Note: Instead of NaN we use _MAXREAL.
+*/
+
+	CReal	left, right, fa, fb, v1, v2;
+	CReal	error, bound, h, h6, value, result;
+	int		m1, jend, mstart, j;
+
+	if (integralError)
+		return _MAXREAL; /* NaN */
+
+	/* Swap integration limits? */
+	if (a > b)
+		return -_integral(f, b, a, errorBound,
+			integralBound, integralError, ru);
+
+	/* Integrate over ]-infinity,+infinity[? */
+	if ((a == -_MAXREAL) && (b == _MAXREAL))
+		return _integral(f, 0, b, 0.5 * errorBound, integralBound,
+			integralError, ru) + _integral(f, a, 0, 0.5 * errorBound,
+			integralBound, integralError, ru);
+
+	/* Integrate over [a,+infinity[? */
+	if (b == _MAXREAL)
+	{
+		h = 5;
+		left = a;
+		right = a + h;
+		result = 0;
+
+		do
+		{
+			value = _integral(f, left, right, errorBound / h, integralBound,
+				integralError, ru);
+
+			result += value;
+			h = 2 * h;
+			left = right;
+			right = left + h;
+		}
+		while ((value != _MAXREAL /* NaN */) && (Abs(value) >=
+			0.5 * errorBound / h) && (left < right));
+
+		if (integralError)
+			result = _MAXREAL; /* NaN */
+
+		return result;
+	}
+
+	/* Integrate over ]-infinity,b]? */
+	if (a == -_MAXREAL)
+	{
+		h = 5;
+		left = b - h;
+		right = b;
+		result = 0;
+		
+		do
+		{
+			value = _integral(f, left, right, errorBound / h, integralBound,
+				integralError, ru);
+
+			result += value;
+			h = 2 * h;
+			right = left;
+			left = right - h;
+		}
+		while ((value != _MAXREAL /* NaN */) && (Abs(value) >=
+			0.5 * errorBound / h) && (left < right));
+		
+		if (integralError)
+			result =  _MAXREAL; /* NaN */
+
+		return result;
+	}
+
+	if (integralError)
+		return _MAXREAL; /* NaN */
+
+
+	/* Integrate over [a,b]. Initialize */
+	const int max = 1024;
+	CRealVector x(max);
+	CRealVector f1(max);
+	CRealVector f2(max);
+	CRealVector f3(max);
+	CRealVector v(max);
+  
+	int step = 1;
+	int m = 1;
+	bound = errorBound;
+	value = 0;
+	h = b - a;
+	x[0] = a;
+	f1[0] = f(a);
+	f2[0] = f(0.5 * (a + b));
+	f3[0] = f(b);
+	v[0] = h * (f1[0] + 4 * f2[0] + f3[0]) / 6;
+
+	do
+	{
+		/* Are we going to go forward or backward? */
+		if (step == -1)
+		{
+			/* Forward: j = m,...,max */
+			step = 1;
+			j = m + 1;
+			jend = max;
+			m = 0;
+			mstart = 0;
+		}
+		else
+		{
+			/* Backward: j = m,...,1 */
+			step = -1;
+			j = m - 1;
+			jend = -1;
+			m = max - 1;
+			mstart = max - 1;
+		}
+		
+		h = 0.5 * h;
+		h6 = h / 6;
+		bound = 0.5 * bound;
+		
+		do
+		{
+			left = x[j];
+			right = x[j] + 0.5 * h;
+
+			/* Complete loss of significance? */
+			if (left >= right)
+			{
+//				alert('integral: Error 1');
+				return value;
+			}
+			
+			fa = f(x[j] + 0.5 * h);
+			fb = f(x[j] + 1.5 * h);
+			v1 = h6 * (f1[j] + 4 * fa + f2[j]);
+			v2 = h6 * (f2[j] + 4 * fb + f3[j]);
+			
+			error = (v[j] - v1 - v2) / 15;
+			
+			if ((Abs(error) <= bound) || (Abs(v1 + v2) < Abs(value) * ru))
+			{
+				value = ((v1 + v2) + value) - error;
+			}
+			else
+			{
+				if (integralError)
+					return _MAXREAL; /* NaN */
+				
+				/* Are we out of memory? */
+				if (m == j)
+				{
+					left = x[j];
+					right = x[j] + 0.5 * h;
+
+					/* Complete loss of significance? */
+					if (left >= right)
+					{
+//						alert('integral: Error 2');
+						return value;
+					}
+
+					value += _integral(f, left, x[j] + 2 * h, bound,
+						integralBound, integralError, ru);
+				}
+				else 
+				{
+					/* No, we are not */
+					left = x[j];
+					right = x[j] + 0.125 * h;
+
+					if (left >= right)
+					{
+						/* The error bound specified is too small! */
+						integralError = true;
+						return _MAXREAL; /* NaN */
+					}
+					
+					m1 = m + step;
+					x[m] = x[j];
+					x[m1] = x[j] + h;
+					v[m] = v1;
+					v[m1] = v2;
+					f1[m] = f1[j];
+					f2[m] = fa;
+					f3[m] = f2[j];
+					f1[m1] = f2[j];
+					f2[m1] = fb;
+					f3[m1] = f3[j];
+					m += 2 * step;
+				}
+			}
+			j += step;
+		}
+		while (j != jend);
+	}
+	while (m != mstart);
+
+	result = value;
+
+	if (integralError)
+		result = _MAXREAL; /* NaN */
+
+	return result;
+}
+
+CReal Quad(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
+		   const CReal errorBound)
+{
+	CReal value;
+
+	/* Set globals */
+	/* Generate rounding unit */
+	CReal ru = (CReal) 1.0;
+	do
+	{
+		ru = (CReal) 0.5 * ru;
+		value = (CReal) 1.0 + ru;
+	}
+	while (value != (CReal) 1.0);
+
+	ru *= 2;
+
+	CReal integralBound = errorBound;
+	bool integralError = false;
+
+	/* Compute */
+	return _integral(f, a, b, errorBound, integralBound, integralError, ru);
+}
+
 CMatlibVector<CComplex> Fft(CMatlibVector<CComplex>& cvI, const CFftPlans& FftPlans)
 {
 	int						i;
