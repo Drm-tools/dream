@@ -45,8 +45,10 @@
 /* Data type for Viterbi metric */
 #ifdef USE_MMX
 # define _VITMETRTYPE				unsigned char
+# define _DECISIONTYPE				unsigned char
 #else
 # define _VITMETRTYPE				float
+# define _DECISIONTYPE				_BINARY
 #endif
 
 /* We initialize each new block of data all branches-metrics with the following
@@ -90,9 +92,17 @@ protected:
 	int						iNumOutBits;
 	int						iNumOutBitsWithMemory;
 
-	/* We have to use unsigned char instead of _BINARY, because of the MMX
-	   implementation */
-	CMatrix<unsigned char>	matbiDecisions;
+	CMatrix<_DECISIONTYPE>	matdecDecisions;
+
+#ifdef USE_MMX
+	/* Fields for storing the reodered metrics for MMX trellis */
+	_VITMETRTYPE			chMet1[MC_NUM_STATES / 2];
+	_VITMETRTYPE			chMet2[MC_NUM_STATES / 2];
+
+	void TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
+		const _VITMETRTYPE* pCurTrelMetric, const _VITMETRTYPE* pOldTrelMetric,
+		const _VITMETRTYPE* pchMet1, const _VITMETRTYPE* pchMet2);
+#endif
 };
 
 

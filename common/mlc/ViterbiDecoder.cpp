@@ -40,11 +40,6 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	_VITMETRTYPE*	pOldTrelMetric;
 
 #ifdef USE_MMX
-	/* Fields for storing the reodered metrics for MMX trellis */
-	unsigned char	chMet1[MC_NUM_STATES / 2];
-	unsigned char	chMet2[MC_NUM_STATES / 2];
-
-
 	/* -------------------------------------------------------------------------
 	   Since the metric is 8-bit fixed-point type, we need to scale the input
 	   metrics to avoid overflows */
@@ -230,13 +225,13 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			{ \
 				/* Save minimum metric for this state and store decision */ \
 				pCurTrelMetric[cur] = rFiStAccMetricPrev0; \
-				matbiDecisions[i][cur] = 0; \
+				matdecDecisions[i][cur] = 0; \
 			} \
 			else \
 			{ \
 				/* Save minimum metric for this state and store decision */ \
 				pCurTrelMetric[cur] = rFiStAccMetricPrev1; \
-				matbiDecisions[i][cur] = 1; \
+				matdecDecisions[i][cur] = 1; \
 			} \
 			\
 			/* Second state in this set ----------------------------------- */ \
@@ -251,13 +246,13 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			{ \
 				/* Save minimum metric for this state and store decision */ \
 				pCurTrelMetric[next] = rSecStAccMetricPrev0; \
-				matbiDecisions[i][next] = 0; \
+				matdecDecisions[i][next] = 0; \
 			} \
 			else \
 			{ \
 				/* Save minimum metric for this state and store decision */ \
 				pCurTrelMetric[next] = rSecStAccMetricPrev1; \
-				matbiDecisions[i][next] = 1; \
+				matdecDecisions[i][next] = 1; \
 			} \
 		}
 #endif
@@ -301,185 +296,9 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 #undef BUTTERFLY
 
 #ifdef USE_MMX
-		/* Get pointer to current decisions vector */
-		unsigned char* pCurDec = &matbiDecisions[i][0];
-
-		/* MMX fixed-point implementation of trellis update */
-		__asm
-		{
-		/*
-			This code is based on a Viterbi sample code from
-			Phil Karn, KA9Q (Dec 2001)
-			simd-viterbi-2.0.3.zip -> viterbi27.c, mmxbfly27.s, ssebfly27.s
-			homepage: http://www.ka9q.net
-
-			Some comments to this MMX code:
-			- To compare two 8-bit sized unsigned char, we need to apply a
-			  special strategy:
-			  psubusb mm5, mm1 // mm5 - mm1
-			  pcmpeqb mm5, mm3 // mm3 = 0
-			  We subtract unsigned with saturation and afterwards compare for
-			  equal to zero. If value in mm1 is larger than the value in mm5, we
-			  always get 0 as the result
-			- Defining __asm Blocks as C Macros: Put the __asm keyword in front
-			  of each assembly instruction
-			- If we want to use c-pointers to arrays (like "pOldTrelMetric"), we
-			  first have to copy it to a register (like edx), otherwise we get
-			  errors
-		*/
-			/* Each invocation of BFLY() will do 8 butterflies in parallel */
-#			define BFLY(GROUP) \
-			{ \
-				/* Compute branch metrics */ \
-				__asm mov edx, pOldTrelMetric /* Incoming path metric */ \
-				__asm movq mm4, [edx + (8 * GROUP)] /* high bit = 0 */ \
-				__asm movq mm5, [edx + ((8 * GROUP) + 32)] /* high bit = 1 */ \
-				__asm movq mm0, [chMet1 + (8 * GROUP)] \
-				__asm movq mm3, [chMet2 + (8 * GROUP)] \
-				\
-				__asm movq mm1, mm4 /* first set (mm1, mm2) */ \
-				__asm paddusb mm1, mm0 /* first set: decision for bit = 0 (mm1) */ \
-				__asm movq mm2, mm5 \
-				__asm paddusb mm2, mm3 /* first set: decision for bit = 1 (mm2) */ \
-				__asm movq mm6, mm4 /* second set (mm6, mm7) */ \
-				__asm paddusb mm6, mm3 /* second set: decision for bit = 0 (mm6) */ \
-				__asm movq mm7, mm5 \
-				__asm paddusb mm7, mm0 /* second set: decision for bit = 1 (mm7) */ \
-				\
-				/* live registers 1 2 6 7. Compare mm1 and mm2; mm6 and mm7 */ \
-				__asm movq mm5, mm2 \
-				__asm movq mm4, mm7 \
-				__asm psubusb mm5, mm1 /* mm5 = mm2 - mm1 */ \
-				__asm psubusb mm4, mm6 /* mm4 = mm7 - mm6 */ \
-				__asm pxor mm3, mm3 /* zero mm3 register, needed for comparison */ \
-				__asm pcmpeqb mm5, mm3 /* mm5 = first set of decisions */ \
-				__asm pcmpeqb mm4, mm3 /* mm4 = second set of decisions */ \
-				\
-				/* live registers 1 2 4 5 6 7. Select survivors. Avoid jumps
-				   -> mask results with AND and ANDN. then OR */ \
-				__asm movq mm3, mm5 \
-				__asm movq mm0, mm4 \
-				__asm pand mm2, mm5 \
-				__asm pand mm7, mm4 \
-				__asm pandn mm3, mm1 \
-				__asm pandn mm0, mm6 \
-				__asm por mm2, mm3 /* mm2: first set survivors (decisions in mm5) */ \
-				__asm por mm7, mm0 /* mm7: second set survivors (decisions in mm4) */ \
-				\
-				/* live registers 2 4 5 7 */ \
-				/* interleave & store decisions in mm4, mm5 */ \
-				/* interleave & store new branch metrics in mm2, mm7 */ \
-				__asm movq mm3, mm5 \
-				__asm movq mm0, mm2 \
-				__asm punpcklbw mm3, mm4 /* interleave first 8 decisions */ \
-				__asm punpckhbw mm5, mm4 /* interleave second 8 decisions */ \
-				__asm punpcklbw mm0, mm7 /* interleave first 8 new metrics */ \
-				__asm punpckhbw mm2, mm7 /* interleave second 8 new metrics */ \
-				__asm mov edx, pCurDec \
-				__asm movq [edx + (16 * GROUP)], mm3 \
-				__asm movq [edx + (16 * GROUP + 8)], mm5 \
-				__asm mov edx, pCurTrelMetric \
-				__asm movq [edx + (16 * GROUP)], mm0 /* new metrics */ \
-				__asm movq [edx + (16 * GROUP + 8)], mm2 \
-			}
-
-			/* Invoke macro 4 times for a total of 32 butterflies */
-			BFLY(0)
-			BFLY(1)
-			BFLY(2)
-			BFLY(3)
-
-
-			/* -----------------------------------------------------------------
-			   Normalize by finding smallest metric and subtracting it
-			   from all metrics */
-
-#if 1 // TEST if 0, always normalize
-			/* See if we have to normalize */
-			mov eax, [edx] /* Extract first output metric */
-			and eax, 255
-			cmp eax, 150 /* Is it greater than 150? */
-			mov eax, 0
-			jle done /* No, no need to normalize */
-#endif
-
-			/* Search for the minimum metric. Result ist stored in mm0 */
-#			define PMINUB_MM0_MM1 \
-			{ \
-				__asm movq mm2, mm0 \
-				__asm psubusb mm2, mm1 /* mm2 = mm0 - mm1 */ \
-				__asm pxor mm3, mm3 /* zero mm3 register, needed for comparison */ \
-				__asm pcmpeqb mm2, mm3 /* decisions */ \
-				\
-				__asm pand mm0, mm2 \
-				__asm pandn mm2, mm1 \
-				__asm por mm0, mm2 \
-			}
-
-			/* Search for minimum, byte-wise for whole register */
-			mov edx, pCurTrelMetric
-			movq mm0, [edx]
-			movq mm1, [edx + 8]
-			PMINUB_MM0_MM1
-			movq mm1, [edx + 16]
-			PMINUB_MM0_MM1
-			movq mm1, [edx + 24]
-			PMINUB_MM0_MM1
-			movq mm1, [edx + 32]
-			PMINUB_MM0_MM1
-			movq mm1, [edx + 40]
-			PMINUB_MM0_MM1
-			movq mm1, [edx + 48]
-			PMINUB_MM0_MM1
-			movq mm1, [edx + 56]
-			PMINUB_MM0_MM1
-
-			/* mm0 contains 8 smallest metrics
-			   crunch down to single lowest metric */
-			movq mm1, mm0
-			psrlq mm0, 32 /* Compare lowest 4 bytes with highest 4 bytes */
-			PMINUB_MM0_MM1 /* -> results are in lowest 4 bytes */
-			movq mm1, mm0
-			psrlq mm0, 16 /* Compare lowest 2 bytes with mext 2 bytes */
-			PMINUB_MM0_MM1 /* -> results are in lowest 2 bytes */
-			movq mm1, mm0
-			psrlq mm0, 8 /* Compare lowest byte with second lowest byte */
-			PMINUB_MM0_MM1 /* -> resulting minium metric is in lowest byte */
-
-			/* Expand value in lowest byte to all 8 bytes */
-			punpcklbw mm0,mm0 /* First 2 bytes have same value */
-			punpcklbw mm0,mm0 /* First 4 bytes have same value */
-			punpcklbw mm0,mm0 /* All bytes are the same */
-
-
-			/* mm0 now contains lowest metric in all 8 bytes
-			   subtract it from every output metric. Trashes mm7 */
-#			define PSUBUSBM(MEM, REG) \
-			{ \
-				__asm movq mm7, MEM \
-				__asm psubusb mm7, REG \
-				__asm movq MEM, mm7 \
-			}
-
-			PSUBUSBM([edx], mm0)
-			PSUBUSBM([edx + 8], mm0)
-			PSUBUSBM([edx + 16], mm0)
-			PSUBUSBM([edx + 24], mm0)
-			PSUBUSBM([edx + 32], mm0)
-			PSUBUSBM([edx + 40], mm0)
-			PSUBUSBM([edx + 48], mm0)
-			PSUBUSBM([edx + 56], mm0)
-
-
-		done:
-			/* Needed, when we have used mmx registers and want to use floating
-			   point operations afterwards */
-			emms
-
-#undef BFLY
-#undef MINIMUM
-#undef PSUBUSBM
-		}
+		/* Do actual trellis update in separate file (assembler implementation) */
+		TrellisUpdateMMX(&matdecDecisions[i][0], pCurTrelMetric, pOldTrelMetric,
+			chMet1, chMet2);
 #endif
 
 		/* Swap trellis data pointers (old -> new, new -> old) */
@@ -498,19 +317,25 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	{
 		/* Read out decisions "backwards". Mask only first bit, because in MMX
 		   implementation, all 8 bits of a "char" are set to the decision */
-		_BINARY biCurBit =
-			matbiDecisions[iNumOutBitsWithMemory - i - 1][iCurDecState] & 1;
+		_DECISIONTYPE decCurBit =
+			matdecDecisions[iNumOutBitsWithMemory - i - 1][iCurDecState] & 1;
 
 		/* Calculate next state from previous decoded bit -> shift old data
 		   and add new bit */
-		iCurDecState = (iCurDecState >> 1) | (biCurBit << 5);
+		iCurDecState = (iCurDecState >> 1) | (decCurBit << 5);
 
 		/* Set decisions "backwards" in actual result vector */
-		vecbiOutputBits[iNumOutBits - i - 1] = biCurBit;
+		vecbiOutputBits[iNumOutBits - i - 1] = (_BINARY) decCurBit;
 	}
 
+#ifdef USE_MMX
+	/* No accumulated metric available because of normalizing the metric because
+	   of fixed-point implementation */
+	return (_REAL) 1.0;
+#else
 	/* Return normalized accumulated minimum metric */
 	return pOldTrelMetric[0] / iDistCnt;
+#endif
 }
 
 void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
@@ -533,7 +358,7 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
 		iPunctPatPartB, iLevel);
 
 	/* Init vector for storing the decided bits */
-	matbiDecisions.Init(iNumOutBitsWithMemory, MC_NUM_STATES);
+	matdecDecisions.Init(iNumOutBitsWithMemory, MC_NUM_STATES);
 }
 
 CViterbiDecoder::CViterbiDecoder()

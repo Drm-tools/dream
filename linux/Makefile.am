@@ -49,6 +49,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/mlc/MLC.cpp \
 	../common/mlc/Metric.cpp \
 	../common/mlc/ViterbiDecoder.cpp \
+	../common/mlc/TrellisUpdateMMX.cpp \
 	../common/mlc/QAMMapping.cpp \
 	../common/mlc/ChannelCode.cpp \
 	../common/ofdmcellmapping/CellMappingTable.cpp \

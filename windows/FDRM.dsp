@@ -231,6 +231,10 @@ SOURCE=..\common\mlc\QAMMapping.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\mlc\TrellisUpdateMMX.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\mlc\ViterbiDecoder.cpp
 
 !IF  "$(CFG)" == "FDRM - Win32 Release"
