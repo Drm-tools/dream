@@ -53,7 +53,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 
 	/* Update histories for channel estimates at the pilot positions -------- */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 	{
 		/* Identify and calculate transfer function at the pilot positions */
 		if (_IsScatPil(veciMapTab[i]))
@@ -128,7 +128,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 				rMMSE = (_REAL) 1.0 / rSNR;
 
 			/* Reset counter and sum (for SNR) */
-			iUpCntWienFilt = iNoSymPerFrame;
+			iUpCntWienFilt = iNumSymPerFrame;
 			iAvSNRCnt = 0;
 			rAvSNR = (_REAL) 0.0;
 		}
@@ -136,7 +136,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 
 	/* Wiener interpolation, filtering and prediction ----------------------- */
-	for (i = 0; i < iNoCarrier; i += iScatPilFreqInt)
+	for (i = 0; i < iNumCarrier; i += iScatPilFreqInt)
 	{
 		/* This check is for robustness mode D since "iScatPilFreqInt" is "1"
 		   in this case it would include the DC carrier in the for-loop */
@@ -147,7 +147,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 			/* Calculate current filter phase, use distance to next pilot */
 			iCurrFiltPhase = (iScatPilTimeInt - DisToNextPil(iPiHiIndex,
-				(*pvecInputData).GetExData().iSymbolNo)) % iScatPilTimeInt;
+				(*pvecInputData).GetExData().iSymbolID)) % iScatPilTimeInt;
 
 			/* Convolution with one phase of the optimal filter */
 			/* Init sum */
@@ -179,12 +179,12 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	return 1 / rMMSE;
 }
 
-int CTimeWiener::DisToNextPil(int iPiHiIndex, int iSymNo)
+int CTimeWiener::DisToNextPil(int iPiHiIndex, int iSymNum)
 {
 	/* Distance to next pilot (later in time!) of one specific
-	   carrier (with pilot). We do the "iNoSymPerFrame - iSymNo" to avoid
+	   carrier (with pilot). We do the "iNumSymPerFrame - iSymNum" to avoid
 	   negative numbers in the modulo operation */
-	return (iNoSymPerFrame - iSymNo + iFirstSymbWithPi + iPiHiIndex) %
+	return (iNumSymPerFrame - iSymNum + iFirstSymbWithPi + iPiHiIndex) %
 		iScatPilTimeInt;
 }
 
@@ -194,21 +194,21 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	int		iNoPiFreqDirAll;
 	int		iSymDelyChanEst;
 	int		iNumPilOneOFDMSym;
-	int		iNoIntpFreqPil;
+	int		iNumIntpFreqPil;
 	_REAL	rSNR;
 
 	/* Init base class, must be at the beginning of this init! */
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Set local parameters */
-	iNoCarrier = ReceiverParam.iNoCarrier;
+	iNumCarrier = ReceiverParam.iNumCarrier;
 	iScatPilTimeInt = ReceiverParam.iScatPilTimeInt;
 	iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
-	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
-	iNoIntpFreqPil = ReceiverParam.iNoIntpFreqPil;
+	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
+	iNumIntpFreqPil = ReceiverParam.iNumIntpFreqPil;
 
 	/* We have to consider the last pilot at the end of the symbol ("+ 1") */
-	iNoPiFreqDirAll = iNoCarrier / iScatPilFreqInt + 1;
+	iNoPiFreqDirAll = iNumCarrier / iScatPilFreqInt + 1;
 
 	/* Init length of filter and maximum value of sigma (doppler) */
 	switch (ReceiverParam.GetWaveMode())
@@ -266,13 +266,13 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	/* Init time constant for IIR filter for averaging correlation estimation.
 	   Consider averaging over frequency axis, too. Pilots in frequency
 	   direction are "iScatPilTimeInt * iScatPilFreqInt" apart */
-	iNumPilOneOFDMSym = iNoIntpFreqPil / iScatPilTimeInt;
+	iNumPilOneOFDMSym = iNumIntpFreqPil / iScatPilTimeInt;
 	rLamTiCorrAv = IIR1Lam(TICONST_TI_CORREL_EST * iNumPilOneOFDMSym,
 		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
 
 	/* Init Update counter for wiener filter update. Wait aprox. half of the
 	   time of the time constant of the IIR filter */
-	iUpCntWienFilt = TICONST_TI_CORREL_EST * iNoSymPerFrame *
+	iUpCntWienFilt = TICONST_TI_CORREL_EST * iNumSymPerFrame *
 		NUM_DRM_FRAMES_PER_MIN / 60 / 2;
 
 	/* Init averaging of SNR values */

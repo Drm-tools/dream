@@ -152,7 +152,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	/* Number of services */
 	/* Use Table */
 	(*pbiFACData).Enqueue( 
-		iTableNoOfServices[Parameter.iNoAudioService][Parameter.iNoDataService],
+		iTableNoOfServices[Parameter.iNumAudioService][Parameter.iNumDataService],
 		4);
 
 	/* Reconfiguration index */
@@ -168,7 +168,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	   array */
 	iCurShortID = Parameter.FACRepitition[FACRepititionCounter];
 	FACRepititionCounter++;
-	if (FACRepititionCounter == Parameter.FACNoRep)
+	if (FACRepititionCounter == Parameter.FACNumRep)
 		FACRepititionCounter = 0;
 
 	/* Service identifier */
@@ -219,7 +219,7 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	(*pbiFACData).ResetBitAccess();
 
-	for (int i = 0; i < NO_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
 		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
 
 	/* Now, pointer in "enqueue"-function is back at the same place, 
@@ -250,7 +250,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 
 	(*pbiFACData).ResetBitAccess();
 
-	for (int i = 0; i < NO_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
+	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
 		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
 
 	CRC = CRCObject.GetCRC();

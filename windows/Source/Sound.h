@@ -37,16 +37,16 @@
 
 
 /* Definitions ****************************************************************/
-#define	NO_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
+#define	NUM_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
 										   use one channel for recording) */
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
 #define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
 
 /* Set this number as high as we have to prebuffer symbols for one MSC block.
    In case of robustness mode D we have 24 symbols */
-#define NO_SOUND_BUFFERS_IN		30		/* Number of sound card buffers */
+#define NUM_SOUND_BUFFERS_IN	30		/* Number of sound card buffers */
 
-#define NO_SOUND_BUFFERS_OUT	4		/* Number of sound card buffers */
+#define NUM_SOUND_BUFFERS_OUT	4		/* Number of sound card buffers */
 
 /* If this flag is defined, both input channels are mixed together, therefore
    no right or left channel choice must be made */
@@ -99,16 +99,16 @@ protected:
 	WAVEINCAPS		m_WaveInDevCaps;
 	HWAVEIN			m_WaveIn;
 	HANDLE			m_WaveInEvent;
-	WAVEHDR			m_WaveInHeader[NO_SOUND_BUFFERS_IN];
+	WAVEHDR			m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
 	int				iBufferSizeIn;
 	int				iWhichBufferIn;
-	short*			psSoundcardBuffer[NO_SOUND_BUFFERS_IN];
+	short*			psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
 
 	/* Wave out */
 	int				iBufferSizeOut;
 	HWAVEOUT		m_WaveOut;
-	short*			psPlaybackBuffer[NO_SOUND_BUFFERS_OUT];
-	WAVEHDR			m_WaveOutHeader[NO_SOUND_BUFFERS_OUT];
+	short*			psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
+	WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
 };
 
 

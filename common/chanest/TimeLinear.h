@@ -55,8 +55,8 @@ public:
 						   CVector<_COMPLEX>& veccPilotCells, _REAL rSNR);
 
 protected:
-	int					iNoCarrier;
-	int					iNoIntpFreqPil;
+	int					iNumCarrier;
+	int					iNumIntpFreqPil;
 	int					iScatPilFreqInt;
 	CMatrix<_COMPLEX>	matcChanEstHist;
 

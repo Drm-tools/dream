@@ -48,12 +48,12 @@ _REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	   (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
 	{
-		for (i = 0; i < iNoIntpFreqPil; i++)
+		for (i = 0; i < iNumIntpFreqPil; i++)
 			matcChanEstHist[j][i] = matcChanEstHist[j + 1][i];
 	}
 
 	/* Clear current symbol for new channel estimates */
-	for (i = 0; i < iNoIntpFreqPil; i++)
+	for (i = 0; i < iNumIntpFreqPil; i++)
 		matcChanEstHist[iLenHistBuff - 1][i] = 
 			_COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 
@@ -69,7 +69,7 @@ _REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 	/* Main loop ------------------------------------------------------------ */
 	/* Identify and calculate transfer function at the pilot positions */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 	{
 		if (_IsScatPil(veciMapTab[i]))
 		{
@@ -109,7 +109,7 @@ _REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	}
 
 	/* Copy channel estimation from current symbol in output buffer */
-	for (i = 0; i < iNoIntpFreqPil; i++)
+	for (i = 0; i < iNumIntpFreqPil; i++)
 		veccOutputData[i] = matcChanEstHist[0][i];
 
 	/* No SNR improvement by linear interpolation */
@@ -122,8 +122,8 @@ int CTimeLinear::Init(CParameter& Parameter)
 	CPilotModiClass::InitRot(Parameter);
 
 	/* Get parameters from global struct */
-	iNoCarrier = Parameter.iNoCarrier;
-	iNoIntpFreqPil = Parameter.iNoIntpFreqPil;
+	iNumCarrier = Parameter.iNumCarrier;
+	iNumIntpFreqPil = Parameter.iNumIntpFreqPil;
 	iScatPilFreqInt = Parameter.iScatPilFreqInt;
 
 	/* Set length of history-buffer according to time-int-index */
@@ -134,7 +134,7 @@ int CTimeLinear::Init(CParameter& Parameter)
 	vecTiCorrHist.Init(iLenTiCorrHist, 0);
 
 	/* Allocate memory for channel estimation history and init with zeros */
-	matcChanEstHist.Init(iLenHistBuff, iNoIntpFreqPil, 
+	matcChanEstHist.Init(iLenHistBuff, iNumIntpFreqPil, 
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
 	/* Return delay of channel estimation in time direction */

@@ -41,7 +41,7 @@
 
 
 /* Definitions ****************************************************************/
-#define	NO_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
+#define	NUM_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
 										   use one channel for recording) */
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
 #define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */

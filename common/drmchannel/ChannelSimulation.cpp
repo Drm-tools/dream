@@ -296,7 +296,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	/* Calculate noise power factors for a given SNR ------------------------ */
 #if (USE_SYSTEM_BANDWIDTH)
 	/* Spectrum width (N / T_u) */
-	rSpecOcc = (_REAL) ReceiverParam.iNoCarrier /
+	rSpecOcc = (_REAL) ReceiverParam.iNumCarrier /
 		ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 #else
 	switch (ReceiverParam.GetSpectrumOccup())

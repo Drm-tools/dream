@@ -58,15 +58,15 @@ void CSound::Read(CVector<short>& psData)
 		/* Mix left and right channel together. Prevent overflow! First,
 		   copy recorded data from "short" in "int" type variables */
 		const int iLeftChan =
-			psSoundcardBuffer[iWhichBufferIn][NO_IN_OUT_CHANNELS * i];
+			psSoundcardBuffer[iWhichBufferIn][NUM_IN_OUT_CHANNELS * i];
 		const int iRightChan =
-			psSoundcardBuffer[iWhichBufferIn][NO_IN_OUT_CHANNELS * i + 1];
+			psSoundcardBuffer[iWhichBufferIn][NUM_IN_OUT_CHANNELS * i + 1];
 
 		psData[i] = (iLeftChan + iRightChan) / 2;
 #else
 		/* Use only desired channel, chosen by "RECORDING_CHANNEL" */
 		psData[i] = psSoundcardBuffer[iWhichBufferIn]
-			[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
+			[NUM_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
 #endif
 	}
 
@@ -91,7 +91,7 @@ void CSound::AddInBuffer()
 
 	/* Toggle buffers */
 	iWhichBufferIn++;
-	if (iWhichBufferIn == NO_SOUND_BUFFERS_IN)
+	if (iWhichBufferIn == NUM_SOUND_BUFFERS_IN)
 		iWhichBufferIn = 0;
 }
 
@@ -101,7 +101,7 @@ void CSound::PrepareInBuffer(int iBufNum)
 	m_WaveInHeader[iBufNum].lpData = 
 		(LPSTR) &psSoundcardBuffer[iBufNum][0];
 	m_WaveInHeader[iBufNum].dwBufferLength =
-		iBufferSizeIn * BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
+		iBufferSizeIn * BYTES_PER_SAMPLE * NUM_IN_OUT_CHANNELS;
 	m_WaveInHeader[iBufNum].dwFlags = 0;
 		
 	/* Prepare wave-header */
@@ -134,12 +134,12 @@ void CSound::InitRecording(int iNewBufferSize)
 	iWhichBufferIn = 0;
 
 	/* Create memory for sound card buffer */
-	for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
+	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
 	{
 		if (psSoundcardBuffer[i] != NULL)
 			delete[] psSoundcardBuffer[i];
 
-		psSoundcardBuffer[i] = new short[iBufferSizeIn * NO_IN_OUT_CHANNELS];
+		psSoundcardBuffer[i] = new short[iBufferSizeIn * NUM_IN_OUT_CHANNELS];
 
 
 		/* Send all buffers to driver for filling the queue ----------------- */
@@ -211,7 +211,7 @@ void CSound::Write(CVector<short>& psData)
 
 	/* Get number of "done"-buffers and position of one of them */
 	iCntPrepBuf = 0;
-	for (i = 0; i < NO_SOUND_BUFFERS_OUT; i++)
+	for (i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
 	{
 		if (m_WaveOutHeader[i].dwFlags & WHDR_DONE)
 		{
@@ -228,13 +228,13 @@ void CSound::Write(CVector<short>& psData)
 // back to the middle: TODO
 		return;
 	}
-	else if (iCntPrepBuf == NO_SOUND_BUFFERS_OUT)
+	else if (iCntPrepBuf == NUM_SOUND_BUFFERS_OUT)
 	{
 		/* ---------------------------------------------------------------------
 		   Buffer is empty -> send as many cleared blocks to the sound-
 		   interface until half of the buffer size is reached */
 		/* Send half of the buffer size blocks to the sound-interface */
-		for (j = 0; j < NO_SOUND_BUFFERS_OUT / 2; j++)
+		for (j = 0; j < NUM_SOUND_BUFFERS_OUT / 2; j++)
 		{
 			/* First, clear these buffers */
 			for (i = 0; i < iBufferSizeOut; i++)
@@ -245,7 +245,7 @@ void CSound::Write(CVector<short>& psData)
 		}
 
 		/* Set index for done buffer */
-		iIndexDoneBuf = NO_SOUND_BUFFERS_OUT / 2;
+		iIndexDoneBuf = NUM_SOUND_BUFFERS_OUT / 2;
 	}
 
 	/* Copy stereo data from input in soundcard buffer */
@@ -300,7 +300,7 @@ void CSound::InitPlayback(int iNewBufferSize)
 	/* Reset interface */
 	waveOutReset(m_WaveOut);
 
-	for (j = 0; j < NO_SOUND_BUFFERS_OUT; j++)
+	for (j = 0; j < NUM_SOUND_BUFFERS_OUT; j++)
 	{
 		/* Create memory for playback buffer */
 		if (psPlaybackBuffer[j] != NULL)
@@ -375,7 +375,7 @@ void CSound::Close()
 	Sleep(500);
 
 	/* Unprepare wave-headers */
-	for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
+	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
 	{
 		result = waveInUnprepareHeader(
 			m_WaveIn, &m_WaveInHeader[i], sizeof(WAVEHDR));
@@ -384,7 +384,7 @@ void CSound::Close()
 			throw CGenErr("Sound Interface, waveInUnprepareHeader() failed.");
 	}
 
-	for (i = 0; i < NO_SOUND_BUFFERS_OUT; i++)
+	for (i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
 	{
 		result = waveOutUnprepareHeader(
 			m_WaveOut, &m_WaveOutHeader[i], sizeof(WAVEHDR));
@@ -416,15 +416,15 @@ CSound::CSound()
 	m_WaveOut = NULL;
 
 	/* Init buffer pointer to zero */
-	for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
+	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
 		psSoundcardBuffer[i] = NULL;
 
-	for (i = 0; i < NO_SOUND_BUFFERS_OUT; i++)
+	for (i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
 		psPlaybackBuffer[i] = NULL;
 
 	/* Init wave-format structure */
 	sWaveFormatEx.wFormatTag = WAVE_FORMAT_PCM;
-	sWaveFormatEx.nChannels = NO_IN_OUT_CHANNELS;
+	sWaveFormatEx.nChannels = NUM_IN_OUT_CHANNELS;
 	sWaveFormatEx.wBitsPerSample = BITS_PER_SAMPLE;
 	sWaveFormatEx.nSamplesPerSec = SOUNDCRD_SAMPLE_RATE;
 	sWaveFormatEx.nBlockAlign = sWaveFormatEx.nChannels *
@@ -464,7 +464,7 @@ CSound::CSound()
 CSound::~CSound()
 {
 	/* Delete allocated memory */
-	for (int i = 0; i < NO_SOUND_BUFFERS_IN; i++)
+	for (int i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
 	{
 		if (psSoundcardBuffer[i] != NULL)
 			delete[] psSoundcardBuffer[i];

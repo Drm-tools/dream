@@ -100,11 +100,11 @@ protected:
 							const int iDiff, const CReal rNewSNR, 
 							const CReal rNewSigma, const CReal rTs, 
 							const int iLength);
-	inline int DisToNextPil(int iPiHiIndex, int iSymNo);
+	inline int DisToNextPil(int iPiHiIndex, int iSymNum);
 	_REAL UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
 	CReal ModLinRegr(CRealVector& vecrCorrEst);
 
-	int					iNoCarrier;
+	int					iNumCarrier;
 
 	int					iLengthWiener;
 	int					iNoFiltPhasTi;
@@ -117,7 +117,7 @@ protected:
 
 	int					iScatPilFreqInt; /* Frequency interpolation */
 	int					iScatPilTimeInt; /* Time interpolation */
-	int					iNoSymPerFrame;
+	int					iNumSymPerFrame;
 
 	/* Number of first symbol with pilot at carrier-number 0 */
 	int					iFirstSymbWithPi;

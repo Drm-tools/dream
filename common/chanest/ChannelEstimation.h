@@ -101,7 +101,7 @@ protected:
 	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM};
 	EDFTWinType			eDFTWindowingMethod;
 
-	int					iNoSymPerFrame;
+	int					iNumSymPerFrame;
 
 	CChanEstTime*		pTimeInt;
 
@@ -113,7 +113,7 @@ protected:
 	ETypeIntFreq		TypeIntFreq;
 	ETypeIntTime		TypeIntTime;
 
-	int					iNoCarrier;
+	int					iNumCarrier;
 
 	CMatrix<_COMPLEX>	matcHistory;
 
@@ -136,7 +136,7 @@ protected:
 	CFftPlans			FftPlanShort;
 	CFftPlans			FftPlanLong;
 
-	int					iNoIntpFreqPil;
+	int					iNumIntpFreqPil;
 
 	CReal				rLamSNREstFast;
 	CReal				rLamSNREstSlow;

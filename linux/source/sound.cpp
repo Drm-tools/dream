@@ -84,11 +84,11 @@ void CSound::Init_HW( int mode )
 	/* Set sampling parameters always so that number of channels (mono/stereo) 
 	   is set before selecting sampling rate! */
 	/* Set number of channels (0=mono, 1=stereo) */
-	arg = NO_IN_OUT_CHANNELS - 1;
+	arg = NUM_IN_OUT_CHANNELS - 1;
 	status = ioctl(fdSound, SNDCTL_DSP_STEREO, &arg);
 	if (status == -1)
 		perror("SNDCTL_DSP_CHANNELS ioctl failed");
-	if (arg != (NO_IN_OUT_CHANNELS - 1))
+	if (arg != (NUM_IN_OUT_CHANNELS - 1))
 		perror("unable to set number of channels");
 	
 
@@ -121,7 +121,7 @@ void CSound::Init_HW( int mode )
 
 int read_HW( void * recbuf, int size) {
 	
-	int ret = read(fdSound, recbuf, size * NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
+	int ret = read(fdSound, recbuf, size * NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
 //printf("%d ", ret); fflush(stdout);
 
 	if (ret < 0) {
@@ -130,7 +130,7 @@ int read_HW( void * recbuf, int size) {
 		else
 			return 0;
 	} else
-		return ret / (NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
+		return ret / (NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
 }
 
 int write_HW( _SAMPLE *playbuf, int size ){
@@ -138,7 +138,7 @@ int write_HW( _SAMPLE *playbuf, int size ){
 	int start = 0;
 	int ret;
 
-	size *= BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
+	size *= BYTES_PER_SAMPLE * NUM_IN_OUT_CHANNELS;
 
 	while (size) {
 
@@ -235,9 +235,9 @@ void CSound::Init_HW( int mode ){
 		return;
 	}
 	/* Set the count of channels */
-	err = snd_pcm_hw_params_set_channels(handle, hwparams, NO_IN_OUT_CHANNELS);
+	err = snd_pcm_hw_params_set_channels(handle, hwparams, NUM_IN_OUT_CHANNELS);
 	if (err < 0) {
-		printf("Channels count (%i) not available s: %s\n", NO_IN_OUT_CHANNELS, snd_strerror(err));
+		printf("Channels count (%i) not available s: %s\n", NUM_IN_OUT_CHANNELS, snd_strerror(err));
 		return;
 	}
 	/* Set the stream rate */
@@ -442,12 +442,12 @@ void CSound::Init_HW( int mode)
 	/* Set sampling parameters */
 	if (mode == RECORD ) {
 		rstream = arts_record_stream(SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, 
-			NO_IN_OUT_CHANNELS, "DRM");
+			NUM_IN_OUT_CHANNELS, "DRM");
 		/* Set to blocking */
 		status = arts_stream_set( rstream, ARTS_P_BLOCKING, 1);
 	} else {
 		pstream = arts_play_stream( SOUNDCRD_SAMPLE_RATE, BITS_PER_SAMPLE, 
-			NO_IN_OUT_CHANNELS, "DRM");
+			NUM_IN_OUT_CHANNELS, "DRM");
 		/* Set to blocking */
 		status = arts_stream_set( pstream, ARTS_P_BLOCKING, 1);
 	}
@@ -460,12 +460,12 @@ void CSound::Init_HW( int mode)
 
 int read_HW( void * recbuf, int size) {
 
-	int ret = arts_read(rstream, recbuf, FRAGSIZE * NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
+	int ret = arts_read(rstream, recbuf, FRAGSIZE * NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
 	if (ret < 0) {
 		fprintf(stderr, "CSound:Read error %s\n", arts_error_text(ret));
 		throw CGenErr("CSound:Read error");
 	} else
-		return ret / (NO_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
+		return ret / (NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
 }
 
 int write_HW( _SAMPLE *playbuf, int size ){
@@ -473,7 +473,7 @@ int write_HW( _SAMPLE *playbuf, int size ){
 	int start = 0;
 	int ret;
 
-	size *= BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
+	size *= BYTES_PER_SAMPLE * NUM_IN_OUT_CHANNELS;
 
 	while (size) 
 	{
@@ -535,7 +535,7 @@ public:
 					ptarget = SoundBufR.QueryWriteBuffer();
 					
 					for (int i = 0; i < size; i++)
-						(*ptarget)[i] = tmprecbuf[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
+						(*ptarget)[i] = tmprecbuf[NUM_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
 		 			
 					SoundBufR.Put( size );
 					SoundBufR.unlock();
@@ -546,7 +546,7 @@ public:
 	}
 
 protected:
-	_SAMPLE	tmprecbuf[NO_IN_OUT_CHANNELS * FRAGSIZE];
+	_SAMPLE	tmprecbuf[NUM_IN_OUT_CHANNELS * FRAGSIZE];
 } RecThread1;
 
 
@@ -640,7 +640,7 @@ public:
 			fill = SoundBufP.GetFillLevel();
 			SoundBufP.unlock();
 				
-			if ( fill > (FRAGSIZE * NO_IN_OUT_CHANNELS) ) {
+			if ( fill > (FRAGSIZE * NUM_IN_OUT_CHANNELS) ) {
 
 //printf("f%d ", fill); fflush(stdout);		 
 				// enough data in the buffer
@@ -648,9 +648,9 @@ public:
 				CVectorEx<_SAMPLE>*	p;
 				
 				SoundBufP.lock();
-				p = SoundBufP.Get( FRAGSIZE * NO_IN_OUT_CHANNELS );
+				p = SoundBufP.Get( FRAGSIZE * NUM_IN_OUT_CHANNELS );
 
-				for (int i=0; i < FRAGSIZE * NO_IN_OUT_CHANNELS; i++)
+				for (int i=0; i < FRAGSIZE * NUM_IN_OUT_CHANNELS; i++)
 					tmpplaybuf[i] = (*p)[i];
 
 				SoundBufP.unlock();
@@ -673,7 +673,7 @@ public:
 	}
 
 protected:
-	_SAMPLE	tmpplaybuf[NO_IN_OUT_CHANNELS * FRAGSIZE];
+	_SAMPLE	tmpplaybuf[NUM_IN_OUT_CHANNELS * FRAGSIZE];
 } PlayThread1;
 
 
