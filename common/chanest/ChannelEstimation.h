@@ -64,13 +64,6 @@
 /* SNR estimation initial SNR value */
 #define INIT_VALUE_SNR_ESTIM_DB			((_REAL) 20.0) /* dB */
 
-/* If this flag is set, the Wiener filter coefficients are updated every DRM
-   frame. If not, the update is done every OFDM symbol. If the update is only
-   done every DRM frame, the processing power is lower but if the timing
-   changes quickly it can happen that the PDS moves out of the estimated
-   window (defined by beginning and end value) */
-#undef UPD_WIENER_FREQ_EACH_DRM_FRAME
-
 /* Wrap around bound for calculation of group delay. It is wraped by the 2 pi
    periodicity of the angle() function */
 #define WRAP_AROUND_BOUND_GRP_DLY		((_REAL) 4.0)
@@ -172,11 +165,8 @@ protected:
 	_REAL					rSNRFACSigCorrFact;
 	_REAL					rSNRTotToPilCorrFact;
 	_REAL					rSNRSysToNomBWCorrFact;
-	int						iUpCntWienFilt;
 
 	_REAL					rLenPDSEst; /* Needed for GetDelay() */
-	_REAL					rMaxLenPDSInFra;
-	_REAL					rMinOffsPDSInFra;
 
 	int						iStartZeroPadding;
 
@@ -195,7 +185,6 @@ protected:
 	CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, CReal rSNR, 
 									 CReal rRatPDSLen, CReal rRatPDSOffs,
 									 int iLength);
-	CComplex FreqCorrFct(int iCurPos, CReal rRatPDSLen, CReal rRatPDSOffs);
 	CMatrix<_COMPLEX>		matcFiltFreq;
 	int						iLengthWiener;
 	CVector<int>			veciPilOffTab;

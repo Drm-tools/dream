@@ -170,39 +170,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Do not update filter in case of simulation */
 		if (ReceiverParam.eSimType == CParameter::ST_NONE)
 		{
-#ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
-			/* Update filter coefficients once in one DRM frame */
-			if (iUpCntWienFilt > 0)
-			{
-				iUpCntWienFilt--;
-
-				/* Get maximum delay spread and offset in one DRM frame */
-				if (rLenPDSEst > rMaxLenPDSInFra)
-					rMaxLenPDSInFra = rLenPDSEst;
-
-				if (rOffsPDSEst < rMinOffsPDSInFra)
-					rMinOffsPDSInFra = rOffsPDSEst;
-			}
-			else
-			{
-#else
-				/* Update Wiener filter each OFDM symbol. Use current
-				   estimates */
-				rMaxLenPDSInFra = rLenPDSEst;
-				rMinOffsPDSInFra = rOffsPDSEst;
-#endif
-				/* Update filter taps */
-				UpdateWienerFiltCoef(rSNRAftTiInt,
-					rMaxLenPDSInFra / iNumCarrier,
-					rMinOffsPDSInFra / iNumCarrier);
-
-#ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
-				/* Reset counter and maximum storage variable */
-				iUpCntWienFilt = iNumSymPerFrame;
-				rMaxLenPDSInFra = (_REAL) 0.0;
-				rMinOffsPDSInFra = rGuardSizeFFT;
-			}
-#endif
+			/* Update Wiener filter each OFDM symbol. Use current estimates */
+			UpdateWienerFiltCoef(rSNRAftTiInt, rLenPDSEst / iNumCarrier,
+				rOffsPDSEst / iNumCarrier);
 		}
 
 
@@ -212,12 +182,17 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		   follows this procedure) */
 		for (j = 0; j < iNumCarrier; j++)
 		{
+// TODO: Do only calculate channel estimation for data cells, not for pilot
+// cells (exeption: if we want to use SNR estimation based on pilots, we also
+// need Wiener on these cells!)
 			/* Convolution */
 			veccChanEst[j] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
 
 			for (i = 0; i < iLengthWiener; i++)
+			{
 				veccChanEst[j] +=
 					matcFiltFreq[j][i] * veccPilots[veciPilOffTab[j] + i];
+			}
 		}
 		break;
 	}
@@ -536,9 +511,6 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Init delay spread length estimation (index) */
 	rLenPDSEst = (_REAL) 0.0;
 
-	/* Init maximum estimated delay spread and offset in one DRM frame */
-	rMaxLenPDSInFra = (_REAL) 0.0;
-	rMinOffsPDSInFra = rGuardSizeFFT;
 
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
 	/* Length of wiener filter */
@@ -579,11 +551,6 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Allocate temporary matlib vector for filter coefficients */
 	matcWienerFilter.Init(iNumWienerFilt, iLengthWiener);
 
-#ifdef UPD_WIENER_FREQ_EACH_DRM_FRAME
-	/* Init Update counter for wiener filter update */
-	iUpCntWienFilt = iNumSymPerFrame;
-#endif
-
 	/* Distinguish between simulation and regular receiver. When we run a
 	   simulation, the parameters are taken from simulation init */
 	if (ReceiverParam.eSimType == CParameter::ST_NONE)
@@ -615,49 +582,54 @@ CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 													 CReal rRatPDSOffs,
 													 int iLength)
 {
-	int				i;
-	int				iCurPos;
-	CComplexVector	veccRpp(iLength);
-	CComplexVector	veccRhp(iLength);
-
-	/* Calculation of R_hp, this is the SHIFTED correlation function */
-	for (i = 0; i < iLength; i++)
-	{
-		iCurPos = i * iFreqInt - iDiff;
-
-		veccRhp[i] = FreqCorrFct(iCurPos, rRatPDSLen, rRatPDSOffs);
-	}
-
-	/* Calculation of R_pp */
-	for (i = 0; i < iLength; i++)
-	{
-		iCurPos = i * iFreqInt;
-
-		veccRpp[i] = FreqCorrFct(iCurPos, rRatPDSLen, rRatPDSOffs);
-	}
-
-	/* Add SNR at first tap */
-	veccRpp[0] += (CReal) 1.0 / rSNR;
-
-	/* Call levinson algorithm to solve matrix system for optimal solution */
-	return Levinson(veccRpp, veccRhp);
-}
-
-CComplex CChannelEstimation::FreqCorrFct(int iCurPos, CReal rRatPDSLen,
-										 CReal rRatPDSOffs)
-{
 /* 
 	We assume that the power delay spread is a rectangle function in the time
 	domain (sinc-function in the frequency domain). Length and position of this
 	window are adapted according to the current estimated PDS.
 */
-	/* First calculate the argument of the sinc- and exp-function */
-	const CReal rArgSinc = (CReal) iCurPos * rRatPDSLen;
-	const CReal rArgExp =
-		(CReal) crPi * iCurPos * (rRatPDSLen + rRatPDSOffs * 2);
+	int				i;
+	CRealVector		vecrRpp(iLength);
+	CRealVector		vecrRhp(iLength);
+	CRealVector		vecrH(iLength);
+	CComplexVector	veccH(iLength);
 
-	/* sinc(n * rat) * exp(pi * n * (rat + ratoffs)) */
-	return Sinc(rArgSinc) * CComplex(Cos(rArgExp), Sin(rArgExp));
+	/* Calculation of R_hp, this is the SHIFTED correlation function */
+	for (i = 0; i < iLength; i++)
+	{
+		const int iCurPos = i * iFreqInt - iDiff;
+
+		vecrRhp[i] = Sinc((CReal) iCurPos * rRatPDSLen);
+	}
+
+	/* Calculation of R_pp */
+	for (i = 0; i < iLength; i++)
+	{
+		const int iCurPos = i * iFreqInt;
+
+		vecrRpp[i] = Sinc((CReal) iCurPos * rRatPDSLen);
+	}
+
+	/* Add SNR at first tap */
+	vecrRpp[0] += (CReal) 1.0 / rSNR;
+
+	/* Call levinson algorithm to solve matrix system for optimal solution */
+	vecrH = Levinson(vecrRpp, vecrRhp);
+
+	/* Correct the optimal filter coefficients. Shift the rectangular
+	   function in the time domain to the correct position (determined by
+	   the "rRatPDSOffs") by multiplying in the frequency domain
+	   with exp(j w T) */
+	for (i = 0; i < iLength; i++)
+	{
+		const int iCurPos = i * iFreqInt - iDiff;
+
+		const CReal rArgExp =
+			(CReal) crPi * iCurPos * (rRatPDSLen + rRatPDSOffs * 2);
+
+		veccH[i] = vecrH[i] * CComplex(Cos(rArgExp), Sin(rArgExp));
+	}
+
+	return veccH;
 }
 
 void CChannelEstimation::UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
@@ -669,21 +641,25 @@ void CChannelEstimation::UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
 
 	/* Calculate all possible wiener filters */
 	for (j = 0; j < iNumWienerFilt; j++)
+	{
 		matcWienerFilter[j] = FreqOptimalFilter(iScatPilFreqInt, j, rNewSNR,
 			rRatPDSLen, rRatPDSOffs, iLengthWiener);
+	}
 
 
 #if 0
-#ifdef _DEBUG_
 /* Save filter coefficients */
 static FILE* pFile = fopen("test/wienerfreq.dat", "w");
 for (j = 0; j < iNumWienerFilt; j++)
+{
 	for (i = 0; i < iLengthWiener; i++)
-		fprintf(pFile, "%e\n", matcWienerFilter[j][i]);
+	{
+		fprintf(pFile, "%e %e\n", Real(matcWienerFilter[j][i]),
+			Imag(matcWienerFilter[j][i]));
+	}
+}
 fflush(pFile);
 #endif
-#endif
-
 
 
 	/* Set matrix with filter taps, one filter for each carrier */
