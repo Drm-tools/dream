@@ -92,7 +92,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		}
 	}
 
-#if 1
+
 	/* Update sigma estimation ---------------------------------------------- */
 	if (bTracking == TRUE)
 	{
@@ -131,7 +131,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			rAvSNR = (_REAL) 0.0;
 		}
 	}
-#endif
+
 
 	/* Wiener interpolation, filtering and prediction ----------------------- */
 	for (i = 0; i < iNumCarrier; i += iScatPilFreqInt)

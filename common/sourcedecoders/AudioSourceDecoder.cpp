@@ -89,7 +89,8 @@ void CAudioSourceEncoder::ProcessDataInternal(CParameter& TransmParam)
 			   "SDCTransmit.cpp". There is currently no "nice" solution for
 			   setting these values. TODO: better solution */
 			/* Padding to byte as done in SDCTransmit.cpp line 138ff */
-			int iTotByt = (iOutputBlockSize / SIZEOF__BYTE) * SIZEOF__BYTE;
+			const int iTotByt =
+				(iOutputBlockSize / SIZEOF__BYTE) * SIZEOF__BYTE;
 
 			for (i = iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 				 i < iTotByt; i++)
