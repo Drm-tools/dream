@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>691</width>
+            <width>687</width>
             <height>413</height>
         </rect>
     </property>
@@ -271,7 +271,8 @@
                             </property>
                             <property stdset="1">
                                 <name>text</name>
-                                <string>S-Meter [dB]:</string>
+                                <string>S-Meter [dB]
+(relative to S9):</string>
                             </property>
                         </widget>
                         <widget>

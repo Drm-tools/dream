@@ -618,7 +618,7 @@ void StationsDlg::OnTimerSMeter()
 	{
 		value_t tValue;
 		if (!rig_get_level(pRig, RIG_VFO_CURR, RIG_LEVEL_STRENGTH, &tValue))
-			ProgrSigStrength->setValue((_REAL) tValue.i / 10);
+			ProgrSigStrength->setValue((_REAL) tValue.i);
 	}
 #endif
 }
