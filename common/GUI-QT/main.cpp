@@ -67,27 +67,30 @@ public:
 /* Implementation *************************************************************/
 int main(int argc, char** argv)
 {
+	QApplication	app(argc, argv); // Application object
+	ReceiverThread	RecThread; // Working thread object
+	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_Minimize); // Main dialog
+
 // Activate this to read DRM data from file
 //DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
 
 // Activate this to start the transmitter and generate a DRM stream
 //DRMTransmitter.StartTransmitter();
 
-
-	QApplication	app(argc, argv); // Application object
-	ReceiverThread	RecThread; // Working thread object
-	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_Minimize); // Main dialog
-
 	/* Set main window */
 	app.setMainWidget(&MainDlg);
 	pApp = &app;
 
+try
+{
 	/* Call simulation script. If simulation is activated, application is 
 	   automatically exit in that routine. If in the script no simulation is
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
 	
-	/* First, initialize the working thread */
+	/* First, initialize the working thread. This should be done in an extra
+	   routine since we cannot 100% assume that the working thread is ealier
+	   ready than the GUI thread */
 	DRMReceiver.Init();
 
 	/* Start thread */
@@ -102,7 +105,21 @@ int main(int argc, char** argv)
 	   program will terminate anyway, but this can lead to an error 
 	   message */
 	DRMReceiver.Stop();
-	return RecThread.wait(5000);
+
+	RecThread.wait(5000);
+}
+
+catch (CGenErr GenErr)
+{
+	ErrorMessage(GenErr.strError);
+}
+
+catch (...)
+{
+	ErrorMessage("Unknown error.");
+}
+
+	return 0;
 }
 
 
@@ -133,9 +150,9 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 void ErrorMessage(string strErrorString)
 {
 	QMessageBox::critical(0, "Dream",
-		QString("The following error occured: ") + 
+		QString("The following error occured:<br><b>") + 
 		QString(strErrorString.c_str()) +
-		"The application will exit now.");
+		"</b><br><br>The application will exit now.");
 
 	exit(1);
 }
