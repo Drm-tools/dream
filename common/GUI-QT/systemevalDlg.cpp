@@ -41,9 +41,10 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
-	SliderNoOfIterations->setValue(DRMReceiver.GetMSCMLC()->GetNumIterations());
+	SliderNoOfIterations->
+		setValue(DRMReceiver.GetMSCMLC()->GetInitNumIterations());
 	TextNoOfIterations->setText("MLC: Number of Iterations: " +
-		QString().setNum(DRMReceiver.GetMSCMLC()->GetNumIterations()));
+		QString().setNum(DRMReceiver.GetMSCMLC()->GetInitNumIterations()));
 
 
 	/* Inits for channel estimation and time sync switches */

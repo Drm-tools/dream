@@ -97,13 +97,14 @@ class CMLCDecoder : public CReceiverModul<CEquSig, _BINARY>,
 					public CMLC
 {
 public:
-	CMLCDecoder() {iNumIterations = MC_NUM_ITERATIONS;}
+	CMLCDecoder() : iInitNumIterations(MC_NUM_ITERATIONS) {}
 	virtual ~CMLCDecoder() {}
 
 	_REAL GetAccMetric() const {return 10 * log10(rAccMetric);}
 	void GetVectorSpace(CVector<_COMPLEX>& veccData);
-	void SetNumIterations(int iNewNumIterations);
-	int GetNumIterations() const {return iNumIterations;}
+	void SetNumIterations(int iNewNumIterations)
+		{iInitNumIterations = iNewNumIterations; SetInitFlag();}
+	int GetInitNumIterations() const {return iInitNumIterations;}
 
 protected:
 	CViterbiDecoder		ViterbiDecoder[MC_MAX_NUM_LEVELS];
@@ -128,6 +129,7 @@ protected:
 	CVector<_COMPLEX>	vecSigSpacBuf;
 
 	int					iNumIterations;
+	int					iInitNumIterations;
 	int					iIndexLastBranch;
 
 	virtual void InitInternal(CParameter& ReceiverParam);

@@ -349,8 +349,12 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	/* First, calculate all necessary parameters for decoding process */
 	CalculateParam(ReceiverParam, eChannelType);
 
-	/* Coding scheme could have be changed, update number of iterations */
-	SetNumIterations(iNumIterations);
+	/* Reasonable number of iterations depends on coding scheme. With a
+	   4-QAM no iteration is possible */
+	if (eCodingScheme == CParameter::CS_1_SM)
+		iNumIterations = 0;
+	else
+		iNumIterations = iInitNumIterations;
 
 	/* Set this parameter to identify the last level of coder (important for
 	   very last loop */
@@ -418,16 +422,6 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	/* Define block-size for input and output */
 	iInputBlockSize = iN_mux;
 	iOutputBlockSize = iNoOutBits;
-}
-
-void CMLCDecoder::SetNumIterations(int iNewNumIterations)
-{
-	/* Reasonable number of iterations depends on coding scheme. With a
-	   4-QAM no iteration is possible */
-	if (eCodingScheme == CParameter::CS_1_SM)
-		iNumIterations = 0;
-	else
-		iNumIterations = iNewNumIterations;
 }
 
 void CMLCDecoder::GetVectorSpace(CVector<_COMPLEX>& veccData)
