@@ -474,10 +474,18 @@ CSound::CSound()
 
 CSound::~CSound()
 {
+	int i;
+
 	/* Delete allocated memory */
-	for (int i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
+	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
 	{
 		if (psSoundcardBuffer[i] != NULL)
 			delete[] psSoundcardBuffer[i];
+	}
+
+	for (i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
+	{
+		if (psPlaybackBuffer[i] != NULL)
+			delete[] psPlaybackBuffer[i];
 	}
 }
