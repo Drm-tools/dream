@@ -534,13 +534,15 @@ public:
 	CMatlibMatrix(const int iNRowLen, const int iNColLen,
 		const EVecTy eNTy = VTY_CONST) : 
 		iRowSize(0), ppData(NULL), eVType(eNTy) {Init(iNRowLen, iNColLen);}
+	CMatlibMatrix(const int iNRowLen, const int iNColLen, const T tIniVal) : 
+		iRowSize(0), ppData(NULL), eVType(VTY_CONST)
+		{Init(iNRowLen, iNColLen, tIniVal);}
 	CMatlibMatrix(const CMatlibMatrix<T>& matI);
 
 	virtual ~CMatlibMatrix() {if (ppData != NULL) delete[] ppData;}
 
 	void Init(const int iNRowLen, const int iNColLen, const T tIniVal = 0);
-	inline int GetRowSize() const
-		{return iRowSize;}
+	inline int GetRowSize() const {return iRowSize;}
 	inline int GetColSize() const
 		{if (iRowSize > 0) return ppData[0].GetSize(); else return 0;}
 
