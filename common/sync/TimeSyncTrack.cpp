@@ -212,6 +212,11 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 			break;
 		}
 
+		/* In case of sample rate offset acquisition phase, use faster timing
+		   corrections */
+		if (bSamRaOffsAcqu == TRUE)
+			rPropGain *= 2;
+
 		/* Apply proportional control and fix result to sample grid */
 		rCurCorrValue = rTiOffset * rPropGain + rFracPartContr;
 		iContrTiOffs = (int) Fix(rCurCorrValue);
