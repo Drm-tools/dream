@@ -151,8 +151,10 @@ CMatlibMatrix<CComplex> Inv(const CMatlibMatrix<CComplex>& matrI)
 			/* Swap with a row below this one that has a non-zero element
 			   in the same column */
 			for (row = i + 1; row < iSize; row++)
+			{
 				if ((Real(work[i][i]) != 0) || (Imag(work[i][i]) != 0))
 					break;
+			}
 
 // TEST
 if (row == iSize)
