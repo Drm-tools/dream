@@ -867,8 +867,9 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 				if (DRMReceiver.GetReceiverState() ==
 					CDRMReceiver::AS_WITH_SIGNAL)
 				{
-					rDoppler = DRMReceiver.GetChanEst()->GetSigma();
 					rDelay = DRMReceiver.GetChanEst()->GetDelay();
+					if (DRMReceiver.GetChanEst()->GetSigma(rDoppler) == FALSE)
+						rDoppler = (_REAL) 0.0;
 				}
 
 				/* This data can be read by Microsoft Excel */
@@ -903,10 +904,15 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 					iNumCRCOkMSC, iTmpNumAAC);
 
 #ifdef _DEBUG_
+				_REAL rDoppler;
+
 				/* Save additional system parameter for debugging performance */
+				if (DRMReceiver.GetChanEst()->GetSigma(rDoppler) == FALSE)
+					rDoppler = (_REAL) 0.0;
+
 				fprintf(pFileShort,
 					"   Dopp: %5.2f Hz   FreOff  %8.2f Hz   SamOff %6.2f Hz",
-					DRMReceiver.GetChanEst()->GetSigma(),
+					rDoppler,
 					DRMReceiver.GetParameters()->GetDCFrequency(),
 					DRMReceiver.GetParameters()->GetSampFreqEst());
 #endif
