@@ -283,7 +283,7 @@ CDRMSimulation::CDRMSimulation()
 	Param.rResampleOffset = (_REAL) 0.0;
 	Param.rFreqOffsetAcqui = (_REAL) 0.0;
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
-	Param.rTimingOffsTrack = (_REAL) 0.0;
+	Param.iTimingOffsTrack = 0;
 
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 	Param.iNoAudioService = 1;

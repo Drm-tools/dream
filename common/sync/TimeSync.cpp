@@ -380,12 +380,12 @@ fflush(pFile);
 
 			/* Reset also the tracking value since the tracking could not get 
 			   right parameters since the timing was not yet correct */
-			ReceiverParam.rTimingOffsTrack = (_REAL) 0.0;
+			ReceiverParam.iTimingOffsTrack = 0;
 		}
 
 		/* In case of tracking only, use final acquisition result "rStartIndex"
 		   (which is not updated any more) and add tracking correction */
-		iStartIndex = (int) rStartIndex + (int) ReceiverParam.rTimingOffsTrack;
+		iStartIndex = (int) rStartIndex + ReceiverParam.iTimingOffsTrack;
 
 		/* Timing acquisition was successfully finished, show always green
 		   light */
@@ -440,7 +440,7 @@ fflush(pFile);
 	if (bTimingAcqu == TRUE)
 		rStartIndex += (_REAL) iIntDiffToCenter;
 	else
-		ReceiverParam.rTimingOffsTrack += (_REAL) iIntDiffToCenter;
+		ReceiverParam.iTimingOffsTrack += iIntDiffToCenter;
 
 
 	/* -------------------------------------------------------------------------

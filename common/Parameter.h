@@ -355,7 +355,7 @@ public:
 
 	_REAL				rResampleOffset;
 
-	_REAL				rTimingOffsTrack;
+	int					iTimingOffsTrack;
 
 
 	/* Reception log -------------------------------------------------------- */

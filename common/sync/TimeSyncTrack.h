@@ -91,7 +91,7 @@ protected:
 	CRealVector				vecrAvPoDeSpRot;
 	int						iSymDelay;
 	CShiftRegister<int>		vecTiCorrHist;
-	CShiftRegister<_REAL>	vecrNewMeasHist;
+	CShiftRegister<int>		veciNewMeasHist;
 	
 	CReal					rFracPartTiCor;
 	int						iTargetTimingPos;
@@ -100,13 +100,15 @@ protected:
 
 	int						iDFTSize;
 
-	_REAL					rBoundLower;
-	_REAL					rBoundHigher;
-	_REAL					rGuardSizeFFT;
+	CReal					rBoundLower;
+	CReal					rBoundHigher;
+	CReal					rGuardSizeFFT;
 
 	int						iInitCnt;
 
-	_REAL					rEstDelay;
+	CReal					rEstDelay;
+
+	CReal					rFracPartContr;
 };
 
 
