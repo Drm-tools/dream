@@ -172,6 +172,64 @@ CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB,
 	return fvY;
 }
 
+CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB, 
+								   const CMatlibVector<CReal>& rvX, 
+								   CMatlibVector<CReal>& rvZ,
+								   int iDecFact)
+
+{
+	int			m, n;
+	const int	iSizeX = rvX.GetSize();
+	const int	iSizeZ = rvZ.GetSize();
+	const int	iSizeXNew = iSizeX + iSizeZ;
+	const int	iSizeFiltHist = cvB.GetSize() - 1;
+
+	int iNewLenZ;
+	int iDecSizeY;
+
+	if (iSizeFiltHist >= iSizeXNew)
+	{
+		 /* Special case if no new output can be calculated */
+		iDecSizeY = 0;
+
+		iNewLenZ = iSizeXNew;
+	}
+	else
+	{
+		/* Calculate the number of output bits which can be generated from the
+		   provided input vector */
+		iDecSizeY = 
+				(int) (((CReal) iSizeXNew - iSizeFiltHist - 1) / iDecFact + 1);
+
+		/* Since the input vector length must not be a multiple of "iDecFact",
+		   some input bits will be unused. To store this number, the size of
+		   the state vector "Z" is adapted */
+		iNewLenZ = iSizeFiltHist - 
+			(iDecSizeY * iDecFact - (iSizeXNew - iSizeFiltHist));
+	}
+
+	CMatlibVector<CComplex>	cvY(iDecSizeY, VTY_TEMP);
+	CMatlibVector<CReal>	rvXNew(iSizeXNew);
+
+	/* Add old values to input vector */
+	rvXNew.Merge(rvZ, rvX);
+
+	/* FIR filter */
+	for (m = 0; m < iDecSizeY; m++)
+	{
+		cvY[m] = (CReal) 0.0;
+
+		for (n = 0; n < cvB.GetSize(); n++)
+			cvY[m] += cvB[n] * rvXNew[m * iDecFact - n + iSizeFiltHist];
+	}
+
+	/* Save last samples in state vector */
+	rvZ.Init(iNewLenZ);
+	rvZ = rvXNew(iSizeXNew - iNewLenZ + 1, iSizeXNew);
+
+	return cvY;
+}
+
 CMatlibVector<CReal> Levinson(const CMatlibVector<CReal> vecrRx, 
 							  const CMatlibVector<CReal> vecrB)
 {
@@ -329,60 +387,4 @@ CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex> veccRx,
 	}
 
 	return veccX;
-}
-
-void GetIIRTaps(CMatlibVector<CReal>& vecrB, CMatlibVector<CReal>& vecrA, 
-				const CReal rFreqOff)
-{
-/* 
-	Use a prototype IIR filter (calculated with Matlab(TM)) and shift
-	the spectrum
-*/
-	CReal rWu, rWl, rAlpha, rK, rA1, rA2;
-
-	/* Coefficiants of prototype filter */
-	/* [b, a] = butter(2, 0.08333); */
-	const CReal rProtB[3] = {(CReal) 0.01440038190639, 
-		(CReal) 0.02880076381278, (CReal) 0.01440038190639};
-	const CReal rProtA[3] = 
-		{(CReal) 1.0, (CReal) -1.63300761704957, (CReal) 0.69060914467514};
-
-
-	/* 4.5 kHz 3-dB-bandwidth at a sample rate of 48 kHz */
-	const CReal rWc = crPi * 0.09375;
-
-	/* New lower and upper frequency bound */
-	rWu = (CReal) crPi * (1.0 - rFreqOff);
-	rWl = rWu - 2 * rWc;
-
-	/* Alpha and K as defined in Proakis, Digital Signal Processing */
-	rAlpha = cos((rWu + rWl) / 2) / cos((rWu - rWl) / 2);
-	rK = tan(rWc / 2) / tan((rWu - rWl) / 2);
-
-	/* A1, A2 */
-	rA1 = -2 * rAlpha * rK / (rK + 1);
-	rA2 = (rK - 1) / (rK + 1);
-
-	/* Init input vectors */
-	vecrB.Init(5);
-	vecrA.Init(5);
-
-	/* Calculate new coefficiants */
-	vecrB[0] = rProtB[0] - rA2 * rProtB[1] + rA2 * rA2 * rProtB[2];
-	vecrB[1] = (CReal) 0.0;
-	vecrB[2] = 2 * rA2 * rProtB[0] + rA1 * rA1 * rProtB[0] - 
-		rA2 * rA2 * rProtB[1] - rA1 * rA1 * rProtB[1] - rProtB[1] + 
-		2 * rA2 * rProtB[2] + rA1 * rA1 * rProtB[2];
-	vecrB[3] = (CReal) 0.0;
-	vecrB[4] = vecrB[0];
-
-	vecrA[0] = rProtA[0] - rA2 * rProtA[1] + rA2 * rA2 * rProtA[2];
-	vecrA[1] = -2 * rA1 * rProtA[0] + rA1 * rA2 * rProtA[1] + rA1 * rProtA[1] -
-		2 * rA1 * rA2 * rProtA[2];
-	vecrA[2] = 2 * rA2 * rProtA[0] + rA1 * rA1 * rProtA[0] - 
-		rA2 * rA2 * rProtA[1] - rA1 * rA1 * rProtA[1] - rProtA[1] + 
-		2 * rA2 * rProtA[2] + rA1 * rA1 * rProtA[2];
-	vecrA[3] = -2 * rA1 * rA2 * rProtA[0] + rA1 * rA2 * rProtA[1] + 
-		rA1 * rProtA[1] - 2 * rA1 * rProtA[2];
-	vecrA[4] = rA2 * rA2 * rProtA[0] - rA2 * rProtA[1] + rProtA[2];
 }

@@ -48,10 +48,10 @@ fprintf(fid, '#ifndef _RESAMPLEFILTER_H_\n');
 fprintf(fid, '#define _RESAMPLEFILTER_H_\n\n');
 
 
-fprintf(fid, '#define NO_TAPS_PER_PHASE			');
+fprintf(fid, '#define NO_TAPS_PER_PHASE            ');
 fprintf(fid, int2str(NoTapsP));
 fprintf(fid, '\n');
-fprintf(fid, '#define INTERP_DECIM_I_D			');
+fprintf(fid, '#define INTERP_DECIM_I_D             ');
 fprintf(fid, int2str(I));
 fprintf(fid, '\n\n\n');
 

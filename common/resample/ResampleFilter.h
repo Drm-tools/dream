@@ -5,8 +5,8 @@
 #ifndef _RESAMPLEFILTER_H_
 #define _RESAMPLEFILTER_H_
 
-#define NO_TAPS_PER_PHASE			15
-#define INTERP_DECIM_I_D			10
+#define NO_TAPS_PER_PHASE            15
+#define INTERP_DECIM_I_D             10
 
 
 /* Filter for ratios close to 1 */

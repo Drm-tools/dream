@@ -139,8 +139,8 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	setAxisTitle(QwtPlot::yLeft, "IR [dB]");
 
 	/* Fixed scale */
-	const double cdAxMinLeft = -20.0;
-	const double cdAxMaxLeft = 40.0;
+	const double cdAxMinLeft = (double) -20.0;
+	const double cdAxMaxLeft = (double) 40.0;
 	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
 	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], 
 		(double) vecrScale[vecrScale.Size() - 1]);

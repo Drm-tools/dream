@@ -97,7 +97,8 @@ void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 		   simplicity we have chosen an IIR filter here) */
 		const CReal rLambda = 0.9;
 		vecrAvPoDeSp = rLambda * vecrAvPoDeSp + 
-			(1 - rLambda) * Abs(veccPilots) * Abs(veccPilots);
+			(1 - rLambda) * (Real(veccPilots) * Real(veccPilots) +
+			Imag(veccPilots) * Imag(veccPilots));
 	}
 
 	/* Lower and higher bound */

@@ -158,41 +158,30 @@ fflush(pFile2);
 
 		if (DecFrameInfo.error != 0)
 		{
-			/* Decrease bad block count */
-			iBadBlockCount--;
+			/* Post message to show that CRC was wrong */
+			PostWinMessage(MS_MSC_CRC, 2);
 
-			if (iBadBlockCount == 0)
+			/* Average block with flipped block for smoother transition */
+			for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH / 2; i++)
 			{
-				/* Reset bad block count */
-				iBadBlockCount = NO_BAD_BL_UNTIL_ZERO;
+				vecTempResBufInLeft[i] = (vecTempResBufInLeft[i] + 
+					vecTempResBufInLeft[AUD_DEC_TRANSFROM_LENGTH - i - 1]) / 2;
 
-				/* Reset audio buffer with zeros */
-				for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH; i++)
-				{
-					vecTempResBufInLeft[i] = (_REAL) 0.0;
-					vecTempResBufInRight[i] = (_REAL) 0.0;
-				}
-
-				/* Post message to show that CRC was wrong and we set
-				   buffer to zero (red light) */
-				PostWinMessage(MS_MSC_CRC, 2);
+				vecTempResBufInRight[i] = (vecTempResBufInRight[i] + 
+					vecTempResBufInRight[AUD_DEC_TRANSFROM_LENGTH - i - 1]) / 2;
 			}
-			else
-			{
-				/* Post message to show that CRC was wrong and we dublicate the
-				   last frame (yellow light) */
-				PostWinMessage(MS_MSC_CRC, 1);
 
-				/* Use old vecTempResBufIn[i] (samples from block before) */
+			/* Attenuated the gain exponentially */
+			for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH; i++)
+			{
+				vecTempResBufInLeft[i] *= FORFACT_AUD_BL_BAD_CRC;
+				vecTempResBufInRight[i] *= FORFACT_AUD_BL_BAD_CRC;
 			}
 		}
 		else
 		{
 			/* Post message to show that CRC was OK */
 			PostWinMessage(MS_MSC_CRC, 0);
-
-			/* Reset bad block count */
-			iBadBlockCount = NO_BAD_BL_UNTIL_ZERO;
 
 			/* Conversion from _SAMPLE vector to _REAL vector for resampling. 
 			   ATTENTION: We use a vector which was allocated inside 
@@ -337,9 +326,6 @@ try
 			iNumHigherProtectedBytes = 
 				(iLenAudHigh - iNoHeaderBytes - iNumAACFrames /* CRC bytes */) /
 				iNumAACFrames;
-
-		/* Init bad block count */
-		iBadBlockCount = NO_BAD_BL_UNTIL_ZERO;
 
 		/* Since we do not correct for sample rate offsets here (yet), we do not
 		   have to consider bigger buffers. An audio frame always corresponds
