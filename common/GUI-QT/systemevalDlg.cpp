@@ -1386,7 +1386,8 @@ void systemevalDlg::AddWhatsThisHelpChar(const ECharType NCharType)
 			"<b>Input PSD:</b> This plot shows the estimated power spectral "
 			"density (PSD) of the input signal. The PSD is estimated by "
 			"averaging some Hamming Window weighted Fourier transformed "
-			"blocks of the input signal samples.";
+			"blocks of the input signal samples. The dashed vertical "
+			"line shows the estimated DC frequency.";
 		break;
 
 	case AUDIO_SPECTRUM:
