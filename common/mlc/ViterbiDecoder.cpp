@@ -87,7 +87,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		   redundancy can be avoided.
 		   Note, that not all possible bit-combinations are used in the coder,
 		   only a subset of numbers: 0, 2, 4, 6, 9, 11, 13, 15 (compare numbers
-		   in the BUTTERFLY( ) calls) */
+		   in the BUTTERFLY() calls) */
 
 		/* Get first position in input vector (is needed for all cases) */
 		const int iPos0 = iDistCnt;
@@ -323,7 +323,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	{
 		/* Read out decisions "backwards". Mask only first bit, because in MMX
 		   implementation, all 8 bits of a "char" are set to the decision */
-		_DECISIONTYPE decCurBit =
+		const _DECISIONTYPE decCurBit =
 			matdecDecisions[iNumOutBitsWithMemory - i - 1][iCurDecState] & 1;
 
 		/* Calculate next state from previous decoded bit -> shift old data
@@ -375,11 +375,11 @@ CViterbiDecoder::CViterbiDecoder()
 	   in the processing routine */
 
 	/* We need to analyze 2^(MC_CONSTRAINT_LENGTH - 1) states in the trellis */
-	int				i;
-	int				iPrev0Index[MC_NUM_STATES];
-	int				iPrev1Index[MC_NUM_STATES];
-	int				iMetricPrev0[MC_NUM_STATES];
-	int				iMetricPrev1[MC_NUM_STATES];
+	int	i;
+	int	iPrev0Index[MC_NUM_STATES];
+	int	iPrev1Index[MC_NUM_STATES];
+	int	iMetricPrev0[MC_NUM_STATES];
+	int	iMetricPrev1[MC_NUM_STATES];
 
 	for (i = 0; i < MC_NUM_STATES; i++)
 	{
