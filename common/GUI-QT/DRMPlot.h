@@ -38,6 +38,9 @@ extern CDRMReceiver	DRMReceiver;
 
 
 /* Definitions ****************************************************************/
+/* number of available color schemes for the plot */
+#define NUM_AVL_COLOR_SCHEMES_PLOT				3
+
 /* Define the plot color profiles */
 /* BLUEWHITE */
 #define BLUEWHITE_MAIN_PEN_COLOR_PLOT			blue
@@ -55,6 +58,14 @@ extern CDRMReceiver	DRMReceiver;
 #define GREENBLACK_SPEC_LINE1_COLOR_PLOT		yellow
 #define GREENBLACK_SPEC_LINE2_COLOR_PLOT		blue
 
+/* BALCKGREY */
+#define BLACKGREY_MAIN_PEN_COLOR_PLOT			black
+#define BLACKGREY_MAIN_PEN_COLOR_CONSTELLATION	green
+#define BLACKGREY_BCKGRD_COLOR_PLOT				gray
+#define BLACKGREY_MAIN_GRID_COLOR_PLOT			white
+#define BLACKGREY_SPEC_LINE1_COLOR_PLOT			blue
+#define BLACKGREY_SPEC_LINE2_COLOR_PLOT			yellow
+
 
 /* Classes ********************************************************************/
 class CDRMPlot : public QwtPlot
@@ -64,8 +75,6 @@ class CDRMPlot : public QwtPlot
 public:
 	CDRMPlot(QWidget *p = 0, const char *name = 0);
 	virtual ~CDRMPlot() {}
-
-	enum EPlotStyle {PS_BLUEWHITE, PS_GREENBLACK};
 
 	void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 				 _REAL rLowerB, _REAL rHigherB,
@@ -82,7 +91,7 @@ public:
 					 CParameter::ECodScheme eNewCoSc);
 	void SetMSCConst(CVector<_COMPLEX>& veccData,
 					 CParameter::ECodScheme eNewCoSc);
-	void SetPlotStyle(const EPlotStyle eNStyle);
+	void SetPlotStyle(const int iNewStyleID);
 
 protected:
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -95,7 +104,6 @@ protected:
 	/* Colors */
 	QColor MainPenColorPlot;
 	QColor MainPenColorConst;
-	QColor BckgrdColorPlot;
 	QColor MainGridColorPlot;
 	QColor SpecLine1ColorPlot;
 	QColor SpecLine2ColorPlot;

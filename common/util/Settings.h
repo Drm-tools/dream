@@ -32,6 +32,9 @@
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
+#ifdef USE_QT_GUI
+# include "../GUI-QT/DRMPlot.h"
+#endif
 #include <map>
 #include <string>
 #include <fstream>
@@ -67,7 +70,7 @@ extern CDRMReceiver	DRMReceiver;
 # define MAX_WIN_GEOM_VAL			10000 /* Pixel */
 
 /* Maximum value for color schemes for main plot */
-# define MAX_COLOR_SCHEMES_VAL		1
+# define MAX_COLOR_SCHEMES_VAL		(NUM_AVL_COLOR_SCHEMES_PLOT - 1)
 #endif
 
 #ifdef HAVE_LIBHAMLIB

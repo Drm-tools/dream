@@ -56,33 +56,45 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	setCanvasLineWidth(0);
 
 	/* Set default style */
-	SetPlotStyle(PS_BLUEWHITE);
+	SetPlotStyle(0);
 
 	/* Connections */
 	connect(this, SIGNAL(plotMouseReleased(const QMouseEvent&)),
 		this, SLOT(OnClicked(const QMouseEvent&)));
 }
 
-void CDRMPlot::SetPlotStyle(const EPlotStyle eNStyle)
+void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 {
-	switch (eNStyle)
-	{
-	case PS_BLUEWHITE:
-		MainPenColorPlot = BLUEWHITE_MAIN_PEN_COLOR_PLOT;
-		MainPenColorConst = BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION;
-		BckgrdColorPlot = BLUEWHITE_BCKGRD_COLOR_PLOT;
-		MainGridColorPlot = BLUEWHITE_MAIN_GRID_COLOR_PLOT;
-		SpecLine1ColorPlot = BLUEWHITE_SPEC_LINE1_COLOR_PLOT;
-		SpecLine2ColorPlot = BLUEWHITE_SPEC_LINE2_COLOR_PLOT;
-		break;
+	QColor BckgrdColorPlot;
 
-	case PS_GREENBLACK:
+	switch (iNewStyleID)
+	{
+	case 1:
 		MainPenColorPlot = GREENBLACK_MAIN_PEN_COLOR_PLOT;
 		MainPenColorConst = GREENBLACK_MAIN_PEN_COLOR_CONSTELLATION;
 		BckgrdColorPlot = GREENBLACK_BCKGRD_COLOR_PLOT;
 		MainGridColorPlot = GREENBLACK_MAIN_GRID_COLOR_PLOT;
 		SpecLine1ColorPlot = GREENBLACK_SPEC_LINE1_COLOR_PLOT;
 		SpecLine2ColorPlot = GREENBLACK_SPEC_LINE2_COLOR_PLOT;
+		break;
+
+	case 2:
+		MainPenColorPlot = BLACKGREY_MAIN_PEN_COLOR_PLOT;
+		MainPenColorConst = BLACKGREY_MAIN_PEN_COLOR_CONSTELLATION;
+		BckgrdColorPlot = BLACKGREY_BCKGRD_COLOR_PLOT;
+		MainGridColorPlot = BLACKGREY_MAIN_GRID_COLOR_PLOT;
+		SpecLine1ColorPlot = BLACKGREY_SPEC_LINE1_COLOR_PLOT;
+		SpecLine2ColorPlot = BLACKGREY_SPEC_LINE2_COLOR_PLOT;
+		break;
+
+	case 0: /* 0 is default */
+	default:
+		MainPenColorPlot = BLUEWHITE_MAIN_PEN_COLOR_PLOT;
+		MainPenColorConst = BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION;
+		BckgrdColorPlot = BLUEWHITE_BCKGRD_COLOR_PLOT;
+		MainGridColorPlot = BLUEWHITE_MAIN_GRID_COLOR_PLOT;
+		SpecLine1ColorPlot = BLUEWHITE_SPEC_LINE1_COLOR_PLOT;
+		SpecLine2ColorPlot = BLUEWHITE_SPEC_LINE2_COLOR_PLOT;
 		break;
 	}
 

@@ -628,6 +628,7 @@ void CSettings::UsageArguments(char** argv)
 		<< endl;
 	cerr << "                             0: blue-white (default)" << endl;
 	cerr << "                             1: green-black" << endl;
+	cerr << "                             2: black-grey" << endl;
 #endif
 
 	cerr << "  -I <n>, --snddevin <n>     set sound in device" << endl;
