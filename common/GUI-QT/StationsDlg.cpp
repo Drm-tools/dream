@@ -646,9 +646,6 @@ _BOOLEAN StationsDlg::SetFrequencyAOR7030(const int iFreqkHz)
 	_BOOLEAN bSucceeded = FALSE;
 
 #ifdef _WIN32
-
-/* Not yet working! */
-#if 0
 	/* Open serial interface (COM1) */
 	HANDLE hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE,
 		0 /* comm devices must be opened w/exclusive-access */,
@@ -693,7 +690,10 @@ _BOOLEAN StationsDlg::SetFrequencyAOR7030(const int iFreqkHz)
 			byCurByte = (_BYTE) (0x50); /* Select working mem (page 0) */
 			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
 
-			byCurByte = (_BYTE) (0x31 + 0x4A); /* Frequency address = 01AH */
+			byCurByte = (_BYTE) (0x31); /* Frequency address = 01AH */
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			byCurByte = (_BYTE) (0x4A);
 			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
 
 			/* Convert kHz to steps */
@@ -724,16 +724,15 @@ _BOOLEAN StationsDlg::SetFrequencyAOR7030(const int iFreqkHz)
 			byCurByte = (_BYTE) (0x60 + iAORFreq);
 			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
 
-			byCurByte = (_BYTE) (0x21 + 0x2C);
+			byCurByte = (_BYTE) (0x21);
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			byCurByte = (_BYTE) (0x2C);
 			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
 		}
 
 		CloseHandle(hCom);
 	}
-#endif
-
-
-
 #endif
 
 	return bSucceeded;
