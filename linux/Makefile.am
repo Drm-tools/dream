@@ -140,6 +140,8 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/GUI-QT/AboutDlgbase.ui \
 	../common/GUI-QT/systemevalDlgbase.ui \
 	../common/GUI-QT/MultimediaDlgbase.ui \
+	../common/GUI-QT/StationsDlgbase.ui \
+	../common/GUI-QT/AnalogDemDlgbase.ui \
 	../common/GUI-QT/fdrmdialog.h \
 	../common/GUI-QT/TransmDlg.h \
 	../common/GUI-QT/MultColorLED.h \
