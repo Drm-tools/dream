@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -30,9 +30,9 @@
 
 
 /* Implementation *************************************************************/
-_REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance, 
+_REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 							  CVector<_BINARY>& vecbiOutputBits,
-							  int iNoOutBitsPartA, int iNoOutBitsPartB, 
+							  int iNoOutBitsPartA, int iNoOutBitsPartB,
 						      int iPunctPatPartA, int iPunctPatPartB, int iLevel)
 {
 	int				i, j, k;
@@ -73,14 +73,14 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	/* Tailbit pattern calculated according DRM-standard. We have to consider
 	   two cases because in HSYM "N1 + N2" is used instead of only "N2" */
 	if (iLevel == 0)
-		iTailbitPattern = 
-			iTailbitParamL0 - 12 - iPuncturingPatterns[iPunctPatPartB][1] * 
-			(int) ((iTailbitParamL0 - 12) / 
+		iTailbitPattern =
+			iTailbitParamL0 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
+			(int) ((iTailbitParamL0 - 12) /
 			iPuncturingPatterns[iPunctPatPartB][1]);
 	else
-		iTailbitPattern = 
-			iTailbitParamL1 - 12 - iPuncturingPatterns[iPunctPatPartB][1] * 
-			(int) ((iTailbitParamL1 - 12) / 
+		iTailbitPattern =
+			iTailbitParamL1 - 12 - iPuncturingPatterns[iPunctPatPartB][1] *
+			(int) ((iTailbitParamL1 - 12) /
 			iPuncturingPatterns[iPunctPatPartB][1]);
 
 	for (i = 0; i < iNoOutBits + MC_CONSTRAINT_LENGTH - 1; i++)
@@ -110,11 +110,11 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 				/* Reset counter when beginning part B */
 				if (i == iNoOutBitsPartA)
 					iPunctCounter = 0;
-	
+
 				/* Refill shift register after a wrap */
 				if (iPunctCounter == 0)
 					iPuncPatShiftReg = iPuncturingPatterns[iPunctPatPartB][2];
-	
+
 				/* Increase puncturing-counter and manage wrap */
 				iPunctCounter++;
 				if (iPunctCounter == iPuncturingPatterns[iPunctPatPartB][0])
@@ -136,7 +136,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			/* For each metric we need same dis. count and puncturing pattern */
 			iDistCnt = iDistCntGlob;
 			iPuncPatShiftRegShifted = iPuncPatShiftReg;
-			
+
 			rMetricSet[k] = (_REAL) 0.0;
 			for (j = 0; j < MC_NO_OUTPUT_BITS_PER_STEP; j++)
 			{
@@ -151,10 +151,10 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 					else
 						/* "0" */
 						rMetricSet[k] += vecNewDistance[iDistCnt].rTow0;
-		
+
 					iDistCnt++;
 				}
-	
+
 				/* Shift puncturing mask for next output bit */
 				iPuncPatShiftRegShifted >>= 1;
 			}
@@ -167,26 +167,26 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		/* ------------------------------------------------------------------ */
 		/* Update trellis --------------------------------------------------- */
 		/* ------------------------------------------------------------------ */
-		/* We need minimum metric for normalizing the metric after adding to 
+		/* We need minimum metric for normalizing the metric after adding to
 		   avoid overrun. Next two lines: Initialization */
 		iMinMetricIndex = 0;
-		rMinMetric = 
+		rMinMetric =
 			TrelState[TrelState[iMinMetricIndex].iPrev0Index].rMetric[iOld] +
 			rMetricSet[TrelState[iMinMetricIndex].iMetricPrev0];
-	
+
 		for (j = 0; j < MC_NO_STATES; j++)
 		{
-			/* Calculate metrics from the two previous states, use the old 
+			/* Calculate metrics from the two previous states, use the old
 			   metric from the previous states plus the "transition-metric" - */
 			/* "0" */
-			rAccMetricPrev0 = 
+			rAccMetricPrev0 =
 				TrelState[TrelState[j].iPrev0Index].rMetric[iOld] +
 				rMetricSet[TrelState[j].iMetricPrev0];
 			/* "1" */
-			rAccMetricPrev1 = 
+			rAccMetricPrev1 =
 				TrelState[TrelState[j].iPrev1Index].rMetric[iOld] +
 				rMetricSet[TrelState[j].iMetricPrev1];
-	
+
 			/* Take path with smallest metric ------------------------------- */
 			if (rAccMetricPrev0 < rAccMetricPrev1)
 			{
@@ -194,11 +194,11 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 				TrelState[j].rMetric[iCur] = rAccMetricPrev0;
 
 				/* Save decoded bits from surviving path */
-				TrelState[j].lDecodedBits[iCur] = 
+				TrelState[j].lDecodedBits[iCur] =
 					TrelState[TrelState[j].iPrev0Index].lDecodedBits[iOld];
 
-				/* Shift lDecodedBits vector since we want to add a new bit, 
-				   in this case a "0", but we dont need to add this, it is 
+				/* Shift lDecodedBits vector since we want to add a new bit,
+				   in this case a "0", but we dont need to add this, it is
 				   already there */
 				TrelState[j].lDecodedBits[iCur] <<= 1;
 			}
@@ -206,9 +206,9 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			{
 				/* Save minimum metric for this state */
 				TrelState[j].rMetric[iCur] = rAccMetricPrev1;
-			
+
 				/* Save decoded bits from surviving path */
-				TrelState[j].lDecodedBits[iCur] = 
+				TrelState[j].lDecodedBits[iCur] =
 					TrelState[TrelState[j].iPrev1Index].lDecodedBits[iOld];
 
 				/* Shift lDecodedBits vector since we want to add a new bit */
@@ -217,7 +217,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 				/* Write resulting "1" in lDecodedBits-vector */
 				TrelState[j].lDecodedBits[iCur] |= 1;
 			}
-	
+
 			/* Get minimum metric and index */
 			if (TrelState[j].rMetric[iCur] < rMinMetric)
 			{
@@ -266,14 +266,14 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	return rMinMetric / iDistCntGlob;
 }
 
-void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme, int iN1, 
+void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme, int iN1,
 						   int iN2, CParameter::EChanType eNewChannelType)
 {
 	/* Set output mask for bits (constant "1" must be casted to 64 bit interger,
 	   otherwise we would get "0") */
 	lOutBitMask = _UINT64BIT(1) << MC_DECODING_DEPTH;
 
-	/* We have to consider two cases because in HSYM "N1 + N2" is used 
+	/* We have to consider two cases because in HSYM "N1 + N2" is used
 	   instead of only "N2" to calculate the tailbit pattern */
 	switch (eNewCodingScheme)
 	{
@@ -301,11 +301,11 @@ CViterbiDecoder::CViterbiDecoder()
 	for (int i = 0; i < MC_NO_STATES; i++)
 	{
 		/* Define previous states ------------------------------------------- */
-		/* We define in this trellis that we shift the bits from right to 
-		   the left. We use the transition-bits which "fall" out of the 
+		/* We define in this trellis that we shift the bits from right to
+		   the left. We use the transition-bits which "fall" out of the
 		   shift-register */
-		TrelState[i].iPrev0Index = (i >> 1); /* Old state, Leading "0" 
-											    (automatically inserted by 
+		TrelState[i].iPrev0Index = (i >> 1); /* Old state, Leading "0"
+												(automatically inserted by
 												shifting */
 		TrelState[i].iPrev1Index = (i >> 1) /* Old state */
 			| (1 << (MC_CONSTRAINT_LENGTH - 2)); /* New "1", must be on position
@@ -324,7 +324,7 @@ CViterbiDecoder::CViterbiDecoder()
 			/* "0" */
 			TrelState[i].iMetricPrev0 |=
 				ConvEncoder.Convolution(
-				/* Set all states in the shift-register for encoder. Use 
+				/* Set all states in the shift-register for encoder. Use
 				   current state with a leading "0" (which is automatically
 				   there */
 				i
@@ -336,13 +336,13 @@ CViterbiDecoder::CViterbiDecoder()
 			/* "1" */
 			TrelState[i].iMetricPrev1 |=
 				ConvEncoder.Convolution(
-				/* Set all states in the shift-register for encoder. Use 
+				/* Set all states in the shift-register for encoder. Use
 				   current state with a leading "1". The position of this
 				   bit is "MC_CONSTRAINT_LENGTH" (shifting from position 1:
 				   "MC_CONSTRAINT_LENGTH - 1") */
 				i | (1 << (MC_CONSTRAINT_LENGTH - 1))
 				/* Use generator-polynomial j */
-				, j) 
+				, j)
 				/* Shift generated bit to the right position */
 				<< j;
 		}

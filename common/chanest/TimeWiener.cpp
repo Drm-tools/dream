@@ -404,7 +404,7 @@ CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 	int iVecLen = Size(vecrCorrEst);
 
 	/* Init vectors and variables */
-	CReal		rSigma;
+	CReal		rSigmaRet;
 	CRealVector Tau(iVecLen);
 	CRealVector Z(iVecLen);
 	CRealVector W(iVecLen);
@@ -433,13 +433,13 @@ CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 
 	A1 = Sum(Wmrem * (Z - Zm)) / Sum(Wmrem * Wmrem);
 
-	rSigma = (CReal) 0.5 / crPi * sqrt((CReal) -2.0 * A1) / Ts;
+	rSigmaRet = (CReal) 0.5 / crPi * sqrt((CReal) -2.0 * A1) / Ts;
 
 	/* Bound estimated sigma value */
-	if (rSigma > rSigmaMax)
-		rSigma = rSigmaMax;
-	if (rSigma < LOW_BOUND_SIGMA)
-		rSigma = LOW_BOUND_SIGMA;
+	if (rSigmaRet > rSigmaMax)
+		rSigmaRet = rSigmaMax;
+	if (rSigmaRet < LOW_BOUND_SIGMA)
+		rSigmaRet = LOW_BOUND_SIGMA;
 
-	return rSigma;
+	return rSigmaRet;
 }
