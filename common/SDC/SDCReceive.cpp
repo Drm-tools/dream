@@ -295,13 +295,27 @@ void CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	}
 
 	/* Application data */
-// TODO This is needed when we want to use data streams
-if (DataParam.ePacketModInd == CParameter::PM_SYNCHRON_STR_MODE)
-{
-	(*pbiData).Separate(iLengthOfBody * 8 - 8);
-}
-else
-	(*pbiData).Separate(iLengthOfBody * 8 - 16);
+	if (DataParam.ePacketModInd == CParameter::PM_SYNCHRON_STR_MODE)
+	{
+		/* Not used */
+		(*pbiData).Separate(iLengthOfBody * 8 - 8);
+	}
+	else if (DataParam.eAppDomain == CParameter::AD_DAB_SPEC_APP)
+	{
+		/* rfu */
+		(*pbiData).Separate(5);
+
+		/* User application identifier */
+		DataParam.iUserAppIdent = (*pbiData).Separate(11);
+
+		/* Data fields as required by DAB application specification, not used */
+		(*pbiData).Separate(iLengthOfBody * 8 - 32);
+	}
+	else
+	{
+		/* Not used */
+		(*pbiData).Separate(iLengthOfBody * 8 - 16);
+	}
 
 	/* Set new parameters in global struct */
 	Parameter.SetDataParam(iTempShortID, DataParam);
