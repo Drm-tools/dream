@@ -230,6 +230,14 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 
 	/* Sample rate offset estimation ---------------------------------------- */
+	/* This sample rate offset estimation is based on the movement of the
+	   estimated PDS with time. The movement per symbol (or a number of symbols)
+	   is proportional to the sample rate offset. It has to be considered the
+	   PDS shiftings of the timing correction unit ("rActShiftTiCor" can be used
+	   for that). The procedere is to detect the maximum peak in the PDS and use
+	   this as a reference, assuming tha delay of this peak is not changing. The
+	   problem is when another peak get higher than this due to fading. In this
+	   case we must adjust the history to this new peak (the new reference) */
 	int		iMaxInd;
 	CReal	rMax;
 
