@@ -40,15 +40,6 @@
 int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput, 
 						_REAL rRation)
 {
-	int i;
-	int ik;
-	int ip1, ip2;
-	int in1, in2;
-	int im;
-	_REAL ry1;
-	_REAL ry2;
-	_REAL rxInt;
-
 	/* Move old data from the end to the history part of the buffer and 
 	   add new data (shift register) */
 	vecrIntBuff.AddEnd((*prInput), iInputBlockSize);
@@ -58,28 +49,28 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 	rTStep = (_REAL) INTERP_DECIM_I_D / rRation;
 
 	/* Init output counter */
-	im = 0;
+	int im = 0;
 
 	/* Main loop */
 	do
 	{
 		/* Quantize output-time to interpolated time-index */
-		ik = (int) rtOut;
+		const int ik = (int) rtOut;
 
 
 		/* Calculate convolutions for the two interpolation-taps ------------ */
 		/* Phase for the linear interpolation-taps */
-		ip1 = ik % INTERP_DECIM_I_D;
-		ip2 = (ik + 1) % INTERP_DECIM_I_D;
+		const int ip1 = ik % INTERP_DECIM_I_D;
+		const int ip2 = (ik + 1) % INTERP_DECIM_I_D;
 
 		/* Sample positions in input vector */
-		in1 = (int) (ik / INTERP_DECIM_I_D);
-		in2 = (int) ((ik + 1) / INTERP_DECIM_I_D);
+		const int in1 = (int) (ik / INTERP_DECIM_I_D);
+		const int in2 = (int) ((ik + 1) / INTERP_DECIM_I_D);
 
 		/* Convolution */
-		ry1 = (_REAL) 0.0;
-		ry2 = (_REAL) 0.0;
-		for (i = 0; i < NUM_TAPS_PER_PHASE; i++)
+		_REAL ry1 = (_REAL) 0.0;
+		_REAL ry2 = (_REAL) 0.0;
+		for (int i = 0; i < NUM_TAPS_PER_PHASE; i++)
 		{
 			ry1 += fResTaps1To1[ip1][i] * vecrIntBuff[in1 - i];
 			ry2 += fResTaps1To1[ip2][i] * vecrIntBuff[in2 - i];
@@ -87,7 +78,8 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 
 
 		/* Linear interpolation --------------------------------------------- */
-		rxInt = rtOut - (int) rtOut; /* Get numbers after the comma */
+		/* Get numbers after the comma */
+		const _REAL rxInt = rtOut - (int) rtOut;
 		(*prOutput)[im] = (ry2 - ry1) * rxInt + ry1;
 
 
@@ -125,10 +117,7 @@ void CResample::Init(int iNewInputBlockSize)
 
 void CAudioResample::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
 {
-	int		i, j;
-	int		ip;
-	int		in;
-	_REAL	ry;
+	int j;
 
 	if (iRation == 1)
 	{
@@ -146,14 +135,14 @@ void CAudioResample::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
 		for (j = 0; j < iOutputBlockSize; j++)
 		{
 			/* Phase for the linear interpolation-taps */
-			ip = (j * INTERP_DECIM_I_D / iRation) % INTERP_DECIM_I_D;
+			const int ip = (j * INTERP_DECIM_I_D / iRation) % INTERP_DECIM_I_D;
 
 			/* Sample position in input vector */
-			in = (int) (j / iRation) + NUM_TAPS_PER_PHASE;
+			const int in = (int) (j / iRation) + NUM_TAPS_PER_PHASE;
 
 			/* Convolution */
-			ry = (_REAL) 0.0;
-			for (i = 0; i < NUM_TAPS_PER_PHASE; i++)
+			_REAL ry = (_REAL) 0.0;
+			for (int i = 0; i < NUM_TAPS_PER_PHASE; i++)
 				ry += fResTaps1To1[ip][i] * vecrIntBuff[in - i];
 
 			rOutput[j] = ry;
