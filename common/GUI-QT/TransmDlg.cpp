@@ -255,6 +255,14 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		Service[0].AudioParam.bTextflag = TRUE;
 
 
+	/* Set Menu ***************************************************************/
+	/* Help menu ------------------------------------------------------------ */
+	QPopupMenu* HelpMenu = new QPopupMenu(this);
+	CHECK_PTR(HelpMenu);
+    HelpMenu->insertItem("What's &This", this ,
+		SLOT(OnHelpWhatsThis()), SHIFT+Key_F1);
+
+
 	/* Settings menu  ------------------------------------------------------- */
 	pSoundInMenu = new QPopupMenu(this);
 	CHECK_PTR(pSoundInMenu);
@@ -297,6 +305,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
 	pMenu->insertItem("&Settings", pSettingsMenu);
+	pMenu->insertItem("&?", HelpMenu);
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */

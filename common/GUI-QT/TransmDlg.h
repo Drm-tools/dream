@@ -154,4 +154,5 @@ public slots:
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
 	void OnTimer();
+	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
 };
