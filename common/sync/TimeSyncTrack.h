@@ -76,6 +76,8 @@ protected:
 	int						iScatPilFreqInt;
 	int						iNoCarrier;
 	CRealVector				vecrAvPoDeSp;
+	CReal					rLamAvPDS;
+
 	CRealVector				vecrHammingWindow;
 	CReal					rConst1;
 	CReal					rConst2;

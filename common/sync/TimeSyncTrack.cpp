@@ -97,7 +97,7 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 	{
 		/* Average result, Eq (16) (Should be a moving average function, for 
 		   simplicity we have chosen an IIR filter here) */
-		IIR1(vecrAvPoDeSp, SqMag(veccPilots), (CReal) 0.9);
+		IIR1(vecrAvPoDeSp, SqMag(veccPilots), rLamAvPDS);
 	}
 
 	/* Rotate the averaged result vector to put the earlier peaks
@@ -237,6 +237,10 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Vector for averaged power delay spread estimation */
 	vecrAvPoDeSp.Init(iNoIntpFreqPil, (CReal) 0.0);
+
+	/* Lambda for IIR filter for averaging the PDS */
+	rLamAvPDS = IIR1Lam((CReal) 0.25, (CReal) SOUNDCRD_SAMPLE_RATE /
+		Parameter.iSymbolBlockSize);
 
 	/* Vector for rotated result */
 	vecrAvPoDeSpRot.Init(iNoIntpFreqPil);

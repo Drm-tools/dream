@@ -219,16 +219,16 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			cModChanEst = 
 				veccChanEst[i] * ReceiverParam.matcPilotCells[iModSymNum][i];
 
-			/* Average noise and signal estimates */
-			const _REAL rLam = 0.999;
 
+			/* Calculate and average noise and signal estimates ------------- */
 			/* The noise estimation is difference between the noise reduced
 			   signal and the noisy received signal
 			   \tilde{n} = \hat{r} - r */
-			IIR1(rNoiseEst, SqMag(matcHistory[0][i] - cModChanEst), rLam);
+			IIR1(rNoiseEst, SqMag(matcHistory[0][i] - cModChanEst),
+				rLamSNREstFast);
 
 			/* The received signal power estimation is just \hat{r} */
-			IIR1(rSignalEst, SqMag(cModChanEst), rLam);
+			IIR1(rSignalEst, SqMag(cModChanEst), rLamSNREstFast);
 
 			/* Calculate final result (signal to noise ratio) */
 			if (rNoiseEst != 0)
@@ -241,7 +241,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				rCurSNREst = (_REAL) 1.0;
 
 			/* Average the SNR with a two sided recursion */
-			IIR1TwoSided(rSNREstimate, rCurSNREst, rLam, 0.9999);
+			IIR1TwoSided(rSNREstimate, rCurSNREst, rLamSNREstFast,
+				rLamSNREstSlow);
 		}
 	}
 
@@ -370,6 +371,13 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rSNREstimate = (_REAL) pow(10, (_REAL) 20.0 / 10);
 	rNoiseEst = (_REAL) 0.0;
 	rSignalEst = (_REAL) 0.0;
+
+	/* Lambda for IIR filter */
+	rLamSNREstFast = IIR1Lam((CReal) 30.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+		ReceiverParam.iSymbolBlockSize);
+	rLamSNREstSlow = IIR1Lam((CReal) 100.0, (CReal) SOUNDCRD_SAMPLE_RATE /
+		ReceiverParam.iSymbolBlockSize);
+
 
 	/* SNR correction factor. We need this factor since we evalute the 
 	   signal-to-noise ratio only on the pilots and these have a higher power as

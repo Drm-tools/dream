@@ -124,6 +124,9 @@ protected:
 
 	int					iNoIntpFreqPil;
 
+	CReal				rLamSNREstFast;
+	CReal				rLamSNREstSlow;
+
 	_REAL				rNoiseEst;
 	_REAL				rSignalEst;
 	_REAL				rSNREstimate;
