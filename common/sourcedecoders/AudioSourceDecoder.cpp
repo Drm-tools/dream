@@ -157,7 +157,7 @@ fflush(pFile2);
 
 		if (DecFrameInfo.error != 0)
 		{
-			/* Set AAC in log file */
+			/* Set AAC CRC result in log file */
 			ReceiverParam.ReceptLog.SetMSC(FALSE);
 
 			if (bAudioWasOK == TRUE)
@@ -202,7 +202,7 @@ fflush(pFile2);
 		}
 		else
 		{
-			/* Set AAC in log file */
+			/* Set AAC CRC result in log file */
 			ReceiverParam.ReceptLog.SetMSC(TRUE);
 
 			/* Post message to show that CRC was OK and reset flag */
