@@ -1197,8 +1197,9 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	/* Transfer Function */
 	QWhatsThis::add(ButtonTransFct,
-		"<b>Transfer Function:</b> This plot shows the squared magnitude of "
-		"the channel estimation at each sub carrier.");
+		"<b>Transfer Function / Group Delay:</b> This plot shows the squared "
+		"magnitude and the group delay of the estimated channel at each "
+		"sub-carrier.");
 
 	/* Impulse Response */
 	QWhatsThis::add(ButtonAvIR,

@@ -206,7 +206,7 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	if (vecrScale.Size() != 0)
 	{
 		/* Init chart for averaged impulse response */
-		setTitle("Estimated Channel Impulse Response");
+		setTitle("Channel Impulse Response");
 		enableAxis(QwtPlot::yRight, FALSE);
 		enableGridX(TRUE);
 		enableGridY(TRUE);
@@ -298,7 +298,7 @@ void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 						  CVector<_REAL>& vecrScale)
 {
 	/* Init chart for transfer function */
-	setTitle("Estimated Channel Transfer Function");
+	setTitle("Channel Transfer Function / Group Delay");
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
