@@ -29,10 +29,39 @@
 #include "TransmDlg.h"
 
 
-TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal, WFlags f)
-	: TransmDlgBase(parent, name, modal, f), bIsStarted(FALSE)
+TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
+						   WFlags f)
+	: TransmDlgBase(parent, name, modal, f), bIsStarted(FALSE),
+	vecstrTextMessage(1) /* 1 for new text */, iIDCurrentText(0)
 {
 	int i;
+
+	/* Set controls to custom behavior */
+	MultiLineEditTextMessage->setWordWrap(QMultiLineEdit::WidgetWidth);
+	MultiLineEditTextMessage->setEdited(FALSE);
+	ComboBoxTextMessage->insertItem("new", 0);
+	UpdateMSCProtLevCombo();
+
+
+	/* Add example text message at startup ---------------------------------- */
+	/* Activate text message */
+	OnToggleCheckBoxEnableTextMessage(TRUE);
+	CheckBoxEnableTextMessage->setChecked(TRUE);
+
+	/* Add example text in internal container */
+	vecstrTextMessage.Enlarge(1);
+	vecstrTextMessage[1] =
+		"Dream DRM Transmitter\x0B\x0AThis is a test transmission";
+
+	/* Insert item in combo box, display text and set item to our text */
+	ComboBoxTextMessage->insertItem(QString().setNum(1), 1);
+	ComboBoxTextMessage->setCurrentItem(1);
+	MultiLineEditTextMessage->insertLine(vecstrTextMessage[1].c_str());
+
+	/* Now make sure that the text message flag is activated in global struct */
+	TransThread.DRMTransmitter.GetParameters()->
+		Service[0].AudioParam.bTextflag = TRUE;
+
 
 	/* Init controls with default settings */
 	ButtonStartStop->setText("&Start");
@@ -146,8 +175,8 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal, WFlags
 		GetParameters()->Service[0].strLabel.c_str());
 
 	/* Service ID */
-	LineEditServiceID->setText(QString().setNum((int) TransThread.DRMTransmitter.
-		GetParameters()->Service[0].iServiceID));
+	LineEditServiceID->setText(QString().setNum((int) TransThread.
+		DRMTransmitter.GetParameters()->Service[0].iServiceID));
 
 	/* Language */
 	for (i = 0; i < LEN_TABLE_LANGUAGE_CODE; i++)
@@ -179,6 +208,12 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal, WFlags
 	/* Connections ---------------------------------------------------------- */
 	connect(ButtonStartStop, SIGNAL(clicked()),
 		this, SLOT(OnButtonStartStop()));
+	connect(PushButtonAddText, SIGNAL(clicked()),
+		this, SLOT(OnPushButtonAddText()));
+	connect(PushButtonClearAllText, SIGNAL(clicked()),
+		this, SLOT(OnButtonClearAllText()));
+	connect(CheckBoxEnableTextMessage, SIGNAL(toggled(bool)),
+		this, SLOT(OnToggleCheckBoxEnableTextMessage(bool)));
 
 	/* Combo boxes */
 	connect(ComboBoxMSCInterleaver, SIGNAL(highlighted(int)),
@@ -191,6 +226,10 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal, WFlags
 		this, SLOT(OnComboBoxLanguageHighlighted(int)));
 	connect(ComboBoxProgramType, SIGNAL(highlighted(int)),
 		this, SLOT(OnComboBoxProgramTypeHighlighted(int)));
+	connect(ComboBoxTextMessage, SIGNAL(highlighted(int)),
+		this, SLOT(OnComboBoxTextMessageHighlighted(int)));
+	connect(ComboBoxMSCProtLev, SIGNAL(highlighted(int)),
+		this, SLOT(OnComboBoxMSCProtLevHighlighted(int)));
 
 	/* Button groups */
 	connect(ButtonGroupRobustnessMode, SIGNAL(clicked(int)),
@@ -230,6 +269,14 @@ void TransmDialog::OnButtonStartStop()
 	else
 	{
 		/* Start transmitter */
+		/* Set text message */
+		TransThread.DRMTransmitter.GetAudSrcEnc()->ClearTextMessage();
+
+		for (int i = 1; i < vecstrTextMessage.Size(); i++)
+			TransThread.DRMTransmitter.GetAudSrcEnc()->
+				SetTextMessage(vecstrTextMessage[i]);
+
+
 		TransThread.start();
 
 		ButtonStartStop->setText("&Stop");
@@ -237,6 +284,121 @@ void TransmDialog::OnButtonStartStop()
 		DisableAllControls();
 
 		bIsStarted = TRUE;
+	}
+}
+
+void TransmDialog::OnToggleCheckBoxEnableTextMessage(bool bState)
+{
+	if (bState)
+	{
+		/* Enable text message controls */
+		ComboBoxTextMessage->setEnabled(TRUE);
+		MultiLineEditTextMessage->setEnabled(TRUE);
+		PushButtonAddText->setEnabled(TRUE);
+		PushButtonClearAllText->setEnabled(TRUE);
+
+		/* Set text message flag in global struct */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].AudioParam.bTextflag = TRUE;
+	}
+	else
+	{
+		/* Disable text message controls */
+		ComboBoxTextMessage->setEnabled(FALSE);
+		MultiLineEditTextMessage->setEnabled(FALSE);
+		PushButtonAddText->setEnabled(FALSE);
+		PushButtonClearAllText->setEnabled(FALSE);
+
+		/* Set text message flag in global struct */
+		TransThread.DRMTransmitter.GetParameters()->
+			Service[0].AudioParam.bTextflag = FALSE;
+	}
+}
+
+_BOOLEAN TransmDialog::GetMessageText(const int iID)
+{
+	_BOOLEAN bTextIsNotEmpty = TRUE;
+
+	/* Check if text control is not empty */
+	if (MultiLineEditTextMessage->edited())
+	{
+		/* Check size of container. If not enough space, enlarge */
+		if (iID == vecstrTextMessage.Size())
+			vecstrTextMessage.Enlarge(1);
+
+		/* First line */
+		vecstrTextMessage[iID] =
+			MultiLineEditTextMessage->textLine(0).utf8();
+
+		/* Other lines */
+		const int iNumLines = MultiLineEditTextMessage->numLines();
+
+		for (int i = 1; i < iNumLines; i++)
+		{
+			/* Insert line break */
+			vecstrTextMessage[iID].append("\x0A");
+
+			/* Insert text of next line */
+			vecstrTextMessage[iID].
+				append(MultiLineEditTextMessage->textLine(i).utf8());
+		}
+	}
+	else
+		bTextIsNotEmpty = FALSE;
+
+	return bTextIsNotEmpty;
+}
+
+void TransmDialog::OnPushButtonAddText()
+{
+	if (iIDCurrentText == 0)
+	{
+		/* Add new message */
+		if (GetMessageText(vecstrTextMessage.Size()) == TRUE)
+		{
+			/* If text was not empty, add new text in combo box */
+			const int iNewID = vecstrTextMessage.Size() - 1;
+			ComboBoxTextMessage->insertItem(QString().setNum(iNewID), iNewID);
+
+			/* Clear added text */
+			MultiLineEditTextMessage->clear();
+			MultiLineEditTextMessage->setEdited(FALSE);
+		}
+	}
+	else
+	{
+		/* Text was modified */
+		GetMessageText(iIDCurrentText);
+	}
+}
+
+void TransmDialog::OnButtonClearAllText()
+{
+	/* Clear container */
+	vecstrTextMessage.Init(1);
+	iIDCurrentText = 0;
+
+	/* Clear combo box */
+	ComboBoxTextMessage->clear();
+	ComboBoxTextMessage->insertItem("new", 0);
+
+	/* Clear multi line edit */
+	MultiLineEditTextMessage->clear();
+	MultiLineEditTextMessage->setEdited(FALSE);
+}
+
+void TransmDialog::OnComboBoxTextMessageHighlighted(int iID)
+{
+	iIDCurrentText = iID;
+
+	/* Set text control with selected message */
+	MultiLineEditTextMessage->clear();
+	MultiLineEditTextMessage->setEdited(FALSE);
+
+	if (iID != 0)
+	{
+		/* Write stored text in multi line edit control */
+		MultiLineEditTextMessage->insertLine(vecstrTextMessage[iID].c_str());
 	}
 }
 
@@ -256,9 +418,9 @@ void TransmDialog::OnTextChangedServiceID(const QString& strID)
 void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 {
 	/* Set additional text for log file. Conversion from QString to STL
-	   string is needed (done with .latin1() function of QT string) */
+	   string is needed (done with .utf8() function of QT string) */
 	TransThread.DRMTransmitter.GetParameters()->Service[0].strLabel =
-		strLabel.latin1();
+		strLabel.utf8();
 }
 
 void TransmDialog::OnComboBoxMSCInterleaverHighlighted(int iID)
@@ -301,6 +463,40 @@ void TransmDialog::OnComboBoxMSCConstellationHighlighted(int iID)
 			CParameter::CS_3_HMMIX;
 		break;
 	}
+
+	/* Protection level must be re-adjusted when constelletion mode was
+	   changed */
+	UpdateMSCProtLevCombo();
+}
+
+void TransmDialog::OnComboBoxMSCProtLevHighlighted(int iID)
+{
+	TransThread.DRMTransmitter.GetParameters()->MSCPrLe.iPartB = iID;
+}
+
+void TransmDialog::UpdateMSCProtLevCombo()
+{
+	if (TransThread.DRMTransmitter.GetParameters()->eMSCCodingScheme ==
+		CParameter::CS_2_SM)
+	{
+		/* Only two protection levels possible in 16 QAM mode */
+		ComboBoxMSCProtLev->clear();
+		ComboBoxMSCProtLev->insertItem("0", 0);
+		ComboBoxMSCProtLev->insertItem("1", 1);
+	}
+	else
+	{
+		/* Four protection levels defined */
+		ComboBoxMSCProtLev->clear();
+		ComboBoxMSCProtLev->insertItem("0", 0);
+		ComboBoxMSCProtLev->insertItem("1", 1);
+		ComboBoxMSCProtLev->insertItem("2", 2);
+		ComboBoxMSCProtLev->insertItem("3", 3);
+	}
+
+	/* Set protection level to 0 */
+	ComboBoxTextMessage->setCurrentItem(0);
+	TransThread.DRMTransmitter.GetParameters()->MSCPrLe.iPartB = 0;
 }
 
 void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
@@ -449,28 +645,12 @@ void TransmDialog::OnRadioBandwidth(int iID)
 
 void TransmDialog::DisableAllControls()
 {
-	ButtonGroupRobustnessMode->setEnabled(FALSE);
-	ButtonGroupBandwidth->setEnabled(FALSE);
-	ComboBoxMSCInterleaver->setEnabled(FALSE);
-	ComboBoxMSCConstellation->setEnabled(FALSE);
-	ComboBoxSDCConstellation->setEnabled(FALSE);
-	LineEditServiceLabel->setEnabled(FALSE);
-	LineEditServiceID->setEnabled(FALSE);
-	ComboBoxLanguage->setEnabled(FALSE);
-	ComboBoxProgramType->setEnabled(FALSE);
-	LineEditSndCrdIF->setEnabled(FALSE);
+	GroupBoxChanParam->setEnabled(FALSE);
+	TabWidgetServices->setEnabled(FALSE);
 }
 
 void TransmDialog::EnableAllControls()
 {
-	ButtonGroupRobustnessMode->setEnabled(TRUE);
-	ButtonGroupBandwidth->setEnabled(TRUE);
-	ComboBoxMSCInterleaver->setEnabled(TRUE);
-	ComboBoxMSCConstellation->setEnabled(TRUE);
-	ComboBoxSDCConstellation->setEnabled(TRUE);
-	LineEditServiceLabel->setEnabled(TRUE);
-	LineEditServiceID->setEnabled(TRUE);
-	ComboBoxLanguage->setEnabled(TRUE);
-	ComboBoxProgramType->setEnabled(TRUE);
-	LineEditSndCrdIF->setEnabled(TRUE);
+	GroupBoxChanParam->setEnabled(TRUE);
+	TabWidgetServices->setEnabled(TRUE);
 }

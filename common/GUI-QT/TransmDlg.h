@@ -37,6 +37,8 @@
 #include <qcombobox.h>
 #include <qstring.h>
 #include <qbuttongroup.h>
+#include <qmultilineedit.h>
+
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"
@@ -100,14 +102,24 @@ protected:
 
 	CTransmitterThread	TransThread; /* Working thread object */
 	_BOOLEAN			bIsStarted;
+	CVector<string>		vecstrTextMessage;
+	int					iIDCurrentText;
+	_BOOLEAN			GetMessageText(const int iID);
+	void				UpdateMSCProtLevCombo();
+
 
 public slots:
 	void OnButtonStartStop();
+	void OnPushButtonAddText();
+	void OnButtonClearAllText();
+	void OnToggleCheckBoxEnableTextMessage(bool bState);
 	void OnComboBoxMSCInterleaverHighlighted(int iID);
 	void OnComboBoxMSCConstellationHighlighted(int iID);
 	void OnComboBoxSDCConstellationHighlighted(int iID);
 	void OnComboBoxLanguageHighlighted(int iID);
 	void OnComboBoxProgramTypeHighlighted(int iID);
+	void OnComboBoxTextMessageHighlighted(int iID);
+	void OnComboBoxMSCProtLevHighlighted(int iID);
 	void OnRadioRobustnessMode(int iID);
 	void OnRadioBandwidth(int iID);
 	void OnTextChangedServiceLabel(const QString& strLabel);
