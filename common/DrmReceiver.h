@@ -90,6 +90,9 @@ public:
 #ifdef HAVE_LIBHAMLIB
 		, strHamlibConf(""), iHamlibModelID(0)
 #endif
+#ifdef USE_QT_GUI
+		, iMainPlotColorStyle(0) /* default color scheme: blue-white */
+#endif
 		{}
 	virtual ~CDRMReceiver() {}
 
@@ -184,6 +187,8 @@ public:
 
 	/* Analog demodulation dialog */
 	CWinGeom GeomAnalogDemDlg;
+
+	int iMainPlotColorStyle;
 #endif
 
 protected:

@@ -38,27 +38,22 @@ extern CDRMReceiver	DRMReceiver;
 
 
 /* Definitions ****************************************************************/
-/* Define the plot color profile */
-//#define FHG_DRM_SOFTWARE_RADIO_CP
-#define MATLAB_LIKE_CP
+/* Define the plot color profiles */
+/* BLUEWHITE */
+#define BLUEWHITE_MAIN_PEN_COLOR_PLOT			blue
+#define BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION	blue
+#define BLUEWHITE_BCKGRD_COLOR_PLOT				white
+#define BLUEWHITE_MAIN_GRID_COLOR_PLOT			gray
+#define BLUEWHITE_SPEC_LINE1_COLOR_PLOT			red
+#define BLUEWHITE_SPEC_LINE2_COLOR_PLOT			black
 
-#ifdef FHG_DRM_SOFTWARE_RADIO_CP
-# define MAIN_PEN_COLOR_PLOT			green
-# define MAIN_PEN_COLOR_CONSTELLATION	red
-# define BCKGRD_COLOR_PLOT				black
-# define MAIN_GRID_COLOR_PLOT			QColor(128, 0, 0)
-# define SPEC_LINE1_COLOR_PLOT			yellow
-# define SPEC_LINE2_COLOR_PLOT			blue
-#endif
-
-#ifdef MATLAB_LIKE_CP
-# define MAIN_PEN_COLOR_PLOT			blue
-# define MAIN_PEN_COLOR_CONSTELLATION	blue
-# define BCKGRD_COLOR_PLOT				white
-# define MAIN_GRID_COLOR_PLOT			gray
-# define SPEC_LINE1_COLOR_PLOT			red
-# define SPEC_LINE2_COLOR_PLOT			black
-#endif
+/* GREENBLACK */
+#define GREENBLACK_MAIN_PEN_COLOR_PLOT			green
+#define GREENBLACK_MAIN_PEN_COLOR_CONSTELLATION	red
+#define GREENBLACK_BCKGRD_COLOR_PLOT			black
+#define GREENBLACK_MAIN_GRID_COLOR_PLOT			QColor(128, 0, 0)
+#define GREENBLACK_SPEC_LINE1_COLOR_PLOT		yellow
+#define GREENBLACK_SPEC_LINE2_COLOR_PLOT		blue
 
 
 /* Classes ********************************************************************/
@@ -69,6 +64,8 @@ class CDRMPlot : public QwtPlot
 public:
 	CDRMPlot(QWidget *p = 0, const char *name = 0);
 	virtual ~CDRMPlot() {}
+
+	enum EPlotStyle {PS_BLUEWHITE, PS_GREENBLACK};
 
 	void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 				 _REAL rLowerB, _REAL rHigherB,
@@ -85,6 +82,7 @@ public:
 					 CParameter::ECodScheme eNewCoSc);
 	void SetMSCConst(CVector<_COMPLEX>& veccData,
 					 CParameter::ECodScheme eNewCoSc);
+	void SetPlotStyle(const EPlotStyle eNStyle);
 
 protected:
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -93,6 +91,14 @@ protected:
 	void SetQAM4Grid();
 	void SetQAM16Grid();
 	void SetQAM64Grid();
+
+	/* Colors */
+	QColor MainPenColorPlot;
+	QColor MainPenColorConst;
+	QColor BckgrdColorPlot;
+	QColor MainGridColorPlot;
+	QColor SpecLine1ColorPlot;
+	QColor SpecLine2ColorPlot;
 
 public slots:
 	void OnClicked(const QMouseEvent& e);

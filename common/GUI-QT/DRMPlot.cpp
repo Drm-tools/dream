@@ -36,11 +36,9 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	/* Grid defaults */
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setGridMajPen(QPen(MAIN_GRID_COLOR_PLOT, 0, DotLine));
 
 	enableGridXMin(FALSE);
 	enableGridYMin(FALSE);
-	setGridMinPen(QPen(MAIN_GRID_COLOR_PLOT, 0, DotLine));
 
 	/* Fonts */
 	setTitleFont(QFont("SansSerif", 8, QFont::Bold));
@@ -56,11 +54,45 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 
 	/* Canvas */
 	setCanvasLineWidth(0);
-	setCanvasBackground(QColor(BCKGRD_COLOR_PLOT));
+
+	/* Set default style */
+	SetPlotStyle(PS_BLUEWHITE);
 
 	/* Connections */
 	connect(this, SIGNAL(plotMouseReleased(const QMouseEvent&)),
 		this, SLOT(OnClicked(const QMouseEvent&)));
+}
+
+void CDRMPlot::SetPlotStyle(const EPlotStyle eNStyle)
+{
+	switch (eNStyle)
+	{
+	case PS_BLUEWHITE:
+		MainPenColorPlot = BLUEWHITE_MAIN_PEN_COLOR_PLOT;
+		MainPenColorConst = BLUEWHITE_MAIN_PEN_COLOR_CONSTELLATION;
+		BckgrdColorPlot = BLUEWHITE_BCKGRD_COLOR_PLOT;
+		MainGridColorPlot = BLUEWHITE_MAIN_GRID_COLOR_PLOT;
+		SpecLine1ColorPlot = BLUEWHITE_SPEC_LINE1_COLOR_PLOT;
+		SpecLine2ColorPlot = BLUEWHITE_SPEC_LINE2_COLOR_PLOT;
+		break;
+
+	case PS_GREENBLACK:
+		MainPenColorPlot = GREENBLACK_MAIN_PEN_COLOR_PLOT;
+		MainPenColorConst = GREENBLACK_MAIN_PEN_COLOR_CONSTELLATION;
+		BckgrdColorPlot = GREENBLACK_BCKGRD_COLOR_PLOT;
+		MainGridColorPlot = GREENBLACK_MAIN_GRID_COLOR_PLOT;
+		SpecLine1ColorPlot = GREENBLACK_SPEC_LINE1_COLOR_PLOT;
+		SpecLine2ColorPlot = GREENBLACK_SPEC_LINE2_COLOR_PLOT;
+		break;
+	}
+
+	/* Apply colors */
+	setGridMajPen(QPen(MainGridColorPlot, 0, DotLine));
+	setGridMinPen(QPen(MainGridColorPlot, 0, DotLine));
+	setCanvasBackground(QColor(BckgrdColorPlot));
+
+	/* Refresh the plot */
+	replot();
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -75,7 +107,7 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	curve1 = insertCurve("Graph 1");
 	
 	/* Curve color */
-	setCurvePen(curve1, QPen(MAIN_PEN_COLOR_PLOT, size, SolidLine, RoundCap,
+	setCurvePen(curve1, QPen(MainPenColorPlot, size, SolidLine, RoundCap,
 		RoundJoin));
 
 	/* Copy data from vectors in temporary arrays */
@@ -147,10 +179,10 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		curveRight = insertCurve("Guard-interval end");
 		curveBeginIR = insertCurve("Estimated begin of impulse response");
 		curveEndIR = insertCurve("Estimated end of impulse response");
-		setCurvePen(curveLeft, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
-		setCurvePen(curveRight, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
-		setCurvePen(curveBeginIR, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
-		setCurvePen(curveEndIR, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
+		setCurvePen(curveLeft, QPen(SpecLine1ColorPlot, 1, DotLine));
+		setCurvePen(curveRight, QPen(SpecLine1ColorPlot, 1, DotLine));
+		setCurvePen(curveBeginIR, QPen(SpecLine2ColorPlot, 1, DotLine));
+		setCurvePen(curveEndIR, QPen(SpecLine2ColorPlot, 1, DotLine));
 
 		dY[0] = cdAxMinLeft;
 		dY[1] = cdAxMaxLeft;
@@ -185,8 +217,8 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 #ifdef _DEBUG_
 		/* Insert lines for lower and higher bound */
 		curveLow = insertCurve("Lower Bound");
-		setCurvePen(curveLow, QPen(SPEC_LINE1_COLOR_PLOT));
-		setCurvePen(curveHigh, QPen(SPEC_LINE2_COLOR_PLOT));
+		setCurvePen(curveLow, QPen(SpecLine1ColorPlot));
+		setCurvePen(curveHigh, QPen(SpecLine2ColorPlot));
 
 		/* Lower bound */
 		dY[0] = dY[1] = rLowerB;
@@ -196,7 +228,7 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		dY[0] = dY[1] = rHigherB;
 #else
 		/* Only include highest bound */
-		setCurvePen(curveHigh, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+		setCurvePen(curveHigh, QPen(SpecLine1ColorPlot, 1, DotLine));
 		dY[0] = dY[1] = Max(rHigherB, rLowerB);
 #endif
 		setCurveData(curveHigh, dX, dY, 2);
@@ -274,7 +306,7 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 
 	/* Insert line for DC carrier */
 	lCurveDC = insertCurve("DC carrier");
-	setCurvePen(lCurveDC, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+	setCurvePen(lCurveDC, QPen(SpecLine1ColorPlot, 1, DotLine));
 
 	dX[0] = dX[1] = (_REAL) VIRTUAL_INTERMED_FREQ / 1000;
 
@@ -313,7 +345,7 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 
 	/* Insert line for DC carrier */
 	long lCurveDC = insertCurve("DC carrier");
-	setCurvePen(lCurveDC, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+	setCurvePen(lCurveDC, QPen(SpecLine1ColorPlot, 1, DotLine));
 
 	dX[0] = dX[1] = rDCFreq / 1000;
 
@@ -328,7 +360,7 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	{
 		/* Insert line for bandwidth marker */
 		long lCurveBW = insertCurve("BW");
-		setCurvePen(lCurveBW, QPen(SPEC_LINE1_COLOR_PLOT, 6));
+		setCurvePen(lCurveBW, QPen(SpecLine1ColorPlot, 6));
 
 		dX[0] = (rBWCenter - rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
 		dX[1] = (rBWCenter + rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
@@ -361,7 +393,7 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 
 	clear();
 	SetQAM4Grid();
-	SetData(veccData, MAIN_PEN_COLOR_CONSTELLATION, 4);
+	SetData(veccData, MainPenColorConst, 4);
 	replot();
 }
 
@@ -386,7 +418,7 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
 	else
 		SetQAM16Grid();
 
-	SetData(veccData, MAIN_PEN_COLOR_CONSTELLATION, 4);
+	SetData(veccData, MainPenColorConst, 4);
 	replot();
 }
 
@@ -411,7 +443,7 @@ void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData,
 	else
 		SetQAM64Grid();
 
-	SetData(veccData, MAIN_PEN_COLOR_CONSTELLATION, 2);
+	SetData(veccData, MainPenColorConst, 2);
 	replot();
 }
 
@@ -422,7 +454,7 @@ void CDRMPlot::SetQAM4Grid()
 	double	dX[2];
 
 	/* Set scale style */
-	QPen ScalePen(MAIN_GRID_COLOR_PLOT, 1, DotLine);
+	QPen ScalePen(MainGridColorPlot, 1, DotLine);
 
 	/* Get bounds of scale */
 	dXMax[0] = axisScale(QwtPlot::xBottom)->lBound();
@@ -447,7 +479,7 @@ void CDRMPlot::SetQAM16Grid()
 	double	dX[2];
 
 	/* Set scale style */
-	QPen ScalePen(MAIN_GRID_COLOR_PLOT, 1, DotLine);
+	QPen ScalePen(MainGridColorPlot, 1, DotLine);
 
 	/* Get bounds of scale */
 	dXMax[0] = axisScale(QwtPlot::xBottom)->lBound();
@@ -490,7 +522,7 @@ void CDRMPlot::SetQAM64Grid()
 	double	dX[2];
 
 	/* Set scale style */
-	QPen ScalePen(MAIN_GRID_COLOR_PLOT, 1, DotLine);
+	QPen ScalePen(MainGridColorPlot, 1, DotLine);
 
 	/* Get bounds of scale */
 	dXMax[0] = axisScale(QwtPlot::xBottom)->lBound();
