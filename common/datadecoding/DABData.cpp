@@ -135,6 +135,7 @@ const int iContentSubType = 3; /* png TEST */
 	MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) 0, 32);
 
 
+
 	/* VersionNumber: If several versions of an object are transferred, this
 	   parameter indicates its VersionNumber. The parameter value is coded as an
 	   unsigned binary number, starting at 0 and being incremented by 1 modulo
@@ -194,7 +195,7 @@ MOTObject.Header.vecbiData.Enqueue((_UINT32BIT) char('g'), 8);
 
 
 	/* Generate segments ---------------------------------------------------- */
-	/* Header */
+	/* Header (header should not be partitioned! TODO) */
 const int iPartiSizeHeader = 100; /* Bytes */ // TEST
 
 	PartitionUnits(MOTObject.Header.vecbiData, MOTObjSegm.vvbiHeader,
