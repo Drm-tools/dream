@@ -65,9 +65,11 @@ void CMOTDABEnc::SetMOTObject(CMOTObject& NewMOTObject)
 	/* Get ending string which declares the type of the file. Make lowercase */
 
 // The following line is not working for Linux!!!! TODO!
-//const string strFormat = _strlwr(_strdup(NewMOTObject.strFormat.c_str()));
-// TEST
-const string strFormat = NewMOTObject.strFormat;
+#ifdef _WIN32
+	const string strFormat = _strlwr(_strdup(NewMOTObject.strFormat.c_str()));
+#else
+	const string strFormat = NewMOTObject.strFormat;
+#endif
 
 
 
