@@ -105,6 +105,12 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	LEDIOInterface->SetUpdateTime(2000); /* extra long -> red light stays long */
 
 
+	/* Init frequency edit for log file */
+	if (DRMReceiver.GetParameters()->ReceptLog.GetFrequency() != 0)
+		EdtFrequency->setText(QString().number(
+			DRMReceiver.GetParameters()->ReceptLog.GetFrequency()));
+
+
 	/* Connect controls */
 	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
 		this, SLOT(OnSliderIterChange(int)));
@@ -155,12 +161,28 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		this, SLOT(OnTimerChart()));
 	connect(&TimerLogFile, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFile()));
+	connect(&TimerLogFileStart, SIGNAL(timeout()),
+		this, SLOT(OnTimerLogFileStart()));
 
 	/* Activte real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 
+	/* Activate delayed log file start if necessary */
+	if (DRMReceiver.GetParameters()->ReceptLog.IsDelLogStart() == TRUE)
+		TimerLogFileStart.start(DELAYED_LOG_FILE_TIME_OUT);
+
 	/* Update window */
 	OnTimerChart();
+}
+
+void systemevalDlg::OnTimerLogFileStart()
+{
+	/* Start logging (if not already done) */
+	if (!CheckBoxWriteLog->isChecked())
+	{
+		CheckBoxWriteLog->setChecked(true);
+		OnCheckWriteLog();
+	}
 }
 
 void systemevalDlg::showEvent(QShowEvent* pEvent)
@@ -662,10 +684,14 @@ void systemevalDlg::OnCheckWriteLog()
 {
 	if (CheckBoxWriteLog->isChecked())
 	{
-		/* Activte log file timer, update time: 1 min (i.e. 60000 ms) */
-		TimerLogFile.start(60000);
+		/* Activte log file timer */
+#ifdef USE_STANDARD_LOG_FILE
+		TimerLogFile.start(60000); /* Every minute (i.e. 60000 ms) */
+#else
+		TimerLogFile.start(1000); /* Every second */
+#endif
 
-		/* Set frequency of front-end */
+		/* Get frequency from front-end edit control */
 		QString strFreq = EdtFrequency->text();
 		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(strFreq.toUInt());
 

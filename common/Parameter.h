@@ -362,26 +362,36 @@ public:
 		CReceptLog();
 		virtual ~CReceptLog() {CloseFile();}
 
-		void SetFAC(_BOOLEAN bCRCOk);
-		void SetMSC(_BOOLEAN bCRCOk);
-		void SetSNR(_REAL rCurSNR);
-		void SetNumAAC(int iNewNum);
-		void SetLog(_BOOLEAN bLog);
-		void SetFrequency(int iNewFreq) {iFrequency = iNewFreq;}
-		void SetAdditText(string strNewTxt) {strAdditText = strNewTxt;}
+		void SetFAC(const _BOOLEAN bCRCOk);
+		void SetMSC(const _BOOLEAN bCRCOk);
+		void SetSync(const _BOOLEAN bCRCOk);
+		void SetSNR(const _REAL rCurSNR);
+		void SetNumAAC(const int iNewNum);
+		void SetLog(const _BOOLEAN bLog);
+		void SetFrequency(const int iNewFreq) {iFrequency = iNewFreq;}
+		int	 GetFrequency() {return iFrequency;}
+		void SetLatitude(const string strLat) {strLatitude = strLat;}
+		void SetLongitude(const string strLon) {strLongitude = strLon;}
+		void SetAdditText(const string strNewTxt) {strAdditText = strNewTxt;}
 		void WriteParameters();
+		void SetDelLogStart() {bDelayedLogStart = TRUE;}
+		_BOOLEAN IsDelLogStart() {return bDelayedLogStart;}
 
 	protected:
 		void ResetLog();
 		void CloseFile();
 		int				iNumSNR;
-		int				iNumCRCOkFAC, iNumCRCOkMSC;
-		int				iNumAACFrames, iMinuteCnt;
+		int				iNumSyncOk, iNumCRCOkFAC, iNumCRCOkMSC;
+		int				iNumSync, iNumCRCFAC, iNumCRCMSC;
+		int				iNumAACFrames, iTimeCnt;
 		int				iFrequency;
 		_REAL			rAvSNR;
 		_BOOLEAN		bLogActivated;
 		FILE*			pFile;
 		string			strAdditText;
+		string			strLatitude;
+		string			strLongitude;
+		_BOOLEAN		bDelayedLogStart;
 	} ReceptLog;
 
 

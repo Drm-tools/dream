@@ -386,6 +386,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 				/* GUI message that timing is ok */
 				PostWinMessage(MS_TIME_SYNC, 0);
+				ReceiverParam.ReceptLog.SetSync(TRUE);
 			}
 			else
 			{
@@ -416,6 +417,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					/* GUI message that timing is yet ok (yellow light) */
 					PostWinMessage(MS_TIME_SYNC, 1);
 				}
+				ReceiverParam.ReceptLog.SetSync(FALSE);
 			}
 
 #ifdef _DEBUG_
@@ -448,6 +450,7 @@ fflush(pFile);
 		/* Timing acquisition was successfully finished, show always green
 		   light */
 		PostWinMessage(MS_TIME_SYNC, 0);
+		ReceiverParam.ReceptLog.SetSync(TRUE);
 
 #ifdef _DEBUG_
 /* Save estimated positions of timing (tracking) */

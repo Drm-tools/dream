@@ -545,34 +545,58 @@ _UINT32BIT CParameter::CRawSimData::Get()
 
 /* Reception log implementation --------------------------------------------- */
 CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFile(NULL),
-	iFrequency(0), strAdditText("")
+	iFrequency(0), strAdditText(""), strLatitude(""), strLongitude(""),
+	bDelayedLogStart(FALSE)
 {
 	ResetLog();
 }
 
 void CParameter::CReceptLog::ResetLog()
 {
+	iNumSyncOk = 0;
 	iNumCRCOkFAC = 0;
 	iNumCRCOkMSC = 0;
+	iNumSync = 0;
+	iNumCRCFAC = 0;
+	iNumCRCMSC = 0;
 	iNumSNR = 0;
 	rAvSNR = (_REAL) 0.0;
 }
 
-void CParameter::CReceptLog::SetFAC(_BOOLEAN bCRCOk)
+void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
+	{
+		if (bCRCOk == TRUE)
+			iNumSyncOk++;
+
+		iNumSync++;
+	}
+}
+
+void CParameter::CReceptLog::SetFAC(const _BOOLEAN bCRCOk)
+{
+	if (bLogActivated == TRUE)
+	{
 		if (bCRCOk == TRUE)
 			iNumCRCOkFAC++;
+
+		iNumCRCFAC++;
+	}
 }
 
-void CParameter::CReceptLog::SetMSC(_BOOLEAN bCRCOk)
+void CParameter::CReceptLog::SetMSC(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
+	{
 		if (bCRCOk == TRUE)
 			iNumCRCOkMSC++;
+
+		iNumCRCMSC++;
+	}
 }
 
-void CParameter::CReceptLog::SetSNR(_REAL rCurSNR)
+void CParameter::CReceptLog::SetSNR(const _REAL rCurSNR)
 {
 	if (bLogActivated == TRUE)
 	{
@@ -583,7 +607,7 @@ void CParameter::CReceptLog::SetSNR(_REAL rCurSNR)
 	}
 }
 
-void CParameter::CReceptLog::SetNumAAC(int iNewNum)
+void CParameter::CReceptLog::SetNumAAC(const int iNewNum)
 {
 	/* Set the number of AAC frames in one block */
 	iNumAACFrames = iNewNum;
@@ -591,7 +615,7 @@ void CParameter::CReceptLog::SetNumAAC(int iNewNum)
 	ResetLog();
 }
 
-void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
+void CParameter::CReceptLog::SetLog(const _BOOLEAN bLog)
 {
 	time_t		ltime;
 	char		tmpbuf[128];
@@ -622,7 +646,8 @@ void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
 			if (iFrequency != 0)
 				fprintf(pFile, "%d kHz", iFrequency);
 			
-			fprintf(pFile, "\nLatitude         \nLongitude        ");
+			fprintf(pFile, "\nLatitude         %7s", strLatitude.c_str());
+			fprintf(pFile, "\nLongitude        %7s", strLongitude.c_str());
 
 			/* Write additional text */
 			if (strAdditText != "")
@@ -630,14 +655,18 @@ void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
 			else
 				fprintf(pFile, "\n\n");
 
+#ifdef USE_STANDARD_LOG_FILE
 			fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
+#else
+			fprintf(pFile, "SECOND, SNR,    SYNC, FAC CRC, MSC CRC\n");
+#endif
 			fflush(pFile);
 		}
 
 		ResetLog();
 
-		/* Reset minute count */
-		iMinuteCnt = 0;
+		/* Reset time count */
+		iTimeCnt = 0;
 	}
 	else
 		CloseFile();
@@ -647,10 +676,10 @@ void CParameter::CReceptLog::CloseFile()
 {
 	if (pFile != NULL)
 	{
+#ifdef USE_STANDARD_LOG_FILE
 		fprintf(pFile, "\nCRC: \n");
-		
+#endif
 		fprintf(pFile, "<<<<\n\n");
-
 		fclose(pFile);
 
 		pFile = NULL;
@@ -670,7 +699,7 @@ void CParameter::CReceptLog::WriteParameters()
 			if (iNumSNR == 0)
 				iAverageSNR = 0;
 			else
-				iAverageSNR = (int) (rAvSNR / iNumSNR + (_REAL) 0.5); /* Round */
+				iAverageSNR = (int) Round(rAvSNR / iNumSNR);
 
 			/* If no sync, do not print number of AAC frames. If the number of
 			   correct FAC CRCs is lower than 10%, we assume that receiver is
@@ -680,8 +709,9 @@ void CParameter::CReceptLog::WriteParameters()
 			else
 				iTmpNumAAC = iNumAACFrames;
 
+#ifdef USE_STANDARD_LOG_FILE
 			fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0",
-				iMinuteCnt, iAverageSNR, iNumCRCOkFAC,
+				iTimeCnt, iAverageSNR, iNumCRCOkFAC,
 				iNumCRCOkMSC, iTmpNumAAC);
 
 #ifdef _DEBUG_
@@ -692,12 +722,19 @@ void CParameter::CReceptLog::WriteParameters()
 				DRMReceiver.GetParameters()->GetSampFreqEst());
 #endif
 
+#else
+			/* This can be read with Microsoft Excel */
+			fprintf(pFile, " %05d  %3d  %3d/%3d     %2d/%1d    %2d/%2d",
+				iTimeCnt, iAverageSNR, iNumSyncOk, iNumSync,
+				iNumCRCOkFAC, iNumCRCFAC, iNumCRCOkMSC, iNumCRCMSC);
+#endif
+
 			fprintf(pFile, "\n"); /* New line */
 			fflush(pFile);
 		}
 
 		ResetLog();
-		iMinuteCnt++;
+		iTimeCnt++;
 	}
 
 	catch (...)

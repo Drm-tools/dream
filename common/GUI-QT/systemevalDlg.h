@@ -56,6 +56,9 @@ extern CDRMReceiver	DRMReceiver;
 /* Define this macro if you prefer the QT-type of displaying date and time */
 #define GUI_QT_DATE_TIME_TYPE
 
+/* Define the time out when the delayed log file should begin */
+#define DELAYED_LOG_FILE_TIME_OUT		60000 /* ms */
+
 
 /* Classes ********************************************************************/
 class systemevalDlg : public systemevalDlgBase
@@ -76,6 +79,7 @@ protected:
 	QTimer			Timer;
 	QTimer			TimerChart;
 	QTimer			TimerLogFile;
+	QTimer			TimerLogFileStart;
 	ECharType		CharType;
 	void			OnlyThisButDown(QPushButton* pButton);
     virtual void	showEvent(QShowEvent* pEvent);
@@ -88,6 +92,7 @@ public slots:
 	void OnTimer();
 	void OnTimerChart();
 	void OnTimerLogFile();
+	void OnTimerLogFileStart();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
@@ -107,4 +112,3 @@ public slots:
 	void OnCheckBoxMuteAudio();
 	void OnCheckWriteLog();
 };
-
