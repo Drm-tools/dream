@@ -93,10 +93,14 @@
 #  define HAMLIB_CONF_COM1				"rig_pathname=COM1"
 #  define HAMLIB_CONF_COM2				"rig_pathname=COM2"
 #  define HAMLIB_CONF_COM3				"rig_pathname=COM3"
+#  define HAMLIB_CONF_COM4				"rig_pathname=COM4"
+#  define HAMLIB_CONF_COM5				"rig_pathname=COM5"
 # else
 #  define HAMLIB_CONF_COM1				"rig_pathname=/dev/ttyS0"
 #  define HAMLIB_CONF_COM2				"rig_pathname=/dev/ttyS1"
-#  define HAMLIB_CONF_COM3				"rig_pathname=/dev/ttyUSB0"
+#  define HAMLIB_CONF_COM3				"rig_pathname=/dev/ttyS2"
+#  define HAMLIB_CONF_COM4				"rig_pathname=/dev/ttyS3"
+#  define HAMLIB_CONF_COM5				"rig_pathname=/dev/ttyUSB0"
 # endif
 #endif
 
@@ -218,6 +222,8 @@ protected:
 	QAction*					pacMenuCOM1;
 	QAction*					pacMenuCOM2;
 	QAction*					pacMenuCOM3;
+	QAction*					pacMenuCOM4;
+	QAction*					pacMenuCOM5;
 	QActionGroup*				agCOMPortSel;
 
 #ifdef HAVE_LIBHAMLIB

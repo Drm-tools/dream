@@ -485,6 +485,8 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pacMenuCOM1 = new QAction("COM1", "COM1", 0, agCOMPortSel, 0, TRUE);
 	pacMenuCOM2 = new QAction("COM2", "COM2", 0, agCOMPortSel, 0, TRUE);
 	pacMenuCOM3 = new QAction("COM3", "COM3", 0, agCOMPortSel, 0, TRUE);
+	pacMenuCOM4 = new QAction("COM4", "COM4", 0, agCOMPortSel, 0, TRUE);
+	pacMenuCOM5 = new QAction("COM5", "COM5", 0, agCOMPortSel, 0, TRUE);
 
 	/* Add COM port selection menu group to remote menu */
 	agCOMPortSel->addTo(pRemoteMenu);
@@ -498,6 +500,12 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM3)
 		pacMenuCOM3->setOn(TRUE);
+
+	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM4)
+		pacMenuCOM4->setOn(TRUE);
+
+	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM5)
+		pacMenuCOM5->setOn(TRUE);
 
 
 	/* Other settings ------------------------------------------------------- */
@@ -975,6 +983,12 @@ void StationsDlg::OnComPortMenu(QAction* action)
 
 	if (action == pacMenuCOM3)
 		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM3);
+
+	if (action == pacMenuCOM4)
+		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM4);
+
+	if (action == pacMenuCOM5)
+		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM5);
 
 	/* Init hamlib, use current selected model ID */
 	InitHamlib(iCurSelModelID);
