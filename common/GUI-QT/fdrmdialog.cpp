@@ -948,4 +948,8 @@ void FDRMDialog::AddWhatsThisHelp()
 	QWhatsThis::add(TextMiniService2, strServiceSel);
 	QWhatsThis::add(TextMiniService3, strServiceSel);
 	QWhatsThis::add(TextMiniService4, strServiceSel);
+
+	/* Dream Logo */
+	QWhatsThis::add(PixmapLabelDreamLogo,
+		"<b>Dream Logo:</b> This is the official logo of the Dream software.");
 }
