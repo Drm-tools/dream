@@ -127,7 +127,7 @@ void CViterbiDecoder::TrellisUpdateSSE2(const _DECISIONTYPE* pCurDec,
 		   Normalize by finding smallest metric and subtracting it
 		   from all metrics */
 
-#if 1 // TEST if 0, always normalize
+#if 1 // if 0, always normalize
 		/* See if we have to normalize */
 		mov eax, [edx] /* Extract first output metric */
 		and eax, 255
@@ -260,7 +260,7 @@ void CViterbiDecoder::TrellisUpdateSSE2(const _DECISIONTYPE* pCurDec,
 		/* -----------------------------------------------------------------
 		   Normalize by finding smallest metric and subtracting it
 		   from all metrics */
-#if 1 // TEST if 0, always normalize
+#if 1 // if 0, always normalize
 		/* See if we have to normalize */
 
 		"mov (%%edx),%%eax ;" /* Extract first output metric */
