@@ -71,7 +71,17 @@ public:
 	void Reset() {ResetOpenJournalineDecoder();}
 
 protected:
+	DAB_DATAGROUP_DECODER_t	dgdec;
+	NEWS_SVC_DEC_decoder_t	newsdec;
+
 	void ResetOpenJournalineDecoder();
+
+	/* Callback functions for journaline decoder internal tasks */
+	static void obj_avail_cb(unsigned long, NEWS_SVC_DEC_obj_availability_t*,
+		void* data) {}
+	static void dg_cb(const DAB_DATAGROUP_DECODER_msc_datagroup_header_t*,
+		const unsigned long len, const unsigned char* buf, void* data)
+		{NEWS_SVC_DEC_putData(((CJournaline*) data)->newsdec, len, buf);}
 };
 #else
 /* No implementation for Linux yet */
@@ -86,6 +96,5 @@ public:
 	void Reset() {}
 };
 #endif
-
 
 #endif // !defined(JOURNALINE_H__3B0UBVE987346456363LIHGEW982__INCLUDED_)

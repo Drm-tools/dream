@@ -30,11 +30,7 @@
 
 #ifdef _WIN32
 /* Implementation *************************************************************/
-/* Global variables. TODO: nicer solution... */
-DAB_DATAGROUP_DECODER_t	dgdec;
-NEWS_SVC_DEC_decoder_t	newsdec;
-
-/* set these to 1 for more debug information */
+/* Set these to 1 for more debug information. Needed by Journaline library */
 #ifdef WIN32
 extern "C" int showDdNewsSvcDecErr = 0;
 extern "C" int showDdNewsSvcDecInfo = 0;
@@ -47,32 +43,22 @@ int showDdDabDgDecErr = 0;
 int showDdDabDgDecInfo = 0;
 #endif
 
-/* Callback functions for journaline decoder internal tasks */
-void obj_avail_cb(unsigned long, NEWS_SVC_DEC_obj_availability_t*, void*) {}
-void dg_cb(const DAB_DATAGROUP_DECODER_msc_datagroup_header_t*,
-	const unsigned long len, const unsigned char* buf, void*)
-	{NEWS_SVC_DEC_putData(newsdec, len, buf);}
-
-CJournaline::CJournaline()
+CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
 {
-	/* This will be the first call to the Journaline decoder open function, set
-	   pointer to the decoders to defined value (NULL) to avoid unpredictable
-	   behaviour in the "ResetOpenJournalineDecoder()" function */
-	dgdec = NULL;
-	newsdec = NULL;
+	/* This will be the first call to the Journaline decoder open function, the
+	   pointer to the decoders must have a defined value (NULL) to avoid
+	   unpredictable behaviour in the "ResetOpenJournalineDecoder()" function */
 	ResetOpenJournalineDecoder();
 }
 
 CJournaline::~CJournaline()
 {
-// TODO: delete decoder does not work...
-/*
+	/* Delete decoder instances */
 	if (newsdec != NULL)
 		NEWS_SVC_DEC_deleteDec(newsdec);
 
 	if (dgdec != NULL)
 		DAB_DATAGROUP_DECODER_deleteDec(dgdec);
-*/
 }
 
 void CJournaline::ResetOpenJournalineDecoder()
@@ -93,10 +79,11 @@ void CJournaline::ResetOpenJournalineDecoder()
 	if (dgdec != NULL)
 		DAB_DATAGROUP_DECODER_deleteDec(dgdec);
 
-	/* Create decoder instance */
-	dgdec = DAB_DATAGROUP_DECODER_createDec(dg_cb, NULL);
+	/* Create decoder instance. Pass the pointer to this object. This is needed
+	   for the call-back functions! */
+	dgdec = DAB_DATAGROUP_DECODER_createDec(dg_cb, this);
 	newsdec = NEWS_SVC_DEC_createDec(obj_avail_cb, max_memory, &max_objects,
-		extended_header_len, NULL);
+		extended_header_len, this);
 }
 
 void CJournaline::AddDataUnit(CVector<_BINARY>& vecbiNewData)
@@ -161,8 +148,7 @@ void CJournaline::GetNews(const int iObjID, CNews& News)
 					News.vecItem[i].iLink = nml->GetLinkId(i);
 
 					/* Store link in vector for "keep in cache" function */
-					iAvailIDs.Enlarge(1);
-					iAvailIDs[iAvailIDs.Size() - 1] = nml->GetLinkId(i);
+					iAvailIDs.Add(nml->GetLinkId(i));
 				}
 				else
 				{
