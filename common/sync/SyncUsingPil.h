@@ -31,13 +31,13 @@
 
 #include "../Parameter.h"
 #include "../Modul.h"
+#include "../Vector.h"
 #include "../chanest/ChanEstTime.h"
 
 
 /* Definitions ****************************************************************/
-#define HI_VALUE_FOR_MIN_SEARCH			3.4E38 /* Max value for float types */
-#define CONTR_FREQ_OFF_INTEGRATION		((_REAL) 0.1)
-#define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 0.4)
+#define HI_VALUE_FOR_MIN_SEARCH			((_REAL) 3.4E38) /* Max value for float types */
+#define CONTR_SAMP_OFF_INTEGRATION		((_REAL) 10.0)
 
 
 /* Classes ********************************************************************/
@@ -46,7 +46,9 @@ class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>,
 {
 public:
 	CSyncUsingPil() : bSyncInput(FALSE), bAquisition(FALSE), bTrackPil(FALSE),
-		iSymbCntFraSy(0), iNoSymPerFrame(0) {}
+		iSymbCntFraSy(0), iNoSymPerFrame(0),
+		iPosFreqPil(NO_FREQ_PILOTS), cOldFreqPil(NO_FREQ_PILOTS),
+		cFreqPilotPhDiff(NO_FREQ_PILOTS) {}
 	virtual ~CSyncUsingPil() {}
 
 	/* To set the module up for synchronized DRM input data stream */
@@ -73,9 +75,10 @@ protected:
 	CShiftRegister<_REAL>	vecrCorrHistory;
 
 	/* Variables for frequency pilot estimation */
-	int						iPosFreqPil[NO_FREQ_PILOTS];
-	_COMPLEX				cOldFreqPil[NO_FREQ_PILOTS];
-	_REAL					rFreqPilotPhDiff[NO_FREQ_PILOTS];
+	CVector<int>			iPosFreqPil;
+	CVector<_COMPLEX>		cOldFreqPil;
+	CVector<_COMPLEX>		cFreqPilotPhDiff;
+
 	_REAL					rNormConstFOE;
 	_REAL					rSampleFreqEst;
 
@@ -91,6 +94,10 @@ protected:
 	_BOOLEAN				bTrackPil;
 
 	int						iMiddleOfInterval;
+
+	_REAL					rLamSamRaOff;
+	_REAL					rLamFreqOff;
+	_COMPLEX				cFreqOffVec;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
