@@ -50,13 +50,9 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 	_REAL rxInt;
 	_REAL rBlockDuration;
 
-	/* Move old data from the end to the history part of the buffer */
-	for (i = 0; i < iHistorySize; i++)
-		vecrIntBuff[i] = vecrIntBuff[i + iInputBlockSize];
-
-	/* Add the new data in internal buffer */
-	for (i = 0; i < iInputBlockSize; i++)
-		vecrIntBuff[i + iHistorySize] = (*prInput)[i];
+	/* Move old data from the end to the history part of the buffer and 
+	   add new data (shift register) */
+	vecrIntBuff.AddEnd((*prInput), iInputBlockSize);
 
 	/* Sample-interval of new sample frequency in relation to interpolated 
 	   sample-interval */
@@ -83,6 +79,7 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 		in1 = (int) (ik / INTERP_DECIM_I_D);
 		in2 = (int) ((ik + 1) / INTERP_DECIM_I_D);
 
+
 		/* Convolution ********************************************************/
 		ry1 = (_REAL) 0.0;
 		ry2 = (_REAL) 0.0;
@@ -92,9 +89,11 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 			ry2 += fResTaps1To1[ip2][i] * vecrIntBuff[in2 - i];
 		}
 
+
 		/* Linear interpolation ***********************************************/
 		rxInt = rtOut - (int) rtOut; /* Get numbers after the comma */
 		(*prOutput)[im] = (ry2 - ry1) * rxInt + ry1;
+
 
 		/* Increase output counter */
 		im++;

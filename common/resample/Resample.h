@@ -42,16 +42,17 @@ public:
 	virtual ~CResample() {}
 
 	void Init(int iNewInputBlockSize);
-	int Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput, _REAL rRation);
+	int Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput, 
+				 _REAL rRation);
 
 protected:
-	_REAL			rTStep;
-	_REAL			rtOut;
+	_REAL					rTStep;
+	_REAL					rtOut;
 
-	CVector<_REAL>	vecrIntBuff;
-	int				iHistorySize;
+	CShiftRegister<_REAL>	vecrIntBuff;
+	int						iHistorySize;
 
-	int				iInputBlockSize;
+	int						iInputBlockSize;
 };
 
 
