@@ -63,8 +63,10 @@ protected:
 
 	CVector<_BYTE>		vecbyPrepAudioFrame;
 
-	CResample			ResampleObjLeft;
-	CResample			ResampleObjRight;
+	CAudioResample		ResampleObjL;
+	CAudioResample		ResampleObjR;
+	int					iResOutBlockSize;
+		
 	CVector<_REAL>		vecTempResBufInLeft;
 	CVector<_REAL>		vecTempResBufInRight;
 	CVector<_REAL>		vecTempResBufOutLeft;

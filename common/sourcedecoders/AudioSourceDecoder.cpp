@@ -38,7 +38,6 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	int					iFrameBorder;
 	_BOOLEAN			bGoodValues;
 	short*				psDecOutSampleBuf;
-	int					iResOutLength;
 	faacDecFrameInfo	DecFrameInfo;
 
 
@@ -175,20 +174,30 @@ fflush(pFile2);
 			}
 
 			/* Average block with flipped block for smoother transition */
-			for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH / 2; i++)
+			for (i = 0; i < iResOutBlockSize / 2; i++)
 			{
-				vecTempResBufInLeft[i] = (vecTempResBufInLeft[i] + 
-					vecTempResBufInLeft[AUD_DEC_TRANSFROM_LENGTH - i - 1]) / 2;
+				vecTempResBufOutLeft[i] = (vecTempResBufOutLeft[i] + 
+					vecTempResBufOutLeft[iResOutBlockSize - i - 1]) / 2;
 
-				vecTempResBufInRight[i] = (vecTempResBufInRight[i] + 
-					vecTempResBufInRight[AUD_DEC_TRANSFROM_LENGTH - i - 1]) / 2;
+				vecTempResBufOutRight[i] = (vecTempResBufOutRight[i] + 
+					vecTempResBufOutRight[iResOutBlockSize - i - 1]) / 2;
 			}
 
 			/* Attenuate the gain exponentially */
-			for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH; i++)
+			for (i = 0; i < iResOutBlockSize; i++)
 			{
-				vecTempResBufInLeft[i] *= FORFACT_AUD_BL_BAD_CRC;
-				vecTempResBufInRight[i] *= FORFACT_AUD_BL_BAD_CRC;
+				/* Make a lower bound of signal because the floating point
+				   variable can get as small as it reaches the lower precision
+				   and this can cause instability! */
+				if (fabs(vecTempResBufOutLeft[i]) > (_REAL) 1.0)		
+					vecTempResBufOutLeft[i] *= FORFACT_AUD_BL_BAD_CRC;
+				else
+					vecTempResBufOutLeft[i] = (_REAL) 0.0;
+
+				if (fabs(vecTempResBufOutRight[i]) > (_REAL) 1.0)		
+					vecTempResBufOutRight[i] *= FORFACT_AUD_BL_BAD_CRC;
+				else
+					vecTempResBufOutRight[i] = (_REAL) 0.0;
 			}
 		}
 		else
@@ -205,10 +214,17 @@ fflush(pFile2);
 			   the AAC decoder! */
 			if (iNoChannelsAAC == 1)
 			{
-				/* Mono (write the same audio material in both channels) */
+				/* Change type of data (short -> real) */
 				for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH; i++)
-					vecTempResBufInLeft[i] = vecTempResBufInRight[i] = 
-						psDecOutSampleBuf[i];
+					vecTempResBufInLeft[i] = psDecOutSampleBuf[i];
+
+				/* Resample data */
+				ResampleObjL.Resample(vecTempResBufInLeft,
+					vecTempResBufOutLeft);
+
+				/* Mono (write the same audio material in both channels) */
+				for (i = 0; i < iResOutBlockSize; i++)
+					vecTempResBufOutRight[i] = vecTempResBufOutLeft[i];
 			}
 			else
 			{
@@ -218,19 +234,17 @@ fflush(pFile2);
 					vecTempResBufInLeft[i] = psDecOutSampleBuf[i * 2];
 					vecTempResBufInRight[i] = psDecOutSampleBuf[i * 2 + 1];
 				}
+
+				/* Resample data */
+				ResampleObjL.Resample(vecTempResBufInLeft,
+					vecTempResBufOutLeft);
+				ResampleObjR.Resample(vecTempResBufInRight,
+					vecTempResBufOutRight);
 			}
 		}
 
-		/* We need to resample the data to the correct output sample rate */
-		ResampleObjLeft.Resample(&vecTempResBufInLeft, &vecTempResBufOutLeft,
-			(_REAL) SOUNDCRD_SAMPLE_RATE / iAudioSamplRate); /* Left channel */
-
-		iResOutLength = ResampleObjRight.Resample(&vecTempResBufInRight, 
-			&vecTempResBufOutRight,
-			(_REAL) SOUNDCRD_SAMPLE_RATE / iAudioSamplRate); /* Right channel */
-
 		/* Conversion from _REAL to _SAMPLE with special function */
-		for (i = 0; i < iResOutLength; i++)
+		for (i = 0; i < iResOutBlockSize; i++)
 		{
 			(*pvecOutputData)[iOutputBlockSize + i * 2] = 
 				Real2Sample(vecTempResBufOutLeft[i]); /* Left channel */
@@ -239,7 +253,7 @@ fflush(pFile2);
 		}
 
 		/* Add new block to output block size ("* 2" for stereo output block) */
-		iOutputBlockSize += iResOutLength * 2;
+		iOutputBlockSize += iResOutBlockSize * 2;
 	}
 }
 
@@ -356,16 +370,23 @@ try
 		iMaxLenResamplerOutput = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * 
 			(_REAL) 0.4 /* 400ms */ * 2 /* for stereo */);
 
+		iResOutBlockSize =
+			AUD_DEC_TRANSFROM_LENGTH * SOUNDCRD_SAMPLE_RATE / iAudioSamplRate;
+
 		/* Additional buffers needed for resampling since we need conversation
-		   between _REAL and _SAMPLE */
+		   between _REAL and _SAMPLE. We have to init the buffers with
+		   zeros since it can happen, that we have bad CRC right at the
+		   start of audio blocks */
 		vecTempResBufInLeft.Init(AUD_DEC_TRANSFROM_LENGTH);
 		vecTempResBufInRight.Init(AUD_DEC_TRANSFROM_LENGTH);
-		vecTempResBufOutLeft.Init(iMaxLenResamplerOutput);
-		vecTempResBufOutRight.Init(iMaxLenResamplerOutput);
+		vecTempResBufOutLeft.Init(iResOutBlockSize, (_REAL) 0.0);
+		vecTempResBufOutRight.Init(iResOutBlockSize, (_REAL) 0.0);
 
 		/* Init resample objects */
-		ResampleObjLeft.Init(AUD_DEC_TRANSFROM_LENGTH);
-		ResampleObjRight.Init(AUD_DEC_TRANSFROM_LENGTH);
+		ResampleObjL.Init(AUD_DEC_TRANSFROM_LENGTH,
+			SOUNDCRD_SAMPLE_RATE / iAudioSamplRate);
+		ResampleObjR.Init(AUD_DEC_TRANSFROM_LENGTH,
+			SOUNDCRD_SAMPLE_RATE / iAudioSamplRate);
 
 
 		/* AAC decoder ------------------------------------------------------ */
