@@ -52,7 +52,6 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/sourcedecoders/AudioSourceDecoder.cpp \
 	../common/sync/FreqSyncAcq.cpp \
 	../common/sync/TimeSync.cpp \
-	../common/sync/RobModeDetection.cpp \
 	../common/sync/SyncUsingPil.cpp \
 	../common/sync/TimeSyncTrack.cpp \
 	source/sound.cpp \
@@ -99,9 +98,9 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/sourcedecoders/AudioSourceDecoder.h \
 	../common/sourcedecoders/faad.h \
 	../common/sync/FreqSyncAcq.h \
-	../common/sync/RobModeDetection.h \
 	../common/sync/SyncUsingPil.h \
 	../common/sync/TimeSync.h \
+	../common/sync/TimeSyncFilter.h \
 	../common/tables/TableCarMap.h \
 	../common/tables/TableDRMGlobal.h \
 	../common/tables/TableFAC.h \
