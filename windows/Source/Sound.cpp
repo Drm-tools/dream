@@ -476,13 +476,9 @@ void CSound::Close()
 			throw CGenErr("Sound Interface, waveOutClose() failed.");
 	}
 
-	/* Close the handle for the events */
-	if (m_WaveInEvent != NULL)
-		CloseHandle(m_WaveInEvent);
-
-	if (m_WaveOutEvent != NULL)
-		CloseHandle(m_WaveOutEvent);
-
+	/* Set flag to open devices the next time it is initialized */
+	bChangDevIn = TRUE;
+	bChangDevOut = TRUE;
 }
 
 CSound::CSound()
@@ -561,4 +557,11 @@ CSound::~CSound()
 		if (psPlaybackBuffer[i] != NULL)
 			delete[] psPlaybackBuffer[i];
 	}
+
+	/* Close the handle for the events */
+	if (m_WaveInEvent != NULL)
+		CloseHandle(m_WaveInEvent);
+
+	if (m_WaveOutEvent != NULL)
+		CloseHandle(m_WaveOutEvent);
 }
