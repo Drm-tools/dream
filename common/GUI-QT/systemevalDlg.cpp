@@ -719,8 +719,15 @@ void systemevalDlg::OnCheckSaveAudioWAV()
 
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
+		{
 			DRMReceiver.GetWriteData()->
 				StartWriteWaveFile(strFileName.latin1());
+		}
+		else
+		{
+			/* User hit the cancel button, uncheck the button */
+			CheckBoxSaveAudioWave->setChecked(FALSE);
+		}
 	}
 	else
 		DRMReceiver.GetWriteData()->StopWriteWaveFile();
