@@ -54,13 +54,20 @@ class CSound
 public:
 	CSound() {}
 	virtual ~CSound() {}
+
+	/* Not implemented yet, always return one device and default string */
+	int		GetNumDev() {return 1;}
+	string	GetDeviceName(int iDiD) {return "Default Sound Device";}
+	void	SetOutDev(int iNewDev) {}
+	void	SetInDev(int iNewDev) {}
+
 #if WITH_SOUND
 	void InitRecording(int iNewBufferSize);
 	void InitPlayback(int iNewBufferSize);
 	void Read(CVector<short>& psData);
 	void Write(CVector<short>& psData);
 
-	void StopRecording();
+	void Close();
 	
 protected:
 	int 	iBufferSize, iInBufferSize;
@@ -76,7 +83,7 @@ protected:
 	void InitPlayback(int iNewBufferSize){}
 	void Read(CVector<short>& psData){}
 	void Write(CVector<short>& psData){}
-	void StopRecording(){}
+	void Close(){}
 #endif
 };
 
