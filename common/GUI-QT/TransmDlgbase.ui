@@ -25,7 +25,7 @@
     </property>
     <property stdset="1">
         <name>sizeGripEnabled</name>
-        <bool>false</bool>
+        <bool>true</bool>
     </property>
     <vbox>
         <property stdset="1">
@@ -85,7 +85,7 @@
                                     <class>QLabel</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>PixmapLabel1_2</cstring>
+                                        <cstring>PixmapLabelDreamLogo</cstring>
                                     </property>
                                     <property stdset="1">
                                         <name>sizePolicy</name>
@@ -122,7 +122,7 @@
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel1</cstring>
+                                                <cstring>TextLabelMainAuthors</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -133,7 +133,7 @@
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel2</cstring>
+                                                <cstring>TextLabelCompany</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -236,7 +236,7 @@ Institute for Communication Technology</string>
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel4</cstring>
+                                                <cstring>TextLabelIF</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -265,7 +265,7 @@ Institute for Communication Technology</string>
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel5</cstring>
+                                                <cstring>TextLabelIFUnit</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -652,7 +652,7 @@ Institute for Communication Technology</string>
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel3_2</cstring>
+                                                <cstring>TextLabelMSCConst</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -687,7 +687,7 @@ Institute for Communication Technology</string>
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel3_2_3</cstring>
+                                                <cstring>TextLabelProtLev</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -739,7 +739,7 @@ Institute for Communication Technology</string>
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel3_2_2</cstring>
+                                                <cstring>TextLabelSDCConst</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -774,7 +774,7 @@ Institute for Communication Technology</string>
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel3</cstring>
+                                                <cstring>TextLabelInterleaver</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -882,7 +882,7 @@ Institute for Communication Technology</string>
                                         <class>QLabel</class>
                                         <property stdset="1">
                                             <name>name</name>
-                                            <cstring>TextLabel1_2</cstring>
+                                            <cstring>TextLabelServiceLabel</cstring>
                                         </property>
                                         <property stdset="1">
                                             <name>text</name>
@@ -924,7 +924,7 @@ Institute for Communication Technology</string>
                                         <class>QLabel</class>
                                         <property stdset="1">
                                             <name>name</name>
-                                            <cstring>TextLabel1_2_2</cstring>
+                                            <cstring>TextLabelServiceID</cstring>
                                         </property>
                                         <property stdset="1">
                                             <name>text</name>
@@ -966,7 +966,7 @@ Institute for Communication Technology</string>
                                         <class>QLabel</class>
                                         <property stdset="1">
                                             <name>name</name>
-                                            <cstring>TextLabel2_2</cstring>
+                                            <cstring>TextLabelServiceLanguage</cstring>
                                         </property>
                                         <property stdset="1">
                                             <name>text</name>

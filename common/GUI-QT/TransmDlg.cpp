@@ -36,6 +36,9 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 {
 	int i;
 
+	/* Set help text for the controls */
+	AddWhatsThisHelp();
+
 	/* Set controls to custom behavior */
 	MultiLineEditTextMessage->setWordWrap(QMultiLineEdit::WidgetWidth);
 	MultiLineEditTextMessage->setEdited(FALSE);
@@ -994,4 +997,97 @@ void TransmDialog::EnableAllControls()
 	ButtonGroupOutput->setEnabled(TRUE);
 
 	GroupInput->setEnabled(FALSE); /* For run-mode */
+}
+
+void TransmDialog::AddWhatsThisHelp()
+{
+	/* Dream Logo */
+	QWhatsThis::add(PixmapLabelDreamLogo,
+		"<b>Dream Logo:</b> This is the official logo of the Dream software.");
+
+	/* Input Level */
+	QWhatsThis::add(ProgrInputLevel,
+		"<b>Input Level:</b> The input level meter shows the relative input "
+		"signal peak level in dB. If the level is too high, the meter turns "
+		"from green to red.");
+
+	/* DRM Robustness Mode */
+	const QString strRobustnessMode =
+		"<b>DRM Robustness Mode:</b> In a DRM system, four possible "
+		"robustness modes are defined to adapt the system to different "
+		"channel conditions. According to the DRM standard:<ul>"
+		"<li><i>Mode A:</i> Gaussian channels, with minor fading</li>"
+		"<li><i>Mode B:</i> Time and frequency selective channels, with longer "
+		"delay spread</li>"
+		"<li><i>Mode C:</i> As robustness mode B, but with higher Doppler "
+		"spread</li>"
+		"<li><i>Mode D:</i> As robustness mode B, but with severe delay and "
+		"Doppler spread</li></ul>";
+
+	QWhatsThis::add(RadioButtonRMA, strRobustnessMode);
+	QWhatsThis::add(RadioButtonRMB, strRobustnessMode);
+	QWhatsThis::add(RadioButtonRMC, strRobustnessMode);
+	QWhatsThis::add(RadioButtonRMD, strRobustnessMode);
+
+	/* Bandwidth */
+	const QString strBandwidth =
+		"<b>DRM Bandwidth:</b> The bandwith is the gross bandwidth of the "
+		"generated DRM signal. Not all DRM robustness mode / bandwidth "
+		"constellations are possible, e.g., DRM robustness mode D and C are "
+		"only defined for the bandwidths 10 kHz and 20 kHz.";
+
+	QWhatsThis::add(RadioButtonBandwidth45, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth5, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth9, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth10, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth18, strBandwidth);
+	QWhatsThis::add(RadioButtonBandwidth20, strBandwidth);
+
+	/* Output intermediate frequency of DRM signal */
+	const QString strOutputIF =
+		"<b>Output intermediate frequency of DRM signal:</b> Set the output "
+		"intermediate frequency (IF) of generated DRM signal in the "
+		"'sound-card pass-band'. In some DRM modes, the IF is located at "
+		"the edge of the DRM signal, in other modes it is centered. The IF "
+		"should be chosen that the DRM signal lies entirely inside the "
+		"sound-card bandwidth.";
+
+	QWhatsThis::add(TextLabelIF, strOutputIF);
+	QWhatsThis::add(LineEditSndCrdIF, strOutputIF);
+	QWhatsThis::add(TextLabelIFUnit, strOutputIF);
+
+	/* Output format */
+	const QString strOutputFormat =
+		"<b>Output format:</b> Since the sound-card outputs signals in "
+		"stereo format, it is possible to output the DRM signal in three "
+		"formats:<ul>"
+		"<li><b>real valued</b> output on both, left and right, sound-card "
+		"channels</li>"
+		"<li><b>I / Q</b> output which is the in-phase and quadrature "
+		"component of the complex base-band signal at the desired IF. "
+		"In-phase is output on the left channel and quadrature on the "
+		"right channel.</li>"
+		"<li><b>E / P</b> output which is the envelope and phase on "
+		"separate channels. This output type cannot be used if the Dream "
+		"transmitter is regularly compiled with a sound-card sample rate "
+		"of 48 kHz since the spectrum of these components exceed the "
+		"bandwidth of 20 kHz.<br>The envelope signal is output on "
+		"the left channel and the phase is output on the right "
+		"channel.</li></ul>";
+
+	QWhatsThis::add(RadioButtonOutReal, strOutputFormat);
+	QWhatsThis::add(RadioButtonOutIQ, strOutputFormat);
+	QWhatsThis::add(RadioButtonOutEP, strOutputFormat);
+
+	/* MSC interleaver mode */
+	const QString strInterleaver =
+		"<b>MSC interleaver mode:</b> The symbol interleaver depth can be "
+		"either short (approx. 400 ms) or long (approx. 2 s). The longer "
+		"the interleaver the better the channel decoder can correct errors "
+		"from slow fading signals. But the longer the interleaver length "
+		"the longer the delay until (after a re-synchronization) audio can "
+		"be heard.";
+
+	QWhatsThis::add(TextLabelInterleaver, strInterleaver);
+	QWhatsThis::add(ComboBoxMSCInterleaver, strInterleaver);
 }

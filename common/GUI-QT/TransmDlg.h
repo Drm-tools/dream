@@ -48,6 +48,7 @@
 #include <qthread.h>
 #include <qtimer.h>
 #include <qwt_thermo.h>
+#include <qwhatsthis.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"
@@ -125,6 +126,7 @@ protected:
 	void				EnableTextMessage(const _BOOLEAN bFlag);
 	void				EnableAudio(const _BOOLEAN bFlag);
 	void				EnableData(const _BOOLEAN bFlag);
+	void				AddWhatsThisHelp();
 
 
 public slots:
