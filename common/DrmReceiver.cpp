@@ -204,6 +204,8 @@ void CDRMReceiver::Run()
 					MSCDeMUXBufAud, AudSoDecBuf))
 				{
 					bEnoughData = TRUE;
+
+					UpdateCDAudHistory(AudioSourceDecoder.GetNumCorDecAudio());
 				}
 			}
 
@@ -593,6 +595,25 @@ void CDRMReceiver::InitsForDataParam()
 
 
 /* Parameter histories for plot --------------------------------------------- */
+void CDRMReceiver::UpdateCDAudHistory(const int iNumCDAud)
+{
+	/* TODO: do not use the shift register class, build a new
+	   one which just incremets a pointer in a buffer and put
+	   the new value at the position of the pointer instead of
+	   moving the total data all the time -> special care has
+	   to be taken when reading out the data */
+
+	/* Only update histories if the receiver is in tracking mode */
+	if (eReceiverState == RS_TRACKING)
+	{
+		MutexHist.Lock(); /* MUTEX vvvvvvvvvv */
+		
+		veciCDAudHist.AddEnd(iNumCDAud);
+
+		MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
+	}
+}
+
 void CDRMReceiver::UpdateParamHistories()
 {
 	/* TODO: do not use the shift register class, build a new
@@ -711,10 +732,12 @@ void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 }
 
 void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
+							  CVector<_REAL>& vecrCDAud,
 							  CVector<_REAL>& vecrScale)
 {
 	/* Init output vectors */
 	vecrSNR.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrCDAud.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
 	/* Lock resources */
@@ -728,9 +751,16 @@ void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
 		ReceiverParam.iGuardSize) / SOUNDCRD_SAMPLE_RATE *
 		ReceiverParam.iNumSymPerFrame;
 
-	/* Calculate time scale */
+	/* Calculate time scale. Copy correctly decoded audio blocks history (must
+	   be transformed from "int" to "real", therefore we need a for-loop */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
+	{
+		/* Scale */
 		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur;
+
+		/* Correctly decoded audio blocks */
+		vecrCDAud[i] = (_REAL) veciCDAudHist[i];
+	}
 
 	/* Release resources */
 	MutexHist.Unlock();

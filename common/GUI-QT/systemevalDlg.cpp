@@ -115,7 +115,7 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	new CCharSelItem(pHistoryLiViIt,
 		"Frequency / Sample Rate", FREQ_SAM_OFFS_HIST);
 	new CCharSelItem(pHistoryLiViIt, "Delay / Doppler", DOPPLER_DELAY_HIST);
-	new CCharSelItem(pHistoryLiViIt, "SNR", SNR_HISTORY);
+	new CCharSelItem(pHistoryLiViIt, "SNR / Audio", SNR_AUDIO_HIST);
 
 	/* Channel */
 	new CCharSelItem(pChannelLiViIt, "Transfer Function", TRANSFERFUNCTION);
@@ -430,12 +430,12 @@ void systemevalDlg::OnTimerChart()
 		MainPlot->SetDopplerDelayHist(vecrData, vecrData2, vecrScale);
 		break;
 
-	case SNR_HISTORY:
+	case SNR_AUDIO_HIST:
 		/* Get data from module */
-		DRMReceiver.GetSNRHist(vecrData, vecrScale);
+		DRMReceiver.GetSNRHist(vecrData, vecrData2, vecrScale);
 
 		/* Prepare graph and set data */
-		MainPlot->SetSNRHist(vecrData, vecrScale);
+		MainPlot->SetSNRAudHist(vecrData, vecrData2, vecrScale);
 		break;
 
 	case FAC_CONSTELLATION:
@@ -782,7 +782,7 @@ void systemevalDlg::SetupChart(const ECharType eNewType)
 		case AUDIO_SPECTRUM:
 		case FREQ_SAM_OFFS_HIST:
 		case DOPPLER_DELAY_HIST:
-		case SNR_HISTORY:
+		case SNR_AUDIO_HIST:
 			/* Slow update of plot */
 			TimerChart.start(GUI_CONTROL_UPDATE_TIME);
 			break;
@@ -1390,11 +1390,11 @@ void systemevalDlg::AddWhatsThisHelpChar(const ECharType NCharType)
 			"values might be responsable for audio drop-outs.";
 		break;
 
-	case SNR_HISTORY:
+	case SNR_AUDIO_HIST:
 		/* SNR History */
 		strCurPlotHelp =
 			"<b>SNR History:</b> The history of the values for the "
-			"SNR is shown.";
+			"SNR and correctly decoded audio blocks is shown.";
 		break;
 	}
 

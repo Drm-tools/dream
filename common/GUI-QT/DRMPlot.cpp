@@ -535,42 +535,52 @@ void CDRMPlot::SetDopplerDelayHist(CVector<_REAL>& vecrData,
 	replot();
 }
 
-void CDRMPlot::SetupSNRHist()
+void CDRMPlot::SetupSNRAudHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
-	setTitle("SNR History");
-	enableAxis(QwtPlot::yRight, FALSE);
+	setTitle("SNR / Correctly Decoded Audio History");
+	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
 	setAxisTitle(QwtPlot::xBottom, "Time [s]");
 	setAxisTitle(QwtPlot::yLeft, "SNR [dB]");
+	setAxisTitle(QwtPlot::yRight, "Num. Corr. Dec. Aud. Blocks / DRM Fra.");
 
 	/* Fixed scale */
-	setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 40.0);
+	setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 35.0);
+	setAxisScale(QwtPlot::yRight, (double) 0.0, (double) 50.0);
 
-	/* Add main curve */
+	/* Add main curves */
 	clear();
 	main1curve = insertCurve("SNR");
+	main2curve = insertCurve("Audio", QwtPlot::xBottom, QwtPlot::yRight);
 
-	/* Curve color */
+	/* Curve colors */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
+	setCurvePen(main2curve, QPen(SpecLine2ColorPlot, 1, SolidLine, RoundCap,
+		RoundJoin));
+
+	/* Legend */
+	enableLegend(TRUE, main1curve);
+	enableLegend(TRUE, main2curve);
 }
 
-void CDRMPlot::SetSNRHist(CVector<_REAL>& vecrData,
-						  CVector<_REAL>& vecrScale)
+void CDRMPlot::SetSNRAudHist(CVector<_REAL>& vecrData,
+							 CVector<_REAL>& vecrData2,
+							 CVector<_REAL>& vecrScale)
 {
 	/* First check if plot must be set up */
-	if (CurCharType != SNR_HISTORY)
+	if (CurCharType != SNR_AUDIO_HIST)
 	{
-		CurCharType = SNR_HISTORY;
-		SetupSNRHist();
+		CurCharType = SNR_AUDIO_HIST;
+		SetupSNRAudHist();
 	}
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
-	SetData(vecrData, vecrScale);
+	SetData(vecrData, vecrData2, vecrScale);
 	replot();
 }
 
