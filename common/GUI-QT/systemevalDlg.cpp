@@ -400,13 +400,17 @@ void systemevalDlg::OnTimer()
 	/* Show SNR if receiver is in tracking mode */
 	if (DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
 	{
-		rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
+		/* Get SNR value and use it if available and valid */
+		if (DRMReceiver.GetChanEst()->GetSNREstdB(rSNREstimate))
+		{
+			TextSNR->setText("<center>SNR<br><b>" + 
+				QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");
 
-		TextSNR->setText("<center>SNR<br><b>" + 
-			QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");
-
-		/* Set SNR for log file */
-		DRMReceiver.GetParameters()->ReceptLog.SetSNR(rSNREstimate);
+			/* Set SNR for log file */
+			DRMReceiver.GetParameters()->ReceptLog.SetSNR(rSNREstimate);
+		}
+		else
+			TextSNR->setText("SNR<br><b>---</b>");
 
 		/* Doppler estimation (assuming Gaussian doppler spectrum) */
 		TextWiener->setText(strTextWiener +
@@ -417,7 +421,8 @@ void systemevalDlg::OnTimer()
 
 		/* Sample frequency offset estimation */
 		TextSampFreqOffset->setText(strTextFreqOffs + QString().
-			setNum(DRMReceiver.GetParameters()->GetSampFreqEst(), 'f', 2) +	" Hz");
+			setNum(DRMReceiver.GetParameters()->
+			GetSampFreqEst(), 'f', 2) +	" Hz");
 	}
 	else
 	{
