@@ -127,11 +127,6 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.iUTCHour = 0;
 	Param.iUTCMin = 0;
 
-	/* Text message string. If "strTextMessage" == "", text message is
-	   disabled */
-	string strTextMessage =
-		"Dream DRM Transmitter\x0B\x0AThis is a test transmission.";
-
 
 	/**************************************************************************/
 	/* Robustness mode and spectrum occupancy. Available transmission modes:
@@ -169,12 +164,15 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 		Param.Service[0].AudioParam.iStreamID = 0;
 
 		/* Text message */
-		if (!strTextMessage.empty())
-		{
-			Param.Service[0].AudioParam.bTextflag = TRUE;
+		Param.Service[0].AudioParam.bTextflag = TRUE;//FALSE;
 
-			ReadData.SetTextMessage(strTextMessage);
-		}
+		/* Specify as many text messages as you like */
+		ReadData.SetTextMessage("Dream DRM Transmitter\x0B\x0AThis is a test"
+			" transmission."); /* 1 */
+		ReadData.SetTextMessage("This is the second message"); /* 2 */
+		ReadData.SetTextMessage("This is the third message"); /* 3 */
+		ReadData.SetTextMessage("This is the fourth message"); /* 4 */
+		ReadData.SetTextMessage("This is the fifth message"); /* 5 */
 	}
 	else
 	{
@@ -184,6 +182,11 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 		Param.Service[0].eAudDataFlag = CParameter::SF_DATA;
 		Param.Service[0].DataParam.iStreamID = 0;
+
+		/* Init SlideShow application */
+		Param.Service[0].DataParam.iPacketLen = 45;
+		Param.Service[0].DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
+		Param.Service[0].DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
 	}
 
 	/* Length of part B is set automatically (equal error protection (EEP),

@@ -48,32 +48,55 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 	for (i = 0; i < iOutputBlockSize; i++)
 	{
 		/* TEST: "TRUE" -> To be filled with meaningful values */
-		(*pvecOutputData)[i] = TRUE;
+		(*pvecOutputData)[i] = 0;
 	}
 
 
-	/* Text message application. Last four bytes in stream are written */
-	if (bUsingTextMessage == TRUE)
+	if (bIsDataService == TRUE)
 	{
-		/* Always four bytes for text message "piece" */
-		CVector<_BINARY> vecbiTextMessBuf(
-			SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
-		
-		/* Get "piece" */
-		TextMessage.Encode(vecbiTextMessBuf);
+		/* Write data packets in stream */
+		CVector<_BINARY> vecbiData;
+		const int iNumPack = iOutputBlockSize / iTotPacketSize;
+		int iPos = 0;
 
-		/* Total number of bytes which are actually used. The number is
-		   specified by iLenPartA + iLenPartB which is set in
-		   "SDCTransmit.cpp". There is currently no "nice" solution for
-		   setting these values. TODO: better solution */
-		/* Padding to byte as done in SDCTransmit.cpp line 138ff */
-		int iTotByt = (iOutputBlockSize / SIZEOF__BYTE) * SIZEOF__BYTE;
-
-		for (i = iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
-			 i < iTotByt; i++)
+		for (int j = 0; j < iNumPack; j++)
 		{
-			(*pvecOutputData)[i] = vecbiTextMessBuf[i -
-				(iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR)];
+			/* Get new packet */
+			DataEncoder.GeneratePacket(vecbiData);
+
+			/* Put it on stream */
+			for (i = 0; i < iTotPacketSize; i++)
+			{
+				(*pvecOutputData)[iPos] = vecbiData[i];
+				iPos++;
+			}
+		}
+	}
+	else
+	{
+		/* Text message application. Last four bytes in stream are written */
+		if (bUsingTextMessage == TRUE)
+		{
+			/* Always four bytes for text message "piece" */
+			CVector<_BINARY> vecbiTextMessBuf(
+				SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR);
+			
+			/* Get "piece" */
+			TextMessage.Encode(vecbiTextMessBuf);
+
+			/* Total number of bytes which are actually used. The number is
+			   specified by iLenPartA + iLenPartB which is set in
+			   "SDCTransmit.cpp". There is currently no "nice" solution for
+			   setting these values. TODO: better solution */
+			/* Padding to byte as done in SDCTransmit.cpp line 138ff */
+			int iTotByt = (iOutputBlockSize / SIZEOF__BYTE) * SIZEOF__BYTE;
+
+			for (i = iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
+				 i < iTotByt; i++)
+			{
+				(*pvecOutputData)[i] = vecbiTextMessBuf[i -
+					(iTotByt - SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR)];
+			}
 		}
 	}
 }
@@ -82,6 +105,14 @@ void CReadData::InitInternal(CParameter& TransmParam)
 {
 	/* Define output block size */
 	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
+
+	if (TransmParam.iNumDataService == 1)
+	{
+		bIsDataService = TRUE;
+		iTotPacketSize = DataEncoder.Init(TransmParam);
+	}
+	else
+		bIsDataService = FALSE;
 }
 
 void CReadData::SetTextMessage(const string& strText)
@@ -112,7 +143,7 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 	/* Define block-size for input, an audio frame always corresponds to 400 ms.
 	   We use always stereo blocks */
 	iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-		(_REAL) 0.4 /* 400ms */ * 2 /* stereo */);
+		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
 
 	/* Init sound interface */
 	pSound->InitPlayback(iInputBlockSize);

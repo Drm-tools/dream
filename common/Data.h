@@ -34,6 +34,7 @@
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
 #include "TextMessage.h"
+#include "datadecoding/DataDecoder.h"
 #include <time.h>
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -56,7 +57,7 @@ public:
 		bUsingTextMessage(FALSE), iCounter(0) {}
 	virtual ~CReadData() {}
 
-	void SetNumTransBlocks(int iNewNum) {iNumTransBlocks = iNewNum;}
+	void SetNumTransBlocks(const int iNewNum) {iNumTransBlocks = iNewNum;}
 	void SetTextMessage(const string& strText);
 
 protected:
@@ -64,6 +65,9 @@ protected:
 	int					iNumTransBlocks;
 	CTextMessageEncoder TextMessage;
 	_BOOLEAN			bUsingTextMessage;
+	CDataEncoder		DataEncoder;
+	int					iTotPacketSize;
+	_BOOLEAN			bIsDataService;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
