@@ -107,8 +107,8 @@ public:
 
 
 	/* Bit operation functions */
-	void		Enqueue(_UINT32BIT iInformation, const int iNumOfBits);
-	_UINT32BIT	Separate(const int iNumOfBits);
+	void		Enqueue(uint32_t iInformation, const int iNumOfBits);
+	uint32_t	Separate(const int iNumOfBits);
 	void		ResetBitAccess() {iBitArrayCounter = 0;}
 
 protected:
@@ -157,7 +157,7 @@ template<class TData> void CVector<TData>::Reset(const TData tResetVal)
 		pData[i] = tResetVal;
 }
 
-template<class TData> void CVector<TData>::Enqueue(_UINT32BIT iInformation,
+template<class TData> void CVector<TData>::Enqueue(uint32_t iInformation,
 												   const int iNumOfBits)
 {
 	/* Enqueue bits in bit array */
@@ -173,9 +173,9 @@ template<class TData> void CVector<TData>::Enqueue(_UINT32BIT iInformation,
 	iBitArrayCounter += iNumOfBits;
 }
 
-template<class TData> _UINT32BIT CVector<TData>::Separate(const int iNumOfBits)
+template<class TData> uint32_t CVector<TData>::Separate(const int iNumOfBits)
 {
-	_UINT32BIT	iInformation;
+	uint32_t iInformation;
 
 	/* Check, if current position plus new bit-size is smaller than the maximum
 	   length of the bit vector. Error code: return a "0" */
