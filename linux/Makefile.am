@@ -6,6 +6,7 @@ drm_LDFLAGS = -pg
 BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_DRMPlot.cpp \
 	moc/moc_fdrmdialog.cpp moc/moc_fdrmdialogbase.cpp moc/fdrmdialogbase.h moc/fdrmdialogbase.cpp \
+	moc/moc_TransmDlg.cpp moc/moc_TransmDlgbase.cpp moc/TransmDlgbase.h moc/TransmDlgbase.cpp \
 	moc/moc_systemevalDlg.cpp  moc/moc_systemevalDlgbase.cpp moc/systemevalDlgbase.h \
 	moc/systemevalDlgbase.cpp \
 	moc/moc_MultimediaDlg.cpp moc/moc_MultimediaDlgbase.cpp moc/MultimediaDlgbase.h moc/MultimediaDlgbase.cpp \
@@ -63,6 +64,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/sync/TimeSyncTrack.cpp \
 	../common/GUI-QT/DRMPlot.cpp \
 	../common/GUI-QT/fdrmdialog.cpp \
+	../common/GUI-QT/TransmDlg.cpp \
 	../common/GUI-QT/main.cpp \
 	../common/GUI-QT/MultColorLED.cpp \
 	../common/GUI-QT/systemevalDlg.cpp \
@@ -125,10 +127,12 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/GUI-QT/main.h \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialogbase.ui \
+	../common/GUI-QT/TransmDlgbase.ui \
 	../common/GUI-QT/AboutDlgbase.ui \
 	../common/GUI-QT/systemevalDlgbase.ui \
 	../common/GUI-QT/MultimediaDlgbase.ui \
 	../common/GUI-QT/fdrmdialog.h \
+	../common/GUI-QT/TransmDlg.h \
 	../common/GUI-QT/MultColorLED.h \
 	../common/GUI-QT/systemevalDlg.h \
 	../common/GUI-QT/DRMPlot.h \
@@ -147,7 +151,7 @@ moc/moc_MultColorLED.cpp: ../common/GUI-QT/MultColorLED.h
 	
 moc/moc_DRMPlot.cpp: ../common/GUI-QT/DRMPlot.h
 	$(MOC) ../common/GUI-QT/DRMPlot.h -o moc/moc_DRMPlot.cpp
-	
+
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp
@@ -157,7 +161,7 @@ moc/AboutDlgbase.h: ../common/GUI-QT/AboutDlgbase.ui
 	
 moc/AboutDlgbase.cpp: ../common/GUI-QT/AboutDlgbase.ui moc/AboutDlgbase.h
 	$(UIC) ../common/GUI-QT/AboutDlgbase.ui -i moc/AboutDlgbase.h -o moc/AboutDlgbase.cpp	
-	
+
 	
 moc/moc_fdrmdialog.cpp: ../common/GUI-QT/fdrmdialog.h
 	$(MOC) ../common/GUI-QT/fdrmdialog.h -o moc/moc_fdrmdialog.cpp
@@ -170,7 +174,20 @@ moc/fdrmdialogbase.h: ../common/GUI-QT/fdrmdialogbase.ui
 
 moc/fdrmdialogbase.cpp: ../common/GUI-QT/fdrmdialogbase.ui moc/fdrmdialogbase.h
 	$(UIC) ../common/GUI-QT/fdrmdialogbase.ui -i moc/fdrmdialogbase.h -o moc/fdrmdialogbase.cpp
+
+
+moc/moc_TransmDlg.cpp: ../common/GUI-QT/TransmDlg.h
+	$(MOC) ../common/GUI-QT/TransmDlg.h -o moc/moc_TransmDlg.cpp
 	
+moc/moc_TransmDlgbase.cpp: moc/TransmDlgbase.h
+	$(MOC) moc/TransmDlgbase.h -o moc/moc_TransmDlgbase.cpp
+
+moc/TransmDlgbase.h: ../common/GUI-QT/TransmDlgbase.ui
+	$(UIC) ../common/GUI-QT/TransmDlgbase.ui -o moc/TransmDlgbase.h
+
+moc/TransmDlgbase.cpp: ../common/GUI-QT/TransmDlgbase.ui moc/TransmDlgbase.h
+	$(UIC) ../common/GUI-QT/TransmDlgbase.ui -i moc/TransmDlgbase.h -o moc/TransmDlgbase.cpp
+
 
 moc/moc_systemevalDlg.cpp: ../common/GUI-QT/systemevalDlg.h
 	$(MOC) ../common/GUI-QT/systemevalDlg.h -o moc/moc_systemevalDlg.cpp
@@ -183,7 +200,7 @@ moc/systemevalDlgbase.h: ../common/GUI-QT/systemevalDlgbase.ui
 
 moc/systemevalDlgbase.cpp: ../common/GUI-QT/systemevalDlgbase.ui moc/systemevalDlgbase.h
 	$(UIC) ../common/GUI-QT/systemevalDlgbase.ui -i moc/systemevalDlgbase.h -o moc/systemevalDlgbase.cpp
-	
+
 
 moc/moc_MultimediaDlg.cpp: ../common/GUI-QT/MultimediaDlg.h
 	$(MOC) ../common/GUI-QT/MultimediaDlg.h -o moc/moc_MultimediaDlg.cpp

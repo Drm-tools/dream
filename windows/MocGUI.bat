@@ -31,6 +31,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultColorLED.h -o moc\moc_MultColorLED.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\systemevalDlg.h -o moc\moc_systemevalDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\fdrmdialog.h -o moc\moc_fdrmdialog.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\TransmDlg.h -o moc\moc_TransmDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\DRMPlot.h -o moc\moc_DRMPlot.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultimediaDlg.h -o moc\moc_MultimediaDlg.cpp
 
@@ -39,6 +40,10 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -i fdrmdialogbase.h -o moc\fdrmdialogbase.cpp  
 %qtdir%\bin\moc.exe moc\fdrmdialogbase.h -o moc\moc_fdrmdialogbase.cpp
+
+%qtdir%\bin\uic.exe ..\common\GUI-QT\TransmDlgbase.ui -o moc\TransmDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\TransmDlgbase.ui -i TransmDlgbase.h -o moc\TransmDlgbase.cpp  
+%qtdir%\bin\moc.exe moc\TransmDlgbase.h -o moc\moc_TransmDlgbase.cpp
 
 %qtdir%\bin\uic.exe ..\common\GUI-QT\systemevalDlgbase.ui -o moc\systemevalDlgbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\systemevalDlgbase.ui -i systemevalDlgbase.h -o moc\systemevalDlgbase.cpp  
