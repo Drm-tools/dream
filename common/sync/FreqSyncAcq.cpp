@@ -249,11 +249,8 @@ fclose(pFile1);
 						   found */
 						/* Calculate frequency offset and set global parameter
 						   for offset */
-						_REAL rNewOffsetNorm =
-							(_REAL) iMaxIndex / iTotalBufferSize;
-
 						ReceiverParam.rFreqOffsetAcqui =
-							rNewOffsetNorm - rDesFreqPosNorm;
+							(_REAL) iMaxIndex / iTotalBufferSize;
 
 						/* Reset acquisition flag */
 						bAquisition = FALSE;
@@ -347,10 +344,6 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	
 	/* Symbol block size is the guard-interval plus the useful part */
 	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
-
-	/* Calculate the desired frequency position (normalized) */
-	rDesFreqPosNorm =
-		(_REAL) ReceiverParam.iIndexDCFreq / ReceiverParam.iFFTSizeN;
 
 	/* Total buffer size */
 	iTotalBufferSize = NO_BLOCKS_4_FREQ_ACQU * iSymbolBlockSize;

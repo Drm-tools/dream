@@ -94,8 +94,6 @@ protected:
 
 	_BOOLEAN					bSyncInput;
 
-	_REAL						rDesFreqPosNorm;
-
 	_REAL						rCenterFreq;
 	_REAL						rWinSize;
 	int							iStartDCSearch;
