@@ -102,6 +102,7 @@ public:
 	void SetRecObj(CDRMReceiver* pNDRMRec) {pDRMRec = pNDRMRec;}
 
 	void SetupChart(const ECharType eNewType);
+	ECharType GetChartType() const {return CurCharType;}
 	void Update() {OnTimerChart();}
 
 	void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
