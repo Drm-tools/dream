@@ -175,10 +175,10 @@ CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB,
 CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB, 
 								   const CMatlibVector<CReal>& rvX, 
 								   CMatlibVector<CReal>& rvZ,
-								   int iDecFact)
+								   const int iDecFact)
 
 {
-	int			m, n;
+	int			m, n, iCurPos;
 	const int	iSizeX = rvX.GetSize();
 	const int	iSizeZ = rvZ.GetSize();
 	const int	iSizeXNew = iSizeX + iSizeZ;
@@ -217,10 +217,12 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 	/* FIR filter */
 	for (m = 0; m < iDecSizeY; m++)
 	{
+		iCurPos = m * iDecFact + iSizeFiltHist;
+
 		cvY[m] = (CReal) 0.0;
 
 		for (n = 0; n < cvB.GetSize(); n++)
-			cvY[m] += cvB[n] * rvXNew[m * iDecFact - n + iSizeFiltHist];
+			cvY[m] += cvB[n] * rvXNew[iCurPos - n];
 	}
 
 	/* Save last samples in state vector */
@@ -230,8 +232,8 @@ CMatlibVector<CComplex> FirFiltDec(const CMatlibVector<CComplex>& cvB,
 	return cvY;
 }
 
-CMatlibVector<CReal> Levinson(const CMatlibVector<CReal> vecrRx, 
-							  const CMatlibVector<CReal> vecrB)
+CMatlibVector<CReal> Levinson(const CMatlibVector<CReal>& vecrRx, 
+							  const CMatlibVector<CReal>& vecrB)
 {
 /* 
 	The levinson recursion [S. Haykin]
@@ -309,8 +311,8 @@ CMatlibVector<CReal> Levinson(const CMatlibVector<CReal> vecrRx,
 	return vecrX;
 }
 
-CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex> veccRx, 
-								 const CMatlibVector<CComplex> veccB)
+CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx, 
+								 const CMatlibVector<CComplex>& veccB)
 {
 /* 
 	The levinson recursion [S. Haykin]

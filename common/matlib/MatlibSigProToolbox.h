@@ -48,13 +48,13 @@ CMatlibVector<CReal>	Filter(const CMatlibVector<CReal>& fvB,
 CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB, 
 								   const CMatlibVector<CReal>& rvX, 
 								   CMatlibVector<CReal>& rvZ,
-								   int iDecFact);
+								   const int iDecFact);
 
 /* Levinson durbin recursion */
-CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal> vecrRx, 
-								 const CMatlibVector<CReal> vecrB);
-CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex> veccRx, 
-								 const CMatlibVector<CComplex> veccB);
+CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal>& vecrRx, 
+								 const CMatlibVector<CReal>& vecrB);
+CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx, 
+								 const CMatlibVector<CComplex>& veccB);
 
 
 #endif	/* _MATLIB_SIGNAL_PROC_TOOLBOX_H_ */
