@@ -120,14 +120,6 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 					(*pvecInputData).Separate(8);
 		}
 	}
-	else
-	{
-		/* Set all bytes and frame lengths to zero. That means, no audio blocks
-		   should be decoded, complete block omitted */
-		audio_frame.Reset(0);
-		veciFrameLength.Reset(iMaxLenOneAudFrame);
-		aac_crc_bits.Reset(0);
-	}	
 
 
 	/* AAC decoder ************************************************************/
@@ -137,13 +129,14 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 
 	for (j = 0; j < iNumAACFrames; j++)
 	{
-		/* Prepare data vector with CRC at the beginning (the definition with
-		   faad2 DRM interface) */
-		vecbyPrepAudioFrame[0] = aac_crc_bits[j];
+		if (bGoodValues == TRUE)
+		{
+			/* Prepare data vector with CRC at the beginning (the definition
+			   with faad2 DRM interface) */
+			vecbyPrepAudioFrame[0] = aac_crc_bits[j];
 
-		for (i = 0; i < veciFrameLength[j]; i++)
-			vecbyPrepAudioFrame[i + 1] = audio_frame[j][i];
-
+			for (i = 0; i < veciFrameLength[j]; i++)
+				vecbyPrepAudioFrame[i + 1] = audio_frame[j][i];
 
 #if 0
 // Store AAC-data in file
@@ -160,10 +153,15 @@ fwrite((void*) &vecbyPrepAudioFrame[0], size_t(1), count, pFile2);
 fflush(pFile2);
 #endif
 
-
-		/* Call decoder routine */
-		psDecOutSampleBuf = (short*) faacDecDecode(HandleAACDecoder,
-			&DecFrameInfo, &vecbyPrepAudioFrame[0], veciFrameLength[j] + 1);
+			/* Call decoder routine */
+			psDecOutSampleBuf = (short*) faacDecDecode(HandleAACDecoder,
+				&DecFrameInfo, &vecbyPrepAudioFrame[0], veciFrameLength[j] + 1);
+		}
+		else
+		{
+			/* DRM AAC header was wrong, set decoder error code */
+			DecFrameInfo.error = 1;
+		}
 
 		if (DecFrameInfo.error != 0)
 		{
