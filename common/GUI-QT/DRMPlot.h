@@ -93,6 +93,8 @@ public:
 	void SetDopplerDelayHist(CVector<_REAL>& vecrData,
 							 CVector<_REAL>& vecrData2,
 							 CVector<_REAL>& vecrScale);
+	void SetSNRHist(CVector<_REAL>& vecrData,
+					CVector<_REAL>& vecrScale);
 	void SetFACConst(CVector<_COMPLEX>& veccData);
 	void SetSDCConst(CVector<_COMPLEX>& veccData,
 					 CParameter::ECodScheme eNewCoSc);
@@ -105,9 +107,10 @@ public:
 
 protected:
 	enum ECharType {DISABLE_PLOT, AVERAGED_IR, TRANSFERFUNCTION,
-					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
-					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
-					FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION};
+		FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
+		POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
+		FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION,
+		SNR_HISTORY};
 
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
@@ -125,6 +128,7 @@ protected:
 	void SetupAudioSpec();
 	void SetupFreqSamOffsHist();
 	void SetupDopplerDelayHist();
+	void SetupSNRHist();
 	void SetupPSD();
 	void SetupInpSpec();
 	void SetupFACConst();

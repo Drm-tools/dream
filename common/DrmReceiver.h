@@ -96,8 +96,10 @@ public:
 		vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
 		vecrSamOffsValHist(LEN_HIST_PLOT_SYNC_PARMS),
 		vecrLenIRHist(LEN_HIST_PLOT_SYNC_PARMS),
-		vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS), iAvCntParamHist(0),
-		rAvLenIRHist((_REAL) 0.0), rAvDopplerHist((_REAL) 0.0)
+		vecrDopplerHist(LEN_HIST_PLOT_SYNC_PARMS),
+		vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS), iAvCntParamHist(0),
+		rAvLenIRHist((_REAL) 0.0), rAvDopplerHist((_REAL) 0.0),
+		rAvSNRHist((_REAL) 0.0)
 #ifdef USE_QT_GUI
 		, UtilizeFACData(&MDI), UtilizeSDCData(&MDI), MSCDemultiplexer(&MDI)
 #endif
@@ -223,6 +225,8 @@ public:
 		_REAL& rFreqAquVal);
 	void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 		CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
+	void GetSNRHist(CVector<_REAL>& vecrSNR,
+		CVector<_REAL>& vecrScale);
 
 protected:
 	void					Run();
@@ -310,9 +314,11 @@ protected:
 	CShiftRegister<_REAL>	vecrSamOffsValHist;
 	CShiftRegister<_REAL>	vecrLenIRHist;
 	CShiftRegister<_REAL>	vecrDopplerHist;
+	CShiftRegister<_REAL>	vecrSNRHist;
 	int						iAvCntParamHist;
 	_REAL					rAvLenIRHist;
 	_REAL					rAvDopplerHist;
+	_REAL					rAvSNRHist;
 
 	CMutex					MutexHist;
 };

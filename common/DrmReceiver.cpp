@@ -499,6 +499,7 @@ void CDRMReceiver::InitsForWaveMode()
 	iAvCntParamHist = 0;
 	rAvLenIRHist = (_REAL) 0.0;
 	rAvDopplerHist = (_REAL) 0.0;
+	rAvSNRHist = (_REAL) 0.0;
 
 	/* After a new robustness mode was detected, give the time synchronization
 	   a bit more time for its job */
@@ -614,13 +615,15 @@ void CDRMReceiver::UpdateParamHistories()
 		vecrSamOffsValHist.AddEnd(ReceiverParam.
 			GetSampFreqEst());
 
-		/* Get estimated Doppler value */
-		_REAL rDoppler;
+		/* Get estimated Doppler value and SNR */
+		_REAL rDoppler, rSNREstimate;
 		ChannelEstimation.GetSigma(rDoppler);
+		ChannelEstimation.GetSNREstdB(rSNREstimate);
 
 		/* Average Doppler and delay estimates */
 		rAvLenIRHist += ChannelEstimation.GetDelay();
 		rAvDopplerHist += rDoppler;
+		rAvSNRHist += rSNREstimate;
 
 		/* Only evalute Doppler and delay once in one DRM
 		   frame */
@@ -632,11 +635,14 @@ void CDRMReceiver::UpdateParamHistories()
 				rAvLenIRHist / ReceiverParam.iNumSymPerFrame);
 			vecrDopplerHist.AddEnd(
 				rAvDopplerHist / ReceiverParam.iNumSymPerFrame);
+			vecrSNRHist.AddEnd(
+				rAvSNRHist / ReceiverParam.iNumSymPerFrame);
 
 			/* Reset parameters used for averaging */
 			iAvCntParamHist = 0;
 			rAvLenIRHist = (_REAL) 0.0;
 			rAvDopplerHist = (_REAL) 0.0;
+			rAvSNRHist = (_REAL) 0.0;
 		}
 
 		MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
@@ -690,6 +696,32 @@ void CDRMReceiver::GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 	/* Simply copy history buffers in output buffers */
 	vecrLenIR = vecrLenIRHist;
 	vecrDoppler = vecrDopplerHist;
+
+	/* Duration of DRM frame */
+	const _REAL rDRMFrameDur = (CReal) (ReceiverParam.iFFTSizeN +
+		ReceiverParam.iGuardSize) / SOUNDCRD_SAMPLE_RATE *
+		ReceiverParam.iNumSymPerFrame;
+
+	/* Calculate time scale */
+	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
+		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur;
+
+	/* Release resources */
+	MutexHist.Unlock();
+}
+
+void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
+							  CVector<_REAL>& vecrScale)
+{
+	/* Init output vectors */
+	vecrSNR.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+
+	/* Lock resources */
+	MutexHist.Lock();
+
+	/* Simply copy history buffer in output buffer */
+	vecrSNR = vecrSNRHist;
 
 	/* Duration of DRM frame */
 	const _REAL rDRMFrameDur = (CReal) (ReceiverParam.iFFTSizeN +

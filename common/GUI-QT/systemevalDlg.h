@@ -39,6 +39,7 @@
 #include <qtooltip.h>
 #include <qfiledialog.h>
 #include <qwhatsthis.h>
+#include <qlistview.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/systemevalDlgbase.h"
@@ -65,10 +66,10 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	enum ECharType {AVERAGED_IR, TRANSFERFUNCTION,
-					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
-					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
-					FREQ_SAM_OFFS_HIST, DOPPLER_DELAY_HIST, ALL_CONSTELLATION};
+	enum ECharType {NONE_OLD, AVERAGED_IR, TRANSFERFUNCTION, FAC_CONSTELLATION,
+		SDC_CONSTELLATION, MSC_CONSTELLATION, POWER_SPEC_DENSITY,
+		INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM, FREQ_SAM_OFFS_HIST,
+		DOPPLER_DELAY_HIST, ALL_CONSTELLATION, SNR_HISTORY};
 
 	systemevalDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
@@ -78,6 +79,22 @@ public:
 	void SetStatus(int MessID, int iMessPara);
 
 protected:
+	class CCharSelItem : public QListViewItem
+	{
+	public:
+		CCharSelItem(QListView* parent, QString str1, ECharType eNewCharTy,
+			_BOOLEAN bSelble = TRUE) : QListViewItem(parent, str1),
+			eCharTy(eNewCharTy)	{setSelectable(bSelble);}
+		CCharSelItem(QListViewItem* parent, QString str1, ECharType eNewCharTy,
+			_BOOLEAN bSelble = TRUE) : QListViewItem(parent, str1),
+			eCharTy(eNewCharTy) {setSelectable(bSelble);}
+
+		ECharType GetCharType() {return eCharTy;}
+
+	protected:
+		ECharType eCharTy;
+	};
+
 	QTimer			Timer;
 	QTimer			TimerChart;
 	QTimer			TimerLogFileLong;
@@ -89,6 +106,7 @@ protected:
 	virtual void	hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
+	void			AddWhatsThisHelpChar(const ECharType NCharType);
 
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();
@@ -109,17 +127,10 @@ public slots:
 	void OnRadioTiSyncFirstPeak();
 	void OnRadioTiSyncEnergy();
 	void OnSliderIterChange(int value);
-	void OnButtonAvIR() {SetupChart(AVERAGED_IR);}
-	void OnButtonTransFct() {SetupChart(TRANSFERFUNCTION);}
-	void OnButtonFreqSamHist() {SetupChart(FREQ_SAM_OFFS_HIST);}
-	void OnButtonDelDoppHist() {SetupChart(DOPPLER_DELAY_HIST);}
-	void OnButtonAllConst() {SetupChart(ALL_CONSTELLATION);}
-	void OnButtonFACConst() {SetupChart(FAC_CONSTELLATION);}
-	void OnButtonSDCConst() {SetupChart(SDC_CONSTELLATION);}
-	void OnButtonMSCConst() {SetupChart(MSC_CONSTELLATION);}
-	void OnButtonPSD() {SetupChart(POWER_SPEC_DENSITY);}
-	void OnButtonInpSpec() {SetupChart(INPUTSPECTRUM_NO_AV);}
-	void OnButtonAudioSpec() {SetupChart(AUDIO_SPECTRUM);}
+
+	void OnListSelChanged(QListViewItem* NewSelIt)
+		{SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());}
+
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
 	void OnCheckWriteLog();

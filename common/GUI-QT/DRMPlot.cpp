@@ -336,8 +336,8 @@ void CDRMPlot::SetupTranFct()
 
 	/* Add main curves */
 	clear();
-	main1curve = insertCurve("TF");
-	main2curve = insertCurve("GD", QwtPlot::xBottom, QwtPlot::yRight);
+	main1curve = insertCurve("Transf. Fkt.");
+	main2curve = insertCurve("Group Del.", QwtPlot::xBottom, QwtPlot::yRight);
 
 	/* Curve colors */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
@@ -410,7 +410,7 @@ void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 void CDRMPlot::SetupFreqSamOffsHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
-	setTitle("Rel. Frequency Offset / Sample Rate Offset");
+	setTitle("Rel. Frequency Offset / Sample Rate Offset History");
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
@@ -489,7 +489,7 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 void CDRMPlot::SetupDopplerDelayHist()
 {
 	/* Init chart for transfer function. Enable right axis, too */
-	setTitle("Delay / Doppler");
+	setTitle("Delay / Doppler History");
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
@@ -532,6 +532,45 @@ void CDRMPlot::SetDopplerDelayHist(CVector<_REAL>& vecrData,
 	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
 	SetData(vecrData, vecrData2, vecrScale);
+	replot();
+}
+
+void CDRMPlot::SetupSNRHist()
+{
+	/* Init chart for transfer function. Enable right axis, too */
+	setTitle("SNR History");
+	enableAxis(QwtPlot::yRight, FALSE);
+	enableGridX(TRUE);
+	enableGridY(TRUE);
+	setAxisTitle(QwtPlot::xBottom, "Time [s]");
+	setAxisTitle(QwtPlot::yLeft, "SNR [dB]");
+
+	/* Fixed scale */
+	setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 40.0);
+
+	/* Add main curve */
+	clear();
+	main1curve = insertCurve("SNR");
+
+	/* Curve color */
+	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
+		RoundJoin));
+}
+
+void CDRMPlot::SetSNRHist(CVector<_REAL>& vecrData,
+						  CVector<_REAL>& vecrScale)
+{
+	/* First check if plot must be set up */
+	if (CurCharType != SNR_HISTORY)
+	{
+		CurCharType = SNR_HISTORY;
+		SetupSNRHist();
+	}
+
+	/* Fixed scale */
+	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
+
+	SetData(vecrData, vecrScale);
 	replot();
 }
 
