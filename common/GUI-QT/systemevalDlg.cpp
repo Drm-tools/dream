@@ -86,8 +86,11 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	}
 
 	/* Init settings checkbuttons */
-	CheckBoxFlipSpec->setChecked(DRMReceiver.GetReceiver()->GetFlippedSpectrum());
 	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
+	CheckBoxFlipSpec->
+		setChecked(DRMReceiver.GetReceiver()->GetFlippedSpectrum());
+	CheckBoxSaveAudioWave->
+		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
 
 
 	/* Init progress bar for SNR */
@@ -191,6 +194,12 @@ void systemevalDlg::showEvent(QShowEvent* pEvent)
 
 	/* Update window */
 	OnTimerChart();
+
+	/* Update mute audio switch and write wave file, these can be changed
+	   by other windows */
+	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
+	CheckBoxSaveAudioWave->
+		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
 }
 
 void systemevalDlg::hideEvent(QHideEvent* pEvent)
@@ -682,16 +691,6 @@ void systemevalDlg::OnlyThisButDown(QPushButton* pButton)
 		pButton->setOn(TRUE);
 }
 
-void systemevalDlg::OnTimerLogFileStart()
-{
-	/* Start logging (if not already done) */
-	if (!CheckBoxWriteLog->isChecked())
-	{
-		CheckBoxWriteLog->setChecked(TRUE);
-		OnCheckWriteLog();
-	}
-}
-
 void systemevalDlg::OnCheckFlipSpectrum()
 {
 	/* Set parameter in working thread module */
@@ -727,6 +726,16 @@ void systemevalDlg::OnCheckSaveAudioWAV()
 	}
 	else
 		DRMReceiver.GetWriteData()->StopWriteWaveFile();
+}
+
+void systemevalDlg::OnTimerLogFileStart()
+{
+	/* Start logging (if not already done) */
+	if (!CheckBoxWriteLog->isChecked())
+	{
+		CheckBoxWriteLog->setChecked(TRUE);
+		OnCheckWriteLog();
+	}
 }
 
 void systemevalDlg::OnCheckWriteLog()
