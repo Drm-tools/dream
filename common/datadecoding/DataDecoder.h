@@ -67,8 +67,6 @@ protected:
 		}
 	};
 
-	int						iLenDataHigh;
-	int						iLenDataLow;
 	int						iTotalPacketSize;
 	int						iNumDataPackets;
 	int						iServPacketID;

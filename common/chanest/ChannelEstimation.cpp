@@ -41,12 +41,12 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
 	{
-		for (i = 0; i < iNoCarrier; i++)
+		for (i = 0; i < iNumCarrier; i++)
 			matcHistory[j][i] = matcHistory[j + 1][i];
 	}
 
 	/* Write new symbol in memory */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 		matcHistory[iLenHistBuff - 1][i] = (*pvecInputData)[i];
 
 
@@ -56,9 +56,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	rSNRAftTiInt = 
 		pTimeInt->Estimate(pvecInputData, veccPilots, 
 						   ReceiverParam.matiMapTab[(*pvecInputData).
-						   GetExData().iSymbolNo],
+						   GetExData().iSymbolID],
 						   ReceiverParam.matcPilotCells[(*pvecInputData).
-						   GetExData().iSymbolNo], rSNREstimate);
+						   GetExData().iSymbolID], rSNREstimate);
 
 	/* Define DC carrier for robustness mode D because there is not pilot */
 	if (iDCPos != 0)
@@ -82,7 +82,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Set first pilot position */
 		veccChanEst[0] = veccPilots[0];
 
-		for (j = 0, k = 1; j < iNoCarrier - iScatPilFreqInt;
+		for (j = 0, k = 1; j < iNumCarrier - iScatPilFreqInt;
 			j += iScatPilFreqInt, k++)
 		{
 			/* Set values at second time pilot position in cluster */
@@ -106,7 +106,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		/* ---------------------------------------------------------------------
 		   Put all pilots at the beginning of the vector. The "real" length of
 		   the vector "pcFFTWInput" is longer than the No of pilots, but we 
-		   calculate the FFT only over "iNoCarrier / iScatPilFreqInt + 1" values
+		   calculate the FFT only over "iNumCarrier / iScatPilFreqInt + 1" values
 		   (this is the number of pilot positions) */
 		/* Weighting pilots with window */
 		veccPilots *= vecrDFTWindow;
@@ -126,14 +126,14 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			Zeros(iLongLenFreq - 2 * iStartZeroPadding)), 
 			/* Set the second part of the actual spectrum at the end of the new
 			   vector */
-			veccPilots(iNoIntpFreqPil - iStartZeroPadding + 1, 
-			iNoIntpFreqPil));
+			veccPilots(iNumIntpFreqPil - iStartZeroPadding + 1, 
+			iNumIntpFreqPil));
 
 		/* Transform back in frequency-domain */
 		veccIntPil = Fft(veccIntPil, FftPlanLong);
 
 		/* Remove weighting with DFT window by inverse multiplication */
-		veccChanEst = veccIntPil(1, iNoCarrier) * vecrDFTwindowInv;
+		veccChanEst = veccIntPil(1, iNumCarrier) * vecrDFTwindowInv;
 		break;
 
 	case FWIENER:
@@ -152,17 +152,17 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		else
 		{
 			/* Update filter taps */
-			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxDelaySprInFra / iNoCarrier);
+			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxDelaySprInFra / iNumCarrier);
 
 			/* Reset counter and maximum storage variable */
-			iUpCntWienFilt = iNoSymPerFrame;
+			iUpCntWienFilt = iNumSymPerFrame;
 			rMaxDelaySprInFra = (_REAL) 0.0;
 		}
 
 		/* FIR filter of the pilots with filter taps. We need to filter the
 		   pilot positions as well to improve the SNR estimation (which 
 		   follows this procedure) */
-		for (j = 0; j < iNoCarrier; j++)
+		for (j = 0; j < iNumCarrier; j++)
 		{
 			/* Convolution */
 			veccChanEst[j] = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
@@ -178,7 +178,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Equalize the output vector ------------------------------------------- */
 	/* Write to output vector. Take oldest symbol of history for output. Also,
 	   ship the channel state at a certain cell */
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 	{
 		(*pvecOutputData)[i].cSig = matcHistory[0][i] / veccChanEst[i];
 		(*pvecOutputData)[i].rChan = SqMag(veccChanEst[i]);
@@ -186,23 +186,23 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* -------------------------------------------------------------------------
-	   Calculate symbol number of the current output block and set parameter */
-	(*pvecOutputData).GetExData().iSymbolNo = 
-		(*pvecInputData).GetExData().iSymbolNo - iLenHistBuff + 1;
+	   Calculate symbol ID of the current output block and set parameter */
+	(*pvecOutputData).GetExData().iSymbolID = 
+		(*pvecInputData).GetExData().iSymbolID - iLenHistBuff + 1;
 
 
 	/* SNR estimation ------------------------------------------------------- */
 	/* Use estimated channel and compare it to the received pilots. This 
 	   estimation works only if the channel estimation was successful */
-	/* Modified symbol number, check range {0, ..., iNoSymPerFrame} */
-	iModSymNum = (*pvecOutputData).GetExData().iSymbolNo;
+	/* Modified symbol ID, check range {0, ..., iNumSymPerFrame} */
+	iModSymNum = (*pvecOutputData).GetExData().iSymbolID;
 
 	while (iModSymNum < 0)
-		iModSymNum += iNoSymPerFrame;
+		iModSymNum += iNumSymPerFrame;
 
-	for (i = 0; i < iNoCarrier; i++)
+	for (i = 0; i < iNumCarrier; i++)
 	{
-		/* Identify pilot positions. Use MODIFIED "iSymbolNo" (See lines
+		/* Identify pilot positions. Use MODIFIED "iSymbolID" (See lines
 		   above) */
 		if (_IsScatPil(ReceiverParam.matiMapTab[iModSymNum][i]))
 		{
@@ -250,7 +250,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		iOutputBlockSize = 0;
 	}
 	else
-		iOutputBlockSize = iNoCarrier; 
+		iOutputBlockSize = iNumCarrier; 
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
@@ -258,13 +258,13 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Get parameters from global struct */
 	iScatPilTimeInt = ReceiverParam.iScatPilTimeInt;
 	iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
-	iNoIntpFreqPil = ReceiverParam.iNoIntpFreqPil;
-	iNoCarrier = ReceiverParam.iNoCarrier;
+	iNumIntpFreqPil = ReceiverParam.iNumIntpFreqPil;
+	iNumCarrier = ReceiverParam.iNumCarrier;
 	iFFTSizeN = ReceiverParam.iFFTSizeN;
-	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
+	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
 
 	/* Length of guard-interval with respect to FFT-size! */
-	iGuardSizeFFT = iNoCarrier * 
+	iGuardSizeFFT = iNumCarrier * 
 		ReceiverParam.RatioTgTu.iEnum / ReceiverParam.RatioTgTu.iDenom;
 
 	/* If robustness mode D is active, get DC position. This position cannot
@@ -274,25 +274,25 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
 	{
 		/* Identify CD carrier position */
-		for (int i = 0; i < iNoCarrier; i++)
+		for (int i = 0; i < iNumCarrier; i++)
 			if (_IsDC(ReceiverParam.matiMapTab[0][i]))
 				iDCPos = i;
 	}
 	else
 		iDCPos = 0;
 
-	/* FFT must be longer than "iNoCarrier" because of zero padding effect (
-	   not in robustness mode D! -> "iLongLenFreq = iNoCarrier") */
-	iLongLenFreq = iNoCarrier + iScatPilFreqInt - 1;
+	/* FFT must be longer than "iNumCarrier" because of zero padding effect (
+	   not in robustness mode D! -> "iLongLenFreq = iNumCarrier") */
+	iLongLenFreq = iNumCarrier + iScatPilFreqInt - 1;
 
 	/* Init vector for received data at pilot positions */
-	veccPilots.Init(iNoIntpFreqPil);
+	veccPilots.Init(iNumIntpFreqPil);
 
 	/* Init vector for interpolated pilots */
 	veccIntPil.Init(iLongLenFreq);
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
-	FftPlanShort.Init(iNoIntpFreqPil);
+	FftPlanShort.Init(iNumIntpFreqPil);
 	FftPlanLong.Init(iLongLenFreq);
 
 	/* Choose time interpolation method and set pointer to correcponding 
@@ -321,34 +321,34 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Init window for DFT operation for frequency interpolation ------------ */
 	/* Init memory */
-	vecrDFTWindow.Init(iNoIntpFreqPil);
-	vecrDFTwindowInv.Init(iNoCarrier);
+	vecrDFTWindow.Init(iNumIntpFreqPil);
+	vecrDFTwindowInv.Init(iNumCarrier);
 
 	/* Set window coefficients */
 	switch (eDFTWindowingMethod)
 	{
 	case DFT_WIN_RECT:
-		vecrDFTWindow = Ones(iNoIntpFreqPil);
-		vecrDFTwindowInv = Ones(iNoCarrier);
+		vecrDFTWindow = Ones(iNumIntpFreqPil);
+		vecrDFTwindowInv = Ones(iNumCarrier);
 		break;
 
 	case DFT_WIN_HAMM:
-		vecrDFTWindow = Hamming(iNoIntpFreqPil);
-		vecrDFTwindowInv = (CReal) 1.0 / Hamming(iNoCarrier);
+		vecrDFTWindow = Hamming(iNumIntpFreqPil);
+		vecrDFTwindowInv = (CReal) 1.0 / Hamming(iNumCarrier);
 		break;
 	}
 
 
 	/* Set start index for zero padding in time domain for DFT method */
 	iStartZeroPadding = iGuardSizeFFT;
-	if (iStartZeroPadding > iNoIntpFreqPil)
-		iStartZeroPadding = iNoIntpFreqPil;
+	if (iStartZeroPadding > iNumIntpFreqPil)
+		iStartZeroPadding = iNumIntpFreqPil;
 
 	/* Allocate memory for channel estimation */
-	veccChanEst.Init(iNoCarrier);
+	veccChanEst.Init(iNumCarrier);
 
 	/* Allocate memory for history buffer (Matrix) and zero out */
-	matcHistory.Init(iLenHistBuff, iNoCarrier,
+	matcHistory.Init(iLenHistBuff, iNumCarrier,
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
 	/* After an initialization we do not put out data befor the number symbols
@@ -407,10 +407,10 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iPilOffset = iLengthWiener / 2;
 
 	/* Allocate memory */
-	matcFiltFreq.Init(iNoCarrier, iLengthWiener);
+	matcFiltFreq.Init(iNumCarrier, iLengthWiener);
 
 	/* Pilot offset table */
-	veciPilOffTab.Init(iNoCarrier);
+	veciPilOffTab.Init(iNumCarrier);
 
 	/* Number of different wiener filters */
 	iNoWienerFilt = (iLengthWiener - 1) * iScatPilFreqInt + 1;
@@ -419,7 +419,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	matcWienerFilter.Init(iNoWienerFilt, iLengthWiener);
 
 	/* Init Update counter for wiener filter update */
-	iUpCntWienFilt = iNoSymPerFrame;
+	iUpCntWienFilt = iNumSymPerFrame;
 
 
 	/* SNR definition */
@@ -431,8 +431,8 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Define block-sizes for input and output */
-	iInputBlockSize = iNoCarrier;
-	iMaxOutputBlockSize = iNoCarrier; 
+	iInputBlockSize = iNumCarrier;
+	iMaxOutputBlockSize = iNumCarrier; 
 }
 
 CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
@@ -514,7 +514,7 @@ fflush(pFile);
 
 
 	/* Set matrix with filter taps, one filter for each carrier */
-	for (j = 0; j < iNoCarrier; j++)
+	for (j = 0; j < iNumCarrier; j++)
 	{
 		/* We define the current pilot position as the last pilot which the
 		   index "j" has passed */
@@ -526,10 +526,10 @@ fflush(pFile);
 			/* Special case: left edge */
 			veciPilOffTab[j] = 0;
 		}
-		else if (iCurPil - iPilOffset > iNoIntpFreqPil - iLengthWiener)
+		else if (iCurPil - iPilOffset > iNumIntpFreqPil - iLengthWiener)
 		{
 			/* Special case: right edge */
-			veciPilOffTab[j] = iNoIntpFreqPil - iLengthWiener;
+			veciPilOffTab[j] = iNumIntpFreqPil - iLengthWiener;
 		}
 		else
 		{
@@ -578,24 +578,24 @@ _REAL CChannelEstimation::GetDelay() const
 {
 	/* Delay in ms */
 	return rDelaySprEstInd * iFFTSizeN / 
-		(SOUNDCRD_SAMPLE_RATE * iNoIntpFreqPil * 2) * 1000;
+		(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * 2) * 1000;
 }
 
 void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 											 CVector<_REAL>& vecrScale)
 {
 	/* Init output vectors */
-	vecrData.Init(iNoCarrier, (_REAL) 0.0);
-	vecrScale.Init(iNoCarrier, (_REAL) 0.0);
+	vecrData.Init(iNumCarrier, (_REAL) 0.0);
+	vecrScale.Init(iNumCarrier, (_REAL) 0.0);
 
 	/* Lock resources */
 	Lock();
 
 	/* Copy data in output vector and set scale 
 	   (carrier index as x-scale) */
-	for (int i = 0; i < iNoCarrier; i++)
+	for (int i = 0; i < iNumCarrier; i++)
 	{
-		_REAL rNormChanEst = abs(veccChanEst[i]) / (_REAL) iNoCarrier;
+		_REAL rNormChanEst = abs(veccChanEst[i]) / (_REAL) iNumCarrier;
 			
 		if (rNormChanEst > 0)
 			vecrData[i] = (_REAL) 20.0 * log10(rNormChanEst);

@@ -221,6 +221,8 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 {
+	int iTotalNumInputBits;
+	int iTotalNumInputBytes;
 	int	iCurDataStreamID;
 	int iCurSelDataServ;
 
@@ -234,79 +236,67 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 	iCurDataStreamID =
 		ReceiverParam.Service[iCurSelDataServ].DataParam.iStreamID;
 
-	/* Check, if service is activated */
-	if (iCurDataStreamID != STREAM_ID_NOT_USED)
-	{
-		/* Length of higher and lower protected part of data stream */
-		iLenDataHigh = ReceiverParam.Stream[iCurDataStreamID].iLenPartA;
-		iLenDataLow = ReceiverParam.Stream[iCurDataStreamID].iLenPartB;
+	/* Get number of total input bits (and bytes) for this module */
+	iTotalNumInputBits = ReceiverParam.iNumDataDecoderBits;
+	iTotalNumInputBytes = iTotalNumInputBits / SIZEOF__BYTE;
 
-		/* Only packet services can be decoded */
-		if (ReceiverParam.Service[iCurSelDataServ].DataParam.
-			ePacketModInd != CParameter::PM_PACKET_MODE)
+	/* Check, if service is activated. Also, only packet services can be
+	   decoded */
+	if ((iCurDataStreamID != STREAM_ID_NOT_USED) &&
+		(ReceiverParam.Service[iCurSelDataServ].DataParam.
+		ePacketModInd == CParameter::PM_PACKET_MODE))
+	{
+		/* Calculate total packet size. DRM standard: packet length: this
+		   field indicates the length in bytes of the data field of each
+		   packet specified as an unsigned binary number (the total packet
+		   length is three bytes longer as it includes the header and CRC
+		   fields) */
+		iTotalPacketSize =
+			ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketLen + 3;
+
+		/* Check total packet size, could be wrong due to wrong SDC */
+		if ((iTotalPacketSize <= 0) ||
+			(iTotalPacketSize > iTotalNumInputBytes))
 		{
 			/* Set error flag */
 			DoNotProcessData = TRUE;
 		}
 		else
 		{
-			/* Calculate total packet size. DRM standard: packet length: this
-			   field indicates the length in bytes of the data field of each
-			   packet specified as an unsigned binary number (the total packet
-			   length is three bytes longer as it includes the header and CRC
-			   fields) */
-			iTotalPacketSize =
-				ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketLen + 3;
+			/* Number of data packets in one data block */
+			iNumDataPackets = iTotalNumInputBytes / iTotalPacketSize;
 
-			/* Check total packet size, could be wrong due to wrong SDC */
-			if ((iTotalPacketSize == 0) ||
-				(iTotalPacketSize > iLenDataHigh + iLenDataLow))
+			/* Get the packet ID of the selected service */
+			iServPacketID =
+				ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
+
+			/* Get application domain of selected service */
+			eServAppDomain =
+				ReceiverParam.Service[iCurSelDataServ].DataParam.eAppDomain;
+
+			/* Get application identifier of current selected service, only
+			   used with DAB */
+			iDABUserAppIdent = ReceiverParam.Service[iCurSelDataServ].
+				DataParam.iUserAppIdent;
+
+			/* Init vector for storing the CRC results for each packet */
+			veciCRCOk.Init(iNumDataPackets);
+
+			/* Reset data units for all possible data IDs */
+			for (int i = 0; i < MAX_NUM_PACK_PER_STREAM; i++)
 			{
-				/* Set error flag */
-				DoNotProcessData = TRUE;
-			}
-			else
-			{
-				/* Number of data packets in one data block */
-				iNumDataPackets =
-					(iLenDataHigh + iLenDataLow) / iTotalPacketSize;
+				DataUnit[i].Reset();
 
-				/* Get the packet ID of the selected service */
-				iServPacketID =
-					ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
-
-				/* Get application domain of selected service */
-				eServAppDomain =
-					ReceiverParam.Service[iCurSelDataServ].DataParam.eAppDomain;
-
-				/* Get application identifier of current selected service, only
-				   used with DAB */
-				iDABUserAppIdent = ReceiverParam.Service[iCurSelDataServ].
-					DataParam.iUserAppIdent;
-
-				/* Vector for storing the CRC results for each packet */
-				veciCRCOk.Init(iNumDataPackets);
-
-				/* Reset data units for all possible data IDs */
-				for (int i = 0; i < MAX_NUM_PACK_PER_STREAM; i++)
-				{
-					DataUnit[i].Reset();
-
-					/* Reset continuity index (CI) */
-					iContInd[i] = 0;
-				}
+				/* Reset continuity index (CI) */
+				iContInd[i] = 0;
 			}
 		}
 	}
 	else
-	{
-		/* Selected stream is not active, set everyting to zero */
-		iLenDataHigh = 0;
-		iLenDataLow = 0;
-	}
+		DoNotProcessData = TRUE;
 
 	/* Set input block size */
-	iInputBlockSize = (iLenDataHigh + iLenDataLow) * SIZEOF__BYTE;
+	iInputBlockSize = iTotalNumInputBits;
 }
 
 void CDataDecoder::GetSlideShowPicture(CMOTPicture& NewPic)
