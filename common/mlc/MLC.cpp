@@ -76,7 +76,7 @@ void CMLCEncoder::ProcessDataInternal(CParameter& Parameter)
 	}
 	else
 	{
-		/* Special departitioning with hierarchical modulation. First set
+		/* Special partitioning with hierarchical modulation. First set
 		   hierarchical bits at the beginning, then append the rest */
 		/* Hierarchical frame (always "iM[0][1]"). "iM[0][0]" is always "0" in
 		   this case */
