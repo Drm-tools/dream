@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>689</width>
+            <width>685</width>
             <height>413</height>
         </rect>
     </property>
@@ -81,14 +81,14 @@
             </property>
             <property stdset="1">
                 <name>cursor</name>
-                <cursor>13</cursor>
+                <cursor>0</cursor>
             </property>
         </widget>
         <widget>
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout2</cstring>
+                <cstring>Layout3</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -100,46 +100,20 @@
                     <number>6</number>
                 </property>
                 <widget>
-                    <class>QButtonGroup</class>
+                    <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>ButtonGroupShowStations</cstring>
-                    </property>
-                    <property stdset="1">
-                        <name>title</name>
-                        <string>Show Stations</string>
+                        <cstring>Layout2</cstring>
                     </property>
                     <hbox>
                         <property stdset="1">
                             <name>margin</name>
-                            <number>11</number>
+                            <number>0</number>
                         </property>
                         <property stdset="1">
                             <name>spacing</name>
                             <number>6</number>
                         </property>
-                        <widget>
-                            <class>QRadioButton</class>
-                            <property stdset="1">
-                                <name>name</name>
-                                <cstring>RadioButtonOnlyActive</cstring>
-                            </property>
-                            <property stdset="1">
-                                <name>text</name>
-                                <string>Only Active</string>
-                            </property>
-                        </widget>
-                        <widget>
-                            <class>QRadioButton</class>
-                            <property stdset="1">
-                                <name>name</name>
-                                <cstring>RadioButtonAll</cstring>
-                            </property>
-                            <property stdset="1">
-                                <name>text</name>
-                                <string>All</string>
-                            </property>
-                        </widget>
                     </hbox>
                 </widget>
                 <spacer>

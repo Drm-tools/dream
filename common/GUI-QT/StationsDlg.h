@@ -32,6 +32,14 @@
 #include <qradiobutton.h>
 #include <qtimer.h>
 #include <qmessagebox.h>
+#include <qcombobox.h>
+#include <qurloperator.h>
+#include <qnetworkprotocol.h>
+#include <qdir.h>
+#include <qmenubar.h>
+#include <qpopupmenu.h>
+#include <qlayout.h>
+#include <qftp.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/StationsDlgbase.h"
@@ -46,7 +54,7 @@ extern CDRMReceiver	DRMReceiver;
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
-#define GUI_TIMER_LIST_VIEW_STAT		1000 /* ms -> every second */
+#define GUI_TIMER_LIST_VIEW_STAT		30000 /* ms (30 seconds) */
 
 
 /* Classes ********************************************************************/
@@ -109,17 +117,28 @@ public:
 	virtual ~StationsDlg() {}
 
 protected:
-	void SetStationsView();
+	enum ERemotecntr {RC_NOREMCNTR, RC_WINRADIO, RC_AOR7030};
+	_BOOLEAN		SetFrequencyWinradio(const int iFreqkHz);
+	_BOOLEAN		SetFrequencyAOR7030(const int iFreqkHz);
+	void			SetStationsView();
+    virtual void	showEvent(QShowEvent* pEvent);
 
 	CDRMSchedule	DRMSchedule;
 	QPixmap			BitmCubeGreen;
+	QPixmap			BitmCubeYellow;
 	QPixmap			BitmCubeRed;
 	QTimer			Timer;
 	_BOOLEAN		bShowAll;
-    virtual void	showEvent(QShowEvent* pEvent);
+	ERemotecntr		eWhichRemoteControl;
+	QUrlOperator	UrlUpdateSchedule;
+	QPopupMenu*		pViewMenu;
+	QPopupMenu*		pRemoteMenu;
 
 public slots:
 	void OnTimer();
 	void OnListItemClicked(QListViewItem* item);
-	void OnRadioShowItems(int iID);
+	void OnUrlFinished(QNetworkOperation* pNetwOp);
+	void OnShowStationsMenu(int iID);
+	void OnRemoteMenu(int iID);
+	void OnGetUpdate();
 };

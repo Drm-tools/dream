@@ -62,7 +62,10 @@ void CDRMSchedule::WriteStatTabToFile(const string strFileName)
 		fprintf(pFile, "Target=%s\n", StationsTable[i].strTarget.c_str());
 
 		/* Power */
-		fprintf(pFile, "Power=%.3f\n", StationsTable[i].rPower);
+		if (StationsTable[i].rPower == 0)
+			fprintf(pFile, "Power=?\n");
+		else
+			fprintf(pFile, "Power=%.3f\n", StationsTable[i].rPower);
 
 		/* Name of the station */
 		fprintf(pFile, "Programme=%s\n", StationsTable[i].strName.c_str());
@@ -168,7 +171,8 @@ void CDRMSchedule::ReadStatTabFromFile(const string strFileName)
 
 
 		/* Add new item in table */
-		StationsTable.Add(StationsItem);
+		if (bReadOK == TRUE)
+			StationsTable.Add(StationsItem);
 	} while (!((iFileStat == EOF) || (bReadOK == FALSE)));
 
 	fclose(pFile);
@@ -190,7 +194,12 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 	   significant 1 is the sunday, then followed the monday and so on. Dividing
 	   by 10 moves the one to the right. "6 -" because we want to start on the
 	   left with the sunday */
-	if ((StationsTable[iPos].iDays / ((6 - gmtCur->tm_wday) * 10)) % 2 == 1)
+	if (((int) (StationsTable[iPos].iDays /
+		pow(10, (6 - gmtCur->tm_wday))) % 2 == 1) ||
+		/* Check also for special case: days are 0000000. This is reserved for
+		   DRM test transmissions or irregular transmissions. We define here,
+		   that these stations are transmitting every day */
+		(StationsTable[iPos].iDays == 0))
 	{
 		/* Get start time */
 		struct tm* gmtStart = gmtime(&ltime);
@@ -227,6 +236,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Create bitmaps */
 	BitmCubeGreen.resize(iXSize, iYSize);
 	BitmCubeGreen.fill(QColor(0, 255, 0));
+	BitmCubeYellow.resize(iXSize, iYSize);
+	BitmCubeYellow.fill(QColor(255, 255, 0));
 	BitmCubeRed.resize(iXSize, iYSize);
 	BitmCubeRed.fill(QColor(255, 0, 0));
 
@@ -244,14 +255,56 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	ListViewStations->addColumn("Site");
 	ListViewStations->addColumn("Language");
 
+
+	/* Set Menu ***************************************************************/
+	/* View menu ------------------------------------------------------------ */
+	pViewMenu = new QPopupMenu(this);
+	CHECK_PTR(pViewMenu);
+	pViewMenu->insertItem("Show &only active stations", this,
+		SLOT(OnShowStationsMenu(int)), NULL, 0);
+	pViewMenu->insertItem("&Show &all stations", this,
+		SLOT(OnShowStationsMenu(int)), NULL, 1);
+
 	/* Set stations in list view which are active right now */
 	bShowAll = FALSE;
-	RadioButtonOnlyActive->setChecked(TRUE);
+	pViewMenu->setItemChecked(0, TRUE);
 	SetStationsView();
 
 	/* Sort list by start time (second column) */
 	ListViewStations->setSorting(1);
 	ListViewStations->sort();
+
+	
+	/* Remote menu  --------------------------------------------------------- */
+	pRemoteMenu = new QPopupMenu(this);
+	CHECK_PTR(pRemoteMenu);
+	pRemoteMenu->insertItem("None", this, SLOT(OnRemoteMenu(int)), NULL, 0);
+	pRemoteMenu->insertItem("Winradio", this, SLOT(OnRemoteMenu(int)),
+		NULL, 1);
+	pRemoteMenu->insertItem("AOR 7030", this, SLOT(OnRemoteMenu(int)),
+		NULL, 2);
+
+	/* Set WINRADIO to default, because I own such a device :-) */
+	eWhichRemoteControl = RC_WINRADIO;
+	pRemoteMenu->setItemChecked(1, TRUE);
+
+	
+	/* Update menu ---------------------------------------------------------- */
+	QPopupMenu* pUpdateMenu = new QPopupMenu(this);
+	CHECK_PTR(pUpdateMenu);
+	pUpdateMenu->insertItem("&Get Update...", this, SLOT(OnGetUpdate()));
+
+
+	/* Main menu bar -------------------------------------------------------- */
+	QMenuBar* pMenu = new QMenuBar(this);
+	CHECK_PTR(pMenu);
+	pMenu->insertItem("&View", pViewMenu);
+	pMenu->insertItem("&Remote", pRemoteMenu);
+	pMenu->insertItem("&Update", pUpdateMenu);
+	pMenu->setSeparator(QMenuBar::InWindowsStyle);
+
+	/* Now tell the layout about the menu */
+	CStationsDlgBaseLayout->setMenuBar(pMenu);
 
 
 	/* Connections ---------------------------------------------------------- */
@@ -259,17 +312,15 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnTimer()));
 	connect(ListViewStations, SIGNAL(clicked(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
-
-	/* Button groups */
-	connect(ButtonGroupShowStations, SIGNAL(clicked(int)),
-		this, SLOT(OnRadioShowItems(int)));
+	connect(&UrlUpdateSchedule, SIGNAL(finished(QNetworkOperation*)),
+		this, SLOT(OnUrlFinished(QNetworkOperation*)));
 
 
 	/* Set up timer */
 	Timer.start(GUI_TIMER_LIST_VIEW_STAT);
 }
 
-void StationsDlg::OnRadioShowItems(int iID)
+void StationsDlg::OnShowStationsMenu(int iID)
 {
 	if (iID == 0)
 	{
@@ -288,12 +339,89 @@ void StationsDlg::OnRadioShowItems(int iID)
 	/* Sort list by start time (second column) */
 	ListViewStations->setSorting(1);
 	ListViewStations->sort();
+
+	/* Taking care of checks in the menu */
+	pViewMenu->setItemChecked(0, 0 == iID);
+	pViewMenu->setItemChecked(1, 1 == iID);
 }
 
-void StationsDlg::OnTimer()
+void StationsDlg::OnRemoteMenu(int iID)
 {
-	/* Update list view */
-	SetStationsView();
+	switch (iID)
+	{
+	case 0:
+		eWhichRemoteControl = RC_NOREMCNTR;
+		break;
+
+	case 1:
+		eWhichRemoteControl = RC_WINRADIO;
+		break;
+
+	case 2:
+		eWhichRemoteControl = RC_AOR7030;
+		break;
+	}
+
+	/* Taking care of checks in the menu */
+	pRemoteMenu->setItemChecked(0, 0 == iID);
+	pRemoteMenu->setItemChecked(1, 1 == iID);
+	pRemoteMenu->setItemChecked(2, 2 == iID);
+}
+
+void StationsDlg::OnGetUpdate()
+{
+	if (QMessageBox::information(this, "Dream Schedule Update",
+		"Dream tries to download the newest DRM schedule\nfrom "
+		"www.drm-dx.de (powered by Klaus Schneider).\nYour computer "
+		"must be connected to the internet.\n\nThe current file "
+		"DRMSchedule.ini will be overwritten.\nDo you want to "
+		"continue?",
+		QMessageBox::Yes, QMessageBox::No) == 3 /* Yes */)
+	{
+		/* First, the network protokol (ftp) must be registered */
+		QNetworkProtocol::registerNetworkProtocol("ftp", new
+			QNetworkProtocolFactory<QFtp>);
+
+		/* Try to download the current schedule. Copy the file to the
+		   current working directory (which is "QDir().absFilePath(NULL)") */
+		UrlUpdateSchedule.
+			copy(QString("ftp://216.92.35.131/DRMSchedule.ini"),
+			QString(QDir().absFilePath(NULL)));
+	}
+}
+
+void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
+{
+	if (pNetwOp->state() == QNetworkProtocol::StFailed)
+	{
+		/* Something went wrong -> stop all network operations */
+		UrlUpdateSchedule.stop();
+
+		/* Notify the user of the failure */
+		QMessageBox::information(this, "Dream",
+			"Update failed. The following things may caused the failure:\n"
+			"\t- the internet connection was not set up properly\n"
+			"\t- the page www.drm-dx.de is currently not available\n"
+			"\t- the file 'DRMSchedule.ini' could not be written",
+			QMessageBox::Ok);
+	}
+
+	/* We are interested in the state of the final put function */
+	if (pNetwOp->operation() == QNetworkProtocol::OpPut)
+	{
+		if (pNetwOp->state() == QNetworkProtocol::StDone)
+		{
+			/* Notify the user that update was successful */
+			QMessageBox::information(this, "Dream", "Update successful.",
+				QMessageBox::Ok);
+
+			/* Read updated ini-file */
+			DRMSchedule.ReadStatTabFromFile("DRMSchedule.ini");
+
+			/* Update list view */
+			SetStationsView();
+		}
+	}
 }
 
 void StationsDlg::showEvent(QShowEvent* pEvent)
@@ -302,8 +430,16 @@ void StationsDlg::showEvent(QShowEvent* pEvent)
 	if (DRMSchedule.GetStationNumber() == 0)
 	{
 		QMessageBox::information(this, "Dream", "The file DRMSchedule.ini could "
-			"not be found. No stations can be displayed.", QMessageBox::Ok);
+			"not be found.\nNo stations can be displayed.\n"
+			"Try to download this file by using the 'Update' menu.",
+			QMessageBox::Ok);
 	}
+}
+
+void StationsDlg::OnTimer()
+{
+	/* Update list view */
+	SetStationsView();
 }
 
 void StationsDlg::SetStationsView()
@@ -332,6 +468,17 @@ void StationsDlg::SetStationsView()
 	{
 		if (!((bShowAll == FALSE) && (DRMSchedule.IsActive(i) == FALSE)))
 		{
+			/* Get power of the station. We have to do a special treatment
+			   here, because we want to avoid having a "0" in the list when
+			   a "?" was in the schedule-ini-file */
+			const _REAL rPower = DRMSchedule.GetItem(i).rPower;
+
+			QString strPower;
+			if (rPower == (_REAL) 0.0)
+				strPower = "?";
+			else
+				strPower.setNum(rPower);
+
 			/* Generate new list item with all necessary column entries */
 			QListViewItem* NewListItem = new QListViewItem(ListViewStations,
 				DRMSchedule.GetItem(i).strName.c_str()			/* name */,
@@ -340,7 +487,7 @@ void StationsDlg::SetStationsView()
 				DRMSchedule.GetItem(i).GetStopTimeNum())		/* time */,
 				QString().setNum(DRMSchedule.GetItem(i).iFreq)	/* frequency */,
 				DRMSchedule.GetItem(i).strTarget.c_str()		/* target */,
-				QString().setNum(DRMSchedule.GetItem(i).rPower)	/* power */,
+				strPower										/* power */,
 				DRMSchedule.GetItem(i).strCountry.c_str()		/* country */,
 				DRMSchedule.GetItem(i).strSite.c_str()			/* site */,
 				DRMSchedule.GetItem(i).strLanguage.c_str()		/* language */);
@@ -348,7 +495,13 @@ void StationsDlg::SetStationsView()
 			/* Check, if station is currently transmitting. If yes, set special
 			   pixmap */
 			if (DRMSchedule.IsActive(i) == TRUE)
-				NewListItem->setPixmap(0, BitmCubeGreen);
+			{
+				/* Check for "special case" transmissions */
+				if (DRMSchedule.GetItem(i).iDays == 0)
+					NewListItem->setPixmap(0, BitmCubeYellow);
+				else
+					NewListItem->setPixmap(0, BitmCubeGreen);
+			}
 			else
 				NewListItem->setPixmap(0, BitmCubeRed);
 
@@ -358,7 +511,8 @@ void StationsDlg::SetStationsView()
 		}
 	}
 
-	/* Recover selection */
+
+	/* Recover selection ---------------------------------------------------- */
 	QListViewItem* pCurItem = ListViewStations->firstChild();
 
 	/* Check all items */
@@ -384,6 +538,31 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 	/* If no item is selected, return */
 	if (item == 0)
 		return;
+
+	/* Third text of list view item is frequency -> text(2) */
+	const int iCurFreqkHz = QString(item->text(2)).toInt();
+
+	switch (eWhichRemoteControl)
+	{
+	case RC_WINRADIO:
+		SetFrequencyWinradio(iCurFreqkHz);
+		break;
+
+	case RC_AOR7030:
+		SetFrequencyAOR7030(iCurFreqkHz);
+		break;
+	}
+
+	/* Now tell the receiver that the frequency has changed */
+	DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+
+	/* Set selected frequency in log file class */
+	DRMReceiver.GetParameters()->ReceptLog.SetFrequency(iCurFreqkHz);
+}
+
+_BOOLEAN StationsDlg::SetFrequencyWinradio(const int iFreqkHz)
+{
+	_BOOLEAN bSucceeded = FALSE;
 
 #ifdef _WIN32
 	/* Some type definitions needed for dll access */
@@ -412,16 +591,21 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		/* Make sure the receiver is switched on */
 		SetPower(hRadio, 1);
 
-		/* Set the frequency ("* 1000", because frequency is in kHz). Third text of
-		   list view item is frequency -> text(2) */
-		G3SetFrequency(hRadio, (DWORD) (QString(item->text(2)).toInt() * 1000));
+		/* Set the frequency ("* 1000", because frequency is in kHz) */
+		if (G3SetFrequency(hRadio, (DWORD) (iFreqkHz * 1000)) == TRUE)
+			bSucceeded = TRUE;
 
 		/* Close device afterwards and also clean up the dll access */
 		CloseRadioDevice(hRadio);
 		FreeLibrary(dll);
-
-		/* Now tell the receiver that the frequency has changed */
-		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
 	}
 #endif
+
+	return bSucceeded;
+}
+
+_BOOLEAN StationsDlg::SetFrequencyAOR7030(const int iFreqkHz)
+{
+	/* TODO */
+	return FALSE;
 }
