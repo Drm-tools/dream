@@ -31,8 +31,19 @@
 #include "Matlib.h"
 
 /* fftw (Homepage: http://www.fftw.org) */
-#include <dfftw.h>
-#include <drfftw.h>
+#ifdef HAVE_DFFTW_H
+ #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+ #include <fftw.h>
+#endif
+
+#ifdef HAVE_DRFFTW_H
+ #include <drfftw.h>
+#endif
+#ifdef HAVE_RFFTW_H
+ #include <rfftw.h>
+#endif
 
 
 /* Classes ********************************************************************/

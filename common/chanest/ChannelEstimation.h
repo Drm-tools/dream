@@ -36,7 +36,14 @@
 #include "TimeLinear.h"
 #include "TimeWiener.h"
 #include "TimeDecDir.h"
-#include <dfftw.h>
+
+#ifdef HAVE_DFFTW_H
+ #include <dfftw.h>
+#endif
+#ifdef HAVE_FFTW_H
+ #include <fftw.h>
+#endif
+
 #include "../sync/TimeSyncTrack.h"
 
 

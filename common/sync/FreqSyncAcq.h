@@ -32,8 +32,13 @@
 #include "../Parameter.h"
 #include "../Modul.h"
 #include "../matlib/Matlib.h"
-#include <drfftw.h>
 
+#ifdef HAVE_DRFFTW_H
+ #include <drfftw.h>
+#endif
+#ifdef HAVE_RFFTW_H
+ #include <rfftw.h>
+#endif
 
 /* Definitions ****************************************************************/
 /* Bound for peak detection between filtered signal (in frequency direction) 
