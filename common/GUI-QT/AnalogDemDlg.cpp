@@ -381,4 +381,76 @@ void AnalogDemDlg::AddWhatsThisHelp()
 	QWhatsThis::add(RadioButtonNoiRedLow, strNoiseReduction);
 	QWhatsThis::add(RadioButtonNoiRedMed, strNoiseReduction);
 	QWhatsThis::add(RadioButtonNoiRedHigh, strNoiseReduction);
+
+	/* Automatic Gain Control */
+	const QString strAGC =
+		tr("<b>AGC (Automatic Gain Control):</b> Input signals can have a "
+		"large variation in power due to channel impairments. To compensate "
+		"for that, an automatic gain control can be applied. The AGC has "
+		"four settings: Off, Slow, Medium and Fast.");
+
+	QWhatsThis::add(ButtonGroupAGC, strAGC);
+	QWhatsThis::add(RadioButtonAGCOff, strAGC);
+	QWhatsThis::add(RadioButtonAGCSlow, strAGC);
+	QWhatsThis::add(RadioButtonAGCMed, strAGC);
+	QWhatsThis::add(RadioButtonAGCFast, strAGC);
+
+	/* Filter Bandwidth */
+	const QString strFilterBW =
+		tr("<b>Filter Bandwidth:</b> A band-pass filter is applied before "
+		"the actual demodulation process. With this filter, adjacent signals "
+		"are attenuated. The bandwidth of this filter can be chosen in steps "
+		"of 1 Hz by using the slider bar. Clicking on the right or left side "
+		"of the slider leveler will increase/decrease the bandwidth by 1 kHz. "
+		"<br>The current filter bandwidth is indicated in the spectrum plot "
+		"by a selection bar.");
+
+	QWhatsThis::add(ButtonGroupBW, strFilterBW);
+	QWhatsThis::add(TextLabelBandWidth, strFilterBW);
+	QWhatsThis::add(SliderBandwidth, strFilterBW);
+
+	/* Demodulation type */
+	const QString strDemodType =
+		tr("<b>Demodulation Type:</b> There are four different analog "
+		"demodulation types available:<ul>"
+		"<li><b>AM:</b> This analog demodulation type is used in most of "
+		"the hardware radios. The envelope of the complex base-band signal "
+		"is used followed by a high-pass filter to remove the DC offset.</li>"
+		"<li><b>LSB / USB:</b> These are single-side-band (SSB) demodulation "
+		"types. Only one side of the spectrum is evaluated, the upper side "
+		"band is used in USB and the lower side band with LSB. It is "
+		"important for SSB demodulation that the DC frequency of the analog "
+		"signal is known to get satisfactory results. The DC frequency is "
+		"automatically estimated by starting a new acquisition or by "
+		"clicking on the plot.</li>"
+		"<li><b>FM:</b> This is a narrow band frequency demodulation.</li>"
+		"</ul>");
+
+	QWhatsThis::add(ButtonGroupDemodulation, strDemodType);
+	QWhatsThis::add(RadioButtonDemAM, strDemodType);
+	QWhatsThis::add(RadioButtonDemLSB, strDemodType);
+	QWhatsThis::add(RadioButtonDemUSB, strDemodType);
+	QWhatsThis::add(RadioButtonDemFM, strDemodType);
+
+	/* Mute Audio (same as in systemevaldlg.cpp!) */
+	QWhatsThis::add(CheckBoxMuteAudio,
+		tr("<b>Mute Audio:</b> The audio can be muted by "
+		"checking this box. The reaction of checking or unchecking this box "
+		"is delayed by approx. 1 second due to the audio buffers."));
+
+	/* Save audio as wave (same as in systemevaldlg.cpp!) */
+	QWhatsThis::add(CheckBoxSaveAudioWave,
+		tr("<b>Save Audio as WAV:</b> Save the audio signal "
+		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
+		"box will let the user choose a file name for the recording."));
+
+	/* Carrier Frequency */
+	const QString strCarFreq =
+		tr("<b>Carrier Frequency:</b> The estimated carrier frequency of the "
+		"analog signal is shown. The estimation of this parameter is done by "
+		"using the estimated PSD of the input signal and doing a maximum "
+		"search.");
+
+	QWhatsThis::add(FrameCarrierFrequency, strCarFreq);
+	QWhatsThis::add(TextFreqOffset, strCarFreq);
 }
