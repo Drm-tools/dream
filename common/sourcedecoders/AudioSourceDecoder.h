@@ -55,8 +55,6 @@ protected:
 	_BOOLEAN			bTextMessageUsed;
 	int					iNumAACFrames;
 	int					iNoHeaderBytes;
-	int					iLenAudLow;
-	int					iLenAudHigh;
 
 	CTextMessage		TextMessage;
 

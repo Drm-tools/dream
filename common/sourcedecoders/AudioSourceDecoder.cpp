@@ -270,6 +270,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	int iDRMchanMode;
 	int iAudioSampleRate;
 	int iAACSampleRate;
+	int	iLenAudHigh;
 
 	/* Init error flag */
 	DoNotProcessData = FALSE;
@@ -280,18 +281,15 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	/* Current audio stream ID */
 	iCurAudioStreamID = ReceiverParam.Service[iCurSelServ].AudioParam.iStreamID;
 
+	/* Get number of total input bits for this module */
+	iTotalNumInputBits = ReceiverParam.iNumAudioDecoderBits;
+
 	/* Check if current selected service is an audio service and check if 
 	   a stream is attached */
 	if ((ReceiverParam.Service[iCurSelServ].
 		eAudDataFlag == CParameter::SF_AUDIO) && 
 		(iCurAudioStreamID != STREAM_ID_NOT_USED))
 	{
-		/* Length of higher and lower protected part of audio stream */
-		iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
-		iLenAudLow = ReceiverParam.Stream[iCurAudioStreamID].iLenPartB;
-
-		iTotalNumInputBits = (iLenAudHigh + iLenAudLow) * SIZEOF__BYTE;
-
 		/* Set number of AAC frames in a AAC super-frame */
 		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioSamplRate)
 		{ /* only 12 kHz and 24 kHz is allowed */
@@ -409,6 +407,8 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		}
 
 		/* Get number of bytes for higher protected blocks */
+		iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
+
 		if (iLenAudHigh == 0)
 			iNumHigherProtectedBytes = 0;
 		else
@@ -463,14 +463,15 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		/* With this parameter we define the maximum lenght of the output 
 		   buffer. The cyclic buffer is only needed if we do a sample rate
 		   correction due to a difference compared to the transmitter. But for
-		   now we do not correct and we could stay with a single buffer */
+		   now we do not correct and we could stay with a single buffer
+		   Maybe TODO: sample rate correction to avoid audio dropouts */
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
-
-		/* Define input block size of this module */
-		iInputBlockSize = iTotalNumInputBits;
 	}
 	else
-		iInputBlockSize = 0;
+		DoNotProcessData = TRUE;
+
+	/* Define input block size of this module */
+	iInputBlockSize = iTotalNumInputBits;
 
 	/* Init output block size for the first time */
 	iOutputBlockSize = 0;
