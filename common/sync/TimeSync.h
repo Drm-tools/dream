@@ -75,7 +75,7 @@ static float* fHilLPProt =				fHilLPProt5;
 
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR
 /* Time constant for IIR averaging of frequency offset estimation */
-# define TICONST_FREQ_OFF_EST_GUCORR		((CReal) 100.0) /* sec */
+# define TICONST_FREQ_OFF_EST_GUCORR	((CReal) 100.0) /* sec */
 #endif
 
 
@@ -170,11 +170,11 @@ protected:
 	int							iRMCorrBufSize;
 
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR
+	CShiftRegister<_COMPLEX>	HistoryBufTrGuCorr;
+	CComplex					cCurExp;
 	CComplex					cFreqOffAv;
-	CReal						rIntPhase;
 	CReal						rLamFreqOff;
 	CReal						rNormConstFOE;
-	CReal						rPrevSamRateOffset;
 #endif
 
 	int GetIndFromRMode(ERobMode eNewMode);

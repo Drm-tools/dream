@@ -104,35 +104,66 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR
 		/* ---------------------------------------------------------------------
-		   Frequency offset tracking estimation method based on guard-intervall
+		   Frequency offset tracking estimation method based on guard-interval
 		   correlation.
 		   Problem: The tracking frequency range is "GRDCRR_DEC_FACT"-times
 		   smaller than the one in the frequency domain tracking algorithm.
 		   Therefore, the acquisition unit must work more precisely
 		   (see FreqSyncAcq.h) */
 
-		/* Guard-interval correlation */
+		/* Apply the estimated frequency offset correction to the signal */
+		const CReal rNormCurFreqOffset = (CReal) 2.0 * crPi * GRDCRR_DEC_FACT *
+			(ReceiverParam.rFreqOffsetAcqui + ReceiverParam.rFreqOffsetTrack);
+
+		/* New rotation vector for exp() calculation */
+		const CComplex cExpStep =
+			CComplex(Cos(rNormCurFreqOffset), Sin(rNormCurFreqOffset));
+
+		for (i = 0; i < iDecInpuSize; i++)
+		{
+			cvecOutTmpInterm[i] = cvecOutTmp[i] * Conj(cCurExp);
+
+			/* Rotate exp-pointer on step further by complex multiplication with
+			   precalculated rotation vector cExpStep. This saves us from
+			   calling sin() and cos() functions all the time (iterative
+			   calculation of these functions) */
+			cCurExp *= cExpStep;
+		}
+
+		/* Add spectrum shifted data in history vector for correlation */
+		HistoryBufTrGuCorr.AddEnd(cvecOutTmpInterm, iDecInpuSize);
+
+		/* Guard-interval correlation at ML estimated timing position */
+		/* Calculate start points for correlation. Consider delay from
+		   Hilbert-filter */
+		const int iHalHilFilDelDec = NUM_TAPS_HILB_FILT / 2 / GRDCRR_DEC_FACT;
+		const int iCorrPosFirst = iDecSymBS + iHalHilFilDelDec;
+		const int iCorrPosSec =
+			iDecSymBS + iHalHilFilDelDec + iLenUsefPart[iSelectedMode];
+
+		/* Actual correlation over entire guard-interval */
 		CComplex cGuardCorrFreqTrack = 0.0;
 		for (i = 0; i < iLenGuardInt[iSelectedMode]; i++)
 		{
 			/* Use start point from ML timing estimation. The input stream is
 			   automatically adjusted to have this point at "iDecSymBS" */
-			cGuardCorrFreqTrack += HistoryBufCorr[i + iDecSymBS] *
-				Conj(HistoryBufCorr[i + iDecSymBS + iLenUsefPart[iSelectedMode]]);
+			cGuardCorrFreqTrack += HistoryBufTrGuCorr[i + iCorrPosFirst] *
+				Conj(HistoryBufTrGuCorr[i + iCorrPosSec]);
 		}
 
 		/* Average vector, real and imaginary part separately */
 		IIR1(cFreqOffAv, cGuardCorrFreqTrack, rLamFreqOff);
 
-		/* Use only differential phase between old phase and new phase for
-		   Angle() function to avoid wrap around errors (Atan() function is
-		   2-pi periodic) */
-		rIntPhase +=
-			Angle(cFreqOffAv * CComplex(Cos(rIntPhase), Sin(-rIntPhase)));
+		/* Calculate argument */
+		const CReal rFreqOffsetEst = Angle(cFreqOffAv);
 
-		/* Directly apply frequency offset estimation since we have a
-		   open loop in this case */
-		ReceiverParam.rFreqOffsetTrack = rIntPhase * rNormConstFOE;
+		/* Correct measurement average for actually applied frequency
+		   correction */
+		cFreqOffAv *= CComplex(Cos(-rFreqOffsetEst), Sin(-rFreqOffsetEst));
+
+		/* Integrate the result for controling the frequency offset, normalize
+		   estimate */
+		ReceiverParam.rFreqOffsetTrack -= rFreqOffsetEst * rNormConstFOE;
 #endif
 
 
@@ -701,6 +732,12 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	}
 
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR
+	/* Allocate memory for vector and zero out */
+	HistoryBufTrGuCorr.Init(iCorrBuffSize, (CReal) 0.0);
+
+	/* Start with phase null (can be arbitrarily chosen) */
+	cCurExp = (_REAL) 1.0;
+
 	/* Init vector for averaging the frequency offset estimation */
 	cFreqOffAv = CComplex((CReal) 0.0, (CReal) 0.0);
 
@@ -711,16 +748,6 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	/* Nomalization constant for frequency offset estimation */
 	rNormConstFOE = (CReal) 1.0 /
 		((CReal) 2.0 * crPi * ReceiverParam.iFFTSizeN * GRDCRR_DEC_FACT);
-
-	/* Introduce a rotation vector which integrates the incremental phases of
-	   the estimator to avoid wrap around errors by using the Arg() function
-	   of complex variables */
-	rIntPhase = (CReal) 0.0;
-
-	/* Init value for previous estimated sample rate offset with the current
-	   setting. This can be non-zero if, e.g., an initial sample rate offset
-	   was set by command line arguments */
-	rPrevSamRateOffset = ReceiverParam.rResampleOffset;
 #endif
 
 	/* Define block-sizes for input and output */
