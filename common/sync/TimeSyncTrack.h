@@ -47,7 +47,6 @@
 #define TETA1_DIST_FROM_MAX_DB_RMD			20 /* Robustness mode D */
 #define TETA2_DIST_FROM_MIN_DB_RMD			15 /* Robustness mode D */
 
-
 /* Control parameters */
 #define CONT_PROP_IN_GUARD_INT				((_REAL) 0.06)
 #define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.08)
@@ -59,7 +58,7 @@
 /* Relative energy of estimated PDS we want to have in our window design for
    Wiener filter in frequency direction. The norm is the total energy of
    estimated PDS which is in the range of the guard-interval */
-#define ENERGY_WIN_WIENER_FREQ				((CReal) 0.9995)
+#define ENERGY_WIN_WIENER_FREQ				((CReal) 0.999)
 
 /* Parameter of controlling the closed loop for sample rate offset */
 #define CONTR_SAMP_OFF_INT_FTI				((_REAL) 0.001)
@@ -69,7 +68,7 @@
 #define HIST_LEN_SAM_OFF_EST_TI_CORR		((CReal) 30.0) /* sec */
 
 /* Length of history used for sample rate offset acquisition estimate */
-#define SAM_OFF_EST_TI_CORR_ACQ_LEN			((CReal) 3.0) /* sec */
+#define SAM_OFF_EST_TI_CORR_ACQ_LEN			((CReal) 4.0) /* sec */
 
 
 /* Classes ********************************************************************/
