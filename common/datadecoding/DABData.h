@@ -39,13 +39,23 @@
 
 
 /* Classes ********************************************************************/
+class CMOTPicture
+{
+public:
+	CMOTPicture() : vecbRawData(0), strFormat(""), iTransportID(-1) {}
+
+	CVector<_BYTE>	vecbRawData;
+	string			strFormat;
+	int				iTransportID;
+};
+
 class CDABData
 {
 public:
 	CDABData() {}
 	virtual ~CDABData() {}
 
-	void AddDataUnit(CVector<_BINARY>& vecbiNewData);
+	void AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic);
 
 protected:
 	class CDataUnit

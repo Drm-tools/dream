@@ -49,6 +49,8 @@ public:
 	CDataDecoder() {}
 	virtual ~CDataDecoder() {}
 
+	void GetSlideShowPicture(CMOTPicture& NewPic);
+
 protected:
 	class CDataUnit
 	{
@@ -74,6 +76,8 @@ protected:
 	CParameter::EApplDomain	eServAppDomain;
 	int						iDABUserAppIdent;
 	CVector<int>			veciCRCOk;
+
+	CMOTPicture				MOTPicture;
 
 	int						iContInd[MAX_NUM_PACK_PER_STREAM];
 	CDataUnit				DataUnit[MAX_NUM_PACK_PER_STREAM];

@@ -26,78 +26,40 @@
  *
 \******************************************************************************/
 
+#include <qtextbrowser.h>
+#include <qmime.h>
+#include <qimage.h>
 #include <qtimer.h>
-#include <qstring.h>
-#include <qlabel.h>
-#include <qradiobutton.h>
-#include <qslider.h>
-#include <qpushbutton.h>
-#include <qcheckbox.h>
-#include <qwt_thermo.h>
-#include <qdatetime.h>
 
 #ifdef _WIN32
-# include "../../Windows/moc/systemevalDlgbase.h"
+# include "../../Windows/moc/MultimediaDlgbase.h"
 #else
-# include "moc/systemevalDlgbase.h"
+# include "moc/MultimediaDlgbase.h"
 #endif
-#include "DRMPlot.h"
-#include "MultColorLED.h"
+
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
 #include "../DrmReceiver.h"
+#include "../datadecoding/DABData.h"
 
 extern CDRMReceiver	DRMReceiver;
 
 
-/* Definitions ****************************************************************/
-/* Define this macro if you prefer the QT-type of displaying date and time */
-#define GUI_QT_DATE_TIME_TYPE
-
-
 /* Classes ********************************************************************/
-class systemevalDlg : public systemevalDlgBase
+class MultimediaDlg : public MultimediaDlgBase
 {
 	Q_OBJECT
 
 public:
-	enum ECharType {IMPULSERESPONSE, AVERAGED_IR, TRANSFERFUNCTION, 
-					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION, 
-					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV};
-
-	systemevalDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
+	MultimediaDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
-
-	void SetStatus(int MessID, int iMessPara);
 
 protected:
 	QTimer			Timer;
-	QTimer			TimerChart;
-	QTimer			TimerLogFile;
-	ECharType		CharType;
-	void			OnlyThisButDown(QPushButton* pButton);
+	int				iCurTransportID;
     virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
 
 public slots:
 	void OnTimer();
-	void OnTimerChart();
-	void OnTimerLogFile();
-	void OnRadioTimeLinear();
-	void OnRadioTimeWiener();
-	void OnRadioFrequencyLinear();
-	void OnRadioFrequencyDft();
-	void OnRadioFrequencyWiener();
-	void OnSliderIterChange(int value);
-	void OnButtonAvIR();
-	void OnButtonTransFct();
-	void OnButtonFACConst();
-	void OnButtonSDCConst();
-	void OnButtonMSCConst();
-	void OnButtonPSD();
-	void OnButtonInpSpec();
-	void OnCheckFlipSpectrum();
-	void OnCheckBoxMuteAudio();
-	void OnCheckWriteLog();
 };
 

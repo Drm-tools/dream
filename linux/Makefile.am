@@ -8,6 +8,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_fdrmdialog.cpp moc/moc_fdrmdialogbase.cpp moc/fdrmdialogbase.h moc/fdrmdialogbase.cpp \
 	moc/moc_systemevalDlg.cpp  moc/moc_systemevalDlgbase.cpp moc/systemevalDlgbase.h \
 	moc/systemevalDlgbase.cpp \
+	moc/moc_MultimediaDlg.cpp moc/moc_MultimediaDlgbase.cpp moc/MultimediaDlgbase.h moc/MultimediaDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp
 
 # and should be cleaned by make clean
@@ -118,9 +119,11 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/GUI-QT/main.cpp \
 	../common/GUI-QT/MultColorLED.cpp \
 	../common/GUI-QT/systemevalDlg.cpp \
+	../common/GUI-QT/MultimediaDlg.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
-	../common/GUI-QT/systemevalDlgbase.ui \
 	../common/GUI-QT/AboutDlgbase.ui \
+	../common/GUI-QT/systemevalDlgbase.ui \
+	../common/GUI-QT/MultimediaDlgbase.ui \
 	../common/GUI-QT/fdrmdialog.h \
 	../common/GUI-QT/MultColorLED.h \
 	../common/GUI-QT/systemevalDlg.h \
@@ -177,4 +180,14 @@ moc/systemevalDlgbase.cpp: ../common/GUI-QT/systemevalDlgbase.ui moc/systemevalD
 	$(UIC) ../common/GUI-QT/systemevalDlgbase.ui -i moc/systemevalDlgbase.h -o moc/systemevalDlgbase.cpp
 	
 
+moc/moc_MultimediaDlg.cpp: ../common/GUI-QT/MultimediaDlg.h
+	$(MOC) ../common/GUI-QT/MultimediaDlg.h -o moc/moc_MultimediaDlg.cpp
+		
+moc/moc_MultimediaDlgbase.cpp: moc/MultimediaDlgbase.h
+	$(MOC) moc/MultimediaDlgbase.h -o moc/moc_MultimediaDlgbase.cpp
 	
+moc/MultimediaDlgbase.h: ../common/GUI-QT/MultimediaDlgbase.ui
+	$(UIC) ../common/GUI-QT/MultimediaDlgbase.ui -o moc/MultimediaDlgbase.h
+
+moc/MultimediaDlgbase.cpp: ../common/GUI-QT/MultimediaDlgbase.ui moc/MultimediaDlgbase.h
+	$(UIC) ../common/GUI-QT/MultimediaDlgbase.ui -i moc/MultimediaDlgbase.h -o moc/MultimediaDlgbase.cpp	

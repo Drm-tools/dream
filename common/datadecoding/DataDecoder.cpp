@@ -184,7 +184,8 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 						{
 						case 2: /* MOTSlideshow */
 							DABData[iPacketID].
-								AddDataUnit(DataUnit[iPacketID].vecbiData);
+								AddDataUnit(DataUnit[iPacketID].vecbiData,
+									MOTPicture);
 							break;
 						}
 					}
@@ -275,4 +276,21 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 
 	/* Set input block size */
 	iInputBlockSize = iTotalNoInputBits;
+}
+
+void CDataDecoder::GetSlideShowPicture(CMOTPicture& NewPic)
+{
+	/* Lock resources */
+	Lock();
+
+	/* Copy picture content */
+	NewPic.iTransportID = MOTPicture.iTransportID;
+	NewPic.strFormat = MOTPicture.strFormat;
+
+	NewPic.vecbRawData.Init(MOTPicture.vecbRawData.Size());
+	for (int i = 0; i < MOTPicture.vecbRawData.Size();	i++)
+		NewPic.vecbRawData[i] = MOTPicture.vecbRawData[i];
+
+	/* Release resources */
+	Unlock();
 }

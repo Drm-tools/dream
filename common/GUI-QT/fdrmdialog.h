@@ -40,11 +40,14 @@
 #ifdef _WIN32
 # include "../../Windows/moc/fdrmdialogbase.h"
 # include "../../Windows/moc/AboutDlgbase.h"
+# include "../../Windows/moc/MultimediaDlgbase.h"
 #else
 # include "moc/fdrmdialogbase.h"
 # include "moc/AboutDlgbase.h"
+# include "moc/MultimediaDlgbase.h"
 #endif
 #include "systemevalDlg.h"
+#include "MultimediaDlg.h"
 #include "../DrmReceiver.h"
 #include "../Vector.h"
 
@@ -74,7 +77,8 @@ public:
 
 protected:
 	systemevalDlg*	pSysEvalDlg;
-    QMenuBar*		pMenu;
+	MultimediaDlg*	pMultiMediaDlg;
+	QMenuBar*		pMenu;
 	QPopupMenu*		pSoundInMenu;
 	QPopupMenu*		pSoundOutMenu;
 	QPopupMenu*		pReceiverModeMenu;
@@ -88,6 +92,7 @@ protected:
 	QString			SetServParamStr(int iServiceID);
 	QString			SetBitrIDStr(int iServiceID);
 	virtual void	customEvent(QCustomEvent* Event);
+	void			SetService(int iNewServiceID);
 
 public slots:
 	void OnTimer();
@@ -96,10 +101,10 @@ public slots:
 	void OnButtonService3();
 	void OnButtonService4();
 	void OnViewEvalDlg();
+	void OnViewMultiMediaDlg();
 	void OnHelpAbout();
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
 	void OnReceiverMode(int id);
-	void OnMuteAudio();
 };
 

@@ -52,6 +52,8 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* View menu ------------------------------------------------------------ */
 	QPopupMenu *EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
+	EvalWinMenu->insertItem("M&ultimedia Dialog...", this,
+		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U);
 	EvalWinMenu->insertItem("&Evaluation Dialog...", this,
 		SLOT(OnViewEvalDlg()), CTRL+Key_E);
 	EvalWinMenu->insertSeparator();
@@ -108,9 +110,6 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	pSettingsMenu->insertItem("Sound &Out", pSoundOutMenu);
 	pSettingsMenu->insertSeparator();
 	pSettingsMenu->insertItem("&Receiver Mode", pReceiverModeMenu);
-	pSettingsMenu->insertSeparator();
-	pSettingsMenu->insertItem("&Mute Audio", this,
-		SLOT(OnMuteAudio()), CTRL+Key_M, 0);
 
 
 	/* Main menu bar -------------------------------------------------------- */
@@ -146,6 +145,13 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 		Qt::WGroupLeader | Qt::WStyle_MinMax);
 	pSysEvalDlg->hide();
 
+	/* Multimedia window */
+	pMultiMediaDlg = new MultimediaDlg(this, "MOT Slide Show", FALSE, 
+			Qt::WGroupLeader | Qt::WStyle_MinMax);
+	pMultiMediaDlg->hide();
+
+	/* Enable multimedia */
+	DRMReceiver.GetParameters()->EnableMultimedia(TRUE);
 
 	/* Init current selected service */
 	DRMReceiver.GetParameters()->SetCurSelAudioService(0);
@@ -371,14 +377,6 @@ void FDRMDialog::OnTimer()
 	}
 }
 
-void FDRMDialog::OnMuteAudio()
-{
-	pSettingsMenu->setItemChecked(0, !pSettingsMenu->isItemChecked(0));
-
-	/* Set parameter in working thread module */
-	DRMReceiver.GetWriteData()->MuteAudio(pSettingsMenu->isItemChecked(0));
-}
-
 void FDRMDialog::OnReceiverMode(int id)
 {
 	switch (id)
@@ -427,9 +425,7 @@ void FDRMDialog::OnButtonService1()
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
-		DRMReceiver.GetParameters()->SetCurSelAudioService(0);
-		DRMReceiver.GetParameters()->SetCurSelDataService(0);
-		iCurSelServiceGUI = 0;
+		SetService(0);
 	}
 }
 
@@ -445,9 +441,7 @@ void FDRMDialog::OnButtonService2()
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
-		DRMReceiver.GetParameters()->SetCurSelAudioService(1);
-		DRMReceiver.GetParameters()->SetCurSelDataService(1);
-		iCurSelServiceGUI = 1;
+		SetService(1);
 	}
 }
 
@@ -463,9 +457,7 @@ void FDRMDialog::OnButtonService3()
 		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
-		DRMReceiver.GetParameters()->SetCurSelAudioService(2);
-		DRMReceiver.GetParameters()->SetCurSelDataService(2);
-		iCurSelServiceGUI = 2;
+		SetService(2);
 	}
 }
 
@@ -481,9 +473,21 @@ void FDRMDialog::OnButtonService4()
 		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
 
-		DRMReceiver.GetParameters()->SetCurSelAudioService(3);
-		DRMReceiver.GetParameters()->SetCurSelDataService(3);
-		iCurSelServiceGUI = 3;
+		SetService(3);
+	}
+}
+
+void FDRMDialog::SetService(int iNewServiceID)
+{
+	DRMReceiver.GetParameters()->SetCurSelAudioService(iNewServiceID);
+	DRMReceiver.GetParameters()->SetCurSelDataService(iNewServiceID);
+	iCurSelServiceGUI = iNewServiceID;
+
+	/* If service is only data service, activate multimedia window */
+	if (DRMReceiver.GetParameters()->Service[iNewServiceID].eAudDataFlag ==
+		CParameter::SF_DATA)
+	{
+		OnViewMultiMediaDlg();
 	}
 }
 
@@ -491,6 +495,12 @@ void FDRMDialog::OnViewEvalDlg()
 {
 	/* Show evauation window */
 	pSysEvalDlg->show();
+}
+
+void FDRMDialog::OnViewMultiMediaDlg()
+{
+	/* Show evaluation window */
+	pMultiMediaDlg->show();
 }
 
 void FDRMDialog::OnHelpAbout()

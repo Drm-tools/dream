@@ -32,6 +32,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\systemevalDlg.h -o moc\moc_systemevalDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\fdrmdialog.h -o moc\moc_fdrmdialog.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\DRMPlot.h -o moc\moc_DRMPlot.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\MultimediaDlg.h -o moc\moc_MultimediaDlg.cpp
 
 
 rem .ui -------------
@@ -46,4 +47,8 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\AboutDlgbase.ui -o moc\AboutDlgbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\AboutDlgbase.ui -i AboutDlgbase.h -o moc\AboutDlgbase.cpp  
 %qtdir%\bin\moc.exe moc\AboutDlgbase.h -o moc\moc_AboutDlgbase.cpp
+
+%qtdir%\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -o moc\MultimediaDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -i MultimediaDlgbase.h -o moc\MultimediaDlgbase.cpp  
+%qtdir%\bin\moc.exe moc\MultimediaDlgbase.h -o moc\moc_MultimediaDlgbase.cpp
 

@@ -30,7 +30,7 @@
 
 
 /* Implementation *************************************************************/
-void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData)
+void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 {
 	_BINARY		biExtensionFlag;
 	_BINARY		biCRCFlag;
@@ -296,57 +296,46 @@ fflush(pFile);
 					/* Check range of content sub type */
 					if (iContentSubType < 4)
 					{
-						char cFileName[100];
-
-						/* Set correct name */
-						switch (iContentSubType)
-						{
-						case 0: /* gif */
-							strcpy(cFileName, "DreamReceivedDataFileTMP.gif");
-							break;
-
-						case 1: /* jfif */
-							strcpy(cFileName, "DreamReceivedDataFileTMP.jpeg");
-							break;
-
-						case 2: /* bmp */
-							strcpy(cFileName, "DreamReceivedDataFileTMP.bmp");
-							break;
-
-						case 3: /* png */
-							strcpy(cFileName, "DreamReceivedDataFileTMP.png");
-							break;
-						}
-						
-						/* Now get data from body */
+						/* Set up MOT picture ------------------------------- */
+						/* Reset bit access to extract data from body */
 						MOTObject.Body.vecbiData.ResetBitAccess();
-
-						/* Write data in binary file */
-						pFiBody = fopen(cFileName, "wb");
 
 						/* Data size in bytes */
 						iDaSiBytes =
 							MOTObject.Body.vecbiData.Size() / SIZEOF__BYTE;
 
+						/* Copy data */
+						NewPic.vecbRawData.Init(iDaSiBytes);
 						for (int i = 0; i < iDaSiBytes;	i++)
-						{
-								/* Extract one byte of data from stream */
-							_BYTE byData =
+							NewPic.vecbRawData[i] =
 								(_BYTE) MOTObject.Body.vecbiData.Separate(8);
 
-							/* Write this byte in file */
-							fwrite((void*) &byData, size_t(1), size_t(1),
-								pFiBody);
+						/* Set format */
+						switch (iContentSubType)
+						{
+						case 0: /* gif */
+							NewPic.strFormat = "gif";
+							break;
+
+						case 1: /* jfif */
+							NewPic.strFormat = "jpeg";
+							break;
+
+						case 2: /* bmp */
+							NewPic.strFormat = "bmp";
+							break;
+
+						case 3: /* png */
+							NewPic.strFormat = "png";
+							break;
+
+						default:
+							NewPic.strFormat = "";
+							break;
 						}
 
-						/* Close the file afterwards */
-						fclose(pFiBody);
-
-						/* Call application to show the image */
-#ifdef _WIN32
-						ShellExecute(NULL, "open", cFileName, NULL,NULL,
-							SW_SHOWNORMAL);
-#endif
+						/* Set ID */
+						NewPic.iTransportID = MOTObject.iTransportID;
 					}
 				}
 

@@ -128,11 +128,23 @@ SOURCE=.\moc\moc_MultColorLED.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_MultimediaDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_MultimediaDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_systemevalDlg.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=.\moc\moc_systemevalDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\MultimediaDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -167,6 +179,10 @@ SOURCE=.\MocGUI.bat
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\MultColorLED.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\MultimediaDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -422,6 +438,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\MultColorLED.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\MultimediaDlg.h"
 # End Source File
 # Begin Source File
 
