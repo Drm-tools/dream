@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
  * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 1111
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -33,10 +33,7 @@
 void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int					i, j;
-	int					iPrevBorder;
 	int					iNumLowerProtectedBytes;
-	int					iFrameBorder;
-	_BOOLEAN			bGoodValues;
 	short*				psDecOutSampleBuf;
 	faacDecFrameInfo	DecFrameInfo;
 
@@ -57,75 +54,83 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 
-	/* Audio DRM header *******************************************************/
+	/* Extract audio data from stream *****************************************/
 	/* Reset bit extraction access */
 	(*pvecInputData).ResetBitAccess();
 
 
 	/* AAC super-frame-header ----------------------------------------------- */
-	iPrevBorder = 0;
-	for (i = 0; i < iNoBorders; i++)
-	{
-		/* Frame border in bytes (12 bits) */
-		iFrameBorder = (*pvecInputData).Separate(12);
+	/* First border is always "0" */
+	veciBorders[0] = 0;
 
-		/* The lenght is difference between borders */
-		veciFrameLength[i] = iFrameBorder - iPrevBorder;
-		iPrevBorder = iFrameBorder;
-	}
+	/* Parse middle borders. Frame borders in bytes (border number is stored in
+	   12 bits). Subtract the porition for the higher protected bytes, because
+	   we need the borders only for lower protected part. The lengths of higher
+	   protected parts are all equal and must not be transmitted in these
+	   borders */
+	for (i = 1; i < iNumAACFrames; i++)
+		veciBorders[i] =
+			(*pvecInputData).Separate(12) - i * iNumHigherProtectedBytes;
+
+	/* Last border (subtract higher protected part from all other audio
+	   frames) */
+	veciBorders[iNumAACFrames] =
+		iAudioPayloadLen - iNumAACFrames * iNumHigherProtectedBytes;
 
 	/* Byte-alignment (4 bits) in case of 10 audio frames */
-	if (iNoBorders == 9)
-		(*pvecInputData).Separate(4); 
+	if (iNumAACFrames == 10)
+		(*pvecInputData).Separate(4);
 
-	/* Frame length of last frame */
-	veciFrameLength[iNoBorders] = iAudioPayloadLen - iPrevBorder;
 
-	/* Check if frame length entries represent possible values */
-	bGoodValues = TRUE;
+	/* Higher-protected part ------------------------------------------------ */
 	for (i = 0; i < iNumAACFrames; i++)
-		if ((veciFrameLength[i] < 0) || (veciFrameLength[i] > iAudioPayloadLen))
-			bGoodValues = FALSE;
-
-	if (bGoodValues == TRUE)
 	{
-		/* Higher-protected part -------------------------------------------- */
+		/* Extract higher protected part bytes (8 bits per byte) */
+		for (j = 0; j < iNumHigherProtectedBytes; j++)
+			audio_frame[i][j] = (*pvecInputData).Separate(8);
+
+		/* Extract CRC bits (8 bits) */
+		aac_crc_bits[i] = (*pvecInputData).Separate(8);
+
+		/* Init frame lengths */
+		veciFrameLength[i] = iNumHigherProtectedBytes;
+	}
+
+
+	/* Lower-protected part ------------------------------------------------- */
+	for (j = 0; j < iLenAudLow; j++)
+	{
+		/* Get current byte */
+		_BYTE byCurData = (*pvecInputData).Separate(8);
+
+		/* Check for each audio frame if it is in range by checking the
+		   transmitted borders. In case one border was received with errors, it
+		   can happen that the next border is lower than the first border. In
+		   this case, the previous and next frame share some of the bytes. Of
+		   course, one of these are incorrect but we do not know which one is
+		   the correct one and which one is wrong, therefore we read both of
+		   them */
 		for (i = 0; i < iNumAACFrames; i++)
 		{
-			/* Extract higher protected part bytes (8 bits per byte) */
-			for (j = 0; j < iNumHigherProtectedBytes; j++)
-				audio_frame[i][j] = (*pvecInputData).Separate(8);
+			/* Check if we are in range for this audio frame */
+			if ((j >= veciBorders[i]) && (j < veciBorders[i + 1]))
+			{
+				/* Always check the total size of this audio frame. In case of
+				   wrong borders, it could cause an overflow */
+				if (veciFrameLength[i] < iMaxLenOneAudFrame)
+				{
+					/* Assign new byte and increase counter */
+					audio_frame[i][veciFrameLength[i]] = byCurData;
 
-			/* Extract CRC bits (8 bits) */
-			aac_crc_bits[i] = (*pvecInputData).Separate(8);
-		}
-
-
-		/* Lower-protected part --------------------------------------------- */
-		for (i = 0; i < iNumAACFrames; i++)
-		{
-			/* First calculate frame length, derived from higher protected part
-			   frame length and total size */
-			iNumLowerProtectedBytes = 
-				veciFrameLength[i] - iNumHigherProtectedBytes;
-
-			/* Extract lower protected part bytes (8 bits per byte) */
-			for (j = 0; j < iNumLowerProtectedBytes; j++)
-				audio_frame[i][iNumHigherProtectedBytes + j] = 
-					(*pvecInputData).Separate(8);
+					veciFrameLength[i]++;
+				}
+			}
 		}
 	}
-	else
-	{
-		/* Set all bytes and frame lengths to zero */
-		audio_frame.Reset(0);
-		veciFrameLength.Reset(iMaxLenOneAudFrame);
-		aac_crc_bits.Reset(0);
-	}	
 
 
 	/* AAC decoder ************************************************************/
-	/* Init output block size to zero, this variable is also used for 
+	/* Init output block size to zero, this variable is also used for
 	   determining the position for writing the output vector */
 	iOutputBlockSize = 0;
 
@@ -156,7 +161,7 @@ fflush(pFile2);
 
 
 		/* Call decoder routine */
-		psDecOutSampleBuf = (short*) faacDecDecode(HandleAACDecoder, 
+		psDecOutSampleBuf = (short*) faacDecDecode(HandleAACDecoder,
 			&DecFrameInfo, &vecbyPrepAudioFrame[0], veciFrameLength[j] + 1);
 
 		if (DecFrameInfo.error != 0)
@@ -180,10 +185,10 @@ fflush(pFile2);
 			/* Average block with flipped block for smoother transition */
 			for (i = 0; i < iResOutBlockSize / 2; i++)
 			{
-				vecTempResBufOutLeft[i] = (vecTempResBufOutLeft[i] + 
+				vecTempResBufOutLeft[i] = (vecTempResBufOutLeft[i] +
 					vecTempResBufOutLeft[iResOutBlockSize - i - 1]) / 2;
 
-				vecTempResBufOutRight[i] = (vecTempResBufOutRight[i] + 
+				vecTempResBufOutRight[i] = (vecTempResBufOutRight[i] +
 					vecTempResBufOutRight[iResOutBlockSize - i - 1]) / 2;
 			}
 
@@ -193,12 +198,12 @@ fflush(pFile2);
 				/* Make a lower bound of signal because the floating point
 				   variable can get as small as it reaches the lower precision
 				   and this can cause instability! */
-				if (fabs(vecTempResBufOutLeft[i]) > (_REAL) 1.0)		
+				if (fabs(vecTempResBufOutLeft[i]) > (_REAL) 1.0)
 					vecTempResBufOutLeft[i] *= FORFACT_AUD_BL_BAD_CRC;
 				else
 					vecTempResBufOutLeft[i] = (_REAL) 0.0;
 
-				if (fabs(vecTempResBufOutRight[i]) > (_REAL) 1.0)		
+				if (fabs(vecTempResBufOutRight[i]) > (_REAL) 1.0)
 					vecTempResBufOutRight[i] *= FORFACT_AUD_BL_BAD_CRC;
 				else
 					vecTempResBufOutRight[i] = (_REAL) 0.0;
@@ -213,8 +218,8 @@ fflush(pFile2);
 			PostWinMessage(MS_MSC_CRC, 0);
 			bAudioWasOK = TRUE;
 
-			/* Conversion from _SAMPLE vector to _REAL vector for resampling. 
-			   ATTENTION: We use a vector which was allocated inside 
+			/* Conversion from _SAMPLE vector to _REAL vector for resampling.
+			   ATTENTION: We use a vector which was allocated inside
 			   the AAC decoder! */
 			if (iNoChannelsAAC == 1)
 			{
@@ -271,6 +276,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	int iAudioSampleRate;
 	int iAACSampleRate;
 	int	iLenAudHigh;
+	int	iNumHeaderBytes;
 
 	/* Init error flag */
 	DoNotProcessData = FALSE;
@@ -284,33 +290,34 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	/* Get number of total input bits for this module */
 	iTotalNumInputBits = ReceiverParam.iNumAudioDecoderBits;
 
-	/* Check if current selected service is an audio service and check if 
-	   a stream is attached */
+	/* Check if current selected service is an audio service and check if a
+	   stream is attached */
 	if ((ReceiverParam.Service[iCurSelServ].
-		eAudDataFlag == CParameter::SF_AUDIO) && 
+		eAudDataFlag == CParameter::SF_AUDIO) &&
 		(iCurAudioStreamID != STREAM_ID_NOT_USED))
 	{
+		/* Lengths of higher and lower protected part of audio stream */
+		iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
+		iLenAudLow = ReceiverParam.Stream[iCurAudioStreamID].iLenPartB;
+
 		/* Set number of AAC frames in a AAC super-frame */
 		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioSamplRate)
 		{ /* only 12 kHz and 24 kHz is allowed */
-		case CParameter::AS_12KHZ: 
+		case CParameter::AS_12KHZ:
 			iNumAACFrames = 5;
-			iNoHeaderBytes = 6;
+			iNumHeaderBytes = 6;
 			iAACSampleRate = 12000;
 			break;
 
-		case CParameter::AS_24KHZ: 
+		case CParameter::AS_24KHZ:
 			iNumAACFrames = 10;
-			iNoHeaderBytes = 14;
+			iNumHeaderBytes = 14;
 			iAACSampleRate = 24000;
 			break;
 		}
 
 		/* Set number of AAC frames for log file */
 		ReceiverParam.ReceptLog.SetNumAAC(iNumAACFrames);
-
-		/* Set number of boarders */
-		iNoBorders = iNumAACFrames - 1;
 
 		/* Init "audio was ok" flag */
 		bAudioWasOK = TRUE;
@@ -327,7 +334,7 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 
 			/* Total frame size is input block size minus the bytes for the text
 			   message */
-			iTotalFrameSize = iTotalNumInputBits - 
+			iTotalFrameSize = iTotalNumInputBits -
 				SIZEOF__BYTE * NO_BYTES_TEXT_MESS_IN_AUD_STR;
 
 			/* Init vector for text message bytes */
@@ -348,8 +355,8 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		case CParameter::AM_MONO:
 			iNoChannelsAAC = 1;
 
-			if (ReceiverParam.Service[iCurSelServ].AudioParam.eSBRFlag ==
-				CParameter::SB_USED)
+			if (ReceiverParam.Service[iCurSelServ].AudioParam.
+				eSBRFlag == CParameter::SB_USED)
 			{
 				iDRMchanMode = DRMCH_SBR_MONO;
 			}
@@ -366,8 +373,8 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		case CParameter::AM_STEREO:
 			iNoChannelsAAC = 2;
 
-			if (ReceiverParam.Service[iCurSelServ].AudioParam.eSBRFlag ==
-				CParameter::SB_USED)
+			if (ReceiverParam.Service[iCurSelServ].AudioParam.
+				eSBRFlag == CParameter::SB_USED)
 			{
 				iDRMchanMode = DRMCH_SBR_STEREO;
 			}
@@ -380,8 +387,8 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 
 		/* In case of SBR, AAC sample rate is half the total sample rate. Length
 		   of output is doubled if SBR is used */
-		if (ReceiverParam.Service[iCurSelServ].AudioParam.eSBRFlag ==
-			CParameter::SB_USED)
+		if (ReceiverParam.Service[iCurSelServ].AudioParam.
+			eSBRFlag == CParameter::SB_USED)
 		{
 			iAudioSampleRate = iAACSampleRate * 2;
 			iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH * 2;
@@ -392,12 +399,12 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 			iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH;
 		}
 
-		/* The audio_payload_length is derived from the length of the audio 
-		   super frame (data_length_of_part_A + data_length_of_part_B) 
+		/* The audio_payload_length is derived from the length of the audio
+		   super frame (data_length_of_part_A + data_length_of_part_B)
 		   subtracting the audio super frame overhead (bytes used for the audio
 		   super frame header() and for the aac_crc_bits) (5.3.1.1, Table 5) */
-		iAudioPayloadLen = 
-			iTotalFrameSize / SIZEOF__BYTE - iNoHeaderBytes - iNumAACFrames;
+		iAudioPayloadLen =
+			iTotalFrameSize / SIZEOF__BYTE - iNumHeaderBytes - iNumAACFrames;
 
 		/* Check iAudioPayloadLen value, only positive values make sense */
 		if (iAudioPayloadLen < 0)
@@ -406,20 +413,18 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 			DoNotProcessData = TRUE;
 		}
 
-		/* Get number of bytes for higher protected blocks */
-		iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
+		/* Calculate number of bytes for higher protected blocks */
+		iNumHigherProtectedBytes =
+			(iLenAudHigh - iNumHeaderBytes - iNumAACFrames /* CRC bytes */) /
+			iNumAACFrames;
 
-		if (iLenAudHigh == 0)
+		if (iNumHigherProtectedBytes < 0)
 			iNumHigherProtectedBytes = 0;
-		else
-			iNumHigherProtectedBytes = 
-				(iLenAudHigh - iNoHeaderBytes - iNumAACFrames /* CRC bytes */) /
-				iNumAACFrames;
 
 		/* Since we do not correct for sample rate offsets here (yet), we do not
-		   have to consider bigger buffers. An audio frame always corresponds
+		   have to consider larger buffers. An audio frame always corresponds
 		   to 400 ms */
-		iMaxLenResamplerOutput = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE * 
+		iMaxLenResamplerOutput = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 			(_REAL) 0.4 /* 400ms */ * 2 /* for stereo */);
 
 		iResOutBlockSize =
@@ -453,14 +458,15 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		   ("+ 1" for CRC) */
 		vecbyPrepAudioFrame.Init(iMaxLenOneAudFrame + 1);
 
-		/* Init storage for CRCs and frame lengths */
+		/* Init storage for CRCs, frame lengths and borders */
 		aac_crc_bits.Init(iNumAACFrames);
 		veciFrameLength.Init(iNumAACFrames);
+		veciBorders.Init(iNumAACFrames + 1);
 
 		/* Init AAC-decoder */
 		faacDecInitDRM(HandleAACDecoder, iAACSampleRate, iDRMchanMode);
 
-		/* With this parameter we define the maximum lenght of the output 
+		/* With this parameter we define the maximum lenght of the output
 		   buffer. The cyclic buffer is only needed if we do a sample rate
 		   correction due to a difference compared to the transmitter. But for
 		   now we do not correct and we could stay with a single buffer
@@ -473,18 +479,19 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	/* Define input block size of this module */
 	iInputBlockSize = iTotalNumInputBits;
 
-	/* Init output block size for the first time */
+	/* Init output block size for the first time. This parameter is set in the
+	   processing routine, too */
 	iOutputBlockSize = 0;
 }
 
-CAudioSourceDecoder::CAudioSourceDecoder() 
+CAudioSourceDecoder::CAudioSourceDecoder()
 {
 	/* Open AACEncoder instance */
 	HandleAACDecoder = faacDecOpen();
 
 	/* Decoder MUST be initialized at least once, therefore do it here in the
 	   constructor with arbitrary values to be sure that this is satisfied */
-	faacDecInitDRM(HandleAACDecoder, 48000, DRMCH_MONO);
+	faacDecInitDRM(HandleAACDecoder, 24000, DRMCH_MONO);
 }
 
 CAudioSourceDecoder::~CAudioSourceDecoder()
