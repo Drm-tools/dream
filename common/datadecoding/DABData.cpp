@@ -52,7 +52,6 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 	int			iDaSiBytes;
 	CCRC		CRCObject;
 	_BOOLEAN	bCRCOk;
-	_UINT32BIT	CRC;
 	FILE*		pFiBody;
 
 	/* Get length of data unit */
@@ -72,9 +71,7 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 	for (int i = 0; i < (iLenGroupDataField / SIZEOF__BYTE) - 2; i++)
 		CRCObject.AddByte((_BYTE) vecbiNewData.Separate(SIZEOF__BYTE));
 
-	CRC = CRCObject.GetCRC();
-
-	if (CRC == (_UINT32BIT) vecbiNewData.Separate(16))
+	if (CRCObject.CheckCRC(vecbiNewData.Separate(16)) == TRUE)
 		bCRCOk = TRUE;
 	else
 		bCRCOk = FALSE;

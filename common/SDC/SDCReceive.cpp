@@ -32,7 +32,6 @@
 /* Implementation *************************************************************/
 _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 {
-	_UINT32BIT	CRC;
 	int			iLengthOfBody;
 	int			iLengthDataFieldBytes;
 	int			iUsefulBitsSDC;
@@ -63,9 +62,8 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	   "- 2": 16 bits for CRC at the end */
 	for (int i = 0; i < (iUsefulBitsSDC - 4) / SIZEOF__BYTE - 2; i++)
 		CRCObject.AddByte((_BYTE) (*pbiData).Separate(SIZEOF__BYTE));
-	CRC = CRCObject.GetCRC();
 
-	if (CRC == (_UINT32BIT) (*pbiData).Separate(16))
+	if (CRCObject.CheckCRC((*pbiData).Separate(16)) == TRUE)
 	{
 		/* CRC-check successful, extract data from SDC-stream */
 		/* Reset separation function */

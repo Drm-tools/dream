@@ -32,7 +32,6 @@
 /* Implementation *************************************************************/
 void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	_UINT32BIT	CRC;
 	int			i, j;
 	int			iPacketID;
 	int			iNewContInd;
@@ -62,10 +61,8 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 		for (i = 0; i < iTotalPacketSize - 2; i++)
 			CRCObject.AddByte((_BYTE) (*pvecInputData).Separate(SIZEOF__BYTE));
 
-		CRC = CRCObject.GetCRC();
-
 		/* Store result in vector and show CRC in multimedia window */
-		if (CRC == (_UINT32BIT) (*pvecInputData).Separate(16))
+		if (CRCObject.CheckCRC((*pvecInputData).Separate(16)) == TRUE)
 		{
 			veciCRCOk[j] = 1; /* CRC ok */
 			PostWinMessage(MS_MOT_OBJ_STAT, 0); /* Green light */

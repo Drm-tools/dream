@@ -64,7 +64,7 @@ void CTextMessage::Decode(CVector<_BINARY>& pData)
 		for (i = 0; i < byLengthBody + 2 /* Header */; i++)
 			CRCObject.AddByte(biStreamBuffer.Separate(SIZEOF__BYTE));
 
-		if (CRCObject.GetCRC() == biStreamBuffer.Separate(16))
+		if (CRCObject.CheckCRC(biStreamBuffer.Separate(16)) == TRUE)
 		{
 			if (biCommandFlag == 1)
 			{

@@ -230,7 +230,6 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 	parameter differs from the old data stored in the receiver. If yes, init
 	the modules to the new parameter 
 */
-	_UINT32BIT	CRC;
 	_UINT32BIT	iTempServiceID;
 	int			iTempShortID;
 
@@ -243,9 +242,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 	for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
 		CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
 
-	CRC = CRCObject.GetCRC();
-
-	if (CRC == (_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE))
+	if (CRCObject.CheckCRC((*pbiFACData).Separate(8)) == TRUE)
 	{
 		/* CRC-check successful, extract data from FAC-stream */
 		/* Reset separation function */

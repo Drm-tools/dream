@@ -36,11 +36,11 @@
 /* Implementation *************************************************************/
 void CCRC::Reset(const int iNewDegree)
 {
-	/* Set internal parameter */
-	iDegree = iNewDegree;
-
 	/* Build mask of bit, which was shifted out of the shift register */
-	iBitOutPosMask = 1 << iDegree;
+	iBitOutPosMask = 1 << iNewDegree;
+
+	/* Index of vector storing the polynominals for CRC calculation */
+	iDegIndex = iNewDegree - 1;
 
 	/* Init state shift-register with ones. Set all registers to "1" with
 	   bit-wise not operation */
@@ -66,7 +66,7 @@ void CCRC::AddByte(const _BYTE byNewInput)
 
 		/* Add mask to shift-register if first bit is true */
 		if (iStateShiftReg & 1)
-			iStateShiftReg ^= iPolynMask[iDegree - 1];
+			iStateShiftReg ^= iPolynMask[iDegIndex];
 	}
 }
 
@@ -77,6 +77,14 @@ _UINT32BIT CCRC::GetCRC()
 
 	/* Remove bit which where shifted out of the shift-register frame */
 	return iStateShiftReg & (iBitOutPosMask - 1);
+}
+
+_BOOLEAN CCRC::CheckCRC(_UINT32BIT iCRC)
+{
+	if (iCRC == GetCRC())
+		return TRUE;
+	else
+		return FALSE;
 }
 
 CCRC::CCRC()
