@@ -66,6 +66,7 @@ protected:
 	QTimer			Timer;
     virtual void	showEvent(QShowEvent* pEvent);
 	void			UpdateControls();
+	void			AddWhatsThisHelp();
 
 	int iBwAM;
 	int iBwLSB;

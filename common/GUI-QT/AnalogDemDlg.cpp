@@ -33,6 +33,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
 	AnalogDemDlgBase(parent, name, modal, f)
 {
+	/* Set help text for the controls */
+	AddWhatsThisHelp();
+
 #ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
 	const QRect WinGeom(pDRMRec->GeomAnalogDemDlg.iXPos,
@@ -357,4 +360,25 @@ void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 
 	/* Update chart */
 	MainPlot->Update();
+}
+
+void AnalogDemDlg::AddWhatsThisHelp()
+{
+	/* Noise Reduction */
+	const QString strNoiseReduction =
+		tr("<b>Noise Reduction:</b> The noise suppression is a frequency "
+		"domain optimal filter design based algorithm. The noise PSD is "
+		"estimated utilizing a minimum statistic. A problem of this type of "
+		"algorithm is that it produces the so called \"musical tones\". The "
+		"noise becomes colored and sounds a bit strange. At the same time, "
+		"the useful signal (which might be speech or music) is also "
+		"distorted by the algorithm. By selecting the level of noise "
+		"reduction, a compromise between distortion of the useful signal "
+		"and actual noise reduction can be made.");
+
+	QWhatsThis::add(ButtonGroupNoiseReduction, strNoiseReduction);
+	QWhatsThis::add(RadioButtonNoiRedOff, strNoiseReduction);
+	QWhatsThis::add(RadioButtonNoiRedLow, strNoiseReduction);
+	QWhatsThis::add(RadioButtonNoiRedMed, strNoiseReduction);
+	QWhatsThis::add(RadioButtonNoiRedHigh, strNoiseReduction);
 }
