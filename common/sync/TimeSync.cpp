@@ -133,7 +133,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 						/* Actual correlation */
 						iCurPos = iTimeSyncPos + k;
 						cGuardCorrBlock[j] += HistoryBufCorr[iCurPos] * 
-							conj(HistoryBufCorr[iCurPos + iLenUsefPart[j]]);
+							Conj(HistoryBufCorr[iCurPos + iLenUsefPart[j]]);
 
 						/* Energy calculation for ML solution */
 						rGuardPowBlock[j] += SqMag(HistoryBufCorr[iCurPos]) +
@@ -361,7 +361,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 
 #ifdef _DEBUG_
-/* Plot estimated positions of timing */
+/* Save estimated positions of timing */
 static FILE* pFile = fopen("test/testtime.dat", "w");
 fprintf(pFile, "%d %d\n", iNewStartIndexField[i], iInputBlockSize);
 fflush(pFile);
@@ -408,7 +408,8 @@ fflush(pFile);
 	if (bSyncInput == TRUE)
 	{
 		/* Set fixed timing position */
-		iStartIndex = iSymbolBlockSize; 
+		iStartIndex = iSymbolBlockSize;
+
 		/* Cut out guard-interval at right position -> no channel estimation 
 		   needed when having only one path. No delay introduced in this 
 		   module  */

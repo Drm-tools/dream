@@ -196,11 +196,13 @@ void systemevalDlg::OnTimer()
 	/* Metric values */
 	TextFreqOffset->setText("Metrics [dB]: \t\nMSC: " + 
 		QString().setNum(
-		DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2) +	" / SDC: "+ 
+		DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2) +	" / SDC: " + 
 		QString().setNum(
-		DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2) +	" / FAC: "+ 
+		DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2) +	" / FAC: " + 
 		QString().setNum(
-		DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2));
+		DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2) + "\nDC Frequency: " +
+		QString().setNum(
+		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 3) + " Hz");
 #else
 	/* DC frequency */
 	TextFreqOffset->setText("DC Frequency of DRM Signal: \t\n" + 

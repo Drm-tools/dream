@@ -5,7 +5,7 @@
  *	Volker Fischer
  *
  * Description:
- *	c++ Mathamatic Library (Matlib), signal processing toolbox
+ *	c++ Mathematic Library (Matlib), signal processing toolbox
  *
  ******************************************************************************
  *
@@ -73,12 +73,13 @@ CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
 
 /* One pole recursion (first order IIR)
    y_n = lambda * y_{n - 1} + (1 - lambda) * x_n */
-template<class CReal> inline
-void					IIR1(CReal& rY, const CReal& rX, const CReal rLambda)
+inline void				IIR1(CReal& rY, const CReal& rX, const CReal rLambda)
 							{rY = rLambda * (rY - rX) + rX;}
 
-template<class CReal> inline
-void					IIR1(CMatlibVector<CReal>& rY,
+inline void				IIR1(CComplex& cY, const CComplex& cX, const CReal rLambda)
+							{cY = rLambda * (cY - cX) + cX;}
+
+inline void				IIR1(CMatlibVector<CReal>& rY,
 							 const CMatlibVector<CReal>& rX,
 							 const CReal rLambda)
 {
@@ -86,15 +87,19 @@ void					IIR1(CMatlibVector<CReal>& rY,
 		IIR1(rY[i], rX[i], rLambda);
 }
 
-template<class CReal> inline
-void					IIR1TwoSided(CReal& rY, const CReal& rX,
+inline void				IIR1TwoSided(CReal& rY, const CReal& rX,
 									 const CReal rLamUp, const CReal rLamDown)
 {
+	/* Two-sided one pole recursion */
 	if (rX > rY)
 		rY = rLamUp * (rY - rX) + rX;
 	else
 		rY = rLamDown * (rY - rX) + rX;
 }
+
+/* Get lambda for one-pole recursion from time constant */
+inline CReal			IIR1Lam(const CReal& rTau, const CReal& rFs)
+	{return exp((CReal) -1.0 / (rTau * rFs));}
 
 
 #endif	/* _MATLIB_SIGNAL_PROC_TOOLBOX_H_ */

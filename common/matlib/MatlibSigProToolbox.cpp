@@ -5,7 +5,7 @@
  *	Volker Fischer
  *
  * Description:
- *	c++ Mathamatic Library (Matlib), signal processing toolbox
+ *	c++ Mathematic Library (Matlib), signal processing toolbox
  *
  ******************************************************************************
  *

@@ -5,7 +5,7 @@
  *	Volker Fischer
  *
  * Description:
- *	c++ Mathamatic Library (Matlib)
+ *	c++ Mathematic Library (Matlib)
  *
  ******************************************************************************
  *
@@ -49,7 +49,7 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 										operator[](i) FCT; \
 									return *this
 
-#define _VECOPCLM(FCT)				for (int i = 0; i < iColumnSize; i++) \
+#define _MATOPCL(FCT)				for (int i = 0; i < iColumnSize; i++) \
 										operator[](i) FCT; \
 									return *this
 
@@ -163,32 +163,40 @@ public:
 		{_TESTSIZE(vecI.GetSize()); _VECOPCL(= vecI[i]);}
 
 	/* operator*= */
-	inline CMatlibVector<T>&		operator*=(const CReal& tI)
-		{_VECOPCL(*= tI);}
+	inline CMatlibVector<T>&		operator*=(const CReal& rI)
+		{_VECOPCL(*= rI);}
+	inline CMatlibVector<CComplex>&	operator*=(const CComplex& cI)
+		{_VECOPCL(*= cI);}
 	inline CMatlibVector<T>&		operator*=(const CMatlibVector<CReal>& vecI)
 		{_VECOPCL(*= vecI[i]);}
 	inline CMatlibVector<CComplex>&	operator*=(const CMatlibVector<CComplex>& vecI)
 		{_VECOPCL(*= vecI[i]);}
 
 	/* operator/= */
-	inline CMatlibVector<T>&		operator/=(const CReal& tI)
-		{_VECOPCL(/= tI);}
+	inline CMatlibVector<T>&		operator/=(const CReal& rI)
+		{_VECOPCL(/= rI);}
+	inline CMatlibVector<CComplex>&	operator/=(const CComplex& cI)
+		{_VECOPCL(/= cI);}
 	inline CMatlibVector<T>&		operator/=(const CMatlibVector<CReal>& vecI)
 		{_VECOPCL(/= vecI[i]);}
 	inline CMatlibVector<CComplex>&	operator/=(const CMatlibVector<CComplex>& vecI)
 		{_VECOPCL(/= vecI[i]);}
 
 	/* operator+= */
-	inline CMatlibVector<T>&		operator+=(const CReal& tI)
-		{_VECOPCL(+= tI);}
+	inline CMatlibVector<T>&		operator+=(const CReal& rI)
+		{_VECOPCL(+= rI);}
+	inline CMatlibVector<CComplex>&	operator+=(const CComplex& cI)
+		{_VECOPCL(+= cI);}
 	inline CMatlibVector<T>&		operator+=(const CMatlibVector<CReal>& vecI)
 		{_VECOPCL(+= vecI[i]);}
 	inline CMatlibVector<CComplex>&	operator+=(const CMatlibVector<CComplex>& vecI)
 		{_VECOPCL(+= vecI[i]);}
 
 	/* operator-= */
-	inline CMatlibVector<T>&		operator-=(const CReal& tI)
-		{_VECOPCL(-= tI);}
+	inline CMatlibVector<T>&		operator-=(const CReal& rI)
+		{_VECOPCL(-= rI);}
+	inline CMatlibVector<CComplex>&	operator-=(const CComplex& cI)
+		{_VECOPCL(-= cI);}
 	inline CMatlibVector<T>&		operator-=(const CMatlibVector<CReal>& vecI)
 		{_VECOPCL(-= vecI[i]);}
 	inline CMatlibVector<CComplex>&	operator-=(const CMatlibVector<CComplex>& vecI)
@@ -461,7 +469,7 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 										  const CMatlibVector<T>& vecB)
 {
 	int i;
-	int iSizeA = vecA.GetSize();
+	const int iSizeA = vecA.GetSize();
 
 	/* Put first vector */
 	for (i = 0; i < iSizeA; i++)
@@ -481,8 +489,8 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 										  const CMatlibVector<T>& vecC)
 {
 	int i;
-	int iSizeA = vecA.GetSize();
-	int iSizeB = vecB.GetSize();
+	const int iSizeA = vecA.GetSize();
+	const int iSizeB = vecB.GetSize();
 
 	/* Put first vector */
 	for (i = 0; i < iSizeA; i++)
@@ -539,9 +547,21 @@ public:
 
 	/* operator= */
 	inline CMatlibMatrix<T>& operator=(const CMatlibMatrix<CReal>& matI) 
-		{_TESTSIZEM(matI.GetColSize()); _VECOPCLM(= matI[i]);}
+		{_TESTSIZEM(matI.GetColSize()); _MATOPCL(= matI[i]);}
 	inline CMatlibMatrix<CComplex>& operator=(const CMatlibMatrix<CComplex>& matI) 
-		{_TESTSIZEM(matI.GetColSize()); _VECOPCLM(= matI[i]);}
+		{_TESTSIZEM(matI.GetColSize()); _MATOPCL(= matI[i]);}
+
+	/* operator*= */
+	inline CMatlibMatrix<T>& operator*=(const CReal& rI)
+		{_MATOPCL(*= rI);}
+	inline CMatlibMatrix<CComplex>& operator*=(const CComplex& cI)
+		{_MATOPCL(*= cI);}
+
+	/* operator/= */
+	inline CMatlibMatrix<T>& operator/=(const CReal& rI)
+		{_MATOPCL(/= rI);}
+	inline CMatlibMatrix<CComplex>& operator/=(const CComplex& cI)
+		{_MATOPCL(/= cI);}
 
 
 protected:
@@ -553,7 +573,7 @@ protected:
 
 /* Help functions *************************************************************/
 /* operator* */
-inline CMatlibVector<CComplex> // cv, cv
+inline CMatlibVector<CComplex> // cm, cv
 operator*(const CMatlibMatrix<CComplex>& cvA, const CMatlibVector<CComplex>& cvB)
 {
 	CMatlibVector<CComplex> vecRet(cvB.GetSize(), VTY_TEMP);

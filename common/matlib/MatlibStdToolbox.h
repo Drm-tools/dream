@@ -5,7 +5,7 @@
  *	Volker Fischer
  *
  * Description:
- *	c++ Mathamatic Library (Matlib), standard toolbox
+ *	c++ Mathematic Library (Matlib), standard toolbox
  *
  ******************************************************************************
  *

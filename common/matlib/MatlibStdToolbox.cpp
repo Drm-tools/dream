@@ -5,7 +5,7 @@
  *	Volker Fischer
  *
  * Description:
- *	c++ Mathamatic Library (Matlib)
+ *	c++ Mathematic Library (Matlib)
  *
  ******************************************************************************
  *

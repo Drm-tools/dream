@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -44,7 +44,7 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 		veccHistory[i] = (*pvecInputData)[i - iMaxDelay];
 
 	/* Delay signal using history buffer, add tap gain (fading), multiply with
-	   exp-function (optimized implementation, see below) to implement 
+	   exp-function (optimized implementation, see below) to implement
 	   doppler shift */
 	/* Direct path */
 	for (i = 0; i < iInputBlockSize; i++)
@@ -53,9 +53,9 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 
 		veccOutput[i] =	veccHistory[i + iMaxDelay /* - 0 */] * cCurTapSamp;
 
-		/* Rotate exp-pointer one step further by complex multiplication with 
+		/* Rotate exp-pointer one step further by complex multiplication with
 		   precalculated rotation vector cExpStep. This saves us from
-		   calling sin() and cos() functions all the time (iterative 
+		   calling sin() and cos() functions all the time (iterative
 		   calculation of these functions) */
 		cCurExp[0] *= cExpStep[0];
 
@@ -114,9 +114,9 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		/* AWGN */
 		iNoTaps = 1;
 
-		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 0.0);
 		break;
 
@@ -124,14 +124,14 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		/* Rice with delay */
 		iNoTaps = 2;
 
-		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 0.0);
 
-		tap[1].Init(/* Delay: */	(_REAL) 1.0, 
-					/* Gain: */		(_REAL) 0.5, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[1].Init(/* Delay: */	(_REAL) 1.0,
+					/* Gain: */		(_REAL) 0.5,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 0.1);
 		break;
 
@@ -139,24 +139,24 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		/* US Consortium */
 		iNoTaps = 4;
 
-		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.1, 
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.1,
 					/* Fd: */		(_REAL) 0.1);
 
-		tap[1].Init(/* Delay: */	(_REAL) 0.7, 
-					/* Gain: */		(_REAL) 0.7, 
-					/* Fshift: */	(_REAL) 0.2, 
+		tap[1].Init(/* Delay: */	(_REAL) 0.7,
+					/* Gain: */		(_REAL) 0.7,
+					/* Fshift: */	(_REAL) 0.2,
 					/* Fd: */		(_REAL) 0.5);
 
-		tap[2].Init(/* Delay: */	(_REAL) 1.5, 
-					/* Gain: */		(_REAL) 0.5, 
-					/* Fshift: */	(_REAL) 0.5, 
+		tap[2].Init(/* Delay: */	(_REAL) 1.5,
+					/* Gain: */		(_REAL) 0.5,
+					/* Fshift: */	(_REAL) 0.5,
 					/* Fd: */		(_REAL) 1.0);
 
-		tap[3].Init(/* Delay: */	(_REAL) 2.2, 
-					/* Gain: */		(_REAL) 0.25, 
-					/* Fshift: */	(_REAL) 1.0, 
+		tap[3].Init(/* Delay: */	(_REAL) 2.2,
+					/* Gain: */		(_REAL) 0.25,
+					/* Fshift: */	(_REAL) 1.0,
 					/* Fd: */		(_REAL) 2.0);
 		break;
 
@@ -164,14 +164,14 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		/* CCIR Poor */
 		iNoTaps = 2;
 
-		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 1.0);
 
-		tap[1].Init(/* Delay: */	(_REAL) 2.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[1].Init(/* Delay: */	(_REAL) 2.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 1.0);
 		break;
 		
@@ -179,14 +179,14 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		/* Channel no 5 */
 		iNoTaps = 2;
 
-		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 2.0);
 
-		tap[1].Init(/* Delay: */	(_REAL) 4.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[1].Init(/* Delay: */	(_REAL) 4.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 2.0);
 		break;
 		
@@ -194,36 +194,36 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		/* Channel no 6 */
 		iNoTaps = 4;
 
-		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
-					/* Gain: */		(_REAL) 0.5, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 0.5,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 0.1);
 
-		tap[1].Init(/* Delay: */	(_REAL) 2.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 1.2, 
+		tap[1].Init(/* Delay: */	(_REAL) 2.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 1.2,
 					/* Fd: */		(_REAL) 2.4);
 
-		tap[2].Init(/* Delay: */	(_REAL) 4.0, 
-					/* Gain: */		(_REAL) 0.25, 
-					/* Fshift: */	(_REAL) 2.4, 
+		tap[2].Init(/* Delay: */	(_REAL) 4.0,
+					/* Gain: */		(_REAL) 0.25,
+					/* Fshift: */	(_REAL) 2.4,
 					/* Fd: */		(_REAL) 4.8);
 
-		tap[3].Init(/* Delay: */	(_REAL) 6.0, 
-					/* Gain: */		(_REAL) 0.0625, 
-					/* Fshift: */	(_REAL) 3.6, 
+		tap[3].Init(/* Delay: */	(_REAL) 6.0,
+					/* Gain: */		(_REAL) 0.0625,
+					/* Fshift: */	(_REAL) 3.6,
 					/* Fd: */		(_REAL) 7.2);
 		break;
 
 	case 7:
-		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! 
+		/* My own test channel, NOT DEFINED IN THE DRM STANDARD!
 		   This channel has only one fading path */
-		rMyFading = 4;
+		rMyFading = (_REAL) 4.0;
 
 		iNoTaps = 1;
-		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
-					/* Gain: */		(_REAL) 1.0, 
-					/* Fshift: */	(_REAL) 0.0, 
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		rMyFading);
 		break;
 	}
@@ -236,7 +236,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		/* Exponent function for shifting (doppler shift) */
 		cCurExp[i] = (_REAL) 1.0;
 
-		cExpStep[i] = 
+		cExpStep[i] =
 			_COMPLEX(cos(tap[i].GetFShift()), sin(tap[i].GetFShift()));
 
 		/* Gain correction denominator */
@@ -249,8 +249,9 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	/* Final gain correction value. "* 2" due to the real-valued signals */
 	rGainCorr = (_REAL) 1.0 / sqrt(rGainCorr) * 2;
 
-	/* Set number of taps in global struct */
+	/* Set number of taps and gain correction in global struct */
 	ReceiverParam.iNumTaps = iNoTaps;
+	ReceiverParam.rGainCorr = rGainCorr / 2;
 
 
 	/* Memory allocation ---------------------------------------------------- */
@@ -269,7 +270,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	/* Calculate noise power factors for a given SNR ------------------------ */
 #if (USE_SYSTEM_BANDWIDTH)
 	/* Spectrum width (N / T_u) */
-	rSpecOcc = (_REAL) ReceiverParam.iNoCarrier / 
+	rSpecOcc = (_REAL) ReceiverParam.iNoCarrier /
 		ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 #else
 	switch (ReceiverParam.GetSpectrumOccup())
@@ -304,7 +305,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	rBWFactor = (_REAL) SOUNDCRD_SAMPLE_RATE / 2 / rSpecOcc;
 
 	/* Calculation of the gain factor for noise generator */
-	rNoisepwrFactor = sqrt(pow(10, -ReceiverParam.rSimSNRdB / 10) * 
+	rNoisepwrFactor = sqrt(pow(10, -ReceiverParam.rSimSNRdB / 10) *
 		ReceiverParam.rAvPowPerSymbol * 2 * rBWFactor);
 
 
@@ -403,7 +404,7 @@ _COMPLEX CTapgain::Update()
 	_COMPLEX	out;
 
 	/* If tap is not fading, just return gain */
-	if (fd == (_REAL) 0.0) 
+	if (fd == (_REAL) 0.0)
 		return gain;
 
 	/* Over_cnt is always zero if no interpolation is used */
@@ -413,7 +414,7 @@ _COMPLEX CTapgain::Update()
 		lastQ = nextQ;
 
 		/* Get new noise sample */
-		if ((phase == -1) || (phase == 0)) 
+		if ((phase == -1) || (phase == 0))
 		{
 			fir_buff[fir_index][0] = randn();
 			fir_buff[fir_index][1] = randn();
@@ -422,7 +423,7 @@ _COMPLEX CTapgain::Update()
 		}
 
 		/* Compute new filter output */
-		nextI = (_REAL) 0.0; 
+		nextI = (_REAL) 0.0;
 		nextQ = (_REAL) 0.0;
 
 		if (phase == -1)
@@ -430,11 +431,11 @@ _COMPLEX CTapgain::Update()
 			/* FIR */
 			for (k = 0; k < FIRLENGTH; k++)
 			{
-				nextI += 
-					fir_buff[(k + fir_index) % FIRLENGTH][0] * 
+				nextI +=
+					fir_buff[(k + fir_index) % FIRLENGTH][0] *
 					taps[FIRLENGTH - k - 1];
-				nextQ += 
-					fir_buff[(k + fir_index) % FIRLENGTH][1] * 
+				nextQ +=
+					fir_buff[(k + fir_index) % FIRLENGTH][1] *
 					taps[FIRLENGTH - k - 1];
 			}
 		}
@@ -458,9 +459,9 @@ _COMPLEX CTapgain::Update()
 	if (interpol)
 	{
 		/* Linear interpolation */
-		out  = _COMPLEX((nextI - lastI) * (_REAL) over_cnt / 
+		out  = _COMPLEX((nextI - lastI) * (_REAL) over_cnt /
 			interpol + lastI,
-			(nextQ - lastQ) * (_REAL) over_cnt / 
+			(nextQ - lastQ) * (_REAL) over_cnt /
 			interpol + lastQ);
 
 		if (++over_cnt == interpol)
@@ -479,19 +480,19 @@ void CTapgain::gausstp(_REAL taps[], _REAL& s, int& over) const
 	/* Calculate impulse response of FIR filter to implement
 	the Watterson modell (Gaussian PSD) */
 
-	/* "2 * s" is the doppler spread */   
+	/* "2 * s" is the doppler spread */
 	for (int n = 0; n < (FIRLENGTH * over); n++)
 	{
-		taps[n] = sqrt(sqrt(crPi * (_REAL) 8.0) * s * over) * 
+		taps[n] = sqrt(sqrt(crPi * (_REAL) 8.0) * s * over) *
 			exp(-fsqr((_REAL) 2.0 * crPi * s * (n - FIRLENGTH * over / 2)));
 	}
 }
 
 int CTapgain::DelMs2Sam(const _REAL rDelay) const
 {
-	/* Delay in samples. The channel taps are shifted to the taps that are 
+	/* Delay in samples. The channel taps are shifted to the taps that are
 	   possible for the given sample rate -> approximation! */
-	return (int) (rDelay /* ms */ * SOUNDCRD_SAMPLE_RATE / 1000);	
+	return (int) (rDelay /* ms */ * SOUNDCRD_SAMPLE_RATE / 1000);
 }
 
 _REAL CTapgain::NormShift(const _REAL rShift) const
