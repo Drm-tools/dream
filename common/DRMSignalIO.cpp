@@ -140,36 +140,26 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 void CReceiveData::InitInternal(CParameter& Parameter)
 {
-	int iSpecificOutBlockSize;
-
 	if (bUseSoundcard == TRUE)
 	{
-		/* Set it to one symbol. The sound card interface has to taken care
-		   about the buffering data of a whole MSC block */
-		iSpecificOutBlockSize = Parameter.iSymbolBlockSize;
+		/* Init sound interface. Set it to one symbol. The sound card interface
+		   has to taken care about the buffering data of a whole MSC block */
+		pSound->InitRecording(Parameter.iSymbolBlockSize);
 
-		/* Init sound interface */
-		pSound->InitRecording(iSpecificOutBlockSize);
-
-		vecsSoundBuffer.Init(iSpecificOutBlockSize);
+		vecsSoundBuffer.Init(Parameter.iSymbolBlockSize);
 	}
 	else
 	{
 		/* Open file for reading data from transmitter. Open file only once */
 		if (pFileReceiver == NULL)
 			pFileReceiver = fopen("test/TransmittedData.txt", "r");
-
-		iSpecificOutBlockSize = Parameter.iSymbolBlockSize;
 	}
 
 	/* Init vector for saving input data for spectrum */
 	vecrInpData.Init(NUM_SMPLS_4_INPUT_SPECTRUM);
 
 	/* Define output block-size */
-	iOutputBlockSize = iSpecificOutBlockSize;
-
-	/* Define maximum size of output cyclic buffer */
-	iMaxOutputBlockSize = 2 * iSpecificOutBlockSize;
+	iOutputBlockSize = Parameter.iSymbolBlockSize;
 }
 
 CReceiveData::~CReceiveData()
