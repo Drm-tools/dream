@@ -37,6 +37,8 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal, WFla
 	pFileMenu = new QPopupMenu(this);
 	CHECK_PTR(pFileMenu);
 	pFileMenu->insertItem("&Save...", this, SLOT(OnSave()), CTRL+Key_S, 0);
+	pFileMenu->insertItem("Save &all...", this, SLOT(OnSaveAll()),
+		CTRL+Key_A, 1);
 
 
 	/* Main menu bar -------------------------------------------------------- */
@@ -214,9 +216,15 @@ void MultimediaDlg::UpdateAccButtons()
 {
 	/* Set enable menu entry for saving a picture */
 	if (iCurImagePos < 0)
+	{
 		pFileMenu->setItemEnabled(0, FALSE);
+		pFileMenu->setItemEnabled(1, FALSE);
+	}
 	else
+	{
 		pFileMenu->setItemEnabled(0, TRUE);
+		pFileMenu->setItemEnabled(1, TRUE);
+	}
 
 	if (iCurImagePos <= 0)
 	{
@@ -254,19 +262,49 @@ void MultimediaDlg::OnSave()
 		QString(vecpRawImages[iCurImagePos]->strFormat.c_str()),
 		"*." + QString(vecpRawImages[iCurImagePos]->strFormat.c_str()), this);
 
+	/* Check if user not hit the cancel button */
     if (!strFileName.isNull())
+		SavePicture(iCurImagePos, strFileName);
+}
+
+void MultimediaDlg::OnSaveAll()
+{
+	/* Let the user choose a directory */
+	QString strDirName =
+		QFileDialog::getExistingDirectory(NULL, this);
+
+    if (!strDirName.isNull())
 	{
-		/* Get picture size */
-		int iPicSize = vecpRawImages[iCurImagePos]->vecbRawData.Size();
+		/* Loop over all pictures received yet */
+		for (int j = 0; j < GetIDLastPicture() + 1; j++)
+		{
+			/* Construct file name from date and picture number */
+			QString strFileName = strDirName + "Dream_" + 
+				QDate().currentDate().toString() + "_#" +
+				QString().setNum(j) + "." +
+				QString(vecpRawImages[j]->strFormat.c_str());
 
-		/* Got a file name */
-		char cFileName[100];
-		strcpy(cFileName, strFileName);
+			SavePicture(j, strFileName);
+		}
+	}
+}
 
-		FILE* pFiBody = fopen(cFileName, "wb");
+void MultimediaDlg::SavePicture(const int iPicID, const QString& strFileName)
+{
+	/* Get picture size */
+	int iPicSize = vecpRawImages[iPicID]->vecbRawData.Size();
 
+	/* Copy file name in c-string */
+	char cFileName[100];
+	strcpy(cFileName, strFileName);
+
+	/* Open file */
+	FILE* pFiBody = fopen(cFileName, "wb");
+
+	if (pFiBody != NULL)
+	{
 		for (int i = 0; i < iPicSize; i++)
-			fwrite((void*) &vecpRawImages[iCurImagePos]->vecbRawData[i],
+			fwrite((void*) &vecpRawImages[iPicID]->vecbRawData[i],
 				size_t(1), size_t(1), pFiBody);
 
 		/* Close the file afterwards */

@@ -36,6 +36,7 @@
 #include <qpopupmenu.h>
 #include <qlayout.h>
 #include <qfiledialog.h>
+#include <qdatetime.h>
 
 
 #ifdef _WIN32
@@ -76,6 +77,7 @@ protected:
 	void SetPicture();
 	void UpdateAccButtons();
 	int GetIDLastPicture() {return vecpRawImages.Size() - 1;}
+	void SavePicture(const int iPicID, const QString& strFileName);
 
 public slots:
 	void OnTimer();
@@ -84,5 +86,6 @@ public slots:
 	void OnButtonJumpBegin();
 	void OnButtonJumpEnd();
 	void OnSave();
+	void OnSaveAll();
 };
 
