@@ -39,7 +39,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	_VITMETRTYPE*	pCurTrelMetric;
 	_VITMETRTYPE*	pOldTrelMetric;
 
-#ifdef USE_MMX
+#ifdef USE_SIMD
 	/* -------------------------------------------------------------------------
 	   Since the metric is 8-bit fixed-point type, we need to scale the input
 	   metrics to avoid overflows */
@@ -198,7 +198,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 
 
 		/* Update trellis --------------------------------------------------- */
-#ifdef USE_MMX
+#ifdef USE_SIMD
 		/* Use the butterfly unroll for reordering the metrics for MMX
 		   trellis */
 #define BUTTERFLY(cur, next, prev0, prev1, met0, met1) \
@@ -295,9 +295,15 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 
 #undef BUTTERFLY
 
-#ifdef USE_MMX
+#ifdef USE_SIMD
 		/* Do actual trellis update in separate file (assembler implementation) */
-		TrellisUpdateMMX(&matdecDecisions[i][0], pCurTrelMetric, pOldTrelMetric,
+#ifdef USE_MMX
+		TrellisUpdateMMX(
+#endif
+#ifdef USE_SSE2
+		TrellisUpdateSSE2(
+#endif
+			&matdecDecisions[i][0], pCurTrelMetric, pOldTrelMetric,
 			chMet1, chMet2);
 #endif
 
@@ -328,7 +334,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		vecbiOutputBits[iNumOutBits - i - 1] = (_BINARY) decCurBit;
 	}
 
-#ifdef USE_MMX
+#ifdef USE_SIMD
 	/* No accumulated metric available because of normalizing the metric because
 	   of fixed-point implementation */
 	return (_REAL) 1.0;

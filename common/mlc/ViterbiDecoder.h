@@ -36,14 +36,23 @@
 
 
 /* Definitions ****************************************************************/
-/* Define, if you want to use MMX instructions. When this flag is activated,
-   the trellis metric is set to unsigned char (8-bit) type.
-   Only implemented for Windows OS so far! */
+/* SIMD implementation is always fixed-point */
+#define USE_SIMD
+#undef USE_SIMD
+
+/* Use MMX or SSE2 */
 #define USE_MMX
 #undef USE_MMX
 
+
+#ifdef USE_SIMD
+#ifndef USE_MMX
+# define USE_SSE2
+#endif
+#endif
+
 /* Data type for Viterbi metric */
-#ifdef USE_MMX
+#ifdef USE_SIMD
 # define _VITMETRTYPE				unsigned char
 # define _DECISIONTYPE				unsigned char
 #else
@@ -58,7 +67,7 @@
    should not take the largest value possible of the data type of the metric
    variable since in the Viterbi-routine we add something to this value and
    in that case we would force an overrun! */
-#ifdef USE_MMX
+#ifdef USE_SIMD
 # define MC_METRIC_INIT_VALUE		((_VITMETRTYPE) 60)
 #else
 # define MC_METRIC_INIT_VALUE		((_VITMETRTYPE) 1e10)
@@ -94,12 +103,18 @@ protected:
 
 	CMatrix<_DECISIONTYPE>	matdecDecisions;
 
-#ifdef USE_MMX
+#ifdef USE_SIMD
 	/* Fields for storing the reodered metrics for MMX trellis */
 	_VITMETRTYPE			chMet1[MC_NUM_STATES / 2];
 	_VITMETRTYPE			chMet2[MC_NUM_STATES / 2];
 
-	void TrellisUpdateMMX(const _DECISIONTYPE* pCurDec,
+#ifdef USE_MMX
+	void TrellisUpdateMMX(
+#endif
+#ifdef USE_SSE2
+	void TrellisUpdateSSE2(
+#endif
+		const _DECISIONTYPE* pCurDec,
 		const _VITMETRTYPE* pCurTrelMetric, const _VITMETRTYPE* pOldTrelMetric,
 		const _VITMETRTYPE* pchMet1, const _VITMETRTYPE* pchMet2);
 #endif

@@ -235,6 +235,10 @@ SOURCE=..\common\mlc\TrellisUpdateMMX.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\mlc\TrellisUpdateSSE2.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\mlc\ViterbiDecoder.cpp
 
 !IF  "$(CFG)" == "FDRM - Win32 Release"
