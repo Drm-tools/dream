@@ -37,6 +37,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/chanest/TimeWiener.cpp \
 	../common/chanest/ChanEstTime.cpp \
 	../common/chanest/TimeDecDir.cpp \
+	../common/chanest/IdealChannelEstimation.cpp \
 	../common/drmchannel/ChannelSimulation.cpp \
 	../common/interleaver/BlockInterleaver.cpp \
 	../common/interleaver/SymbolInterleaver.cpp \
@@ -82,6 +83,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/chanest/TimeDecDir.h \
 	../common/chanest/TimeLinear.h \
 	../common/chanest/TimeWiener.h \
+	../common/chanest/IdealChannelEstimation.h \
 	../common/drmchannel/ChannelSimulation.h \
 	../common/interleaver/BlockInterleaver.h \
 	../common/interleaver/SymbolInterleaver.h \
