@@ -1322,7 +1322,7 @@ void systemevalDlg::AddWhatsThisHelp()
 	const QString strInterfRej =
 		tr("<b>Interferer Rejection:</b> There are two "
 		"algorithms available to reject interferers:<ul>"
-		"<li><b>Bandpass filter (BP-Filter):</b>"
+		"<li><b>Bandpass Filter (BP-Filter):</b>"
 		" The bandpass filter is designed to have the same bandwidth as "
 		"the DRM signal. If, e.g., a strong signal is close to the border "
 		"of the actual DRM signal, under some conditions this signal will "
