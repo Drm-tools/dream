@@ -26,7 +26,7 @@ AC_ARG_WITH( qtdir,[  --with-qtdir=path to QT],QTDIR=$withval)
 
 AC_ARG_WITH( faad2,[  --with-faad2            use faad2 library for decoding AAC audio],WITHFAAD2=$withval, WITHFAAD2=yes)
 
-AC_ARG_WITH( journaline,[  --with-journaline       support Journaline],WITHJOURNALINE=$withval, WITHJOURNALINE=yes)
+AC_ARG_WITH( journaline,[  --with-journaline       support Journaline],WITHJOURNALINE=$withval, WITHJOURNALINE=no)
 
 AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$withval, WITHHAMLIB=no)
 
