@@ -32,6 +32,15 @@
 AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 	: AnalogDemDlgBase(parent, name, modal, f)
 {
+	/* Get window geometry data from DRMReceiver module and apply it */
+	const QRect WinGeom(DRMReceiver.GeomAnalogDemDlg.iXPos,
+		DRMReceiver.GeomAnalogDemDlg.iYPos,
+		DRMReceiver.GeomAnalogDemDlg.iWSize,
+		DRMReceiver.GeomAnalogDemDlg.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
 	QToolTip::add(MainPlot, "Click on the plot to set the demod. frequency");
 	MainPlot->setMargin(1);
@@ -68,6 +77,17 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 
 	/* Update window */
 	OnTimerChart();
+}
+
+AnalogDemDlg::~AnalogDemDlg()
+{
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	DRMReceiver.GeomAnalogDemDlg.iXPos = WinGeom.x();
+	DRMReceiver.GeomAnalogDemDlg.iYPos = WinGeom.y();
+	DRMReceiver.GeomAnalogDemDlg.iHSize = WinGeom.height();
+	DRMReceiver.GeomAnalogDemDlg.iWSize = WinGeom.width();
 }
 
 void AnalogDemDlg::UpdateControls()

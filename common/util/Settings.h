@@ -62,6 +62,9 @@ extern CDRMReceiver	DRMReceiver;
 
 /* Maximum carrier frequency for log file */
 # define MAX_FREQ_LOG_FILE			30000 /* kHz */
+
+/* Maximum value for window position and size */
+# define MAX_WIN_GEOM_VAL			10000 /* Pixel */
 #endif
 
 #ifdef HAVE_LIBHAMLIB
@@ -113,6 +116,12 @@ protected:
 					   const char* pszKey = NULL, const char* pszValue = "");
 	void SaveIni(INIFile& theINI, const char* pszFilename);
 	INIFile LoadIni(const char* pszFilename);
+
+
+	void SetNumericIniSet(INIFile& theINI, string strSection, string strKey,
+						  int iValue);
+	_BOOLEAN GetNumericIniSet(INIFile& theINI, string strSection, string strKey,
+							  int iRangeStart, int iRangeStop, int& iValue);
 };
 
 #endif // !defined(SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_)

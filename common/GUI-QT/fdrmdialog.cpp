@@ -109,6 +109,15 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+	/* Get window geometry data from DRMReceiver module and apply it */
+	const QRect WinGeom(DRMReceiver.GeomFdrmdialog.iXPos,
+		DRMReceiver.GeomFdrmdialog.iYPos,
+		DRMReceiver.GeomFdrmdialog.iWSize,
+		DRMReceiver.GeomFdrmdialog.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
 
 	/* Set Menu ***************************************************************/
 	/* Help menu ------------------------------------------------------------ */
@@ -285,6 +294,17 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 #ifdef _DEBUG_
 OnViewEvalDlg();
 #endif
+}
+
+FDRMDialog::~FDRMDialog()
+{
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	DRMReceiver.GeomFdrmdialog.iXPos = WinGeom.x();
+	DRMReceiver.GeomFdrmdialog.iYPos = WinGeom.y();
+	DRMReceiver.GeomFdrmdialog.iHSize = WinGeom.height();
+	DRMReceiver.GeomFdrmdialog.iWSize = WinGeom.width();
 }
 
 void FDRMDialog::OnTimer()

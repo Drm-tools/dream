@@ -35,6 +35,15 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+	/* Get window geometry data from DRMReceiver module and apply it */
+	const QRect WinGeom(DRMReceiver.GeomSystemEvalDlg.iXPos,
+		DRMReceiver.GeomSystemEvalDlg.iYPos,
+		DRMReceiver.GeomSystemEvalDlg.iWSize,
+		DRMReceiver.GeomSystemEvalDlg.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
 	MainPlot->setMargin(1);
 
 	/* Default chart (at startup) */
@@ -147,6 +156,17 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 
 	/* Update window */
 	OnTimerChart();
+}
+
+systemevalDlg::~systemevalDlg()
+{
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	DRMReceiver.GeomSystemEvalDlg.iXPos = WinGeom.x();
+	DRMReceiver.GeomSystemEvalDlg.iYPos = WinGeom.y();
+	DRMReceiver.GeomSystemEvalDlg.iHSize = WinGeom.height();
+	DRMReceiver.GeomSystemEvalDlg.iWSize = WinGeom.width();
 }
 
 void systemevalDlg::UpdateControls()

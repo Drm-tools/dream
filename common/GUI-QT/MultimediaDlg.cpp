@@ -32,6 +32,15 @@
 MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 	WFlags f) : MultimediaDlgBase(parent, name, modal, f)
 {
+	/* Get window geometry data from DRMReceiver module and apply it */
+	const QRect WinGeom(DRMReceiver.GeomMultimediaDlg.iXPos,
+		DRMReceiver.GeomMultimediaDlg.iYPos,
+		DRMReceiver.GeomMultimediaDlg.iWSize,
+		DRMReceiver.GeomMultimediaDlg.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
 	/* Picture controls should be invisable. These controls are only used for
 	   storing the resources */
 	PixmapFhGIIS->hide();
@@ -101,6 +110,17 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
+}
+
+MultimediaDlg::~MultimediaDlg()
+{
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	DRMReceiver.GeomMultimediaDlg.iXPos = WinGeom.x();
+	DRMReceiver.GeomMultimediaDlg.iYPos = WinGeom.y();
+	DRMReceiver.GeomMultimediaDlg.iHSize = WinGeom.height();
+	DRMReceiver.GeomMultimediaDlg.iWSize = WinGeom.width();
 }
 
 void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)

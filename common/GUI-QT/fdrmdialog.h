@@ -91,6 +91,8 @@ public:
 	FDRMDialog(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
 
+	virtual ~FDRMDialog();
+
 protected:
 	systemevalDlg*	pSysEvalDlg;
 	MultimediaDlg*	pMultiMediaDlg;

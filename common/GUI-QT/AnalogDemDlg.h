@@ -59,6 +59,8 @@ public:
 	AnalogDemDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
 
+	virtual ~AnalogDemDlg();
+
 protected:
 	QTimer			Timer;
 	QTimer			TimerChart;

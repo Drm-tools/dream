@@ -102,6 +102,8 @@ public:
 	MultimediaDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
 
+	virtual ~MultimediaDlg();
+
 	void SetStatus(int MessID, int iMessPara);
 
 protected:

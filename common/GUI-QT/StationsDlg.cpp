@@ -241,6 +241,15 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+	/* Get window geometry data from DRMReceiver module and apply it */
+	const QRect WinGeom(DRMReceiver.GeomStationsDlg.iXPos,
+		DRMReceiver.GeomStationsDlg.iYPos,
+		DRMReceiver.GeomStationsDlg.iWSize,
+		DRMReceiver.GeomStationsDlg.iHSize);
+
+	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+		setGeometry(WinGeom);
+
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
 	const int iYSize = 13;
@@ -525,6 +534,14 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 StationsDlg::~StationsDlg()
 {
+	/* Set window geometry data in DRMReceiver module */
+	QRect WinGeom = geometry();
+
+	DRMReceiver.GeomStationsDlg.iXPos = WinGeom.x();
+	DRMReceiver.GeomStationsDlg.iYPos = WinGeom.y();
+	DRMReceiver.GeomStationsDlg.iHSize = WinGeom.height();
+	DRMReceiver.GeomStationsDlg.iWSize = WinGeom.width();
+
 #ifdef HAVE_LIBHAMLIB
 	if (pRig != NULL)
 	{
