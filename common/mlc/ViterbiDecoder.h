@@ -36,8 +36,18 @@
 
 
 /* Definitions ****************************************************************/
+/* Define, if you want to use MMX instructions. When this flag is activated,
+   the trellis metric is set to unsigned char (8-bit) type.
+   Only implemented for Windows OS so far! */
+#define USE_MMX
+#undef USE_MMX
+
 /* Data type for Viterbi metric */
-#define _VITMETRTYPE				float
+#ifdef USE_MMX
+# define _VITMETRTYPE				unsigned char
+#else
+# define _VITMETRTYPE				float
+#endif
 
 /* We initialize each new block of data all branches-metrics with the following
    value exept of the zero-state. This can be done since we actually KNOW that
@@ -46,18 +56,14 @@
    should not take the largest value possible of the data type of the metric
    variable since in the Viterbi-routine we add something to this value and
    in that case we would force an overrun! */
-#define MC_METRIC_INIT_VALUE		((_VITMETRTYPE) 1e10)
+#ifdef USE_MMX
+# define MC_METRIC_INIT_VALUE		((_VITMETRTYPE) 60)
+#else
+# define MC_METRIC_INIT_VALUE		((_VITMETRTYPE) 1e10)
+#endif
 
 
 /* Classes ********************************************************************/
-class CTrellisData
-{
-public:
-	CTrellisData() : rMetric((_VITMETRTYPE) 0.0) {}
-
-	_VITMETRTYPE	rMetric;
-};
-
 class CViterbiDecoder : public CChannelCode
 {
 public:
@@ -71,19 +77,22 @@ public:
 			     int iNewNumOutBitsPartA, int iNewNumOutBitsPartB,
 			     int iPunctPatPartA, int iPunctPatPartB, int iLevel);
 
+
 protected:
 	/* Two trellis data vectors are needed for current and old state */
-	CTrellisData			vecTrelData1[MC_NO_STATES];
-	CTrellisData			vecTrelData2[MC_NO_STATES];
+	_VITMETRTYPE			vecTrelMetric1[MC_NUM_STATES];
+	_VITMETRTYPE			vecTrelMetric2[MC_NUM_STATES];
 
-	_VITMETRTYPE			vecrMetricSet[MC_NO_OUTPUT_COMBINATIONS];
+	_REAL					vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];
 
 	CVector<int>			veciTablePuncPat;
 
 	int						iNumOutBits;
 	int						iNumOutBitsWithMemory;
 
-	CMatrix<_BINARY>		matbiDecisions;
+	/* We have to use unsigned char instead of _BINARY, because of the MMX
+	   implementation */
+	CMatrix<unsigned char>	matbiDecisions;
 };
 
 
