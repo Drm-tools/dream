@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>645</width>
+            <width>641</width>
             <height>188</height>
         </rect>
     </property>
@@ -246,7 +246,7 @@ Institute for Communication Technology</string>
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Copyright (C) 2001 - 2003</string>
+                                        <string>Copyright (C) 2001 - 2004</string>
                                     </property>
                                 </widget>
                                 <spacer>
