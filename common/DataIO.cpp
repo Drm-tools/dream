@@ -333,9 +333,20 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 					"time remaining: %d min)", iCounter, iNumSimBlocks,
 					tiElTi / 60, lReTi / 60);
 
-				/* Add current value of BER */
-				fprintf(pFileCurPos, "\n%e %e", TransmParam.GetNominalSNRdB(),
-					TransmParam.rBitErrRate);
+				if (TransmParam.eSimType == CParameter::ST_SYNC_PARAM)
+				{
+					/* Write sync paramter */
+					fprintf(pFileCurPos, "\n%e %e",
+						TransmParam.GetNominalSNRdB(),
+						TransmParam.rSyncTestParam);
+				}
+				else
+				{
+					/* Add current value of BER */
+					fprintf(pFileCurPos, "\n%e %e",
+						TransmParam.GetNominalSNRdB(),
+						TransmParam.rBitErrRate);
+				}
 				fclose(pFileCurPos);
 			}
 		}
