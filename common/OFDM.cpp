@@ -152,8 +152,9 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* SNR estimation. Use virtual carriers at the end of spectrum ---------- */
-	_REAL	rPowLeftVCar, rPowRightVCar, rAvNoisePow, rUsNoPower;
-	int		iNoAve;
+	_REAL		rPowLeftVCar, rPowRightVCar, rAvNoisePow, rUsNoPower;
+	int			iNoAve;
+	const _REAL rLam = 0.999;
 
 	/* Power of useful part plus noise */
 	rUsNoPower = (_REAL) 0.0;
@@ -169,8 +170,8 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 	}
 
-	/* Normalize result */
-	rUsNoPower /= iNoAve;
+	/* Normalize and average result */
+	IIR1(rUsefPowAv, rUsNoPower / iNoAve, rLam);
 
 	/* Estimate power of noise */
 	/* First, check if virtual carriers are in range */
@@ -188,17 +189,18 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			veccFFTWOutput[iShiftedKmax + 1].im;
 
 		/* Average results */
-		const _REAL rLam = 0.98;
 		IIR1(rNoisePowAvLeft, rPowLeftVCar, rLam);
 		IIR1(rNoisePowAvRight, rPowRightVCar, rLam);
 
 		/* Take the smallest value of both to avoid getting sinusoid 
 		   interferer in the measurement */
-		rAvNoisePow = _min(rNoisePowAvLeft, rNoisePowAvRight);
+		rAvNoisePow = Min(rNoisePowAvLeft, rNoisePowAvRight);
 	}
 
-	/* Calculate SNR estimate */
-	rSNREstimate = rUsNoPower / rAvNoisePow * iDFTSize * iDFTSize - 1;
+	/* Calculate SNR estimate (\hat{s} - \hat{n}) / \hat{n}. The result
+	   must be multiplicated with squared "iDFTSize" because of the 
+	   FFT operation */
+	rSNREstimate = (rUsefPowAv / rAvNoisePow * iDFTSize * iDFTSize - 1) / 2;
 
 
 	/* Save averaged spectrum for plotting ---------------------------------- */
@@ -227,6 +229,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	/* Initialize useful and noise power estimation */
 	rNoisePowAvLeft = (_REAL) 0.0;
 	rNoisePowAvRight = (_REAL) 0.0;
+	rUsefPowAv = (_REAL) 0.0;
 
 	/* Init SNR estimate */
 	rSNREstimate = (_REAL) 0.0;

@@ -352,11 +352,6 @@ public:
 	int					iNoBitErrors;
 	int					iChanEstDelay;
 
-
-// TEST
-_REAL rSNR4WienerFreq;
-
-
 	/* Simulation raw-data management. We have to implement a shift register
 	   with varying size. We do that by adding a variable for storing the
 	   current write position. */

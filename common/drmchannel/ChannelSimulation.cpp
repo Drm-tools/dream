@@ -51,7 +51,7 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 		veccOutput[i] = tap[0].Update() * 
 			veccHistory[i + iMaxDelay /* - 0 */] * cCurExp[0];
 
-		/* Rotate exp-pointer on step further by complex multiplication with 
+		/* Rotate exp-pointer one step further by complex multiplication with 
 		   precalculated rotation vector cExpStep. This saves us from
 		   calling sin() and cos() functions all the time (iterative 
 		   calculation of these functions) */

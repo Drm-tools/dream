@@ -84,11 +84,11 @@ class CGenSimData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
 	CGenSimData() : iNoSimBlocks(DEFAULT_NO_SIM_BLOCKS), eCntType(CT_TIME),
-		iCounter(0), iNoErrors(0) {}
+		iCounter(0), iNoErrors(0), strFileName("SimTime.dat"), tiStartTime(0) {}
 	virtual ~CGenSimData() {}
 
-	void SetSimTime(int iNewTi);
-	void SetNoErrors(int iNewNE);
+	void SetSimTime(int iNewTi, string strNewFileName);
+	void SetNoErrors(int iNewNE, string strNewFileName);
 	int GetNoErrors() {return iNoErrors;}
 
 protected:
@@ -98,6 +98,8 @@ protected:
 	int			iNoErrors;
 	int			iCounter;
 	int			iMinNoBlocks;
+	string		strFileName;
+	time_t		tiStartTime;
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);

@@ -40,6 +40,8 @@ void CDRMSimulation::SimScript()
 	string			strSimFile;
 	_REAL			rStartSNR, rEndSNR, rStepSNR;
 	string			strSpecialRemark;
+	int				iSimTime = 0;
+	int				iSimNumErrors = 0;
 
 
 	/**************************************************************************\
@@ -47,9 +49,9 @@ void CDRMSimulation::SimScript()
 	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
-	eSimType = ST_BER_IDEALCHAN;
 	eSimType = ST_MSECHANEST;
 	eSimType = ST_BITERROR;
+	eSimType = ST_BER_IDEALCHAN;
 	eSimType = ST_NONE;
 	
 	if (eSimType != ST_NONE)
@@ -57,19 +59,19 @@ void CDRMSimulation::SimScript()
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
 		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 		Param.MSCPrLe.iPartB = 1;
-Param.eSymbolInterlMode = CParameter::SI_SHORT;//SI_LONG;//
+		Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
 
-		Param.iDRMChannelNo = 5;
+		Param.iDRMChannelNo = 3;
 
-		rStartSNR = (_REAL) 20.0;
-		rEndSNR = (_REAL) 20.0;
-		rStepSNR = (_REAL) 0.3;
-		strSpecialRemark = "";
+		rStartSNR = (_REAL) 12.0;
+		rEndSNR = (_REAL) 26.0;
+		rStepSNR = (_REAL) 1.0;
+		strSpecialRemark = "test";
 
 		/* Length of simulation */
-		GenSimData.SetSimTime(100);
-//		GenSimData.SetNoErrors(100);
+//		iSimTime = 500;
+		iSimNumErrors = 400000;
 
 
 ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
@@ -109,10 +111,19 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
 #endif
 
+
+		/* Set simulation time or number of errors */
+		if (iSimTime != 0)
+			GenSimData.SetSimTime(iSimTime, 
+				SimFileName(Param, eSimType, strSpecialRemark));
+		else
+			GenSimData.SetNoErrors(iSimNumErrors, 
+				SimFileName(Param, eSimType, strSpecialRemark));
+
 		if (eSimType == ST_MSECHANEST)
 		{
 			/* Open simulation file */
-			strSimFile = SimFileName(Param, eSimType, strSpecialRemark);
+			strSimFile = SimFileName(Param, eSimType, strSpecialRemark) + ".dat";
 			pFileMSE = fopen(strSimFile.c_str(), "w");
 
 			Param.rSimSNRdB = rStartSNR;
@@ -131,7 +142,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		else
 		{
 			/* Open simulation file */
-			strSimFile = SimFileName(Param, eSimType, strSpecialRemark);
+			strSimFile = SimFileName(Param, eSimType, strSpecialRemark) + ".dat";
 			pFileBitEr = fopen(strSimFile.c_str(), "w");
 
 			for (rSNRCnt = rStartSNR; rSNRCnt <= rEndSNR; rSNRCnt += rStepSNR)
@@ -246,5 +257,5 @@ string CDRMSimulation::SimFileName(CParameter& Param, ESimType eNewType,
 		strFileName += strAddInf;
 	}
 
-	return strFileName += ".dat";
+	return strFileName;
 }

@@ -330,6 +330,7 @@ _REAL CTimeWiener::UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma)
 			matrFiltTime[j][i] = vecrTempFilt[i];
 	}
 
+#if 0
 #ifdef _DEBUG_
 /* Plot out filter coefficients */
 static FILE* pFile = fopen("test/wienertime.dat", "w");
@@ -337,6 +338,7 @@ for (i = 0; i < iLengthWiener; i++)
 	for (j = 0; j < iNoFiltPhasTi; j++)
 		fprintf(pFile, "%e\n", matrFiltTime[j][i]);
 fflush(pFile);
+#endif
 #endif
 
 	/* Normalize averaged MMSE */

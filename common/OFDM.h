@@ -90,6 +90,7 @@ protected:
 
 	_REAL					rNoisePowAvLeft;
 	_REAL					rNoisePowAvRight;
+	_REAL					rUsefPowAv;
 	_REAL					rSNREstimate;
 
 	virtual void InitInternal(CParameter& ReceiverParam);

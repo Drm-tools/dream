@@ -305,7 +305,4 @@ CDRMSimulation::CDRMSimulation()
 	/* DRM channel parameters */
 	Param.iDRMChannelNo = 1;
 	Param.rSimSNRdB = 25;
-
-	/* Length of simulation */
-	GenSimData.SetSimTime(300);
 }

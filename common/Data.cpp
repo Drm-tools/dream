@@ -84,12 +84,29 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	_UINT32BIT	iTempShiftRegister1;
 	_BINARY		biPRBSbit;
 	_UINT32BIT	iShiftRegister;
+	FILE*		pFileCurPos;
+	time_t		tiElTi;
+	long int	lReTi;
+
+	/* Get elapsed time since this run was started (in minutes) */
+	tiElTi = time(NULL) - tiStartTime;
 
 	/* Stop simulation if stop condition is true */
 	iCounter++;
 	switch (eCntType)
 	{
 	case CT_TIME:
+		/* Estimate remaining time */
+		lReTi = 
+			(long int) (((_REAL) iNoSimBlocks - iCounter) / iCounter * tiElTi);
+
+		/* Store current counter position in file */
+		pFileCurPos = fopen(strFileName.c_str(), "w");
+		fprintf(pFileCurPos,
+			"%d / %d (%d min elapsed, estimated time remaining: %d min)",
+			iCounter, iNoSimBlocks, tiElTi / 60, lReTi / 60);
+		fclose(pFileCurPos);
+
 		if (iCounter == iNoSimBlocks)
 		{
 			TransmParam.bRunThread = FALSE;
@@ -98,6 +115,39 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 		break;
 
 	case CT_ERRORS:
+		if (iCounter >= iMinNoBlocks)
+		{
+			/* Estimate remaining time */
+			lReTi = (long int) (((_REAL) TransmParam.iNoBitErrors - iNoErrors) /
+				iNoErrors * tiElTi);
+
+			/* Store current counter position in file */
+			pFileCurPos = fopen(strFileName.c_str(), "w");
+			fprintf(pFileCurPos,
+				"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
+				TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
+			fclose(pFileCurPos);
+		}
+		else
+		{
+			/* Estimate remaining time */
+			lReTi = (long int) 
+				(((_REAL) iMinNoBlocks - iCounter) / iCounter * tiElTi);
+
+			/* Store current counter position in file */
+			pFileCurPos = fopen(strFileName.c_str(), "w");
+			fprintf(pFileCurPos,
+				"%d / %d (%d min elapsed, estimated minimum time remaining: %d min)\n",
+				iCounter, iMinNoBlocks, tiElTi / 60, lReTi / 60);
+
+			lReTi = (long int) (((_REAL) TransmParam.iNoBitErrors - iNoErrors) /
+				iNoErrors * tiElTi);
+			fprintf(pFileCurPos,
+				"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
+				TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
+			fclose(pFileCurPos);
+		}
+
 		if (TransmParam.iNoBitErrors >= iNoErrors)
 		{
 			/* A minimum simulation time must be elapsed */
@@ -187,7 +237,7 @@ void CGenSimData::InitInternal(CParameter& TransmParam)
 	TransmParam.RawSimDa.Reset();
 }
 
-void CGenSimData::SetSimTime(int iNewTi)
+void CGenSimData::SetSimTime(int iNewTi, string strNewFileName)
 {
 	/* One MSC frame is 400 ms long */
 	iNoSimBlocks = (int) ((_REAL) iNewTi /* sec */ / (_REAL) 0.4);
@@ -197,9 +247,13 @@ void CGenSimData::SetSimTime(int iNewTi)
 
 	/* Reset counter */
 	iCounter = 0;
+
+	/* Set file name */
+	strFileName = strNewFileName + "__SIMTIME" + ".dat";
+	tiStartTime = time(NULL);
 }
 
-void CGenSimData::SetNoErrors(int iNewNE)
+void CGenSimData::SetNoErrors(int iNewNE, string strNewFileName)
 {
 	iNoErrors = iNewNE;
 
@@ -208,6 +262,10 @@ void CGenSimData::SetNoErrors(int iNewNE)
 
 	/* Reset counter, because we also look at the time */
 	iCounter = 0;
+
+	/* Set file name */
+	strFileName = strNewFileName + "__SIMTIME" + ".dat";
+	tiStartTime = time(NULL);
 }
 
 void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)

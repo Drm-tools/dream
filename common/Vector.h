@@ -102,9 +102,9 @@ public:
 	void ResetBitAccess() {iBitArrayCounter = 0;}
 
 protected:
-	vector<TData>::iterator	pData;
-	int						iBitArrayCounter;
-	int						iVectorSize;
+	typename vector<TData>::iterator	pData;
+	int									iBitArrayCounter;
+	int									iVectorSize;
 };
 
 
