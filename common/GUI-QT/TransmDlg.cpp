@@ -109,6 +109,14 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		break;
 	}
 
+	/* Set button group IDs */
+	ButtonGroupBandwidth->insert(RadioButtonBandwidth45, 0);
+	ButtonGroupBandwidth->insert(RadioButtonBandwidth5, 1);
+	ButtonGroupBandwidth->insert(RadioButtonBandwidth9, 2);
+	ButtonGroupBandwidth->insert(RadioButtonBandwidth10, 3);
+	ButtonGroupBandwidth->insert(RadioButtonBandwidth18, 4);
+	ButtonGroupBandwidth->insert(RadioButtonBandwidth20, 5);
+
 	/* MSC interleaver mode */
 	ComboBoxMSCInterleaver->insertItem("2 s (Long Interleaving)", 0);
 	ComboBoxMSCInterleaver->insertItem("400 ms (Short Interleaving)", 1);
@@ -189,7 +197,7 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 
 	/* Sound card IF */
 	LineEditSndCrdIF->setText(QString().number(
-		TransThread.DRMTransmitter.GetOFDMMod()->GetCarOffset(), 'f', 2));
+		TransThread.DRMTransmitter.GetCarOffset(), 'f', 2));
 
 	/* Clear list box for file names and set up columns */
 	ListViewFileNames->clear();
@@ -620,7 +628,7 @@ void TransmDialog::OnComboBoxTextMessageHighlighted(int iID)
 void TransmDialog::OnTextChangedSndCrdIF(const QString& strIF)
 {
 	/* Convert string to floating point value "toFloat()" */
-	TransThread.DRMTransmitter.GetOFDMMod()->SetCarOffset(strIF.toFloat());
+	TransThread.DRMTransmitter.SetCarOffset(strIF.toFloat());
 }
 
 void TransmDialog::OnTextChangedServiceID(const QString& strID)
