@@ -34,6 +34,7 @@
 #include <math.h>
 #include "matlib/Matlib.h"
 #include "TransmitterFilter.h"
+#include "util/Utilities.h"
 
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -43,8 +44,6 @@
 
 
 /* Definitions ****************************************************************/
-#define	METER_FLY_BACK				15
-
 /* Length of vector for input spectrum. We use approx. 0.2 sec
    of sampled data for spectrum calculation, this is 2^13 = 8192 to 
    make the FFT work more efficient. Make sure that this number is not smaller
@@ -66,22 +65,6 @@
 
 
 /* Classes ********************************************************************/
-class CSignalLevelMeter
-{
-public:
-	CSignalLevelMeter() : rCurLevel((_REAL) 0.0) {}
-	virtual ~CSignalLevelMeter() {}
-
-	void Init(_REAL rStartVal) {rCurLevel = Abs(rStartVal);}
-	void Update(_REAL rVal);
-	void Update(CVector<_REAL> vecrVal);
-	void Update(CVector<_SAMPLE> vecsVal);
-	_REAL Level();
-
-protected:
-	_REAL rCurLevel;
-};
-
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
