@@ -996,7 +996,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 
 		/* Set total number of bits for hiearchical frame (needed for MSC
 		   demultiplexer module) */
-		Parameter.iNumBitsHierarchFrameTotal = iL[2];
+		Parameter.SetNumBitsHieraFrTot(iL[2]);
 		break;
 	}
 }

@@ -254,6 +254,7 @@ public:
 
 	void			SetNumDecodedBitsMSC(const int iNewNumDecodedBitsMSC);
 	void			SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC);
+	void			SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot);
 	void			SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits);
 	void			SetNumDataDecoderBits(const int iNewNumDataDecoderBits);
 

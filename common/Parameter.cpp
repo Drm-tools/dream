@@ -319,6 +319,18 @@ void CParameter::SetNumDecodedBitsSDC(const int iNewNumDecodedBitsSDC)
 	}
 }
 
+void CParameter::SetNumBitsHieraFrTot(const int iNewNumBitsHieraFrTot)
+{
+	/* Apply changes only if parameters have changed */
+	if (iNewNumBitsHieraFrTot != iNumBitsHierarchFrameTotal)
+	{
+		iNumBitsHierarchFrameTotal = iNewNumBitsHieraFrTot;
+
+		/* Set init flags */
+		DRMReceiver.InitsForMSCDemux();
+	}
+}
+
 void CParameter::SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits)
 {
 	/* Apply changes only if parameters have changed */
@@ -668,9 +680,19 @@ void CParameter::CReceptLog::WriteParameters()
 			else
 				iTmpNumAAC = iNumAACFrames;
 
-			fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0\n",
+			fprintf(pFile, "  %04d   %2d      %3d  %4d/%02d        0",
 				iMinuteCnt, iAverageSNR, iNumCRCOkFAC,
 				iNumCRCOkMSC, iTmpNumAAC);
+
+#ifdef _DEBUG_
+			/* Save additional system parameter for debugging performance */
+			fprintf(pFile, "   Dopp: %.2f Hz   FreOff  %.2f Hz   SamOff %.2f Hz",
+				DRMReceiver.GetChanEst()->GetSigma(),
+				DRMReceiver.GetParameters()->GetDCFrequency(),
+				DRMReceiver.GetParameters()->GetSampFreqEst());
+#endif
+
+			fprintf(pFile, "\n"); /* New line */
 			fflush(pFile);
 		}
 
