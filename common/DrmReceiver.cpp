@@ -625,12 +625,13 @@ void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
 	vecrFreqOffs = vecrFreqSyncValHist;
 	vecrSamOffs = vecrSamOffsValHist;
 
-	/* Duration of OFDM symbol useful part */
-	const _REAL rTu = (_REAL) ReceiverParam.iFFTSizeN / SOUNDCRD_SAMPLE_RATE;
+	/* Duration of OFDM symbol */
+	const _REAL rTs = (CReal) (ReceiverParam.iFFTSizeN +
+		ReceiverParam.iGuardSize) / SOUNDCRD_SAMPLE_RATE;
 
 	/* Calculate time scale */
 	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
-		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTu;
+		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTs;
 
 	/* Value from frequency acquisition */
 	rFreqAquVal = ReceiverParam.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
