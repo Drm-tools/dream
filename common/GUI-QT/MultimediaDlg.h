@@ -37,7 +37,7 @@
 #include <qlayout.h>
 #include <qfiledialog.h>
 #include <qdatetime.h>
-
+#include <qregexp.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/MultimediaDlgbase.h"

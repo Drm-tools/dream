@@ -68,7 +68,7 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 	pFileMenu->insertItem("Save &all...", this, SLOT(OnSaveAll()),
 		CTRL+Key_A, 2);
 	pFileMenu->insertSeparator();
-	pFileMenu->insertItem("&Close", this, SLOT(close()), CTRL+Key_C, 3);
+	pFileMenu->insertItem("&Close", this, SLOT(close()), 0, 3);
 
 
 	/* Main menu bar -------------------------------------------------------- */
@@ -202,6 +202,9 @@ void MultimediaDlg::SetJournalineText()
 		/* Decode UTF-8 coding of this item text */
 		QString strCurItem = QString().fromUtf8(
 			QCString(News.vecItem[i].sText.c_str()));
+
+		/* Replace \n by html command <br> */
+		strCurItem = strCurItem.replace(QRegExp("\n"), "<br>");
 
 		if (News.vecItem[i].iLink == JOURNALINE_IS_NO_LINK)
 		{
