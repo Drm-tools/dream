@@ -264,7 +264,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 		/* Completely on the right side of DC */
 		rNormCurFreqOffset =
-			(VIRTUAL_INTERMED_FREQ + (CReal) 2250.0) / SOUNDCRD_SAMPLE_RATE;
+			(VIRTUAL_INTERMED_FREQ + (CReal) 2190.0) / SOUNDCRD_SAMPLE_RATE;
 		break;
 
 	case SO_1:
@@ -273,7 +273,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 		/* Completely on the right side of DC */
 		rNormCurFreqOffset =
-			(VIRTUAL_INTERMED_FREQ + (CReal) 2500.0) / SOUNDCRD_SAMPLE_RATE;
+			(VIRTUAL_INTERMED_FREQ + (CReal) 2440.0) / SOUNDCRD_SAMPLE_RATE;
 		break;
 
 	case SO_2:
