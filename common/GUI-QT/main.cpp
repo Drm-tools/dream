@@ -3,13 +3,12 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
- *
- *	Thanks to Tomi Manninen / OH2BNS for the command line argument
- *		parsing (argv)
+ *	Volker Fischer, Tomi Manninen
  *
  * Description:
- *	
+ *
+ * 10/03/2003 Tomi Manninen / OH2BNS
+ *  - Initial (basic) code for command line argument parsing (argv)
  *
  ******************************************************************************
  *
