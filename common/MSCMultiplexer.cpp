@@ -60,7 +60,7 @@ void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* Data ----------------------------------------------------------------- */
-	/* Extract audio data from input-stream */
+	/* Extract data from input-stream */
 	ExtractData(*pvecInputData, *pvecOutputData2, DataStreamPos);
 
 

@@ -601,8 +601,10 @@ CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI, const CFftPlans
 	
 	const CReal scale = (CReal) 1.0 / n;
 	for (i = 0; i < n; i++)
+	{
 		cvReturn[i] = CComplex(pFftwComplexOut[i].re * scale,
 			pFftwComplexOut[i].im * scale);
+	}
 
 	if (!FftPlans.IsInitialized())
 		delete pCurPlan;

@@ -433,18 +433,15 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 			iServPacketID =
 				ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
 
-			/* Get application domain of selected service */
-			CParameter::EApplDomain eServAppDomain =
-				ReceiverParam.Service[iCurSelDataServ].DataParam.eAppDomain;
-
-			/* Get application identifier of current selected service, only
-			   used with DAB */
-			int iDABUserAppIdent = ReceiverParam.Service[iCurSelDataServ].
-				DataParam.iUserAppIdent;
-
-			/* Set application type of the data service */
-			if (eServAppDomain == CParameter::AD_DAB_SPEC_APP)
+			/* Only DAB application supported */
+			if (ReceiverParam.Service[iCurSelDataServ].DataParam.eAppDomain ==
+				CParameter::AD_DAB_SPEC_APP)
 			{
+				/* Get application identifier of current selected service, only
+				   used with DAB */
+				const int iDABUserAppIdent = ReceiverParam.
+					Service[iCurSelDataServ].DataParam.iUserAppIdent;
+
 				switch (iDABUserAppIdent)
 				{
 				case 2: /* MOTSlideshow */
