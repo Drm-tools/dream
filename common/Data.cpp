@@ -96,16 +96,24 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	switch (eCntType)
 	{
 	case CT_TIME:
-		/* Estimate remaining time */
-		lReTi = 
-			(long int) (((_REAL) iNoSimBlocks - iCounter) / iCounter * tiElTi);
+		try
+		{
+			/* Estimate remaining time */
+			lReTi = (long int) (((_REAL) iNoSimBlocks - iCounter) /
+				iCounter * tiElTi);
 
-		/* Store current counter position in file */
-		pFileCurPos = fopen(strFileName.c_str(), "w");
-		fprintf(pFileCurPos,
-			"%d / %d (%d min elapsed, estimated time remaining: %d min)",
-			iCounter, iNoSimBlocks, tiElTi / 60, lReTi / 60);
-		fclose(pFileCurPos);
+			/* Store current counter position in file */
+			pFileCurPos = fopen(strFileName.c_str(), "w");
+			fprintf(pFileCurPos,
+				"%d / %d (%d min elapsed, estimated time remaining: %d min)",
+				iCounter, iNoSimBlocks, tiElTi / 60, lReTi / 60);
+			fclose(pFileCurPos);
+		}
+
+		catch (...)
+		{
+			/* Catch all file errors to avoid stopping the simulation */
+		}
 
 		if (iCounter == iNoSimBlocks)
 		{
@@ -115,37 +123,46 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 		break;
 
 	case CT_ERRORS:
-		if (iCounter >= iMinNoBlocks)
+		try
 		{
-			/* Estimate remaining time */
-			lReTi = (long int) (((_REAL) TransmParam.iNoBitErrors - iNoErrors) /
-				iNoErrors * tiElTi);
+			if (iCounter >= iMinNoBlocks)
+			{
+				/* Estimate remaining time */
+				lReTi =
+					(long int) (((_REAL) TransmParam.iNoBitErrors - iNoErrors) /
+					iNoErrors * tiElTi);
 
-			/* Store current counter position in file */
-			pFileCurPos = fopen(strFileName.c_str(), "w");
-			fprintf(pFileCurPos,
-				"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
-				TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
-			fclose(pFileCurPos);
+				/* Store current counter position in file */
+				pFileCurPos = fopen(strFileName.c_str(), "w");
+				fprintf(pFileCurPos,
+					"%d / %d (%d min elapsed, estimated time remaining: %d min)",
+					TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
+				fclose(pFileCurPos);
+			}
+			else
+			{
+				/* Estimate remaining time */
+				lReTi = (long int) 
+					(((_REAL) iMinNoBlocks - iCounter) / iCounter * tiElTi);
+
+				/* Store current counter position in file */
+				pFileCurPos = fopen(strFileName.c_str(), "w");
+				fprintf(pFileCurPos,
+					"%d / %d (%d min elapsed, estimated minimum time remaining: %d min)\n",
+					iCounter, iMinNoBlocks, tiElTi / 60, lReTi / 60);
+
+				lReTi = (long int) (((_REAL) TransmParam.iNoBitErrors - iNoErrors) /
+					iNoErrors * tiElTi);
+				fprintf(pFileCurPos,
+					"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
+					TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
+				fclose(pFileCurPos);
+			}
 		}
-		else
+
+		catch (...)
 		{
-			/* Estimate remaining time */
-			lReTi = (long int) 
-				(((_REAL) iMinNoBlocks - iCounter) / iCounter * tiElTi);
-
-			/* Store current counter position in file */
-			pFileCurPos = fopen(strFileName.c_str(), "w");
-			fprintf(pFileCurPos,
-				"%d / %d (%d min elapsed, estimated minimum time remaining: %d min)\n",
-				iCounter, iMinNoBlocks, tiElTi / 60, lReTi / 60);
-
-			lReTi = (long int) (((_REAL) TransmParam.iNoBitErrors - iNoErrors) /
-				iNoErrors * tiElTi);
-			fprintf(pFileCurPos,
-				"%d / %d (%d min elapsed, estimated time remaining: %d min)", 
-				TransmParam.iNoBitErrors, iNoErrors, tiElTi / 60, lReTi / 60);
-			fclose(pFileCurPos);
+			/* Catch all file errors to avoid stopping the simulation */
 		}
 
 		if (TransmParam.iNoBitErrors >= iNoErrors)
@@ -362,9 +379,19 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 		bCRCOk = FACReceive.FACParam(pvecInputData, ReceiverParam);
 
 		if (bCRCOk == TRUE)
+		{
 			PostWinMessage(MS_FAC_CRC, 0);
+
+			/* Set AAC in log file */
+			ReceiverParam.ReceptLog.SetFAC(TRUE);
+		}
 		else
+		{
 			PostWinMessage(MS_FAC_CRC, 2);
+
+			/* Set AAC in log file */
+			ReceiverParam.ReceptLog.SetFAC(FALSE);
+		}
 	}
 
 	if ((bSyncInput == TRUE) || (bCRCOk == FALSE))
