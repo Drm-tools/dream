@@ -34,7 +34,7 @@
 
 
 /* Definitions ****************************************************************/
-#define NUM_FAC_BITS_PER_BLOCK		72
+#define NUM_FAC_BITS_PER_BLOCK			72
 
 /* iTableNumOfServices[a][b]
    a: Number of audio services
