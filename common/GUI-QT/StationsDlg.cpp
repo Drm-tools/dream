@@ -307,20 +307,21 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	vecSpecDRMRigs.Init(0);
 
 	/* Winradio G3 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(1508, "" /* TODO */));
+	vecSpecDRMRigs.Add(CSpecDRMRig(1508, "" /* TODO */, 0));
 
 	/* AOR 7030 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(503, "" /* TODO */));
+	vecSpecDRMRigs.Add(CSpecDRMRig(503, "" /* TODO */, 0));
 
 	/* Elektor 3/04 */
-	vecSpecDRMRigs.Add(CSpecDRMRig(2501, ""));
+	vecSpecDRMRigs.Add(CSpecDRMRig(2501, "", 0));
 
 	/* JRC NRD 535 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(606,
-		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3")); /* AGC=slow */
+		"l_CWPITCH=-5000,m_CW=12000,l_IF=-2000,l_AGC=3" /* AGC=slow */,
+		3 /* kHz frequency offset */));
 
 	/* TenTec RX320D */
-	vecSpecDRMRigs.Add(CSpecDRMRig(1603, "" /* TODO */));
+	vecSpecDRMRigs.Add(CSpecDRMRig(1603, "" /* TODO */, 0));
 
 
 	/* Load all possible front-end remotes in hamlib library */
@@ -930,9 +931,10 @@ void StationsDlg::SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlibModels)
 _BOOLEAN StationsDlg::CheckForSpecDRMFE(const rig_model_t iID, int& iIndex)
 {
 	_BOOLEAN bIsSpecialDRMrig = FALSE;
+	const int iVecSize = vecSpecDRMRigs.Size();
 
 	/* Check for special DRM front-end */
-	for (int i = 0; i < vecSpecDRMRigs.Size(); i++)
+	for (int i = 0; i < iVecSize; i++)
 	{
 		if (vecSpecDRMRigs[i].iModelID == iID)
 		{
@@ -948,11 +950,21 @@ _BOOLEAN StationsDlg::SetFrequencyHamlib(const int iFreqkHz)
 {
 	_BOOLEAN bSucceeded = FALSE;
 
+	/* Prepare actual frequency value for hamlib */
+	int iActHamFreq = iFreqkHz;
+
+	/* Check for special rig if there is a frequency offset */
+	int iIndex;
+	if (CheckForSpecDRMFE(iCurSelModelID, iIndex) == TRUE)
+		iActHamFreq += vecSpecDRMRigs[iIndex].iFreqOffs;
+
+	iActHamFreq *= 1000; /* Conversion from kHz to Hz */
+
 	/* Check if rig was opend properly */
 	if (pRig != NULL)
 	{
 		/* Set frequency */
-		if (rig_set_freq(pRig, RIG_VFO_CURR, iFreqkHz * 1000) == RIG_OK)
+		if (rig_set_freq(pRig, RIG_VFO_CURR, iActHamFreq) == RIG_OK)
 			bSucceeded = TRUE;
 	}
 

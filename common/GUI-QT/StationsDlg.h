@@ -195,14 +195,15 @@ protected:
 	class CSpecDRMRig
 	{
 	public:
-		CSpecDRMRig() : iModelID(0), strDRMSet("") {}
+		CSpecDRMRig() : iModelID(0), strDRMSet(""), iFreqOffs(0) {}
 		CSpecDRMRig(const CSpecDRMRig& nSpec) : iModelID(nSpec.iModelID),
-			strDRMSet(nSpec.strDRMSet) {}
-		CSpecDRMRig(rig_model_t newID, QString sSet) :
-		  iModelID(newID), strDRMSet(sSet) {}
+			strDRMSet(nSpec.strDRMSet),  iFreqOffs(nSpec.iFreqOffs) {}
+		CSpecDRMRig(rig_model_t newID, QString sSet, int iNFrOff) :
+		  iModelID(newID), strDRMSet(sSet), iFreqOffs(iNFrOff) {}
 
 		rig_model_t		iModelID; /* Model ID for hamlib */
-		string			strDRMSet; /* Special DRM settings string */	
+		string			strDRMSet; /* Special DRM settings string */
+		int				iFreqOffs; /* Frequency offset */
 	};
 	CVector<CSpecDRMRig>	vecSpecDRMRigs;
 
