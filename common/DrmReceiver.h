@@ -85,7 +85,8 @@ public:
 	CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquDetecCnt(0),
 		iGoodSignCnt(0), bWasFreqAcqu(TRUE), bDoInitRun(FALSE),
 		eReceiverMode(RM_DRM), 	eNewReceiverMode(RM_NONE),
-		ReceiveData(&SoundInterface), WriteData(&SoundInterface) {}
+		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
+		rInitResampleOffset((_REAL) 0.0) {}
 	virtual ~CDRMReceiver() {}
 
 	/* For GUI */
@@ -96,6 +97,9 @@ public:
 	ERecMode				GetReceiverMode() {return eReceiverMode;}
 	void					SetReceiverMode(ERecMode eNewMode)
 								{eNewReceiverMode = eNewMode;}
+
+	void					SetInitResOff(_REAL rNRO)
+								{rInitResampleOffset = rNRO;}
 
 	/* Get pointer to internal modules */
 	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
@@ -193,6 +197,8 @@ protected:
 
 	_BOOLEAN				bWasFreqAcqu;
 	_BOOLEAN				bDoInitRun;
+
+	_REAL					rInitResampleOffset;
 };
 
 

@@ -416,7 +416,7 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	Param.iFrameIDReceiv = 0;
 
 	/* Set synchronization parameters */
-	Param.rResampleOffset = (_REAL) 0.0;
+	Param.rResampleOffset = rInitResampleOffset; /* Initial resample offset */
 	Param.rFreqOffsetAcqui = (_REAL) 0.0;
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
 	Param.iTimingOffsTrack = 0;
