@@ -262,6 +262,9 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	QwtCounterFrequency->
 		setValue(DRMReceiver.GetParameters()->ReceptLog.GetFrequency());
 
+	/* Init UTC time shown with a label control */
+	SetUTCTimeLabel();
+
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
@@ -473,8 +476,10 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	connect(agCOMPortSel, SIGNAL(selected(QAction*)),
 		this, SLOT(OnComPortMenu(QAction*)));
 
-	connect(&Timer, SIGNAL(timeout()),
-		this, SLOT(OnTimer()));
+	connect(&TimerList, SIGNAL(timeout()),
+		this, SLOT(OnTimerList()));
+	connect(&TimerUTCLabel, SIGNAL(timeout()),
+		this, SLOT(OnTimerUTCLabel()));
 
 	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
@@ -486,7 +491,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 
 	/* Set up timer */
-	Timer.start(GUI_TIMER_LIST_VIEW_STAT);
+	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
+	TimerUTCLabel.start(1000); /* UTC label, every second */
 }
 
 StationsDlg::~StationsDlg()
@@ -499,6 +505,23 @@ StationsDlg::~StationsDlg()
 		rig_cleanup(pRig);
 	}
 #endif
+}
+
+void StationsDlg::SetUTCTimeLabel()
+{
+	/* Get current UTC time */
+	time_t ltime;
+	time(&ltime);
+	struct tm* gmtCur = gmtime(&ltime);
+
+	/* Generate time in format "UTC 12:00" */
+	QString strUTCTime = QString("UTC %1:%2"). /* String format */
+		arg(QString().setNum(gmtCur->tm_hour)). /* Hour */
+		arg(QString().setNum(gmtCur->tm_min));
+
+	/* Only apply if time label does not show the correct time */
+	if (TextLabelUTCTime->text().compare(strUTCTime))
+		TextLabelUTCTime->setText(strUTCTime);
 }
 
 void StationsDlg::OnShowStationsMenu(int iID)
@@ -603,7 +626,7 @@ void StationsDlg::showEvent(QShowEvent* pEvent)
 	}
 }
 
-void StationsDlg::OnTimer()
+void StationsDlg::OnTimerList()
 {
 	/* Update list view */
 	SetStationsView();
@@ -1884,4 +1907,9 @@ void StationsDlg::AddWhatsThisHelp()
 		"buttons with two arrows and 1 kHz for the buttons having only "
 		"one arrow. By keeping the button pressed, the values are "
 		"increased / decreased automatically.");
+
+	/* UTC time label */
+	QWhatsThis::add(TextLabelUTCTime,
+		"<b>UTC Time:</b> Shows the current Coordinated Universal Time (UTC) "
+		"which is also known as Greenwich Mean Time (GMT).");
 }

@@ -44,6 +44,7 @@
 #include <qwt_counter.h>
 #include <qaction.h>
 #include <qwhatsthis.h>
+#include <qlabel.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/StationsDlgbase.h"
@@ -172,12 +173,14 @@ protected:
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
 	void			AddWhatsThisHelp();
+	void			SetUTCTimeLabel();
 
 	CDRMSchedule				DRMSchedule;
 	QPixmap						BitmCubeGreen;
 	QPixmap						BitmCubeYellow;
 	QPixmap						BitmCubeRed;
-	QTimer						Timer;
+	QTimer						TimerList;
+	QTimer						TimerUTCLabel;
 	_BOOLEAN					bShowAll;
 	QUrlOperator				UrlUpdateSchedule;
 	QPopupMenu*					pViewMenu;
@@ -248,7 +251,8 @@ protected:
 
 public slots:
 	void OnRemoteMenu(int iID);
-	void OnTimer();
+	void OnTimerList();
+	void OnTimerUTCLabel() {SetUTCTimeLabel();}
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 	void OnShowStationsMenu(int iID);
