@@ -39,7 +39,7 @@ class CParameter : public CCellMappingTable
 {
 public:
 	CParameter() : bRunThread(FALSE), Stream(MAX_NO_STREAMS), iChanEstDelay(0),
-		FACRepitition(15) /* See 6.3.6 */ {}
+		FACRepitition(15) /* See 6.3.6 */, bUsingMultimedia(TRUE) {}
 	virtual ~CParameter() {}
 
 	/* Enumerations --------------------------------------------------------- */
@@ -163,11 +163,12 @@ public:
 
 		/* In case of packet mode ------------------------------------------- */
 		EDatUnit	eDataUnitInd; /* Data unit indicator */
-		int			iPacketID; /* Packet Id */
+		int			iPacketID; /* Packet Id (2 bits) */
 		int			iPacketLen; /* Packet length */
 
 		// "DAB specified application" not yet implemented!!!
-		EApplDomain eAppDomain; /* Application domain */ 
+		EApplDomain eAppDomain; /* Application domain */
+		int			iUserAppIdent; /* User application identifier, only DAB */
 
 		/* This function is needed for detection changes in the class */
 		_BOOLEAN operator!=(const CDataParam DataParam)
@@ -178,8 +179,10 @@ public:
 			{
 				if (eDataUnitInd != DataParam.eDataUnitInd) return TRUE;
 				if (iPacketID != DataParam.iPacketID) return TRUE;
-				if (eAppDomain != DataParam.eAppDomain) return TRUE;
 				if (iPacketLen != DataParam.iPacketLen) return TRUE;
+				if (eAppDomain != DataParam.eAppDomain) return TRUE;
+				if (DataParam.eAppDomain == AD_DAB_SPEC_APP)
+					if (iUserAppIdent != DataParam.iUserAppIdent) return TRUE;
 			}
 			return FALSE;
 		}
@@ -260,6 +263,8 @@ public:
 	int				GetCurSelAudioService() const {return iCurSelAudioService;}
 	void			SetCurSelDataService(const int iNewService);
 	int				GetCurSelDataService() const {return iCurSelDataService;}
+	void			EnableMultimedia(const _BOOLEAN bFlag);
+	_BOOLEAN		GetEnableMultimedia() const {return bUsingMultimedia;}
 
 	_REAL			GetDCFrequency() const {return SOUNDCRD_SAMPLE_RATE *
 						(rFreqOffsetAcqui + rFreqOffsetTrack);}
@@ -421,6 +426,7 @@ public:
 
 	/* General -------------------------------------------------------------- */
 	_BOOLEAN			bRunThread;
+	_BOOLEAN			bUsingMultimedia;
 
 protected:
 	/* Current selected audio service for processing */

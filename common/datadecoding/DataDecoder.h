@@ -32,6 +32,14 @@
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
 #include "../Modul.h"
+#include "../CRC.h"
+#include "../Vector.h"
+#include "DABData.h"
+
+
+/* Definitions ****************************************************************/
+/* Maximum number of packtes per stream */
+#define MAX_NUM_PACK_PER_STREAM					4
 
 
 /* Classes ********************************************************************/
@@ -42,9 +50,34 @@ public:
 	virtual ~CDataDecoder() {}
 
 protected:
-	int iLenDataHigh;
-	int iLenDataLow;
-	int iTotalNoInputBits;
+	class CDataUnit
+	{
+	public:
+		CVector<_BINARY>	vecbiData;
+		_BOOLEAN			bOK;
+		_BOOLEAN			bReady;
+
+		void Reset()
+		{
+			vecbiData.Init(0);
+			bOK = FALSE;
+			bReady = FALSE;
+		}
+	};
+
+	int						iLenDataHigh;
+	int						iLenDataLow;
+	int						iTotalNoInputBits;
+	int						iTotalPacketSize;
+	int						iNumDataPackets;
+	int						iServPacketID;
+	CParameter::EApplDomain	eServAppDomain;
+	int						iDABUserAppIdent;
+	CVector<int>			veciCRCOk;
+
+	int						iContInd[MAX_NUM_PACK_PER_STREAM];
+	CDataUnit				DataUnit[MAX_NUM_PACK_PER_STREAM];
+	CDABData				DABData[MAX_NUM_PACK_PER_STREAM];
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

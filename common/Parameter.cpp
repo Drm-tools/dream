@@ -352,6 +352,17 @@ void CParameter::SetCurSelDataService(const int iNewService)
 	}
 }
 
+void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
+{
+	if (bUsingMultimedia != bFlag)
+	{
+		bUsingMultimedia = bFlag;
+
+		/* Set init flags */
+		DRMReceiver.InitsForMSCDemux();
+	}
+}
+
 void CParameter::SetNoAudioServ(const int iNewNoAuSe)
 {
 	if (iNoAudioService != iNewNoAuSe)
