@@ -150,7 +150,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	Param.MSCPrLe.iHierarch = 0;
 
 	/* Either one audio or one data service can be chosen */
-	_BOOLEAN bIsAudio = TRUE;
+	_BOOLEAN bIsAudio = FALSE;
 
 	/* In the current version only one service and one stream is supported. The
 	   stream IDs must be 0 in both cases */
@@ -184,7 +184,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 		Param.Service[0].DataParam.iStreamID = 0;
 
 		/* Init SlideShow application */
-		Param.Service[0].DataParam.iPacketLen = 45;
+		Param.Service[0].DataParam.iPacketLen = 45; /* TEST */
 		Param.Service[0].DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
 		Param.Service[0].DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
 	}
@@ -192,7 +192,7 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	/* Length of part B is set automatically (equal error protection (EEP),
 	   if "= 0"). Sets the number of bytes, should not exceed total number of
 	   bytes available in MSC block */
-	Param.Stream[0].iLenPartA = 80;
+	Param.Stream[0].iLenPartA = 80; /* TEST */
 
 	/* Init service parameters, 24 bit unsigned integer number */
 	Param.Service[0].iServiceID = 163569;
