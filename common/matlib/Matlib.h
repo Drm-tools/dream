@@ -49,7 +49,7 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 										operator[](i) FCT; \
 									return *this
 
-#define _MATOPCL(FCT)				for (int i = 0; i < iColumnSize; i++) \
+#define _MATOPCL(FCT)				for (int i = 0; i < iRowSize; i++) \
 										operator[](i) FCT; \
 									return *this
 
@@ -65,15 +65,15 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 #define _TESTSIZE(INP)		if (INP != iVectorLength) \
 								DebugError("MatLibOperator=()", "INP", INP, \
 								"iVectorLength", iVectorLength)
-#define _TESTRNGRM(POS)		if ((POS >= iColumnSize) || (POS < 0)) \
+#define _TESTRNGRM(POS)		if ((POS >= iRowSize) || (POS < 0)) \
 								DebugError("MatLibrReadMatrix", "POS", POS, \
-								"iColumnSize", iColumnSize)
-#define _TESTRNGWM(POS)		if ((POS >= iColumnSize) || (POS < 0)) \
+								"iRowSize", iRowSize)
+#define _TESTRNGWM(POS)		if ((POS >= iRowSize) || (POS < 0)) \
 								DebugError("MatLibrWriteMatrix", "POS", POS, \
-								"iColumnSize", iColumnSize)
-#define _TESTSIZEM(INP)		if (INP != iColumnSize) \
+								"iRowSize", iRowSize)
+#define _TESTSIZEM(INP)		if (INP != iRowSize) \
 								DebugError("MatLibOperatorMatrix=()", "INP", INP, \
-								"iColumnSize", iColumnSize)
+								"iRowSize", iRowSize)
 #else
 #define _TESTRNGR(POS)
 #define _TESTRNGW(POS)
@@ -513,25 +513,28 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 /******************************************************************************/
 /* CMatlibMatrix class ********************************************************/
 /******************************************************************************/
+/*
+	We define: Matrix[row][column]
+*/
 template<class T>
 class CMatlibMatrix
 {
 public:
 	/* Construction, Destruction -------------------------------------------- */
-	CMatlibMatrix() : iColumnSize(0), ppData(NULL), eVType(VTY_CONST) {}
+	CMatlibMatrix() : iRowSize(0), ppData(NULL), eVType(VTY_CONST) {}
 	CMatlibMatrix(const int iNRowLen, const int iNColLen,
 		const EVecTy eNTy = VTY_CONST) : 
-		iColumnSize(0), ppData(NULL), eVType(eNTy) {Init(iNRowLen, iNColLen);}
+		iRowSize(0), ppData(NULL), eVType(eNTy) {Init(iNRowLen, iNColLen);}
 	CMatlibMatrix(const CMatlibMatrix<T>& matI);
 
 	virtual ~CMatlibMatrix() {if (ppData != NULL) delete[] ppData;}
 
-	void Init(const int iNColLen, const int iNRowLen);
-	void Init(const int iNColLen, const int iNRowLen, const T tIniVal);
-	inline int GetColSize() const
-		{return iColumnSize;}
+	void Init(const int iNRowLen, const int iNColLen);
+	void Init(const int iNRowLen, const int iNColLen, const T tIniVal);
 	inline int GetRowSize() const
-		{if (iColumnSize > 0) return ppData[0].GetSize(); else return 0;}
+		{return iRowSize;}
+	inline int GetColSize() const
+		{if (iRowSize > 0) return ppData[0].GetSize(); else return 0;}
 
 	/* Operator[] (Regular indices!!!) */
 	inline CMatlibVector<T> operator[](int const iPos) const
@@ -547,9 +550,9 @@ public:
 
 	/* operator= */
 	inline CMatlibMatrix<T>& operator=(const CMatlibMatrix<CReal>& matI) 
-		{_TESTSIZEM(matI.GetColSize()); _MATOPCL(= matI[i]);}
+		{_TESTSIZEM(matI.GetRowSize()); _MATOPCL(= matI[i]);}
 	inline CMatlibMatrix<CComplex>& operator=(const CMatlibMatrix<CComplex>& matI) 
-		{_TESTSIZEM(matI.GetColSize()); _MATOPCL(= matI[i]);}
+		{_TESTSIZEM(matI.GetRowSize()); _MATOPCL(= matI[i]);}
 
 	/* operator*= */
 	inline CMatlibMatrix<T>& operator*=(const CReal& rI)
@@ -566,27 +569,60 @@ public:
 
 protected:
 	EVecTy				eVType;
-	int					iColumnSize;
+	int					iRowSize;
 	CMatlibVector<T>*	ppData;
 };
 
 
 /* Help functions *************************************************************/
+/* operator+ */
+inline CMatlibMatrix<CComplex> // cm, cm
+operator+(const CMatlibMatrix<CComplex>& cmA, const CMatlibMatrix<CComplex>& cmB)
+{
+	CMatlibMatrix<CComplex> matRet(cmA.GetRowSize(), cmA.GetColSize(), VTY_TEMP);
+
+	for (int j = 0; j < cmA.GetRowSize(); j++)
+		for (int i = 0; i < cmA.GetColSize(); i++)
+			matRet[j][i] = cmA[j][i] + cmB[j][i];
+
+	return matRet;
+}
+
 /* operator* */
 inline CMatlibVector<CComplex> // cm, cv
-operator*(const CMatlibMatrix<CComplex>& cvA, const CMatlibVector<CComplex>& cvB)
+operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibVector<CComplex>& cvB)
 {
 	CMatlibVector<CComplex> vecRet(cvB.GetSize(), VTY_TEMP);
 
-	for (int j = 0; j < cvA.GetColSize(); j++)
+	for (int j = 0; j < cmA.GetRowSize(); j++)
 	{
 		vecRet[j] = (CReal) 0.0;
 
 		for (int i = 0; i < cvB.GetSize(); i++)
-			vecRet[j] += cvA[j][i] * cvB[i];
+			vecRet[j] += cmA[j][i] * cvB[i];
 	}
 
 	return vecRet;
+}
+
+/* operator* */
+inline CMatlibMatrix<CComplex> // cm, cm
+operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibMatrix<CComplex>& cmB)
+{
+	CMatlibMatrix<CComplex> matRet(cmA.GetRowSize(), cmB.GetColSize(), VTY_TEMP);
+
+	for (int k = 0; k < cmB.GetColSize(); k++)
+	{
+		for (int j = 0; j < cmA.GetRowSize(); j++)
+		{
+			matRet[j][k] = (CReal) 0.0;
+
+			for (int i = 0; i < cmB.GetRowSize(); i++)
+				matRet[j][k] += cmA[j][i] * cmB[i][k];
+		}
+	}
+
+	return matRet;
 }
 
 
@@ -594,17 +630,17 @@ operator*(const CMatlibMatrix<CComplex>& cvA, const CMatlibVector<CComplex>& cvB
    (the implementation of template classes must be in the header file!) */
 template<class T>
 CMatlibMatrix<T>::CMatlibMatrix(const CMatlibMatrix<T>& matI) : 
-	iColumnSize(matI.GetColSize()), ppData(NULL), eVType(VTY_CONST)
+	iRowSize(matI.GetRowSize()), ppData(NULL), eVType(VTY_CONST)
 {
-	if (iColumnSize > 0)
+	if (iRowSize > 0)
 	{
 		/* Allocate data block for vector */
-		ppData = new CMatlibVector<T>[iColumnSize];
+		ppData = new CMatlibVector<T>[iRowSize];
 
 		/* Init column vectors and copy */
-		for (int i = 0; i < iColumnSize; i++)
+		for (int i = 0; i < iRowSize; i++)
 		{
-			ppData[i].Init(matI.GetRowSize());
+			ppData[i].Init(matI.GetColSize());
 
 			/* Copy entire vector */
 			ppData[i] = matI[i];
@@ -613,29 +649,29 @@ CMatlibMatrix<T>::CMatlibMatrix(const CMatlibMatrix<T>& matI) :
 }
 
 template<class T>
-void CMatlibMatrix<T>::Init(const int iNColLen, const int iNRowLen)
+void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen)
 {
-	iColumnSize = iNColLen;
+	iRowSize = iNRowLen;
 
 	/* Allocate data block for vector */
-	if (iColumnSize > 0)
+	if (iRowSize > 0)
 	{
 		if (ppData != NULL)
 			delete[] ppData;
 
-		ppData = new CMatlibVector<T>[iColumnSize];
+		ppData = new CMatlibVector<T>[iRowSize];
 
 		/* Init column vectors and zero out */
-		for (int i = 0; i < iColumnSize; i++)
-			ppData[i].Init(iNRowLen, 0);
+		for (int i = 0; i < iRowSize; i++)
+			ppData[i].Init(iNColLen, 0);
 	}
 }
 
 template<class T>
-void CMatlibMatrix<T>::Init(const int iNColLen, const int iNRowLen, const T tIniVal)
+void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen, const T tIniVal)
 {
 	/* Init vector and set all values to init value parameter */
-	Init(iNColLen, iNRowLen);
+	Init(iNRowLen, iNColLen);
 
 	/* Set all values to the init value */
 	for (int i = 0; i < iNRowLen; i++)
