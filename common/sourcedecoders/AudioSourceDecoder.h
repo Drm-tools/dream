@@ -57,6 +57,11 @@ public:
 	void SetTextMessage(const string& strText);
 	void ClearTextMessage();
 
+	void SetPicFileName(const string& strFileName, const string& strFormat)
+		{DataEncoder.GetSliShowEnc()->AddFileName(strFileName, strFormat);}
+	void ClearPicFileNames()
+		{DataEncoder.GetSliShowEnc()->ClearAllFileNames();}
+
 
 protected:
 	CTextMessageEncoder TextMessage;
