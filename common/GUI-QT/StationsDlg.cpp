@@ -144,6 +144,37 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 	struct tm* gmtCur = gmtime(&ltime);
 	const time_t lCurTime = mktime(gmtCur);
 
+	/* Get stop time */
+	struct tm* gmtStop = gmtime(&ltime);
+	gmtStop->tm_hour = StationsTable[iPos].iStopHour;
+	gmtStop->tm_min = StationsTable[iPos].iStopMinute;
+	const time_t lStopTime = mktime(gmtStop);
+
+	/* Get start time */
+	struct tm* gmtStart = gmtime(&ltime);
+	gmtStart->tm_hour = StationsTable[iPos].iStartHour;
+	gmtStart->tm_min = StationsTable[iPos].iStartMinute;
+	const time_t lStartTime = mktime(gmtStart);
+
+	/* Check, if stop time is on next day */
+	_BOOLEAN bSecondDay = FALSE;
+	if (lStopTime < lStartTime)
+	{
+		/* Check, if we are at the first or the second day right now */
+		if (lCurTime < lStopTime)
+		{
+			/* Second day. Increase day count */
+			gmtCur->tm_wday++;
+
+			/* Check that value is valid (range 0 - 6) */
+			if (gmtCur->tm_wday > 6)
+				gmtCur->tm_wday = 0;
+
+			/* Set flag */
+			bSecondDay = TRUE;
+		}
+	}
+
 	/* Check day
 	   tm_wday: day of week (0 - 6; Sunday = 0). "iDays" are coded with pseudo
 	   binary representation. A one signalls that day is active. The most
@@ -157,26 +188,27 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 		   that these stations are transmitting every day */
 		(StationsTable[iPos].iDays == 0))
 	{
-		/* Get start time */
-		struct tm* gmtStart = gmtime(&ltime);
-		gmtStart->tm_hour = StationsTable[iPos].iStartHour;
-		gmtStart->tm_min = StationsTable[iPos].iStartMinute;
-		time_t lStartTime = mktime(gmtStart);
-
-		/* Get stop time */
-		struct tm* gmtStop = gmtime(&ltime);
-		gmtStop->tm_hour = StationsTable[iPos].iStopHour;
-		gmtStop->tm_min = StationsTable[iPos].iStopMinute;
-
-		/* Check, if stop time is on next day */
-		if (StationsTable[iPos].iStartHour > StationsTable[iPos].iStopHour)
-			gmtStop->tm_mday++;
-
-		const time_t lStopTime = mktime(gmtStop);
-
-		/* Check interval */
-		if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
-			return TRUE;
+		/* Check time interval */
+		if (lStopTime > lStartTime)
+		{
+			if ((lCurTime >= lStartTime) && (lCurTime < lStopTime))
+				return TRUE;
+		}
+		else
+		{
+			if (bSecondDay == FALSE)
+			{
+				/* First day. Only check if we are after start time */
+				if (lCurTime >= lStartTime)
+					return TRUE;
+			}
+			else
+			{
+				/* Second day. Only check if we are before stop time */
+				if (lCurTime < lStopTime)
+					return TRUE;
+			}
+		}
 	}
 
 	return FALSE;
