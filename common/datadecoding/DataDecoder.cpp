@@ -356,8 +356,7 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 					break;
 
 				case AT_JOURNALINE:
-					Journaline[iPacketID].
-						AddDataUnit(DataUnit[iPacketID].vecbiData);
+					Journaline.AddDataUnit(DataUnit[iPacketID].vecbiData);
 					break;
 				}
 
@@ -456,6 +455,23 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 				   NewsService Journaline shall be 0x44A */
 				case 0x44A: /* Journaline */
 					eAppType = AT_JOURNALINE;
+
+					/* Check, if service ID of Journaline application has
+					   changed, that indicates that a new transmission is
+					   received -> reset decoder in this case. Otherwise
+					   use old buffer. That ensures that the decoder keeps
+					   old data in buffer when synchronization was lost for
+					   a short time */
+					const _UINT32BIT iNewServID =
+						ReceiverParam.Service[iCurSelDataServ].iServiceID;
+
+					if (iOldJournalineServiceID != iNewServID)
+					{
+						/* Reset Journaline decoder and store the new service
+						   ID number */
+						Journaline.Reset();
+						iOldJournalineServiceID = iNewServID;
+					}
 					break;
 				}
 			}
@@ -504,7 +520,7 @@ void CDataDecoder::GetNews(const int iObjID, CNews& News)
 
 	/* Check if data service is Journaline application */
 	if ((DoNotProcessData == FALSE) && (eAppType == AT_JOURNALINE))
-		Journaline[iServPacketID].GetNews(iObjID, News);
+		Journaline.GetNews(iObjID, News);
 
 	/* Release resources */
 	Unlock();

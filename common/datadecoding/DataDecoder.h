@@ -73,7 +73,7 @@ class CDataDecoder : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
 	CDataDecoder() : iServPacketID(0), DoNotProcessData(TRUE),
-		eAppType(AT_NOT_SUP) {}
+		eAppType(AT_NOT_SUP), iOldJournalineServiceID(0) {}
 	virtual ~CDataDecoder() {}
 	enum EAppType {AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE};
 
@@ -108,7 +108,8 @@ protected:
 	int						iContInd[MAX_NUM_PACK_PER_STREAM];
 	CDataUnit				DataUnit[MAX_NUM_PACK_PER_STREAM];
 	CMOTSlideShowDecoder	MOTSlideShow[MAX_NUM_PACK_PER_STREAM];
-	CJournaline				Journaline[MAX_NUM_PACK_PER_STREAM];
+	CJournaline				Journaline;
+	_UINT32BIT				iOldJournalineServiceID;
 
 	EAppType				eAppType;
 
