@@ -179,7 +179,9 @@ void MultimediaDlg::SetPicture()
 		}
 	else
 		TextBrowser->setText("<br><br><center><b>Image could not be "
-			"loaded, format not supported by this version of QT!"
+			"loaded, " +
+			 QString(vecpRawImages[iCurImagePos]->strFormat.c_str()) +
+			 "-format not supported by this version of QT!"
 			"</b><br><br><br>If you want to view the image, "
 			"save it to file and use an external viewer</center>");
 
