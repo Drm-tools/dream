@@ -4,7 +4,7 @@ bin_PROGRAMS = drm
 drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
 	../common/CRC.cpp \
 	../common/DRMSignalIO.cpp \
-	../common/Data.cpp \
+	../common/DataIO.cpp \
 	../common/DrmReceiver.cpp \
 	../common/DrmSimulation.cpp \
 	../common/DrmTransmitter.cpp \
@@ -56,7 +56,7 @@ drmwithoutqt_SOURCES = ../common/SimulationParameters.cpp \
 	../common/Buffer.h \
 	../common/CRC.h \
 	../common/DRMSignalIO.h \
-	../common/Data.h \
+	../common/DataIO.h \
 	../common/DrmReceiver.h \
 	../common/DrmSimulation.h \
 	../common/DrmTransmitter.h \

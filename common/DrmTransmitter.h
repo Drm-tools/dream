@@ -32,7 +32,7 @@
 #include <iostream>
 #include "Buffer.h"
 #include "Parameter.h"
-#include "Data.h"
+#include "DataIO.h"
 #include "mlc/MLC.h"
 #include "interleaver/SymbolInterleaver.h"
 #include "ofdmcellmapping/OFDMCellMapping.h"

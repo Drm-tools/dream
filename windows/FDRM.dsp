@@ -441,7 +441,7 @@ SOURCE=..\common\CRC.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\Data.cpp
+SOURCE=..\common\DataIO.cpp
 # End Source File
 # Begin Source File
 
@@ -754,7 +754,7 @@ SOURCE=..\common\CRC.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\Data.h
+SOURCE=..\common\DataIO.h
 # End Source File
 # Begin Source File
 
