@@ -85,7 +85,6 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 				(*pvecInputData)[i + 1] /* right */);
 	}
 
-
 	/* Store data in buffer for spectrum calculation */
 	vecsOutputData.AddEnd((*pvecInputData), iInputBlockSize);
 }
@@ -192,6 +191,7 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
 			iCurPosInStream += NUM_SMPLS_4_AUDIO_SPECTRUM;
 		}
 
+		/* Calculate norm constand and scale factor */
 		const _REAL rNormData = (_REAL) NUM_SMPLS_4_AUDIO_SPECTRUM *
 			NUM_SMPLS_4_AUDIO_SPECTRUM * _MAXSHORT * _MAXSHORT *
 			NUM_BLOCKS_AV_AUDIO_SPEC;
