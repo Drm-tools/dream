@@ -127,22 +127,83 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* To get a continuous counter we need to take the guard-interval and
 	   timing corrections into account */
-	rSkipGuardIntPhase = rNormCurFreqOffset *
-		(iGuardSize - (*pvecInputData).GetExData().iCurTimeCorr);
+	if (bUseRecFilter == TRUE)
+	{
+		/* In case of using a receiver filter, additionally, the data needed for
+		   the filter at the beginning and end has to be considered */
+		rSkipGuardIntPhase =
+			rNormCurFreqOffset * (iGuardSize - (*pvecInputData).GetExData().
+			iCurTimeCorr - iNumTapsRecFilt + 1);
+	}
+	else
+	{
+		rSkipGuardIntPhase =
+			rNormCurFreqOffset * (iGuardSize - (*pvecInputData).GetExData().
+			iCurTimeCorr);
+	}
 
 	/* Apply correction */
 	cCurExp *= _COMPLEX(cos(rSkipGuardIntPhase), sin(rSkipGuardIntPhase));
 
-	/* Input data is real, make complex and compensate for frequency offset */
-	for (i = 0; i < iInputBlockSize; i++)
+	if (bUseRecFilter == TRUE)
 	{
-		veccFFTInput[i] = (*pvecInputData)[i] * Conj(cCurExp);
-		
-		/* Rotate exp-pointer on step further by complex multiplication with
-		   precalculated rotation vector cExpStep. This saves us from
-		   calling sin() and cos() functions all the time (iterative
-		   calculation of these functions) */
-		cCurExp *= cExpStep;
+		/* Filtering of output signal (FIR filter) -------------------------- */
+		/* Fill state registers with initial data */
+		const int iStartIni =
+			HALF_MAX_NUM_TAPS_RECFILTER - iNumTapsRecFilt / 2 + 1;
+
+		const int iEndIni = HALF_MAX_NUM_TAPS_RECFILTER + iNumTapsRecFilt / 2;
+		const int iEndData = iEndIni + iDFTSize;
+
+		for (i = iStartIni; i < iEndIni; i++)
+		{
+			rvecZReal[i - iStartIni] =
+				Real((*pvecInputData)[i] * Conj(cCurExp));
+
+			rvecZImag[i - iStartIni] =
+				Imag((*pvecInputData)[i] * Conj(cCurExp));
+
+			/* Rotate pointer (for complex exp function) */
+			cCurExp *= cExpStep;
+		}
+
+		/* Actual data vector */
+		for (i = iEndIni; i < iEndData; i++)
+		{
+			rvecDataReal[i - iEndIni] =
+				Real((*pvecInputData)[i] * Conj(cCurExp));
+
+			rvecDataImag[i - iEndIni] =
+				Imag((*pvecInputData)[i] * Conj(cCurExp));
+
+			/* Rotate pointer (for complex exp function) */
+			cCurExp *= cExpStep;
+		}
+
+		/* Actual filter routine for real and imaginary part */
+		rvecDataReal = Filter(rvecB, rvecA, rvecDataReal, rvecZReal);
+		rvecDataImag = Filter(rvecB, rvecA, rvecDataImag, rvecZImag);
+
+		/* Cut out correct data and fill vector for FFT operation */
+		for (i = 0;	i < iDFTSize; i++)
+			veccFFTInput[i] = CComplex(rvecDataReal[i], rvecDataImag[i]);
+	}
+	else
+	{
+		/* Input data is real, make complex and compensate for frequency
+		   offset */
+		for (i = HALF_MAX_NUM_TAPS_RECFILTER;
+			i < iInputBlockSize - HALF_MAX_NUM_TAPS_RECFILTER; i++)
+		{
+			veccFFTInput[i - HALF_MAX_NUM_TAPS_RECFILTER] =
+				(*pvecInputData)[i] * Conj(cCurExp);
+
+			/* Rotate exp-pointer on step further by complex multiplication with
+			   precalculated rotation vector cExpStep. This saves us from
+			   calling sin() and cos() functions all the time (iterative
+			   calculation of these functions) */
+			cCurExp *= cExpStep;
+		}
 	}
 
 	/* Calculate Fourier transformation (actual OFDM demodulation) */
@@ -186,8 +247,94 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 	rLamPSD = IIR1Lam(TICONST_PSD_EST_OFDM, (CReal) SOUNDCRD_SAMPLE_RATE /
 		ReceiverParam.iSymbolBlockSize); /* Lambda for IIR filter */
 
+
+	/* Inits for receiver filter -------------------------------------------- */
+	float*	pCurFilt;
+	CReal	rNormCurFreqOffset;
+
+	/* Choose correct filter for chosen DRM bandwidth. Also, adjust offset
+	   frequency for different modes. E.g., 5 kHz mode is on the right side
+	   of the DC frequency */
+	switch (ReceiverParam.GetSpectrumOccup())
+	{
+	case SO_0:
+		pCurFilt = fRecFilt4_5;
+		iNumTapsRecFilt = NUM_TAPS_RECFILTER_4_5;
+
+		/* Completely on the right side of DC */
+		rNormCurFreqOffset =
+			(VIRTUAL_INTERMED_FREQ + (CReal) 2250.0) / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_1:
+		pCurFilt = fRecFilt5;
+		iNumTapsRecFilt = NUM_TAPS_RECFILTER_5;
+
+		/* Completely on the right side of DC */
+		rNormCurFreqOffset =
+			(VIRTUAL_INTERMED_FREQ + (CReal) 2500.0) / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_2:
+		pCurFilt = fRecFilt9;
+		iNumTapsRecFilt = NUM_TAPS_RECFILTER_9;
+
+		/* Centered */
+		rNormCurFreqOffset =
+			(CReal) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_3:
+		pCurFilt = fRecFilt10;
+		iNumTapsRecFilt = NUM_TAPS_RECFILTER_10;
+
+		/* Centered */
+		rNormCurFreqOffset =
+			(CReal) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_4:
+		pCurFilt = fRecFilt18;
+		iNumTapsRecFilt = NUM_TAPS_RECFILTER_18;
+
+		/* Main part on the right side of DC */
+		rNormCurFreqOffset =
+			(VIRTUAL_INTERMED_FREQ + (CReal) 4500.0) / SOUNDCRD_SAMPLE_RATE;
+		break;
+
+	case SO_5:
+		pCurFilt = fRecFilt20;
+		iNumTapsRecFilt = NUM_TAPS_RECFILTER_20;
+
+		/* Main part on the right side of DC */
+		rNormCurFreqOffset =
+			(VIRTUAL_INTERMED_FREQ + (CReal) 5000.0) / SOUNDCRD_SAMPLE_RATE;
+		break;
+	}
+
+	/* Init filter taps */
+	rvecB.Init(iNumTapsRecFilt);
+
+	/* Modulate filter to shift it to the correct IF frequency */
+	for (int i = 0; i < iNumTapsRecFilt; i++)
+	{
+		rvecB[i] =
+			pCurFilt[i] * Cos((CReal) 2.0 * crPi * rNormCurFreqOffset * i);
+	}
+
+	/* Only FIR filter */
+	rvecA.Init(1);
+	rvecA[0] = (CReal) 1.0;
+
+	/* State memory (init with zeros) and data vector */
+	rvecZReal.Init(iNumTapsRecFilt - 1, (CReal) 0.0);
+	rvecZImag.Init(iNumTapsRecFilt - 1, (CReal) 0.0);
+	rvecDataReal.Init(iDFTSize);
+	rvecDataImag.Init(iDFTSize);
+
+
 	/* Define block-sizes for input and output */
-	iInputBlockSize = iDFTSize;
+	iInputBlockSize = iDFTSize + 2 * HALF_MAX_NUM_TAPS_RECFILTER;
 	iOutputBlockSize = ReceiverParam.iNumCarrier;
 }
 

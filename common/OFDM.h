@@ -31,6 +31,7 @@
 
 #include "Parameter.h"
 #include "Modul.h"
+#include "ReceiverFilter.h"
 
 #ifdef HAVE_DFFTW_H
 # include <dfftw.h>
@@ -79,10 +80,15 @@ protected:
 class COFDMDemodulation : public CReceiverModul<_REAL, _COMPLEX>
 {
 public:
-	COFDMDemodulation() : iLenPowSpec(0) {}
+	/* bUseRecFilter shall be set the FALSE as default since in case of
+	   BERIDEAL simulations, no filter shall be applied */
+	COFDMDemodulation() : iLenPowSpec(0), bUseRecFilter(FALSE) {}
 	virtual ~COFDMDemodulation() {}
 
 	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+
+	void SetRecFilter(const _BOOLEAN bNewF) {bUseRecFilter = bNewF;}
+	_BOOLEAN GetRecFilter() {return bUseRecFilter;}
 
 protected:
 	CVector<_REAL>			vecrPDSResult;
@@ -105,6 +111,15 @@ protected:
 	CReal					rLamPSD;
 
 	_REAL					rInternIFNorm;
+
+	_BOOLEAN				bUseRecFilter;
+	CRealVector				rvecA;
+	CRealVector				rvecB;
+	CRealVector				rvecZReal; /* State memory real part */
+	CRealVector				rvecZImag; /* State memory imaginary part */
+	CRealVector				rvecDataReal;
+	CRealVector				rvecDataImag;
+	int						iNumTapsRecFilt;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

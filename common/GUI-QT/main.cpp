@@ -270,6 +270,14 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 		}
 
 
+		/* Bandpass filter flag --------------------------------------------- */
+		if (GetFlagArgument(argc, argv, i, "-F", "--filter") == TRUE)
+		{
+			DRMReceiver.GetOFDMDemod()->SetRecFilter(TRUE);
+			continue;
+		}
+
+
 		/* Sound In device -------------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", 0, 1000,
 			rArgument) == TRUE)
@@ -460,6 +468,7 @@ void UsageArguments(char** argv)
 		<< endl;
 	cerr << "  -E <r>, --fracwincent <r>  freq. acqu. search window center [Hz]"
 		<< endl;
+	cerr << "  -F, --filter               apply bandpass filter" << endl;
 
 #ifdef USE_QT_GUI
 	cerr << "  -r <n>, --frequency <n>    set frequency [kHz] for log file"
