@@ -87,6 +87,7 @@ public:
 	virtual ~CWriteData() {}
 
 	void StartWriteWaveFile(const string strFileName);
+	_BOOLEAN GetIsWriteWaveFile() {return bDoWriteWaveFile;}
 	void StopWriteWaveFile();
 	void MuteAudio(_BOOLEAN bNewMA) {bMuteAudio = bNewMA;}
 	_BOOLEAN GetMuteAudio() {return bMuteAudio;}
