@@ -1068,7 +1068,10 @@ void systemevalDlg::AddWhatsThisHelp()
 		"is one of the three logical channels and is always modulated with a "
 		"4-QAM. If the FAC CRC check was successful, the receiver changes to "
 		"tracking mode. The FAC LED is the indication whether the receiver "
-		"is synchronized to a DRM transmission or not.");
+		"is synchronized to a DRM transmission or not.<br>"
+		"The bandwidth of the DRM signal, the constellation scheme of MSC and "
+		"SDC channels and the interleaver depth are some of the parameters "
+		"which are provided by the FAC.");
 
 	QWhatsThis::add(TextLabelLEDFACCRC, strLEDFACCRC);
 	QWhatsThis::add(LEDFAC, strLEDFACCRC);
