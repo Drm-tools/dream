@@ -1,8 +1,28 @@
-#! /bin/sh
+#! /bin/bash
 
-aclocal -I .
-autoheader
+# work around a strange setup in RedHat 7.x
+
+if [ -x /usr/bin/aclocal-1.5 ]; then
+	aclocal-1.5 -I .
+else
+	aclocal -I .
+fi
+if [ -x /usr/bin/autoheader-2.53 ]; then
+	autoheader-2.53
+else
+	autoheader
+fi
+
 libtoolize --automake
-automake --add-missing
-autoconf
+
+if [ -x /usr/bin/automake-1.5 ]; then
+	automake-1.5 --add-missing
+else
+	automake --add-missing
+fi
+if [ -x /usr/bin/autoconf-2.53 ]; then
+	autoconf-2.53
+else
+	autoconf
+fi
 echo "Ready to run ./configure"
