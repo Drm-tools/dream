@@ -68,8 +68,8 @@ public:
 
 	void Init(CParameter& Parameter, int iNewSymbDelay);
 
-	_REAL Process(CParameter& Parameter, CComplexVector& veccChanEst,
-				  int iNewTiCorr);
+	void Process(CParameter& Parameter, CComplexVector& veccChanEst,
+				 int iNewTiCorr, _REAL& rLenPDS, _REAL& rOffsPDS);
 
 	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 					 _REAL& rLowerBound, _REAL& rHigherBound,

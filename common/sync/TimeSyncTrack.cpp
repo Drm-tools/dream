@@ -33,8 +33,9 @@
 
 
 /* Implementation *************************************************************/
-_REAL CTimeSyncTrack::Process(CParameter& Parameter,
-							  CComplexVector& veccChanEst, int iNewTiCorr)
+void CTimeSyncTrack::Process(CParameter& Parameter,
+							 CComplexVector& veccChanEst, int iNewTiCorr,
+							 _REAL& rLenPDS, _REAL& rOffsPDS)
 {
 	int			i, j;
 	int			iIntShiftVal;
@@ -260,11 +261,13 @@ _REAL CTimeSyncTrack::Process(CParameter& Parameter,
 		}
 	}
 
-	/* Bound the delay to the guard-interval length */
+	/* Set return parameters. Bound the delay to the guard-interval length */
 	if (rEstDelay > rGuardSizeFFT)
-		return rGuardSizeFFT;
+		rLenPDS = rGuardSizeFFT;
 	else
-		return rEstDelay;
+		rLenPDS = rEstDelay;
+
+	rOffsPDS = (_REAL) 0.0; /* Not yet estimated */
 }
 
 void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)

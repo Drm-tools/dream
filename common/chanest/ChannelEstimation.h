@@ -132,7 +132,6 @@ protected:
 
 	CComplexVector		veccChanEst;
 
-	int					iGuardSizeFFT;
 	int					iFFTSizeN;
 
 	CRealVector			vecrDFTWindow;
@@ -154,7 +153,7 @@ protected:
 	_REAL				rSNREstimate;
 	_REAL				rSNRCorrectFact;
 	int					iUpCntWienFilt;
-	_REAL				rDelaySprEstInd;
+	_REAL				rLenPDSEst;
 	_REAL				rMaxDelaySprInFra;
 
 	int					iStartZeroPadding;
@@ -162,11 +161,13 @@ protected:
 	CReal				TentativeFACDec(const CComplex cCurRec) const;
 
 	/* Wiener interpolation in frequency direction */
-	void UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio);
+	void UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
+							  CReal rRatPDSOffs);
 
-	CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, _REAL rSNR, 
-									 _REAL rRatGuarLen, int iLength);
-	_COMPLEX FreqCorrFct(int iCurPos, _REAL rRatGuarLen);
+	CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, CReal rSNR, 
+									 CReal rRatPDSLen, CReal rRatPDSOffs,
+									 int iLength);
+	CComplex FreqCorrFct(int iCurPos, CReal rRatPDSLen, CReal rRatPDSOffs);
 	CMatrix<_COMPLEX>	matcFiltFreq;
 	int					iLengthWiener;
 	CVector<int>		veciPilOffTab;

@@ -68,8 +68,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* -------------------------------------------------------------------------
 	   Use time-interpolated channel estimate for timing synchronization 
 	   tracking */
-	rDelaySprEstInd = TimeSyncTrack.Process(ReceiverParam, veccPilots, 
-		(*pvecInputData).GetExData().iCurTimeCorr);
+
+
+// TEST
+_REAL rOffsPDSEst; /* Not yet used */
+
+	TimeSyncTrack.Process(ReceiverParam, veccPilots, 
+		(*pvecInputData).GetExData().iCurTimeCorr, rLenPDSEst, rOffsPDSEst);
 
 
 	/* Frequency-interploation ************************************************/
@@ -146,13 +151,14 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 			iUpCntWienFilt--;
 
 			/* Get maximum delay spread in one DRM frame */
-			if (rDelaySprEstInd > rMaxDelaySprInFra)
-				rMaxDelaySprInFra = rDelaySprEstInd;
+			if (rLenPDSEst > rMaxDelaySprInFra)
+				rMaxDelaySprInFra = rLenPDSEst;
 		}
 		else
 		{
 			/* Update filter taps */
-			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxDelaySprInFra / iNumCarrier);
+			UpdateWienerFiltCoef(rSNRAftTiInt, rMaxDelaySprInFra / iNumCarrier,
+				(CReal) 0.0);
 
 			/* Reset counter and maximum storage variable */
 			iUpCntWienFilt = iNumSymPerFrame;
@@ -192,8 +198,6 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* SNR estimation ------------------------------------------------------- */
-	/* Use estimated channel and compare it to the received pilots. This 
-	   estimation works only if the channel estimation was successful */
 	/* Modified symbol ID, check range {0, ..., iNumSymPerFrame} */
 	iModSymNum = (*pvecOutputData).GetExData().iSymbolID;
 
@@ -205,6 +209,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		switch (TypeSNREst)
 		{
 		case SNR_PIL:
+			/* Use estimated channel and compare it to the received pilots. This
+			   estimation works only if the channel estimation was successful */
 			/* Identify pilot positions. Use MODIFIED "iSymbolID" (See lines
 			   above) */
 			if (_IsScatPil(ReceiverParam.matiMapTab[iModSymNum][i]))
@@ -299,7 +305,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
 
 	/* Length of guard-interval with respect to FFT-size! */
-	iGuardSizeFFT = iNumCarrier * 
+	int iGuardSizeFFT = iNumCarrier * 
 		ReceiverParam.RatioTgTu.iEnum / ReceiverParam.RatioTgTu.iDenom;
 
 	/* If robustness mode D is active, get DC position. This position cannot
@@ -409,7 +415,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		ReceiverParam.rAvPilPowPerSym /	ReceiverParam.rAvPowPerSymbol;
 
 	/* Init delay spread length estimation (index) */
-	rDelaySprEstInd = (_REAL) 0.0;
+	rLenPDSEst = (_REAL) 0.0;
 	rMaxDelaySprInFra = (_REAL) 0.0; /* Maximum estimated delay spread in
 									    one DRM frame */
 
@@ -462,7 +468,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Init wiener filter */
 	UpdateWienerFiltCoef(rSNR, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
-		ReceiverParam.RatioTgTu.iDenom);
+		ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
 
 
 	/* Define block-sizes for input and output */
@@ -471,8 +477,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 }
 
 CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
-													 _REAL rSNR,
-													 _REAL rRatGuarLen,
+													 CReal rSNR,
+													 CReal rRatPDSLen,
+													 CReal rRatPDSOffs,
 													 int iLength)
 {
 	int				i;
@@ -486,7 +493,7 @@ CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 	{
 		iCurPos = i * iFreqInt - iDiff;
 
-		veccRhp[i] = FreqCorrFct(iCurPos, rRatGuarLen);
+		veccRhp[i] = FreqCorrFct(iCurPos, rRatPDSLen, rRatPDSOffs);
 	}
 
 	/* Calculation of R_pp */
@@ -494,11 +501,11 @@ CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 	{
 		iCurPos = i * iFreqInt;
 
-		veccRpp[i] = FreqCorrFct(iCurPos, rRatGuarLen);
+		veccRpp[i] = FreqCorrFct(iCurPos, rRatPDSLen, rRatPDSOffs);
 	}
 
 	/* Add SNR at first tap */
-	veccRpp[0] += (_REAL) 1.0 / rSNR;
+	veccRpp[0] += (CReal) 1.0 / rSNR;
 
 	/* Call levinson algorithm to solve matrix system for optimal solution */
 	veccReturn = Levinson(veccRpp, veccRhp);
@@ -506,24 +513,25 @@ CComplexVector CChannelEstimation::FreqOptimalFilter(int iFreqInt, int iDiff,
 	return veccReturn;
 }
 
-_COMPLEX CChannelEstimation::FreqCorrFct(int iCurPos, _REAL rRatGuarLen)
+CComplex CChannelEstimation::FreqCorrFct(int iCurPos, CReal rRatPDSLen,
+										 CReal rRatPDSOffs)
 {
-	/* We assume that the power delay spread is a rectangle function in the time
-	   domain with the lenght of the guard interval (sinc-function in the
-	   frequency domain) */
-	if (iCurPos == 0)
-		return (_REAL) 1.0;
-	else
-	{
-		/* First calculate the argument of the sinc- and exp-function */
-		_REAL rArg = (_REAL) crPi * iCurPos * rRatGuarLen;
+/* 
+	We assume that the power delay spread is a rectangle function in the time
+	domain (sinc-function in the frequency domain). Length and position of this
+	window are adapted according to the current estimated PDS.
+*/
+	/* First calculate the argument of the sinc- and exp-function */
+	const CReal rArgSinc = (CReal) iCurPos * rRatPDSLen;
+	const CReal rArgExp =
+		(CReal) crPi * iCurPos * (rRatPDSLen + rRatPDSOffs);
 
-		/* si(pi * n * rat) * exp(pi * n * rat) */
-		return sin(rArg) / rArg * _COMPLEX(cos(rArg), sin(rArg));
-	}
+	/* sinc(n * rat) * exp(pi * n * (rat + ratoffs)) */
+	return Sinc(rArgSinc) * CComplex(Cos(rArgExp), Sin(rArgExp));
 }
 
-void CChannelEstimation::UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio)
+void CChannelEstimation::UpdateWienerFiltCoef(CReal rNewSNR, CReal rRatPDSLen,
+											  CReal rRatPDSOffs)
 {
 	int	j, i;
 	int	iDiff;
@@ -532,7 +540,7 @@ void CChannelEstimation::UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio)
 	/* Calculate all possible wiener filters */
 	for (j = 0; j < iNoWienerFilt; j++)
 		matcWienerFilter[j] = FreqOptimalFilter(iScatPilFreqInt, j, rNewSNR,
-			rNewRatio, iLengthWiener);
+			rRatPDSLen, rRatPDSOffs, iLengthWiener);
 
 
 #if 0
@@ -633,8 +641,8 @@ _REAL CChannelEstimation::GetSNREstdB() const
 _REAL CChannelEstimation::GetDelay() const
 {
 	/* Delay in ms */
-	return rDelaySprEstInd * iFFTSizeN / 
-		(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * 2) * 1000;
+	return rLenPDSEst * iFFTSizeN / 
+		(SOUNDCRD_SAMPLE_RATE * iNumIntpFreqPil * iScatPilFreqInt) * 1000;
 }
 
 void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
@@ -655,10 +663,10 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 		   (carrier index as x-scale) */
 		for (int i = 0; i < iNumCarrier; i++)
 		{
-			_REAL rNormChanEst = abs(veccChanEst[i]) / (_REAL) iNumCarrier;
+			CReal rNormChanEst = Abs(veccChanEst[i]) / (CReal) iNumCarrier;
 				
 			if (rNormChanEst > 0)
-				vecrData[i] = (_REAL) 20.0 * log10(rNormChanEst);
+				vecrData[i] = (CReal) 20.0 * Log10(rNormChanEst);
 			else
 				vecrData[i] = RET_VAL_LOG_0;
 
