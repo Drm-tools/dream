@@ -781,7 +781,7 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 		else
 		{
 			/* The long version of log file has different header */
-			fprintf(pFile, " FREQ,       DATE,       TIME, SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY\n");
+			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY\n");
 		}
 
 		fflush(pFile);
@@ -853,10 +853,10 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 
 				/* This data can be read by Microsoft Excel */
 				fprintf(pFileLong,
-					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %3d,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f\n",
+					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f\n",
 					iFrequency,	TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
 					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
-					TimeNow->tm_sec, (int) rCurSNR, iSyncInd, iFACInd, iMSCInd,
+					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
 					iNumCRCMSCLong, iNumCRCOkMSCLong,
 					rDoppler, rDelay);
 			}
