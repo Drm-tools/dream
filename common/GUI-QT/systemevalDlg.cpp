@@ -633,7 +633,7 @@ void systemevalDlg::OnCheckWriteLog()
 		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(strFreq.toUInt());
 
 		/* Set some other information obout this receiption */
-		string strAddText = "";
+		QString strAddText = "";
 
 		/* Check if receiver does receive a DRM signal */
 		if ((DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
@@ -661,8 +661,12 @@ void systemevalDlg::OnCheckWriteLog()
 				strAddText += "\nBandwidth        " + GetSpecOccStr();
 			}
 		}
-		DRMReceiver.GetParameters()->ReceptLog.SetAdditText(strAddText);
 
+		/* Set additional text for log file */
+		string strTemp = strAddText;
+		DRMReceiver.GetParameters()->ReceptLog.SetAdditText(strTemp);
+
+		/* Activate log file */
 		DRMReceiver.GetParameters()->ReceptLog.SetLog(TRUE);
 	}
 	else
