@@ -106,6 +106,7 @@ public:
 	CSyncUsingPil*			GetSyncUsPil() {return &SyncUsingPil;}
 	CWriteData*				GetWriteData() {return &WriteData;}
 	CSound*					GetSoundInterface() {return &SoundInterface;}
+	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 
 
 	CParameter*				GetParameters() {return &ReceiverParam;}
