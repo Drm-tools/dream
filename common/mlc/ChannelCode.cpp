@@ -182,7 +182,7 @@ CChannelCode::CChannelCode()
 		   access to all bits in "byResult" we shift the current bit so long
 		   until it reaches the mask (at zero) by using operator ">> i". The
 		   actual XOR operation is done by "^=" */
-		vecbiParity[j] = FALSE;
+		vecbiParity[j] = 0;
 		for (int i = 0; i < MC_CONSTRAINT_LENGTH; i++)
 			vecbiParity[j] ^= (j >> i) & 1;
 	}
