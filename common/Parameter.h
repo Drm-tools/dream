@@ -357,12 +357,12 @@ public:
 		void SetSNR(_REAL rCurSNR);
 		void SetNumAAC(int iNewNum);
 		void SetLog(_BOOLEAN bLog);
+		void WriteParameters();
 
 	protected:
 		void ResetLog();
 		void CloseFile();
-		void WriteParameters();
-		int				iNumFAC, iNumMSC, iNumSNR;
+		int				iNumSNR;
 		int				iNumCRCOkFAC, iNumCRCOkMSC;
 		int				iNumAACFrames, iMinuteCnt;
 		_REAL			rAvSNR;

@@ -416,59 +416,35 @@ CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFile(NULL)
 
 void CParameter::CReceptLog::ResetLog()
 {
-	iNumFAC = 0;
-	iNumMSC = 0;
-	iNumSNR = 0;
 	iNumCRCOkFAC = 0;
 	iNumCRCOkMSC = 0;
+	iNumSNR = 0;
 	rAvSNR = (_REAL) 0.0;
 }
 
 void CParameter::CReceptLog::SetFAC(_BOOLEAN bCRCOk)
 {
-	iNumFAC++;
-
-	if (bCRCOk == TRUE)
-		iNumCRCOkFAC++;
-
-	if (iNumFAC > NUM_DRM_FRAMES_PER_MIN)
-	{
-		/* This should not happen, reset log and write zeros */
-		ResetLog();
-
-		WriteParameters();
-
-		iMinuteCnt++;
-
-		/* Increase FAC CRC count since the on good CRC which caused the overrun
-		   was for the next block */
-		iNumCRCOkFAC++;
-	}
+	if (bLogActivated == TRUE)
+		if (bCRCOk == TRUE)
+			iNumCRCOkFAC++;
 }
 
 void CParameter::CReceptLog::SetMSC(_BOOLEAN bCRCOk)
 {
-	iNumMSC++;
-
-	if (bCRCOk == TRUE)
-		iNumCRCOkMSC++;
-
-	if (iNumMSC == iNumAACFrames * NUM_DRM_FRAMES_PER_MIN)
-	{
-		/* Store results in file */
-		WriteParameters();
-
-		ResetLog();
-		iMinuteCnt++;
-	}
+	if (bLogActivated == TRUE)
+		if (bCRCOk == TRUE)
+			iNumCRCOkMSC++;
 }
 
 void CParameter::CReceptLog::SetSNR(_REAL rCurSNR)
 {
-	iNumSNR++;
+	if (bLogActivated == TRUE)
+	{
+		iNumSNR++;
 
-	/* Average SNR values */
-	rAvSNR += rCurSNR;
+		/* Average SNR values */
+		rAvSNR += rCurSNR;
+	}
 }
 
 void CParameter::CReceptLog::SetNumAAC(int iNewNum)
@@ -545,8 +521,10 @@ void CParameter::CReceptLog::WriteParameters()
 			else
 				iAverageSNR = (int) (rAvSNR / iNumSNR + (_REAL) 0.5); /* Round */
 
-			/* If no sync, do not print number of AAC frames */
-			if (iNumCRCOkFAC == 0)
+			/* If no sync, do not print number of AAC frames. If the number of
+			   correct FAC CRCs is lower than 10%, we assume that receiver is
+			   not synchronized */
+			if (iNumCRCOkFAC < 15)
 				iTmpNumAAC = 0;
 			else
 				iTmpNumAAC = iNumAACFrames;
@@ -556,6 +534,9 @@ void CParameter::CReceptLog::WriteParameters()
 				iNumCRCOkMSC, iTmpNumAAC);
 			fflush(pFile);
 		}
+
+		ResetLog();
+		iMinuteCnt++;
 	}
 
 	catch (...)

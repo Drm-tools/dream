@@ -131,6 +131,8 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 		this, SLOT(OnTimer()));
 	connect(&TimerChart, SIGNAL(timeout()),
 		this, SLOT(OnTimerChart()));
+	connect(&TimerLogFile, SIGNAL(timeout()),
+		this, SLOT(OnTimerLogFile()));
 
 	/* Activte real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -625,5 +627,24 @@ void systemevalDlg::OnCheckBoxMuteAudio()
 
 void systemevalDlg::OnCheckWriteLog()
 {
-	DRMReceiver.GetParameters()->ReceptLog.SetLog(CheckBoxWriteLog->isChecked());
+	if (CheckBoxWriteLog->isChecked())
+	{
+		/* Activte log file timer, update time: 1 min (i.e. 60000 ms) */
+		TimerLogFile.start(60000);
+
+		DRMReceiver.GetParameters()->ReceptLog.SetLog(TRUE);
+	}
+	else
+	{
+		/* Deactivate log file timer */
+		TimerLogFile.stop();
+
+		DRMReceiver.GetParameters()->ReceptLog.SetLog(FALSE);
+	}
+}
+
+void systemevalDlg::OnTimerLogFile()
+{
+	/* Write new parameters in log file */
+	DRMReceiver.GetParameters()->ReceptLog.WriteParameters();
 }
