@@ -106,9 +106,9 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 
 	/* Init frequency edit for log file */
+	iCurFrequency = DRMReceiver.GetParameters()->ReceptLog.GetFrequency();
 	if (DRMReceiver.GetParameters()->ReceptLog.GetFrequency() != 0)
-		EdtFrequency->setText(QString().number(
-			DRMReceiver.GetParameters()->ReceptLog.GetFrequency()));
+		EdtFrequency->setText(QString().number(iCurFrequency));
 
 
 	/* Connect controls */
@@ -540,6 +540,18 @@ void systemevalDlg::OnTimer()
 		/* Remove tool tip */
 		QToolTip::remove(MainPlot);
 	}
+
+	/* Update frequency edit control (frequency could be changed by
+	   schedule dialog */
+	QString strFreq = EdtFrequency->text();
+	const int iCurLogFreq =
+		DRMReceiver.GetParameters()->ReceptLog.GetFrequency();
+
+	if (iCurLogFreq != iCurFrequency)
+	{
+		EdtFrequency->setText(QString().setNum(iCurLogFreq));
+		iCurFrequency = iCurLogFreq;
+	}
 }
 
 void systemevalDlg::OnRadioTimeLinear() 
@@ -701,7 +713,8 @@ void systemevalDlg::OnCheckWriteLog()
 
 		/* Get frequency from front-end edit control */
 		QString strFreq = EdtFrequency->text();
-		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(strFreq.toUInt());
+		iCurFrequency = strFreq.toUInt();
+		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(iCurFrequency);
 
 		/* Set some other information obout this receiption */
 		QString strAddText = "";

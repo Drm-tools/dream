@@ -82,6 +82,7 @@ protected:
 	QTimer			TimerLogFileShort;
 	QTimer			TimerLogFileStart;
 	ECharType		CharType;
+	int				iCurFrequency;
 	void			OnlyThisButDown(QPushButton* pButton);
     virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
