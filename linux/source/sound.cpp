@@ -494,7 +494,7 @@ public:
 					for (int i = 0; i < size * NUM_IN_OUT_CHANNELS; i++)
 						(*ptarget)[i] = tmprecbuf[i];
 
-					SoundBufR.Put( size );
+					SoundBufR.Put( size * NUM_IN_OUT_CHANNELS );
 					SoundBufR.unlock();
 				}
 			} else
