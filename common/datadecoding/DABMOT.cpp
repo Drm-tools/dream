@@ -850,6 +850,7 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 	unsigned char	ucDatafield;
 
 	/* Header --------------------------------------------------------------- */
+	/* ETSI EN 301 234 */
 	MOTObjectRaw.Header.vecbiData.ResetBitAccess();
 
 	/* HeaderSize and BodySize */
@@ -950,13 +951,27 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 				iSizeRec -= 2;
 			}
 
-			/* Get data */
+			/* Store data in vector */
+			CVector<char> veccNewData(iDataFieldLen);
 			for (i = 0; i < iDataFieldLen; i++)
 			{
-				ucDatafield = (unsigned char)
+				veccNewData[i] = (char)
 					MOTObjectRaw.Header.vecbiData.Separate(8);
+			}
 
-				/* TODO: Use information in data field */
+			/* Decode label (P.10 Label) */
+			if ((ucParamId == 12) && (iDataFieldLen > 0))
+			{
+				/* Only use "0 0 0 0 complete EBU Latin based repertoire"
+				   character set */
+				if (veccNewData[0] == 0)
+				{
+					/* Copy name of object (first byte is character set
+					   indicator) */
+					MOTObject.strName = "";
+					for(i = 1; i < iDataFieldLen; i++)
+						MOTObject.strName.append(&veccNewData[i], 1);
+				}
 			}
 			break;
 		}
@@ -981,8 +996,10 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 			/* Copy data */
 			MOTObject.vecbRawData.Init(iDaSiBytes);
 			for (int i = 0; i < iDaSiBytes;	i++)
+			{
 				MOTObject.vecbRawData[i] = (_BYTE) MOTObjectRaw.Body.
 					vecbiData.Separate(SIZEOF__BYTE);
+			}
 
 			/* Set format */
 			switch (iContentSubType)
@@ -1024,8 +1041,10 @@ void CMOTObjectRaw::CDataUnit::Add(CVector<_BINARY>& vecbiNewData,
 	/* Read useful bits. We have to use the "Separate()" function since we have
 	   to start adding at the current bit position of "vecbiNewData" */
 	for (int i = 0; i < iNewEnlSize; i++)
+	{
 		vecbiData[iOldDataSize + i] =
 			(_BINARY) vecbiNewData.Separate(1);
+	}
 
 	/* Set new segment number */
 	iDataSegNum = iSegNum;
