@@ -77,8 +77,6 @@ public:
 
 	void GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	_REAL GetSNREstdB() const;
-
 protected:
 	CVector<_REAL>			vecrPDSResult;
 
@@ -97,13 +95,7 @@ protected:
 
 	_COMPLEX				cCurExp;
 
-	_REAL					rNoisePowAvLeft;
-	_REAL					rNoisePowAvRight;
-	_REAL					rUsefPowAv;
-	_REAL					rSNREstimate;
-
 	CReal					rLamPSD;
-	CReal					rLamSNREst;
 
 	_REAL					rInternIFNorm;
 

@@ -296,14 +296,7 @@ void systemevalDlg::OnTimer()
 	/* Show SNR if receiver is in tracking mode */
 	if (DRMReceiver.GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
 	{
-		/* SNR estimate. Problem: the SNR estimation from the
-		   channel estimation only works if wiener interpolation is activated.
-		   If, e.g., linear interpolation is chosen, the SNR from this
-		   estimation will be wrong */
-		if (DRMReceiver.GetChanEst()->GetTimeInt() == CChannelEstimation::TWIENER)
-			rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
-		else
-			rSNREstimate = DRMReceiver.GetOFDMDemod()->GetSNREstdB();
+		rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
 
 		TextSNR->setText("<center>SNR<br><b>" + 
 			QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");

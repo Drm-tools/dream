@@ -84,11 +84,8 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int			i;
-	int			iNumAve;
 	_REAL		rNormCurFreqOffset;
 	_REAL		rSkipGuardIntPhase;
-	_REAL		rCurPower;
-	_REAL		rPowLeftVCar, rPowRightVCar, rAvNoisePow, rUsNoPower;
 	_COMPLEX	cExpStep;
 
 	/* Total frequency offset from acquisition and tracking (we calculate the
@@ -128,63 +125,16 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			veccFFTOutput[i] / (CReal) iDFTSize;
 
 
-	/* SNR estimation. Use virtual carriers at the edges of the spectrum ---- */
-	/* Power of useful part plus noise */
-	rUsNoPower = (_REAL) 0.0;
-	iNumAve = 0;
-	for (i = 0; i < iNumCarrier; i++)
-	{
-		/* Use all carriers except of DC carriers */
-		if (!_IsDC(ReceiverParam.matiMapTab[0][i]))
-		{
-			rUsNoPower += SqMag((*pvecOutputData)[i]);
-
-			iNumAve++;
-		}
-	}
-
-	/* Normalize and average result */
-	IIR1(rUsefPowAv, rUsNoPower / iNumAve, rLamSNREst);
-
-	/* Estimate power of noise */
-	/* First, check if virtual carriers are in range */
-	if ((iShiftedKmin > 1) && (iShiftedKmax + 1 < iDFTSize))
-	{
-		/* Get current powers */
-		rPowLeftVCar = SqMag(veccFFTOutput[iShiftedKmin - 1]);
-		rPowRightVCar = SqMag(veccFFTOutput[iShiftedKmin + 1]);
-
-		/* Average results */
-		IIR1(rNoisePowAvLeft, rPowLeftVCar, rLamSNREst);
-		IIR1(rNoisePowAvRight, rPowRightVCar, rLamSNREst);
-
-		/* Take the smallest value of both to avoid getting sinusoid 
-		   interferer in the measurement */
-		rAvNoisePow = Min(rNoisePowAvLeft, rNoisePowAvRight);
-	}
-
-	/* Calculate SNR estimate (\hat{s} - \hat{n}) / \hat{n}. The result
-	   must be multiplicated with squared "iDFTSize" because of the
-	   FFT operation */
-	rSNREstimate = (rUsefPowAv / rAvNoisePow * iDFTSize * iDFTSize - 1) / 2;
-
-
 	/* Save averaged spectrum for plotting ---------------------------------- */
+	/* Average power (using power of this tap) (first order IIR filter) */
 	for (i = 0; i < iLenPowSpec; i++)
-	{
-		/* Power of this tap */
-		rCurPower = SqMag(veccFFTOutput[i]);
-
-		/* Averaging (first order IIR filter) */
-		IIR1(vecrPowSpec[i], rCurPower, rLamPSD);
-	}
+		IIR1(vecrPowSpec[i], SqMag(veccFFTOutput[i]), rLamPSD);
 }
 
 void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 {
 	iDFTSize = ReceiverParam.iFFTSizeN;
 	iGuardSize = ReceiverParam.iGuardSize;
-	iNumCarrier = ReceiverParam.iNumCarrier;
 	iShiftedKmin = ReceiverParam.iShiftedKmin;
 	iShiftedKmax = ReceiverParam.iShiftedKmax;
 
@@ -193,16 +143,6 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 	/* Start with phase null (can be arbitrarily chosen) */
 	cCurExp = (_REAL) 1.0;
-
-	/* Initialize useful and noise power estimation */
-	rNoisePowAvLeft = (_REAL) 0.0;
-	rNoisePowAvRight = (_REAL) 0.0;
-	rUsefPowAv = (_REAL) 0.0;
-	rLamSNREst = IIR1Lam(TICONST_SIGNOIEST_OFDM, (CReal) SOUNDCRD_SAMPLE_RATE /
-		ReceiverParam.iSymbolBlockSize); /* Lambda for IIR filter */
-
-	/* Init SNR estimate */
-	rSNREstimate = (_REAL) 0.0;
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iDFTSize);
@@ -219,7 +159,7 @@ void COFDMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iDFTSize;
-	iOutputBlockSize = iNumCarrier;
+	iOutputBlockSize = ReceiverParam.iNumCarrier;
 }
 
 void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
@@ -256,15 +196,6 @@ void COFDMDemodulation::GetPowDenSpec(CVector<_REAL>& vecrData,
 		/* Release resources */
 		Unlock();
 	}
-}
-
-_REAL COFDMDemodulation::GetSNREstdB() const
-{
-	/* Bound the SNR at 0 dB */
-	if (rSNREstimate > (_REAL) 1.0)
-		return 10 * log10(rSNREstimate);
-	else
-		return (_REAL) 0.0;
 }
 
 
