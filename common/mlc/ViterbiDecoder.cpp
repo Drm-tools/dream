@@ -444,7 +444,7 @@ CViterbiDecoder::CViterbiDecoder()
 		}
 	}
 
-	/* Save trellis in file (for substituting number directly in the code */
+	/* Save trellis in file (for substituting number directly in the code) */
 	static FILE* pFile = fopen("test/trellis.dat", "w");
 	for (i = 0; i < MC_NO_STATES; i++)
 		fprintf(pFile, "BUTTERFLY( %d, %d, %d, %d, %d )\n", i,
