@@ -155,15 +155,15 @@ void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam)
 void ErrorMessage(string strErrorString)
 {
 	/* Workaround for the QT problem */
-#ifdef _WIN32
 	string strError = "The following error occured:\n";
 	strError += strErrorString.c_str();
 	strError += "\n\nThe application will exit now.";
 
+#ifdef _WIN32
 	MessageBox(NULL, strError.c_str(), "Dream",
 		MB_SYSTEMMODAL | MB_OK | MB_ICONEXCLAMATION);
 #else
-	perror(strErrorString.c_str());
+	perror(strError.c_str());
 #endif
 
 /*
@@ -187,6 +187,8 @@ int main(int argc, char** argv)
 	CDRMTransmitter	DRMTransmitter;
 	CDRMSimulation	DRMSimulation;
 
+try
+{
 	_BOOLEAN bIsReceiver = ParseArguments(argc, argv);
 	DRMSimulation.SimScript();
 
@@ -194,6 +196,12 @@ int main(int argc, char** argv)
 		DRMReceiver.Start();
 	else
 		DRMTransmitter.Start();
+}
+
+catch (CGenErr GenErr)
+{
+	ErrorMessage(GenErr.strError);
+}
 
 	return 0;
 }
@@ -251,15 +259,6 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 			(!strcmp(argv[i], "-m")))
 		{
 			DRMReceiver.GetWriteData()->MuteAudio(TRUE);
-			continue;
-		}
-
-
-		/* Do not use sound card, read from file ---------------------------- */
-		if ((!strcmp(argv[i], "--fromfile")) ||
-			(!strcmp(argv[i], "-f")))
-		{
-			DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
 			continue;
 		}
 
@@ -323,6 +322,24 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 			}
 
 			DRMReceiver.GetParameters()->ReceptLog.SetFrequency(n);
+			continue;
+		}
+
+
+		/* Do not use sound card, read from file ---------------------------- */
+		if ((!strcmp(argv[i], "--fileio")) ||
+			(!strcmp(argv[i], "-f")))
+		{
+			if (++i >= argc)
+			{
+				cerr << argv[0] << ": ";
+				cerr << "'--fileio' needs a string argument."
+					<< endl;
+				exit(1);
+			}
+
+			DRMReceiver.GetReceiver()->SetIOFileName(argv[i]);
+			DRMReceiver.GetReceiver()->SetUseSoundcard(FALSE);
 			continue;
 		}
 
@@ -425,8 +442,8 @@ void UsageArguments(char** argv)
 	cerr << "                             allowed range: -200.0...200.0"
 		<< endl;
 	cerr << "  -m, --muteaudio            mute audio output" << endl;
-	cerr << "  -f, --fromfile             disable sound card," << endl;
-	cerr << "                             read from file instead" << endl;
+	cerr << "  -f <s>, --fileio <s>       disable sound card," << endl;
+	cerr << "                             use file instead" << endl;
 	cerr << "  -r <n>, --frequency <n>    set frequency [kHz] for log file"
 		<< endl;
 	cerr << "  -a <s>, --latitude <s>     set latitude string for log file"

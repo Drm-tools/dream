@@ -114,8 +114,9 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	CReceiveData(CSound* pNS) : bFippedSpectrum(FALSE), pFileReceiver(NULL),
-		bUseSoundcard(TRUE), pSound(pNS),
+	CReceiveData(CSound* pNS) : strIOFileName("test/TransmittedData.txt"),
+		bUseSoundcard(TRUE), pSound(pNS), bFippedSpectrum(FALSE),
+		pFileReceiver(NULL),
 		vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0) {}
 	virtual ~CReceiveData();
 
@@ -130,6 +131,7 @@ public:
 		bUseSoundcard = bNewUS;
 		SetInitFlag();
 	}
+	void SetIOFileName(const string strNFN) {strIOFileName = strNFN;}
 
 protected:
 	void LevelMeter();
@@ -145,6 +147,8 @@ protected:
 
 	_BOOLEAN				bFippedSpectrum;
 	_BOOLEAN				bUseSoundcard;
+
+	string					strIOFileName;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

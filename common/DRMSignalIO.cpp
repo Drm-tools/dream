@@ -129,9 +129,9 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 #ifdef WRITE_TRNSM_TO_FILE
 	/* Open file for writing data for transmitting */
 #ifdef FILE_DRM_USING_RAW_DATA
-	pFileTransmitter = fopen("test/TransmittedData.txt", "wb");
+	pFileTransmitter = fopen(strIOFileName.c_str(), "wb");
 #else
-	pFileTransmitter = fopen("test/TransmittedData.txt", "w");
+	pFileTransmitter = fopen(strIOFileName.c_str(), "w");
 #endif
 
 	/* Check for error */
@@ -357,15 +357,15 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		if (pFileReceiver == NULL)
 		{
 #ifdef FILE_DRM_USING_RAW_DATA
-			pFileReceiver = fopen("test/TransmittedData.txt", "rb");
+			pFileReceiver = fopen(strIOFileName.c_str(), "rb");
 #else
-			pFileReceiver = fopen("test/TransmittedData.txt", "r");
+			pFileReceiver = fopen(strIOFileName.c_str(), "r");
 #endif
 		}
 
 		/* Check for error */
 		if (pFileReceiver == NULL)
-			throw CGenErr("The file test/TransmittedData.txt must exist.");
+			throw CGenErr("The file " + strIOFileName + " must exist.");
 	}
 
 	/* Define output block-size */
