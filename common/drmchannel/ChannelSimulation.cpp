@@ -317,7 +317,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	switch (ReceiverParam.GetSpectrumOccup())
 	{
 	case SO_0:
-		rSpecOcc = (_REAL) 4900.0; // Hz
+		rSpecOcc = (_REAL) 4500.0; // Hz
 		break;
 
 	case SO_1:
@@ -357,7 +357,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = ReceiverParam.iSymbolBlockSize;
 	iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
 }
-	
+
 void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNewFd)
 {
 	_REAL	s;
