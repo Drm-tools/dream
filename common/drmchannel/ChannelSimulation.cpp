@@ -215,9 +215,35 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 					/* Fd: */		(_REAL) 7.2);
 		break;
 
+
+	/* My own test channels, NOT DEFINED IN THE DRM STANDARD! --------------- */
 	case 7:
-		/* My own test channel, NOT DEFINED IN THE DRM STANDARD!
-		   This channel has only one fading path */
+		/* Channel without fading and doppler shift */
+		iNoTaps = 4;
+
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) 0.0);
+
+		tap[1].Init(/* Delay: */	(_REAL) 0.7,
+					/* Gain: */		(_REAL) 0.7,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) 0.0);
+
+		tap[2].Init(/* Delay: */	(_REAL) 1.5,
+					/* Gain: */		(_REAL) 0.5,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) 0.0);
+
+		tap[3].Init(/* Delay: */	(_REAL) 2.2,
+					/* Gain: */		(_REAL) 0.25,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) 0.0);
+		break;
+
+	case 8:
+		/* Only one fading path */
 		rMyFading = (_REAL) 4.0;
 
 		iNoTaps = 1;
