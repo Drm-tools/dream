@@ -244,7 +244,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	case 8:
 		/* Only one fading path */
-		rMyFading = (_REAL) 4.0;
+		rMyFading = (_REAL) 2.0;
 
 		iNoTaps = 1;
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
