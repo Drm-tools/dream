@@ -65,6 +65,9 @@ extern CDRMReceiver	DRMReceiver;
 
 /* Maximum value for window position and size */
 # define MAX_WIN_GEOM_VAL			10000 /* Pixel */
+
+/* Maximum value for color schemes for main plot */
+# define MAX_COLOR_SCHEMES_VAL		1
 #endif
 
 #ifdef HAVE_LIBHAMLIB

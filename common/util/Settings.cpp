@@ -62,53 +62,55 @@ void CSettings::ReadIniFile()
 	INIFile ini = LoadIni(DREAM_INIT_FILE_NAME);
 
 
-	/* Flip spectrum flag --------------------------------------------------- */
+	/* Receiver ------------------------------------------------------------- */
+	/* Flip spectrum flag */
 	if (GetFlagIniSet(ini, "Receiver", "flipspectrum", bValue) == TRUE)
 		DRMReceiver.GetReceiver()->SetFlippedSpectrum(bValue);
 
 
-	/* Mute audio flag ------------------------------------------------------ */
+	/* Mute audio flag */
 	if (GetFlagIniSet(ini, "Receiver", "muteaudio", bValue) == TRUE)
 		DRMReceiver.GetWriteData()->MuteAudio(bValue);
 
 
-	/* Bandpass filter flag ------------------------------------------------- */
+	/* Bandpass filter flag */
 	if (GetFlagIniSet(ini, "Receiver", "filter", bValue) == TRUE)
 		DRMReceiver.GetOFDMDemod()->SetRecFilter(bValue);
 
 
-	/* Sound In device ------------------------------------------------------ */
+	/* Sound In device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevin", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
 		DRMReceiver.GetSoundInterface()->SetInDev(iValue);
 
 
-	/* Sound Out device ----------------------------------------------------- */
+	/* Sound Out device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevout", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
 		DRMReceiver.GetSoundInterface()->SetOutDev(iValue);
 
 
-	/* Number of iterations for MLC setting --------------------------------- */
+	/* Number of iterations for MLC setting */
 	if (GetNumericIniSet(ini, "Receiver", "mlciter", 0, MAX_NUM_MLC_IT, iValue) == TRUE)
 		DRMReceiver.GetMSCMLC()->SetNumIterations(iValue);
 
 
 #ifdef USE_QT_GUI
-	/* Start log file flag -------------------------------------------------- */
+	/* Logfile -------------------------------------------------------------- */
+	/* Start log file flag */
 	if (GetNumericIniSet(ini, "Logfile", "startlog", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
 		DRMReceiver.GetParameters()->ReceptLog.SetDelLogStart(iValue);
 
 
-	/* Frequency for log file ----------------------------------------------- */
+	/* Frequency for log file */
 	if (GetNumericIniSet(ini, "Logfile", "frequency", 0, MAX_FREQ_LOG_FILE, iValue) == TRUE)
 		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(iValue);
 
 
-	/* Latitude string for log file ----------------------------------------- */
+	/* Latitude string for log file */
 	DRMReceiver.GetParameters()->ReceptLog.SetLatitude(
 		GetIniSetting(ini, "Logfile", "latitude"));
 
 
-	/* Longitude string for log file ---------------------------------------- */
+	/* Longitude string for log file */
 	DRMReceiver.GetParameters()->ReceptLog.SetLongitude(
 		GetIniSetting(ini, "Logfile", "longitude"));
 
@@ -171,11 +173,18 @@ void CSettings::ReadIniFile()
 		DRMReceiver.GeomAnalogDemDlg.iWSize = iValue;
 	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
 		DRMReceiver.GeomAnalogDemDlg.bVisible = bValue;
+
+
+	/* GUI customizations --------------------------------------------------- */
+	/* Color scheme main plot */
+	if (GetNumericIniSet(ini, "GUI", "colorscheme", 0, MAX_COLOR_SCHEMES_VAL, iValue) == TRUE)
+		DRMReceiver.iMainPlotColorStyle = iValue;
 #endif
 
 
 #ifdef HAVE_LIBHAMLIB
-	/* Hamlib Model ID ------------------------------------------------------ */
+	/* Hamlib --------------------------------------------------------------- */
+	/* Hamlib Model ID */
 	if (GetNumericIniSet(ini, "Hamlib",	"hamlib-model", 0, MAX_ID_HAMLIB, iValue) == TRUE)
 		DRMReceiver.SetHamlibModel(iValue);
 #endif
@@ -185,53 +194,55 @@ void CSettings::WriteIniFile()
 {
 	INIFile ini;
 
-	/* Flip spectrum flag --------------------------------------------------- */
+	/* Receiver ------------------------------------------------------------- */
+	/* Flip spectrum flag */
 	SetFlagIniSet(ini, "Receiver", "flipspectrum",
 		DRMReceiver.GetReceiver()->GetFlippedSpectrum());
 
 
-	/* Mute audio flag ------------------------------------------------------ */
+	/* Mute audio flag */
 	SetFlagIniSet(ini, "Receiver", "muteaudio",
 		DRMReceiver.GetWriteData()->GetMuteAudio());
 
 
-	/* Bandpass filter flag ------------------------------------------------- */
+	/* Bandpass filter flag */
 	SetFlagIniSet(ini, "Receiver", "filter",
 		DRMReceiver.GetOFDMDemod()->GetRecFilter());
 
 
-	/* Sound In device ------------------------------------------------------ */
+	/* Sound In device */
 	SetNumericIniSet(ini, "Receiver", "snddevin",
 		DRMReceiver.GetSoundInterface()->GetInDev());
 
 
-	/* Sound Out device ----------------------------------------------------- */
+	/* Sound Out device */
 	SetNumericIniSet(ini, "Receiver", "snddevout",
 		DRMReceiver.GetSoundInterface()->GetOutDev());
 
 
-	/* Number of iterations for MLC setting --------------------------------- */
+	/* Number of iterations for MLC setting */
 	SetNumericIniSet(ini, "Receiver", "mlciter",
 		DRMReceiver.GetMSCMLC()->GetInitNumIterations());
 
 
 #ifdef USE_QT_GUI
-	/* Start log file flag -------------------------------------------------- */
+	/* Logfile -------------------------------------------------------------- */
+	/* Start log file delayed */
 	SetNumericIniSet(ini, "Logfile", "startlog",
 		DRMReceiver.GetParameters()->ReceptLog.GetDelLogStart());
 
 
-	/* Frequency for log file ----------------------------------------------- */
+	/* Frequency for log file */
 	SetNumericIniSet(ini, "Logfile", "frequency",
 		DRMReceiver.GetParameters()->ReceptLog.GetFrequency());
 
 
-	/* Latitude string for log file ----------------------------------------- */
+	/* Latitude string for log file */
 	PutIniSetting(ini, "Logfile", "latitude",
 		DRMReceiver.GetParameters()->ReceptLog.GetLatitude().c_str());
 
 
-	/* Longitude string for log file ---------------------------------------- */
+	/* Longitude string for log file */
 	PutIniSetting(ini, "Logfile", "longitude",
 		DRMReceiver.GetParameters()->ReceptLog.GetLongitude().c_str());
 
@@ -270,11 +281,17 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Window geometry", "analdemhsize", DRMReceiver.GeomAnalogDemDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "analdemwsize", DRMReceiver.GeomAnalogDemDlg.iWSize);
 	SetFlagIniSet(ini, "Window geometry", "analdemvis", DRMReceiver.GeomAnalogDemDlg.bVisible);
+
+
+	/* GUI customizations --------------------------------------------------- */
+	/* Color scheme main plot */
+	SetNumericIniSet(ini, "GUI", "colorscheme", DRMReceiver.iMainPlotColorStyle);
 #endif
 
 
 #ifdef HAVE_LIBHAMLIB
-	/* Hamlib Model ID ------------------------------------------------------ */
+	/* Hamlib --------------------------------------------------------------- */
+	/* Hamlib Model ID */
 	SetNumericIniSet(ini, "Hamlib", "hamlib-model",
 		DRMReceiver.GetHamlibModel());
 #endif
@@ -502,6 +519,15 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			DRMReceiver.GetParameters()->ReceptLog.SetLongitude(strArgument);
 			continue;
 		}
+
+
+		/* Color scheme main plot ------------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-y", "--colorstyle", 0,
+			MAX_COLOR_SCHEMES_VAL, rArgument) == TRUE)
+		{
+			DRMReceiver.iMainPlotColorStyle = (int) rArgument;
+			continue;
+		}
 #endif
 
 #ifdef HAVE_LIBHAMLIB
@@ -598,6 +624,10 @@ void CSettings::UsageArguments(char** argv)
 	cerr << "  -l <n>, --startlog <n>     start log file (delayed by" << endl;
 	cerr << "                             <n> seconds)" << endl;
 	cerr << "                             allowed range: 1...3600" << endl;
+	cerr << "  -y <n>, --colorscheme <n>  set color scheme for main plot"
+		<< endl;
+	cerr << "                             0: blue-white (default)" << endl;
+	cerr << "                             1: green-black" << endl;
 #endif
 
 	cerr << "  -I <n>, --snddevin <n>     set sound in device" << endl;

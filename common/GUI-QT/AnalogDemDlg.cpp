@@ -43,8 +43,19 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 		setGeometry(WinGeom);
 #endif
 
+	/* Init main plot */
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
 	QToolTip::add(MainPlot, "Click on the plot to set the demod. frequency");
+	switch (DRMReceiver.iMainPlotColorStyle)
+	{
+	case 0:
+		MainPlot->SetPlotStyle(CDRMPlot::PS_BLUEWHITE);
+		break;
+	
+	case 1:
+		MainPlot->SetPlotStyle(CDRMPlot::PS_GREENBLACK);
+		break;
+	}	
 	MainPlot->setMargin(1);
 
 	/* Update controls */
