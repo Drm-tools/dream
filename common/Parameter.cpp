@@ -63,7 +63,7 @@ void CParameter::ResetServicesStreams()
 		Service[i].DataParam.eAppDomain = AD_DRM_SPEC_APP;
 
 		Service[i].iServiceID = SERV_ID_NOT_USED;
-		Service[i].eCAIndication = CA_USED;
+		Service[i].eCAIndication = CA_NOT_USED;
 		Service[i].iLanguage = 0;
 		Service[i].eAudDataFlag = SF_AUDIO;
 		Service[i].iServiceDescr = 0;
