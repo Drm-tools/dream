@@ -126,6 +126,10 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 
 void CTransmitData::InitInternal(CParameter& TransmParam)
 {
+	float*	pCurFilt;
+	int		iNumTapsTransmFilt;
+	CReal	rNormCurFreqOffset;
+
 	/* Init vector for storing a complete DRM frame number of OFDM symbols */
 	iBlockCnt = 0;
 	iNumBlocks = TransmParam.iNumSymPerFrame;
@@ -152,19 +156,14 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 			throw CGenErr("The file " + strOutFileName + " cannot be created.");
 	}
 
-	/* Init filter taps */
-	rvecB.Init(NUM_TAPS_TRANSMFILTER);
-
 	/* Choose correct filter for chosen DRM bandwidth. Also, adjust offset
 	   frequency for different modes. E.g., 5 kHz mode is on the right side
 	   of the DC frequency */
-	float* pCurFilt;
-	CReal rNormCurFreqOffset;
-
 	switch (TransmParam.GetSpectrumOccup())
 	{
 	case SO_0:
 		pCurFilt = fTransmFilt4_5;
+		iNumTapsTransmFilt = NUM_TAPS_TRANSMFILTER_4_5;
 
 		/* Completely on the right side of DC */
 		rNormCurFreqOffset =
@@ -173,6 +172,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	case SO_1:
 		pCurFilt = fTransmFilt5;
+		iNumTapsTransmFilt = NUM_TAPS_TRANSMFILTER_5;
 
 		/* Completely on the right side of DC */
 		rNormCurFreqOffset =
@@ -181,6 +181,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	case SO_2:
 		pCurFilt = fTransmFilt9;
+		iNumTapsTransmFilt = NUM_TAPS_TRANSMFILTER_9;
 
 		/* Centered */
 		rNormCurFreqOffset = rDefCarOffset / SOUNDCRD_SAMPLE_RATE;
@@ -188,6 +189,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	case SO_3:
 		pCurFilt = fTransmFilt10;
+		iNumTapsTransmFilt = NUM_TAPS_TRANSMFILTER_10;
 
 		/* Centered */
 		rNormCurFreqOffset = rDefCarOffset / SOUNDCRD_SAMPLE_RATE;
@@ -195,6 +197,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	case SO_4:
 		pCurFilt = fTransmFilt18;
+		iNumTapsTransmFilt = NUM_TAPS_TRANSMFILTER_18;
 
 		/* Main part on the right side of DC */
 		rNormCurFreqOffset =
@@ -203,6 +206,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	case SO_5:
 		pCurFilt = fTransmFilt20;
+		iNumTapsTransmFilt = NUM_TAPS_TRANSMFILTER_20;
 
 		/* Main part on the right side of DC */
 		rNormCurFreqOffset =
@@ -210,8 +214,11 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 		break;
 	}
 
+	/* Init filter taps */
+	rvecB.Init(iNumTapsTransmFilt);
+
 	/* Modulate filter to shift it to the correct IF frequency */
-	for (int i = 0; i < NUM_TAPS_TRANSMFILTER; i++)
+	for (int i = 0; i < iNumTapsTransmFilt; i++)
 	{
 		rvecB[i] =
 			pCurFilt[i] * Cos((CReal) 2.0 * crPi * rNormCurFreqOffset * i);
@@ -222,8 +229,8 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	rvecA[0] = (CReal) 1.0;
 
 	/* State memory (init with zeros) and data vector */
-	rvecZReal.Init(NUM_TAPS_TRANSMFILTER - 1, (CReal) 0.0);
-	rvecZImag.Init(NUM_TAPS_TRANSMFILTER - 1, (CReal) 0.0);
+	rvecZReal.Init(iNumTapsTransmFilt - 1, (CReal) 0.0);
+	rvecZImag.Init(iNumTapsTransmFilt - 1, (CReal) 0.0);
 	rvecDataReal.Init(TransmParam.iSymbolBlockSize);
 	rvecDataImag.Init(TransmParam.iSymbolBlockSize);
 

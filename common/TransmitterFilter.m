@@ -29,17 +29,24 @@
 function [] = TransmitterFilter()
 PLOT = 1;
 
-nTaps = 200;
-ftrans = 800; % Size of transition region
+nTaps4_5 = 320;
+nTaps5 = 320;
+nTaps9 = 250;
+nTaps10 = 250;
+nTaps18 = 200;
+nTaps20 = 200;
+ftrans5 = 500; % Size of transition region
+ftrans10 = 650; % Size of transition region
+ftrans20 = 800; % Size of transition region
 fs = 48000; % Constant for all cases
 
 % Actual filter design for all DRM modes
-h4_5 = DesignFilter(0, 4500, ftrans, nTaps, fs); % 4.5 kHz
-h5 = DesignFilter(0, 5000, ftrans, nTaps, fs); % 5 kHz
-h9 = DesignFilter(0, 9000, ftrans, nTaps, fs); % 9 kHz
-h10 = DesignFilter(0, 10000, ftrans, nTaps, fs); % 10 kHz
-h18 = DesignFilter(0, 18000, ftrans, nTaps, fs); % 18 kHz
-h20 = DesignFilter(0, 20000, ftrans, nTaps, fs); % 20 kHz
+h4_5 = DesignFilter(0, 4500, ftrans5, nTaps4_5, fs); % 4.5 kHz
+h5 = DesignFilter(0, 5000, ftrans5, nTaps5, fs); % 5 kHz
+h9 = DesignFilter(0, 9000, ftrans10, nTaps9, fs); % 9 kHz
+h10 = DesignFilter(0, 10000, ftrans10, nTaps10, fs); % 10 kHz
+h18 = DesignFilter(0, 18000, ftrans20, nTaps18, fs); % 18 kHz
+h20 = DesignFilter(0, 20000, ftrans20, nTaps20, fs); % 20 kHz
 
 if (PLOT == 1)
     close all;
@@ -67,48 +74,64 @@ fprintf(fid, '/* Filter taps in time-domain */\n\n');
 fprintf(fid, '#ifndef _TRANSMITTERFILTER_H_\n');
 fprintf(fid, '#define _TRANSMITTERFILTER_H_\n\n');
 
-fprintf(fid, '#define NUM_TAPS_TRANSMFILTER            ');
-fprintf(fid, int2str(nTaps));
+fprintf(fid, '#define NUM_TAPS_TRANSMFILTER_4_5          ');
+fprintf(fid, int2str(nTaps4_5));
+fprintf(fid, '\n');
+fprintf(fid, '#define NUM_TAPS_TRANSMFILTER_5            ');
+fprintf(fid, int2str(nTaps5));
+fprintf(fid, '\n');
+fprintf(fid, '#define NUM_TAPS_TRANSMFILTER_9            ');
+fprintf(fid, int2str(nTaps9));
+fprintf(fid, '\n');
+fprintf(fid, '#define NUM_TAPS_TRANSMFILTER_10           ');
+fprintf(fid, int2str(nTaps10));
+fprintf(fid, '\n');
+fprintf(fid, '#define NUM_TAPS_TRANSMFILTER_18           ');
+fprintf(fid, int2str(nTaps18));
+fprintf(fid, '\n');
+fprintf(fid, '#define NUM_TAPS_TRANSMFILTER_20           ');
+fprintf(fid, int2str(nTaps20));
 fprintf(fid, '\n\n\n');
+
 
 % Write filter taps
 fprintf(fid, '/* 4.5 kHz bandwidth */\n');
-fprintf(fid, 'static float fTransmFilt4_5[NUM_TAPS_TRANSMFILTER] =\n');
+fprintf(fid, 'static float fTransmFilt4_5[NUM_TAPS_TRANSMFILTER_4_5] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', h4_5(1:end - 1));
 fprintf(fid, '	%.20ff\n', h4_5(end));
 fprintf(fid, '};\n\n');
 
 fprintf(fid, '/* 5 kHz bandwidth */\n');
-fprintf(fid, 'static float fTransmFilt5[NUM_TAPS_TRANSMFILTER] =\n');
+fprintf(fid, 'static float fTransmFilt5[NUM_TAPS_TRANSMFILTER_5] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', h5(1:end - 1));
 fprintf(fid, '	%.20ff\n', h5(end));
 fprintf(fid, '};\n\n');
 
 fprintf(fid, '/* 9 kHz bandwidth */\n');
-fprintf(fid, 'static float fTransmFilt9[NUM_TAPS_TRANSMFILTER] =\n');
+fprintf(fid, 'static float fTransmFilt9[NUM_TAPS_TRANSMFILTER_9] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', h9(1:end - 1));
 fprintf(fid, '	%.20ff\n', h9(end));
 fprintf(fid, '};\n\n');
 
 fprintf(fid, '/* 10 kHz bandwidth */\n');
-fprintf(fid, 'static float fTransmFilt10[NUM_TAPS_TRANSMFILTER] =\n');
+fprintf(fid, 'static float fTransmFilt10[NUM_TAPS_TRANSMFILTER_10] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', h10(1:end - 1));
 fprintf(fid, '	%.20ff\n', h10(end));
 fprintf(fid, '};\n\n');
 
 fprintf(fid, '/* 18 kHz bandwidth */\n');
-fprintf(fid, 'static float fTransmFilt18[NUM_TAPS_TRANSMFILTER] =\n');
+fprintf(fid, 'static float fTransmFilt18[NUM_TAPS_TRANSMFILTER_18] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', h18(1:end - 1));
 fprintf(fid, '	%.20ff\n', h18(end));
 fprintf(fid, '};\n\n');
 
 fprintf(fid, '/* 20 kHz bandwidth */\n');
-fprintf(fid, 'static float fTransmFilt20[NUM_TAPS_TRANSMFILTER] =\n');
+fprintf(fid, 'static float fTransmFilt20[NUM_TAPS_TRANSMFILTER_20] =\n');
 fprintf(fid, '{\n');
 fprintf(fid, '	%.20ff,\n', h20(1:end - 1));
 fprintf(fid, '	%.20ff\n', h20(end));
