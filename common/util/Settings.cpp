@@ -77,6 +77,10 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Receiver", "filter", bValue) == TRUE)
 		pDRMRec->GetOFDMDemod()->SetRecFilter(bValue);
 
+	/* Modificated metric flag */
+	if (GetFlagIniSet(ini, "Receiver", "modmetric", bValue) == TRUE)
+		pDRMRec->GetChanEst()->SetIntCons(bValue);
+
 
 	/* Sound In device */
 	if (GetNumericIniSet(ini, "Receiver", "snddevin", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
@@ -219,6 +223,10 @@ void CSettings::WriteIniFile()
 	/* Bandpass filter flag */
 	SetFlagIniSet(ini, "Receiver", "filter",
 		pDRMRec->GetOFDMDemod()->GetRecFilter());
+
+	/* Modificated metric flag */
+	SetFlagIniSet(ini, "Receiver", "modmetric",
+		pDRMRec->GetChanEst()->GetIntCons());
 
 
 	/* Sound In device */
@@ -427,6 +435,14 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		if (GetFlagArgument(argc, argv, i, "-F", "--filter") == TRUE)
 		{
 			pDRMRec->GetOFDMDemod()->SetRecFilter(TRUE);
+			continue;
+		}
+
+
+		/* Modificated metric flag ------------------------------------------ */
+		if (GetFlagArgument(argc, argv, i, "-D", "--modmetric") == TRUE)
+		{
+			pDRMRec->GetChanEst()->SetIntCons(TRUE);
 			continue;
 		}
 
@@ -742,6 +758,7 @@ string CSettings::UsageArguments(char** argv)
 		"  -S <r>, --fracwinsize <r>   freq. acqu. search window size [Hz]\n"
 		"  -E <r>, --fracwincent <r>   freq. acqu. search window center [Hz]\n"
 		"  -F, --filter                apply bandpass filter\n"
+		"  -D, --modmetric             enable modificated metric\n"
 		"  -c <n>, --inchansel <n>     input channel selection\n"
 		"                              0: left channel\n"
 		"                              1: right channel\n"
