@@ -123,7 +123,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				/* Detect peaks by the distance to the filtered curve ------- */
 				/* Get peak indices of detected peaks */
 				iNumDetPeaks = 0;
-				for (i = 0; i < iSearchWinSize; i++)
+				for (i = iStartDCSearch; i < iEndDCSearch; i++)
 				{
 					if (vecrPSDPilCor[i] / vecrFiltRes[i] >
 						PEAK_BOUND_FILT2SIGNAL)
@@ -285,9 +285,6 @@ fclose(pFile1);
 
 void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 {
-	_REAL	rNormDesPos;
-	_REAL	rNormWinSize;
-
 	/* Needed for calculating offset in Hertz in case of synchronized input
 	   (for simulation) */
 	iFFTSize = ReceiverParam.iFFTSizeN;
@@ -309,8 +306,8 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	   Set start- and endpoint of search window for DC carrier after the
 	   correlation with the known pilot structure */
 	/* Normalize the desired position and window size which are in Hertz */
-	rNormDesPos = rCenterFreq / SOUNDCRD_SAMPLE_RATE;
-	rNormWinSize = rWinSize / SOUNDCRD_SAMPLE_RATE;
+	const _REAL rNormDesPos = rCenterFreq / SOUNDCRD_SAMPLE_RATE * 2;
+	const _REAL rNormHalfWinSize = rWinSize / SOUNDCRD_SAMPLE_RATE;
 
 	/* Length of the half of the spectrum of real input signal (the other half
 	   is the same because of the real input signal). We have to consider the
@@ -321,15 +318,15 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	   with pilot positions */
 	iSearchWinSize = iHalfBuffer - veciTableFreqPilots[2];
 
-	iStartDCSearch = (int) ((rNormDesPos - rWinSize / 2) * iHalfBuffer);
-	iEndDCSearch = (int) ((rNormDesPos + rWinSize / 2) * iHalfBuffer);
+	iStartDCSearch = Floor((rNormDesPos - rNormHalfWinSize) * iHalfBuffer);
+	iEndDCSearch = Ceil((rNormDesPos + rNormHalfWinSize) * iHalfBuffer);
 
 	/* Check range. If out of range -> correct */
-	if (!((iStartDCSearch > 0) && (iStartDCSearch < iHalfBuffer)))
+	if (!((iStartDCSearch > 0) && (iStartDCSearch < iSearchWinSize)))
 		iStartDCSearch = 0;
 
-	if (!((iEndDCSearch > 0) && (iEndDCSearch < iHalfBuffer)))
-		iEndDCSearch = iHalfBuffer;
+	if (!((iEndDCSearch > 0) && (iEndDCSearch < iSearchWinSize)))
+		iEndDCSearch = iSearchWinSize;
 
 
 	/* Init vectors and fft plan -------------------------------------------- */

@@ -72,8 +72,9 @@ class CFreqSyncAcq : public CReceiverModul<_REAL, _REAL>
 {
 public:
 	CFreqSyncAcq() : bSyncInput(FALSE), bAquisition(FALSE), 
-		rWinSize((_REAL) 0.0), veciTableFreqPilots(3), /* 3 freqency pilots */
-		rCenterFreq((_REAL) 0.0) {}
+		rWinSize((_REAL) SOUNDCRD_SAMPLE_RATE / 2),
+		veciTableFreqPilots(3), /* 3 freqency pilots */
+		rCenterFreq((_REAL) SOUNDCRD_SAMPLE_RATE / 4) {}
 	virtual ~CFreqSyncAcq() {}
 
 	void SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize);
