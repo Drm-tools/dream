@@ -438,7 +438,7 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 
 CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 {
-	/* Modified linear regresseion to estimate the "sigma" of the Gaussian
+	/* Modified linear regression to estimate the "sigma" of the Gaussian
 	   correlation function */
 	/* Get vector length */
 	int iVecLen = Size(vecrCorrEst);
@@ -454,12 +454,20 @@ CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 
 	/* Generate the tau vector */
 	for (int i = 0; i < iVecLen; i++)
+	{
 		Tau[i] = (CReal) (i * iScatPilTimeInt);
+
+		/* Check the input vector. It is not possible to have negative input
+		   values. If we detect negative values, return highest possible
+		   sigma value, since we cannot estimate a new sigma */
+		if (vecrCorrEst[i] < 0)
+			return rSigmaMax;
+	}
 
 	/* Linearize acf equation:  y = a * exp(-b * x^2)
 	   z = ln(y);   w = x^2
 	   -> z = a0 + a1 * w */
-	Z = Log(Abs(vecrCorrEst)); /* acfm can be negative due to noise */
+	Z = Log(vecrCorrEst);
 
 	W = Tau * Tau;
 
