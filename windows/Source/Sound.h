@@ -50,7 +50,7 @@
 
 /* If this flag is defined, both input channels are mixed together, therefore
    no right or left channel choice must be made */
-#undef MIX_INPUT_CHANNELS
+#define MIX_INPUT_CHANNELS
 
 /* Chose recording channel: 0: Left, 1: Right, disabled if previous flag is
    set! */
