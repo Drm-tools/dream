@@ -6,7 +6,6 @@
  *	Volker Fischer
  *
  * Description:
- *	See DABMOT.cpp
  *
  ******************************************************************************
  *
@@ -31,7 +30,6 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Vector.h"
-#include "../CRC.h"
 #include "DABMOT.h"
 
 
