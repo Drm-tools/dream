@@ -655,9 +655,8 @@ void systemevalDlg::OnCheckWriteLog()
 				strAddText += QString().setNum(DRMReceiver.GetParameters()->
 					GetBitRate(iCurSelServ), 'f', 2) + " kbps";
 
-				strAddText += "\nMode / Bandwidth " + GetRobModeStr() + " / ";
-
-				strAddText += GetSpecOccStr();
+				strAddText += "\nMode             " + GetRobModeStr();
+				strAddText += "\nBandwidth        " + GetSpecOccStr();
 			}
 		}
 		DRMReceiver.GetParameters()->ReceptLog.SetAdditText(strAddText);
