@@ -147,7 +147,6 @@ void MultimediaDlg::OnTimer()
 {
 	CMOTObject	NewPic;
 	QPixmap		NewImage;
-	_BOOLEAN	bPicLoadSuccess;
 	FILE*		pFiBody;
 	int			iCurNumPict;
 
@@ -317,7 +316,6 @@ void MultimediaDlg::OnButtonJumpEnd()
 
 void MultimediaDlg::SetSlideShowPicture()
 {
-	_BOOLEAN	bPicLoadSuccess;
 	QPixmap		NewImage;
 	int			iPicSize;
 
@@ -333,10 +331,7 @@ void MultimediaDlg::SetSlideShowPicture()
 	iPicSize = vecbyCurPict.vecbRawData.Size();
 
 	/* Load picture in QT format */
-	bPicLoadSuccess = NewImage.loadFromData(&vecbyCurPict.vecbRawData[0],
-		iPicSize);
-
-	if (bPicLoadSuccess == TRUE)
+	if (NewImage.loadFromData(&vecbyCurPict.vecbRawData[0], iPicSize))
 	{
 		/* Set new picture in source factory and set it in text control */
 		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
