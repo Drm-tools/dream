@@ -350,7 +350,7 @@ void MultimediaDlg::SetSlideShowPicture()
 		/* Show text that tells the user of load failure */
 		TextBrowser->setText("<br><br><center><b>Image could not be "
 			"loaded, " +
-			 QString(vecRawImages[iCurImagePos].strFormat.c_str()) +
+			 QString(vecbyCurPict.strFormat.c_str()) +
 			 "-format not supported by this version of QT!"
 			"</b><br><br><br>If you want to view the image, "
 			"save it to file and use an external viewer</center>");
