@@ -76,4 +76,5 @@ public slots:
 	void OnRadioAGC(int iID);
 	void OnCheckBoxMuteAudio();
 	void OnCheckSaveAudioWAV();
+	void OnChartxAxisValSet(double dVal);
 };

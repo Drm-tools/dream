@@ -32,9 +32,6 @@
 #include <qwt_plot.h>
 #include "../Vector.h"
 #include "../Parameter.h"
-#include "../DrmReceiver.h"
-
-extern CDRMReceiver	DRMReceiver;
 
 
 /* Definitions ****************************************************************/
@@ -154,6 +151,9 @@ protected:
 
 public slots:
 	void OnClicked(const QMouseEvent& e);
+
+signals:
+	void xAxisValSet(double);
 };
 
 

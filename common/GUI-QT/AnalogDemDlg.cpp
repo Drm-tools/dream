@@ -55,6 +55,8 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 
 	/* Connect controls ----------------------------------------------------- */
 	connect(buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
+	connect(MainPlot, SIGNAL(xAxisValSet(double)),
+		this, SLOT(OnChartxAxisValSet(double)));
 	
 	/* Button groups */
 	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
@@ -415,4 +417,10 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 	}
 	else
 		DRMReceiver.GetWriteData()->StopWriteWaveFile();
+}
+
+void AnalogDemDlg::OnChartxAxisValSet(double dVal)
+{
+	/* Set new frequency in receiver module */
+	DRMReceiver.SetAMDemodAcq(dVal);
 }
