@@ -56,6 +56,8 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 		SLOT(OnViewEvalDlg()), CTRL+Key_E);
 	EvalWinMenu->insertItem("M&ultimedia Dialog...", this,
 		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U);
+	EvalWinMenu->insertItem("S&tations Dialog...", this,
+		SLOT(OnViewStationsDlg()), CTRL+Key_T);
 	EvalWinMenu->insertSeparator();
 	EvalWinMenu->insertItem("E&xit", this, SLOT(close()), CTRL+Key_Q);
 
@@ -138,6 +140,11 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	ProgrInputLevel->setAlarmLevel(-12.5);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
+
+	/* Stations window */
+	pStationsDlg = new StationsDlg(this, "Stations", FALSE, 
+		Qt::WGroupLeader | Qt::WStyle_MinMax);
+	pStationsDlg->hide();
 
 	/* Evaluation window ("WGroupLeader" flag enabels that in both windows 
 	   controls can be clicked) */
@@ -519,6 +526,12 @@ void FDRMDialog::OnViewMultiMediaDlg()
 {
 	/* Show evaluation window */
 	pMultiMediaDlg->show();
+}
+
+void FDRMDialog::OnViewStationsDlg()
+{
+	/* Show evauation window */
+	pStationsDlg->show();
 }
 
 void FDRMDialog::OnHelpAbout()

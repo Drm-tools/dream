@@ -136,6 +136,14 @@ SOURCE=.\moc\moc_MultimediaDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_StationsDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_StationsDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_systemevalDlg.cpp
 # End Source File
 # Begin Source File
@@ -153,6 +161,10 @@ SOURCE=.\moc\moc_TransmDlgbase.cpp
 # Begin Source File
 
 SOURCE=.\moc\MultimediaDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\StationsDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -195,6 +207,10 @@ SOURCE="..\common\GUI-QT\MultColorLED.cpp"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\MultimediaDlg.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\StationsDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -474,6 +490,10 @@ SOURCE="..\common\GUI-QT\MultColorLED.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\MultimediaDlg.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\StationsDlg.h"
 # End Source File
 # Begin Source File
 

@@ -34,6 +34,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\TransmDlg.h -o moc\moc_TransmDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\DRMPlot.h -o moc\moc_DRMPlot.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultimediaDlg.h -o moc\moc_MultimediaDlg.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\StationsDlg.h -o moc\moc_StationsDlg.cpp
 
 
 rem .ui -------------
@@ -57,3 +58,6 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -i MultimediaDlgbase.h -o moc\MultimediaDlgbase.cpp  
 %qtdir%\bin\moc.exe moc\MultimediaDlgbase.h -o moc\moc_MultimediaDlgbase.cpp
 
+%qtdir%\bin\uic.exe ..\common\GUI-QT\StationsDlgbase.ui -o moc\StationsDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\StationsDlgbase.ui -i StationsDlgbase.h -o moc\StationsDlgbase.cpp  
+%qtdir%\bin\moc.exe moc\StationsDlgbase.h -o moc\moc_StationsDlgbase.cpp

@@ -48,6 +48,7 @@
 #endif
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"
+#include "StationsDlg.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../Vector.h"
@@ -79,6 +80,7 @@ public:
 protected:
 	systemevalDlg*	pSysEvalDlg;
 	MultimediaDlg*	pMultiMediaDlg;
+	StationsDlg*	pStationsDlg;
 	QMenuBar*		pMenu;
 	QPopupMenu*		pSoundInMenu;
 	QPopupMenu*		pSoundOutMenu;
@@ -103,6 +105,7 @@ public slots:
 	void OnButtonService4();
 	void OnViewEvalDlg();
 	void OnViewMultiMediaDlg();
+	void OnViewStationsDlg();
 	void OnHelpAbout();
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
