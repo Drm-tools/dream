@@ -41,6 +41,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	int				iTimeDiffNew;
 	_COMPLEX		cNewPilot;
 	CVector<_REAL>	vecrTiCorrEstSym;
+	_REAL			rSigOverEst;
 
 	/* Timing correction history -------------------------------------------- */
 	/* Shift old vaules and add a "0" at the beginning of the vector */
@@ -97,42 +98,45 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 
 	/* Update sigma estimation ---------------------------------------------- */
-	/* Update moving average for overall averaging for correlation estimation */
-	for (i = 0; i < iNumTapsSigEst; i++)
+	if (bTracking == TRUE)
 	{
-		/* Subtract oldest value in history from current estimation */
-		vecrTiCorrEst[i] -= matrTiCorrEstHist[iCurIndTiCor][i];
+		/* Update moving average for overall averaging for correlation
+		   estimation */
+		for (i = 0; i < iNumTapsSigEst; i++)
+		{
+			/* Subtract oldest value in history from current estimation */
+			vecrTiCorrEst[i] -= matrTiCorrEstHist[iCurIndTiCor][i];
 
-		/* Add new value and write in memory */
-		vecrTiCorrEst[i] += vecrTiCorrEstSym[i];
-		matrTiCorrEstHist[iCurIndTiCor][i] = vecrTiCorrEstSym[i];
-	}
+			/* Add new value and write in memory */
+			vecrTiCorrEst[i] += vecrTiCorrEstSym[i];
+			matrTiCorrEstHist[iCurIndTiCor][i] = vecrTiCorrEstSym[i];
+		}
 
-	/* Increase position pointer and test if wrap */
-	iCurIndTiCor++;
-	if (iCurIndTiCor == NO_SYM_AVER_TI_CORR)
-		iCurIndTiCor = 0;
+		/* Increase position pointer and test if wrap */
+		iCurIndTiCor++;
+		if (iCurIndTiCor == NO_SYM_AVER_TI_CORR)
+			iCurIndTiCor = 0;
 
-	/* Update filter coefficients once in one DRM frame */
-	if (iUpCntWienFilt > 0)
-		iUpCntWienFilt--;
-	else
-	{
-		/* Actual estimation of sigma */
-		rSigma = ModLinRegr(vecrTiCorrEst);
+		/* Update filter coefficients once in one DRM frame */
+		if (iUpCntWienFilt > 0)
+			iUpCntWienFilt--;
+		else
+		{
+			/* Actual estimation of sigma */
+			rSigma = ModLinRegr(vecrTiCorrEst);
 
-		/* Update the wiener filter */
-//		rMMSE = UpdateFilterCoef(rSNR, rSigma);
+			/* Use overestimated sigma for filter update */
+			rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
 
+			/* Update the wiener filter */
+			if (rSigOverEst < rSigmaMax)
+				rMMSE = UpdateFilterCoef(rSNR, rSigOverEst);
+			else
+				rMMSE = UpdateFilterCoef(rSNR, rSigmaMax);
 
-// TEST
-// Overestimate sigma
-rMMSE = UpdateFilterCoef(rSNR, rSigma * 2.0);
-
-
-
-		/* Reset counter */
-		iUpCntWienFilt = iNoSymPerFrame;
+			/* Reset counter */
+			iUpCntWienFilt = iNoSymPerFrame;
+		}
 	}
 
 
@@ -268,8 +272,9 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	iCurIndTiCor = 0;
 
 
-	/* Init Update counter for wiener filter update */
-	iUpCntWienFilt = iNoSymPerFrame;
+	/* Init Update counter for wiener filter update. Wait until moving
+	   average history was filled once */
+	iUpCntWienFilt = NO_SYM_AVER_TI_CORR;
 
 	/* Allocate memory for filter phases (Matrix) */
 	matrFiltTime.Init(iNoFiltPhasTi, iLengthWiener);

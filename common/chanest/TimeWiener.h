@@ -48,7 +48,7 @@
 
 /* Lengths of wiener filter for wiener filtering in time direction */
 #define LEN_WIENER_FILT_TIME_RMA		15
-#define LEN_WIENER_FILT_TIME_RMB		25
+#define LEN_WIENER_FILT_TIME_RMB		20
 #define LEN_WIENER_FILT_TIME_RMC		9
 #define LEN_WIENER_FILT_TIME_RMD		9
 
@@ -69,12 +69,21 @@
 /* Initial value for SNR */
 #define INIT_VALUE_SNR_WIEN_TIME_DB		((_REAL) 25.0) /* dB */
 
+/* Overestimation factor for sigma estimation.
+   We overestimate the sigma since the channel estimation result is much worse
+   if we use a sigma which is small than the real one compared to a value
+   which is bigger than the real one. Since we can only estimate on sigma for
+   all paths, it can happen that a path with a small gain but a high doppler
+   does not contribute enough on the global sigma estimation. Therefor the
+   overestimation */
+#define SIGMA_OVERESTIMATION_FACT		((_REAL) 2.0)
+
 
 /* Classes ********************************************************************/
 class CTimeWiener : public CChanEstTime
 {
 public:
-	CTimeWiener() {}
+	CTimeWiener() : bTracking(FALSE) {}
 	virtual ~CTimeWiener() {}
 
 	virtual int Init(CParameter& ReceiverParam);
@@ -85,6 +94,8 @@ public:
 
 	_REAL GetSigma() {return rSigma * 2;}
 
+	void StartTracking() {bTracking = TRUE;}
+	void StopTracking() {bTracking = FALSE;}
 	
 protected:
 	CReal TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt, 
@@ -127,6 +138,8 @@ protected:
 	_REAL				rSigmaMax;
 
 	_REAL				rMMSE;
+
+	_BOOLEAN			bTracking;
 };
 
 
