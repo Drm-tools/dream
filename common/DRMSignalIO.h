@@ -70,32 +70,30 @@ public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ /* I / Q */,
 		OF_EP /* envelope / phase */};
 
-#ifdef WRITE_TRNSM_TO_FILE
-	CTransmitData() : pFileTransmitter(NULL),
-		rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}
-	void SetIQOutput(const EOutFormat eFormat) {} /* Not used in file mode */
-	_BOOLEAN GetIQOutput() {return FALSE;}
-#else
 	CTransmitData(CSound* pNS) : pSound(pNS), eOutputFormat(OF_REAL_VAL),
-		rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}
+		rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), bUseSoundcard(TRUE),
+		strOutFileName("test/TransmittedData.txt"), pFileTransmitter(NULL) {}
+	virtual ~CTransmitData();
+
 	void SetIQOutput(const EOutFormat eFormat) {eOutputFormat = eFormat;}
 	EOutFormat GetIQOutput() {return eOutputFormat;}
-#endif
-	virtual ~CTransmitData();
 
 	void SetCarOffset(const CReal rNewCarOffset)
 		{rDefCarOffset = rNewCarOffset;}
 
+	void SetWriteToFile(const string strNFN)
+	{
+		strOutFileName = strNFN;
+		bUseSoundcard = FALSE;
+	}
+
 protected:
-#ifdef WRITE_TRNSM_TO_FILE
 	FILE*			pFileTransmitter;
-#else
 	CSound*			pSound;
 	CVector<short>	vecsDataOut;
 	int				iBlockCnt;
 	int				iNumBlocks;
 	EOutFormat		eOutputFormat;
-#endif
 
 	CReal			rDefCarOffset;
 	CRealVector		rvecA;
@@ -107,6 +105,11 @@ protected:
 
 	CReal			rNormFactor;
 
+	int				iBigBlockSize;
+
+	string			strOutFileName;
+	_BOOLEAN		bUseSoundcard;
+
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);
 };
@@ -114,9 +117,9 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	CReceiveData(CSound* pNS) : strIOFileName("test/TransmittedData.txt"),
-		bUseSoundcard(TRUE), pSound(pNS), bFippedSpectrum(FALSE),
-		pFileReceiver(NULL),
+	CReceiveData(CSound* pNS) : strInFileName("test/TransmittedData.txt"),
+		bUseSoundcard(TRUE), bNewUseSoundcard(TRUE), pSound(pNS),
+		pFileReceiver(NULL), bFippedSpectrum(FALSE),
 		vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0) {}
 	virtual ~CReceiveData();
 
@@ -126,12 +129,8 @@ public:
 	void SetFlippedSpectrum(const _BOOLEAN bNewF) {bFippedSpectrum = bNewF;}
 	_BOOLEAN GetFlippedSpectrum() {return bFippedSpectrum;}
 
-	void SetUseSoundcard(const _BOOLEAN bNewUS)
-	{
-		bUseSoundcard = bNewUS;
-		SetInitFlag();
-	}
-	void SetIOFileName(const string strNFN) {strIOFileName = strNFN;}
+	void SetReadFromFile(const string strNFN)
+		{bNewUseSoundcard = FALSE; strInFileName = strNFN; SetInitFlag();}
 
 protected:
 	void LevelMeter();
@@ -147,8 +146,9 @@ protected:
 
 	_BOOLEAN				bFippedSpectrum;
 	_BOOLEAN				bUseSoundcard;
+	_BOOLEAN				bNewUseSoundcard;
 
-	string					strIOFileName;
+	string					strInFileName;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

@@ -37,28 +37,6 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 {
 	int i;
 
-#ifdef WRITE_TRNSM_TO_FILE
-	/* Write data to file */
-	/* Use only real-part. Since we use only the real part of the signal, we
-	   have to double the amplitude (64 * 2 = 128) */
-	for (i = 0; i < iInputBlockSize; i++)
-	{
-#ifdef FILE_DRM_USING_RAW_DATA
-		const short sOut = (short) ((*pvecInputData)[i].real() * rNormFactor);
-
-		/* Write 2 bytes, 1 piece */
-		fwrite((const void*) &sOut, size_t(2), size_t(1), pFileTransmitter);
-#else
-		fprintf(pFileTransmitter, "%e\n",
-			(float) (*pvecInputData)[i].real() * rNormFactor);
-#endif
-	}
-
-	/* Flush the file buffer */
-	fflush(pFileTransmitter);
-#else
-
-
 	/* Filtering of output signal (FIR filter) ------------------------------ */
 	/* Transfer input data in Matlib library vector */
 	for (i = 0; i < iInputBlockSize; i++)
@@ -118,37 +96,61 @@ void CTransmitData::ProcessDataInternal(CParameter& Parameter)
 	{
 		iBlockCnt = 0;
 
-		/* Write data to sound card. Must be a blocking function */
-		pSound->Write(vecsDataOut);
-	}
+		if (bUseSoundcard == TRUE)
+		{
+			/* Write data to sound card. Must be a blocking function */
+			pSound->Write(vecsDataOut);
+		}
+		else
+		{
+			/* Write data to file */
+			for (i = 0; i < iBigBlockSize; i++)
+			{
+#ifdef FILE_DRM_USING_RAW_DATA
+				const short sOut = vecsDataOut[i];
+
+				/* Write 2 bytes, 1 piece */
+				fwrite((const void*) &sOut, size_t(2), size_t(1),
+					pFileTransmitter);
+#else
+				/* This can be read with Matlab "load" command */
+				fprintf(pFileTransmitter, "%d\n", vecsDataOut[i]);
 #endif
+			}
+
+			/* Flush the file buffer */
+			fflush(pFileTransmitter);
+		}
+	}
 }
 
 void CTransmitData::InitInternal(CParameter& TransmParam)
 {
-#ifdef WRITE_TRNSM_TO_FILE
-	/* Open file for writing data for transmitting */
-#ifdef FILE_DRM_USING_RAW_DATA
-	pFileTransmitter = fopen(strIOFileName.c_str(), "wb");
-#else
-	pFileTransmitter = fopen(strIOFileName.c_str(), "w");
-#endif
-
-	/* Check for error */
-	if (pFileTransmitter == NULL)
-		throw CGenErr("The file test/TransmittedData.txt cannot be created.");
-#else
 	/* Init vector for storing a complete DRM frame number of OFDM symbols */
 	iBlockCnt = 0;
 	iNumBlocks = TransmParam.iNumSymPerFrame;
-	const int iTotalSize =
-		TransmParam.iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
+	iBigBlockSize = TransmParam.iSymbolBlockSize * 2 /* Stereo */ * iNumBlocks;
 
-	vecsDataOut.Init(iTotalSize);
+	vecsDataOut.Init(iBigBlockSize);
 
-	/* Init sound interface */
-	pSound->InitPlayback(iTotalSize, TRUE);
+	if (bUseSoundcard == TRUE)
+	{
+		/* Init sound interface */
+		pSound->InitPlayback(iBigBlockSize, TRUE);
+	}
+	else
+	{
+		/* Open file for writing data for transmitting */
+#ifdef FILE_DRM_USING_RAW_DATA
+		pFileTransmitter = fopen(strOutFileName.c_str(), "wb");
+#else
+		pFileTransmitter = fopen(strOutFileName.c_str(), "w");
 #endif
+
+		/* Check for error */
+		if (pFileTransmitter == NULL)
+			throw CGenErr("The file " + strOutFileName + " cannot be created.");
+	}
 
 	/* Init filter taps */
 	rvecB.Init(NUM_TAPS_TRANSMFILTER);
@@ -210,7 +212,10 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	/* Modulate filter to shift it to the correct IF frequency */
 	for (int i = 0; i < NUM_TAPS_TRANSMFILTER; i++)
-		rvecB[i] = pCurFilt[i] * Cos((CReal) 2.0 * crPi * rNormCurFreqOffset * i);
+	{
+		rvecB[i] =
+			pCurFilt[i] * Cos((CReal) 2.0 * crPi * rNormCurFreqOffset * i);
+	}
 
 	/* Only FIR filter */
 	rvecA.Init(1);
@@ -233,11 +238,9 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 CTransmitData::~CTransmitData()
 {
-#ifdef WRITE_TRNSM_TO_FILE
 	/* Close file */
 	if (pFileTransmitter != NULL)
 		fclose(pFileTransmitter);
-#endif
 }
 
 
@@ -341,6 +344,10 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 void CReceiveData::InitInternal(CParameter& Parameter)
 {
+	/* Check if "new" flag for sound card usage has changed */
+	if (bNewUseSoundcard != bUseSoundcard)
+		bUseSoundcard = bNewUseSoundcard;
+
 	if (bUseSoundcard == TRUE)
 	{
 		/* Init sound interface. Set it to one symbol. The sound card interface
@@ -357,15 +364,15 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		if (pFileReceiver == NULL)
 		{
 #ifdef FILE_DRM_USING_RAW_DATA
-			pFileReceiver = fopen(strIOFileName.c_str(), "rb");
+			pFileReceiver = fopen(strInFileName.c_str(), "rb");
 #else
-			pFileReceiver = fopen(strIOFileName.c_str(), "r");
+			pFileReceiver = fopen(strInFileName.c_str(), "r");
 #endif
 		}
 
 		/* Check for error */
 		if (pFileReceiver == NULL)
-			throw CGenErr("The file " + strIOFileName + " must exist.");
+			throw CGenErr("The file " + strInFileName + " must exist.");
 	}
 
 	/* Define output block-size */
