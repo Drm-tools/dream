@@ -100,8 +100,9 @@ typedef unsigned int					_MESSAGE_IDENT;
 #define MS_MSC_CRC						3
 #define MS_FRAME_SYNC					4
 #define MS_TIME_SYNC					5
-#define MS_RESET_ALL					6
-#define MS_MOT_OBJ_STAT					7
+#define MS_IOINTERFACE					6
+#define MS_RESET_ALL					7
+#define MS_MOT_OBJ_STAT					8
 
 #define GUI_CONTROL_UPDATE_TIME			500	/* Milliseconds */
 
