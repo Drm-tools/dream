@@ -85,7 +85,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	else
 		iOutputBlockSize = iNumCarrier; 
 
-	/* Define DC carrier for robustness mode D because there is not pilot */
+	/* Define DC carrier for robustness mode D because there is no pilot */
 	if (iDCPos != 0)
 		veccPilots[iDCPos] = (CReal) 0.0;
 
@@ -424,8 +424,10 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	{
 		/* Identify DC carrier position */
 		for (int i = 0; i < iNumCarrier; i++)
+		{
 			if (_IsDC(ReceiverParam.matiMapTab[0][i]))
 				iDCPos = i;
+		}
 	}
 	else
 		iDCPos = 0;
@@ -747,7 +749,7 @@ fflush(pFile);
 			if ((iCurPil - iDCPos < iLengthWiener) && (iCurPil - iDCPos > 0))
 			{
 				/* Right side of DC carrier */
-				veciPilOffTab[j] = iDCPos;
+				veciPilOffTab[j] = iDCPos + 1;
 			}
 		}
 
