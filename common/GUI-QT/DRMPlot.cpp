@@ -40,8 +40,8 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	enableGridXMin(FALSE);
 	enableGridYMin(FALSE);
 
-	/* Legend should be on the right side -> "2" */
-	setLegendPos(2);
+	/* Legend should be on the right side */
+	setLegendPos(QwtPlot::Right);
 
 	/* Fonts */
 	setTitleFont(QFont("SansSerif", 8, QFont::Bold));
