@@ -64,10 +64,10 @@ void CDRMTransmitter::Run()
 
 		/* Audio source encoder */
 		AudioSourceEncoder.ProcessData(TransmParam, DataBuf, AudSrcBuf);
-	
+
 		/* MLC-encoder */
 		MSCMLCEncoder.ProcessData(TransmParam, AudSrcBuf, MLCEncBuf);
-	
+
 		/* Convolutional interleaver */
 		SymbInterleaver.ProcessData(TransmParam, MLCEncBuf, IntlBuf);
 
@@ -85,11 +85,11 @@ void CDRMTransmitter::Run()
 		/* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
 		OFDMCellMapping.ProcessData(TransmParam, IntlBuf, FACMapBuf, SDCMapBuf,
 			CarMapBuf);
-	
+
 
 		/* OFDM-modulation ****************************************************/
 		OFDMModulation.ProcessData(TransmParam, CarMapBuf, OFDMModBuf);
-	
+
 
 		/* Transmit the signal ************************************************/
 		TransmitData.WriteData(TransmParam, OFDMModBuf);
@@ -103,7 +103,7 @@ void CDRMTransmitter::Init()
 
 	/* Defines number of SDC bits per super-frame */
 	SDCMLCEncoder.Init(TransmParam, SDCMapBuf);
-	
+
 	MSCMLCEncoder.Init(TransmParam, MLCEncBuf);
 	SymbInterleaver.Init(TransmParam, IntlBuf);
 	GenerateFACData.Init(TransmParam, GenFACDataBuf);
