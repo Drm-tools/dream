@@ -110,7 +110,6 @@ public:
 	virtual ~CEvaSimData() {}
 
 protected:
-	int		iIntDelCnt;
 	int		iIniCnt;
 	int		iNoAccBitErrRate;
 	_REAL	rAccBitErrRate;

@@ -190,14 +190,10 @@ void systemevalDlg::OnTimer()
 		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
 #endif
 
-
-
-// TEST
-// Sigma
-TextWiener->setText("Sigma: \t\n" + 
-	QString().setNum(
-	DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz");
-
+	/* Doppler estimation (assuming Gaussian doppler spectrum) */
+	TextWiener->setText("Doppler: \t\n" + 
+		QString().setNum(
+		DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz");
 
 
 	/* Sample frequency offset estimation */

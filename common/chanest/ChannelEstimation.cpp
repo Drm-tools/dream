@@ -190,18 +190,25 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		   above) */
 		if (_IsScatPil(ReceiverParam.matiMapTab[iModSymNum][i]))
 		{
-			/* Normalize the channel estimation to values of pilots 
-			   (h = received / pilot -> received = h * pilot) */
+			/* We assume that the channel estimation in "veccChanEst" is noise
+			   free (e.g., the wiener interpolation does noise reduction). 
+			   Thus, we have an estimate of the received signal power 
+			   \hat{r} = s * \hat{h}_{wiener} */
 			cModChanEst = 
 				veccChanEst[i] * ReceiverParam.matcPilotCells[iModSymNum][i];
 
 			/* Average noise and signal estimates */
 			const _REAL rLam = 0.999;
+
+			/* The noise estimation is difference between the noise reduced
+			   signal and the noisy received signal
+			   \tilde{n} = \hat{r} - r */
 			rNoiseEst = rLam * rNoiseEst + 
 				(1 - rLam) * SqMag(matcHistory[0][i] - cModChanEst);
 
-			rSignalEst = rLam * rSignalEst + 
-				(1 - rLam) * SqMag(veccChanEst[i]);
+			/* The received signal power estimation is just \hat{r} */
+			rSignalEst = rLam * rSignalEst +
+				(1 - rLam) * SqMag(cModChanEst);
 
 			/* Calculate final result (signal to noise ratio) */
 			rSNREstimate = rSignalEst / rNoiseEst * rSNRCorrectFact;

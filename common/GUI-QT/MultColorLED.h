@@ -35,7 +35,7 @@
 
 
 /* Definitions ****************************************************************/
-#define DEFAULT_UPDATE_TIME				500
+#define DEFAULT_UPDATE_TIME				800
 
 /* The red and yellow light should be on at least this interval */
 #define MIN_TIME_FOR_RED_LIGHT			100

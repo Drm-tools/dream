@@ -828,7 +828,7 @@ _REAL CMLCMetric::Minimum1(_REAL rA, _REAL rB) const
 
 _REAL CMLCMetric::Minimum2(_REAL rA, _REAL rB1, _REAL rB2) const
 {
-	/* First calculate all distances */
+	/* First, calculate all distances */
 	_REAL rResult1 = fabs(rA - rB1);
 	_REAL rResult2 = fabs(rA - rB2);
 
@@ -841,13 +841,13 @@ _REAL CMLCMetric::Minimum2(_REAL rA, _REAL rB1, _REAL rB2) const
 
 _REAL CMLCMetric::Minimum4(_REAL rA, _REAL rB1, _REAL rB2, _REAL rB3, _REAL rB4) const
 {
-	/* First calculate all distances */
+	/* First, calculate all distances */
 	_REAL rResult1 = fabs(rA - rB1);
 	_REAL rResult2 = fabs(rA - rB2);
 	_REAL rResult3 = fabs(rA - rB3);
 	_REAL rResult4 = fabs(rA - rB4);
 
-	/* Search for smalles one */
+	/* Search for smallest one */
 	_REAL rReturn = rResult1;
 	if (rResult2 < rReturn)
 		rReturn = rResult2;

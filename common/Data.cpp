@@ -213,17 +213,6 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 	int				iNoBitErrors;
 	int				i;
 
-	/* First check if incoming block is valid (because of long interleaving
-	   the first blocks are not valid */
-	if (iIntDelCnt > 0)
-	{
-		iIntDelCnt--;
-
-		/* We have an invalid block, return function immediately */
-		return;
-	}
-
-
 	/* -------------------------------------------------------------------------
 	   Generate a pseudo-noise test-signal (PRBS) for comparison with
 	   received signal */
@@ -253,7 +242,9 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Save bit error rate, debar initialization blocks */
-	if (iIniCnt > 10)
+	if (iIniCnt > 0)
+		iIniCnt--;
+	else
 	{
 		rAccBitErrRate += (_REAL) iNoBitErrors / iInputBlockSize;
 		iNoAccBitErrRate++;
@@ -261,23 +252,16 @@ void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 		ReceiverParam.rBitErrRate = rAccBitErrRate / iNoAccBitErrRate;
 		ReceiverParam.iNoBitErrors += iNoBitErrors;
 	}
-	else
-		iIniCnt++;
 }
 
 void CEvaSimData::InitInternal(CParameter& ReceiverParam)
 {
-	/* In case long symbol interleaving was set, the first blocks must be 
-	   debarred. Set an interleaver delay count */
-	if (ReceiverParam.eSymbolInterlMode == CParameter::SI_LONG)
-		iIntDelCnt = D_LENGTH_LONG_INTERL - 1;
-	else
-		iIntDelCnt = 0;
-
 	/* Reset bit error rate parameters */
 	rAccBitErrRate = (_REAL) 0.0;
 	iNoAccBitErrRate = 0;
-	iIniCnt = 0;
+
+	/* Number of blocks at the beginning we do not want to use */
+	iIniCnt = 10;
 
 	/* Init global parameters */
 	ReceiverParam.rBitErrRate = (_REAL) 0.0;

@@ -44,22 +44,22 @@ void CSymbInterleaver::ProcessDataInternal(CParameter& TransmParam)
 
 	/* Write data in interleaver-memory (always index "0") */
 	for (i = 0; i < iInputBlockSize; i++)
-		veccInterlMemory[iCurIndex[0]][i] = (*pvecInputData)[i];
+		matcInterlMemory[veciCurIndex[0]][i] = (*pvecInputData)[i];
 
 	/* Interleave data according to the interleaver table. Use the
 	   the interleaver-blocks described in the DRM-standard 
 	   (Ro(i) = i (mod D)  -> "i % iD") */
 	for (i = 0; i < iInputBlockSize; i++)
 		(*pvecOutputData)[i] = 
-			veccInterlMemory[iCurIndex[i % iD]][veciIntTable[i]];
+			matcInterlMemory[veciCurIndex[i % iD]][veciIntTable[i]];
 
 	/* Set new indices. Move blocks (virtually) forward */
 	for (j = 0; j < iD; j++)
 	{
-		iCurIndex[j]--;
+		veciCurIndex[j]--;
 
-		if (iCurIndex[j] < 0)
-			iCurIndex[j] = iD - 1;
+		if (veciCurIndex[j] < 0)
+			veciCurIndex[j] = iD - 1;
 	}
 }
 
@@ -89,12 +89,12 @@ void CSymbInterleaver::InitInternal(CParameter& TransmParam)
 	}
 
 	/* Always allocate memory for long interleaver case (Interleaver memory) */
-	for (i = 0; i < D_LENGTH_LONG_INTERL; i++)
-		veccInterlMemory[i].Init(iN_MUX);
+	matcInterlMemory.Init(D_LENGTH_LONG_INTERL, iN_MUX);
 
 	/* Index for addressing the buffers */
+	veciCurIndex.Init(D_LENGTH_LONG_INTERL);
 	for (i = 0; i < D_LENGTH_LONG_INTERL; i++)
-		iCurIndex[i] = i;
+		veciCurIndex[i] = i;
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iN_MUX;
@@ -118,21 +118,32 @@ void CSymbDeinterleaver::ProcessDataInternal(CParameter& ReceiverParam)
 	   the interleaver-blocks described in the DRM-standard 
 	   (Ro(i) = i (mod D)  -> "i % iD") */
 	for (i = 0; i < iInputBlockSize; i++)
-		veccDeinterlMemory[iCurIndex[i % iD]][veciIntTable[i]] = 
+		matcDeinterlMemory[veciCurIndex[i % iD]][veciIntTable[i]] = 
 			(*pvecInputData)[i];
 
 	/* Read data from current block (index "iD - 1")*/
 	for (i = 0; i < iInputBlockSize; i++)
-		(*pvecOutputData)[i] = veccDeinterlMemory[iCurIndex[iD - 1]][i];
+		(*pvecOutputData)[i] = matcDeinterlMemory[veciCurIndex[iD - 1]][i];
 
 	/* Set new indices. Move blocks forward (virtually) */
 	for (j = 0; j < iD; j++)
 	{
-		iCurIndex[j]--;
+		veciCurIndex[j]--;
 
-		if (iCurIndex[j] < 0)
-			iCurIndex[j] = iD - 1;
+		if (veciCurIndex[j] < 0)
+			veciCurIndex[j] = iD - 1;
 	}
+
+	/* Debar initialization phase */
+	if (iInitCnt > 0)
+	{
+		iInitCnt--;
+
+		/* Do not put out data in initialization phase */
+		iOutputBlockSize = 0;
+	}
+	else
+		iOutputBlockSize = iN_MUX; 
 }
 
 void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
@@ -161,14 +172,18 @@ void CSymbDeinterleaver::InitInternal(CParameter& ReceiverParam)
 	}
 
 	/* Always allocate memory for long interleaver case (Interleaver memory) */
-	for (i = 0; i < D_LENGTH_LONG_INTERL; i++)
-		veccDeinterlMemory[i].Init(iN_MUX);
+	matcDeinterlMemory.Init(D_LENGTH_LONG_INTERL, iN_MUX);
 
 	/* Index for addressing the buffers */
+	veciCurIndex.Init(D_LENGTH_LONG_INTERL);
 	for (i = 0; i < D_LENGTH_LONG_INTERL; i++)
-		iCurIndex[i] = i;
+		veciCurIndex[i] = i;
+
+	/* After an initialization we do not put out data befor the number symbols
+	   of the interleaver delay have been processed */
+	iInitCnt = iD - 1;
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iN_MUX;
-	iOutputBlockSize = iN_MUX;
+	iMaxOutputBlockSize = iN_MUX;
 }
