@@ -193,11 +193,6 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	pReceiverModeMenu->insertItem(tr("AM (analog)"), this,
 		SLOT(OnReceiverMode(int)), CTRL+Key_A, 1);
 
-	/* Default is DRM mode */
-	pReceiverModeMenu->setItemChecked(0, 1);
-	DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
-
-
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("Sound &In"), pSoundInMenu);
@@ -247,9 +242,23 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 		Qt::WStyle_MinMax);
 
 	if (DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
+	{
+		/* If analog demodulation evaluation window was shown, the receiver
+		   certainly was in analog demodulation mode and we should set it to
+		   this mode now */
+		pReceiverModeMenu->setItemChecked(1, 1);
+		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_AM);
+
 		pAnalogDemDlg->show();
+	}
 	else
+	{
+		/* Default is DRM mode */
+		pReceiverModeMenu->setItemChecked(0, 1);
+		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+
 		pAnalogDemDlg->hide();
+	}
 
 	/* Stations window */
 	pStationsDlg = new StationsDlg(this, tr("Stations"), FALSE,
