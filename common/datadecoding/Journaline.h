@@ -91,7 +91,14 @@ public:
 	CJournaline() {}
 	virtual ~CJournaline() {}
 
-	void GetNews(const int iObjID, CNews& News) {}
+	void GetNews(const int iObjID, CNews& News)
+	{
+		/* Show in GUI that Journaline decoder is not available */
+		News.sTitle = "Dream Decoder Message";
+		News.vecItem.Init(1);
+		News.vecItem[0].iLink = JOURNALINE_IS_NO_LINK;
+		News.vecItem[0].sText = "No Journaline decoder available.";
+	}
 	void AddDataUnit(CVector<_BINARY>& vecbiNewData) {}
 	void Reset() {}
 };
