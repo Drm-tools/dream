@@ -101,17 +101,18 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	/* Spectrum */
 	CCharSelItem* pListItAudSpec = new CCharSelItem(pSpectrumLiViIt,
 		tr("Audio Spectrum"), AUDIO_SPECTRUM);
-	new CCharSelItem(pSpectrumLiViIt, "Shifted PSD", POWER_SPEC_DENSITY);
-	new CCharSelItem(pSpectrumLiViIt, "Input PSD", INPUT_SIG_PSD);
-	CCharSelItem* pListItInpSpec = new CCharSelItem(pSpectrumLiViIt,
-		tr("Input Spectrum"), INPUTSPECTRUM_NO_AV);
+	new CCharSelItem(pSpectrumLiViIt, tr("Shifted PSD"), POWER_SPEC_DENSITY);
+	new CCharSelItem(pSpectrumLiViIt, tr("Input Spectrum"),
+		INPUTSPECTRUM_NO_AV);
+	CCharSelItem* pListItInpPSD = new CCharSelItem(pSpectrumLiViIt,
+		tr("Input PSD"), INPUT_SIG_PSD);
 
 	/* Constellation */
-	new CCharSelItem(pConstellationLiViIt, "MSC", MSC_CONSTELLATION);
-	new CCharSelItem(pConstellationLiViIt, "SDC", SDC_CONSTELLATION);
-	new CCharSelItem(pConstellationLiViIt, "FAC", FAC_CONSTELLATION);
+	new CCharSelItem(pConstellationLiViIt, tr("MSC"), MSC_CONSTELLATION);
+	new CCharSelItem(pConstellationLiViIt, tr("SDC"), SDC_CONSTELLATION);
+	new CCharSelItem(pConstellationLiViIt, tr("FAC"), FAC_CONSTELLATION);
 	new CCharSelItem(pConstellationLiViIt,
-		"FAC / SDC / MSC", ALL_CONSTELLATION);
+		tr("FAC / SDC / MSC"), ALL_CONSTELLATION);
 
 	/* History */
 	new CCharSelItem(pHistoryLiViIt,
@@ -149,9 +150,9 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 	else
 	{
 		/* Default chart (at startup) */
-		ListViewCharSel->setSelected(pListItInpSpec, TRUE);
+		ListViewCharSel->setSelected(pListItInpPSD, TRUE);
 		ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-		SetupChart(INPUTSPECTRUM_NO_AV);
+		SetupChart(INPUT_SIG_PSD);
 	}
 #endif
 
