@@ -48,7 +48,7 @@ _COMPLEX CPilotModiClass::Rotate(const _COMPLEX cI, const int iCN,
 	if (iTiDi != 0)
 	{
 		/* First calculate the argument */
-		_REAL rArg = rArgMult * iTiDi * (iKminAbs + iCN);
+		const _REAL rArg = rArgMult * iTiDi * (iKminAbs + iCN);
 
 		/* * exp(2 * pi * TimeDiff / norm) */
 		return _COMPLEX(cos(rArg), sin(rArg)) * cI;
