@@ -480,7 +480,7 @@ _COMPLEX CTapgain::Update()
 		out = _COMPLEX(nextI, nextQ);
 
 	/* Weight with gain */
-	const _REAL ccGainCorr = sqrt(2);
+	const _REAL ccGainCorr = sqrt((_REAL) 2.0);
 	return out * gain / ccGainCorr;
 }
 

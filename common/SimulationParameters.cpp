@@ -64,7 +64,7 @@ void CDRMSimulation::SimScript()
 
 //Param.eMSCCodingScheme = CParameter::CS_3_HMMIX;//CS_3_HMSYM;
 
-		Param.iDRMChannelNo = 8;
+		Param.iDRMChannelNo = 5;
 
 		/* Init the modules to adapt to the new parameters. We need to do that
 		   because the following routines call modul internal functions which
@@ -85,12 +85,12 @@ void CDRMSimulation::SimScript()
 //ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
 
 		/* No of blocks for simulation */
-		GenSimData.SetSimTime(20);
-//		GenSimData.SetNoErrors(100);
+//		GenSimData.SetSimTime(20);
+		GenSimData.SetNoErrors(1000);
 
 		MSCMLCDecoder.SetNoIterations(1);
 
-		for (rSNRCnt = 30; rSNRCnt <= 30; rSNRCnt += 1.0)
+		for (rSNRCnt = 20; rSNRCnt <= 30; rSNRCnt += 0.5)
 		{
 			Param.rSimSNRdB = rSNRCnt;
 

@@ -384,7 +384,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				else
 				{
 					matcPilotCells[iSym][iCarArrInd] = 
-						Polar2Cart(sqrt(2), iScatPilPhase);
+						Polar2Cart(sqrt((_REAL) 2.0), iScatPilPhase);
 				}
 			}
 			
@@ -405,7 +405,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 					/* Set complex value for this pilot */
 					matcPilotCells[iSym][iCarArrInd] = 
-						Polar2Cart(sqrt(2),
+						Polar2Cart(sqrt((_REAL) 2.0),
 						piTableTimePilots[iTimePilotsCounter * 2 + 1]);
 
 					if (iTimePilotsCounter == iNoTimePilots - 1)
@@ -451,12 +451,12 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				/* Apply complex value */
 				if (bIsFreqPilSpeciCase)
 					matcPilotCells[iSym][iCarArrInd] = 
-						Polar2Cart(sqrt(2), mod(
+						Polar2Cart(sqrt((_REAL) 2.0), mod(
 						piTableFreqPilots[iFreqPilotsCounter * 2 + 1] + 
 						512, 1024));
 				else
 					matcPilotCells[iSym][iCarArrInd] = 
-						Polar2Cart(sqrt(2),
+						Polar2Cart(sqrt((_REAL) 2.0),
 						piTableFreqPilots[iFreqPilotsCounter * 2 + 1]);
 
 				/* Increase counter and wrap if needed */
