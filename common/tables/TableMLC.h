@@ -34,42 +34,42 @@
 
 /* Definitions ****************************************************************/
 /* Default number of iterations at application startup */
-#define MC_NUM_ITERATIONS			1
+#define MC_NUM_ITERATIONS				1
 
 /* Generator polynomials used for channel coding (octal form, defined by 
    a leading "0"!). We must bit-reverse the octal-forms given in the standard 
    since we shift bits from right to the left! */
 /* In this implementation we shift bits from right to left, therefore the order
    of the code-words are: [..., b_(0, i), b_(1, i), b(2, i), b(3, i), ...] */
-#define MC_NO_OUTPUT_BITS_PER_STEP	4	// MC: Multi-level Coder
-const _BYTE byGeneratorMatrix[MC_NO_OUTPUT_BITS_PER_STEP] = {
+#define MC_NUM_OUTPUT_BITS_PER_STEP		4	/* MC: Multi-level Coder */
+const _BYTE byGeneratorMatrix[MC_NUM_OUTPUT_BITS_PER_STEP] = {
 	0155,	/* (133) x_{0, i} */
 	0117,	/* (171) x_{1, i} */
 	0123,	/* (145) x_{2, i} */
 	0155	/* (133) x_{3, i} */
 };
 
-#define MC_CONSTRAINT_LENGTH		7
+#define MC_CONSTRAINT_LENGTH			7
 
 /* Since we have a periodical structure in the trellis it
    is enough to build one step. 2^(MC_CONSTRAINT_LENGTH - 1) states have
    to be considered. ("- 1": since one bit is the transition to the next 
    state) */
-#define MC_NO_STATES				(1 << (MC_CONSTRAINT_LENGTH - 1))
-#define MC_NO_OUTPUT_COMBINATIONS	(1 << MC_NO_OUTPUT_BITS_PER_STEP)
+#define MC_NUM_STATES					(1 << (MC_CONSTRAINT_LENGTH - 1))
+#define MC_NUM_OUTPUT_COMBINATIONS		(1 << MC_NUM_OUTPUT_BITS_PER_STEP)
 
 /* Maximum number of levels (Its in case of HMmix) */
-#define MC_MAX_NUM_LEVELS			6
+#define MC_MAX_NUM_LEVELS				6
 
 
 /* Puncturing --------------------------------------------------------------- */
 /* Only these types of patterns are used in DRM */
-#define PP_TYPE_0000				0 /* not used, dummy */
-#define PP_TYPE_1111				1
-#define PP_TYPE_0111				2
-#define PP_TYPE_0011				3
-#define PP_TYPE_0001				4
-#define PP_TYPE_0101				5
+#define PP_TYPE_0000					0 /* not used, dummy */
+#define PP_TYPE_1111					1
+#define PP_TYPE_0111					2
+#define PP_TYPE_0011					3
+#define PP_TYPE_0001					4
+#define PP_TYPE_0101					5
 
 /* {a, b, c ...}: a = Number of groups, b = Number of "1"s, c = Patterns */
 const _UINT32BIT iPuncturingPatterns[13][10] = {
@@ -283,7 +283,7 @@ B3: 0 0 0 0 0 0 0 0
 };
 
 /* Puncturing patterns for tailbits */
-#define LENGTH_TAIL_BIT_PAT			6
+#define LENGTH_TAIL_BIT_PAT				6
 const _UINT32BIT iPunctPatTailbits[12][LENGTH_TAIL_BIT_PAT] = {
 /*
 B0: 1 1 1 1 1 1
