@@ -48,7 +48,6 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 	_REAL ry1;
 	_REAL ry2;
 	_REAL rxInt;
-	_REAL rBlockDuration;
 
 	/* Move old data from the end to the history part of the buffer and 
 	   add new data (shift register) */
@@ -60,9 +59,6 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 
 	/* Init output counter */
 	im = 0;
-
-	/* Calculate block duration */
-	rBlockDuration = (iInputBlockSize + iHistorySize - 1) * INTERP_DECIM_I_D;
 
 	/* Main loop */
 	do
@@ -116,6 +112,9 @@ void CResample::Init(int iNewInputBlockSize)
 	/* History size must be one sample larger, because we use always TWO 
 	   convolutions */
 	iHistorySize = NO_TAPS_PER_PHASE + 1;
+
+	/* Calculate block duration */
+	rBlockDuration = (iInputBlockSize + iHistorySize - 1) * INTERP_DECIM_I_D;
 
 	/* Allocate memory for internal buffer, clear sample history */
 	vecrIntBuff.Init(iInputBlockSize + iHistorySize, (_REAL) 0.0);

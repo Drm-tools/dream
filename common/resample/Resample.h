@@ -48,6 +48,7 @@ public:
 protected:
 	_REAL					rTStep;
 	_REAL					rtOut;
+	_REAL					rBlockDuration;
 
 	CShiftRegister<_REAL>	vecrIntBuff;
 	int						iHistorySize;
