@@ -36,6 +36,10 @@
 
 
 /* Definitions ****************************************************************/
+/* Using max-log MAP decoder */
+#undef USE_MAX_LOG_MAP
+
+
 /* SIMD implementation is always fixed-point */
 #define USE_SIMD
 #undef USE_SIMD
@@ -46,9 +50,11 @@
 
 
 #ifdef USE_SIMD
-#ifndef USE_MMX
-# define USE_SSE2
-#endif
+/* No MAP implementation for SIMD */
+# undef USE_MAX_LOG_MAP
+# ifndef USE_MMX
+#  define USE_SSE2
+# endif
 #endif
 
 /* Data type for Viterbi metric */
@@ -74,6 +80,15 @@
 #endif
 
 
+/* In case of MAP decoder, all metrics must be stored for the entire input
+   vector since we need them for the forward and backward direction */
+#ifdef USE_MAX_LOG_MAP
+# define METRICSET(a)		matrMetricSet[a]
+#else
+# define METRICSET(a)		vecrMetricSet
+#endif
+
+
 /* Classes ********************************************************************/
 class CViterbiDecoder : public CChannelCode
 {
@@ -94,7 +109,12 @@ protected:
 	_VITMETRTYPE			vecTrelMetric1[MC_NUM_STATES];
 	_VITMETRTYPE			vecTrelMetric2[MC_NUM_STATES];
 
+#ifdef USE_MAX_LOG_MAP
+	CMatrix<_REAL>			matrAlpha;
+	CMatrix<_REAL>			matrMetricSet;
+#else
 	_REAL					vecrMetricSet[MC_NUM_OUTPUT_COMBINATIONS];
+#endif
 
 	CVector<int>			veciTablePuncPat;
 
