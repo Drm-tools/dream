@@ -179,7 +179,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	return 1 / rMMSE;
 }
 
-int CTimeWiener::DisToNextPil(int iPiHiIndex, int iSymNum)
+int CTimeWiener::DisToNextPil(const int iPiHiIndex, const int iSymNum) const
 {
 	/* Distance to next pilot (later in time!) of one specific
 	   carrier (with pilot). We do the "iNumSymPerFrame - iSymNum" to avoid

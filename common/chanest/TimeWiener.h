@@ -100,7 +100,7 @@ protected:
 							const int iDiff, const CReal rNewSNR, 
 							const CReal rNewSigma, const CReal rTs, 
 							const int iLength);
-	inline int DisToNextPil(int iPiHiIndex, int iSymNum);
+	inline int DisToNextPil(const int iPiHiIndex, const int iSymNum) const;
 	_REAL UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
 	CReal ModLinRegr(CRealVector& vecrCorrEst);
 
