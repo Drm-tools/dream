@@ -54,9 +54,8 @@ CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx,
 
 /* Sinc-function */
 inline CReal			Sinc(const CReal& rI)
-{
-	return rI == (CReal) 0.0 ? (CReal) 1.0 : sin(crPi * rI) / (crPi * rI);
-}
+							{return rI == (CReal) 0.0 ? (CReal) 1.0 : sin(crPi * rI) / (crPi * rI);}
+inline
 CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI)
 							{_VECOP(CReal, fvI.GetSize(), Sinc(fvI[i]));}
 
@@ -70,8 +69,7 @@ CMatlibVector<CComplex>	FirFiltDec(const CMatlibVector<CComplex>& cvB,
 
 
 /* Squared magnitude */
-inline
-CReal					SqMag(const CComplex& cI)
+inline CReal			SqMag(const CComplex& cI)
 							{return cI.real() * cI.real() + cI.imag() * cI.imag();}
 inline
 CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI)
