@@ -113,7 +113,8 @@ class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
 	CReceiveData(CSound* pNS) : bFippedSpectrum(FALSE), pFileReceiver(NULL),
-		bUseSoundcard(TRUE), pSound(pNS) {}
+		bUseSoundcard(TRUE), pSound(pNS),
+		vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0) {}
 	virtual ~CReceiveData();
 
 	_REAL GetLevelMeter();

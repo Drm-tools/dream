@@ -366,9 +366,6 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 			throw CGenErr("The file test/TransmittedData.txt must exist.");
 	}
 
-	/* Init vector for saving input data for spectrum */
-	vecrInpData.Init(NUM_SMPLS_4_INPUT_SPECTRUM);
-
 	/* Define output block-size */
 	iOutputBlockSize = Parameter.iSymbolBlockSize;
 }
@@ -416,14 +413,13 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 {
 	int				i;
 	int				iLenSpecWithNyFreq;
-	int				iLenInputVector;
 	CComplexVector	veccSpectrum;
 	_REAL			rFactorScale;
 	_REAL			rNormData;
 	CRealVector		vecrFFTInput;
 	_REAL			rNormSqMag;
 
-	iLenInputVector = vecrInpData.Size();
+	const int iLenInputVector = NUM_SMPLS_4_INPUT_SPECTRUM;
 
 	/* Length of spectrum vector including Nyquist frequency */
 	iLenSpecWithNyFreq = iLenInputVector / 2 + 1;
@@ -432,41 +428,36 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 	vecrData.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
 	vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
 
-	/* Do copying of data only if vector is of non-zero length which means that
-	   the module was already initialized */
-	if (iLenInputVector != 0)
+	/* Lock resources */
+	Lock();
+
+	rFactorScale = (_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
+	rNormData = (_REAL) iLenInputVector * iLenInputVector * _MAXSHORT;
+
+	veccSpectrum.Init(iLenSpecWithNyFreq);
+
+	/* Copy data from shift register in Matlib vector */
+	vecrFFTInput.Init(iLenInputVector);
+	for (i = 0; i < iLenInputVector; i++)
+		vecrFFTInput[i] = vecrInpData[i];
+
+	/* Get spectrum */
+	veccSpectrum = rfft(vecrFFTInput);
+
+	/* Log power spectrum data */
+	for (i = 0; i < iLenSpecWithNyFreq; i++)
 	{
-		/* Lock resources */
-		Lock();
+		rNormSqMag = SqMag(veccSpectrum[i]) / rNormData;
 
-		rFactorScale = (_REAL) SOUNDCRD_SAMPLE_RATE / iLenSpecWithNyFreq / 2000;
-		rNormData = (_REAL) iLenInputVector * iLenInputVector * _MAXSHORT;
+		if (rNormSqMag > 0)
+			vecrData[i] = 
+				(_REAL) 10.0 * log10(rNormSqMag);
+		else
+			vecrData[i] = RET_VAL_LOG_0;
 
-		veccSpectrum.Init(iLenSpecWithNyFreq);
-
-		/* Copy data from shift register in Matlib vector */
-		vecrFFTInput.Init(iLenInputVector);
-		for (i = 0; i < iLenInputVector; i++)
-			vecrFFTInput[i] = vecrInpData[i];
-
-		/* Get spectrum */
-		veccSpectrum = rfft(vecrFFTInput);
-
-		/* Log power spectrum data */
-		for (i = 0; i < iLenSpecWithNyFreq; i++)
-		{
-			rNormSqMag = SqMag(veccSpectrum[i]) / rNormData;
-
-			if (rNormSqMag > 0)
-				vecrData[i] = 
-					(_REAL) 10.0 * log10(rNormSqMag);
-			else
-				vecrData[i] = RET_VAL_LOG_0;
-
-			vecrScale[i] = (_REAL) i * rFactorScale;
-		}
-
-		/* Release resources */
-		Unlock();
+		vecrScale[i] = (_REAL) i * rFactorScale;
 	}
+
+	/* Release resources */
+	Unlock();
 }
