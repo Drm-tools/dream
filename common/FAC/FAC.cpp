@@ -142,9 +142,8 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	/* Number of services */
 	/* Use Table */
-	(*pbiFACData).Enqueue( 
-		iTableNoOfServices[Parameter.iNumAudioService][Parameter.iNumDataService],
-		4);
+	(*pbiFACData).Enqueue(iTableNumOfServices[Parameter.iNumAudioService]
+		[Parameter.iNumDataService], 4);
 
 	/* Reconfiguration index (not used) */
 	(*pbiFACData).Enqueue((uint32_t) 0, 3);
@@ -504,10 +503,10 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 			
 		/* Number of services */
 		/* Search table for entry */
-		int iNoServTabEntry = (*pbiFACData).Separate(4);
+		int iNumServTabEntry = (*pbiFACData).Separate(4);
 		for (int i = 0; i < 5; i++)
 			for (int j = 0; j < 5; j++)
-				if (iNoServTabEntry == iTableNoOfServices[i][j])
+				if (iNumServTabEntry == iTableNumOfServices[i][j])
 					Parameter.SetNumOfServices(i, j);
 
 		/* Reconfiguration index (not used, yet) */

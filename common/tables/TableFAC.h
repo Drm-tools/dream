@@ -36,11 +36,11 @@
 /* Definitions ****************************************************************/
 #define NUM_FAC_BITS_PER_BLOCK		72
 
-/* iTableNoOfServices[a][b]
+/* iTableNumOfServices[a][b]
    a: Number of audio services
    b: Number of data services 
    (6.3.4) */
-const int iTableNoOfServices[5][5] = {
+const int iTableNumOfServices[5][5] = {
 	/* -> Data */
 	{-1,  1,  2,  3, 15},
 	{ 4,  5,  6,  7, -1},
