@@ -73,28 +73,22 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Calculate abs(IFFT) for getting estimate of impulse response */
 		vecrTestImpResp = Abs(Ifft(veccChan, FftPlan));
 
-		/* Calculate peak to average, we need to add a minus since the following
-		   algorithm searches for a minimum */
-		const CReal rResultIREst =
-			- Max(vecrTestImpResp) / Sum(vecrTestImpResp);
+		/* Calculate peak to average */
+		const CReal rResultIREst = Max(vecrTestImpResp) / Sum(vecrTestImpResp);
 
 
 		/* DRM frame synchronization based on time pilots ------------------- */
-		/* We use a differential demodulation of the time-pilots, because there
-		   is no channel-estimation done, yet. The differential factors are pre-
-		   calculated in the Init-routine. Additionally, the index of the first
-		   pilot in the pair is stored in ".iNumCarrier". We calculate and
-		   averaging the Euclidean-norm of the resulting complex values */
-		CReal rResultPilPairEst = (CReal) 0.0;
-		for (i = 0; i < iNumDiffFact; i++)
+		/* Calculate correlation of received cells with pilot pairs */
+		CReal rResultPilPairCorr = (CReal) 0.0;
+		for (i = 0; i < iNumPilPairs; i++)
 		{
-			const CComplex cErrVec =
-				((*pvecInputData)[vecDiffFact[i].iNumCarrier] *
-				vecDiffFact[i].cDiff -
-				(*pvecInputData)[vecDiffFact[i].iNumCarrier + 1]);
+			/* Actual correlation */
+			const CComplex cCorrRes = (*pvecInputData)[vecPilCorr[i].iIdx1] *
+				Conj(vecPilCorr[i].cPil1) *
+				Conj((*pvecInputData)[vecPilCorr[i].iIdx2]) *
+				vecPilCorr[i].cPil2 * cR_HH;
 
-			/* Add squard magnitude of error vector */
-			rResultPilPairEst += SqMag(cErrVec);
+			rResultPilPairCorr += Real(cCorrRes);
 		}
 
 
@@ -103,24 +97,24 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		   Method of IR should not be used with robustness mode A because the
 		   guard-interval is too short in this mode */
 		if (eCurRobMode == RM_ROBUSTNESS_MODE_A)
-			vecrCorrHistory.AddEnd(rResultPilPairEst);
+			vecrCorrHistory.AddEnd(rResultPilPairCorr);
 		else
 			vecrCorrHistory.AddEnd(rResultIREst);
 
-		/* Search for minimum distance. Init value with a large number */
-		int iMinIndex = 0;
-		CReal rMinValue = _MAXREAL;
+		/* Search for maximum */
+		int iMaxIndex = 0;
+		CReal rMaxValue = -_MAXREAL;
 		for (i = 0; i < iNumSymPerFrame; i++)
 		{
-			if (vecrCorrHistory[i] < rMinValue)
+			if (vecrCorrHistory[i] > rMaxValue)
 			{
-				rMinValue = vecrCorrHistory[i];
-				iMinIndex = i;
+				rMaxValue = vecrCorrHistory[i];
+				iMaxIndex = i;
 			}
 		}
 
-		/* If minimum is in the middle of the interval -> check frame sync */
-		if (iMinIndex == iMiddleOfInterval)
+		/* If maximum is in the middle of the interval -> check frame sync */
+		if (iMaxIndex == iMiddleOfInterval)
 		{
 			if (iSymbCntFraSy == iNumSymPerFrame - iMiddleOfInterval - 1)
 			{
@@ -344,9 +338,9 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	bInitFrameSync = TRUE; /* Set flag to show that (re)-init was done */
 	bFrameSyncWasOK = FALSE;
 
-	/* Allocate memory for histories. Init history with large values, because
-	   we search for minimum! */
-	vecrCorrHistory.Init(iNumSymPerFrame, _MAXREAL);
+	/* Allocate memory for histories. Init history with small values, because
+	   we search for maximum! */
+	vecrCorrHistory.Init(iNumSymPerFrame, -_MAXREAL);
 
 	/* Set middle of observation interval */
 	iMiddleOfInterval = iNumSymPerFrame / 2;
@@ -368,40 +362,40 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 
 	/* DRM frame synchronization based on time pilots, inits ---------------- */
-	/* Allocate memory for storing differential complex factors. Since we do
-	   not know the resulting "iNumDiffFact" we allocate memory for the
+	/* Allocate memory for storing pilots and indices. Since we do
+	   not know the resulting "iNumPilPairs" we allocate memory for the
 	   worst case, i.e. "iNumCarrier" */
-	vecDiffFact.Init(iNumCarrier);
+	vecPilCorr.Init(iNumCarrier);
 
-	/* Calculate differential complex factors for time-synchronization pilots
-	   Use only first symbol of "matcPilotCells", because there are the pilots
-	   for Frame-synchronization */
-	iNumDiffFact = 0;
+	/* Store pilots and indices for calculating the correlation. Use only first
+	   symbol of "matcPilotCells", because there are the pilots for
+	   Frame-synchronization */
+	iNumPilPairs = 0;
+
 	for (i = 0; i < iNumCarrier - 1; i++)
 	{
 		/* Only successive pilots (in frequency direction) are used */
 		if (_IsPilot(ReceiverParam.matiMapTab[0][i]) &&
 			_IsPilot(ReceiverParam.matiMapTab[0][i + 1]))
 		{
-			/* Store index of first pilot of the couple */
-			vecDiffFact[iNumDiffFact].iNumCarrier = i;
+			/* Store indices and complex numbers */
+			vecPilCorr[iNumPilPairs].iIdx1 = i;
+			vecPilCorr[iNumPilPairs].iIdx2 = i + 1;
+			vecPilCorr[iNumPilPairs].cPil1 = ReceiverParam.matcPilotCells[0][i];
+			vecPilCorr[iNumPilPairs].cPil2 =
+				ReceiverParam.matcPilotCells[0][i + 1];
 
-			/* Calculate phase correction term. This term is needed, because the
-			   desired position of the main peak (line of sight) is the middle
-			   of the guard-interval */
-			rArgumentTemp = (CReal) 2.0 * crPi / ReceiverParam.iFFTSizeN *
-				ReceiverParam.iGuardSize / 2;
-			cPhaseCorTermDivi =
-				CComplex(Cos(rArgumentTemp), -Sin(rArgumentTemp));
-
-			/* Calculate differential factor */
-			vecDiffFact[iNumDiffFact].cDiff = 
-				ReceiverParam.matcPilotCells[0][i + 1] /
-				ReceiverParam.matcPilotCells[0][i] * cPhaseCorTermDivi;
-
-			iNumDiffFact++;
+			iNumPilPairs++;
 		}
 	}
+
+	/* Calculate channel correlation in frequency direction. Use rectangular
+	   shaped PDS with the length of the guard-interval */
+	const CReal rArgSinc =
+		(CReal) ReceiverParam.iGuardSize / ReceiverParam.iFFTSizeN;
+	const CReal rArgExp = crPi * rArgSinc;
+
+	cR_HH = Sinc(rArgSinc) * CComplex(Cos(rArgExp), -Sin(rArgExp));
 
 
 	/* Frequency offset estimation ------------------------------------------ */
@@ -469,7 +463,7 @@ void CSyncUsingPil::StartAcquisition()
 	iSymbCntFraSy = 0;
 
 	/* Reset correlation history */
-	vecrCorrHistory.Reset(_MAXREAL);
+	vecrCorrHistory.Reset(-_MAXREAL);
 
 	bAquisition = TRUE;
 }

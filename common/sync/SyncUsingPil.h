@@ -70,17 +70,17 @@ public:
 	void StopTrackPil() {bTrackPil = FALSE;}
 
 protected:
-	class CPilotDiff
+	class CPilotCorr
 	{
 	public:
-		CComplex	cDiff;
-		int			iNumCarrier;
+		int			iIdx1, iIdx2;
+		CComplex	cPil1, cPil2;
 	};
 
-
 	/* Variables for frame synchronization */
-	CVector<CPilotDiff>		vecDiffFact;
-	int						iNumDiffFact;
+	CVector<CPilotCorr>		vecPilCorr;
+	int						iNumPilPairs;
+	CComplex				cR_HH;
 	CShiftRegister<CReal>	vecrCorrHistory;
 
 	/* Variables for frequency pilot estimation */
