@@ -146,12 +146,14 @@ public:
 	virtual ~StationsDlg() {}
 
 protected:
-	enum ERemotecntr {RC_NOREMCNTR, RC_WINRADIO, RC_AOR7030_COM1, RC_AOR7030_COM2,
-		RC_ELEKTOR304_COM1, RC_ELEKTOR304_COM2, RC_JRC_NRD535};
-	enum ECOMNumber {CN_COM1, CN_COM2};
+	enum ERemotecntr {RC_NOREMCNTR, RC_WINRADIO, RC_AOR7030, RC_ELEKTOR304,
+		RC_JRC_NRD535, RC_TT_RX320D};
+	enum ECOMNumber {CN_COM1, CN_COM2, CN_COM3};
+
 	_BOOLEAN		SetFrequencyWinradio(const int iFreqkHz);
 	_BOOLEAN		SetFrequencyAOR7030(const ECOMNumber eCOMNumber, const int iFreqkHz);
-	_BOOLEAN		SetFrequencyNRD535(const int iFreqkHz);
+	_BOOLEAN		SetFrequencyNRD535(const ECOMNumber eCOMNumber, const int iFreqkHz);
+	_BOOLEAN		SetFrequencyRX320D(const ECOMNumber eCOMNumber, const int iFreqkHz);
 
 	enum EOutWire {OW_TXD, OW_DTR, OW_RTS};
 	_BOOLEAN		SetFrequencyElektor304(const ECOMNumber eCOMNumber, const int iFreqkHz);
@@ -171,6 +173,7 @@ protected:
 	QUrlOperator	UrlUpdateSchedule;
 	QPopupMenu*		pViewMenu;
 	QPopupMenu*		pRemoteMenu;
+	ECOMNumber		eComNumber;
 
 public slots:
 	void OnTimer();
@@ -178,5 +181,6 @@ public slots:
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 	void OnShowStationsMenu(int iID);
 	void OnRemoteMenu(int iID);
+	void OnComPortMenu(int iID);
 	void OnGetUpdate();
 };

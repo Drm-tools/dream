@@ -3,30 +3,33 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Mark J. Fine, Markus Maerz
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
 
 #include "StationsDlg.h"
+#ifndef _WIN32
+#include <sys/termios.h>
+#endif
 
 
 /* Implementation *************************************************************/
@@ -274,7 +277,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	ListViewStations->setSorting(1);
 	ListViewStations->sort();
 
-	
+
 	/* Remote menu  --------------------------------------------------------- */
 	pRemoteMenu = new QPopupMenu(this);
 	CHECK_PTR(pRemoteMenu);
@@ -282,25 +285,45 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 #ifdef _WIN32
 	pRemoteMenu->insertItem("Winradio G3",
 		this, SLOT(OnRemoteMenu(int)), 0, 1);
-	pRemoteMenu->insertItem("AOR 7030 [COM1]",
+	pRemoteMenu->insertItem("AOR 7030",
 		this, SLOT(OnRemoteMenu(int)), 0, 2);
-	pRemoteMenu->insertItem("AOR 7030 [COM2]",
-		this, SLOT(OnRemoteMenu(int)), 0, 3);
 #endif
-	pRemoteMenu->insertItem("Elektor 3/04 [COM1]",
-		this, SLOT(OnRemoteMenu(int)), 0, 4);
-	pRemoteMenu->insertItem("Elektor 3/04 [COM2]",
-		this, SLOT(OnRemoteMenu(int)), 0, 5);
-#ifndef _WIN32
+	pRemoteMenu->insertItem("Elektor 3/04",
+		this, SLOT(OnRemoteMenu(int)), 0, 3);
 	pRemoteMenu->insertItem("JRC NRD-535",
-		this, SLOT(OnRemoteMenu(int)), 0, 6);
+		this, SLOT(OnRemoteMenu(int)), 0, 4);
+	pRemoteMenu->insertItem("TenTec RX320D",
+		this, SLOT(OnRemoteMenu(int)), 0, 5);
+
+	/* Separator */
+	pRemoteMenu->insertSeparator();
+
+	/* Which COM port. Start menu IDs from ID = 100 */
+	pRemoteMenu->insertItem("COM1",
+		this, SLOT(OnComPortMenu(int)), 0, 100);
+	pRemoteMenu->insertItem("COM2",
+		this, SLOT(OnComPortMenu(int)), 0, 101);
+#ifdef _WIN32
+	pRemoteMenu->insertItem("COM3",
+		this, SLOT(OnComPortMenu(int)), 0, 102);
+#else
+	pRemoteMenu->insertItem("USB",
+		this, SLOT(OnComPortMenu(int)), 0, 102);
 #endif
 
+	/* Default com number */
+	eComNumber = CN_COM1;
+	pRemoteMenu->setItemChecked(100, TRUE);
 
 #ifdef _WIN32
 	/* Set WINRADIO to default, because I own such a device :-) */
 	eWhichRemoteControl = RC_WINRADIO;
 	pRemoteMenu->setItemChecked(1, TRUE);
+
+	/* No com number needed for Winrado receiver */
+	pRemoteMenu->setItemEnabled(100, FALSE);
+	pRemoteMenu->setItemEnabled(101, FALSE);
+	pRemoteMenu->setItemEnabled(102, FALSE);
 #else
 	eWhichRemoteControl = RC_NOREMCNTR;
 	pRemoteMenu->setItemChecked(0, TRUE);
@@ -558,24 +581,20 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		SetFrequencyWinradio(iCurFreqkHz);
 		break;
 
-	case RC_AOR7030_COM1:
-		SetFrequencyAOR7030(CN_COM1, iCurFreqkHz);
+	case RC_AOR7030:
+		SetFrequencyAOR7030(eComNumber, iCurFreqkHz);
 		break;
 
-	case RC_AOR7030_COM2:
-		SetFrequencyAOR7030(CN_COM2, iCurFreqkHz);
-		break;
-
-	case RC_ELEKTOR304_COM1:
-		SetFrequencyElektor304(CN_COM1, iCurFreqkHz);
-		break;
-
-	case RC_ELEKTOR304_COM2:
-		SetFrequencyElektor304(CN_COM2, iCurFreqkHz);
+	case RC_ELEKTOR304:
+		SetFrequencyElektor304(eComNumber, iCurFreqkHz);
 		break;
 
 	case RC_JRC_NRD535:
-		SetFrequencyNRD535(iCurFreqkHz);
+		SetFrequencyNRD535(eComNumber, iCurFreqkHz);
+		break;
+
+	case RC_TT_RX320D:
+		SetFrequencyRX320D(eComNumber, iCurFreqkHz);
 		break;
 	}
 
@@ -599,23 +618,19 @@ void StationsDlg::OnRemoteMenu(int iID)
 		break;
 
 	case 2:
-		eWhichRemoteControl = RC_AOR7030_COM1;
+		eWhichRemoteControl = RC_AOR7030;
 		break;
 
 	case 3:
-		eWhichRemoteControl = RC_AOR7030_COM2;
+		eWhichRemoteControl = RC_ELEKTOR304;
 		break;
 
 	case 4:
-		eWhichRemoteControl = RC_ELEKTOR304_COM1;
+		eWhichRemoteControl = RC_JRC_NRD535;
 		break;
 
 	case 5:
-		eWhichRemoteControl = RC_ELEKTOR304_COM2;
-		break;
-
-	case 6:
-		eWhichRemoteControl = RC_JRC_NRD535;
+		eWhichRemoteControl = RC_TT_RX320D;
 		break;
 	}
 
@@ -626,7 +641,47 @@ void StationsDlg::OnRemoteMenu(int iID)
 	pRemoteMenu->setItemChecked(3, 3 == iID);
 	pRemoteMenu->setItemChecked(4, 4 == iID);
 	pRemoteMenu->setItemChecked(5, 5 == iID);
-	pRemoteMenu->setItemChecked(6, 6 == iID);
+
+	/* Check which receiver require com number and which not. If not required,
+	   disable com menu */
+	switch (iID)
+	{
+	case 0:
+	case 1:
+		pRemoteMenu->setItemEnabled(100, FALSE);
+		pRemoteMenu->setItemEnabled(101, FALSE);
+		pRemoteMenu->setItemEnabled(102, FALSE);
+		break;
+
+	default:
+		pRemoteMenu->setItemEnabled(100, TRUE);
+		pRemoteMenu->setItemEnabled(101, TRUE);
+		pRemoteMenu->setItemEnabled(102, TRUE);
+		break;
+	}
+}
+
+void StationsDlg::OnComPortMenu(int iID)
+{
+	switch (iID)
+	{
+	case 100:
+		eComNumber = CN_COM1;
+		break;
+
+	case 101:
+		eComNumber = CN_COM2;
+		break;
+
+	case 102:
+		eComNumber = CN_COM3;
+		break;
+	}
+
+	/* Taking care of checks in the menu */
+	pRemoteMenu->setItemChecked(100, 100 == iID);
+	pRemoteMenu->setItemChecked(101, 101 == iID);
+	pRemoteMenu->setItemChecked(102, 102 == iID);
 }
 
 
@@ -698,12 +753,23 @@ _BOOLEAN StationsDlg::SetFrequencyAOR7030(const ECOMNumber eCOMNumber,
 #ifdef _WIN32
 	/* Open serial interface */
 	FILE_HANDLE hCom;
-	if (eCOMNumber == CN_COM1)
+	switch (eCOMNumber)
+	{
+	case CN_COM1:
 		hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE, 0, NULL,
 			OPEN_EXISTING, 0, NULL);
-	else
+		break;
+
+	case CN_COM2:
 		hCom = CreateFile("COM2", GENERIC_READ | GENERIC_WRITE, 0, NULL,
 			OPEN_EXISTING, 0, NULL);
+		break;
+
+	case CN_COM3:
+		hCom = CreateFile("COM3", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+		break;
+	}
 
 	if (hCom != INVALID_HANDLE_VALUE)
 	{
@@ -809,20 +875,41 @@ _BOOLEAN StationsDlg::SetFrequencyElektor304(const ECOMNumber eCOMNumber,
 	FILE_HANDLE hCom;
 
 #ifdef _WIN32
-	if (eCOMNumber == CN_COM1)
+	switch (eCOMNumber)
+	{
+	case CN_COM1:
 		hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE, 0, NULL,
 			OPEN_EXISTING, 0, NULL);
-	else
+		break;
+
+	case CN_COM2:
 		hCom = CreateFile("COM2", GENERIC_READ | GENERIC_WRITE, 0, NULL,
 			OPEN_EXISTING, 0, NULL);
+		break;
+
+	case CN_COM3:
+		hCom = CreateFile("COM3", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+		break;
+	}
 
 	if (hCom != INVALID_HANDLE_VALUE)
 	{
 #else
-	if (eCOMNumber == CN_COM1)
+	switch (eCOMNumber)
+	{
+	case CN_COM1:
 		hCom = ::open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
-	else
+		break;
+
+	case CN_COM2:
 		hCom = ::open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NDELAY);
+		break;
+
+	case CN_COM3:
+		hCom = ::open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
+		break;
+	}
 
 	if (hCom != -1)
 	{
@@ -962,77 +1049,348 @@ void StationsDlg::SetOutStateElektor304(FILE_HANDLE hCom, EOutWire eOutWire,
 	This code was written by Mark J. Fine (Virginia, USA)
 	http://www.fineware-swl.com/drm.html
 */
-#ifndef _WIN32
-#include <sys/termios.h>
-#endif
-
-_BOOLEAN StationsDlg::SetFrequencyNRD535(const int iFreqkHz)
+_BOOLEAN StationsDlg::SetFrequencyNRD535(const ECOMNumber eCOMNumber,
+										 const int iFreqkHz)
 {
 	_BOOLEAN bSucceeded = FALSE;
 
-#ifndef _WIN32
-	int hCom = ::open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
+	QString sFreqHz;
+	const int iFreqHz = (iFreqkHz + 3) * 1000;    // freq in Hz, add 3kHz offset
+
+	sFreqHz = QString("%1").arg(iFreqHz).rightJustify(8,'0',TRUE).
+		prepend('F').append('\x0d');
+
+#ifdef _WIN32
+  FILE_HANDLE hCom;
+
+	switch (eCOMNumber)
+	{
+	case CN_COM1:
+		hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+		break;
+
+	case CN_COM2:
+		hCom = CreateFile("COM2", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+		break;
+
+	case CN_COM3:
+		hCom = CreateFile("COM3", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+		break;
+	}
+
+	if (hCom != INVALID_HANDLE_VALUE)
+	{
+		DCB dcb;
+
+		GetCommState(hCom, &dcb); /* first get parameters to fill struct */
+
+		dcb.BaudRate = 4800;
+		dcb.ByteSize = 8;
+		dcb.Parity = NOPARITY;
+		dcb.fParity=FALSE;
+		dcb.StopBits = ONESTOPBIT;
+		dcb.fOutxCtsFlow = FALSE;
+		dcb.fOutxDsrFlow = FALSE;
+		dcb.fOutX = FALSE;
+		dcb.fInX = FALSE;
+		dcb.fDsrSensitivity = FALSE;
+		dcb.fBinary=TRUE;
+		dcb.fNull=FALSE;
+		dcb.fAbortOnError=TRUE;
+		dcb.fDtrControl=DTR_CONTROL_DISABLE;
+		dcb.fRtsControl=RTS_CONTROL_DISABLE;
+
+		BOOL bSuccess = SetCommState(hCom, &dcb); /* apply new parameters */
+
+		if (bSuccess == TRUE)
+		{
+			DWORD lpNumOfByWr;
+
+			PurgeComm(hCom, PURGE_TXCLEAR | PURGE_RXCLEAR);        // flush buffers
+
+			WriteFile(hCom, "H1\x0d", 3, &lpNumOfByWr, NULL);      // send control on
+			//Sleep(7);
+
+			WriteFile(hCom, "U2-5000\x0d", 8, &lpNumOfByWr, NULL); // set BFO to -5kHz
+			//Sleep(17);
+
+			WriteFile(hCom, "D1\x0d", 3, &lpNumOfByWr, NULL);      // set mode to CW
+			//Sleep(7);
+
+			WriteFile(hCom, "B3\x0d", 3, &lpNumOfByWr, NULL);      // set BW to AUX
+			//Sleep(7);
+
+			WriteFile(hCom, "P-2000\x0d", 7, &lpNumOfByWr, NULL);  // set PBS to -2kHz
+			//Sleep(15);
+
+			WriteFile(hCom, "G0\x0d", 3, &lpNumOfByWr, NULL);      // set AGC slow
+			//Sleep(7);
+
+			WriteFile(hCom, sFreqHz.ascii(), 10, &lpNumOfByWr, NULL);// send frequency cmd
+			//Sleep(21);
+
+			WriteFile(hCom, "H0\x0d", 3, &lpNumOfByWr, NULL);      // send control off
+			//Sleep(7);
+		}
+
+		CloseHandle(hCom);
+		bSucceeded = TRUE;
+	}
+#else
+	FILE_HANDLE hCom = -1;
+
+	switch (eCOMNumber)
+	{
+	case CN_COM1:
+		hCom = ::open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
+		break;
+
+	case CN_COM2:
+		hCom = ::open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NDELAY);
+		break;
+
+	case CN_COM3:
+		hCom = ::open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
+		break;
+	}
 
 	if (hCom >= 0)
 	{
 		struct termios tty;
-		tcgetattr(hCom, &tty);                     // get current attributes
 
-		const int iFreqHz = (iFreqkHz + 3) * 1000; // freq in Hz, add 3kHz offset
+		tcgetattr(hCom, &tty);                   //get current attributes
 
-		QString sFreqHz = QString("%1").arg(iFreqHz).rightJustify(8,'0',TRUE).
-			prepend('F').append('\x0d');
-
-		cfsetospeed(&tty, (speed_t) B4800);         // set baud rate to 4800
-		cfsetispeed(&tty, (speed_t) B4800);
+		cfsetospeed(&tty, (speed_t)B4800);        // set baud rate to 4800
+		cfsetispeed(&tty, (speed_t)B4800);
 		tty.c_lflag = 0;
-		tty.c_oflag = 0;                            // set OutX off;
-		tty.c_iflag = IGNBRK;                       // set no echo mode
-		tty.c_iflag &= ~(IXON|IXOFF|IXANY);         // set InX off
-		tty.c_cflag = (tty.c_cflag & ~CSIZE)|CS8;   // set 8 bits
-		tty.c_cflag |= CLOCAL | CREAD;              // set no wait
-		tty.c_cflag &= ~(PARENB | PARODD);          // set no parity
-		tty.c_cflag &= ~CSTOPB;                     // set 1 stop bit
-		tty.c_cflag &= ~HUPCL;                      // set no hangup
-		tty.c_cflag |= CRTSCTS;                     // set DCD Flow
-		tty.c_cc[VMIN] = 1;                         // set timeout constants
+		tty.c_oflag = 0;                          // set OutX off;
+		tty.c_iflag = IGNBRK;                     // set no echo mode
+		tty.c_iflag &= ~(IXON|IXOFF|IXANY);       // set InX off
+		tty.c_cflag = (tty.c_cflag & ~CSIZE)|CS8; // set 8 bits
+		tty.c_cflag |= CLOCAL | CREAD;            // set no wait
+		tty.c_cflag &= ~(PARENB | PARODD);        // set no parity
+		tty.c_cflag &= ~CSTOPB;                   // set 1 stop bit
+		tty.c_cflag &= ~HUPCL;                    // set no hangup
+		tty.c_cflag &= ~CRTSCTS;                  // set DCD Flow
+		tty.c_cc[VMIN] = 1;                       // set timeout constants
 		tty.c_cc[VTIME] = 5;
- 
-		int bSuccess = tcsetattr(hCom, TCSANOW, &tty); // set new parms
- 
+
+		int bSuccess = tcsetattr(hCom, TCSANOW, &tty); //set new parms
+
 		if (bSuccess == 0)
 		{
 			tcflush(hCom, TCIOFLUSH);                // flush buffers
 
 			write(hCom, "H1\x0d", 3);                // send control on
-			usleep(500);
+			usleep(6250);
 
 			write(hCom, "U2-5000\x0d", 8);           // set BFO to -5kHz
-			usleep(17);
+			usleep(16667);
 
 			write(hCom, "D1\x0d", 3);                // set mode to CW
-			usleep(10);
+			usleep(6250);
 
 			write(hCom, "B3\x0d", 3);                // set BW to AUX
-			usleep(10);
+			usleep(6250);
 
 			write(hCom, "P-2000\x0d", 7);            // set PBS to -2kHz
-			usleep(15);
+			usleep(14584);
 
 			write(hCom, "G0\x0d", 3);                // set AGC slow
-			usleep(10);
+			usleep(6250);
 
 			write(hCom, sFreqHz.ascii(), 10);        // send frequency cmd
-			usleep(22);
+			usleep(20834);
 
 			write(hCom, "H0\x0d", 3);                // send control off
-			usleep(500);
+			usleep(6250);
 		}
 
 		::close(hCom);
 		bSucceeded = TRUE;
-     }
+	}
 #endif
 
-	return bSucceeded;
+  return bSucceeded;
+}
+
+
+/******************************************************************************\
+* TenTec RX320D																   *
+\******************************************************************************/
+/*
+	This code was written by Mark J. Fine (Virginia, USA)
+	http://www.fineware-swl.com/drm.html
+*/
+_BOOLEAN StationsDlg::SetFrequencyRX320D(const ECOMNumber eCOMNumber,
+										 const int iFreqkHz)
+{
+	_BOOLEAN bSucceeded = FALSE;
+	_BYTE freqAry[8];
+	int i;
+
+	QString sFreqHz;
+	double rFreq = (iFreqkHz / 1000.0) - 0.00125;
+	int cVal = (int) (rFreq * 400.0);
+	int fVal = (int) (((rFreq * 400.0) - cVal) * 13650.0);
+	cVal += 18000;
+	freqAry[0] = 0x4E;
+	freqAry[1] = (uint)(cVal / 256);
+	freqAry[2] = (uint)(cVal % 256);
+	freqAry[3] = (uint)(fVal / 256);
+	freqAry[4] = (uint)(fVal % 256);
+	freqAry[5] = 0x77;
+	freqAry[6] = 0x70;
+	freqAry[7] = 0x0d;
+
+#ifdef _WIN32
+	FILE_HANDLE hCom;
+
+	switch (eCOMNumber)
+	{
+	case CN_COM1:
+		hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+		break;
+
+	case CN_COM2:
+		hCom = CreateFile("COM2", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+		break;
+
+	case CN_COM3:
+		hCom = CreateFile("COM3", GENERIC_READ | GENERIC_WRITE, 0, NULL,
+			OPEN_EXISTING, 0, NULL);
+		break;
+	}
+
+	if (hCom != INVALID_HANDLE_VALUE)
+	{
+		DCB dcb;
+
+		GetCommState(hCom, &dcb); /* first get parameters to fill struct */
+
+		dcb.BaudRate = 1200;
+		dcb.ByteSize = 8;
+		dcb.Parity = NOPARITY;
+		dcb.fParity=FALSE;
+		dcb.StopBits = ONESTOPBIT;
+		dcb.fOutxCtsFlow = FALSE;
+		dcb.fOutxDsrFlow = FALSE;
+		dcb.fOutX = FALSE;
+		dcb.fInX = FALSE;
+		dcb.fDsrSensitivity = FALSE;
+		dcb.fBinary=TRUE;
+		dcb.fNull=FALSE;
+		dcb.fAbortOnError=TRUE;
+		dcb.fDtrControl=DTR_CONTROL_DISABLE;
+		dcb.fRtsControl=RTS_CONTROL_DISABLE;
+
+		BOOL bSuccess = SetCommState(hCom, &dcb); /* apply new parameters */
+
+		if (bSuccess == TRUE)
+		{
+			_BYTE byCurByte;
+			DWORD lpNumOfByWr;
+
+			PurgeComm(hCom, PURGE_TXCLEAR | PURGE_RXCLEAR);        // flush buffers
+
+			WriteFile(hCom, "A\x7f\x3f\x0d", 4, &lpNumOfByWr, NULL); // mute line out
+			//Sleep(34);
+
+			WriteFile(hCom, "V\x7f\x3f\x0d", 4, &lpNumOfByWr, NULL); // mute speaker
+			//Sleep(34);
+
+			WriteFile(hCom, "G1\x0d", 3, &lpNumOfByWr, NULL);        // set AGC slow
+			//Sleep(25);
+
+			WriteFile(hCom, "W\x00\x0d", 3, &lpNumOfByWr, NULL);     // set BW to 6kHz
+			//Sleep(25);
+
+			for (i = 0; i < 8; i++)
+			{
+				byCurByte = freqAry[i];
+				WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);    // set freq byte
+				//Sleep(9);
+			}
+		}
+
+		CloseHandle(hCom);
+		bSucceeded = TRUE;
+	}
+#else
+	FILE_HANDLE hCom = -1;
+
+	switch (eCOMNumber)
+	{
+	case CN_COM1:
+		hCom = ::open("/dev/ttyS0", O_RDWR | O_NOCTTY | O_NDELAY);
+		break;
+
+	case CN_COM2:
+		hCom = ::open("/dev/ttyS1", O_RDWR | O_NOCTTY | O_NDELAY);
+		break;
+
+	case CN_COM3:
+		hCom = ::open("/dev/ttyUSB0", O_RDWR | O_NOCTTY | O_NDELAY);
+		break;
+	}
+
+	if (hCom >= 0)
+	{
+		struct termios tty;
+
+		tcgetattr(hCom, &tty);                   //get current attributes
+
+		cfsetospeed(&tty, (speed_t)B1200);        // set baud rate to 1200
+		cfsetispeed(&tty, (speed_t)B1200);
+		tty.c_lflag = 0;
+		tty.c_oflag = 0;                          // set OutX off;
+		tty.c_iflag = IGNBRK;                     // set no echo mode
+		tty.c_iflag &= ~(IXON|IXOFF|IXANY);       // set InX off
+		tty.c_cflag = (tty.c_cflag & ~CSIZE)|CS8; // set 8 bits
+		tty.c_cflag |= CLOCAL | CREAD;            // set no wait
+		tty.c_cflag &= ~(PARENB | PARODD);        // set no parity
+		tty.c_cflag &= ~CSTOPB;                   // set 1 stop bit
+		tty.c_cflag &= ~HUPCL;                    // set no hangup
+		tty.c_cflag &= ~CRTSCTS;                  // set DCD Flow
+		tty.c_cc[VMIN] = 1;                       // set timeout constants
+		tty.c_cc[VTIME] = 5;
+
+		int bSuccess = tcsetattr(hCom, TCSANOW, &tty); //set new parms
+
+		if (bSuccess == 0)
+		{
+			_BYTE byCurByte;
+			tcflush(hCom, TCIOFLUSH);                // flush buffers
+
+			write(hCom, "A\x7f\x3f\x0d", 4);         // mute line out
+			usleep(33334);
+
+			write(hCom, "V\x7f\x3f\x0d", 4);         // mute speaker
+			usleep(33334);
+
+			write(hCom, "G1\x0d", 3);                // set AGC slow
+			usleep(25000);
+
+			write(hCom, "W\x00\x0d", 3);             // set BW to 6kHz
+			usleep(25000);
+
+			for (i = 0; i < 8; i++)
+			{
+				byCurByte = freqAry[i];
+				write(hCom, &byCurByte, 1);            // set freq byte
+				usleep(8334);
+			}
+		}
+
+		::close(hCom);
+		bSucceeded = TRUE;
+	}
+#endif
+
+  return bSucceeded;
 }
