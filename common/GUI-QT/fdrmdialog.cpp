@@ -301,7 +301,7 @@ void FDRMDialog::OnTimer()
 		   stream */
 		int iNoServices = DRMReceiver.GetParameters()->GetTotNumServices();
 
-		QString m_StaticService[MAX_NO_SERVICES] = {"", "", "", ""};
+		QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
 
 		/* Reset all buttons only if No of services has changed */
 		if (iOldNoServicesGUI != iNoServices)
@@ -313,7 +313,7 @@ void FDRMDialog::OnTimer()
 		}
 		iOldNoServicesGUI = iNoServices;
 
-		for (int i = 0; i < MAX_NO_SERVICES; i++)
+		for (int i = 0; i < MAX_NUM_SERVICES; i++)
 		{
 			/* Check, if service is used */
 			if (DRMReceiver.GetParameters()->Service[i].IsActive())
@@ -326,6 +326,15 @@ void FDRMDialog::OnTimer()
 				   html tags are used in the label: FIXME */
 				m_StaticService[i] = "<b>" + strLabel + 
 					"</b>" + strSpace + SetServParamStr(i);
+
+				/* Show, if a multimedia stream is connected to this service */
+				if ((DRMReceiver.GetParameters()->Service[i].
+					eAudDataFlag == CParameter::SF_AUDIO) && 
+					(DRMReceiver.GetParameters()->Service[i].
+					DataParam.iStreamID != STREAM_ID_NOT_USED))
+				{
+					m_StaticService[i] += " + MM";
+				}
 
 				switch (i)
 				{
@@ -670,60 +679,12 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 
 QString	FDRMDialog::SetBitrIDStr(int iServiceID)
 {
-	QString strServIDBitrate;
-	int iNoBitsPerFrame;
-	int iLenPartA, iLenPartB;
-
 	/* Bit-rate */
-	if (DRMReceiver.GetParameters()->Service[iServiceID].
-		eAudDataFlag == CParameter::SF_AUDIO)
-	{
-		if (DRMReceiver.GetParameters()->Service[iServiceID].
-			AudioParam.iStreamID != STREAM_ID_NOT_USED)
-		{
-			iLenPartA = DRMReceiver.GetParameters()->Stream[
-				DRMReceiver.GetParameters()->Service[iServiceID].
-				AudioParam.iStreamID].iLenPartA;
-
-			iLenPartB = DRMReceiver.GetParameters()->Stream[
-				DRMReceiver.GetParameters()->Service[iServiceID].
-				AudioParam.iStreamID].iLenPartB;
-		}
-		else
-		{
-			/* Stream is not yet assigned, set lengths to zero */
-			iLenPartA = 0;
-			iLenPartB = 0;
-		}
-	}
-	else
-	{
-		if (DRMReceiver.GetParameters()->Service[iServiceID].
-			DataParam.iStreamID != STREAM_ID_NOT_USED)
-		{
-			iLenPartA = DRMReceiver.GetParameters()->Stream[
-				DRMReceiver.GetParameters()->Service[iServiceID].
-				DataParam.iStreamID].iLenPartA;
-
-			iLenPartB = DRMReceiver.GetParameters()->Stream[
-				DRMReceiver.GetParameters()->Service[iServiceID].
-				DataParam.iStreamID].iLenPartB;
-		}
-		else
-		{
-			/* Stream is not yet assigned, set lengths to zero */
-			iLenPartA = 0;
-			iLenPartB = 0;
-		}
-	}
-	iNoBitsPerFrame = (iLenPartA + iLenPartB) * SIZEOF__BYTE;
-
-	_REAL rBitRate = (_REAL) iNoBitsPerFrame * 3 / 1.2 / 1000;
-	strServIDBitrate += 
-		"Bit Rate:" + QString().setNum(rBitRate, 'f', 2) + " kbps";
+	QString strServIDBitrate = "Bit Rate:" + QString().setNum(
+		DRMReceiver.GetParameters()->GetBitRate(iServiceID), 'f', 2) + " kbps";
 
 	/* Equal or unequal error protection */
-	if (iLenPartA == 0)
+	if (DRMReceiver.GetParameters()->IsEEP(iServiceID) == TRUE)
 		strServIDBitrate += " EEP";
 	else
 		strServIDBitrate += " UEP";
