@@ -96,6 +96,17 @@ CMatlibMatrix<CComplex> Diag(const CMatlibVector<CComplex>& cvI)
 	return matcRet;
 }
 
+CReal Trace(const CMatlibMatrix<CReal>& rmI)
+{
+	const int iSize = rmI.GetRowSize(); /* matrix must be square */
+	CReal rReturn = (CReal) 0.0;
+
+	for (int i = 0; i < iSize; i++)
+		rReturn += rmI[i][i];
+
+	return rReturn;
+}
+
 CMatlibMatrix<CComplex> Transp(const CMatlibMatrix<CComplex>& cmI)
 {
 	const int iRowSize = cmI.GetRowSize();

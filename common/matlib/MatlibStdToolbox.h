@@ -227,6 +227,8 @@ CMatlibMatrix<CReal>		Eye(const int iLen);
 
 CMatlibMatrix<CComplex>		Diag(const CMatlibVector<CComplex>& cvI);
 
+CReal						Trace(const CMatlibMatrix<CReal>& rmI);
+
 /* Matrix transpose */
 CMatlibMatrix<CComplex>		Transp(const CMatlibMatrix<CComplex>& cmI);
 inline
