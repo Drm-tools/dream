@@ -160,30 +160,6 @@ void CDABData::AddDataUnit(CVector<_BINARY>& vecbiNewData, CMOTPicture& NewPic)
 		if ((biSegmentFlag == TRUE) && (biUserAccFlag == TRUE) &&
 			(biTransportIDFlag == TRUE))
 		{
-
-/*
-// TEST
-static FILE* pFile = fopen("test/v.dat", "w");
-
-fprintf(pFile, "%d %d %d %d %d H:%d B:%d", iDataGroupType, MOTObject.Body.iDataSegNum,
-		iSegmentNum, MOTObject.iTransportID, iTransportID,
-		MOTObject.Header.vecbiData.Size()/8, MOTObject.Body.vecbiData.Size()/8);
-
-if (MOTObject.Body.bOK == TRUE)
-	fprintf(pFile, " bOK:+");
-else
-	fprintf(pFile, " bOK:-");
-
-if (MOTObject.Body.bReady == TRUE)
-	fprintf(pFile, " bReady:+");
-else
-	fprintf(pFile, " bReady:-");
-
-fprintf(pFile, "\n");
-
-fflush(pFile);
-*/
-
 			/* Distinguish between header and body */
 			/* Header information, i.e. the header core and the header
 			   extension, are transferred in Data Group type 3 */
