@@ -376,17 +376,21 @@ void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
 
 void CParameter::SetNumOfServices(const int iNNoAuSe, const int iNNoDaSe)
 {
+	/* Check whether number of activated services is not greater than the
+	   number of services signalled by the FAC because it can happen that
+	   a false CRC check (it is only a 8 bit CRC) of the FAC block
+	   initializes a wrong service */
+	if (GetNumActiveServices() > iNNoAuSe + iNNoDaSe)
+	{
+		/* Reset services and streams and set flag for init modules */
+		ResetServicesStreams();
+		DRMReceiver.InitsForMSCDemux();
+	}
+
 	if ((iNoAudioService != iNNoAuSe) || (iNoDataService != iNNoDaSe))
 	{
 		iNoAudioService = iNNoAuSe;
 		iNoDataService = iNNoDaSe;
-
-		/* Check whether number of activated services is not greater than the
-		   number of services signalled by the FAC because it can happen that
-		   a false CRC check (it is only a 8 bit CRC) of the FAC block
-		   initializes a wrong service */
-		if (GetNumActiveServices() > GetTotNumServices())
-			ResetServicesStreams();
 
 		/* Set init flags */
 		DRMReceiver.InitsForMSCDemux();
