@@ -102,10 +102,8 @@ void CParameter::GetActiveServices(CVector<int>& veciActServ)
 	{
 		if (Service[i].IsActive())
 		{
-			/* A service is active, enlarge return vector and store ID */
-			veciActServ.Enlarge(1);
-			veciActServ[iNumServices] = i;
-
+			/* A service is active, add ID to vector */
+			veciActServ.Add(i);
 			iNumServices++;
 		}
 	}

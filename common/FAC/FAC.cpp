@@ -238,14 +238,12 @@ void CFACTransmit::Init(CParameter& Parameter)
 		if (Parameter.Service[veciActServ[i]].
 			eAudDataFlag ==	CParameter::SF_AUDIO)
 		{
-			veciAudioServ.Enlarge(1);
-			veciAudioServ[iNumAudio] = i;
+			veciAudioServ.Add(i);
 			iNumAudio++;
 		}
 		else
 		{
-			veciDataServ.Enlarge(1);
-			veciDataServ[iNumData] = i;
+			veciDataServ.Add(i);
 			iNumData++;
 		}
 	}

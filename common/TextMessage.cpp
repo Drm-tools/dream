@@ -92,10 +92,8 @@ void CTextMessageEncoder::Encode(CVector<_BINARY>& pData)
 void CTextMessageEncoder::SetMessage(const string& strMessage)
 {
 	/* Allocate memory for new text message, store text and increment counter */
-	vecstrText.Enlarge(1);
-	vecstrText[iNumMess] = strMessage;
+	vecstrText.Add(strMessage);
 	iNumMess++;
-
 
 	/* Init first message. TODO: this is always done when an additional text
 	   is set but can only be done once. But for that we need an initialization
