@@ -38,6 +38,11 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	ButtonInpSpec->setOn(TRUE);
 	CharType = INPUTSPECTRUM_NO_AV;
 
+	/* Deactivate multimedia as default */
+	CheckBoxMultimedia->setChecked(TRUE);
+	DRMReceiver.GetParameters()->EnableMultimedia(FALSE);
+
+
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
 	SliderNoOfIterations->setValue(DRMReceiver.GetMSCMLC()->GetNoIterations());
@@ -122,8 +127,8 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 	connect(CheckBoxFlipSpec, SIGNAL(clicked()),
 		this, SLOT(OnCheckFlipSpectrum()));
-	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
-		this, SLOT(OnCheckBoxMuteAudio()));
+	connect(CheckBoxMultimedia, SIGNAL(clicked()),
+		this, SLOT(OnCheckBoxMultimedia()));
 	connect(CheckBoxWriteLog, SIGNAL(clicked()),
 		this, SLOT(OnCheckWriteLog()));
 
@@ -617,13 +622,15 @@ void systemevalDlg::OnlyThisButDown(QPushButton* pButton)
 void systemevalDlg::OnCheckFlipSpectrum()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.GetReceiver()->SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
+	DRMReceiver.GetReceiver()->
+		SetFlippedSpectrum(CheckBoxFlipSpec->isChecked());
 }
 
-void systemevalDlg::OnCheckBoxMuteAudio()
+void systemevalDlg::OnCheckBoxMultimedia()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
+	DRMReceiver.GetParameters()->
+		EnableMultimedia(!CheckBoxMultimedia->isChecked());
 }
 
 void systemevalDlg::OnCheckWriteLog()

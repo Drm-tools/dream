@@ -97,7 +97,7 @@ public slots:
 	void OnButtonPSD();
 	void OnButtonInpSpec();
 	void OnCheckFlipSpectrum();
-	void OnCheckBoxMuteAudio();
+	void OnCheckBoxMultimedia();
 	void OnCheckWriteLog();
 };
 

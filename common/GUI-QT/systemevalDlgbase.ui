@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>743</width>
+            <width>739</width>
             <height>565</height>
         </rect>
     </property>
@@ -648,11 +648,11 @@
                                     <class>QCheckBox</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>CheckBoxMuteAudio</cstring>
+                                        <cstring>CheckBoxMultimedia</cstring>
                                     </property>
                                     <property stdset="1">
                                         <name>text</name>
-                                        <string>Mute Audio</string>
+                                        <string>Disable Multimedia</string>
                                     </property>
                                 </widget>
                                 <widget>
