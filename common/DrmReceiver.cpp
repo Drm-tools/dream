@@ -47,7 +47,7 @@ void CDRMReceiver::Run()
 
 		bEnoughData = TRUE;
 
-		while (bEnoughData)
+		while (bEnoughData && ReceiverParam.bRunThread)
 		{
 			/* Init flag */
 			bEnoughData = FALSE;
@@ -245,6 +245,13 @@ void CDRMReceiver::Start()
 	ReceiverParam.bRunThread = TRUE;
 
 	Run();
+}
+
+void CDRMReceiver::Stop()
+{
+	ReceiverParam.bRunThread = FALSE;
+
+	SoundInterface.Close();
 }
 
 void CDRMReceiver::SetInStartMode()
