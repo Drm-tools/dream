@@ -164,7 +164,7 @@ CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB,
 	{
 		/* IIR filter ------------------------------------------------------- */
 		/* Length of coefficients */
-		iLenCoeff = Max((CReal) iSizeB, (CReal) iSizeA);
+		iLenCoeff = (int) Max((CReal) iSizeB, (CReal) iSizeA);
 
 		/* Make fvB and fvA the same length (zero padding) */
 		if (iSizeB > iSizeA)
