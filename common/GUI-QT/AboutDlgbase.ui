@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>566</width>
+            <width>558</width>
             <height>423</height>
         </rect>
     </property>
@@ -104,7 +104,7 @@
                             <class>QLabel</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>PixmapLabel2</cstring>
+                                <cstring>PixmapLabelTUDLogo</cstring>
                             </property>
                             <property stdset="1">
                                 <name>sizePolicy</name>
@@ -218,7 +218,7 @@
                                     <class>QLabel</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>PixmapLabel1</cstring>
+                                        <cstring>PixmapLabelDreamLogo</cstring>
                                     </property>
                                     <property stdset="1">
                                         <name>sizePolicy</name>
@@ -293,7 +293,7 @@
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel1</cstring>
+                                                <cstring>TextLabelAuthorNames</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -304,7 +304,7 @@
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel2</cstring>
+                                                <cstring>TextLabelAuthorFacility</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
@@ -316,11 +316,11 @@ Institute for Communication Technology</string>
                                             <class>QLabel</class>
                                             <property stdset="1">
                                                 <name>name</name>
-                                                <cstring>TextLabel1_2</cstring>
+                                                <cstring>TextLabelCopyright</cstring>
                                             </property>
                                             <property stdset="1">
                                                 <name>text</name>
-                                                <string>Copyright (C) 2001 - 2004</string>
+                                                <string>Copyright (C) 2001 - 2005</string>
                                             </property>
                                         </widget>
                                         <spacer>
