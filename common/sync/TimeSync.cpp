@@ -17,16 +17,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -72,7 +72,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		   performance with the most probabale 10 kHz mode but may have worse
 		   performance with the 4.5 or 5 kHz modes (for the acquisition) */
 
-		/* The FIR filter intermediate buffer must be adjusted to the new 
+		/* The FIR filter intermediate buffer must be adjusted to the new
 		   input block size since the size can be vary */
 		rvecInpTmp.Init(iInputBlockSize);
 
@@ -90,7 +90,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Get size of new output vector */
 		iDecInpuSize = Size(cvecOutTmp);
 
-		/* Copy data from Matlib vector in regular vector for storing in 
+		/* Copy data from Matlib vector in regular vector for storing in
 		   shift register
 		   TODO: Make vector types compatible (or maybe only use matlib vectors
 		   everywhere) */
@@ -154,12 +154,12 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				if (i == iTimeSyncPos)
 				{
 					/* Do the following guard interval correlation for all
-					   possible robustness modes (this is needed for robustness 
+					   possible robustness modes (this is needed for robustness
 					   mode detection) */
 					for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
 					{
 						/* Guard-interval correlation ----------------------- */
-						/* Speed optimized calculation of the guard-interval 
+						/* Speed optimized calculation of the guard-interval
 						   correlation. We devide the total block, which has to
 						   be computed, in parts of length "iStepSizeGuardCorr".
 						   The results of these blocks are stored in a vector.
@@ -291,7 +291,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							}
 						}
 
-						/* If maximum is in the middle of the interval, mark 
+						/* If maximum is in the middle of the interval, mark
 						   position as the beginning of the FFT window */
 						if (iMaxIndex == iCenterOfMaxDetBuf)
 						{
@@ -368,12 +368,12 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 	if (bTimingAcqu == TRUE)
 	{
-		/* Use all measured FFT-window start points for determining the "real" 
+		/* Use all measured FFT-window start points for determining the "real"
 		   one */	
 		for (i = 0; i < iNewStIndCount; i++)
 		{
-			/* Check if new measurement is in range of predefined bound. This 
-			   bound shall eliminate outliers for the calculation of the 
+			/* Check if new measurement is in range of predefined bound. This
+			   bound shall eliminate outliers for the calculation of the
 			   filtered result */
 			if (((iNewStartIndexField[i] < (iCenterOfBuf + TIMING_BOUND_ABS)) &&
 				(iNewStartIndexField[i] > (iCenterOfBuf - TIMING_BOUND_ABS))))
@@ -393,8 +393,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 			else
 			{
-				/* Non-linear correction of the filter-output to ged rid of 
-				   large differences between current measurement and 
+				/* Non-linear correction of the filter-output to ged rid of
+				   large differences between current measurement and
 				   filter-output */
 				iCorrCounter++;
 
@@ -441,7 +441,7 @@ fflush(pFile);
 		{
 			bAcqWasActive = FALSE;
 
-			/* Reset also the tracking value since the tracking could not get 
+			/* Reset also the tracking value since the tracking could not get
 			   right parameters since the timing was not yet correct */
 			ReceiverParam.iTimingOffsTrack = 0;
 		}
@@ -470,7 +470,7 @@ fflush(pFile);
 	   Cut out the estimated optimal time window and write it to the output
 	   vector. Add the acquisition and tracking offset together for the final
 	   timing */
-	/* Check range of "iStartIndex" to prevent from vector overwrites. It must 
+	/* Check range of "iStartIndex" to prevent from vector overwrites. It must
 	   be larger than "0" since then the input block size would be also "0" and
 	   than the processing routine of the modul would not be called any more */
 	if (iStartIndex <= 0)
@@ -487,8 +487,8 @@ fflush(pFile);
 		/* Set fixed timing position */
 		iStartIndex = iSymbolBlockSize;
 
-		/* Cut out guard-interval at right position -> no channel estimation 
-		   needed when having only one path. No delay introduced in this 
+		/* Cut out guard-interval at right position -> no channel estimation
+		   needed when having only one path. No delay introduced in this
 		   module  */
 		for (k = iGuardSize; k < iSymbolBlockSize; k++)
 			(*pvecOutputData)[k - iGuardSize] = 
@@ -497,18 +497,18 @@ fflush(pFile);
 
 
 	/* -------------------------------------------------------------------------
-	   Adjust filtered measurement so that it is back in the center of the 
+	   Adjust filtered measurement so that it is back in the center of the
 	   buffer */
 	/* Integer part of the difference between filtered measurement and the
 	   center of the buffer */
 	iIntDiffToCenter = iCenterOfBuf - iStartIndex;
 
 	/* Set input block size for next block and reset filtered measurement. This
-	   is equal to a global shift of the observation window by the 
+	   is equal to a global shift of the observation window by the
 	   rearrangement of the filtered measurement */
 	iInputBlockSize = iSymbolBlockSize - iIntDiffToCenter;
 
-	/* In case of tracking the tracking offset must be reset since the 
+	/* In case of tracking the tracking offset must be reset since the
 	   acquisition result is constant after switching to tracking */
 	if (bTimingAcqu == TRUE)
 		rStartIndex += (CReal) iIntDiffToCenter;
@@ -517,8 +517,8 @@ fflush(pFile);
 
 
 	/* -------------------------------------------------------------------------
-	   The channel estimation needs information about timing corrections, 
-	   because it is using information from the symbol memory. After a 
+	   The channel estimation needs information about timing corrections,
+	   because it is using information from the symbol memory. After a
 	   timing correction all old symbols must be corrected by a phase
 	   rotation as well */
 	(*pvecOutputData).GetExData().iCurTimeCorr = iIntDiffToCenter;
