@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -41,7 +41,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
 	SliderNoOfIterations->setValue(DRMReceiver.GetMSCMLC()->GetNoIterations());
-	TextNoOfIterations->setText("MLC: Number of Iterations: " + 
+	TextNoOfIterations->setText("MLC: Number of Iterations: " +
 		QString().setNum(DRMReceiver.GetMSCMLC()->GetNoIterations()));
 
 
@@ -88,44 +88,44 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 
 	/* Connect controls */
-	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)), 
+	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
 		this, SLOT(OnSliderIterChange(int)));
 
-	connect(RadioButtonTiLinear, SIGNAL(clicked()), 
+	connect(RadioButtonTiLinear, SIGNAL(clicked()),
 		this, SLOT(OnRadioTimeLinear()));
-	connect(RadioButtonTiWiener, SIGNAL(clicked()), 
+	connect(RadioButtonTiWiener, SIGNAL(clicked()),
 		this, SLOT(OnRadioTimeWiener()));
-	connect(RadioButtonFreqLinear, SIGNAL(clicked()), 
+	connect(RadioButtonFreqLinear, SIGNAL(clicked()),
 		this, SLOT(OnRadioFrequencyLinear()));
-	connect(RadioButtonFreqDFT, SIGNAL(clicked()), 
+	connect(RadioButtonFreqDFT, SIGNAL(clicked()),
 		this, SLOT(OnRadioFrequencyDft()));
-	connect(RadioButtonFreqWiener, SIGNAL(clicked()), 
+	connect(RadioButtonFreqWiener, SIGNAL(clicked()),
 		this, SLOT(OnRadioFrequencyWiener()));
 
-	connect(ButtonAvIR, SIGNAL(clicked()), 
+	connect(ButtonAvIR, SIGNAL(clicked()),
 		this, SLOT(OnButtonAvIR()));
-	connect(ButtonTransFct, SIGNAL(clicked()), 
+	connect(ButtonTransFct, SIGNAL(clicked()),
 		this, SLOT(OnButtonTransFct()));
-	connect(ButtonFACConst, SIGNAL(clicked()), 
+	connect(ButtonFACConst, SIGNAL(clicked()),
 		this, SLOT(OnButtonFACConst()));
-	connect(ButtonSDCConst, SIGNAL(clicked()), 
+	connect(ButtonSDCConst, SIGNAL(clicked()),
 		this, SLOT(OnButtonSDCConst()));
-	connect(ButtonMSCConst, SIGNAL(clicked()), 
+	connect(ButtonMSCConst, SIGNAL(clicked()),
 		this, SLOT(OnButtonMSCConst()));
-	connect(ButtonPSD, SIGNAL(clicked()), 
+	connect(ButtonPSD, SIGNAL(clicked()),
 		this, SLOT(OnButtonPSD()));
-	connect(ButtonInpSpec, SIGNAL(clicked()), 
+	connect(ButtonInpSpec, SIGNAL(clicked()),
 		this, SLOT(OnButtonInpSpec()));
 
-	connect(buttonOk, SIGNAL(clicked()), 
+	connect(buttonOk, SIGNAL(clicked()),
 		this, SLOT(accept()));
 
-	connect(CheckBoxFlipSpec, SIGNAL(clicked()), 
+	connect(CheckBoxFlipSpec, SIGNAL(clicked()),
 		this, SLOT(OnCheckFlipSpectrum()));
-	connect(CheckBoxMuteAudio, SIGNAL(clicked()), 
+	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
 		this, SLOT(OnCheckBoxMuteAudio()));
 
-	connect(&Timer, SIGNAL(timeout()), 
+	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 }
 
@@ -180,7 +180,6 @@ void systemevalDlg::SetStatus(int MessID, int iMessPara)
 
 void systemevalDlg::OnTimer()
 {
-	int					v;
 	CVector<_REAL>		vecrData;
 	CVector<_REAL>		vecrScale;
 	CVector<_COMPLEX>*	pveccData;
@@ -200,39 +199,42 @@ void systemevalDlg::OnTimer()
 			rSNREstimate = DRMReceiver.GetChanEst()->GetSNREstdB();
 		else
 			rSNREstimate = DRMReceiver.GetOFDMDemod()->GetSNREstdB();
+
+		TextSNR->setText("<center>SNR<br><b>" + 
+			QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");
 	}
 	else
+	{
 		rSNREstimate = 0;
-	
-	TextSNR->setText("<center>SNR<br><b>" + 
-		QString().setNum(rSNREstimate, 'f', 1) + " dB</b></center>");
 
+		TextSNR->setText("SNR<br><b>---</b>");
+	}
 	ThermoSNR->setValue(rSNREstimate);
 
 
 #ifdef _DEBUG_
 	/* Metric values */
-	TextFreqOffset->setText("Metrics [dB]: \t\nMSC: " + 
+	TextFreqOffset->setText("Metrics [dB]: \t\nMSC: " +
 		QString().setNum(
-		DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2) +	" / SDC: " + 
+		DRMReceiver.GetMSCMLC()->GetAccMetric(), 'f', 2) +	" / SDC: " +
 		QString().setNum(
-		DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2) +	" / FAC: " + 
+		DRMReceiver.GetSDCMLC()->GetAccMetric(), 'f', 2) +	" / FAC: " +
 		QString().setNum(
 		DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2) + "\nDC Frequency: " +
 		QString().setNum(
 		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 3) + " Hz");
 #else
 	/* DC frequency */
-	TextFreqOffset->setText("DC Frequency of DRM Signal: \t\n" + 
+	TextFreqOffset->setText("DC Frequency of DRM Signal: \t\n" +
 		QString().setNum(
 		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
 #endif
 
 
 	/* Doppler estimation (assuming Gaussian doppler spectrum) */
-	TextWiener->setText("Doppler / Delay: \t\n" + 
+	TextWiener->setText("Doppler / Delay: \t\n" +
 		QString().setNum(
-		DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz / " + 
+		DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz / " +
 		QString().setNum(
 		DRMReceiver.GetChanEst()->GetDelay(), 'f', 2) + " ms");
 
@@ -240,30 +242,6 @@ void systemevalDlg::OnTimer()
 	/* Sample frequency offset estimation */
 	TextSampFreqOffset->setText("Sample Frequency Offset: \t\n" + QString().
 		setNum(DRMReceiver.GetParameters()->GetSampFreqEst(), 'f', 2) +	" Hz");
-
-
-	/* Time, date */
-	if ((DRMReceiver.GetParameters()->iUTCHour == 0) &&
-		(DRMReceiver.GetParameters()->iUTCMin == 0) &&
-		(DRMReceiver.GetParameters()->iDay == 0) &&
-		(DRMReceiver.GetParameters()->iMonth == 0) &&
-		(DRMReceiver.GetParameters()->iYear == 0))
-	{
-		/* No time service available */
-		TextTimeService->setText("No time service available");
-		TextDateService->setText("No date service available");
-	}
-	else
-	{
-		/* Set time and date */
-		TextTimeService->setText("Received UTC-Time: " +
-			QString().setNum(DRMReceiver.GetParameters()->iUTCHour) + ":" +
-			QString().setNum(DRMReceiver.GetParameters()->iUTCMin));
-		TextDateService->setText("Received Date: " +
-			QString().setNum(DRMReceiver.GetParameters()->iMonth) + "/" +
-			QString().setNum(DRMReceiver.GetParameters()->iDay) + "/" +
-			QString().setNum(DRMReceiver.GetParameters()->iYear));
-	}
 
 
 	/* CHART ******************************************************************/
@@ -333,7 +311,8 @@ void systemevalDlg::OnTimer()
 
 
 	/* FAC info static ********************************************************/
-	QString m_StaticFACInfo = " "; 
+	QString strTemp;
+	QString m_StaticFACInfo = " ";
 
 	/* Robustness mode */
 	m_StaticFACInfo += "Robustness Mode: \t\t";
@@ -346,17 +325,17 @@ void systemevalDlg::OnTimer()
 	case RM_ROBUSTNESS_MODE_B:
 		m_StaticFACInfo += "B";
 		break;
-	
+
 	case RM_ROBUSTNESS_MODE_C:
 		m_StaticFACInfo += "C";
 		break;
-	
+
 	case RM_ROBUSTNESS_MODE_D:
 		m_StaticFACInfo += "D";
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; 
+	m_StaticFACInfo += "\r\n "; // ####################
 
 	/* Spectrum occupancy */
 	m_StaticFACInfo += "Spectrum Occupancy: \t\t";
@@ -387,7 +366,7 @@ void systemevalDlg::OnTimer()
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; 
+	m_StaticFACInfo += "\r\n "; // ####################
 
 	/* Interleaver Depth */
 	m_StaticFACInfo += "Interleaver Depth: \t\t";
@@ -402,7 +381,7 @@ void systemevalDlg::OnTimer()
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; 
+	m_StaticFACInfo += "\r\n "; // ####################
 
 	/* MSC mode */
 	m_StaticFACInfo += "MSC Mode: \t\t\t";
@@ -425,7 +404,7 @@ void systemevalDlg::OnTimer()
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; 
+	m_StaticFACInfo += "\r\n "; // ####################
 
 	/* SDC mode */
 	m_StaticFACInfo += "SDC Mode: \t\t\t";
@@ -440,13 +419,54 @@ void systemevalDlg::OnTimer()
 		break;
 	}
 
-	m_StaticFACInfo += "\r\n "; 
+	m_StaticFACInfo += "\r\n "; // ####################
 
 	/* Number of services */
-	QString strTemp = "Number of Services: \t\t";
+	strTemp = "Number of Services: \t\t";
 	strTemp += QString().setNum(DRMReceiver.GetParameters()->iNoAudioService +
 		DRMReceiver.GetParameters()->iNoDataService);
 	m_StaticFACInfo += strTemp;
+
+	m_StaticFACInfo += "\r\n "; // ####################
+
+	/* Time, date */
+	strTemp = "Received time - date: \t\t";
+
+	if ((DRMReceiver.GetParameters()->iUTCHour == 0) &&
+		(DRMReceiver.GetParameters()->iUTCMin == 0) &&
+		(DRMReceiver.GetParameters()->iDay == 0) &&
+		(DRMReceiver.GetParameters()->iMonth == 0) &&
+		(DRMReceiver.GetParameters()->iYear == 0))
+	{
+		/* No time service available */
+		strTemp += "No time - date service available";
+	}
+	else
+	{
+		/* Set time and date */
+		QString strMin;
+		const int iMin = DRMReceiver.GetParameters()->iUTCMin;
+
+		/* Add leading zero to number smaller than 10 */
+		if (iMin < 10)
+			strMin = "0";
+		else
+			strMin = "";
+	
+		strMin += QString().setNum(iMin);
+
+		strTemp +=
+			/* Time */
+			QString().setNum(DRMReceiver.GetParameters()->iUTCHour) + ":" +
+			strMin + "  -  " +
+			/* Date */
+			QString().setNum(DRMReceiver.GetParameters()->iMonth) + "/" +
+			QString().setNum(DRMReceiver.GetParameters()->iDay) + "/" +
+			QString().setNum(DRMReceiver.GetParameters()->iYear);
+	}
+
+	m_StaticFACInfo += strTemp;
+
 
 	/* Finally, set the string to the label */
 	TextFACInfo->setText(m_StaticFACInfo);
@@ -455,31 +475,31 @@ void systemevalDlg::OnTimer()
 void systemevalDlg::OnRadioTimeLinear() 
 {
 	if (DRMReceiver.GetChanEst()->GetTimeInt() != CChannelEstimation::TLINEAR)
-		DRMReceiver.GetChanEst()->SetTimeInt(CChannelEstimation::TLINEAR);	
+		DRMReceiver.GetChanEst()->SetTimeInt(CChannelEstimation::TLINEAR);
 }
 
 void systemevalDlg::OnRadioTimeWiener() 
 {
 	if (DRMReceiver.GetChanEst()->GetTimeInt() != CChannelEstimation::TWIENER)
-		DRMReceiver.GetChanEst()->SetTimeInt(CChannelEstimation::TWIENER);	
+		DRMReceiver.GetChanEst()->SetTimeInt(CChannelEstimation::TWIENER);
 }
 
 void systemevalDlg::OnRadioFrequencyLinear() 
 {
 	if (DRMReceiver.GetChanEst()->GetFreqInt() != CChannelEstimation::FLINEAR)
-		DRMReceiver.GetChanEst()->SetFreqInt(CChannelEstimation::FLINEAR);	
+		DRMReceiver.GetChanEst()->SetFreqInt(CChannelEstimation::FLINEAR);
 }
 
 void systemevalDlg::OnRadioFrequencyDft() 
 {
 	if (DRMReceiver.GetChanEst()->GetFreqInt() != CChannelEstimation::FDFTFILTER)
-		DRMReceiver.GetChanEst()->SetFreqInt(CChannelEstimation::FDFTFILTER);	
+		DRMReceiver.GetChanEst()->SetFreqInt(CChannelEstimation::FDFTFILTER);
 }
 
 void systemevalDlg::OnRadioFrequencyWiener() 
 {
 	if (DRMReceiver.GetChanEst()->GetFreqInt() != CChannelEstimation::FWIENER)
-		DRMReceiver.GetChanEst()->SetFreqInt(CChannelEstimation::FWIENER);	
+		DRMReceiver.GetChanEst()->SetFreqInt(CChannelEstimation::FWIENER);
 }
 
 void systemevalDlg::OnSliderIterChange(int value)
@@ -488,7 +508,7 @@ void systemevalDlg::OnSliderIterChange(int value)
 	DRMReceiver.GetMSCMLC()->SetNoIterations(value);
 
 	/* Show the new value in the label control */
-	TextNoOfIterations->setText("MLC: Number of Iterations: " + 
+	TextNoOfIterations->setText("MLC: Number of Iterations: " +
 		QString().setNum(value));
 }
 
