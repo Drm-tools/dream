@@ -60,9 +60,6 @@
 #endif
 
 
-extern CDRMReceiver	DRMReceiver;
-
-
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
 #define GUI_TIMER_LIST_VIEW_STAT		30000 /* ms (30 seconds) */
@@ -187,8 +184,8 @@ class StationsDlg : public CStationsDlgBase
 	Q_OBJECT
 
 public:
-	StationsDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~StationsDlg();
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
@@ -198,6 +195,8 @@ protected:
     virtual void	showEvent(QShowEvent* pEvent);
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
+
+	CDRMReceiver*				pDRMRec;
 
 	CDRMSchedule				DRMSchedule;
 	QPixmap						BitmCubeGreen;

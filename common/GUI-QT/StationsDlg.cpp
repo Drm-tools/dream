@@ -238,8 +238,9 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 	return FALSE;
 }
 
-StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
-	WFlags f) :	CStationsDlgBase(parent, name, modal, f), vecpListItems(0)
+StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
+	const char* name, bool modal, WFlags f) : vecpListItems(0),
+	CStationsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
 #ifdef HAVE_LIBHAMLIB
 	, pRig(NULL)
 #endif
@@ -249,10 +250,10 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 #ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(DRMReceiver.GeomStationsDlg.iXPos,
-		DRMReceiver.GeomStationsDlg.iYPos,
-		DRMReceiver.GeomStationsDlg.iWSize,
-		DRMReceiver.GeomStationsDlg.iHSize);
+	const QRect WinGeom(pDRMRec->GeomStationsDlg.iXPos,
+		pDRMRec->GeomStationsDlg.iYPos,
+		pDRMRec->GeomStationsDlg.iWSize,
+		pDRMRec->GeomStationsDlg.iHSize);
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
@@ -309,7 +310,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 	/* Init with current setting in log file */
 	QwtCounterFrequency->
-		setValue(DRMReceiver.GetParameters()->ReceptLog.GetFrequency());
+		setValue(pDRMRec->GetParameters()->ReceptLog.GetFrequency());
 
 	/* Init UTC time shown with a label control */
 	SetUTCTimeLabel();
@@ -332,8 +333,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 #ifdef HAVE_LIBHAMLIB
 	/* If config string is empty, set default COM port 1 */
-	if (DRMReceiver.GetHamlibConf().empty())
-		DRMReceiver.SetHamlibConf(HAMLIB_CONF_COM1);
+	if (pDRMRec->GetHamlibConf().empty())
+		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM1);
 
 
 	/* Remote menu  --------------------------------------------------------- */
@@ -431,7 +432,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 					this, SLOT(OnRemoteMenu(int)), 0, veciModelID.Size() - 1);
 
 				/* Check for checking and init if necessary */
-				if (DRMReceiver.GetHamlibModel() == iCurModelID)
+				if (pDRMRec->GetHamlibModel() == iCurModelID)
 				{
 					pRemoteMenu->setItemChecked(veciModelID.Size() - 1, TRUE);
 					bCheckWasSet = TRUE;
@@ -452,7 +453,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 					this, SLOT(OnRemoteMenu(int)), 0, veciModelID.Size() - 1);
 
 				/* Check for checking and init if necessary */
-				if (DRMReceiver.GetHamlibModel() == iCurModelID)
+				if (pDRMRec->GetHamlibModel() == iCurModelID)
 				{
 					pRemoteMenuOther->
 						setItemChecked(veciModelID.Size() - 1, TRUE);
@@ -489,13 +490,13 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	agCOMPortSel->addTo(pRemoteMenu);
 
 	/* Try to get the COM port number from the hamlib configure string */
-	if (DRMReceiver.GetHamlibConf() == HAMLIB_CONF_COM1)
+	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM1)
 		pacMenuCOM1->setOn(TRUE);
 
-	if (DRMReceiver.GetHamlibConf() == HAMLIB_CONF_COM2)
+	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM2)
 		pacMenuCOM2->setOn(TRUE);
 
-	if (DRMReceiver.GetHamlibConf() == HAMLIB_CONF_COM3)
+	if (pDRMRec->GetHamlibConf() == HAMLIB_CONF_COM3)
 		pacMenuCOM3->setOn(TRUE);
 
 
@@ -508,7 +509,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnSMeterMenu(int)), 0);
 
 	/* Set check */
-	if (DRMReceiver.GetEnableSMeter() == TRUE)
+	if (pDRMRec->GetEnableSMeter() == TRUE)
 		pRemoteMenu->setItemChecked(iSMeterMenuID, 1);
 
 	/* Enable special settings for rigs */
@@ -519,7 +520,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 		"Modification"), this, SLOT(OnModRigMenu(int)), 0);
 
 	/* Set check */
-	if (DRMReceiver.GetEnableModRigSettings() == TRUE)
+	if (pDRMRec->GetEnableModRigSettings() == TRUE)
 		pRemoteMenu->setItemChecked(iModRigMenuID, 1);
 #endif
 
@@ -584,10 +585,10 @@ StationsDlg::~StationsDlg()
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
 
-	DRMReceiver.GeomStationsDlg.iXPos = WinGeom.x();
-	DRMReceiver.GeomStationsDlg.iYPos = WinGeom.y();
-	DRMReceiver.GeomStationsDlg.iHSize = WinGeom.height();
-	DRMReceiver.GeomStationsDlg.iWSize = WinGeom.width();
+	pDRMRec->GeomStationsDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomStationsDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomStationsDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomStationsDlg.iWSize = WinGeom.width();
 
 #ifdef HAVE_LIBHAMLIB
 	if (pRig != NULL)
@@ -873,7 +874,7 @@ void StationsDlg::OnFreqCntNewValue(double dVal)
 #endif
 
 	/* Set selected frequency in log file class */
-	DRMReceiver.GetParameters()->ReceptLog.SetFrequency((int) dVal);
+	pDRMRec->GetParameters()->ReceptLog.SetFrequency((int) dVal);
 }
 
 void StationsDlg::OnListItemClicked(QListViewItem* item)
@@ -893,11 +894,11 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
-			DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+			pDRMRec->SetReceiverMode(CDRMReceiver::RM_DRM);
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
-			DRMReceiver.SetReceiverMode(CDRMReceiver::RM_AM);
+			pDRMRec->SetReceiverMode(CDRMReceiver::RM_AM);
 			break;
 		}
 	}
@@ -909,12 +910,12 @@ void StationsDlg::OnSMeterMenu(int iID)
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
-		DRMReceiver.SetEnableSMeter(FALSE);
+		pDRMRec->SetEnableSMeter(FALSE);
 	}
 	else
 	{
 		pRemoteMenu->setItemChecked(iID, TRUE);
-		DRMReceiver.SetEnableSMeter(TRUE);
+		pDRMRec->SetEnableSMeter(TRUE);
 	}
 
 	/* Init hamlib, use current selected model ID */
@@ -928,12 +929,12 @@ void StationsDlg::OnModRigMenu(int iID)
 	if (pRemoteMenu->isItemChecked(iID))
 	{
 		pRemoteMenu->setItemChecked(iID, FALSE);
-		DRMReceiver.SetEnableModRigSettings(FALSE);
+		pDRMRec->SetEnableModRigSettings(FALSE);
 	}
 	else
 	{
 		pRemoteMenu->setItemChecked(iID, TRUE);
-		DRMReceiver.SetEnableModRigSettings(TRUE);
+		pDRMRec->SetEnableModRigSettings(TRUE);
 	}
 
 	/* Init hamlib, use current selected model ID */
@@ -965,13 +966,13 @@ void StationsDlg::OnComPortMenu(QAction* action)
 #ifdef HAVE_LIBHAMLIB
 	/* We cannot use the switch command for the non constant expressions here */
 	if (action == pacMenuCOM1)
-		DRMReceiver.SetHamlibConf(HAMLIB_CONF_COM1);
+		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM1);
 
 	if (action == pacMenuCOM2)
-		DRMReceiver.SetHamlibConf(HAMLIB_CONF_COM2);
+		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM2);
 
 	if (action == pacMenuCOM3)
-		DRMReceiver.SetHamlibConf(HAMLIB_CONF_COM3);
+		pDRMRec->SetHamlibConf(HAMLIB_CONF_COM3);
 
 	/* Init hamlib, use current selected model ID */
 	InitHamlib(iCurSelModelID);
@@ -1011,7 +1012,7 @@ void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
 {
 	/* Both, GUI "enabled" and hamlib "enabled" must be fullfilled before
 	   s-meter is used */
-	if ((bStatus == TRUE) && (DRMReceiver.GetEnableSMeter() == TRUE))
+	if ((bStatus == TRUE) && (pDRMRec->GetEnableSMeter() == TRUE))
 	{
 		/* Init progress bar for input s-meter */
 		ProgrSigStrength->setAlarmEnabled(TRUE);
@@ -1094,7 +1095,7 @@ _BOOLEAN StationsDlg::SetFrequency(const int iFreqkHz)
 	int iActHamFreq = iFreqkHz;
 
 	/* Check if we have a modified or not modified receiver */
-	if (DRMReceiver.GetEnableModRigSettings() == FALSE)
+	if (pDRMRec->GetEnableModRigSettings() == FALSE)
 	{
 		/* Check for special rig if there is a frequency offset */
 		int iIndex;
@@ -1125,7 +1126,7 @@ try
 	iCurSelModelID = newModID;
 
 	/* Set new model ID in receiver object which is needed for init-file */
-	DRMReceiver.SetHamlibModel(newModID);
+	pDRMRec->SetHamlibModel(newModID);
 
 	/* If rig was already open, close it first */
 	if (pRig != NULL)
@@ -1145,7 +1146,7 @@ try
 		throw CGenErr(tr("Initialization of hamlib failed.").latin1());
 
 	/* Set config for hamlib */
-	string strHamlibConfig = DRMReceiver.GetHamlibConf();
+	string strHamlibConfig = pDRMRec->GetHamlibConf();
 
 	/* Config setup */
 	char *p_dup, *p, *q, *n;
@@ -1194,7 +1195,7 @@ try
 	{
 		/* Get correct parameter string */
 		string strSet;
-		if (DRMReceiver.GetEnableModRigSettings() == TRUE)
+		if (pDRMRec->GetEnableModRigSettings() == TRUE)
 			strSet = vecSpecDRMRigs[iIndex].strDRMSetMod;
 		else
 			strSet = vecSpecDRMRigs[iIndex].strDRMSetNoMod;

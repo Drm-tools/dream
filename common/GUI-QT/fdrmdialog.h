@@ -56,9 +56,6 @@
 #include "../Vector.h"
 
 
-extern CDRMReceiver	DRMReceiver;
-
-
 /* Classes ********************************************************************/
 class DRMEvent : public QCustomEvent
 {
@@ -88,12 +85,14 @@ class FDRMDialog : public FDRMDialogBase
 	Q_OBJECT
 
 public:
-	FDRMDialog(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE,	WFlags f = 0);
 
 	virtual ~FDRMDialog();
 
 protected:
+	CDRMReceiver*	pDRMRec;
+
 	systemevalDlg*	pSysEvalDlg;
 	MultimediaDlg*	pMultiMediaDlg;
 	StationsDlg*	pStationsDlg;

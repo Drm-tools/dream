@@ -29,15 +29,16 @@
 #include "MultimediaDlg.h"
 
 
-MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
-	WFlags f) : MultimediaDlgBase(parent, name, modal, f)
+MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
+	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
+	MultimediaDlgBase(parent, name, modal, f)
 {
 #ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(DRMReceiver.GeomMultimediaDlg.iXPos,
-		DRMReceiver.GeomMultimediaDlg.iYPos,
-		DRMReceiver.GeomMultimediaDlg.iWSize,
-		DRMReceiver.GeomMultimediaDlg.iHSize);
+	const QRect WinGeom(pDRMRec->GeomMultimediaDlg.iXPos,
+		pDRMRec->GeomMultimediaDlg.iYPos,
+		pDRMRec->GeomMultimediaDlg.iWSize,
+		pDRMRec->GeomMultimediaDlg.iHSize);
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
@@ -95,7 +96,7 @@ MultimediaDlg::MultimediaDlg(QWidget* parent, const char* name, bool modal,
 	LEDStatus->SetUpdateTime(1000);
 
 	/* Init container and GUI */
-	InitApplication(DRMReceiver.GetDataDecoder()->GetAppType());
+	InitApplication(pDRMRec->GetDataDecoder()->GetAppType());
 
 
 	/* Connect controls */
@@ -119,10 +120,10 @@ MultimediaDlg::~MultimediaDlg()
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
 
-	DRMReceiver.GeomMultimediaDlg.iXPos = WinGeom.x();
-	DRMReceiver.GeomMultimediaDlg.iYPos = WinGeom.y();
-	DRMReceiver.GeomMultimediaDlg.iHSize = WinGeom.height();
-	DRMReceiver.GeomMultimediaDlg.iWSize = WinGeom.width();
+	pDRMRec->GeomMultimediaDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomMultimediaDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomMultimediaDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomMultimediaDlg.iWSize = WinGeom.width();
 }
 
 void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
@@ -174,7 +175,7 @@ void MultimediaDlg::OnTimer()
 
 	/* Check out which application is transmitted right now */
 	CDataDecoder::EAppType eNewAppType =
-		DRMReceiver.GetDataDecoder()->GetAppType();
+		pDRMRec->GetDataDecoder()->GetAppType();
 
 	if (eNewAppType != eAppType)
 		InitApplication(eNewAppType);
@@ -183,7 +184,7 @@ void MultimediaDlg::OnTimer()
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
 		/* Poll the data decoder module for new picture */
-		if (DRMReceiver.GetDataDecoder()->GetSlideShowPicture(NewPic) == TRUE)
+		if (pDRMRec->GetDataDecoder()->GetSlideShowPicture(NewPic) == TRUE)
 		{
 			/* Store received picture */
 			iCurNumPict = vecRawImages.Size();
@@ -211,7 +212,7 @@ void MultimediaDlg::SetJournalineText()
 {
 	/* Get news from actual Journaline decoder */
 	CNews News;
-	DRMReceiver.GetDataDecoder()->GetNews(iCurJourObjID, News);
+	pDRMRec->GetDataDecoder()->GetNews(iCurJourObjID, News);
 
 	/* Decode UTF-8 coding for title */
 	QString strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));

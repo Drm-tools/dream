@@ -130,7 +130,7 @@ try
 	else
 	{
 		CReceiverThread	RecThread; /* Working thread object */
-		FDRMDialog		MainDlg(0, 0, FALSE, Qt::WStyle_MinMax);
+		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
 
 		/* First, initialize the working thread. This should be done in an extra
 		   routine since we cannot 100% assume that the working thread is ealier

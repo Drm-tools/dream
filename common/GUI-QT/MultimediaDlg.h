@@ -54,8 +54,6 @@
 # include <FreeImage.h>
 #endif
 
-extern CDRMReceiver	DRMReceiver;
-
 
 /* Definitions ****************************************************************/
 /* Maximum number of levels. A maximum of 20 hierarchy levels is set
@@ -99,14 +97,16 @@ class MultimediaDlg : public MultimediaDlgBase
 	Q_OBJECT
 
 public:
-	MultimediaDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~MultimediaDlg();
 
 	void SetStatus(int MessID, int iMessPara);
 
 protected:
+	CDRMReceiver*			pDRMRec;
+
 	QTimer					Timer;
 	QMenuBar*				pMenu;
 	QPopupMenu*				pFileMenu;

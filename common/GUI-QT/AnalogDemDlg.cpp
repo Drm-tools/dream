@@ -29,15 +29,16 @@
 #include "AnalogDemDlg.h"
 
 
-AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags f)
-	: AnalogDemDlgBase(parent, name, modal, f)
+AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
+	const char* name, bool modal, WFlags f) : pDRMRec(pNDRMR),
+	AnalogDemDlgBase(parent, name, modal, f)
 {
 #ifdef _WIN32 /* This works only reliable under Windows :-( */
 	/* Get window geometry data from DRMReceiver module and apply it */
-	const QRect WinGeom(DRMReceiver.GeomAnalogDemDlg.iXPos,
-		DRMReceiver.GeomAnalogDemDlg.iYPos,
-		DRMReceiver.GeomAnalogDemDlg.iWSize,
-		DRMReceiver.GeomAnalogDemDlg.iHSize);
+	const QRect WinGeom(pDRMRec->GeomAnalogDemDlg.iXPos,
+		pDRMRec->GeomAnalogDemDlg.iYPos,
+		pDRMRec->GeomAnalogDemDlg.iWSize,
+		pDRMRec->GeomAnalogDemDlg.iHSize);
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
@@ -47,7 +48,7 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
 	QToolTip::add(MainPlot,
 		tr("Click on the plot to set the demod. frequency"));
-	MainPlot->SetPlotStyle(DRMReceiver.iMainPlotColorStyle);
+	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
 	MainPlot->setMargin(1);
 
 	/* Set default settings -> AM: 10 kHz; SSB: 5 kHz; medium AGC */
@@ -55,9 +56,9 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	iBwUSB = 5000; /* Hz */
 	iBwFM = 6000; /* Hz */
 	iBwAM = 10000; /* Hz */
-	DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
-	DRMReceiver.GetAMDemod()->SetFilterBW(iBwAM);
-	DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
+	pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
+	pDRMRec->GetAMDemod()->SetFilterBW(iBwAM);
+	pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
 
 	/* Init slider control for bandwidth setting */
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
@@ -108,16 +109,16 @@ AnalogDemDlg::~AnalogDemDlg()
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
 
-	DRMReceiver.GeomAnalogDemDlg.iXPos = WinGeom.x();
-	DRMReceiver.GeomAnalogDemDlg.iYPos = WinGeom.y();
-	DRMReceiver.GeomAnalogDemDlg.iHSize = WinGeom.height();
-	DRMReceiver.GeomAnalogDemDlg.iWSize = WinGeom.width();
+	pDRMRec->GeomAnalogDemDlg.iXPos = WinGeom.x();
+	pDRMRec->GeomAnalogDemDlg.iYPos = WinGeom.y();
+	pDRMRec->GeomAnalogDemDlg.iHSize = WinGeom.height();
+	pDRMRec->GeomAnalogDemDlg.iWSize = WinGeom.width();
 }
 
 void AnalogDemDlg::UpdateControls()
 {
 	/* Set demodulation type */
-	switch (DRMReceiver.GetAMDemod()->GetDemodType())
+	switch (pDRMRec->GetAMDemod()->GetDemodType())
 	{
 	case CAMDemodulation::DT_AM:
 		if (!RadioButtonDemAM->isChecked())
@@ -141,7 +142,7 @@ void AnalogDemDlg::UpdateControls()
 	}
 
 	/* Set AGC type */
-	switch (DRMReceiver.GetAMDemod()->GetAGCType())
+	switch (pDRMRec->GetAMDemod()->GetAGCType())
 	{
 	case CAMDemodulation::AT_NO_AGC:
 		if (!RadioButtonAGCOff->isChecked())
@@ -165,15 +166,15 @@ void AnalogDemDlg::UpdateControls()
 	}
 
 	/* Set filter bandwidth */
-	SliderBandwidth->setValue(DRMReceiver.GetAMDemod()->GetFilterBW());
+	SliderBandwidth->setValue(pDRMRec->GetAMDemod()->GetFilterBW());
 	TextLabelBandWidth->setText(tr("Bandwidth: ") +
-		QString().setNum(DRMReceiver.GetAMDemod()->GetFilterBW()) +
+		QString().setNum(pDRMRec->GetAMDemod()->GetFilterBW()) +
 		tr(" Hz"));
 
 	/* Update mute audio switch and write wave file */
-	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
+	CheckBoxMuteAudio->setChecked(pDRMRec->GetWriteData()->GetMuteAudio());
 	CheckBoxSaveAudioWave->
-		setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
+		setChecked(pDRMRec->GetWriteData()->GetIsWriteWaveFile());
 }
 
 void AnalogDemDlg::showEvent(QShowEvent* pEvent)
@@ -200,21 +201,21 @@ void AnalogDemDlg::OnTimerChart()
 	CVector<_REAL>	vecrScale;
 
 	/* Get data from module */
-	DRMReceiver.GetReceiver()->GetInputPSD(vecrData, vecrScale);
+	pDRMRec->GetReceiver()->GetInputPSD(vecrData, vecrScale);
 
 	/* Prepare graph and set data */
 	CReal rCenterFreq, rBW;
-	DRMReceiver.GetAMDemod()->GetBWParameters(rCenterFreq, rBW);
+	pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBW);
 
 	MainPlot->SetInpPSD(vecrData, vecrScale,
-		DRMReceiver.GetParameters()->GetDCFrequency(), rCenterFreq, rBW);
+		pDRMRec->GetParameters()->GetDCFrequency(), rCenterFreq, rBW);
 }
 
 void AnalogDemDlg::OnTimer()
 {
 	/* Carrier frequency of AM signal */
 	TextFreqOffset->setText(tr("Carrier Frequency: ") + QString().setNum(
-		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
+		pDRMRec->GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
 }
 
 void AnalogDemDlg::OnRadioDemodulation(int iID)
@@ -222,23 +223,23 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
-		DRMReceiver.GetAMDemod()->SetFilterBW(iBwAM);
+		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwAM);
 		break;
 
 	case 1:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_LSB);
-		DRMReceiver.GetAMDemod()->SetFilterBW(iBwLSB);
+		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_LSB);
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwLSB);
 		break;
 
 	case 2:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
-		DRMReceiver.GetAMDemod()->SetFilterBW(iBwUSB);
+		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwUSB);
 		break;
 
 	case 3:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_FM);
-		DRMReceiver.GetAMDemod()->SetFilterBW(iBwFM);
+		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_FM);
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwFM);
 		break;
 	}
 
@@ -251,19 +252,19 @@ void AnalogDemDlg::OnRadioAGC(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_NO_AGC);
+		pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_NO_AGC);
 		break;
 
 	case 1:
-		DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_SLOW);
+		pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_SLOW);
 		break;
 
 	case 2:
-		DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
+		pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
 		break;
 
 	case 3:
-		DRMReceiver.GetAMDemod()->SetAGCType(CAMDemodulation::AT_FAST);
+		pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_FAST);
 		break;
 	}
 }
@@ -271,12 +272,12 @@ void AnalogDemDlg::OnRadioAGC(int iID)
 void AnalogDemDlg::OnSliderBWChange(int value)
 {
 	/* Set new filter in processing module */
-	DRMReceiver.GetAMDemod()->SetFilterBW(value);
+	pDRMRec->GetAMDemod()->SetFilterBW(value);
 	TextLabelBandWidth->setText(tr("Bandwidth: ") +
 		QString().setNum(value) + tr(" Hz"));
 
 	/* Store filter bandwidth for this demodulation type */
-	switch (DRMReceiver.GetAMDemod()->GetDemodType())
+	switch (pDRMRec->GetAMDemod()->GetDemodType())
 	{
 	case CAMDemodulation::DT_AM:
 		iBwAM = value;
@@ -302,7 +303,7 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 void AnalogDemDlg::OnCheckBoxMuteAudio()
 {
 	/* Set parameter in working thread module */
-	DRMReceiver.GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
+	pDRMRec->GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
 }
 
 void AnalogDemDlg::OnCheckSaveAudioWAV()
@@ -320,7 +321,7 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
 		{
-			DRMReceiver.GetWriteData()->
+			pDRMRec->GetWriteData()->
 				StartWriteWaveFile(strFileName.latin1());
 		}
 		else
@@ -330,11 +331,11 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 		}
 	}
 	else
-		DRMReceiver.GetWriteData()->StopWriteWaveFile();
+		pDRMRec->GetWriteData()->StopWriteWaveFile();
 }
 
 void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 {
 	/* Set new frequency in receiver module */
-	DRMReceiver.SetAMDemodAcq(dVal);
+	pDRMRec->SetAMDemodAcq(dVal);
 }

@@ -48,8 +48,6 @@
 #include "../Vector.h"
 #include "../DrmReceiver.h"
 
-extern CDRMReceiver	DRMReceiver;
-
 
 /* Classes ********************************************************************/
 class AnalogDemDlg : public AnalogDemDlgBase
@@ -57,12 +55,14 @@ class AnalogDemDlg : public AnalogDemDlgBase
 	Q_OBJECT
 
 public:
-	AnalogDemDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~AnalogDemDlg();
 
 protected:
+	CDRMReceiver*	pDRMRec;
+
 	QTimer			Timer;
 	QTimer			TimerChart;
     virtual void	showEvent(QShowEvent* pEvent);

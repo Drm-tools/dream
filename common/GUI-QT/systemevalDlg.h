@@ -53,8 +53,6 @@
 #include "../Vector.h"
 #include "../DrmReceiver.h"
 
-extern CDRMReceiver	DRMReceiver;
-
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -73,8 +71,8 @@ public:
 		DOPPLER_DELAY_HIST, ALL_CONSTELLATION, SNR_AUDIO_HIST, INPUT_SIG_PSD,
 		SNR_SPECTRUM};
 
-	systemevalDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+	systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~systemevalDlg();
 
@@ -96,6 +94,8 @@ protected:
 	protected:
 		ECharType eCharTy;
 	};
+
+	CDRMReceiver*	pDRMRec;
 
 	QTimer			Timer;
 	QTimer			TimerChart;
