@@ -120,7 +120,13 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 		/* Update filter coefficients once in one DRM frame */
 		if (iUpCntWienFilt > 0)
+		{
 			iUpCntWienFilt--;
+
+			/* Average estimated SNR values */
+			rAvSNR += rSNR;
+			iAvSNRCnt++;
+		}
 		else
 		{
 			/* Actual estimation of sigma */
@@ -129,14 +135,23 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			/* Use overestimated sigma for filter update */
 			rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
 
-			/* Update the wiener filter */
+			/* Update the wiener filter, use averaged SNR */
 			if (rSigOverEst < rSigmaMax)
-				rMMSE = UpdateFilterCoef(rSNR, rSigOverEst);
+				rMMSE = UpdateFilterCoef(rAvSNR, rSigOverEst);
 			else
-				rMMSE = UpdateFilterCoef(rSNR, rSigmaMax);
+				rMMSE = UpdateFilterCoef(rAvSNR, rSigmaMax);
 
-			/* Reset counter */
+			/* If no SNR improvent is achieved by the optimal filter, use
+			   SNR estimation for MMSE */
+			_REAL rNewSNR = (_REAL) 1.0 / rMMSE;
+			if (rNewSNR < rSNR)
+				rMMSE = (_REAL) 1.0 / rSNR;
+
+
+			/* Reset counter and sum (for SNR) */
 			iUpCntWienFilt = iNoSymPerFrame;
+			iAvSNRCnt = 0;
+			rAvSNR = (_REAL) 0.0;
 		}
 	}
 
@@ -181,12 +196,8 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		}
 	}
 
-	/* Return the SNR improvement by wiener interpolation in time direction. If
-	   no SNR improvent was achieved, just return old SNR */
-	if (1 / rMMSE < rSNR)
-		return rSNR;
-	else
-		return 1 / rMMSE;
+	/* Return the SNR improvement by wiener interpolation in time direction */
+	return 1 / rMMSE;
 }
 
 int CTimeWiener::DisToNextPil(int iPiHiIndex, int iSymNo)
@@ -274,8 +285,13 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 
 	/* Init Update counter for wiener filter update. Wait until moving
-	   average history was filled once */
+	   average history is filled for the first time */
 	iUpCntWienFilt = NO_SYM_AVER_TI_CORR;
+
+	/* Init averaging of SNR values */
+	rAvSNR = (_REAL) 0.0;
+	iAvSNRCnt = 0;
+
 
 	/* Allocate memory for filter phases (Matrix) */
 	matrFiltTime.Init(iNoFiltPhasTi, iLengthWiener);
@@ -318,11 +334,11 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 			rSigma = LOW_BOUND_SIGMA;
 			break;
 
-		case 3:
 		case 4:
 			rSigma = 1.0 / 2;
 			break;
 
+		case 3:
 		case 5:
 			rSigma = 2.0 / 2;
 			break;

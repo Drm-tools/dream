@@ -137,6 +137,8 @@ protected:
 	_REAL				rSigmaMax;
 
 	_REAL				rMMSE;
+	_REAL				rAvSNR;
+	int					iAvSNRCnt;
 
 	_BOOLEAN			bTracking;
 };
