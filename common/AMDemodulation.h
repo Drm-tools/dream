@@ -102,7 +102,7 @@ protected:
 	CRealVector					rvecInpTmp;
 	CComplexVector				cvecHilbert;
 	int							iHilFiltBlLen;
-	CFftPlans					FftPlans;
+	CFftPlans					FftPlansHilFilt;
 
 	CRealVector					rvecZAM;
 	CRealVector					rvecADC;
@@ -119,7 +119,7 @@ protected:
 	_BOOLEAN					bAcquisition;
 	CShiftRegister<fftw_real>	vecrFFTHistory;
 
-	CFftPlans					FftPlan;
+	CFftPlans					FftPlanAcq;
 	CRealVector					vecrFFTInput;
 	CComplexVector				veccFFTOutput;
 

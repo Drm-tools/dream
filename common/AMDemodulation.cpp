@@ -57,7 +57,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			for (i = 0; i < iTotalBufferSize; i++)
 				vecrFFTInput[i] = vecrFFTHistory[i];
 
-			veccFFTOutput = rfft(vecrFFTInput, FftPlan);
+			veccFFTOutput = rfft(vecrFFTInput, FftPlanAcq);
 
 			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) and average
 			   results */
@@ -110,8 +110,8 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Cut out a spectrum part of desired bandwidth */
 		cvecHilbert = CComplexVector(
-			FftFilt(cvecBReal, rvecInpTmp, rvecZReal, FftPlans),
-			FftFilt(cvecBImag, rvecInpTmp, rvecZImag, FftPlans));
+			FftFilt(cvecBReal, rvecInpTmp, rvecZReal, FftPlansHilFilt),
+			FftFilt(cvecBImag, rvecInpTmp, rvecZImag, FftPlansHilFilt));
 
 		/* Mix it down to zero frequency */
 		for (i = 0; i < iInputBlockSize; i++)
@@ -130,7 +130,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		switch (eDemodType)
 		{
 		case DT_AM:
-			/* Use envelope of signal and DC filter */
+			/* Use envelope of signal and apply DC filter */
 			rvecInpTmp = Filter(rvecBDC, rvecADC, Abs(cvecHilbert), rvecZAM);
 			break;
 
@@ -244,7 +244,7 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	cvecBImag.Init(iHilFiltBlLen + 1);
 
 	/* FFT plans are initialized with the long length */
-	FftPlans.Init(iHilFiltBlLen * 2);
+	FftPlansHilFilt.Init(iHilFiltBlLen * 2);
 
 	/* Init DC filter */
 	/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.999 * z^{-1}) */
@@ -297,7 +297,7 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	vecrFFTHistory.Reset((CReal) 0.0);
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
-	FftPlan.Init(iTotalBufferSize);
+	FftPlanAcq.Init(iTotalBufferSize);
 
 	/* Search window indices for aquisition */
 	if (bSearWinWasSet == TRUE)
@@ -399,8 +399,8 @@ fflush(pFile);
 	}
 
 	/* Transformation in frequency domain for fft filter */
-	cvecBReal = rfft(rvecBReal, FftPlans);
-	cvecBImag = rfft(rvecBImag, FftPlans);
+	cvecBReal = rfft(rvecBReal, FftPlansHilFilt);
+	cvecBImag = rfft(rvecBImag, FftPlansHilFilt);
 
 
 	/* Set mixing constant -------------------------------------------------- */
