@@ -268,42 +268,6 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 		}
 
 
-		/* Start log file flag ---------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-l", "--startlog") == TRUE)
-		{
-			DRMReceiver.GetParameters()->ReceptLog.SetDelLogStart();
-			continue;
-		}
-
-		
-		/* Number of iterations for MLC setting ----------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-i", "--mlciter", 0, 4,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.GetMSCMLC()->SetNumIterations((int) rArgument);
-			continue;
-		}
-
-
-		/* Frequency for log file ------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0, 30000,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.GetParameters()->ReceptLog.
-				SetFrequency((int) rArgument);
-			continue;
-		}
-
-
-		/* Do not use sound card, read from file ---------------------------- */
-		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
-			strArgument) == TRUE)
-		{
-			DRMReceiver.SetReadDRMFromFile(strArgument);
-			continue;
-		}
-
-
 		/* Sound In device -------------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", 0, 1000,
 			rArgument) == TRUE)
@@ -318,6 +282,61 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 			rArgument) == TRUE)
 		{
 			DRMReceiver.SetSoundCrdDevOut((int) rArgument);
+			continue;
+		}
+
+
+		/* Do not use sound card, read from file ---------------------------- */
+		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
+			strArgument) == TRUE)
+		{
+			DRMReceiver.SetReadDRMFromFile(strArgument);
+			continue;
+		}
+
+
+		/* Write output data to file as WAV --------------------------------- */
+		if (GetStringArgument(argc, argv, i, "-w", "--writewav",
+			strArgument) == TRUE)
+		{
+			DRMReceiver.GetWriteData()-> StartWriteWaveFile(strArgument);
+			continue;
+		}
+
+		
+		/* Number of iterations for MLC setting ----------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-i", "--mlciter", 0, 4,
+			rArgument) == TRUE)
+		{
+			DRMReceiver.GetMSCMLC()->SetNumIterations((int) rArgument);
+			continue;
+		}
+
+
+		/* Sample rate offset start value ----------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-s", "--sampleoff", -200, 200,
+			rArgument) == TRUE)
+		{
+			DRMReceiver.SetInitResOff(rArgument);
+			continue;
+		}
+
+
+#ifdef USE_QT_GUI /* QThread needed for log file timing */
+		/* Start log file flag ---------------------------------------------- */
+		if (GetFlagArgument(argc, argv, i, "-l", "--startlog") == TRUE)
+		{
+			DRMReceiver.GetParameters()->ReceptLog.SetDelLogStart();
+			continue;
+		}
+
+
+		/* Frequency for log file ------------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0, 30000,
+			rArgument) == TRUE)
+		{
+			DRMReceiver.GetParameters()->ReceptLog.
+				SetFrequency((int) rArgument);
 			continue;
 		}
 
@@ -338,17 +357,7 @@ _BOOLEAN ParseArguments(int argc, char** argv)
 			DRMReceiver.GetParameters()->ReceptLog.SetLongitude(strArgument);
 			continue;
 		}
-
-
-
-		/* Sample rate offset start value ----------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-s", "--sampleoff", -200, 200,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.SetInitResOff(rArgument);
-			continue;
-		}
-
+#endif
 
 #ifdef HAVE_LIBHAMLIB
 		/* Hamlib Model ID -------------------------------------------------- */
@@ -409,6 +418,9 @@ void UsageArguments(char** argv)
 	cerr << "  -m, --muteaudio            mute audio output" << endl;
 	cerr << "  -f <s>, --fileio <s>       disable sound card," << endl;
 	cerr << "                             use file instead" << endl;
+	cerr << "  -w <s>, --writewav <s>     write output to wave file" << endl;
+
+#ifdef USE_QT_GUI
 	cerr << "  -r <n>, --frequency <n>    set frequency [kHz] for log file"
 		<< endl;
 	cerr << "  -a <s>, --latitude <s>     set latitude string for log file"
@@ -416,6 +428,8 @@ void UsageArguments(char** argv)
 	cerr << "  -o <s>, --longitude <s>    set longitude string for log file"
 		<< endl;
 	cerr << "  -l, --startlog             start log file (delayed)" << endl;
+#endif
+
 	cerr << "  -I <n>, --snddevin <n>     set sound in device" << endl;
 	cerr << "  -O <n>, --snddevout <n>    set sound out device"	<< endl;
 
@@ -428,7 +442,11 @@ void UsageArguments(char** argv)
 	cerr << "  -h, -?, --help             this help text" << endl;
 	cerr << endl;
 	cerr << "Example: " << argv[0] <<
-		" -p --sampleoff -0.23 -i 2 -r 6140 -a 50°13\\'N -o 8°34\\'E" << endl;
+		" -p --sampleoff -0.23 -i 2 "
+#ifdef USE_QT_GUI
+		"-r 6140 -a 50°13\\'N -o 8°34\\'E"
+#endif
+		<< endl;
 	cerr << endl;
 }
 
