@@ -126,6 +126,8 @@ public:
 	void					SetInTrackingMode();
 	void					SetInTrackingModeDelayed();
 
+	void					SetReadDRMFromFile(const string strNFN);
+
 	void					InitsForAllModules();
 
 	void					InitsForWaveMode();

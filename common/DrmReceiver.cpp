@@ -381,6 +381,15 @@ void CDRMReceiver::SetInTrackingModeDelayed()
 	ChannelEstimation.GetTimeSyncTrack()->StartTracking();
 }
 
+void CDRMReceiver::SetReadDRMFromFile(const string strNFN)
+{
+	/* If DRM data is read from file instead of using the sound card, the sound
+	   output must be a blocking function otherwise we cannot achieve a
+	   synchronized stream */
+	ReceiveData.SetReadFromFile(strNFN);
+	WriteData.SetSoundBlocking(TRUE);
+}
+
 void CDRMReceiver::StartParameters(CParameter& Param)
 {
 /*

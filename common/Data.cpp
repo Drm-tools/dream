@@ -36,13 +36,6 @@
 /* Transmitter -------------------------------------------------------------- */
 void CReadData::ProcessDataInternal(CParameter& TransmParam)
 {
-#ifdef WRITE_TRNSM_TO_FILE
-	/* Stop writing file when defined number of blocks were generated */
-	iCounter++;
-	if (iCounter == iNumTransBlocks)
-		TransmParam.bRunThread = FALSE;
-#endif
-
 	/* Get data from sound interface */
 	pSound->Read(vecsSoundBuffer);
 
@@ -92,8 +85,12 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 	iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
 
-	/* Init sound interface */
-	pSound->InitPlayback(iInputBlockSize);
+	/* Check if blocking behaviour of sound interface shall be changed */
+	if (bNewSoundBlocking != bSoundBlocking)
+		bSoundBlocking = bNewSoundBlocking;
+
+	/* Init sound interface with blocking or non-blocking behaviour */
+	pSound->InitPlayback(iInputBlockSize, bSoundBlocking);
 }
 
 void CWriteData::StartWriteWaveFile(const string strFileName)

@@ -53,27 +53,12 @@
 class CReadData : public CTransmitterModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CReadData(CSound* pNS) :
-#ifdef WRITE_TRNSM_TO_FILE
-		iNumTransBlocks(DEFAULT_NUM_SIM_BLOCKS), iCounter(0),
-#endif
-		pSound(pNS) {}
+	CReadData(CSound* pNS) : pSound(pNS) {}
 	virtual ~CReadData() {}
-
-#ifdef WRITE_TRNSM_TO_FILE
-	void SetNumTransBlocks(const int iNewNum) {iNumTransBlocks = iNewNum;}
-#endif
-
 
 protected:
 	CSound*				pSound;
 	CVector<_SAMPLE>	vecsSoundBuffer;
-
-
-#ifdef WRITE_TRNSM_TO_FILE
-	int				iCounter;
-	int				iNumTransBlocks;
-#endif
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& TransmParam);
@@ -83,20 +68,26 @@ class CWriteData : public CReceiverModul<_SAMPLE, _SAMPLE>
 {
 public:
 	CWriteData(CSound* pNS) : bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
-		pSound(pNS) {}
+		pSound(pNS), bSoundBlocking(FALSE), bNewSoundBlocking(FALSE) {}
 	virtual ~CWriteData() {}
 
 	void StartWriteWaveFile(const string strFileName);
 	_BOOLEAN GetIsWriteWaveFile() {return bDoWriteWaveFile;}
 	void StopWriteWaveFile();
+
 	void MuteAudio(_BOOLEAN bNewMA) {bMuteAudio = bNewMA;}
 	_BOOLEAN GetMuteAudio() {return bMuteAudio;}
+
+	void SetSoundBlocking(const _BOOLEAN bNewBl)
+		{bNewSoundBlocking = bNewBl; SetInitFlag();}
 
 protected:
 	CSound*		pSound;
 	_BOOLEAN	bMuteAudio;
 	CWaveFile	WaveFileAudio;
 	_BOOLEAN	bDoWriteWaveFile;
+	_BOOLEAN	bSoundBlocking;
+	_BOOLEAN	bNewSoundBlocking;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
