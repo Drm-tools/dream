@@ -304,116 +304,118 @@ void CSound::InitRecording(int iNewBufferSize){
 	tmprecbuf = new short int[iNewBufferSize * NO_IN_OUT_CHANNELS];
 	
 
-	if (rhandle != NULL) {
+	if (rhandle != NULL)
 		snd_pcm_close( rhandle );
+	
+	if ( err = snd_pcm_open( &rhandle, device, SND_PCM_STREAM_CAPTURE, 0 )) 
+	{
+		printf("Playback open error: %s\n", snd_strerror(err));
+		return;	
 	}
 	
-	if ( err = snd_pcm_open( &rhandle, device, SND_PCM_STREAM_CAPTURE, 0 )) {
-                printf("Playback open error: %s\n", snd_strerror(err));
-                return;	
-	}
-
-        snd_pcm_hw_params_alloca(&hwparams);
-        snd_pcm_sw_params_alloca(&swparams);
-
+	snd_pcm_hw_params_alloca(&hwparams);
+	snd_pcm_sw_params_alloca(&swparams);
 	
-		/* choose all parameters */
-        err = snd_pcm_hw_params_any(rhandle, hwparams);
-        if (err < 0) {
-                printf("Broken configuration for record: no configurations available: %s\n", snd_strerror(err));
-                return;
-        }
-        /* set the interleaved read/write format */
-        err = snd_pcm_hw_params_set_access(rhandle, hwparams, SND_PCM_ACCESS_MMAP_INTERLEAVED);
-        if (err < 0) {
-                printf("Access type not available for record: %s\n", snd_strerror(err));
-                return;
+	
+	/* Choose all parameters */
+	err = snd_pcm_hw_params_any(rhandle, hwparams);
+	if (err < 0) {
+		printf("Broken configuration for record: no configurations available: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Set the interleaved read/write format */
+//	err = snd_pcm_hw_params_set_access(rhandle, hwparams, SND_PCM_ACCESS_MMAP_INTERLEAVED);
+	err = snd_pcm_hw_params_set_access(rhandle, hwparams, SND_PCM_ACCESS_RW_INTERLEAVED);	
 
-        }
-        /* set the sample format */
-        err = snd_pcm_hw_params_set_format(rhandle, hwparams, SND_PCM_FORMAT_S16);
-        if (err < 0) {
-                printf("Sample format not available for record: %s\n", snd_strerror(err));
-                return;
-        }
-        /* set the count of channels */
-        err = snd_pcm_hw_params_set_channels(rhandle, hwparams, NO_IN_OUT_CHANNELS);
-        if (err < 0) {
-                printf("Channels count (%i) not available for records: %s\n", NO_IN_OUT_CHANNELS, snd_strerror(err));
-                return;
-        }
-        /* set the stream rate */
-        rrate = SOUNDCRD_SAMPLE_RATE;
-        err = snd_pcm_hw_params_set_rate_near(rhandle, hwparams, &rrate, 0);
-        if (err < 0) {
-                printf("Rate %iHz not available for record: %s\n", rrate, snd_strerror(err));
-                return;        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-
-        }
-        if (rrate != SOUNDCRD_SAMPLE_RATE) {
-                printf("Rate doesn't match (requested %iHz, get %iHz)\n", rrate, err);
-                return;
-        }        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-
-        /* set the buffer time */
-        err = snd_pcm_hw_params_set_buffer_time_near(rhandle, hwparams, &buffer_time, &dir);
-        if (err < 0) {
-                printf("Unable to set buffer time %i for record: %s\n", buffer_time, snd_strerror(err));
-                return;
-        }
-        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-        if (err < 0) {
-                printf("Unable to get buffer size for record: %s\n", snd_strerror(err));
-                return;
-        }
-        /* set the period time */
-        err = snd_pcm_hw_params_set_period_time_near(rhandle, hwparams, &period_time, &dir);
-        if (err < 0) {
-                printf("Unable to set period time %i for record: %s\n", period_time, snd_strerror(err));
-                return;
-        }
-        err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
-        if (err > 0) {
-                printf("Unable to get period size for record: %s\n", snd_strerror(err));
-                return;
-        }
-        /* write the parameters to device */
-        err = snd_pcm_hw_params(rhandle, hwparams);
-        if (err < 0) {
-                printf("Unable to set hw params for record: %s\n", snd_strerror(err));
-                return;
-        }
-	        /* get the current swparams */
-        err = snd_pcm_sw_params_current(rhandle, swparams);
-        if (err < 0) {
-                printf("Unable to determine current swparams for record: %s\n", snd_strerror(err));
-                return;
-        }
-        /* start the transfer when the buffer is full */
-        err = snd_pcm_sw_params_set_start_threshold(rhandle, swparams, buffer_size);
-        if (err < 0) {
-                printf("Unable to set start threshold mode for record: %s\n", snd_strerror(err));
-                return;
-        }
-        /* allow the transfer when at least period_size samples can be processed */
-        err = snd_pcm_sw_params_set_avail_min(rhandle, swparams, period_size);
-        if (err < 0) {
-                printf("Unable to set avail min for record: %s\n", snd_strerror(err));
-                return;
-        }
-        /* align all transfers to 1 sample */
-        err = snd_pcm_sw_params_set_xfer_align(rhandle, swparams, 1);
-        if (err < 0) {
-                printf("Unable to set transfer align for record: %s\n", snd_strerror(err));
-                return;
-        }
-        /* write the parameters to the record device */
-        err = snd_pcm_sw_params(rhandle, swparams);
-        if (err < 0) {
-                printf("Unable to set sw params for record: %s\n", snd_strerror(err));
-                return;
-        }
-printf("record init done\n");
+	if (err < 0) {
+		printf("Access type not available for record: %s\n", snd_strerror(err));
+		return;
+		
+	}
+	/* Set the sample format */
+	err = snd_pcm_hw_params_set_format(rhandle, hwparams, SND_PCM_FORMAT_S16);
+	if (err < 0) {
+		printf("Sample format not available for record: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Set the count of channels */
+	err = snd_pcm_hw_params_set_channels(rhandle, hwparams, NO_IN_OUT_CHANNELS);
+	if (err < 0) {
+		printf("Channels count (%i) not available for records: %s\n", NO_IN_OUT_CHANNELS, snd_strerror(err));
+		return;
+	}
+	/* Set the stream rate */
+	rrate = SOUNDCRD_SAMPLE_RATE;
+	err = snd_pcm_hw_params_set_rate_near(rhandle, hwparams, &rrate, 0);
+	if (err < 0) {
+		printf("Rate %iHz not available for record: %s\n", rrate, snd_strerror(err));
+		return;        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+		
+	}
+	if (rrate != SOUNDCRD_SAMPLE_RATE) {
+		printf("Rate doesn't match (requested %iHz, get %iHz)\n", rrate, err);
+		return;
+	}        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+	
+	/* Set the buffer time */
+	err = snd_pcm_hw_params_set_buffer_time_near(rhandle, hwparams, &buffer_time, &dir);
+	if (err < 0) {
+		printf("Unable to set buffer time %i for record: %s\n", buffer_time, snd_strerror(err));
+		return;
+	}
+	err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+	if (err < 0) {
+		printf("Unable to get buffer size for record: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Set the period time */
+	err = snd_pcm_hw_params_set_period_time_near(rhandle, hwparams, &period_time, &dir);
+	if (err < 0) {
+		printf("Unable to set period time %i for record: %s\n", period_time, snd_strerror(err));
+		return;
+	}
+	err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
+	if (err > 0) {
+		printf("Unable to get period size for record: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Write the parameters to device */
+	err = snd_pcm_hw_params(rhandle, hwparams);
+	if (err < 0) {
+		printf("Unable to set hw params for record: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Get the current swparams */
+	err = snd_pcm_sw_params_current(rhandle, swparams);
+	if (err < 0) {
+		printf("Unable to determine current swparams for record: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Start the transfer when the buffer is full */
+	err = snd_pcm_sw_params_set_start_threshold(rhandle, swparams, buffer_size);
+	if (err < 0) {
+		printf("Unable to set start threshold mode for record: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Allow the transfer when at least period_size samples can be processed */
+	err = snd_pcm_sw_params_set_avail_min(rhandle, swparams, period_size);
+	if (err < 0) {
+		printf("Unable to set avail min for record: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Align all transfers to 1 sample */
+	err = snd_pcm_sw_params_set_xfer_align(rhandle, swparams, 1);
+	if (err < 0) {
+		printf("Unable to set transfer align for record: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Write the parameters to the record device */
+	err = snd_pcm_sw_params(rhandle, swparams);
+	if (err < 0) {
+		printf("Unable to set sw params for record: %s\n", snd_strerror(err));
+		return;
+	}
+	printf("record init done\n");
 
 }
 
@@ -436,39 +438,57 @@ void CSound::Read(CVector<short>& psData)
 	/* Reset start position of reading and set read block size */
 	start = 0;
 	size = iInBufferSize;
-
+	
 	while (size) 
 	{
 		ret = snd_pcm_avail_update(rhandle);
-printf("r %d %d available %d state %d\n", size, start, ret, snd_pcm_state(rhandle));
-		ret = snd_pcm_mmap_readi(rhandle, &tmprecbuf[start], size);
+		printf("r %d %d available %d state %d\n", size, start, ret, snd_pcm_state(rhandle));
+
+//		ret = snd_pcm_mmap_readi(rhandle, &tmprecbuf[start], size);
+		ret = snd_pcm_readi(rhandle, &tmprecbuf[start], size);
+
 printf("ret: %d\n", ret);
+
 		if (ret < 0) 
 		{
 			if (ret == -EAGAIN) 
 			{
-//printf(".");
+				//printf(".");
 				continue;
-			} else if (ret == -EPIPE) {    /* under-run */
-			printf("prepare\n");
-        			ret = snd_pcm_prepare(rhandle);
-        			if (ret < 0)
-                			printf("Can't recover from undretun, prepare failed: %s\n", snd_strerror(ret));
-        			continue;
-			} else if (ret == -ESTRPIPE) {
-			printf("strpipe\n");
-        			while ((ret = snd_pcm_resume(rhandle)) == -EAGAIN)
-                			sleep(1);       /* wait until the suspend flag is released */
-        			if (ret < 0) {
-                			ret = snd_pcm_prepare(rhandle);
-                			if (ret < 0)
-                        			printf("Can't recover from suspend, prepare failed: %s\n", snd_strerror(ret));
-        			}
-        			continue;
-			} else {
-                                printf("CSound::Read: %s\n", snd_strerror(ret));
-                                exit(1);
-                        }
+			} 
+			else if (ret == -EPIPE) 
+			{    
+				/* Under-run */
+				printf("prepare\n");
+				ret = snd_pcm_prepare(rhandle);
+
+				if (ret < 0)
+					printf("Can't recover from undretun, prepare failed: %s\n", snd_strerror(ret));
+
+				continue;
+			} 
+			else if (ret == -ESTRPIPE) 
+			{
+				printf("strpipe\n");
+
+				/* Wait until the suspend flag is released */
+				while ((ret = snd_pcm_resume(rhandle)) == -EAGAIN)
+					sleep(1);       
+
+				if (ret < 0) 
+				{
+					ret = snd_pcm_prepare(rhandle);
+
+					if (ret < 0)
+						printf("Can't recover from suspend, prepare failed: %s\n", snd_strerror(ret));
+				}
+				continue;
+			} 
+			else 
+			{
+				printf("CSound::Read: %s\n", snd_strerror(ret));
+				exit(1);
+			}
 		}
 		size -= ret;
 		start += ret;
@@ -477,7 +497,6 @@ printf("ret: %d\n", ret);
 	/* Copy data from temporary buffer in output buffer */
 	for (int i = 0; i < iInBufferSize; i++)
 		psData[i] = tmprecbuf[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
-
 }
 
 
@@ -485,8 +504,8 @@ printf("ret: %d\n", ret);
 void CSound::InitPlayback(int iNewBufferSize)
 {
 	int err, dir;
-        snd_pcm_hw_params_t *hwparams;
-        snd_pcm_sw_params_t *swparams;
+    snd_pcm_hw_params_t *hwparams;
+    snd_pcm_sw_params_t *swparams;
 	unsigned int rrate;
 	unsigned int buffer_time = 4*500000;	// 4*500ms
 	unsigned int period_time =   500000;	// 500ms
@@ -502,112 +521,113 @@ printf("already open!\n");
 	
 	/* Save buffer size */
 	iBufferSize = iNewBufferSize;
-
-	if ( err = snd_pcm_open( &phandle, device, SND_PCM_STREAM_PLAYBACK, 0 )) {
-                printf("Playback open error: %s\n", snd_strerror(err));
-                return;	
-	}
-
-        snd_pcm_hw_params_alloca(&hwparams);
-        snd_pcm_sw_params_alloca(&swparams);
-
 	
-	/* choose all parameters */
-        err = snd_pcm_hw_params_any(phandle, hwparams);
-        if (err < 0) {
-                printf("Broken configuration for playback: no configurations available: %s\n", snd_strerror(err));
-                return;
-        }
-        /* set the interleaved read/write format */
-        err = snd_pcm_hw_params_set_access(phandle, hwparams, SND_PCM_ACCESS_MMAP_INTERLEAVED);
-        if (err < 0) {
-                printf("Access type not available for playback: %s\n", snd_strerror(err));
-                return;
-
-        }
-        /* set the sample format */
-        err = snd_pcm_hw_params_set_format(phandle, hwparams, SND_PCM_FORMAT_S16);
-        if (err < 0) {
-                printf("Sample format not available for playback: %s\n", snd_strerror(err));
-                return;
-        }
-        /* set the count of channels */
-        err = snd_pcm_hw_params_set_channels(phandle, hwparams, NO_IN_OUT_CHANNELS);
-        if (err < 0) {
-                printf("Channels count (%i) not available for playbacks: %s\n", NO_IN_OUT_CHANNELS, snd_strerror(err));
-                return;
-        }
-        /* set the stream rate */
-        rrate = SOUNDCRD_SAMPLE_RATE;
-        err = snd_pcm_hw_params_set_rate_near(phandle, hwparams, &rrate, 0);
-        if (err < 0) {
-                printf("Rate %iHz not available for playback: %s\n", rrate, snd_strerror(err));
-                return;        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-
-        }
-        if (rrate != SOUNDCRD_SAMPLE_RATE) {
-                printf("Rate doesn't match (requested %iHz, get %iHz)\n", rrate, err);
-                return;
-        }        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-
-        /* set the buffer time */
-        err = snd_pcm_hw_params_set_buffer_time_near(phandle, hwparams, &buffer_time, &dir);
-        if (err < 0) {
-                printf("Unable to set buffer time %i for playback: %s\n", buffer_time, snd_strerror(err));
-                return;
-        }
-        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
-        if (err < 0) {
-                printf("Unable to get buffer size for playback: %s\n", snd_strerror(err));
-                return;
-        }
-        /* set the period time */
-        err = snd_pcm_hw_params_set_period_time_near(phandle, hwparams, &period_time, &dir);
-        if (err < 0) {
-                printf("Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
-                return;
-        }
-        err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
-        if (err > 0) {
-                printf("Unable to get period size for playback: %s\n", snd_strerror(err));
-                return;
-        }
-        /* write the parameters to device */
-        err = snd_pcm_hw_params(phandle, hwparams);
-        if (err < 0) {
-                printf("Unable to set hw params for playback: %s\n", snd_strerror(err));
-                return;
-        }
-	        /* get the current swparams */
-        err = snd_pcm_sw_params_current(phandle, swparams);
-        if (err < 0) {
-                printf("Unable to determine current swparams for playback: %s\n", snd_strerror(err));
-                return;
-        }
-        /* start the transfer when the buffer is full */
-        err = snd_pcm_sw_params_set_start_threshold(phandle, swparams, buffer_size);
-        if (err < 0) {
-                printf("Unable to set start threshold mode for playback: %s\n", snd_strerror(err));
-                return;
-        }
-        /* allow the transfer when at least period_size samples can be processed */
-        err = snd_pcm_sw_params_set_avail_min(phandle, swparams, period_size);
-        if (err < 0) {
-                printf("Unable to set avail min for playback: %s\n", snd_strerror(err));
-                return;
-        }
-        /* align all transfers to 1 sample */
-        err = snd_pcm_sw_params_set_xfer_align(phandle, swparams, 1);
-        if (err < 0) {
-                printf("Unable to set transfer align for playback: %s\n", snd_strerror(err));
-                return;
-        }
-        /* write the parameters to the playback device */
-        err = snd_pcm_sw_params(phandle, swparams);
-        if (err < 0) {
-                printf("Unable to set sw params for playback: %s\n", snd_strerror(err));
-                return;
-        }
+	if ( err = snd_pcm_open( &phandle, device, SND_PCM_STREAM_PLAYBACK, 0 )) 
+	{
+		printf("Playback open error: %s\n", snd_strerror(err));
+		return;	
+	}
+	
+	snd_pcm_hw_params_alloca(&hwparams);
+	snd_pcm_sw_params_alloca(&swparams);
+	
+	
+	/* Choose all parameters */
+	err = snd_pcm_hw_params_any(phandle, hwparams);
+	if (err < 0) {
+		printf("Broken configuration for playback: no configurations available: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Set the interleaved read/write format */
+	err = snd_pcm_hw_params_set_access(phandle, hwparams, SND_PCM_ACCESS_MMAP_INTERLEAVED);
+	if (err < 0) {
+		printf("Access type not available for playback: %s\n", snd_strerror(err));
+		return;
+		
+	}
+	/* Set the sample format */
+	err = snd_pcm_hw_params_set_format(phandle, hwparams, SND_PCM_FORMAT_S16);
+	if (err < 0) {
+		printf("Sample format not available for playback: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Set the count of channels */
+	err = snd_pcm_hw_params_set_channels(phandle, hwparams, NO_IN_OUT_CHANNELS);
+	if (err < 0) {
+		printf("Channels count (%i) not available for playbacks: %s\n", NO_IN_OUT_CHANNELS, snd_strerror(err));
+		return;
+	}
+	/* Set the stream rate */
+	rrate = SOUNDCRD_SAMPLE_RATE;
+	err = snd_pcm_hw_params_set_rate_near(phandle, hwparams, &rrate, 0);
+	if (err < 0) {
+		printf("Rate %iHz not available for playback: %s\n", rrate, snd_strerror(err));
+		return;        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+		
+	}
+	if (rrate != SOUNDCRD_SAMPLE_RATE) {
+		printf("Rate doesn't match (requested %iHz, get %iHz)\n", rrate, err);
+		return;
+	}        err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+	
+	/* Set the buffer time */
+	err = snd_pcm_hw_params_set_buffer_time_near(phandle, hwparams, &buffer_time, &dir);
+	if (err < 0) {
+		printf("Unable to set buffer time %i for playback: %s\n", buffer_time, snd_strerror(err));
+		return;
+	}
+	err = snd_pcm_hw_params_get_buffer_size(hwparams, &buffer_size);
+	if (err < 0) {
+		printf("Unable to get buffer size for playback: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Set the period time */
+	err = snd_pcm_hw_params_set_period_time_near(phandle, hwparams, &period_time, &dir);
+	if (err < 0) {
+		printf("Unable to set period time %i for playback: %s\n", period_time, snd_strerror(err));
+		return;
+	}
+	err = snd_pcm_hw_params_get_period_size(hwparams, &period_size, &dir);
+	if (err > 0) {
+		printf("Unable to get period size for playback: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Write the parameters to device */
+	err = snd_pcm_hw_params(phandle, hwparams);
+	if (err < 0) {
+		printf("Unable to set hw params for playback: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Get the current swparams */
+	err = snd_pcm_sw_params_current(phandle, swparams);
+	if (err < 0) {
+		printf("Unable to determine current swparams for playback: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Start the transfer when the buffer is full */
+	err = snd_pcm_sw_params_set_start_threshold(phandle, swparams, buffer_size);
+	if (err < 0) {
+		printf("Unable to set start threshold mode for playback: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Allow the transfer when at least period_size samples can be processed */
+	err = snd_pcm_sw_params_set_avail_min(phandle, swparams, period_size);
+	if (err < 0) {
+		printf("Unable to set avail min for playback: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Align all transfers to 1 sample */
+	err = snd_pcm_sw_params_set_xfer_align(phandle, swparams, 1);
+	if (err < 0) {
+		printf("Unable to set transfer align for playback: %s\n", snd_strerror(err));
+		return;
+	}
+	/* Write the parameters to the playback device */
+	err = snd_pcm_sw_params(phandle, swparams);
+	if (err < 0) {
+		printf("Unable to set sw params for playback: %s\n", snd_strerror(err));
+		return;
+	}
 printf("init done\n");
 }
 

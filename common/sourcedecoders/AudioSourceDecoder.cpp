@@ -54,7 +54,7 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 
-	/* Audio ******************************************************************/
+	/* Audio DRM header *******************************************************/
 	/* Reset bit extraction access */
 	(*pvecInputData).ResetBitAccess();
 
@@ -121,6 +121,7 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	}	
 
 
+	/* AAC decoder ************************************************************/
 	/* Init output block size to zero, this variable is also used for 
 	   determining the position for writing the output vector */
 	iOutputBlockSize = 0;
