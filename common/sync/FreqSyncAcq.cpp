@@ -275,9 +275,11 @@ fclose(pFile1);
 	}
 
 	/* If synchronized DRM input stream is used, overwrite the detected
-	   frequency offest estimate by "0", because we know this value */
+	   frequency offest estimate by the desired frequency, because we know this
+	   value */
 	if (bSyncInput == TRUE)
-		ReceiverParam.rFreqOffsetAcqui = (_REAL) 0.0;
+		ReceiverParam.rFreqOffsetAcqui = (_REAL) ReceiverParam.iIndexDCFreq /
+			ReceiverParam.iFFTSizeN;
 }
 
 void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
