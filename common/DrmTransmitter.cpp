@@ -191,11 +191,6 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 		Param.Service[0].iServiceDescr = 0;
 	}
 
-	/* Length of part B is set automatically (equal error protection (EEP),
-	   if "= 0"). Sets the number of bytes, should not exceed total number of
-	   bytes available in MSC block */
-	Param.Stream[0].iLenPartA = 0;
-
 	/* Init service parameters, 24 bit unsigned integer number */
 	Param.Service[0].iServiceID = 163569;
 
@@ -224,4 +219,20 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 
 	/* Set desired intermedia frequency (IF) in Hertz */
 	SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
+
+
+// UEP only works with Dream receiver, FIXME! -> disabled for now
+const _BOOLEAN bUEBIsUsed = FALSE; // TEST
+	if (bUEBIsUsed == TRUE)
+	{
+		// TEST
+		Param.Stream[0].iLenPartA = 80;
+	}
+	else
+	{
+		/* Length of part B is set automatically (equal error protection (EEP),
+		   if "= 0"). Sets the number of bytes, should not exceed total number
+		   of bytes available in MSC block */
+		Param.Stream[0].iLenPartA = 0;
+	}
 }
