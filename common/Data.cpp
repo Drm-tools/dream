@@ -39,7 +39,7 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 	int i;
 
 #ifdef WRITE_TRNSM_TO_FILE
-	/* Stop simulation if defined number of blocks are generated */
+	/* Stop writing file when defined number of blocks were generated */
 	iCounter++;
 	if (iCounter == iNumTransBlocks)
 		TransmParam.bRunThread = FALSE;
