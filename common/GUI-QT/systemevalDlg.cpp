@@ -80,7 +80,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 
 	/* Update times for color LEDs */
-	LEDFAC->SetUpdateTime(1000);
+	LEDFAC->SetUpdateTime(1500);
 	LEDSDC->SetUpdateTime(1500);
 	LEDMSC->SetUpdateTime(600);
 	LEDFrameSync->SetUpdateTime(600);
