@@ -67,6 +67,7 @@ public:
 	/* Get pointer to internal modules */
 	COFDMModulation*		GetOFDMMod() {return &OFDMModulation;}
 	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
+	CTransmitData*			GetTransData() {return &TransmitData;}
 
 	CParameter*				GetParameters() {return &TransmParam;}
 
