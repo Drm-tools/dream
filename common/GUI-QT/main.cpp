@@ -77,6 +77,11 @@ int main(int argc, char** argv)
 {
 try
 {
+	/* Call simulation script. If simulation is activated, application is 
+	   automatically exit in that routine. If in the script no simulation is
+	   activated, this function will immediately return */
+	DRMSimulation.SimScript();
+
 	QApplication	app(argc, argv); // Application object
 	ReceiverThread	RecThread; // Working thread object
 	FDRMDialog		MainDlg(0, 0, TRUE, Qt::WStyle_MinMax); // Main dialog
@@ -87,11 +92,6 @@ try
 // Activate this to start the transmitter and generate a DRM stream
 //DRMTransmitter.StartTransmitter();
 
-	/* Call simulation script. If simulation is activated, application is 
-	   automatically exit in that routine. If in the script no simulation is
-	   activated, this function will immediately return */
-	DRMSimulation.SimScript();
-	
 	/* First, initialize the working thread. This should be done in an extra
 	   routine since we cannot 100% assume that the working thread is ealier
 	   ready than the GUI thread */
