@@ -184,7 +184,8 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 		rvecDataReal = Filter(rvecB, rvecA, rvecDataReal, rvecZReal);
 		rvecDataImag = Filter(rvecB, rvecA, rvecDataImag, rvecZImag);
 
-		/* Cut out correct data and fill vector for FFT operation */
+		/* Pack real and imaginary part in one complex vector for FFT
+		   operation */
 		for (i = 0;	i < iDFTSize; i++)
 			veccFFTInput[i] = CComplex(rvecDataReal[i], rvecDataImag[i]);
 	}

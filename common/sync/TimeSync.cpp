@@ -479,6 +479,8 @@ fflush(pFile);
 	if (iStartIndex > i2SymBlSize - HALF_MAX_NUM_TAPS_RECFILTER)
 		iStartIndex = i2SymBlSize - HALF_MAX_NUM_TAPS_RECFILTER;
 
+	/* Cut out more than the useful part of the OFDM symbol so a pre-fft
+	   filtering can be applied in the next module */
 	const int iStart = iStartIndex - HALF_MAX_NUM_TAPS_RECFILTER;
 	const int iStop = iStartIndex + iDFTSize + HALF_MAX_NUM_TAPS_RECFILTER;
 	for (k = iStart; k < iStop; k++)
@@ -723,6 +725,10 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iSymbolBlockSize; /* For the first loop */
+
+	/* We need more data then only iDFTSize since a pre-fft filtering can be
+	   applied in the next module. "2 *" because we need additional data at the
+	   beginning and at the end */
 	iOutputBlockSize = iDFTSize + 2 * HALF_MAX_NUM_TAPS_RECFILTER;
 }
 
