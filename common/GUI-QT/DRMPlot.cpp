@@ -181,7 +181,7 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 #else
 	/* Only include highest bound */
 	setCurvePen(curveHigh, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
-	dY[0] = dY[1] = _max(rHigherB, rLowerB);
+	dY[0] = dY[1] = Max(rHigherB, rLowerB);
 #endif
 	setCurveData(curveHigh, dX, dY, 2);
 
