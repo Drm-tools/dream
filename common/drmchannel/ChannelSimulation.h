@@ -92,7 +92,7 @@ protected:
 	_COMPLEX			cCurExp[4];
 	_COMPLEX			cExpStep[4];
 
-	int					iNoTaps;
+	int					iNumTaps;
 	CVector<_COMPLEX>	veccHistory;
 	int					iMaxDelay;
 	int					iLenHist;

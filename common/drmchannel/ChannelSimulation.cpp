@@ -64,7 +64,7 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 	/* Echos */
-	for (j = 1; j < iNoTaps; j++)
+	for (j = 1; j < iNumTaps; j++)
 	{
 		for (i = 0; i < iInputBlockSize; i++)
 		{
@@ -109,7 +109,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	{
 	case 1:
 		/* AWGN */
-		iNoTaps = 1;
+		iNumTaps = 1;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
@@ -119,7 +119,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	case 2:
 		/* Rice with delay */
-		iNoTaps = 2;
+		iNumTaps = 2;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
@@ -134,7 +134,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	case 3:
 		/* US Consortium */
-		iNoTaps = 4;
+		iNumTaps = 4;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
@@ -159,7 +159,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	case 4:
 		/* CCIR Poor */
-		iNoTaps = 2;
+		iNumTaps = 2;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
@@ -174,7 +174,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		
 	case 5:
 		/* Channel no 5 */
-		iNoTaps = 2;
+		iNumTaps = 2;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
@@ -188,8 +188,8 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 		break;
 		
 	case 6:
-		/* Channel no 6 */
-		iNoTaps = 4;
+		/* Channel #6 */
+		iNumTaps = 4;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 0.5,
@@ -216,7 +216,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	/* My own test channels, NOT DEFINED IN THE DRM STANDARD! --------------- */
 	case 7:
 		/* Channel without fading and doppler shift */
-		iNoTaps = 4;
+		iNumTaps = 4;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
@@ -241,9 +241,10 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	case 8:
 		/* Only one fading path */
-		rMyFading = (_REAL) 2.0;
+		rMyFading = (_REAL) 4.0;
 
-		iNoTaps = 1;
+		iNumTaps = 1;
+
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
 					/* Fshift: */	(_REAL) 0.0,
@@ -252,7 +253,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	case 9:
 		/* Two moderate fading taps close to each other with equal gain */
-		iNoTaps = 4;
+		iNumTaps = 2;
 
 		tap[0].Init(/* Delay: */	(_REAL) 0.0,
 					/* Gain: */		(_REAL) 1.0,
@@ -269,7 +270,7 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 
 	/* Init exponent steps (for doppler shift) and gain correction ---------- */
 	rGainCorr = (_REAL) 0.0;
-	for (int i = 0; i < iNoTaps; i++)
+	for (int i = 0; i < iNumTaps; i++)
 	{
 		/* Exponent function for shifting (doppler shift) */
 		cCurExp[i] = (_REAL) 1.0;
@@ -288,13 +289,13 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	rGainCorr = (_REAL) 1.0 / sqrt(rGainCorr) * 2;
 
 	/* Set number of taps and gain correction in global struct */
-	ReceiverParam.iNumTaps = iNoTaps;
+	ReceiverParam.iNumTaps = iNumTaps;
 	ReceiverParam.rGainCorr = rGainCorr / 2;
 
 
 	/* Memory allocation ---------------------------------------------------- */
 	/* Maximum delay */
-	iMaxDelay = tap[iNoTaps - 1].GetDelay();
+	iMaxDelay = tap[iNumTaps - 1].GetDelay();
 
 	/* Allocate memory for history, init vector with zeros. This history is used
 	   for generating path delays */
