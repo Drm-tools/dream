@@ -37,16 +37,25 @@
 #include <qcheckbox.h>
 #include <qfiledialog.h>
 #include <qslider.h>
+#include <qwt_dial.h>
+#include <qwt_dial_needle.h>
+#include <qlayout.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/AnalogDemDlgbase.h"
 #else
 # include "moc/AnalogDemDlgbase.h"
 #endif
+#include "DialogUtil.h"
 #include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
 #include "../Vector.h"
 #include "../DrmReceiver.h"
+
+
+/* Definitions ****************************************************************/
+/* Update time of PLL phase dial control */
+#define PLL_PHASE_DIAL_UPDATE_TIME				100
 
 
 /* Classes ********************************************************************/
@@ -64,22 +73,33 @@ protected:
 	CDRMReceiver*	pDRMRec;
 
 	QTimer			Timer;
-    virtual void	showEvent(QShowEvent* pEvent);
+	QTimer			TimerPLLPhaseDial;
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
+    virtual void	showEvent(QShowEvent* pEvent) {UpdateControls();}
+	virtual void	closeEvent(QCloseEvent* pEvent) {parentWidget()->close();}
 
 	int iBwAM;
 	int iBwLSB;
 	int iBwUSB;
+	int iBwCW;
 	int iBwFM;
 
 public slots:
 	void OnTimer();
+	void OnTimerPLLPhaseDial();
 	void OnRadioDemodulation(int iID);
 	void OnRadioAGC(int iID);
 	void OnCheckBoxMuteAudio();
 	void OnCheckSaveAudioWAV();
+	void OnCheckAutoFreqAcq();
+	void OnCheckPLL();
 	void OnChartxAxisValSet(double dVal);
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);
+	void OnNewAMAcquisition() {pDRMRec->SetReceiverMode(CDRMReceiver::RM_AM);}
+
+signals:
+	void SwitchToDRM();
+	void ViewStationsDlg();
 };

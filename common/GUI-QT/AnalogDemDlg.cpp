@@ -47,6 +47,39 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		setGeometry(WinGeom);
 #endif
 
+
+	/* Set Menu ***************************************************************/
+	/* View menu ------------------------------------------------------------ */
+	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
+	CHECK_PTR(EvalWinMenu);
+	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
+		SIGNAL(ViewStationsDlg()), CTRL+Key_T);
+	EvalWinMenu->insertSeparator();
+	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q);
+
+	/* Settings menu  ------------------------------------------------------- */
+	QPopupMenu* pSettingsMenu = new QPopupMenu(this);
+	CHECK_PTR(pSettingsMenu);
+	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
+		new CSoundCardSelMenu(pDRMRec->GetSoundInterface(), this));
+	pSettingsMenu->insertItem(tr("&DRM (digital)"), this,
+		SIGNAL(SwitchToDRM()), CTRL+Key_D);
+	pSettingsMenu->insertItem(tr("New &AM Acquisition"), this,
+		SLOT(OnNewAMAcquisition()), CTRL+Key_A);
+
+
+	/* Main menu bar -------------------------------------------------------- */
+	QMenuBar* pMenu = new QMenuBar(this);
+	CHECK_PTR(pMenu);
+	pMenu->insertItem(tr("&View"), EvalWinMenu);
+	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
+	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
+	pMenu->setSeparator(QMenuBar::InWindowsStyle);
+
+	/* Now tell the layout about the menu */
+	AnalogDemDlgBaseLayout->setMenuBar(pMenu);
+
+
 	/* Init main plot */
 	MainPlot->SetRecObj(pDRMRec);
 	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
@@ -55,16 +88,17 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	/* Add tool tip to show the user the possibility of choosing the AM IF */
 	QToolTip::add(MainPlot,
-		tr("Click on the plot to set the demod. frequency"));
+		tr("Click on the plot to set the demodulation frequency"));
 
 	/* Set default settings -> AM: 10 kHz; SSB: 5 kHz; medium AGC */
 	iBwLSB = 5000; /* Hz */
 	iBwUSB = 5000; /* Hz */
+	iBwCW = 150; /* Hz */
 	iBwFM = 6000; /* Hz */
 	iBwAM = 10000; /* Hz */
 	pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
 	pDRMRec->GetAMDemod()->SetFilterBW(iBwAM);
-	pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
+	pDRMRec->GetAMDemod()->SetAGCType(CAGC::AT_MEDIUM);
 
 	/* Init slider control for bandwidth setting */
 	SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
@@ -72,15 +106,25 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	SliderBandwidth->setTickInterval(1000); /* Each kHz a tick */
 	SliderBandwidth->setPageStep(1000); /* Hz */
 
+	/* Init PLL phase dial control */
+	PhaseDial->setMode(QwtDial::RotateNeedle);
+	PhaseDial->setWrapping(true);
+	PhaseDial->setReadOnly(true);
+	PhaseDial->setScale(0, 360, 45); /* Degrees */
+	PhaseDial->setOrigin(270);
+	PhaseDial->setNeedle(new QwtDialSimpleNeedle(QwtDialSimpleNeedle::Arrow));
+	PhaseDial->setFrameShadow(QwtDial::Plain);
+	PhaseDial->setScaleOptions(QwtDial::ScaleTicks);
+
 	/* Update controls */
 	UpdateControls();
 
 
 	/* Connect controls ----------------------------------------------------- */
-	connect(buttonOk, SIGNAL(clicked()), this, SLOT(accept()));
+	connect(ButtonDRM, SIGNAL(clicked()), this, SIGNAL(SwitchToDRM()));
 	connect(MainPlot, SIGNAL(xAxisValSet(double)),
 		this, SLOT(OnChartxAxisValSet(double)));
-	
+
 	/* Button groups */
 	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioDemodulation(int)));
@@ -98,13 +142,20 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		this, SLOT(OnCheckBoxMuteAudio()));
 	connect(CheckBoxSaveAudioWave, SIGNAL(clicked()),
 		this, SLOT(OnCheckSaveAudioWAV()));
+	connect(CheckBoxAutoFreqAcq, SIGNAL(clicked()),
+		this, SLOT(OnCheckAutoFreqAcq()));
+	connect(CheckBoxPLL, SIGNAL(clicked()),
+		this, SLOT(OnCheckPLL()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
+	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
+		this, SLOT(OnTimerPLLPhaseDial()));
 
-	/* Activte real-time timer */
+	/* Activte real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
+	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 }
 
 AnalogDemDlg::~AnalogDemDlg()
@@ -138,6 +189,11 @@ void AnalogDemDlg::UpdateControls()
 			RadioButtonDemUSB->setChecked(TRUE);
 		break;
 
+	case CAMDemodulation::DT_CW:
+		if (!RadioButtonDemCW->isChecked())
+			RadioButtonDemCW->setChecked(TRUE);
+		break;
+
 	case CAMDemodulation::DT_FM:
 		if (!RadioButtonDemFM->isChecked())
 			RadioButtonDemFM->setChecked(TRUE);
@@ -147,22 +203,22 @@ void AnalogDemDlg::UpdateControls()
 	/* Set AGC type */
 	switch (pDRMRec->GetAMDemod()->GetAGCType())
 	{
-	case CAMDemodulation::AT_NO_AGC:
+	case CAGC::AT_NO_AGC:
 		if (!RadioButtonAGCOff->isChecked())
 			RadioButtonAGCOff->setChecked(TRUE);
 		break;
 
-	case CAMDemodulation::AT_SLOW:
+	case CAGC::AT_SLOW:
 		if (!RadioButtonAGCSlow->isChecked())
 			RadioButtonAGCSlow->setChecked(TRUE);
 		break;
 
-	case CAMDemodulation::AT_MEDIUM:
+	case CAGC::AT_MEDIUM:
 		if (!RadioButtonAGCMed->isChecked())
 			RadioButtonAGCMed->setChecked(TRUE);
 		break;
 
-	case CAMDemodulation::AT_FAST:
+	case CAGC::AT_FAST:
 		if (!RadioButtonAGCFast->isChecked())
 			RadioButtonAGCFast->setChecked(TRUE);
 		break;
@@ -201,19 +257,43 @@ void AnalogDemDlg::UpdateControls()
 	CheckBoxMuteAudio->setChecked(pDRMRec->GetWriteData()->GetMuteAudio());
 	CheckBoxSaveAudioWave->
 		setChecked(pDRMRec->GetWriteData()->GetIsWriteWaveFile());
-}
 
-void AnalogDemDlg::showEvent(QShowEvent* pEvent)
-{
-	/* Update controls */
-	UpdateControls();
+	CheckBoxAutoFreqAcq->
+		setChecked(pDRMRec->GetAMDemod()->AutoFreqAcqEnabled());
+
+	CheckBoxPLL->setChecked(pDRMRec->GetAMDemod()->PLLEnabled());
 }
 
 void AnalogDemDlg::OnTimer()
 {
 	/* Carrier frequency of AM signal */
-	TextFreqOffset->setText(tr("Carrier Frequency: ") + QString().setNum(
-		pDRMRec->GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
+	TextFreqOffset->setText(tr("Carrier<br>Frequency:<b><br>") +
+		QString().setNum(pDRMRec->GetAMDemod()->GetCurMixFreqOffs(), 'f', 2) +
+		" Hz</b>");
+}
+
+void AnalogDemDlg::OnTimerPLLPhaseDial()
+{
+	CReal rCurPLLPhase;
+
+	if (pDRMRec->GetAMDemod()->GetPLLPhase(rCurPLLPhase) == TRUE)
+	{
+		/* Set current PLL phase (convert radiant in degree) */
+		PhaseDial->setValue(rCurPLLPhase * (CReal) 360.0 / (2 * crPi));
+
+		/* Check if control is enabled */
+		if (!PhaseDial->isEnabled())
+			PhaseDial->setEnabled(true);
+	}
+	else
+	{
+		/* Reset dial */
+		PhaseDial->setValue((CReal) 0.0);
+
+		/* Check if control is disabled */
+		if (PhaseDial->isEnabled())
+			PhaseDial->setEnabled(false);
+	}
 }
 
 void AnalogDemDlg::OnRadioDemodulation(int iID)
@@ -236,6 +316,11 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 		break;
 
 	case 3:
+		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_CW);
+		pDRMRec->GetAMDemod()->SetFilterBW(iBwCW);
+		break;
+
+	case 4:
 		pDRMRec->GetAMDemod()->SetDemodType(CAMDemodulation::DT_FM);
 		pDRMRec->GetAMDemod()->SetFilterBW(iBwFM);
 		break;
@@ -250,19 +335,19 @@ void AnalogDemDlg::OnRadioAGC(int iID)
 	switch (iID)
 	{
 	case 0:
-		pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_NO_AGC);
+		pDRMRec->GetAMDemod()->SetAGCType(CAGC::AT_NO_AGC);
 		break;
 
 	case 1:
-		pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_SLOW);
+		pDRMRec->GetAMDemod()->SetAGCType(CAGC::AT_SLOW);
 		break;
 
 	case 2:
-		pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_MEDIUM);
+		pDRMRec->GetAMDemod()->SetAGCType(CAGC::AT_MEDIUM);
 		break;
 
 	case 3:
-		pDRMRec->GetAMDemod()->SetAGCType(CAMDemodulation::AT_FAST);
+		pDRMRec->GetAMDemod()->SetAGCType(CAGC::AT_FAST);
 		break;
 	}
 }
@@ -310,6 +395,10 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 		iBwUSB = value;
 		break;
 
+	case CAMDemodulation::DT_CW:
+		iBwCW = value;
+		break;
+
 	case CAMDemodulation::DT_FM:
 		iBwFM = value;
 		break;
@@ -317,6 +406,18 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 
 	/* Update chart */
 	MainPlot->Update();
+}
+
+void AnalogDemDlg::OnCheckAutoFreqAcq()
+{
+	/* Set parameter in working thread module */
+	pDRMRec->GetAMDemod()->EnableAutoFreqAcq(CheckBoxAutoFreqAcq->isChecked());
+}
+
+void AnalogDemDlg::OnCheckPLL()
+{
+	/* Set parameter in working thread module */
+	pDRMRec->GetAMDemod()->EnablePLL(CheckBoxPLL->isChecked());
 }
 
 void AnalogDemDlg::OnCheckBoxMuteAudio()
@@ -411,11 +512,14 @@ void AnalogDemDlg::AddWhatsThisHelp()
 
 	/* Demodulation type */
 	const QString strDemodType =
-		tr("<b>Demodulation Type:</b> There are four different analog "
-		"demodulation types available:<ul>"
+		tr("<b>Demodulation Type:</b> The following analog "
+		"demodulation types are available:<ul>"
 		"<li><b>AM:</b> This analog demodulation type is used in most of "
 		"the hardware radios. The envelope of the complex base-band signal "
-		"is used followed by a high-pass filter to remove the DC offset.</li>"
+		"is used followed by a high-pass filter to remove the DC offset. "
+		"Additionally, a low pass filter with the same bandwidth as the "
+		"pass-band filter is applied to reduce the noise caused by "
+		"non-linear distortions.</li>"
 		"<li><b>LSB / USB:</b> These are single-side-band (SSB) demodulation "
 		"types. Only one side of the spectrum is evaluated, the upper side "
 		"band is used in USB and the lower side band with LSB. It is "
@@ -423,6 +527,10 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"signal is known to get satisfactory results. The DC frequency is "
 		"automatically estimated by starting a new acquisition or by "
 		"clicking on the plot.</li>"
+		"<li><b>CW:</b> This demodulation type can be used to receive "
+		"CW signals. Only a narrow frequency band in a fixed distance "
+		"to the mixing frequency is used. By clicking on the spectrum "
+		"plot, the center position of the band pass filter can be set.</li>"
 		"<li><b>FM:</b> This is a narrow band frequency demodulation.</li>"
 		"</ul>");
 
@@ -430,6 +538,7 @@ void AnalogDemDlg::AddWhatsThisHelp()
 	QWhatsThis::add(RadioButtonDemAM, strDemodType);
 	QWhatsThis::add(RadioButtonDemLSB, strDemodType);
 	QWhatsThis::add(RadioButtonDemUSB, strDemodType);
+	QWhatsThis::add(RadioButtonDemCW, strDemodType);
 	QWhatsThis::add(RadioButtonDemFM, strDemodType);
 
 	/* Mute Audio (same as in systemevaldlg.cpp!) */
@@ -445,12 +554,34 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"box will let the user choose a file name for the recording."));
 
 	/* Carrier Frequency */
-	const QString strCarFreq =
-		tr("<b>Carrier Frequency:</b> The estimated carrier frequency of the "
-		"analog signal is shown. The estimation of this parameter is done by "
-		"using the estimated PSD of the input signal and doing a maximum "
-		"search.");
+	QWhatsThis::add(TextFreqOffset,
+		tr("<b>Carrier Frequency:</b> The (estimated) carrier frequency of the "
+		"analog signal is shown. (The estimation of this parameter can be done "
+		"by the Autom Frequency Acquisition which uses the estimated PSD of "
+		"the input signal and applies a maximum search.)"));
 
-	QWhatsThis::add(FrameCarrierFrequency, strCarFreq);
-	QWhatsThis::add(TextFreqOffset, strCarFreq);
+	/* Phase lock loop */
+	const QString strPLL =
+		tr("<b>PLL:</b> The Phase-Lock-Loop (PLL) tracks the carrier of the "
+		"modulated received signal. The resulting phase offset between the "
+		"reference oscillator and the received carrier is displayed in "
+		"a dial control. If the pointer is almost steady, the PLL is locked. "
+		"If the pointer of the dial control turns quickly, the PLL is "
+		"out of lock. To get the PLL locked, the frequency offset to "
+		"the true carrier frequency must not exceed a few Hz.");
+
+	QWhatsThis::add(GroupBoxPLL, strPLL);
+	QWhatsThis::add(CheckBoxPLL, strPLL);
+	QWhatsThis::add(PhaseDial, strPLL);
+	QWhatsThis::add(TextLabelPhaseOffset, strPLL);
+
+	/* Auto frequency acquisition */
+	const QString strAutoFreqAcqu =
+		tr("<b>Auto Frequency Acquisition:</b> Clicking on the "
+		"input spectrum plot changes the mixing frequency for demodulation. "
+		"If the Auto Frequency Acquisition is enabled, the largest peak "
+		"near the curser is selected.");
+
+	QWhatsThis::add(GroupBoxAutoFreqAcq, strAutoFreqAcqu);
+	QWhatsThis::add(CheckBoxAutoFreqAcq, strAutoFreqAcqu);
 }

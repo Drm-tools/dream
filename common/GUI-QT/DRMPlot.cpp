@@ -157,7 +157,7 @@ void CDRMPlot::OnTimerChart()
 
 		/* Prepare graph and set data */
 		SetInpPSD(vecrData, vecrScale,
-			pDRMRec->GetParameters()->GetDCFrequency(), rCenterFreq,
+			pDRMRec->GetAMDemod()->GetCurMixFreqOffs(), rCenterFreq,
 			rBandwidth);
 		break;
 

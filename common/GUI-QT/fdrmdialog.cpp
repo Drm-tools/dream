@@ -30,81 +30,6 @@
 
 
 /* Implementation *************************************************************/
-/* About dialog */
-CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
-	: CAboutDlgBase(parent, name, modal, f)
-{
-	/* Set the text for the about dialog html text control */
-	TextViewCredits->setText(
-		"<p>" /* General description of Dream software */
-		"<big><b>Dream</b> " + tr("is a software implementation of a Digital "
-		"Radio Mondiale (DRM) receiver. All what is needed to receive DRM "
-		"transmissions is a PC with a sound card and a modified analog "
-		"short-wave (MW, LW) receiver.") + "</big>"
-		"</p><br>"
-		"<p><font face=\"courier\">" /* GPL header text */
-		"This program is free software; you can redistribute it and/or modify "
-		"it under the terms of the GNU General Public License as published by "
-		"the Free Software Foundation; either version 2 of the License, or "
-		"(at your option) any later version.<br>This program is distributed in "
-		"the hope that it will be useful, but WITHOUT ANY WARRANTY; without "
-		"even the implied warranty of MERCHANTABILITY or FITNESS FOR A "
-		"PARTICULAR PURPOSE. See the GNU General Public License for more "
-		"details.<br>You should have received a copy of the GNU General Public "
-		"License along with his program; if not, write to the Free Software "
-		"Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 "
-		"USA"
-		"</font></p><br>" /* Our warning text */
-		"<p><font color=\"#ff0000\" face=\"courier\">" +
-		tr("Although this software is going to be "
-		"distributed as free software under the terms of the GPL this does not "
-		"mean that its use is free of rights of others. The use may infringe "
-		"third party IP and thus may not be legal in some countries.") +
-		"</font></p><br>"
-		"<p>" /* Libraries used by this compilation of Dream */
-		"<b>" + tr("This compilation of Dream uses the following libraries:") +
-		"</b></p>"
-		"<ul>"
-		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
-#ifdef USE_FAAD2_LIBRARY
-		"<li><b>FAAD2</b> <i>AAC/HE-AAC/HE-AACv2/DRM decoder "
-		"(c) Ahead Software, www.nero.com (http://faac.sf.net)</i></li>"
-#endif
-#ifdef USE_FAAC_LIBRARY
-		"<li><b>FAAC</b> <i>http://faac.sourceforge.net</i></li>"
-#endif
-#ifdef USE_QT_GUI /* QWT */
-		"<li><b>QWT</b> <i>Dream is based in part on the work of the Qwt "
-		"project (http://qwt.sf.net).</i></li>"
-#endif
-#ifdef HAVE_LIBHAMLIB
-		"<li><b>Hamlib</b> <i>http://hamlib.sourceforge.net</i></li>"
-#endif
-#ifdef HAVE_JOURNALINE
-		"<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
-		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
-		"Germany. For more information visit http://www.iis.fhg.de/dab</i></li>"
-#endif
-#ifdef HAVE_LIBFREEIMAGE
-		"<li><b>FreeImage</b> <i>This software uses the FreeImage open source "
-		"image library. See http://freeimage.sourceforge.net for details. "
-		"FreeImage is used under the GNU GPL.</i></li>"
-#endif
-		"</ul>");
-
-	/* Set version number in about dialog */
-	QString strVersionText;
-	strVersionText = "<center><b>" + tr("Dream, Version ");
-	strVersionText += VERSION;
-	strVersionText += "</b><br> " + tr("Open-Source Software Implementation of "
-		"a DRM-Receiver") + "<br>";
-	strVersionText += tr("Under the GNU General Public License (GPL)") +
-		"</center>";
-	TextLabelVersion->setText(strVersionText);
-}
-
-
-/* Main dialog */
 FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	bool modal, WFlags f) : pDRMRec(pNDRMR),
 	FDRMDialogBase(parent, name, modal, f)
@@ -125,15 +50,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 
 	/* Set Menu ***************************************************************/
-	/* Help menu ------------------------------------------------------------ */
-	QPopupMenu* HelpMenu = new QPopupMenu(this);
-	CHECK_PTR(HelpMenu);
-    HelpMenu->insertItem(tr("What's &This"), this ,
-		SLOT(OnHelpWhatsThis()), SHIFT+Key_F1);
-	HelpMenu->insertSeparator();
-	HelpMenu->insertItem(tr("&About..."), this, SLOT(OnHelpAbout()));
-
-
 	/* View menu ------------------------------------------------------------ */
 	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
@@ -148,58 +64,14 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 
 	/* Settings menu  ------------------------------------------------------- */
-	pSoundInMenu = new QPopupMenu(this);
-	CHECK_PTR(pSoundInMenu);
-	pSoundOutMenu = new QPopupMenu(this);
-	CHECK_PTR(pSoundOutMenu);
-	pReceiverModeMenu = new QPopupMenu(this);
-	CHECK_PTR(pReceiverModeMenu);
-
-	/* Get sound device names */
-	iNumSoundDev = pDRMRec->GetSoundInterface()->GetNumDev();
-	for (int i = 0; i < iNumSoundDev; i++)
-	{
-		string strName = pDRMRec->GetSoundInterface()->GetDeviceName(i);
-		pSoundInMenu->insertItem(QString(strName.c_str()), this,
-			SLOT(OnSoundInDevice(int)), 0, i);
-		pSoundOutMenu->insertItem(QString(strName.c_str()), this,
-			SLOT(OnSoundOutDevice(int)), 0, i);
-	}
-
-	/* Insert "Wave mapper". "iNumSoundDev" is no valid ID for a device, use
-	   this for wave-mapper */
-	pSoundInMenu->insertSeparator();
-	pSoundInMenu->insertItem("Wave &Mapper Recording", this,
-		SLOT(OnSoundInDevice(int)), 0, iNumSoundDev);
-	pSoundOutMenu->insertSeparator();
-	pSoundOutMenu->insertItem("Wave &Mapper Playback", this,
-		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
-
-	/* Set default device. If no valid device was selected, select
-	   "Wave mapper" */
-	int iDefaultInDev = pDRMRec->GetSoundInterface()->GetInDev();
-	if ((iDefaultInDev > iNumSoundDev) || (iDefaultInDev < 0))
-		iDefaultInDev = iNumSoundDev;
-
-	int iDefaultOutDev = pDRMRec->GetSoundInterface()->GetOutDev();
-	if ((iDefaultOutDev > iNumSoundDev) || (iDefaultOutDev < 0))
-		iDefaultOutDev = iNumSoundDev;
-
-	pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
-	pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
-
-	/* Reiceiver mode menu */
-	pReceiverModeMenu->insertItem(tr("DRM (digital)"), this,
-		SLOT(OnReceiverMode(int)), CTRL+Key_D, 0);
-	pReceiverModeMenu->insertItem(tr("AM (analog)"), this,
-		SLOT(OnReceiverMode(int)), CTRL+Key_A, 1);
-
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
-	pSettingsMenu->insertItem(tr("Sound &In"), pSoundInMenu);
-	pSettingsMenu->insertItem(tr("Sound &Out"), pSoundOutMenu);
-	pSettingsMenu->insertSeparator();
-	pSettingsMenu->insertItem(tr("&Receiver Mode"), pReceiverModeMenu);
+	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
+		new CSoundCardSelMenu(pDRMRec->GetSoundInterface(), this));
+	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
+		SLOT(OnSwitchToAM()), CTRL+Key_A);
+	pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
+		SLOT(OnSwitchToDRM()), CTRL+Key_D);
 
 
 	/* Main menu bar -------------------------------------------------------- */
@@ -207,7 +79,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&View"), EvalWinMenu);
 	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
-	pMenu->insertItem(tr("&?"), HelpMenu);
+	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
@@ -230,12 +102,14 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	/* Check "visible" settings flag if values are possible */
 	if ((pDRMRec->GeomAnalogDemDlg.bVisible == TRUE) &&
-		(pDRMRec->GeomSystemEvalDlg.bVisible == TRUE))
+		((pDRMRec->GeomSystemEvalDlg.bVisible == TRUE) ||
+		(pDRMRec->GeomMultimediaDlg.bVisible == TRUE)))
 	{
-		/* It makes no sense that both windows are shown at the same time ->
-		   disable both windows */
-		pDRMRec->GeomAnalogDemDlg.bVisible = FALSE;
+		/* It makes no sense that these windows are shown at the same time ->
+		   use valid configuration */
+		pDRMRec->GeomAnalogDemDlg.bVisible = TRUE;
 		pDRMRec->GeomSystemEvalDlg.bVisible = FALSE;
+		pDRMRec->GeomMultimediaDlg.bVisible = FALSE;
 	}
 
 	/* Stations window */
@@ -251,41 +125,39 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 		FALSE, Qt::WStyle_MinMax);
 
 	if (pDRMRec->GeomSystemEvalDlg.bVisible == TRUE)
+	{
 		pSysEvalDlg->show();
+		bSysEvalDlgWasVis = TRUE;
+	}
 	else
+	{
 		pSysEvalDlg->hide();
+		bSysEvalDlgWasVis = FALSE;
+	}
 
 	/* Multimedia window */
 	pMultiMediaDlg = new MultimediaDlg(pDRMRec, this, tr("Multimedia"), FALSE,
 		Qt::WStyle_MinMax);
 
 	if (pDRMRec->GeomMultimediaDlg.bVisible == TRUE)
+	{
 		pMultiMediaDlg->show();
+		bMultMedDlgWasVis = TRUE;
+	}
 	else
+	{
 		pMultiMediaDlg->hide();
+		bMultMedDlgWasVis = FALSE;
+	}
 
 	/* Analog demodulation window */
 	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, this, tr("Analog Demodulation"),
 		FALSE, Qt::WStyle_MinMax);
 
-	/* Make sure that the stations and evaluation dialog is already constructed
-	   before making calls to SetReceiverMode()! */
 	if (pDRMRec->GeomAnalogDemDlg.bVisible == TRUE)
-	{
-		/* If analog demodulation evaluation window was shown, the receiver
-		   certainly was in analog demodulation mode and we should set it to
-		   this mode now */
 		SetReceiverMode(CDRMReceiver::RM_AM);
-
-		pAnalogDemDlg->show();
-	}
 	else
-	{
-		/* Default is DRM mode */
 		SetReceiverMode(CDRMReceiver::RM_DRM);
-
-		pAnalogDemDlg->hide();
-	}
 
 	/* Enable multimedia */
 	pDRMRec->GetParameters()->EnableMultimedia(TRUE);
@@ -307,16 +179,21 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	CLED_MSC->SetUpdateTime(600);
 
 	/* Connect buttons */
-	connect(PushButtonService1, SIGNAL(clicked()), 
+	connect(PushButtonService1, SIGNAL(clicked()),
 		this, SLOT(OnButtonService1()));
-	connect(PushButtonService2, SIGNAL(clicked()), 
+	connect(PushButtonService2, SIGNAL(clicked()),
 		this, SLOT(OnButtonService2()));
-	connect(PushButtonService3, SIGNAL(clicked()), 
+	connect(PushButtonService3, SIGNAL(clicked()),
 		this, SLOT(OnButtonService3()));
-	connect(PushButtonService4, SIGNAL(clicked()), 
+	connect(PushButtonService4, SIGNAL(clicked()),
 		this, SLOT(OnButtonService4()));
 
-	connect(&Timer, SIGNAL(timeout()), 
+	connect(pAnalogDemDlg, SIGNAL(SwitchToDRM()),
+		this, SLOT(OnSwitchToDRM()));
+	connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()),
+		this, SLOT(OnViewStationsDlg()));
+
+	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 
 	/* Disable text message label */
@@ -562,47 +439,7 @@ void FDRMDialog::OnTimer()
 		TextTextMessage->hide();
 		TextTextMessage->setText("");
 
-		if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_DRM)
-			TextServiceLabel->setText(tr("Scanning..."));
-		else
-		{
-			TextServiceLabel->setText(tr("Analog AM Mode"));
-			TextServiceIDRate->setText(tr("Press Ctrl+A for new Acquisition, "
-				"Ctrl+D for DRM"));
-		}
-	}
-
-	/* Check the receiver mode for showing the correct evaluation window */
-	if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_DRM)
-	{
-		/* DRM: 0, AM: 1 */
-		if (pReceiverModeMenu->isItemChecked(1) == TRUE)
-		{
-			pReceiverModeMenu->setItemChecked(1, FALSE);
-			pReceiverModeMenu->setItemChecked(0, TRUE);
-		}
-
-		if (pAnalogDemDlg->isVisible())
-		{
-			pAnalogDemDlg->hide();
-			pSysEvalDlg->show();
-		}
-	}
-
-	if (pDRMRec->GetReceiverMode() == CDRMReceiver::RM_AM)
-	{
-		/* DRM: 0, AM: 1 */
-		if (pReceiverModeMenu->isItemChecked(0) == TRUE)
-		{
-			pReceiverModeMenu->setItemChecked(0, FALSE);
-			pReceiverModeMenu->setItemChecked(1, TRUE);
-		}
-
-		if (pSysEvalDlg->isVisible())
-		{
-			pSysEvalDlg->hide();
-			pAnalogDemDlg->show();
-		}
+		TextServiceLabel->setText(tr("Scanning..."));
 	}
 }
 
@@ -615,63 +452,40 @@ void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 	switch (eNewReMo)
 	{
 	case CDRMReceiver::RM_DRM:
-		if (pAnalogDemDlg->isVisible())
-		{
-			pAnalogDemDlg->hide();
+		/* For DRM mode, always show main window */
+		show();
+
+		pAnalogDemDlg->hide();
+
+		/* Recover visibility state */
+		if (bSysEvalDlgWasVis == TRUE)
 			pSysEvalDlg->show();
-		}
+
+		if (bMultMedDlgWasVis == TRUE)
+			pMultiMediaDlg->show();
 
 		/* Load correct schedule */
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
 		break;
 
 	case CDRMReceiver::RM_AM:
-		if (pSysEvalDlg->isVisible())
-		{
-			pSysEvalDlg->hide();
-			pAnalogDemDlg->show();
-		}
+		/* Main window is not needed, hide it. If Multimedia window was open,
+		   hide it. Make sure analog demodulation dialog is visible */
+		hide();
+
+		/* Store visibility state */
+		bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
+		bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
+
+		pSysEvalDlg->hide();
+		pMultiMediaDlg->hide();
+
+		pAnalogDemDlg->show();
 
 		/* Load correct schedule */
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
 		break;
 	}
-
-	/* Taking care of checks in the menu */
-	pReceiverModeMenu->setItemChecked(0, eNewReMo == CDRMReceiver::RM_DRM);
-	pReceiverModeMenu->setItemChecked(1, eNewReMo == CDRMReceiver::RM_AM);
-}
-
-void FDRMDialog::OnReceiverMode(int id)
-{
-	switch (id)
-	{
-	case 0:
-		SetReceiverMode(CDRMReceiver::RM_DRM);
-		break;
-
-	case 1:
-		SetReceiverMode(CDRMReceiver::RM_AM);
-		break;
-	}
-}
-
-void FDRMDialog::OnSoundInDevice(int id)
-{
-	pDRMRec->GetSoundInterface()->SetInDev(id);
-
-	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
-	for (int i = 0; i < iNumSoundDev + 1; i++)
-		pSoundInMenu->setItemChecked(i, i == id);
-}
-
-void FDRMDialog::OnSoundOutDevice(int id)
-{
-	pDRMRec->GetSoundInterface()->SetOutDev(id);
-
-	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
-	for (int i = 0; i < iNumSoundDev + 1; i++)
-		pSoundOutMenu->setItemChecked(i, i == id);
 }
 
 void FDRMDialog::OnButtonService1()

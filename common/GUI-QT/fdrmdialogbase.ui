@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>558</width>
+            <width>550</width>
             <height>460</height>
         </rect>
     </property>
@@ -721,6 +721,9 @@ Level [dB]</string>
                                 <name>name</name>
                                 <cstring>LayoutStationLabelOtherInfo</cstring>
                             </property>
+                            <property>
+                                <name>layoutSpacing</name>
+                            </property>
                             <vbox>
                                 <property stdset="1">
                                     <name>margin</name>
@@ -728,7 +731,7 @@ Level [dB]</string>
                                 </property>
                                 <property stdset="1">
                                     <name>spacing</name>
-                                    <number>6</number>
+                                    <number>0</number>
                                 </property>
                                 <widget>
                                     <class>QLabel</class>
@@ -1617,6 +1620,10 @@ Level [dB]</string>
                                 <name>text</name>
                                 <string>TextMiniService1</string>
                             </property>
+                            <property stdset="1">
+                                <name>textFormat</name>
+                                <enum>RichText</enum>
+                            </property>
                         </widget>
                     </hbox>
                 </widget>
@@ -1644,7 +1651,7 @@ Level [dB]</string>
                             <property stdset="1">
                                 <name>sizePolicy</name>
                                 <sizepolicy>
-                                    <hsizetype>5</hsizetype>
+                                    <hsizetype>1</hsizetype>
                                     <vsizetype>5</vsizetype>
                                 </sizepolicy>
                             </property>
@@ -1713,6 +1720,10 @@ Level [dB]</string>
                                 <name>text</name>
                                 <string>TextMiniService2</string>
                             </property>
+                            <property stdset="1">
+                                <name>textFormat</name>
+                                <enum>RichText</enum>
+                            </property>
                         </widget>
                     </hbox>
                 </widget>
@@ -1740,7 +1751,7 @@ Level [dB]</string>
                             <property stdset="1">
                                 <name>sizePolicy</name>
                                 <sizepolicy>
-                                    <hsizetype>5</hsizetype>
+                                    <hsizetype>1</hsizetype>
                                     <vsizetype>5</vsizetype>
                                 </sizepolicy>
                             </property>
@@ -1809,6 +1820,10 @@ Level [dB]</string>
                                 <name>text</name>
                                 <string>TextMiniService3</string>
                             </property>
+                            <property stdset="1">
+                                <name>textFormat</name>
+                                <enum>RichText</enum>
+                            </property>
                         </widget>
                     </hbox>
                 </widget>
@@ -1836,7 +1851,7 @@ Level [dB]</string>
                             <property stdset="1">
                                 <name>sizePolicy</name>
                                 <sizepolicy>
-                                    <hsizetype>5</hsizetype>
+                                    <hsizetype>1</hsizetype>
                                     <vsizetype>5</vsizetype>
                                 </sizepolicy>
                             </property>
@@ -1904,6 +1919,10 @@ Level [dB]</string>
                             <property stdset="1">
                                 <name>text</name>
                                 <string>TextMiniService4</string>
+                            </property>
+                            <property stdset="1">
+                                <name>textFormat</name>
+                                <enum>RichText</enum>
                             </property>
                         </widget>
                     </hbox>

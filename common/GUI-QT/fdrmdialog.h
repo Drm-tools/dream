@@ -37,16 +37,14 @@
 #include <qcstring.h>
 #include <qlayout.h>
 #include <qwhatsthis.h>
-#include <qtextview.h>
 
 
 #ifdef _WIN32
 # include "../../Windows/moc/fdrmdialogbase.h"
-# include "../../Windows/moc/AboutDlgbase.h" /* no regular .cpp and .h file */
 #else
 # include "moc/fdrmdialogbase.h"
-# include "moc/AboutDlgbase.h" /* no regular .cpp and .h file */
 #endif
+#include "DialogUtil.h"
 #include "systemevalDlg.h"
 #include "MultimediaDlg.h"
 #include "StationsDlg.h"
@@ -57,29 +55,6 @@
 
 
 /* Classes ********************************************************************/
-class DRMEvent : public QCustomEvent
-{
-public:
-	DRMEvent(int iNewMeTy, int iNewSt) : 
-		QCustomEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
-
-	int iMessType;
-	int iStatus;
-};
-
-
-/* About dialog */
-class CAboutDlg : public CAboutDlgBase
-{
-	Q_OBJECT
-
-public:
-	CAboutDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
-};
-
-
-/* Main dialog */
 class FDRMDialog : public FDRMDialogBase
 {
 	Q_OBJECT
@@ -98,15 +73,15 @@ protected:
 	StationsDlg*	pStationsDlg;
 	AnalogDemDlg*	pAnalogDemDlg;
 	QMenuBar*		pMenu;
-	QPopupMenu*		pSoundInMenu;
-	QPopupMenu*		pSoundOutMenu;
 	QPopupMenu*		pReceiverModeMenu;
 	QPopupMenu*		pSettingsMenu;
 	int				iCurSelServiceGUI;
 	int				iOldNoServicesGUI;
-	int				iNumSoundDev;
 	QTimer			Timer;
 	CAboutDlg		AboutDlg;
+
+	_BOOLEAN		bSysEvalDlgWasVis;
+	_BOOLEAN		bMultMedDlgWasVis;
 
 	QString			SetServParamStr(int iServiceID);
 	QString			SetBitrIDStr(int iServiceID);
@@ -124,9 +99,6 @@ public slots:
 	void OnViewEvalDlg();
 	void OnViewMultiMediaDlg();
 	void OnViewStationsDlg();
-	void OnHelpAbout() {AboutDlg.exec();}
-	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
-	void OnSoundInDevice(int id);
-	void OnSoundOutDevice(int id);
-	void OnReceiverMode(int id);
+	void OnSwitchToDRM() {SetReceiverMode(CDRMReceiver::RM_DRM);}
+	void OnSwitchToAM() {SetReceiverMode(CDRMReceiver::RM_AM);}
 };

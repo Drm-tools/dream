@@ -129,13 +129,13 @@ try
 	}
 	else
 	{
-		CReceiverThread	RecThread; /* Working thread object */
-		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
-
 		/* First, initialize the working thread. This should be done in an extra
 		   routine since we cannot 100% assume that the working thread is ealier
 		   ready than the GUI thread */
 		DRMReceiver.Init();
+
+		CReceiverThread	RecThread; /* Working thread object */
+		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
 
 		/* Start thread */
 		RecThread.start();
@@ -144,9 +144,7 @@ try
 		app.setMainWidget(&MainDlg);
 		pApp = &app; /* Needed for post-event routine */
 
-		/* Show dialog, working thread must be initialized before starting the 
-		   GUI! */
-		MainDlg.show();
+		/* Working thread must be initialized before starting the GUI! */
 		app.exec();
 
 		RecThread.Stop();
