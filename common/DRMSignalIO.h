@@ -159,8 +159,7 @@ protected:
 
 	CVector<_REAL>			vecrReHist;
 	CVector<_REAL>			vecrImHist;
-	_REAL HilbertFilt(const _REAL rRe, const _REAL rIm,
-		const _BOOLEAN bUSBFlag);
+	_REAL HilbertFilt(const _REAL rRe, const _REAL rIm);
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

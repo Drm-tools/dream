@@ -300,7 +300,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 			{
 				(*pvecOutputData)[i] =
 					HilbertFilt((_REAL) vecsSoundBuffer[2 * i],
-					(_REAL) vecsSoundBuffer[2 * i + 1], TRUE);
+					(_REAL) vecsSoundBuffer[2 * i + 1]);
 			}
 			break;
 
@@ -308,8 +308,8 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 			for (i = 0; i < iOutputBlockSize; i++)
 			{
 				(*pvecOutputData)[i] =
-					HilbertFilt((_REAL) vecsSoundBuffer[2 * i],
-					(_REAL) vecsSoundBuffer[2 * i + 1], FALSE);
+					HilbertFilt((_REAL) vecsSoundBuffer[2 * i + 1],
+					(_REAL) vecsSoundBuffer[2 * i]);
 			}
 			break;
 		}
@@ -421,8 +421,7 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	iOutputBlockSize = Parameter.iSymbolBlockSize;
 }
 
-_REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm,
-								const _BOOLEAN bUSBFlag)
+_REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)
 {
 /*
 	Hilbert filter for I / Q input data. This code is based on code written
@@ -445,10 +444,7 @@ _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm,
     for (i = 1; i < NUM_TAPS_IQ_INPUT_FILT; i += 2)
 		rSum += fHilFiltIQ[i] * vecrImHist[i];
 
-	if (bUSBFlag == TRUE)
-		return rSum + vecrReHist[IQ_INP_HIL_FILT_DELAY];
-	else
-		return rSum - vecrReHist[IQ_INP_HIL_FILT_DELAY];
+	return rSum + vecrReHist[IQ_INP_HIL_FILT_DELAY];
 }
 
 CReceiveData::~CReceiveData()
