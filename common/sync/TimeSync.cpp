@@ -421,6 +421,10 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				/* GUI message that timing is ok */
 				PostWinMessage(MS_TIME_SYNC, 0);
 				ReceiverParam.ReceptLog.SetSync(TRUE);
+
+				/* Acquisition was successful, reset init flag (just in case it
+				   was not reset by the non-linear correction unit */
+				bInitTimingAcqu = FALSE;
 			}
 			else
 			{
@@ -443,14 +447,23 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					iCorrCounter = 0;
 					iAveCorr = 0;
 
-					/* GUI message that timing was corrected (red light) */
-					PostWinMessage(MS_TIME_SYNC, 2);
+					/* If this is the first correction after an initialization
+					   was done, reset flag and do not show red light */
+					if (bInitTimingAcqu == TRUE)
+						bInitTimingAcqu = FALSE;
+					else
+					{
+						/* GUI message that timing was corrected (red light) */
+						PostWinMessage(MS_TIME_SYNC, 2);
+					}
 				}
 				else
 				{
-					/* GUI message that timing is yet ok (yellow light) */
-					PostWinMessage(MS_TIME_SYNC, 1);
-				}
+					/* GUI message that timing is yet ok (yellow light). Do not
+					   show any light if init was done right before this */
+					if (bInitTimingAcqu == FALSE)
+						PostWinMessage(MS_TIME_SYNC, 1);
+				} 
 				ReceiverParam.ReceptLog.SetSync(FALSE);
 			}
 
@@ -628,10 +641,9 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 		rStartIndex = (CReal) iCenterOfBuf;
 
 	/* Some inits */
-	/* Set correction counter to limit to get a non-linear correction 
-	   the first time of a new acquisition block */
-	iCorrCounter = NUM_SYM_BEFORE_RESET;
+	iCorrCounter = 0;
 	iAveCorr = 0;
+	bInitTimingAcqu = TRUE; /* Flag to show that init was done */
 
 	/* Allocate memory for vectors and zero out */
 	HistoryBuf.Init(iTotalBufferSize, (CReal) 0.0);

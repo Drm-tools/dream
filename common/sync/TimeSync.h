@@ -138,6 +138,7 @@ protected:
 
 	_BOOLEAN					bSyncInput;
 
+	_BOOLEAN					bInitTimingAcqu;
 	_BOOLEAN					bTimingAcqu;
 	_BOOLEAN					bRobModAcqu;
 	_BOOLEAN					bAcqWasActive;
