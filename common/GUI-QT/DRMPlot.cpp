@@ -336,7 +336,7 @@ void CDRMPlot::SetupTranFct()
 
 	/* Add main curves */
 	clear();
-	main1curve = insertCurve(tr("Transf. Fkt."));
+	main1curve = insertCurve(tr("Transf. Fct."));
 	main2curve = insertCurve("Group Del.", QwtPlot::xBottom, QwtPlot::yRight);
 
 	/* Curve colors */

@@ -283,7 +283,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	ListViewStations->addColumn(tr("Time [UTC]"));
 	ListViewStations->addColumn(tr("Frequency [kHz]"));
 	ListViewStations->addColumn(tr("Target"));
-	ListViewStations->addColumn(tr("Power [KW]"));
+	ListViewStations->addColumn(tr("Power [kW]"));
 	ListViewStations->addColumn(tr("Country"));
 	ListViewStations->addColumn(tr("Site"));
 	ListViewStations->addColumn(tr("Language"));
