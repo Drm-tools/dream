@@ -41,7 +41,6 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	int				iTimeDiffNew;
 	_COMPLEX		cNewPilot;
 	_COMPLEX		cCurChanEst;
-	CComplexVector	veccTiCorrEstSym;
 	_REAL			rSigOverEst;
 
 	/* Timing correction history -------------------------------------------- */
@@ -54,9 +53,6 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 
 	/* Update histories for channel estimates at the pilot positions -------- */
-	/* Init vector for storing time correlation estimation for one symbol */
-	veccTiCorrEstSym.Init(iNumTapsSigEst, (CReal) 0.0);
-
 	for (i = 0; i < iNoCarrier; i++)
 	{
 		/* Identify and calculate transfer function at the pilot positions */
@@ -87,12 +83,13 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			{
 				/* Correct pilot information for phase rotation */
 				iTimeDiffNew = vecTiCorrHist[iScatPilTimeInt * j];
-				cNewPilot = 
-					Rotate(matcChanAtPilPos[j][iPiHiIndex], i, iTimeDiffNew);
+				cNewPilot = Rotate(matcChanAtPilPos[j][iPiHiIndex], i,
+					iTimeDiffNew);
 
-				/* Simply add all results together and increment count */
-				veccTiCorrEstSym[j] +=
-					conj(matcChanAtPilPos[0][iPiHiIndex]) * cNewPilot;
+				/* Use IIR filtering for averaging */
+				IIR1(vecrTiCorrEst[j],
+					Real(Conj(matcChanAtPilPos[0][iPiHiIndex]) * cNewPilot),
+						rLamTiCorrAv);
 			}
 		}
 	}
@@ -101,23 +98,6 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	/* Update sigma estimation ---------------------------------------------- */
 	if (bTracking == TRUE)
 	{
-		/* Update moving average for overall averaging for correlation
-		   estimation */
-		for (i = 0; i < iNumTapsSigEst; i++)
-		{
-			/* Subtract oldest value in history from current estimation */
-			veccTiCorrEst[i] -= matcTiCorrEstHist[iCurIndTiCor][i];
-
-			/* Add new value and write in memory */
-			veccTiCorrEst[i] += veccTiCorrEstSym[i];
-			matcTiCorrEstHist[iCurIndTiCor][i] = veccTiCorrEstSym[i];
-		}
-
-		/* Increase position pointer and test if wrap */
-		iCurIndTiCor++;
-		if (iCurIndTiCor == NO_SYM_AVER_TI_CORR)
-			iCurIndTiCor = 0;
-
 		/* Update filter coefficients once in one DRM frame */
 		if (iUpCntWienFilt > 0)
 		{
@@ -130,7 +110,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		else
 		{
 			/* Actual estimation of sigma */
-			rSigma = ModLinRegr(veccTiCorrEst);
+			rSigma = ModLinRegr(vecrTiCorrEst);
 
 			/* Use overestimated sigma for filter update */
 			rSigOverEst = rSigma * SIGMA_OVERESTIMATION_FACT;
@@ -146,7 +126,6 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			_REAL rNewSNR = (_REAL) 1.0 / rMMSE;
 			if (rNewSNR < rSNR)
 				rMMSE = (_REAL) 1.0 / rSNR;
-
 
 			/* Reset counter and sum (for SNR) */
 			iUpCntWienFilt = iNoSymPerFrame;
@@ -214,6 +193,8 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	int		i, j;
 	int		iNoPiFreqDirAll;
 	int		iSymDelyChanEst;
+	int		iNumPilOneOFDMSym;
+	int		iNoIntpFreqPil;
 	_REAL	rSNR;
 
 	/* Init base class, must be at the beginning of this init! */
@@ -224,6 +205,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	iScatPilTimeInt = ReceiverParam.iScatPilTimeInt;
 	iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
 	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
+	iNoIntpFreqPil = ReceiverParam.iNoIntpFreqPil;
 
 	/* We have to consider the last pilot at the end of the symbol ("+ 1") */
 	iNoPiFreqDirAll = iNoCarrier / iScatPilFreqInt + 1;
@@ -277,16 +259,21 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	else
 		iNumTapsSigEst = NO_TAPS_USED4SIGMA_EST;
 
-	/* Init matrix for estimation the correlation function in time direction
-	   (moving average) */
-	matcTiCorrEstHist.Init(NO_SYM_AVER_TI_CORR, iNumTapsSigEst, (CReal) 0.0);
-	veccTiCorrEst.Init(iNumTapsSigEst, (CReal) 0.0);
-	iCurIndTiCor = 0;
+	/* Init vector for estimation of the correlation function in time direction
+	   (IIR average) */
+	vecrTiCorrEst.Init(iNumTapsSigEst, (CReal) 0.0);
 
+	/* Init time constant for IIR filter for averaging correlation estimation.
+	   Consider averaging over frequency axis, too. Pilots in frequency
+	   direction are "iScatPilTimeInt * iScatPilFreqInt" apart */
+	iNumPilOneOFDMSym = iNoIntpFreqPil / iScatPilTimeInt;
+	rLamTiCorrAv = IIR1Lam(TICONST_TI_CORREL_EST * iNumPilOneOFDMSym,
+		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
 
-	/* Init Update counter for wiener filter update. Wait until moving
-	   average history is filled for the first time */
-	iUpCntWienFilt = NO_SYM_AVER_TI_CORR;
+	/* Init Update counter for wiener filter update. Wait aprox. half of the
+	   time of the time constant of the IIR filter */
+	iUpCntWienFilt = TICONST_TI_CORREL_EST * iNoSymPerFrame *
+		NUM_DRM_FRAMES_PER_MIN / 60 / 2;
 
 	/* Init averaging of SNR values */
 	rAvSNR = (_REAL) 0.0;
@@ -449,12 +436,12 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	return rMMSE;
 }
 
-CReal CTimeWiener::ModLinRegr(CComplexVector& veccCorrEst)
+CReal CTimeWiener::ModLinRegr(CRealVector& vecrCorrEst)
 {
 	/* Modified linear regresseion to estimate the "sigma" of the Gaussian
 	   correlation function */
 	/* Get vector length */
-	int iVecLen = Size(veccCorrEst);
+	int iVecLen = Size(vecrCorrEst);
 
 	/* Init vectors and variables */
 	CReal		rSigmaRet;
@@ -469,14 +456,11 @@ CReal CTimeWiener::ModLinRegr(CComplexVector& veccCorrEst)
 	for (int i = 0; i < iVecLen; i++)
 		Tau[i] = (CReal) (i * iScatPilTimeInt);
 
-	/*
-		% linearize acf equation:  y = a exp (-b x^2)
-		%
-		% z = ln y;   w = x^2
-		%
-		% -> z = a0 + a1 * w
-	*/
-	Z = Log(Abs(veccCorrEst)); /* acfm can be negative due to noise */
+	/* Linearize acf equation:  y = a * exp(-b * x^2)
+	   z = ln(y);   w = x^2
+	   -> z = a0 + a1 * w */
+	Z = Log(Abs(vecrCorrEst)); /* acfm can be negative due to noise */
+
 	W = Tau * Tau;
 
 	Wm = Mean(W);
@@ -486,6 +470,7 @@ CReal CTimeWiener::ModLinRegr(CComplexVector& veccCorrEst)
 
 	A1 = Sum(Wmrem * (Z - Zm)) / Sum(Wmrem * Wmrem);
 
+	/* Final sigma calculation from estimation and assumed Gaussian model */
 	rSigmaRet = (CReal) 0.5 / crPi * sqrt((CReal) -2.0 * A1) / Ts;
 
 	/* Bound estimated sigma value */

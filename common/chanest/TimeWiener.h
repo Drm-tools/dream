@@ -38,11 +38,6 @@
 
 
 /* Definitions ****************************************************************/
-/* Define the number of averaged estimates of the correlation of the channel in
-   time direction. This number comes from robustness mode B with 10 kHz 
-   bandwidth -> after approx. 1000 symbols a good estimate was done */
-#define NO_SYM_AVER_TI_CORR				1000
-
 /* Number of taps we want to use for sigma estimation */
 #define NO_TAPS_USED4SIGMA_EST			3
 
@@ -68,6 +63,9 @@
 
 /* Initial value for SNR */
 #define INIT_VALUE_SNR_WIEN_TIME_DB		((_REAL) 25.0) /* dB */
+
+/* Time constant for IIR averaging of time correlation estimation */
+#define TICONST_TI_CORREL_EST			((CReal) 60.0) /* sec */
 
 /* Overestimation factor for sigma estimation.
    We overestimate the sigma since the channel estimation result is much worse
@@ -104,7 +102,7 @@ protected:
 							const int iLength);
 	inline int DisToNextPil(int iPiHiIndex, int iSymNo);
 	_REAL UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
-	CReal ModLinRegr(CComplexVector& veccCorrEst);
+	CReal ModLinRegr(CRealVector& vecrCorrEst);
 
 	int					iNoCarrier;
 
@@ -114,9 +112,8 @@ protected:
 	
 	CMatrix<_COMPLEX>	matcChanAtPilPos;
 
-	CMatrix<_COMPLEX>	matcTiCorrEstHist;
-	CComplexVector		veccTiCorrEst;
-	int					iCurIndTiCor;
+	CRealVector			vecrTiCorrEst;
+	CReal				rLamTiCorrAv;
 
 	int					iScatPilFreqInt; /* Frequency interpolation */
 	int					iScatPilTimeInt; /* Time interpolation */
