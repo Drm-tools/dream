@@ -443,7 +443,8 @@ _UINT32BIT CParameter::CRawSimData::Get()
 
 
 /* Reception log implementation --------------------------------------------- */
-CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFile(NULL)
+CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFile(NULL),
+	iFrequency(0)
 {
 	ResetLog();
 }
@@ -514,7 +515,11 @@ void CParameter::CReceptLog::SetLog(_BOOLEAN bLog)
 			today->tm_year + 1900, today->tm_mon + 1, today->tm_mday,
 			today->tm_hour, today->tm_min, today->tm_sec);
 
-		fprintf(pFile, "Frequency        \nLatitude         \nLongitude        \n\n");
+		fprintf(pFile, "Frequency        ");
+		if (iFrequency != 0)
+			fprintf(pFile, "%d kHz", iFrequency);
+		
+		fprintf(pFile, "\nLatitude         \nLongitude        \n\n");
 
 		fprintf(pFile, "MINUTE  SNR     SYNC    AUDIO     TYPE\n");
 		fflush(pFile);

@@ -370,6 +370,7 @@ public:
 		void SetSNR(_REAL rCurSNR);
 		void SetNumAAC(int iNewNum);
 		void SetLog(_BOOLEAN bLog);
+		void SetFrequency(int iNewFreq) {iFrequency = iNewFreq;}
 		void WriteParameters();
 
 	protected:
@@ -378,6 +379,7 @@ public:
 		int				iNumSNR;
 		int				iNumCRCOkFAC, iNumCRCOkMSC;
 		int				iNumAACFrames, iMinuteCnt;
+		int				iFrequency;
 		_REAL			rAvSNR;
 		_BOOLEAN		bLogActivated;
 		FILE*			pFile;

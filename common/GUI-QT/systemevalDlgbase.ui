@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>733</width>
-            <height>568</height>
+            <width>729</width>
+            <height>559</height>
         </rect>
     </property>
     <property stdset="1">
@@ -622,7 +622,7 @@
                             <class>QLayoutWidget</class>
                             <property stdset="1">
                                 <name>name</name>
-                                <cstring>Layout20</cstring>
+                                <cstring>Layout22</cstring>
                             </property>
                             <vbox>
                                 <property stdset="1">
@@ -656,15 +656,60 @@
                                     </property>
                                 </widget>
                                 <widget>
-                                    <class>QCheckBox</class>
+                                    <class>QLayoutWidget</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>CheckBoxWriteLog</cstring>
+                                        <cstring>Layout21</cstring>
                                     </property>
-                                    <property stdset="1">
-                                        <name>text</name>
-                                        <string>Write Log File</string>
+                                    <property>
+                                        <name>layoutMargin</name>
                                     </property>
+                                    <property>
+                                        <name>layoutSpacing</name>
+                                    </property>
+                                    <hbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>0</number>
+                                        </property>
+                                        <widget>
+                                            <class>QCheckBox</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>CheckBoxWriteLog</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>Log File, Freq:</string>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>QLineEdit</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>EdtFrequency</cstring>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>QLabel</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>TextLabel1_3</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>kHz</string>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>indent</name>
+                                                <number>1</number>
+                                            </property>
+                                        </widget>
+                                    </hbox>
                                 </widget>
                             </vbox>
                         </widget>

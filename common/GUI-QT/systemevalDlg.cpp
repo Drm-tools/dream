@@ -668,6 +668,10 @@ void systemevalDlg::OnCheckWriteLog()
 		/* Activte log file timer, update time: 1 min (i.e. 60000 ms) */
 		TimerLogFile.start(60000);
 
+		/* Set frequency of front-end */
+		QString strFreq = EdtFrequency->text();
+		DRMReceiver.GetParameters()->ReceptLog.SetFrequency(strFreq.toUInt());
+
 		DRMReceiver.GetParameters()->ReceptLog.SetLog(TRUE);
 	}
 	else
