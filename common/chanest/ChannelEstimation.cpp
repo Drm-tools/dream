@@ -202,41 +202,76 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 	for (i = 0; i < iNumCarrier; i++)
 	{
-		/* Identify pilot positions. Use MODIFIED "iSymbolID" (See lines
-		   above) */
-		if (_IsScatPil(ReceiverParam.matiMapTab[iModSymNum][i]))
+		switch (TypeSNREst)
 		{
-			/* We assume that the channel estimation in "veccChanEst" is noise
-			   free (e.g., the wiener interpolation does noise reduction). 
-			   Thus, we have an estimate of the received signal power 
-			   \hat{r} = s * \hat{h}_{wiener} */
-			cModChanEst = 
-				veccChanEst[i] * ReceiverParam.matcPilotCells[iModSymNum][i];
+		case SNR_PIL:
+			/* Identify pilot positions. Use MODIFIED "iSymbolID" (See lines
+			   above) */
+			if (_IsScatPil(ReceiverParam.matiMapTab[iModSymNum][i]))
+			{
+				/* We assume that the channel estimation in "veccChanEst" is
+				   noise free (e.g., the wiener interpolation does noise
+				   reduction). Thus, we have an estimate of the received signal
+				   power \hat{r} = s * \hat{h}_{wiener} */
+				cModChanEst = veccChanEst[i] *
+					ReceiverParam.matcPilotCells[iModSymNum][i];
 
 
-			/* Calculate and average noise and signal estimates ------------- */
-			/* The noise estimation is difference between the noise reduced
-			   signal and the noisy received signal
-			   \tilde{n} = \hat{r} - r */
-			IIR1(rNoiseEst, SqMag(matcHistory[0][i] - cModChanEst),
-				rLamSNREstFast);
+				/* Calculate and average noise and signal estimates --------- */
+				/* The noise estimation is difference between the noise reduced
+				   signal and the noisy received signal
+				   \tilde{n} = \hat{r} - r */
+				IIR1(rNoiseEst, SqMag(matcHistory[0][i] - cModChanEst),
+					rLamSNREstFast);
 
-			/* The received signal power estimation is just \hat{r} */
-			IIR1(rSignalEst, SqMag(cModChanEst), rLamSNREstFast);
+				/* The received signal power estimation is just \hat{r} */
+				IIR1(rSignalEst, SqMag(cModChanEst), rLamSNREstFast);
 
-			/* Calculate final result (signal to noise ratio) */
-			if (rNoiseEst != 0)
-				rCurSNREst = rSignalEst / rNoiseEst;
-			else
-				rCurSNREst = (_REAL) 1.0;
+				/* Calculate final result (signal to noise ratio) */
+				if (rNoiseEst != 0)
+					rCurSNREst = rSignalEst / rNoiseEst;
+				else
+					rCurSNREst = (_REAL) 1.0;
 
-			/* Bound the SNR at 0 dB */
-			if (rCurSNREst < (_REAL) 1.0)
-				rCurSNREst = (_REAL) 1.0;
+				/* Bound the SNR at 0 dB */
+				if (rCurSNREst < (_REAL) 1.0)
+					rCurSNREst = (_REAL) 1.0;
 
-			/* Average the SNR with a two sided recursion */
-			IIR1TwoSided(rSNREstimate, rCurSNREst, rLamSNREstFast,
-				rLamSNREstSlow);
+				/* Average the SNR with a two sided recursion */
+				IIR1TwoSided(rSNREstimate, rCurSNREst, rLamSNREstFast,
+					rLamSNREstSlow);
+			}
+			break;
+
+		case SNR_FAC:
+			/* Only use FAC cells for this SNR estimation method */
+			if (_IsFAC(ReceiverParam.matiMapTab[iModSymNum][i]))
+			{
+				/* Get tentative decision for current FAC cell (squared) */
+				CReal rCurErrPow = TentativeFACDec((*pvecOutputData)[i].cSig);
+
+				/* Use decision together with channel estimate to get estimates
+				   for signal and noise */
+				IIR1(rNoiseEst, rCurErrPow * (*pvecOutputData)[i].rChan,
+					rLamSNREstFast);
+
+				IIR1(rSignalEst, (*pvecOutputData)[i].rChan, rLamSNREstFast);
+
+				/* Calculate final result (signal to noise ratio) */
+				if (rNoiseEst != (_REAL) 0.0)
+					rCurSNREst = rSignalEst / rNoiseEst;
+				else
+					rCurSNREst = (_REAL) 1.0;
+
+				/* Bound the SNR at 0 dB */
+				if (rCurSNREst < (_REAL) 1.0)
+					rCurSNREst = (_REAL) 1.0;
+
+				/* The channel estimation algorithms need the SNR normalized to
+				   the energy of the pilots */
+				rSNREstimate = rCurSNREst / rSNRCorrectFact;
+			}
+			break;
 		}
 	}
 
@@ -357,8 +392,8 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* Inits for SNR estimation (noise and signal averages) */
 	rSNREstimate = (_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10);
-	rNoiseEst = (_REAL) 0.0;
 	rSignalEst = (_REAL) 0.0;
+	rNoiseEst = (_REAL) 0.0;
 
 	/* Lambda for IIR filter */
 	rLamSNREstFast = IIR1Lam(TICONST_SNREST_FAST, (CReal) SOUNDCRD_SAMPLE_RATE /
@@ -565,6 +600,27 @@ fflush(pFile);
 	}
 }
 
+CReal CChannelEstimation::TentativeFACDec(const CComplex cCurRec) const
+{
+/* 
+	Get tentative decision for this FAC QAM symbol. FAC is always 4-QAM.
+	First calculate all distances to the four possible constellation points
+	of a 4-QAM
+*/
+	/* Real axis minimum distance */
+	const CReal rDistReal = Min(
+		Abs(rTableQAM4[0][0] - Real(cCurRec)),
+		Abs(rTableQAM4[1][0] - Real(cCurRec)));
+
+	/* Imaginary axis minimum distance */
+	const CReal rDistImag = Min(
+		Abs(rTableQAM4[0][1] - Imag(cCurRec)),
+		Abs(rTableQAM4[1][1] - Imag(cCurRec)));
+
+	/* Return squared minimum distance */
+	return SqMag(CComplex(rDistReal, rDistImag));
+}
+
 _REAL CChannelEstimation::GetSNREstdB() const
 {
 	/* Bound the SNR at 0 dB */
@@ -630,5 +686,3 @@ void CChannelEstimation::GetAvPoDeSp(CVector<_REAL>& vecrData,
 	/* Release resources */
 	Unlock();
 }
-
-

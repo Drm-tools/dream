@@ -32,6 +32,7 @@
 #include "../Parameter.h"
 #include "../Modul.h"
 #include "../ofdmcellmapping/OFDMCellMapping.h"
+#include "../tables/TableQAMMapping.h"
 #include "../matlib/Matlib.h"
 #include "TimeLinear.h"
 #include "TimeWiener.h"
@@ -69,11 +70,13 @@ class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
 {
 public:
 	CChannelEstimation() : iLenHistBuff(0), TypeIntFreq(FWIENER), 
-		TypeIntTime(TWIENER), eDFTWindowingMethod(DFT_WIN_HAMM) {}
+		TypeIntTime(TWIENER), eDFTWindowingMethod(DFT_WIN_HAMM),
+		TypeSNREst(SNR_FAC) {}
 	virtual ~CChannelEstimation() {}
 
 	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
 	enum ETypeIntTime {TLINEAR, TWIENER, TDECIDIR};
+	enum ETypeSNREst {SNR_FAC, SNR_PIL};
 
 	void GetTransferFunction(CVector<_REAL>& vecrData, 
 		CVector<_REAL>& vecrScale);
@@ -92,6 +95,10 @@ public:
 	void SetTimeInt(ETypeIntTime eNewTy) {TypeIntTime = eNewTy;
 		SetInitFlag();}
 	ETypeIntTime GetTimeInt() const {return TypeIntTime;}
+
+	/* Which SNR estimation algorithm */
+	void SetSNREst(ETypeSNREst eNewTy) {TypeSNREst = eNewTy;}
+	ETypeSNREst GetSNREst() {return TypeSNREst;}
 
 	_REAL GetSNREstdB() const;
 	_REAL GetSigma() {return TimeWiener.GetSigma();}
@@ -112,6 +119,7 @@ protected:
 
 	ETypeIntFreq		TypeIntFreq;
 	ETypeIntTime		TypeIntTime;
+	ETypeSNREst			TypeSNREst;
 
 	int					iNumCarrier;
 
@@ -150,6 +158,8 @@ protected:
 	_REAL				rMaxDelaySprInFra;
 
 	int					iStartZeroPadding;
+
+	CReal				TentativeFACDec(const CComplex cCurRec) const;
 
 	/* Wiener interpolation in frequency direction */
 	void UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio);
