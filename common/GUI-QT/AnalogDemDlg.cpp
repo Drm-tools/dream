@@ -169,7 +169,7 @@ void AnalogDemDlg::UpdateControls()
 	SliderBandwidth->setValue(DRMReceiver.GetAMDemod()->GetFilterBW());
 	TextLabelBandWidth->setText(tr("Bandwidth: ") +
 		QString().setNum(DRMReceiver.GetAMDemod()->GetFilterBW()) +
-		tr("kHz"));
+		tr(" Hz"));
 
 	/* Update mute audio switch and write wave file */
 	CheckBoxMuteAudio->setChecked(DRMReceiver.GetWriteData()->GetMuteAudio());
@@ -274,7 +274,7 @@ void AnalogDemDlg::OnSliderBWChange(int value)
 	/* Set new filter in processing module */
 	DRMReceiver.GetAMDemod()->SetFilterBW(value);
 	TextLabelBandWidth->setText(tr("Bandwidth: ") +
-		QString().setNum(value) + tr("kHz"));
+		QString().setNum(value) + tr(" Hz"));
 
 	/* Store filter bandwidth for this demodulation type */
 	switch (DRMReceiver.GetAMDemod()->GetDemodType())
