@@ -364,7 +364,7 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 
 	/* TenTec RX320D */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_RX320,
-		"l_AF=1,l_AGC=3,m_USB=6000", 0,
+		"l_AF=1,l_AGC=3,m_AM=6000", 0,
 		"l_AGC=3"));
 
 	/* TenTec RX340D */
