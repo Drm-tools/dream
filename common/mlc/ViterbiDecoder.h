@@ -98,11 +98,11 @@ protected:
 	int						iNumOutBitsPartA;
 	int						iNumOutBits;
 	int						iNumOutBitsWithMemory;
-	_UINT32BIT				iTailBitPat;
-	_UINT32BIT				iPartAPat;
 	int						iPartAPatLen;
-	_UINT32BIT				iPartBPat;
+	CVector<int>			veciPuncPatPartA;
 	int						iPartBPatLen;
+	CVector<int>			veciPuncPatPartB;
+	CVector<int>			veciTailBitPat;
 
 	int						iTotalDecDepth;
 	_UINT64BIT				lOutBitMask;

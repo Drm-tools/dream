@@ -34,13 +34,10 @@
 int CConvEncoder::Encode(CVector<_BINARY>& vecInputData, 
 						 CVector<_BINARY>& vecOutputData)
 {
-	int				i, k;
-	int				iOutputCounter;
-	_UINT32BIT		iPunctCounter;
-	int				iTailbitPattern;
-	_UINT32BIT		iPuncPatShiftReg;
-	_BYTE			byStateShiftReg;
-	int				iNoBitsRegPunct;
+	int		iOutputCounter;
+	int		iPunctCounter;
+	int		iCurPunctPattern;
+	_BYTE	byStateShiftReg;
 
 	/* Set output size to zero, increment it each time a new bit is encoded */
 	iOutputCounter = 0;
@@ -49,42 +46,53 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 	iPunctCounter = 0;
 	byStateShiftReg = 0;
 
-	/* FAC with no special tailbit pattern */
-	if (eChannelType == CParameter::CT_FAC)
-		iNoBitsRegPunct = iNumInBitsWithMemory;
-	else
-		iNoBitsRegPunct = iNumInBits;
 
-	for (i = 0; i < iNoBitsRegPunct; i++)
+	for (int i = 0; i < iNumInBitsWithMemory; i++)
 	{
 		/* Prepare puncturing pattern --------------------------------------- */
 		if (i < iNumInBitsPartA)
 		{
 			/* Puncturing patterns part A */
-			/* Refill shift register after a wrap */
-			if (iPunctCounter == 0)
-				iPuncPatShiftReg = iPartAPat;
+			/* Get current pattern */
+			iCurPunctPattern = veciPuncPatPartA[iPunctCounter];
 
-			/* Increase puncturing-counter and manage wrap */
+			/* Increment index and take care of wrap around */
 			iPunctCounter++;
 			if (iPunctCounter == iPartAPatLen)
 				iPunctCounter = 0;
 		}
 		else
 		{
-			/* Puncturing patterns part B */
-			/* Reset counter when beginning part B */
-			if (i == iNumInBitsPartA)
-				iPunctCounter = 0;
+			/* In case of FAC do not use special tailbit-pattern! */
+			if ((i < iNumInBits) || (eChannelType == CParameter::CT_FAC))
+			{
+				/* Puncturing patterns part B */
+				/* Reset counter when beginning of part B is reached */
+				if (i == iNumInBitsPartA)
+					iPunctCounter = 0;
 
-			/* Refill shift register after a wrap */
-			if (iPunctCounter == 0)
-				iPuncPatShiftReg = iPartBPat;
+				/* Get current pattern */
+				iCurPunctPattern = veciPuncPatPartB[iPunctCounter];
 
-			/* Increase puncturing-counter and manage wrap */
-			iPunctCounter++;
-			if (iPunctCounter == iPartBPatLen)
-				iPunctCounter = 0;
+				/* Increment index and take care of wrap around */
+				iPunctCounter++;
+				if (iPunctCounter == iPartBPatLen)
+					iPunctCounter = 0;
+			}
+			else
+			{
+				/* Tailbits */
+				/* Check when tailbit pattern starts */
+				if (i == iNumInBits)
+					iPunctCounter = 0;
+
+				/* Set tailbit pattern */
+				iCurPunctPattern = veciTailBitPat[iPunctCounter];
+
+				/* No test for wrap around needed, since there ist only one
+				   cycle of this pattern */
+				iPunctCounter++;
+			}
 		}
 
 
@@ -92,8 +100,8 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 		/* Shift bits in state-shift-register */
 		byStateShiftReg <<= 1;
 
-		/* In case of FAC, the tailbits must be calculated in this loop. Check
-		   when end of vector is reached and no more bits must be added */
+		/* Tailbits are calculated in this loop. Check when end of vector is
+		   reached and no more bits must be added */
 		if (i < iNumInBits)
 		{
 			/* Add new bit at the beginning */
@@ -101,93 +109,69 @@ int CConvEncoder::Encode(CVector<_BINARY>& vecInputData,
 				byStateShiftReg |= 1;
 		}
 
-		for (k = 0; k < MC_NO_OUTPUT_BITS_PER_STEP; k++)
+
+		/* Puncturing ------------------------------------------------------- */
+		/* Depending on the current puncturing pattern, different numbers of
+		   output bits are generated. The state shift register "byStateShiftReg"
+		   is convoluted with the respective patterns for this bit (is done
+		   inside the convolution function) */
+		switch (iCurPunctPattern)
 		{
-			/* Puncturing --------------------------------------------------- */
-			/* Mask first bit (LSB) */
-			if (iPuncPatShiftReg & 1)
-			{
-				/* Calculate convolution and put result in transitory 
-				   output vector */
-				vecOutputData[iOutputCounter] = Convolution(byStateShiftReg, k);
+		case PP_TYPE_0001:
+			/* Pattern 0001 */
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 0);
+			break;
 
-				/* Set new fill-level */
-				iOutputCounter++;
-			}
+		case PP_TYPE_0101:
+			/* Pattern 0101 */
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 0);
+	
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 2);
+			break;
 
-			/* Shift puncturing mask for next output bit */
-			iPuncPatShiftReg >>= 1;
+		case PP_TYPE_0011:
+			/* Pattern 0011 */
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 0);
+	
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 1);
+			break;
+
+		case PP_TYPE_0111:
+			/* Pattern 0111 */
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 0);
+	
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 1);
+
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 2);
+			break;
+
+		case PP_TYPE_1111:
+			/* Pattern 1111 */
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 0);
+	
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 1);
+
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 2);
+
+			vecOutputData[iOutputCounter++] =
+				Convolution(byStateShiftReg, 3);
+			break;
 		}
-	}
-
-
-	/* Tailbits ***************************************************************/
-	/* Tailbit patterns are NOT USED with FAC! */
-	if (eChannelType != CParameter::CT_FAC)
-	{
-		/* Fill shift register for the first time */
-		iPuncPatShiftReg = iTailBitPat;
-	
-		for (i = 0; i < MC_CONSTRAINT_LENGTH - 1; i++)
-		{
-			/* Update shift-register (state information) -------------------- */
-			/* Shift bits in state-shift-register (implicitely a 0 is added) */
-			byStateShiftReg <<= 1;
-	
-			for (k = 0; k < MC_NO_OUTPUT_BITS_PER_STEP; k++)
-			{
-				/* Puncturing for tailbits ---------------------------------- */
-				/* Mask first bit (LSB) */
-				if (iPuncPatShiftReg & 1)
-				{
-					/* Calculate convolution */
-					vecOutputData[iOutputCounter] = 
-						Convolution(byStateShiftReg, k);
-	
-					/* Set new fill-level */
-					iOutputCounter++;
-				}
-	
-				/* Shift puncturing mask for next output bit */
-				iPuncPatShiftReg >>= 1;
-			}
-		}	
 	}
 
 	/* Return number of encoded bits */
 	return iOutputCounter;
-}
-
-_BINARY CConvEncoder::Convolution(const _BYTE byNewStateShiftReg,
-								  const int iGenPolyn) const
-{
-	/* This table was generated by the code given in the constructor of class
-	   "CConvEncoder" */
-	static _BINARY vecbiConvTable[256] = {
-		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1, 
-		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-		0, 1, 1, 0, 1, 0, 0, 1, 1, 0, 0, 1, 0, 1, 1, 0, 
-		1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 0, 1, 0, 0, 1
-	};
-
-	/* Mask bits with generator polynomial and get convolution result from
-	   pre-calculated table (speed optimization). Since we have a AND
-	   operation on the "byGeneratorMatrix", the index of the convolution
-	   table cannot exceed the size of the table (although the value in
-	   "byNewStateShiftReg" can be larger) */
-	return vecbiConvTable[byNewStateShiftReg & byGeneratorMatrix[iGenPolyn]];
 }
 
 void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme,
@@ -196,6 +180,7 @@ void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme,
 						int iNewNumInBitsPartB, int iPunctPatPartA,
 						int iPunctPatPartB, int iLevel)
 {
+	int i;
 	int	iTailbitPattern;
 	int	iTailbitParamL0;
 	int	iTailbitParamL1;
@@ -211,13 +196,6 @@ void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme,
 	iNumInBitsWithMemory = iNumInBits + MC_CONSTRAINT_LENGTH - 1;
 
 
-	/* Set puncturing bit patterns and lengths ------------------------------ */
-	iPartAPat = iPuncturingPatterns[iPunctPatPartA][2];
-	iPartBPat = iPuncturingPatterns[iPunctPatPartB][2];
-	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
-	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
-
-	
 	/* Set tail-bit pattern ------------------------------------------------- */
 	/* We have to consider two cases because in HSYM "N1 + N2" is used
 	   instead of only "N2" to calculate the tailbit pattern */
@@ -251,7 +229,26 @@ void CConvEncoder::Init(CParameter::ECodScheme eNewCodingScheme,
 			(int) ((iTailbitParamL1 - 12) /
 			iPuncturingPatterns[iPunctPatPartB][1]);
 
-	iTailBitPat = iPunctPatTailbits[iTailbitPattern];
+
+	/* Set puncturing bit patterns and lengths ------------------------------ */
+	/* Lengths */
+	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
+	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
+
+	/* Vector, storing patterns for part A. Patterns begin at [][2 + x] */
+	veciPuncPatPartA.Init(iPartAPatLen);
+	for (i = 0; i < iPartAPatLen; i++)
+		veciPuncPatPartA[i] = iPuncturingPatterns[iPunctPatPartA][2 + i];
+
+	/* Vector, storing patterns for part B. Patterns begin at [][2 + x] */
+	veciPuncPatPartB.Init(iPartBPatLen);
+	for (i = 0; i < iPartBPatLen; i++)
+		veciPuncPatPartB[i] = iPuncturingPatterns[iPunctPatPartB][2 + i];
+
+	/* Vector, storing patterns for tailbit pattern */
+	veciTailBitPat.Init(LENGTH_TAIL_BIT_PAT);
+	for (i = 0; i < LENGTH_TAIL_BIT_PAT; i++)
+		veciTailBitPat[i] = iPunctPatTailbits[iTailbitPattern][i];
 }
 
 CConvEncoder::CConvEncoder()

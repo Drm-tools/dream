@@ -35,16 +35,13 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 {
 	int				i, j, k;
 	int				iDistCnt;
-	int				iDistCntGlob;
 	int				iMinMetricIndex;
+	int				iCurPunctPattern;
+	int				iPunctCounter;
 	_VITMETRTYPE	rAccMetricPrev0;
 	_VITMETRTYPE	rAccMetricPrev1;
 	_VITMETRTYPE	rMinMetric;
 	_VITMETRTYPE	rCurMetric;
-	_UINT32BIT		iPuncPatShiftRegShifted;
-	_UINT32BIT		iPuncPatShiftReg;
-	_UINT32BIT		iPunctCounter;
-	int				iBitMask;
 	CTrellisData*	pCurTrelData;
 	CTrellisData*	pOldTrelData;
 
@@ -59,8 +56,8 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	for (i = 1; i < MC_NO_STATES; i++)
 		pOldTrelData[i].rMetric = MC_METRIC_INIT_VALUE;
 
-	/* Reset counter for puncturing and distance (metric) */
-	iDistCntGlob = 0;
+	/* Reset counter for puncturing and distance (from metric) */
+	iDistCnt = 0;
 	iPunctCounter = 0;
 
 
@@ -73,11 +70,10 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 		if (i < iNumOutBitsPartA)
 		{
 			/* Puncturing patterns part A */
-			/* Refill shift register after a wrap */
-			if (iPunctCounter == 0)
-				iPuncPatShiftReg = iPartAPat;
+			/* Get current pattern */
+			iCurPunctPattern = veciPuncPatPartA[iPunctCounter];
 
-			/* Increase puncturing-counter and manage wrap */
+			/* Increment index and take care of wrap around */
 			iPunctCounter++;
 			if (iPunctCounter == iPartAPatLen)
 				iPunctCounter = 0;
@@ -88,15 +84,14 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			if ((i < iNumOutBits) || (eChannelType == CParameter::CT_FAC))
 			{
 				/* Puncturing patterns part B */
-				/* Reset counter when beginning part B */
+				/* Reset counter when beginning of part B is reached */
 				if (i == iNumOutBitsPartA)
 					iPunctCounter = 0;
 
-				/* Refill shift register after a wrap */
-				if (iPunctCounter == 0)
-					iPuncPatShiftReg = iPartBPat;
+				/* Get current pattern */
+				iCurPunctPattern = veciPuncPatPartB[iPunctCounter];
 
-				/* Increase puncturing-counter and manage wrap */
+				/* Increment index and take care of wrap around */
 				iPunctCounter++;
 				if (iPunctCounter == iPartBPatLen)
 					iPunctCounter = 0;
@@ -104,54 +99,137 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 			else
 			{
 				/* Tailbits */
-				/* Set tailbit pattern (no counter needed since there ist
-				   only one cycle of this pattern) */
+				/* Check when tailbit pattern starts */
 				if (i == iNumOutBits)
-					iPuncPatShiftReg = iTailBitPat;
+					iPunctCounter = 0;
+
+				/* Set tailbit pattern */
+				iCurPunctPattern = veciTailBitPat[iPunctCounter];
+
+				/* No test for wrap around needed, since there ist only one
+				   cycle of this pattern */
+				iPunctCounter++;
 			}
 		}
 
 
 		/* Calculate all possible metrics ----------------------------------- */
-		/* Try all possible output combinations of the encoder */
-		for (k = 0; k < MC_NO_OUTPUT_COMBINATIONS; k++)
+		/* There are only a small set of possible puncturing patterns used for
+		   DRM: 0001, 0101, 0011, 0111, 1111. These need different numbers of
+		   input bits (increment of "iDistCnt" is dependent on pattern!). To
+		   optimize the calculation of the metrics, a "subset" of bits are first
+		   calculated which are used to get the final result. In this case,
+		   redundancy can be avoided.
+		   Note, that not all possible bit-combinations are used in the coder,
+		   only a subset of numbers: 0, 2, 4, 6, 9, 11, 13, 15 (compare numbers
+		   in the BUTTERFLY( ) calls) */
+
+		/* Get first position in input vector (is needed for all cases) */
+		const int iPos0 = iDistCnt;
+		iDistCnt++;
+
+		if (iCurPunctPattern == PP_TYPE_0001)
 		{
-			/* For each metric we need the same distance count and puncturing
-			   pattern */
-			iDistCnt = iDistCntGlob;
-			iPuncPatShiftRegShifted = iPuncPatShiftReg;
-
-			rCurMetric = (_VITMETRTYPE) 0;
-			iBitMask = 1;
-
-			for (j = 0; j < MC_NO_OUTPUT_BITS_PER_STEP; j++)
-			{
-				/* Mask first bit (LSB) */
-				if (iPuncPatShiftRegShifted & 1)
-				{
-					/* We define the metrics order: [b_3, b_2, b_1, b_0] */
-					if (k & iBitMask)
-						rCurMetric += vecNewDistance[iDistCnt].rTow1; /* "1" */
-					else
-						rCurMetric += vecNewDistance[iDistCnt].rTow0; /* "0" */
-
-					iDistCnt++;
-				}
-
-				/* Shift puncturing mask for next output bit */
-				iPuncPatShiftRegShifted >>= 1;
-
-				/* Shift bit mask */
-				iBitMask <<= 1;
-			}
-
-			/* Set new value in vector */
-			vecrMetricSet[k] = rCurMetric;
+			/* Pattern 0001 */
+			vecrMetricSet[ 0] = vecNewDistance[iPos0].rTow0;
+			vecrMetricSet[ 2] = vecNewDistance[iPos0].rTow0;
+			vecrMetricSet[ 4] = vecNewDistance[iPos0].rTow0;
+			vecrMetricSet[ 6] = vecNewDistance[iPos0].rTow0;
+			vecrMetricSet[ 9] = vecNewDistance[iPos0].rTow1;
+			vecrMetricSet[11] = vecNewDistance[iPos0].rTow1;
+			vecrMetricSet[13] = vecNewDistance[iPos0].rTow1;
+			vecrMetricSet[15] = vecNewDistance[iPos0].rTow1;
 		}
+		else
+		{
+			/* The following patterns need one more bit */
+			const int iPos1 = iDistCnt;
+			iDistCnt++;
 
-		/* Save shifted register and distance count for next loop */
-		iPuncPatShiftReg = iPuncPatShiftRegShifted;
-		iDistCntGlob = iDistCnt;
+			/* Calculate "subsets" of bit-combinations. "rIRxx00" means that
+			   the fist two bits are used, others are x-ed. "IR" stands for
+			   "intermediate result" */
+			_VITMETRTYPE rIRxx00 =
+				vecNewDistance[iPos1].rTow0 + vecNewDistance[iPos0].rTow0;
+			_VITMETRTYPE rIRxx10 =
+				vecNewDistance[iPos1].rTow1 + vecNewDistance[iPos0].rTow0;
+			_VITMETRTYPE rIRxx01 =
+				vecNewDistance[iPos1].rTow0 + vecNewDistance[iPos0].rTow1;
+			_VITMETRTYPE rIRxx11 =
+				vecNewDistance[iPos1].rTow1 + vecNewDistance[iPos0].rTow1;
+
+			if (iCurPunctPattern == PP_TYPE_0101)
+			{
+				/* Pattern 0101 */
+				vecrMetricSet[ 0] = rIRxx00;
+				vecrMetricSet[ 2] = rIRxx00;
+				vecrMetricSet[ 4] = rIRxx10;
+				vecrMetricSet[ 6] = rIRxx10;
+				vecrMetricSet[ 9] = rIRxx01;
+				vecrMetricSet[11] = rIRxx01;
+				vecrMetricSet[13] = rIRxx11;
+				vecrMetricSet[15] = rIRxx11;
+			}
+			else if (iCurPunctPattern == PP_TYPE_0011)
+			{
+				/* Pattern 0011 */
+				vecrMetricSet[ 0] = rIRxx00;
+				vecrMetricSet[ 2] = rIRxx10;
+				vecrMetricSet[ 4] = rIRxx00;
+				vecrMetricSet[ 6] = rIRxx10;
+				vecrMetricSet[ 9] = rIRxx01;
+				vecrMetricSet[11] = rIRxx11;
+				vecrMetricSet[13] = rIRxx01;
+				vecrMetricSet[15] = rIRxx11;
+			}
+			else
+			{
+				/* The following patterns need one more bit */
+				const int iPos2 = iDistCnt;
+				iDistCnt++;
+
+				if (iCurPunctPattern == PP_TYPE_0111)
+				{
+					/* Pattern 0111 */
+					vecrMetricSet[ 0] = vecNewDistance[iPos2].rTow0 + rIRxx00;
+					vecrMetricSet[ 2] = vecNewDistance[iPos2].rTow0 + rIRxx10;
+					vecrMetricSet[ 4] = vecNewDistance[iPos2].rTow1 + rIRxx00;
+					vecrMetricSet[ 6] = vecNewDistance[iPos2].rTow1 + rIRxx10;
+					vecrMetricSet[ 9] = vecNewDistance[iPos2].rTow0 + rIRxx01;
+					vecrMetricSet[11] = vecNewDistance[iPos2].rTow0 + rIRxx11;
+					vecrMetricSet[13] = vecNewDistance[iPos2].rTow1 + rIRxx01;
+					vecrMetricSet[15] = vecNewDistance[iPos2].rTow1 + rIRxx11;
+				}
+				else
+				{
+					/* Pattern 1111 */
+					/* This pattern needs all four bits */
+					const int iPos3 = iDistCnt;
+					iDistCnt++;
+
+					/* Calculate "subsets" of bit-combinations. "rIRxx00" means
+					   that the last two bits are used, others are x-ed.
+					   "IR" stands for "intermediate result" */
+					_VITMETRTYPE rIR00xx = vecNewDistance[iPos3].rTow0 +
+						vecNewDistance[iPos2].rTow0;
+					_VITMETRTYPE rIR10xx = vecNewDistance[iPos3].rTow1 +
+						vecNewDistance[iPos2].rTow0;
+					_VITMETRTYPE rIR01xx = vecNewDistance[iPos3].rTow0 +
+						vecNewDistance[iPos2].rTow1;
+					_VITMETRTYPE rIR11xx = vecNewDistance[iPos3].rTow1 +
+						vecNewDistance[iPos2].rTow1;
+
+					vecrMetricSet[ 0] = rIR00xx + rIRxx00; /* 0 */
+					vecrMetricSet[ 2] = rIR00xx + rIRxx10; /* 2 */
+					vecrMetricSet[ 4] = rIR01xx + rIRxx00; /* 4 */
+					vecrMetricSet[ 6] = rIR01xx + rIRxx10; /* 6 */
+					vecrMetricSet[ 9] = rIR10xx + rIRxx01; /* 9 */
+					vecrMetricSet[11] = rIR10xx + rIRxx11; /* 11 */
+					vecrMetricSet[13] = rIR11xx + rIRxx01; /* 13 */
+					vecrMetricSet[15] = rIR11xx + rIRxx11; /* 15 */
+				}
+			}
+		}
 
 
 		/* ------------------------------------------------------------------ */
@@ -309,7 +387,7 @@ _REAL CViterbiDecoder::Decode(CVector<CDistance>& vecNewDistance,
 	}
 
 	/* Return normalized accumulated minimum metric */
-	return rMinMetric / iDistCntGlob;
+	return rMinMetric / iDistCnt;
 }
 
 void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
@@ -318,6 +396,7 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
 						   int iNewNumOutBitsPartB, int iPunctPatPartA,
 						   int iPunctPatPartB, int iLevel)
 {
+	int i;
 	int	iTailbitPattern;
 	int	iTailbitParamL0;
 	int	iTailbitParamL1;
@@ -337,13 +416,6 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
 	lOutBitMask = _UINT64BIT(1) << MC_DECODING_DEPTH;
 
 
-	/* Set puncturing bit patterns and lengths ------------------------------ */
-	iPartAPat = iPuncturingPatterns[iPunctPatPartA][2];
-	iPartBPat = iPuncturingPatterns[iPunctPatPartB][2];
-	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
-	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
-
-	
 	/* Set tail-bit pattern ------------------------------------------------- */
 	/* We have to consider two cases because in HSYM "N1 + N2" is used
 	   instead of only "N2" to calculate the tailbit pattern */
@@ -377,7 +449,26 @@ void CViterbiDecoder::Init(CParameter::ECodScheme eNewCodingScheme,
 			(int) ((iTailbitParamL1 - 12) /
 			iPuncturingPatterns[iPunctPatPartB][1]);
 
-	iTailBitPat = iPunctPatTailbits[iTailbitPattern];
+
+	/* Set puncturing bit patterns and lengths ------------------------------ */
+	/* Lengths */
+	iPartAPatLen = iPuncturingPatterns[iPunctPatPartA][0];
+	iPartBPatLen = iPuncturingPatterns[iPunctPatPartB][0];
+
+	/* Vector, storing patterns for part A. Patterns begin at [][2 + x] */
+	veciPuncPatPartA.Init(iPartAPatLen);
+	for (i = 0; i < iPartAPatLen; i++)
+		veciPuncPatPartA[i] = iPuncturingPatterns[iPunctPatPartA][2 + i];
+
+	/* Vector, storing patterns for part B. Patterns begin at [][2 + x] */
+	veciPuncPatPartB.Init(iPartBPatLen);
+	for (i = 0; i < iPartBPatLen; i++)
+		veciPuncPatPartB[i] = iPuncturingPatterns[iPunctPatPartB][2 + i];
+
+	/* Vector, storing patterns for tailbit pattern */
+	veciTailBitPat.Init(LENGTH_TAIL_BIT_PAT);
+	for (i = 0; i < LENGTH_TAIL_BIT_PAT; i++)
+		veciTailBitPat[i] = iPunctPatTailbits[iTailbitPattern][i];
 }
 
 CViterbiDecoder::CViterbiDecoder()
