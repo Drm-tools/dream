@@ -119,8 +119,9 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			if (iSymbCntFraSy == iNumSymPerFrame - iMiddleOfInterval - 1)
 			{
-				/* Reset flag */
+				/* Reset flags */
 				bBadFrameSync = FALSE;
+				bFrameSyncWasOK = TRUE;
 
 				/* Post Message for GUI (Good frame sync) */
 				PostWinMessage(MS_FRAME_SYNC, 0); /* green */
@@ -153,10 +154,18 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 					   measurement, then correct it */
 					bBadFrameSync = TRUE;
 
-					/* Post Message that frame sync was wrong but was not yet
-					   corrected (yellow light) */
-					PostWinMessage(MS_FRAME_SYNC, 1); /* yellow */
+					if (bFrameSyncWasOK == TRUE)
+					{
+						/* Post Message that frame sync was wrong but was not
+						   yet corrected (yellow light) */
+						PostWinMessage(MS_FRAME_SYNC, 1); /* yellow */
+					}
+					else
+						PostWinMessage(MS_FRAME_SYNC, 2); /* red */
 				}
+
+				/* Set flag for bad sync */
+				bFrameSyncWasOK = FALSE;
 			}
 
 			/* Reset flag which shows that init was done */
@@ -328,6 +337,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	/* After an initialization the frame sync must be adjusted */
 	bBadFrameSync = TRUE;
 	bInitFrameSync = TRUE; /* Set flag to show that (re)-init was done */
+	bFrameSyncWasOK = FALSE;
 
 	/* Allocate memory for histories. Init history with large values, because
 	   we search for minimum! */

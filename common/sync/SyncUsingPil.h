@@ -96,6 +96,7 @@ protected:
 
 	_BOOLEAN				bBadFrameSync;
 	_BOOLEAN				bInitFrameSync;
+	_BOOLEAN				bFrameSyncWasOK;
 
 	_BOOLEAN				bSyncInput;
 
