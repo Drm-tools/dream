@@ -1,0 +1,204 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001
+ *
+ * Author(s):
+ *	Volker Fischer
+ *
+ * Description:
+ *	Implementation of an analog AM demodulation	
+ *
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later 
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc., 
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#include "AMDemodulation.h"
+
+
+/* Implementation *************************************************************/
+void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
+{
+	int		i, j;
+	CReal	rNormCurFreqOffset;
+	CReal	rMaxPeak;
+	int		iIndMaxPeak;
+
+	/* Acquisition ---------------------------------------------------------- */
+	if (bAcquisition == TRUE)
+	{
+		/* Add new symbol in history (shift register) */
+		vecrFFTHistory.AddEnd((*pvecInputData), iSymbolBlockSize);
+
+		if (iAquisitionCounter > 0)
+		{
+			/* Decrease counter */
+			iAquisitionCounter--;
+		}
+		else
+		{
+			/* Real-valued FFTW */
+			rfftw_one(RFFTWPlan, &vecrFFTHistory[0], &vecrFFTOutput[0]);
+
+			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) and average
+			   results */
+			for (i = 1; i < iHalfBuffer; i++)
+				vecrPSD[i] += vecrFFTOutput[i] * vecrFFTOutput[i] + 
+					vecrFFTOutput[iTotalBufferSize - i] * 
+					vecrFFTOutput[iTotalBufferSize - i];
+
+			/* Calculate frequency from maximum peak in spectrum */
+			rMaxPeak = (CReal) 0.0;
+			iIndMaxPeak = 1;
+			for (i = 1; i < iHalfBuffer; i++)
+			{
+				if (vecrPSD[i] > rMaxPeak)
+				{
+					/* Remember maximum value and index of it */
+					rMaxPeak = vecrPSD[i];
+					iIndMaxPeak = i;
+				}
+			}
+
+			/* Calculate relative frequency offset */
+			rNormCurFreqOffset = (CReal) iIndMaxPeak / iHalfBuffer / 2;
+
+			/* Generate filter taps and set mixing constant */
+			SetFilterTaps(rNormCurFreqOffset);
+			cExpStep = CComplex(cos((_REAL) 2.0 * crPi * rNormCurFreqOffset),
+				-sin((_REAL) 2.0 * crPi * rNormCurFreqOffset));
+
+			/* Set global parameter for GUI */
+			ReceiverParam.rFreqOffsetAcqui = rNormCurFreqOffset;
+
+			/* Reset acquisition flag */
+			bAcquisition = FALSE;
+		}
+	}
+	else
+	{
+		/* AM demodulation -------------------------------------------------- */
+		/* Copy CVector data in CMatlibVector */
+		for (i = 0; i < iInputBlockSize; i++)
+			rvecInpTmp[i] = (*pvecInputData)[i];
+
+		/* Cut out a spectrum part of bandwidth "HILB_FILT_BNDWIDTH" */
+		cvecHilbert = CComplexVector(
+			Filter(rvecBReal, rvecA, rvecInpTmp, rvecZReal),
+			Filter(rvecBImag, rvecA, rvecInpTmp, rvecZImag));
+
+		/* Mix it down to zero frequency */
+		for (i = 0; i < iInputBlockSize; i++)
+		{
+			cvecHilbert[i] *= cCurExp;
+			
+			/* Rotate exp-pointer on step further by complex multiplication with
+			   precalculated rotation vector cExpStep. This saves us from
+			   calling sin() and cos() functions all the time (iterative
+			   calculation of these functions) */
+			cCurExp *= cExpStep;
+		}
+
+		/* Make signal real and write mono signal in both channels (left and
+		   right) */
+		for (i = 0, j = 0; i < 2 * iSymbolBlockSize; i += 2, j++)
+			(*pvecOutputData)[i] = (*pvecOutputData)[i + 1] =
+				Real2Sample(Real(cvecHilbert[j]) * 2);
+	}
+}
+
+void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
+{
+	/* Get parameters from info class */
+	iSymbolBlockSize = ReceiverParam.iSymbolBlockSize;
+
+	/* Init temporary vector for filter input and output */
+	rvecInpTmp.Init(iSymbolBlockSize);
+	cvecHilbert.Init(iSymbolBlockSize);
+
+	/* Start with phase null (can be arbitrarily chosen) */
+	cCurExp = (CReal) 1.0;
+
+
+	/* Inits for acquisition ------------------------------------------------ */
+	/* Total buffer size */
+	iTotalBufferSize = NUM_BLOCKS_CARR_ACQUISITION * iSymbolBlockSize;
+
+	/* Center of maximum possible search window */
+	iHalfBuffer = (iTotalBufferSize + 1) / 2;
+
+	/* Allocate memory for FFT-histories and init with zeros */
+	vecrFFTHistory.Init(iTotalBufferSize, (_REAL) 0.0);
+	vecrFFTOutput.Init(iTotalBufferSize, (_REAL) 0.0);
+	vecrPSD.Init(iHalfBuffer);
+
+
+	/* Set flag for aquisition */
+	bAcquisition = TRUE;
+	iAquisitionCounter = NUM_BLOCKS_CARR_ACQUISITION;
+	/* Reset FFT-history */
+	vecrFFTHistory.Reset((_REAL) 0.0);
+
+	/* Create plan for rfftw */
+	if (RFFTWPlan != NULL)
+		fftw_destroy_plan(RFFTWPlan);
+	RFFTWPlan = rfftw_create_plan(iTotalBufferSize,
+		FFTW_REAL_TO_COMPLEX, FFTW_ESTIMATE);
+
+
+	/* Define block-sizes for input and output */
+	iMaxOutputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */) +
+		2 /* stereo */ * iSymbolBlockSize;
+
+	iInputBlockSize = iSymbolBlockSize;
+	iOutputBlockSize = 2 * iSymbolBlockSize;
+}
+
+void CAMDemodulation::SetFilterTaps(_REAL rNewOffsetNorm)
+{
+	/* Calculate filter taps for complex Hilbert filter */
+	rvecBReal.Init(NO_TAPS_HILB_FILT);
+	rvecBImag.Init(NO_TAPS_HILB_FILT);
+	rvecA.Init(1);
+
+	/* The filter should be on the right of the DC carrier */
+	rNewOffsetNorm += (_REAL) HILB_FILT_BNDWIDTH / 2 / SOUNDCRD_SAMPLE_RATE;
+
+	for (int i = 0; i < NO_TAPS_HILB_FILT; i++)
+	{
+		rvecBReal[i] =
+			fHilLPProt[i] * Cos((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
+
+		rvecBImag[i] =
+			fHilLPProt[i] * Sin((_REAL) 2.0 * crPi * rNewOffsetNorm * i);
+	}
+
+	/* Only FIR filter */
+	rvecA[0] = (CReal) 1.0;
+
+	/* Init state vector for filtering with zeros */
+	rvecZReal.Init(NO_TAPS_HILB_FILT - 1, (CReal) 0.0);
+	rvecZImag.Init(NO_TAPS_HILB_FILT - 1, (CReal) 0.0);
+}
+
+CAMDemodulation::~CAMDemodulation()
+{
+	/* Destroy FFTW plan */
+	if (RFFTWPlan != NULL)
+		fftw_destroy_plan(RFFTWPlan);
+}

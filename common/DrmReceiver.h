@@ -46,6 +46,7 @@
 #include "sync/FreqSyncAcq.h"
 #include "sync/TimeSync.h"
 #include "sync/SyncUsingPil.h"
+#include "AMDemodulation.h"
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -67,11 +68,19 @@
 class CDRMReceiver
 {
 public:
+	/* Acquisition state of receiver */
 	enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
+
+	/* Receiver state */
 	enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
+	/* RM: Receiver mode (analog or digital demodulation) */
+	enum ERecMode {RM_DRM, RM_AM, RM_NONE};
+
+
 	CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquDetecCnt(0),
-		iGoodSignCnt(0), bWasFreqAcqu(TRUE),
+		iGoodSignCnt(0), bWasFreqAcqu(TRUE), bDoInitRun(FALSE),
+		eReceiverMode(RM_DRM), 	eNewReceiverMode(RM_NONE),
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface) {}
 	virtual ~CDRMReceiver() {}
 
@@ -80,6 +89,9 @@ public:
 	void					Start();
 	void					Stop();
 	EAcqStat				GetReceiverState() {return eAcquiState;}
+	ERecMode				GetReceiverMode() {return eReceiverMode;}
+	void					SetReceiverMode(ERecMode eNewMode)
+								{eNewReceiverMode = eNewMode;}
 
 	/* Get pointer to internal modules */
 	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
@@ -119,6 +131,7 @@ public:
 protected:
 	void					Run();
 	void					DetectAcqui();
+	void					InitReceiverMode();
 
 	/* Modules */
 	CReceiveData			ReceiveData;
@@ -139,6 +152,7 @@ protected:
 	CAudioSourceDecoder		AudioSourceDecoder;
 	CDataDecoder			DataDecoder;
 	CWriteData				WriteData;
+	CAMDemodulation			AMDemodulation;
 
 	/* Parameters */
 	CParameter				ReceiverParam;
@@ -166,10 +180,13 @@ protected:
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
 	ERecState				eReceiverState;
+	ERecMode				eReceiverMode;
+	ERecMode				eNewReceiverMode;
 
 	CSound					SoundInterface;
 
 	_BOOLEAN				bWasFreqAcqu;
+	_BOOLEAN				bDoInitRun;
 };
 
 
