@@ -402,10 +402,8 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	/* Select the service we want to decode. Always zero, because we do not
 	   know how many services are transmitted in the signal we want to
 	   decode */
-	Param.SetCurSelAudioService(0);
-	Param.SetCurSelDataService(0); /* useless, since only active services
-								      can be selected. See implementation of
-									  this function (TODO) */
+	Param.ResetCurSelAudDatServ();
+
 
 	/* Set the following parameters to zero states (initial states) --------- */
 	Param.ResetServicesStreams();

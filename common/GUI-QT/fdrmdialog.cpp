@@ -166,8 +166,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	DRMReceiver.GetParameters()->EnableMultimedia(TRUE);
 
 	/* Init current selected service */
-	DRMReceiver.GetParameters()->SetCurSelAudioService(0);
-	DRMReceiver.GetParameters()->SetCurSelDataService(0);
+	DRMReceiver.GetParameters()->ResetCurSelAudDatServ();
 	iCurSelServiceGUI = 0;
 	iOldNoServicesGUI = 0;
 
