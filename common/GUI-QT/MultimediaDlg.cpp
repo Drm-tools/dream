@@ -145,7 +145,6 @@ void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
 		InitJournaline();
 		break;
 
-	case CDataDecoder::AT_NOT_SUP:
 	default:
 		InitNotSupported();
 		break;
