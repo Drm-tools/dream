@@ -169,9 +169,10 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	/* Activte real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 
-	/* Activate delayed log file start if necessary */
+	/* Activate delayed log file start if necessary (timer is set to shot
+	   only once) */
 	if (DRMReceiver.GetParameters()->ReceptLog.IsDelLogStart() == TRUE)
-		TimerLogFileStart.start(DELAYED_LOG_FILE_TIME_OUT);
+		TimerLogFileStart.start(DELAYED_LOG_FILE_TIME_OUT, TRUE);
 
 	/* Update window */
 	OnTimerChart();
@@ -182,7 +183,7 @@ void systemevalDlg::OnTimerLogFileStart()
 	/* Start logging (if not already done) */
 	if (!CheckBoxWriteLog->isChecked())
 	{
-		CheckBoxWriteLog->setChecked(true);
+		CheckBoxWriteLog->setChecked(TRUE);
 		OnCheckWriteLog();
 	}
 }
