@@ -184,7 +184,6 @@ protected:
     virtual void	showEvent(QShowEvent* pEvent);
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
-	void			EnableSMeter(_BOOLEAN bStatus);
 
 	CDRMSchedule				DRMSchedule;
 	QPixmap						BitmCubeGreen;
@@ -246,6 +245,7 @@ protected:
 	};
 	CVector<SDrRigCaps>	veccapsHamlibModels;
 	void SortHamlibModelList(CVector<SDrRigCaps>& veccapsHamlibModels);
+	void EnableSMeter(const _BOOLEAN bStatus);
 
 	rig_model_t			iCurSelModelID;
 

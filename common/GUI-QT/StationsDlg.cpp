@@ -555,34 +555,6 @@ StationsDlg::~StationsDlg()
 #endif
 }
 
-void StationsDlg::EnableSMeter(_BOOLEAN bStatus)
-{
-	if (bStatus == TRUE)
-	{
-		/* Init progress bar for input s-meter */
-		ProgrSigStrength->setAlarmEnabled(TRUE);
-		ProgrSigStrength->setValue(S_METER_THERMO_MIN);
-		ProgrSigStrength->setFillColor(QColor(0, 190, 0));
-
-		ProgrSigStrength->setEnabled(TRUE);
-		TextLabelSMeter->setEnabled(TRUE);
-
-		bSMeterEnabled = TRUE;
-	}
-	else
-	{
-		/* Set s-meter control in "disabled" status */
-		ProgrSigStrength->setAlarmEnabled(FALSE);
-		ProgrSigStrength->setValue(S_METER_THERMO_MAX);
-		ProgrSigStrength->setFillColor(palette().disabled().light());
-
-		ProgrSigStrength->setEnabled(FALSE);
-		TextLabelSMeter->setEnabled(FALSE);
-
-		bSMeterEnabled = FALSE;
-	}
-}
-
 void StationsDlg::SetUTCTimeLabel()
 {
 	/* Get current UTC time */
@@ -905,6 +877,34 @@ void StationsDlg::SetFrequency(const int iFreqkHz)
 	This code is based on patches and example code from Tomi Manninen and
 	Stephane Fillod (developer of hamlib)
 */
+void StationsDlg::EnableSMeter(const _BOOLEAN bStatus)
+{
+	if (bStatus == TRUE)
+	{
+		/* Init progress bar for input s-meter */
+		ProgrSigStrength->setAlarmEnabled(TRUE);
+		ProgrSigStrength->setValue(S_METER_THERMO_MIN);
+		ProgrSigStrength->setFillColor(QColor(0, 190, 0));
+
+		ProgrSigStrength->setEnabled(TRUE);
+		TextLabelSMeter->setEnabled(TRUE);
+
+		bSMeterEnabled = TRUE;
+	}
+	else
+	{
+		/* Set s-meter control in "disabled" status */
+		ProgrSigStrength->setAlarmEnabled(FALSE);
+		ProgrSigStrength->setValue(S_METER_THERMO_MAX);
+		ProgrSigStrength->setFillColor(palette().disabled().light());
+
+		ProgrSigStrength->setEnabled(FALSE);
+		TextLabelSMeter->setEnabled(FALSE);
+
+		bSMeterEnabled = FALSE;
+	}
+}
+
 int StationsDlg::PrintHamlibModelList(const struct rig_caps* caps, void* data)
 {
 	/* Access data members of class through pointer ((StationsDlg*) data).
