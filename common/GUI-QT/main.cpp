@@ -1,16 +1,11 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Tomi Manninen, Stephane Fillod
+ *	Volker Fischer
  *
  * Description:
- *
- * 10/03/2003 Tomi Manninen / OH2BNS
- *  - Initial (basic) code for command line argument parsing (argv)
- * 04/15/2004 Tomi Manninen, Stephane Fillod
- *  - Hamlib
  *
  ******************************************************************************
  *
@@ -30,7 +25,19 @@
  *
 \******************************************************************************/
 
-#include "main.h"
+#include "../GlobalDefinitions.h"
+#include "../DrmReceiver.h"
+#include "../DrmTransmitter.h"
+#include "../DrmSimulation.h"
+#include "../util/Settings.h"
+
+#ifdef USE_QT_GUI
+# include <qapplication.h>
+# include <qthread.h>
+# include <qmessagebox.h>
+# include "fdrmdialog.h"
+# include "TransmDlg.h"
+#endif
 
 
 /* Implementation *************************************************************/
@@ -86,8 +93,9 @@ int main(int argc, char** argv)
 {
 try
 {
-	/* Parse arguments */
-	const _BOOLEAN bIsReceiver = ParseArguments(argc, argv);
+	/* Parse arguments and load settings from init-file */
+	CSettings Settings;
+	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
 
 	/* Call simulation script. If simulation is activated, application is 
 	   automatically exit in that routine. If in the script no simulation is
@@ -98,7 +106,7 @@ try
 
 	if (bIsReceiver == FALSE)
 	{
-		TransmDialog MainDlg(0, 0, FALSE, Qt::WStyle_ContextHelp);
+		TransmDialog MainDlg(0, 0, FALSE, Qt::WStyle_MinMax);
 
 		/* Set main window */
 		app.setMainWidget(&MainDlg);
@@ -111,8 +119,7 @@ try
 	else
 	{
 		CReceiverThread	RecThread; /* Working thread object */
-		FDRMDialog		MainDlg(0, 0, FALSE,
-			Qt::WStyle_ContextHelp | Qt::WStyle_MinMax);
+		FDRMDialog		MainDlg(0, 0, FALSE, Qt::WStyle_MinMax);
 
 		/* First, initialize the working thread. This should be done in an extra
 		   routine since we cannot 100% assume that the working thread is ealier
@@ -133,6 +140,9 @@ try
 
 		RecThread.Stop();
 	}
+
+	/* Save settings to init-file */
+	Settings.Save();
 }
 
 catch (CGenErr GenErr)
@@ -194,7 +204,8 @@ int main(int argc, char** argv)
 
 try
 {
-	const _BOOLEAN bIsReceiver = ParseArguments(argc, argv);
+	CSettings Settings;
+	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
 	DRMSimulation.SimScript();
 
 	if (bIsReceiver == TRUE)
@@ -229,334 +240,4 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 	fclose(pFile);
 	printf("\nDebug error, exit! For more information see DebugError.dat\n");
 	exit(1);
-}
-
-
-/* Command line argument parser ***********************************************/
-_BOOLEAN ParseArguments(int argc, char** argv)
-{
-	_BOOLEAN	bIsReceiver = TRUE;
-	_REAL		rArgument;
-	string		strArgument;
-	_REAL		rFreqAcSeWinSize = (_REAL) 0.0;
-	_REAL		rFreqAcSeWinCenter = (_REAL) 0.0;
-
-	/* QT docu: argv()[0] is the program name, argv()[1] is the first
-	   argument and argv()[argc()-1] is the last argument.
-	   Start with first argument, therefore "i = 1" */
-	for (int i = 1; i < argc; i++)
-	{
-		/* DRM transmitter mode flag ---------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter") == TRUE)
-		{
-			bIsReceiver = FALSE;
-			continue;
-		}
-
-		
-		/* Flip spectrum flag ----------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-p", "--flipspectrum") == TRUE)
-		{
-			DRMReceiver.GetReceiver()->SetFlippedSpectrum(TRUE);
-			continue;
-		}
-
-
-		/* Mute audio flag -------------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-m", "--muteaudio") == TRUE)
-		{
-			DRMReceiver.GetWriteData()->MuteAudio(TRUE);
-			continue;
-		}
-
-
-		/* Bandpass filter flag --------------------------------------------- */
-		if (GetFlagArgument(argc, argv, i, "-F", "--filter") == TRUE)
-		{
-			DRMReceiver.GetOFDMDemod()->SetRecFilter(TRUE);
-			continue;
-		}
-
-
-		/* Sound In device -------------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", 0, 1000,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.SetSoundCrdDevIn((int) rArgument);
-			continue;
-		}
-
-
-		/* Sound Out device ------------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", 0, 1000,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.SetSoundCrdDevOut((int) rArgument);
-			continue;
-		}
-
-
-		/* Do not use sound card, read from file ---------------------------- */
-		if (GetStringArgument(argc, argv, i, "-f", "--fileio",
-			strArgument) == TRUE)
-		{
-			DRMReceiver.SetReadDRMFromFile(strArgument);
-			continue;
-		}
-
-
-		/* Write output data to file as WAV --------------------------------- */
-		if (GetStringArgument(argc, argv, i, "-w", "--writewav",
-			strArgument) == TRUE)
-		{
-			DRMReceiver.GetWriteData()-> StartWriteWaveFile(strArgument);
-			continue;
-		}
-
-		
-		/* Number of iterations for MLC setting ----------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-i", "--mlciter", 0, 4,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.GetMSCMLC()->SetNumIterations((int) rArgument);
-			continue;
-		}
-
-
-		/* Sample rate offset start value ----------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-s", "--sampleoff", -200, 200,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.SetInitResOff(rArgument);
-			continue;
-		}
-
-
-		/* Frequency acquisition search window size ------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-S", "--fracwinsize",
-			0, SOUNDCRD_SAMPLE_RATE / 2, rArgument) == TRUE)
-		{
-			rFreqAcSeWinSize = rArgument;
-			continue;
-		}
-
-		/* Sample rate offset start value ----------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-E", "--fracwincent",
-			0, SOUNDCRD_SAMPLE_RATE / 2, rArgument) == TRUE)
-		{
-			rFreqAcSeWinCenter = rArgument;
-			continue;
-		}
-
-
-#ifdef USE_QT_GUI /* QThread needed for log file timing */
-		/* Start log file flag ---------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-l", "--startlog", 0, 3600,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.GetParameters()->ReceptLog.
-				SetDelLogStart((int) rArgument);
-			continue;
-		}
-
-
-		/* Frequency for log file ------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0, 30000,
-			rArgument) == TRUE)
-		{
-			DRMReceiver.GetParameters()->ReceptLog.
-				SetFrequency((int) rArgument);
-			continue;
-		}
-
-
-		/* Latitude string for log file ------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "-a", "--latitude",
-			strArgument) == TRUE)
-		{
-			DRMReceiver.GetParameters()->ReceptLog.SetLatitude(strArgument);
-			continue;
-		}
-
-
-		/* Longitude string for log file ------------------------------------ */
-		if (GetStringArgument(argc, argv, i, "-o", "--longitude",
-			strArgument) == TRUE)
-		{
-			DRMReceiver.GetParameters()->ReceptLog.SetLongitude(strArgument);
-			continue;
-		}
-#endif
-
-#ifdef HAVE_LIBHAMLIB
-		/* Hamlib Model ID -------------------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
-			strArgument) == TRUE)
-		{
-			DRMReceiver.SetHamlibConf(strArgument);
-			continue;
-		}
-
-
-		/* Hamlib config string --------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-M", "--hamlib-model", 0,
-			32768, rArgument) == TRUE)
-		{
-			DRMReceiver.SetHamlibModel((int) rArgument);
-			continue;
-		}
-#endif
-
-
-		/* Help (usage) flag ------------------------------------------------ */
-		if ((!strcmp(argv[i], "--help")) ||
-			(!strcmp(argv[i], "-h")) ||
-			(!strcmp(argv[i], "-?")))
-		{
-			UsageArguments(argv);
-			exit(1);
-		}
-
-
-		/* Unknown option --------------------------------------------------- */
-		cerr << argv[0] << ": ";
-		cerr << "Unknown option '" << argv[i] << "' -- use '--help' for help"
-			<< endl;
-
-		exit(1);
-	}
-
-	/* Set parameters for frequency acquisition search window if needed */
-	if (rFreqAcSeWinSize != (_REAL) 0.0)
-	{
-		if (rFreqAcSeWinCenter == (_REAL) 0.0)
-		{
-			/* If no center was specified, set default parameter (in the
-			   middle of the available spectrum) */
-			rFreqAcSeWinCenter = (_REAL) SOUNDCRD_SAMPLE_RATE / 4;
-		}
-
-		/* Set new parameters */
-		DRMReceiver.GetFreqSyncAcq()->SetSearchWindow(rFreqAcSeWinCenter,
-			rFreqAcSeWinSize);
-	}
-
-	return bIsReceiver;
-}
-
-void UsageArguments(char** argv)
-{
-	cerr << "Usage: " << argv[0] << " [option] [argument]" << endl;
-	cerr << endl;
-	cerr << "Recognized options:" << endl;
-	cerr << endl;
-	cerr << "  -t, --transmitter          DRM transmitter mode" << endl;
-	cerr << "  -p, --flipspectrum         flip input spectrum" << endl;
-	cerr << "  -i <n>, --mlciter <n>      number of MLC iterations" << endl;
-	cerr << "                             allowed range: 0...4" << endl;
-	cerr << "                             default: 1" << endl;
-	cerr << "  -s <r>, --sampleoff <r>    sample rate offset initial value [Hz]"
-		<< endl;
-	cerr << "                             allowed range: -200.0...200.0"
-		<< endl;
-	cerr << "  -m, --muteaudio            mute audio output" << endl;
-	cerr << "  -f <s>, --fileio <s>       disable sound card," << endl;
-	cerr << "                             use file <s> instead" << endl;
-	cerr << "  -w <s>, --writewav <s>     write output to wave file" << endl;
-
-	cerr << "  -S <r>, --fracwinsize <r>  freq. acqu. search window size [Hz]"
-		<< endl;
-	cerr << "  -E <r>, --fracwincent <r>  freq. acqu. search window center [Hz]"
-		<< endl;
-	cerr << "  -F, --filter               apply bandpass filter" << endl;
-
-#ifdef USE_QT_GUI
-	cerr << "  -r <n>, --frequency <n>    set frequency [kHz] for log file"
-		<< endl;
-	cerr << "  -a <s>, --latitude <s>     set latitude string for log file"
-		<< endl;
-	cerr << "  -o <s>, --longitude <s>    set longitude string for log file"
-		<< endl;
-	cerr << "  -l <n>, --startlog <n>     start log file (delayed by" << endl;
-	cerr << "                             <n> seconds)" << endl;
-	cerr << "                             allowed range: 0...3600" << endl;
-#endif
-
-	cerr << "  -I <n>, --snddevin <n>     set sound in device" << endl;
-	cerr << "  -O <n>, --snddevout <n>    set sound out device"	<< endl;
-
-#ifdef HAVE_LIBHAMLIB
-	cerr << "  -M <n>, --hamlib-model <n> set Hamlib radio model ID" << endl;
-	cerr << "  -C, --hamlib-config <s>    set Hamlib config parameter" << endl;
-#endif
-
-	cerr << endl;
-	cerr << "  -h, -?, --help             this help text" << endl;
-	cerr << endl;
-	cerr << "Example: " << argv[0] <<
-		" -p --sampleoff -0.23 -i 2 "
-#ifdef USE_QT_GUI
-		"-r 6140 -a 50°13\\'N -o 8°34\\'E"
-#endif
-		<< endl;
-	cerr << endl;
-}
-
-_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
-						 string strLongOpt)
-{
-	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
-		return TRUE;
-	else
-		return FALSE;
-}
-
-_BOOLEAN GetStringArgument(int argc, char** argv, int& i, string strShortOpt,
-							string strLongOpt, string& strArg)
-{
-	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
-	{
-		if (++i >= argc)
-		{
-			cerr << argv[0] << ": ";
-			cerr << "'" << strLongOpt << "' needs a string argument" << endl;
-			exit(1);
-		}
-
-		strArg = argv[i];
-
-		return TRUE;
-	}
-	else
-		return FALSE;
-}
-
-_BOOLEAN GetNumericArgument(int argc, char** argv, int& i, string strShortOpt,
-							string strLongOpt, _REAL rRangeStart,
-							_REAL rRangeStop, _REAL& rValue)
-{
-	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
-	{
-		if (++i >= argc)
-		{
-			cerr << argv[0] << ": ";
-			cerr << "'" << strLongOpt << "' needs a numeric argument between "
-				<< rRangeStart << " and " << rRangeStop << endl;
-			exit(1);
-		}
-
-		char *p;
-		rValue = strtod(argv[i], &p);
-		if (*p || rValue < rRangeStart || rValue > rRangeStop)
-		{
-			cerr << argv[0] << ": ";
-			cerr << "'" << strLongOpt << "' needs a numeric argument between "
-				<< rRangeStart << " and " << rRangeStop << endl;
-			exit(1);
-		}
-
-		return TRUE;
-	}
-	else
-		return FALSE;
 }
