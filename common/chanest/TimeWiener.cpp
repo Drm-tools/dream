@@ -68,12 +68,13 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 				matcChanAtPilPos[j][iPiHiIndex] = 
 					matcChanAtPilPos[j - 1][iPiHiIndex];
 
-			/* h = r / s, h: transfer function of channel, r: received signal, 
-			   s: transmitted signal */
+			/* Add new channel estimate: h = r / s, h: transfer function of the
+			   channel, r: received signal, s: transmitted signal */
 			matcChanAtPilPos[0][iPiHiIndex] = 
 				(*pvecInputData)[i] / veccPilotCells[i];
 
 
+#ifdef DO_WIENER_TIME_FILT_UPDATE
 			/* Estimation of the channel correlation function --------------- */
 			for (j = 0; j < iLengthWiener; j++)
 			{
@@ -88,39 +89,22 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 				iAvCntSigmaEst++;
 			}
+#endif
 		}
 	}
 
 
+#ifdef DO_WIENER_TIME_FILT_UPDATE
 	/* Update filter coefficiants if estimation is ready -------------------- */
 	if (iAvCntSigmaEst >= NO_SIGMA_AVER_UNTIL_USE)
 	{
-// TEST
-rSigma = ModLinRegr(vecrTiCorrEst);
-//UpdateFilterCoef(rSNR, rSigma);
-
-
-/*
-// TEST
-static FILE* pFile = fopen("test/v.dat", "w");
-// *2 due to real doppler frequency
-fprintf(pFile, "%e\n", ModLinRegr(vecrTiCorrEst)*2);
-fflush(pFile);
-*/
-
-/*
-// TEST
-static FILE* pFile1 = fopen("test/wienerfilter.dat", "w");
-for (int v = 0; v < iLengthWiener; v++)
-{
-	for (i = 0; i < iNoFiltPhasTi; i++)
-		fprintf(pFile1, "%e ", matrFiltTime[i][v]);
-//	fprintf(pFile1, "\n");
-	fflush(pFile1);
-}
-exit(1);
-*/
-
+		/* Use a threshold to exclude noisy estimates */
+		for (i = 1; i < iLengthWiener; i++)
+			if (vecrTiCorrEst[i] < vecrTiCorrEst[0] / 10)
+				vecrTiCorrEst[i] = (_REAL) 0.0;
+	
+		/* Update the wiener filter */
+		UpdateFilterCoef(rSNR, ModLinRegr(vecrTiCorrEst));
 
 		/* Reset counter */
 		iAvCntSigmaEst = 0;
@@ -128,6 +112,7 @@ exit(1);
 		/* Reset estimation vector */
 		vecrTiCorrEst.Reset((_REAL) 0.0);
 	}
+#endif
 
 
 	/* Wiener interpolation, filtering and prediction ----------------------- */
@@ -167,18 +152,6 @@ exit(1);
 			/* Copy channel estimation from current symbol in output buffer - */
 			veccOutputData[i] = veccChanEst[iPiHiIndex];
 		}
-
-
-
-/*
-// clear all;figure;load v.dat;x=complex(v(:,1), v(:,2));subplot(211),plot(abs(x));subplot(212),plot(angle(x))
-
-if (iPiHiIndex == 1){
-static FILE* pFile = fopen("test/v.dat", "w");
-fprintf(pFile, "%e %e\n", veccChanEst[iPiHiIndex].real(), veccChanEst[iPiHiIndex].imag());
-fflush(pFile);
-}
-*/
 	}
 }
 
@@ -389,7 +362,8 @@ _REAL CTimeWiener::ModLinRegr(CVector<_REAL>& vecrCorrEst)
 	/* Average of y */
 	rYAv = (_REAL) 0.0;
 	for (i = 0; i < iVecLen; i++)
-		rYAv += log(fabs(vecrCorrEst[i]));
+		if (vecrCorrEst[i] > (_REAL) 0.0)
+			rYAv += log(fabs(vecrCorrEst[i]));
 	rYAv /= iVecLen;
 
 	/* Modified linear regression */
@@ -397,10 +371,15 @@ _REAL CTimeWiener::ModLinRegr(CVector<_REAL>& vecrCorrEst)
 	rSumDenom = (_REAL) 0.0;
 	for (i = 0; i < iVecLen; i++)
 	{
-		int iSquaredTiIn = i * i * iScatPilTimeInt * iScatPilTimeInt;
+		if (vecrCorrEst[i] > (_REAL) 0.0)
+		{
+			int iSquaredTiIn = i * i * iScatPilTimeInt * iScatPilTimeInt;
 
-		rSumEnum += (iSquaredTiIn - rXAv) * (log(fabs(vecrCorrEst[i])) - rYAv);
-		rSumDenom += (iSquaredTiIn - rXAv) * (iSquaredTiIn - rXAv);
+			rSumEnum += 
+				(iSquaredTiIn - rXAv) * (log(fabs(vecrCorrEst[i])) - rYAv);
+			rSumDenom += 
+				(iSquaredTiIn - rXAv) * (iSquaredTiIn - rXAv);
+		}
 	}
 
 	/* Normalize result */

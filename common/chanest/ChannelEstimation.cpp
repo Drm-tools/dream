@@ -46,13 +46,10 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iNoCarrier; i++)
 		matcHistory[iLenHistBuff - 1][i] = (*pvecInputData)[i];
 
-
-// TEST
-//TimeWiener.SetSNR(pow(10, rSNREstimate / 10));
-//
-//ThermoSNR->setValue(Min(DRMReceiver.GetChanEst()->GetSNREstdB(),
-//	DRMReceiver.GetOFDMDemod()->GetSNREstdB()));
-
+	/* Set the estimated SNR for the wiener filter in time direction. We use 
+	   only SNR measurement from channel estimation */
+	if (TypeIntTime == TWIENER)
+		TimeWiener.SetSNR(pow(10, rSNREstimate / 10));
 
 
 	/* Time interpolation *****************************************************/

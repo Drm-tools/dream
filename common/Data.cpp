@@ -68,7 +68,7 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 
 void CWriteData::InitInternal(CParameter& ReceiverParam)
 {
-	/* Define block-size for input, an audio frame always corresponds to 400ms.
+	/* Define block-size for input, an audio frame always corresponds to 400 ms.
 	   We use always stereo blocks */
 	iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
 		(_REAL) 0.4 /* 400ms */ * 2 /* stereo */);
@@ -352,6 +352,7 @@ void CEvalChanEst::ProcessDataInternal(CParameter& ReceiverParam)
 	   per frame, otherwise we get wraps which are not evaluated here!) */
 	iChanEstDelay = (*pvecInputData2).GetExData().iSymbolNo -
 		(*pvecInputData).GetExData().iSymbolNo + 1;
+
 	if (iChanEstDelay < 0)
 		iChanEstDelay += iNoSymPerFrame;
 

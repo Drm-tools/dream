@@ -40,9 +40,13 @@
 /* Definitions ****************************************************************/
 /* Define the number of averaged estimates of the correlation of the channel in
    time direction. This number comes from robustness mode B with 10 kHz 
-   bandwidth -> after approx. 5000 symbols a good estimate was done: 
-   N = 5000 * 206 / PilGrid (= 2) approx. 500000 */
-#define NO_SIGMA_AVER_UNTIL_USE			500000
+   bandwidth -> after approx. 10000 symbols a good estimate was done: 
+   N = 10000 * 206 / PilGrid (= 2) approx. 1000000 */
+#define NO_SIGMA_AVER_UNTIL_USE			1000000
+
+/* Define the following macro if you want to activate the continuous estimation 
+   of the optimal filter coefficiants continuous */
+#undef DO_WIENER_TIME_FILT_UPDATE
 
 
 /* Classes ********************************************************************/

@@ -38,8 +38,8 @@ void CDRMSimulation::SimScript()
 	CVector<_REAL>	vecrMSE;
 
 	/* Choose which type of simulation */
-	eSimType = ST_CHANEST;
 	eSimType = ST_BITERROR;
+	eSimType = ST_CHANEST;
 	eSimType = ST_NONE;
 
 
@@ -114,16 +114,16 @@ ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
 //ChannelEstimation.SetFreqInt(CChannelEstimation::FDFTFILTER);
 //ChannelEstimation.SetFreqInt(CChannelEstimation::FLINEAR);
 
-ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
-//ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
+//ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
+ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 
 
 		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 
-		Param.iDRMChannelNo = 3;
+		Param.iDRMChannelNo = 7;
 
 		/* No of blocks for simulation */
-		GenSimData.SetSimTime(1000);
+		GenSimData.SetSimTime(100);
 
 		Param.rSimSNRdB = 20;//rSNRCnt;
 

@@ -94,9 +94,6 @@ if (pvecOutputData2 != NULL){
 	for (i = 0; i < iInputBlockSize; i++)
 		(*pvecOutputData3)[i] = veccOutput[i].real() * 2 * rGainCorr;
 }
-
-
-
 }
 
 void CDRMChannel::InitInternal(CParameter& ReceiverParam)
@@ -211,6 +208,18 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 					/* Gain: */		(_REAL) 0.0625, 
 					/* Fshift: */	(_REAL) 3.6, 
 					/* Fd: */		(_REAL) 7.2);
+		break;
+
+	case 7:
+		/* My own test channel, NOT DEFINED IN THE DRM STANDARD! This channel
+		   has only one fading path */
+		_REAL rMyFading = 0.5;
+
+		iNoTaps = 1;
+		tap[0].Init(/* Delay: */	(_REAL) 0.0, 
+					/* Gain: */		(_REAL) 1.0, 
+					/* Fshift: */	(_REAL) 0.0, 
+					/* Fd: */		rMyFading);
 		break;
 	}
 
