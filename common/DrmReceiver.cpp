@@ -71,8 +71,15 @@ void CDRMReceiver::Run()
 			}
 			else
 			{
+				/* Resample input DRM-stream -------------------------------- */
+				if (InputResample.ProcessData(ReceiverParam, RecDataBuf,
+					InpResBuf))
+				{
+					bEnoughData = TRUE;
+				}
+
 				/* Frequency synchronization acquisition -------------------- */
-				if (FreqSyncAcq.ProcessData(ReceiverParam, RecDataBuf,
+				if (FreqSyncAcq.ProcessData(ReceiverParam, InpResBuf,
 					FreqSyncAcqBuf))
 				{
 					bEnoughData = TRUE;
@@ -96,15 +103,8 @@ void CDRMReceiver::Run()
 						bWasFreqAcqu = TRUE;
 				}
 
-				/* Resample input DRM-stream -------------------------------- */
-				if (InputResample.ProcessData(ReceiverParam, FreqSyncAcqBuf,
-					InpResBuf))
-				{
-					bEnoughData = TRUE;
-				}
-
 				/* Time synchronization ------------------------------------- */
-				if (TimeSync.ProcessData(ReceiverParam, InpResBuf,
+				if (TimeSync.ProcessData(ReceiverParam, FreqSyncAcqBuf,
 					TimeSyncBuf))
 				{
 					bEnoughData = TRUE;

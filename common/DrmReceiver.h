@@ -167,8 +167,8 @@ protected:
 	CParameter				ReceiverParam;
 
 	/* Buffers */
-	CCyclicBuffer<_REAL>	RecDataBuf;
-	CSingleBuffer<_REAL>	FreqSyncAcqBuf;
+	CSingleBuffer<_REAL>	RecDataBuf;
+	CCyclicBuffer<_REAL>	FreqSyncAcqBuf;
 	CCyclicBuffer<_REAL>	InpResBuf;
 	CSingleBuffer<_REAL>	TimeSyncBuf;
 	CSingleBuffer<_COMPLEX>	OFDMDemodBuf;

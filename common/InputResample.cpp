@@ -75,8 +75,6 @@ void CInputResample::InitInternal(CParameter& ReceiverParam)
 	   We have to consider the following case: The output block size is
 	   smaller than one symbol -> no data is read by the next unit, but
 	   after that the output block size is bigger than one symbol, therefore
-	   we have to allocate three symbols for output buffer.
-	   We also have to consider that the next module can take up to two
-	   symbols per step. This can also be satisfied be multiplying with "3" */
+	   we have to allocate three symbols for output buffer */
 	iMaxOutputBlockSize = 3 * ReceiverParam.iSymbolBlockSize;
 }

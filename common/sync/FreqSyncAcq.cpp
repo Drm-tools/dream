@@ -358,7 +358,10 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	   the processing routine, therefore only a maximum block size is set
 	   here) */
 	iInputBlockSize = ReceiverParam.iSymbolBlockSize;
-	iMaxOutputBlockSize = ReceiverParam.iSymbolBlockSize;
+
+	/* We have to consider that the next module can take up to two symbols per
+	   step. This can be satisfied be multiplying with "3" */
+	iMaxOutputBlockSize = 3 * ReceiverParam.iSymbolBlockSize;
 }
 
 void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)
