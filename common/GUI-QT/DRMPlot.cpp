@@ -243,8 +243,12 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	replot();
 }
 
-void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+						  const _REAL rDCFreq)
 {
+	long	lCurveDC;
+	double	dX[2], dY[2];
+
 	/* Init chart for power spectram density estimation */
 	setTitle("Input Spectrum");
 	enableGridX(TRUE);
@@ -253,10 +257,25 @@ void CDRMPlot::SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	setAxisTitle(QwtPlot::yLeft, "Input Spectrum [dB]");
 
 	/* Fixed scale */
-	setAxisScale(QwtPlot::yLeft, (double) -100.0, (double) 0.0);
+	const double cdAxMinLeft = -100.0;
+	const double cdAxMaxLeft = 0.0;
+	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
 	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) 24.0);
 
 	clear();
+
+	/* Insert line for DC carrier */
+	lCurveDC = insertCurve("DC carrier");
+	setCurvePen(lCurveDC, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+
+	dX[0] = dX[1] = rDCFreq / 1000;
+
+	/* Take the min-max values from scale to get vertical line */
+	dY[0] = cdAxMinLeft;
+	dY[1] = cdAxMaxLeft;
+
+	setCurveData(lCurveDC, dX, dY, 2);
+
 	SetData(vecrData, vecrScale);
 	replot();
 }

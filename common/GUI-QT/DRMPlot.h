@@ -73,7 +73,8 @@ public:
 				 const _REAL rEndIR);
 	void SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+					const _REAL rDCFreq);
 	void SetFACConst(CVector<_COMPLEX>& veccData);
 	void SetSDCConst(CVector<_COMPLEX>& veccData,
 					 CParameter::ECodScheme eNewCoSc);
