@@ -195,9 +195,9 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 	   by 10 moves the one to the right. "6 -" because we want to start on the
 	   left with the sunday */
 	if (((int) (StationsTable[iPos].iDays /
-		pow(10, (6 - gmtCur->tm_wday))) % 2 == 1) ||
+		pow((_REAL) 10.0, (6 - gmtCur->tm_wday))) % 2 == 1) ||
 		/* Check also for special case: days are 0000000. This is reserved for
-		   DRM test transmissions or irregular transmissions. We define here,
+		   DRM test transmissions or irregular transmissions. We define here
 		   that these stations are transmitting every day */
 		(StationsTable[iPos].iDays == 0))
 	{
@@ -261,9 +261,9 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	pViewMenu = new QPopupMenu(this);
 	CHECK_PTR(pViewMenu);
 	pViewMenu->insertItem("Show &only active stations", this,
-		SLOT(OnShowStationsMenu(int)), NULL, 0);
-	pViewMenu->insertItem("&Show &all stations", this,
-		SLOT(OnShowStationsMenu(int)), NULL, 1);
+		SLOT(OnShowStationsMenu(int)), 0, 0);
+	pViewMenu->insertItem("Show &all stations", this,
+		SLOT(OnShowStationsMenu(int)), 0, 1);
 
 	/* Set stations in list view which are active right now */
 	bShowAll = FALSE;
@@ -279,10 +279,12 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	pRemoteMenu = new QPopupMenu(this);
 	CHECK_PTR(pRemoteMenu);
 	pRemoteMenu->insertItem("None", this, SLOT(OnRemoteMenu(int)), NULL, 0);
-	pRemoteMenu->insertItem("Winradio", this, SLOT(OnRemoteMenu(int)),
+	pRemoteMenu->insertItem("Winradio G3", this, SLOT(OnRemoteMenu(int)),
 		NULL, 1);
 	pRemoteMenu->insertItem("AOR 7030", this, SLOT(OnRemoteMenu(int)),
 		NULL, 2);
+	pRemoteMenu->insertItem("Elektor 3/04", this, SLOT(OnRemoteMenu(int)),
+		NULL, 3);
 
 	/* Set WINRADIO to default, because I own such a device :-) */
 	eWhichRemoteControl = RC_WINRADIO;
@@ -345,29 +347,6 @@ void StationsDlg::OnShowStationsMenu(int iID)
 	pViewMenu->setItemChecked(1, 1 == iID);
 }
 
-void StationsDlg::OnRemoteMenu(int iID)
-{
-	switch (iID)
-	{
-	case 0:
-		eWhichRemoteControl = RC_NOREMCNTR;
-		break;
-
-	case 1:
-		eWhichRemoteControl = RC_WINRADIO;
-		break;
-
-	case 2:
-		eWhichRemoteControl = RC_AOR7030;
-		break;
-	}
-
-	/* Taking care of checks in the menu */
-	pRemoteMenu->setItemChecked(0, 0 == iID);
-	pRemoteMenu->setItemChecked(1, 1 == iID);
-	pRemoteMenu->setItemChecked(2, 2 == iID);
-}
-
 void StationsDlg::OnGetUpdate()
 {
 	if (QMessageBox::information(this, "Dream Schedule Update",
@@ -384,8 +363,7 @@ void StationsDlg::OnGetUpdate()
 
 		/* Try to download the current schedule. Copy the file to the
 		   current working directory (which is "QDir().absFilePath(NULL)") */
-		UrlUpdateSchedule.
-			copy(QString("ftp://216.92.35.131/DRMSchedule.ini"),
+		UrlUpdateSchedule.copy(QString(DRM_SCHEDULE_UPDATE_FILE),
 			QString(QDir().absFilePath(NULL)));
 	}
 }
@@ -401,7 +379,7 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 		QMessageBox::information(this, "Dream",
 			"Update failed. The following things may caused the failure:\n"
 			"\t- the internet connection was not set up properly\n"
-			"\t- the page www.drm-dx.de is currently not available\n"
+			"\t- the server www.drm-dx.de is currently not available\n"
 			"\t- the file 'DRMSchedule.ini' could not be written",
 			QMessageBox::Ok);
 	}
@@ -442,6 +420,22 @@ void StationsDlg::OnTimer()
 	SetStationsView();
 }
 
+QString MyListViewItem::key(int column, bool ascending) const
+{
+	/* Reimplement "key()" function to get correct sorting behaviour */
+	if ((column == 2) || (column == 4))
+	{
+		/* These columns are filled with numbers. Some items may have numbers
+		   after the comma, therefore multiply with 10000 (which moves the
+		   numbers in front of the comma). Afterwards append zeros at the
+		   beginning so that positive integer numbers are sorted correctly */
+		return QString(QString().setNum((long int)
+			(text(column).toFloat() * 10000.0))).rightJustify(20, '0');
+	}
+    else
+		return QListViewItem::key(column, ascending);
+}
+
 void StationsDlg::SetStationsView()
 {
 	QString strSelTabItemName = "";
@@ -480,7 +474,7 @@ void StationsDlg::SetStationsView()
 				strPower.setNum(rPower);
 
 			/* Generate new list item with all necessary column entries */
-			QListViewItem* NewListItem = new QListViewItem(ListViewStations,
+			QListViewItem* NewListItem = new MyListViewItem(ListViewStations,
 				DRMSchedule.GetItem(i).strName.c_str()			/* name */,
 				QString().sprintf("%04d-%04d",
 				DRMSchedule.GetItem(i).GetStartTimeNum(),
@@ -551,6 +545,10 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 	case RC_AOR7030:
 		SetFrequencyAOR7030(iCurFreqkHz);
 		break;
+
+	case RC_ELEKTOR304:
+		SetFrequencyElektor304(iCurFreqkHz);
+		break;
 	}
 
 	/* Now tell the receiver that the frequency has changed */
@@ -560,15 +558,47 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 	DRMReceiver.GetParameters()->ReceptLog.SetFrequency(iCurFreqkHz);
 }
 
+void StationsDlg::OnRemoteMenu(int iID)
+{
+	switch (iID)
+	{
+	case 0:
+		eWhichRemoteControl = RC_NOREMCNTR;
+		break;
+
+	case 1:
+		eWhichRemoteControl = RC_WINRADIO;
+		break;
+
+	case 2:
+		eWhichRemoteControl = RC_AOR7030;
+		break;
+
+	case 3:
+		eWhichRemoteControl = RC_ELEKTOR304;
+		break;
+	}
+
+	/* Taking care of checks in the menu */
+	pRemoteMenu->setItemChecked(0, 0 == iID);
+	pRemoteMenu->setItemChecked(1, 1 == iID);
+	pRemoteMenu->setItemChecked(2, 2 == iID);
+	pRemoteMenu->setItemChecked(3, 3 == iID);
+}
+
+
+/******************************************************************************\
+* Winradio G3																   *
+\******************************************************************************/
 _BOOLEAN StationsDlg::SetFrequencyWinradio(const int iFreqkHz)
 {
 	_BOOLEAN bSucceeded = FALSE;
 
 #ifdef _WIN32
 	/* Some type definitions needed for dll access */
+	typedef int (__stdcall *FNCOpenRadioDevice)(int iDeviceNum);
 	typedef BOOL (__stdcall *FNCCloseRadioDevice)(int hRadio);
 	typedef BOOL (__stdcall *FNCG3SetFrequency)(int hRadio, DWORD dwFreq);
-	typedef int (__stdcall *FNCOpenRadioDevice)(int iDeviceNum);
 	typedef BOOL (__stdcall *FNCSetPower)(int hRadio, BOOL rPower);
 
 	/* Try to load required dll */
@@ -577,12 +607,12 @@ _BOOLEAN StationsDlg::SetFrequencyWinradio(const int iFreqkHz)
 	if (dll)
 	{
 		/* Get process addresses from dll for function access */
+		FNCOpenRadioDevice OpenRadioDevice =
+			(FNCOpenRadioDevice) GetProcAddress(dll, "OpenRadioDevice");
 		FNCCloseRadioDevice CloseRadioDevice =
 			(FNCCloseRadioDevice) GetProcAddress(dll, "CloseRadioDevice");
 		FNCG3SetFrequency G3SetFrequency =
 			(FNCG3SetFrequency) GetProcAddress(dll, "SetFrequency");
-		FNCOpenRadioDevice OpenRadioDevice =
-			(FNCOpenRadioDevice) GetProcAddress(dll, "OpenRadioDevice");
 		FNCSetPower SetPower = (FNCSetPower) GetProcAddress(dll, "SetPower");
 
 		/* Open Winradio receiver handle */
@@ -604,8 +634,201 @@ _BOOLEAN StationsDlg::SetFrequencyWinradio(const int iFreqkHz)
 	return bSucceeded;
 }
 
+
+/******************************************************************************\
+* AOR 7030 serial interface													   *
+\******************************************************************************/
 _BOOLEAN StationsDlg::SetFrequencyAOR7030(const int iFreqkHz)
 {
-	/* TODO */
-	return FALSE;
+	_BOOLEAN bSucceeded = FALSE;
+
+#ifdef _WIN32
+
+/* Not yet working! */
+#if 0
+	/* Open serial interface (COM1) */
+	HANDLE hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE,
+		0 /* comm devices must be opened w/exclusive-access */,
+		NULL /* no security attributes  */,
+		OPEN_EXISTING /* comm devices must use OPEN_EXISTING */,
+		0 /* not overlapped I/O */,
+		NULL  /* hTemplate must be NULL for comm devices */);
+
+	if (hCom != INVALID_HANDLE_VALUE)
+	{
+		DCB dcb;
+
+		GetCommState(hCom, &dcb); /* first get parameters to fill struct */
+
+		/* Set parameters requried by AOR receiver (All data transfers are at
+		   1200 baud, No parity, 8 bits, 1 stop bit (1200 N 8 1). There is no
+		   hardware or software flow control other than that inherent in the
+		   command structure) */
+		dcb.BaudRate = 1200;
+		dcb.ByteSize = 8;
+		dcb.Parity = NOPARITY;
+		dcb.fParity=FALSE;
+		dcb.StopBits = ONESTOPBIT;
+		dcb.fOutxCtsFlow = FALSE;
+		dcb.fOutxDsrFlow = FALSE;
+		dcb.fOutX = FALSE;
+		dcb.fInX = FALSE;
+		dcb.fDsrSensitivity = FALSE;
+		dcb.fBinary=TRUE;
+		dcb.fNull=FALSE;
+		dcb.fAbortOnError=TRUE;
+		dcb.fDtrControl=DTR_CONTROL_DISABLE;
+		dcb.fRtsControl=RTS_CONTROL_DISABLE;
+
+		BOOL bSuccess = SetCommState(hCom, &dcb); /* apply new parameters */
+
+		if (bSuccess == TRUE)
+		{
+			_BYTE byCurByte;
+			DWORD lpNumOfByWr;
+
+			byCurByte = (_BYTE) (0x50); /* Select working mem (page 0) */
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			byCurByte = (_BYTE) (0x31 + 0x4A); /* Frequency address = 01AH */
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			/* Convert kHz to steps */
+			int iAORFreq = (int) ((_REAL) iFreqkHz * 376.635223 + 0.5);
+
+			/* Exact multiplicand is (2^24) / 44545 */
+			byCurByte = (_BYTE) (0x30 + iAORFreq / 1048576);
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			/* Write frequency as 6 hex digits */
+			iAORFreq = iAORFreq % 1048576;
+			byCurByte = (_BYTE) (0x60 + iAORFreq / 65536);
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			iAORFreq = iAORFreq % 65536;
+			byCurByte = (_BYTE) (0x30 + iAORFreq / 4096);
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			iAORFreq = iAORFreq % 4096;
+			byCurByte = (_BYTE) (0x60 + iAORFreq / 256);
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			iAORFreq = iAORFreq % 256;
+			byCurByte = (_BYTE) (0x30 + iAORFreq / 16);
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			iAORFreq = iAORFreq % 16;
+			byCurByte = (_BYTE) (0x60 + iAORFreq);
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+
+			byCurByte = (_BYTE) (0x21 + 0x2C);
+			WriteFile(hCom, &byCurByte, 1, &lpNumOfByWr, NULL);
+		}
+
+		CloseHandle(hCom);
+	}
+#endif
+
+
+
+#endif
+
+	return bSucceeded;
 }
+
+
+/******************************************************************************\
+* Elektor DRM receiver (3/04)												   *
+\******************************************************************************/
+/*
+	The Elektor DRM Receiver 3/04 COM interface is based on the Visual Basic
+	source code by Burkhard Kainka which can be downloaded from
+	www.b-kainka.de
+*/
+_BOOLEAN StationsDlg::SetFrequencyElektor304(const int iFreqkHz)
+{
+	_BOOLEAN bSucceeded = FALSE;
+
+#ifdef _WIN32
+	/* Open serial interface (COM1) */
+	HANDLE hCom = CreateFile("COM1", GENERIC_READ | GENERIC_WRITE,
+		0 /* comm devices must be opened w/exclusive-access */,
+		NULL /* no security attributes  */,
+		OPEN_EXISTING /* comm devices must use OPEN_EXISTING */,
+		0 /* not overlapped I/O */,
+		NULL  /* hTemplate must be NULL for comm devices */);
+
+	if (hCom != INVALID_HANDLE_VALUE)
+	{
+		/* Initialization */
+		EscapeCommFunction(hCom, CLRDTR); // DTR 0
+		EscapeCommFunction(hCom, CLRRTS); // RTS 0
+		EscapeCommFunction(hCom, CLRBREAK); // TXD 0
+
+		const _REAL rNFreq = iFreqkHz + 454.3; // add IF1 (IF1 = 454.3)
+
+		const _UINT32BIT iFrg = (_UINT32BIT) (rNFreq / 50000.0 * 4294967296.0);
+		const _UINT32BIT iFreqHi = iFrg / 0x10000;
+		const _UINT32BIT iFreqLo = iFrg - iFreqHi * 0x10000;
+		const _UINT32BIT iFreqLoL = iFreqLo & 0xFF;
+		const _UINT32BIT iFreqLoH = iFreqLo / 0x100;
+		const _UINT32BIT iFreqHiL = iFreqHi & 0xFF;
+		const _UINT32BIT iFreqHiH = iFreqHi / 0x100;
+
+		OutputElektor304(hCom, 0xF800); // Reset
+		OutputElektor304(hCom, (0x3000 + iFreqLoL)); // 4 Bytes to FREQ0
+		OutputElektor304(hCom, (0x2100 + iFreqLoH));
+		OutputElektor304(hCom, (0x3200 + iFreqHiL));
+		OutputElektor304(hCom, (0x2300 + iFreqHiH));
+		OutputElektor304(hCom, 0x8000); // Sync
+		OutputElektor304(hCom, 0xC000); // Reset end
+
+		CloseHandle(hCom);
+	}
+#endif
+
+	return bSucceeded;
+}
+
+#ifdef _WIN32
+void StationsDlg::OutputElektor304(HANDLE hCom, const _UINT32BIT iData)
+{
+	EscapeCommFunction(hCom, CLRBREAK); // TXD 0
+	DelayElektor304(1.0);
+	EscapeCommFunction(hCom, SETDTR); // DTR 1 // CE
+	DelayElektor304(1.0);
+	_UINT32BIT BitValue = 0x8000;
+	for (int n = 0; n < 16; n++)
+	{
+		if ((iData & BitValue) > 0)
+			EscapeCommFunction(hCom, CLRRTS); // RTS 0
+		else
+			EscapeCommFunction(hCom, SETRTS); // RTS 1
+
+		DelayElektor304(1.0);
+		EscapeCommFunction(hCom, SETBREAK); // TXD 1 // clock
+		DelayElektor304(1.0);
+		EscapeCommFunction(hCom, CLRBREAK); // TXD 0
+		DelayElektor304(1.0);
+		DelayElektor304(1.0);
+		BitValue >>= 1; /* Next bit for masking */
+	}
+	DelayElektor304(1.0);
+	EscapeCommFunction(hCom, CLRDTR); // DTR 0
+	DelayElektor304(1.0);
+}
+
+_REAL StationsDlg::TimeReadElektor304()
+{
+	LARGE_INTEGER t;
+	_REAL TimeUnit = 0.000838096515;
+	QueryPerformanceCounter(&t);
+	return (t.HighPart * 4294967296 + t.LowPart) * TimeUnit;
+}
+
+void StationsDlg::DelayElektor304(_REAL rDelay)
+{
+	_REAL TimeStart = TimeReadElektor304();
+	while (TimeReadElektor304() < (TimeStart + rDelay));
+}
+#endif
