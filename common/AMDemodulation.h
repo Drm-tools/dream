@@ -33,7 +33,7 @@
 #include "Modul.h"
 #include "Vector.h"
 #include "matlib/Matlib.h"
-#include "sync/TimeSyncFilter.h"
+#include "AMDemodulationFilter.h"
 
 #ifdef HAVE_DRFFTW_H
 # include <drfftw.h>
@@ -56,18 +56,31 @@ class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
 	CAMDemodulation() : bAcquisition(TRUE), bSearWinWasSet(FALSE),
-		bNewDemodType(FALSE), eDemodType(DT_AM_10) {}
+		bNewDemodType(FALSE), eDemodType(DT_AM), eFilterBW(BW_10KHZ),
+		rFiltCentOffsNorm((CReal) 0.0), rBandWidthNorm((CReal) 0.0) {}
 	virtual ~CAMDemodulation() {}
 
-	enum EDemodType {DT_AM_10, DT_AM_5, DT_LSB, DT_USB};
+	enum EDemodType {DT_AM, DT_LSB, DT_USB};
+	enum EFilterBW {BW_1KHZ, BW_2KHZ, BW_3KHZ, BW_4KHZ, BW_5KHZ, BW_6KHZ,
+		BW_7KHZ, BW_8KHZ, BW_9KHZ, BW_10KHZ, BW_11KHZ, BW_12KHZ, BW_13KHZ,
+		BW_14KHZ, BW_15KHZ};
 
 	void SetAcqFreq(const CReal rNewNormCenter);
+
 	EDemodType GetDemodType() {return eDemodType;}
-	void SetDemodType(EDemodType eNewType)
+	void SetDemodType(const EDemodType eNewType)
 		{eDemodType = eNewType; bNewDemodType = TRUE;}
+
+	EFilterBW GetFilterBW() {return eFilterBW;}
+	void SetFilterBW(const EFilterBW eNewBW)
+		{eFilterBW = eNewBW; bNewDemodType = TRUE;}
+
+	void GetBWParameters(CReal& rCenterFreq, CReal& rBW)
+		{rCenterFreq = rFiltCentOffsNorm; rBW = rBandWidthNorm;}
 
 protected:
 	void SetCarrierFrequency(const CReal rNormCurFreqOffset);
+	void GetBWFilter(const EFilterBW eFiltBW, CReal& rFreq, float** ppfFilter);
 
 	CRealVector					rvecA;
 	CRealVector					rvecBReal;
@@ -107,6 +120,10 @@ protected:
 
 	_BOOLEAN					bNewDemodType;
 	EDemodType					eDemodType;
+	EFilterBW					eFilterBW;
+
+	CReal						rFiltCentOffsNorm;
+	CReal						rBandWidthNorm;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

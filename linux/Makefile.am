@@ -90,6 +90,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/Parameter.h \
 	../common/TextMessage.h \
 	../common/AMDemodulation.h \
+	../common/AMDemodulationFilter.h \	
 	../common/Vector.h \
 	../common/AudioFile.h \
 	../common/datadecoding/DataDecoder.h \

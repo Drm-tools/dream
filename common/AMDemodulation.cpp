@@ -122,7 +122,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 			cCurExp *= cExpStep;
 		}
 
-		if ((eDemodType == DT_AM_10) || (eDemodType == DT_AM_5))
+		if (eDemodType == DT_AM)
 		{
 			/* Use envelope of signal and DC filter. Reuse temp buffer
 			   "rvecInpTmp" */
@@ -220,77 +220,54 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 {
-	/* Calculate filter taps for complex Hilbert filter --------------------- */
-	CReal rFiltCentOffs;
+	float*	pHilFilter;
+	CReal	rBandWidth;
 
+	GetBWFilter(eFilterBW, rBandWidthNorm, &pHilFilter);
+
+	/* Calculate filter taps for complex Hilbert filter --------------------- */
 	/* Adjust center of filter for respective demodulation types */
 	switch (eDemodType)
 	{
-	case DT_AM_10:
-	case DT_AM_5:
+	case DT_AM:
 		/* No offset in normal AM mode */
-		rFiltCentOffs = rNormCurFreqOffset;
+		rFiltCentOffsNorm = rNormCurFreqOffset;
 		break;
 
 	case DT_LSB:
 		/* Shift filter to the left side of the carrier */
-		rFiltCentOffs = rNormCurFreqOffset -
-			(CReal) HILB_FILT_BNDWIDTH_5 / 2 / SOUNDCRD_SAMPLE_RATE;
+		rFiltCentOffsNorm = rNormCurFreqOffset - rBandWidthNorm / 2;
 		break;
 
 	case DT_USB:
 		/* Shift filter to the right side of the carrier */
-		rFiltCentOffs = rNormCurFreqOffset +
-			(CReal) HILB_FILT_BNDWIDTH_5 / 2 / SOUNDCRD_SAMPLE_RATE;
+		rFiltCentOffsNorm = rNormCurFreqOffset + rBandWidthNorm / 2;
 		break;
 	}
 
 
-	/* Set filter coefficients */
-	if (eDemodType == DT_AM_10)
+	/* Set filter coefficients ---------------------------------------------- */
+	rvecBReal.Init(NUM_TAPS_AM_DEMOD_FILTER);
+	rvecBImag.Init(NUM_TAPS_AM_DEMOD_FILTER);
+
+	for (int i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
 	{
-		/* Use 10 kHz filter for normal AM demodulation */
-		rvecBReal.Init(NUM_TAPS_HILB_FILT_10);
-		rvecBImag.Init(NUM_TAPS_HILB_FILT_10);
+		rvecBReal[i] =
+			pHilFilter[i] * Cos((CReal) 2.0 * crPi * rFiltCentOffsNorm * i);
 
-		for (int i = 0; i < NUM_TAPS_HILB_FILT_10; i++)
-		{
-			rvecBReal[i] =
-				fHilLPProt10[i] * Cos((CReal) 2.0 * crPi * rFiltCentOffs * i);
-
-			rvecBImag[i] =
-				fHilLPProt10[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffs * i);
-		}
-
-		/* Init state vector for filtering with zeros */
-		rvecZReal.Init(NUM_TAPS_HILB_FILT_10 - 1, (CReal) 0.0);
-		rvecZImag.Init(NUM_TAPS_HILB_FILT_10 - 1, (CReal) 0.0);
+		rvecBImag[i] =
+			pHilFilter[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffsNorm * i);
 	}
-	else
-	{
-		/* 5 kHz filter for LSB and USB and narrow AM mode */
-		rvecBReal.Init(NUM_TAPS_HILB_FILT_5);
-		rvecBImag.Init(NUM_TAPS_HILB_FILT_5);
 
-		for (int i = 0; i < NUM_TAPS_HILB_FILT_5; i++)
-		{
-			rvecBReal[i] =
-				fHilLPProt5[i] * Cos((CReal) 2.0 * crPi * rFiltCentOffs * i);
-
-			rvecBImag[i] =
-				fHilLPProt5[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffs * i);
-		}
-
-		/* Init state vector for filtering with zeros */
-		rvecZReal.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
-		rvecZImag.Init(NUM_TAPS_HILB_FILT_5 - 1, (CReal) 0.0);
-	}
+	/* Init state vector for filtering with zeros */
+	rvecZReal.Init(NUM_TAPS_AM_DEMOD_FILTER - 1, (CReal) 0.0);
+	rvecZImag.Init(NUM_TAPS_AM_DEMOD_FILTER - 1, (CReal) 0.0);
 
 	/* Only FIR filter */
 	rvecA.Init(1, (CReal) 1.0);
 
 	/* DC filter for AM demodulation */
-	if ((eDemodType == DT_AM_10) || (eDemodType == DT_AM_5))
+	if (eDemodType == DT_AM)
 	{
 		rvecZAM.Init(2, (CReal) 0.0);
 
@@ -318,4 +295,94 @@ void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 	/* Set the flag so that the parameters are not overwritten in the init
 	   function */
 	bSearWinWasSet = TRUE;
+}
+
+void CAMDemodulation::GetBWFilter(const EFilterBW eFiltBW, CReal& rFreq,
+								  float** ppfFilter)
+{
+	switch (eFiltBW)
+	{
+	case BW_1KHZ:
+		*ppfFilter = fHilLPProtAMDemod1;
+		rFreq = (CReal) 1000.0; /* Hz */
+		break;
+
+	case BW_2KHZ:
+		rFreq = (CReal) 2000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod2;
+		break;
+
+	case BW_3KHZ:
+		rFreq = (CReal) 3000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod3;
+		break;
+
+	case BW_4KHZ:
+		rFreq = (CReal) 4000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod4;
+		break;
+
+	case BW_5KHZ:
+		rFreq = (CReal) 5000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod5;
+		break;
+
+	case BW_6KHZ:
+		rFreq = (CReal) 6000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod6;
+		break;
+
+	case BW_7KHZ:
+		rFreq = (CReal) 7000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod7;
+		break;
+
+	case BW_8KHZ:
+		rFreq = (CReal) 8000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod8;
+		break;
+
+	case BW_9KHZ:
+		rFreq = (CReal) 9000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod9;
+		break;
+
+	case BW_10KHZ:
+		rFreq = (CReal) 10000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod10;
+		break;
+
+	case BW_11KHZ:
+		rFreq = (CReal) 11000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod11;
+		break;
+
+	case BW_12KHZ:
+		rFreq = (CReal) 12000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod12;
+		break;
+
+	case BW_13KHZ:
+		rFreq = (CReal) 13000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod13;
+		break;
+
+	case BW_14KHZ:
+		rFreq = (CReal) 14000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod14;
+		break;
+
+	case BW_15KHZ:
+		rFreq = (CReal) 15000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod15;
+		break;
+
+	default:
+		rFreq = (CReal) 10000.0; /* Hz */
+		*ppfFilter = fHilLPProtAMDemod10;
+		break;
+	}
+
+	/* Return normalized frequency */
+	rFreq = (rFreq + HILB_FILT_BNDWIDTH_ADD) / SOUNDCRD_SAMPLE_RATE;
 }

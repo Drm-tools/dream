@@ -46,6 +46,8 @@ AnalogDemDlg::AnalogDemDlg(QWidget* parent, const char* name, bool modal, WFlags
 	/* Button groups */
 	connect(ButtonGroupDemodulation, SIGNAL(clicked(int)),
 		this, SLOT(OnRadioDemodulation(int)));
+	connect(ButtonGroupBW, SIGNAL(clicked(int)),
+		this, SLOT(OnRadioBW(int)));
 
 	/* Check boxes */
 	connect(CheckBoxMuteAudio, SIGNAL(clicked()),
@@ -71,14 +73,9 @@ void AnalogDemDlg::UpdateControls()
 	/* Set default demodulation type */
 	switch (DRMReceiver.GetAMDemod()->GetDemodType())
 	{
-	case CAMDemodulation::DT_AM_10:
-		if (!RadioButtonDemAM10->isChecked())
-			RadioButtonDemAM10->setChecked(TRUE);
-		break;
-
-	case CAMDemodulation::DT_AM_5:
-		if (!RadioButtonDemAM5->isChecked())
-			RadioButtonDemAM5->setChecked(TRUE);
+	case CAMDemodulation::DT_AM:
+		if (!RadioButtonDemAM->isChecked())
+			RadioButtonDemAM->setChecked(TRUE);
 		break;
 
 	case CAMDemodulation::DT_LSB:
@@ -89,6 +86,85 @@ void AnalogDemDlg::UpdateControls()
 	case CAMDemodulation::DT_USB:
 		if (!RadioButtonDemUSB->isChecked())
 			RadioButtonDemUSB->setChecked(TRUE);
+		break;
+	}
+
+	/* Set default filter bandwidth */
+	switch (DRMReceiver.GetAMDemod()->GetFilterBW())
+	{
+	case CAMDemodulation::BW_1KHZ:
+		if (!RadioButtonBW1->isChecked())
+			RadioButtonBW1->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_2KHZ:
+		if (!RadioButtonBW2->isChecked())
+			RadioButtonBW2->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_3KHZ:
+		if (!RadioButtonBW3->isChecked())
+			RadioButtonBW3->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_4KHZ:
+		if (!RadioButtonBW4->isChecked())
+			RadioButtonBW4->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_5KHZ:
+		if (!RadioButtonBW5->isChecked())
+			RadioButtonBW5->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_6KHZ:
+		if (!RadioButtonBW6->isChecked())
+			RadioButtonBW6->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_7KHZ:
+		if (!RadioButtonBW7->isChecked())
+			RadioButtonBW7->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_8KHZ:
+		if (!RadioButtonBW8->isChecked())
+			RadioButtonBW8->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_9KHZ:
+		if (!RadioButtonBW9->isChecked())
+			RadioButtonBW9->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_10KHZ:
+		if (!RadioButtonBW10->isChecked())
+			RadioButtonBW10->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_11KHZ:
+		if (!RadioButtonBW11->isChecked())
+			RadioButtonBW11->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_12KHZ:
+		if (!RadioButtonBW12->isChecked())
+			RadioButtonBW12->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_13KHZ:
+		if (!RadioButtonBW13->isChecked())
+			RadioButtonBW13->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_14KHZ:
+		if (!RadioButtonBW14->isChecked())
+			RadioButtonBW14->setChecked(TRUE);
+		break;
+
+	case CAMDemodulation::BW_15KHZ:
+		if (!RadioButtonBW15->isChecked())
+			RadioButtonBW15->setChecked(TRUE);
 		break;
 	}
 
@@ -125,8 +201,11 @@ void AnalogDemDlg::OnTimerChart()
 	DRMReceiver.GetReceiver()->GetInputSpec(vecrData, vecrScale);
 
 	/* Prepare graph and set data */
+	CReal rCenterFreq, rBW;
+	DRMReceiver.GetAMDemod()->GetBWParameters(rCenterFreq, rBW);
+
 	MainPlot->SetInpSpec(vecrData, vecrScale,
-		DRMReceiver.GetParameters()->GetDCFrequency());
+		DRMReceiver.GetParameters()->GetDCFrequency(), rCenterFreq, rBW);
 }
 
 void AnalogDemDlg::OnTimer()
@@ -141,19 +220,93 @@ void AnalogDemDlg::OnRadioDemodulation(int iID)
 	switch (iID)
 	{
 	case 0:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM_10);
+		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM);
+
+		/* Set to default filter -> 10 kHz */
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_10KHZ);
+		RadioButtonBW10->setChecked(TRUE);
 		break;
 
 	case 1:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_AM_5);
+		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_LSB);
+
+		/* Set to default filter -> 5 kHz */
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_5KHZ);
+		RadioButtonBW5->setChecked(TRUE);
 		break;
 
 	case 2:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_LSB);
+		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
+
+		/* Set to default filter -> 5 kHz */
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_5KHZ);
+		RadioButtonBW5->setChecked(TRUE);
+		break;
+	}
+}
+
+void AnalogDemDlg::OnRadioBW(int iID)
+{
+	switch (iID)
+	{
+	case 0:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_1KHZ);
+		break;
+
+	case 1:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_2KHZ);
+		break;
+
+	case 2:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_3KHZ);
 		break;
 
 	case 3:
-		DRMReceiver.GetAMDemod()->SetDemodType(CAMDemodulation::DT_USB);
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_4KHZ);
+		break;
+
+	case 4:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_5KHZ);
+		break;
+
+	case 5:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_6KHZ);
+		break;
+
+	case 6:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_7KHZ);
+		break;
+
+	case 7:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_8KHZ);
+		break;
+
+	case 8:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_9KHZ);
+		break;
+
+	case 9:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_10KHZ);
+		break;
+
+	case 10:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_11KHZ);
+		break;
+
+	case 11:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_12KHZ);
+		break;
+
+	case 12:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_13KHZ);
+		break;
+
+	case 13:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_14KHZ);
+		break;
+
+	case 14:
+		DRMReceiver.GetAMDemod()->SetFilterBW(CAMDemodulation::BW_15KHZ);
 		break;
 	}
 }

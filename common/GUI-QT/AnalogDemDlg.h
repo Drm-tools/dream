@@ -70,6 +70,7 @@ public slots:
 	void OnTimer();
 	void OnTimerChart();
 	void OnRadioDemodulation(int iID);
+	void OnRadioBW(int iID);
 	void OnCheckBoxMuteAudio();
 	void OnCheckSaveAudioWAV();
 };
