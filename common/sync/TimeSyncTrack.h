@@ -46,11 +46,8 @@
 #define TETA2_DIST_FROM_MIN_DB				23
 
 /* Control parameters */
-#define CONT_PROP_IN_GUARD_INT				((_REAL) 0.2)
-#define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.3)
-
-/* Init wait for using information from channel estimation in time direction */
-#define INIT_CNT_BEF_CHAN_EST_USED			20 /* Symbols */
+#define CONT_PROP_IN_GUARD_INT				((_REAL) 0.08)
+#define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.1)
 
 
 /* Classes ********************************************************************/
@@ -73,8 +70,6 @@ public:
 	void StopTracking() {bTracking = FALSE;}
 
 protected:
-	int					iFirstPathDelay;
-
 	CComplexVector		veccPilots;
 	int					iNoIntpFreqPil;
 	CFftPlans			FftPlan;
@@ -88,12 +83,12 @@ protected:
 	CRealVector			vecrAvPoDeSpRot;
 	int					iSymDelay;
 	CShiftRegister<int>	vecTiCorrHist;
+	CShiftRegister<_REAL>	vecrNewMeasHist;
+	
 	CReal				rFracPartTiCor;
 	int					iTargetTimingPos;
 
 	_BOOLEAN			bTracking;
-
-	int					iControlDelay;
 
 	int					iDFTSize;
 

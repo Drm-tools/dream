@@ -36,32 +36,26 @@
 void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 							 int iNewTiCorr)
 {
-	int		i;
-	int		iTiOffset;
-	int		iCurTiCorr;
-	int		iIntShiftVal;
-	CReal	rPeakBound;
-	CReal	rActShiftTiCor;
-	CReal	rPropGain;
+	int			i;
+	_REAL		rTiOffset;
+	int			iIntShiftVal;
+	int			iFirstPathDelay;
+	CReal		rPeakBound;
+	CReal		rActShiftTiCor;
+	CReal		rPropGain;
+	_BOOLEAN	bDelayFound;
 
-	/* Correct averaged estimate of impulse response for timing shifts ------ */
+	/* Rotate the averaged PDP to follow the time shifts -------------------- */
 	/* Update timing correction history (shift register) */
 	vecTiCorrHist.AddEnd(iNewTiCorr);
-
-	/* Adapt vector to timing corrections */
-	iCurTiCorr = -vecTiCorrHist[0];
-
-	/* If new correction is out of range, do not use it */
-	if ((iCurTiCorr >= iNoIntpFreqPil) || (iCurTiCorr <= -iNoIntpFreqPil))
-		iCurTiCorr = 0;
 
 	/* Calculate the actual shift of the timing correction. Since we do the 
 	   timing correction at the sound card sample rate (48 kHz) and the 
 	   estimated impulse response has a different sample rate (since the 
 	   spectrum is only one little part of the sound card frequency range)
 	   we have to correct the timing correction by a certain bandwidth factor */
-	rActShiftTiCor = rFracPartTiCor + 
-		(_REAL) iCurTiCorr * iNoCarrier / Parameter.iFFTSizeN;
+	rActShiftTiCor = rFracPartTiCor - 
+		(_REAL) vecTiCorrHist[0] * iNoCarrier / iDFTSize;
 
 	/* Extract the fractional part since we can only correct integer timing
 	   shifts */
@@ -74,6 +68,11 @@ void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 	else
 		iIntShiftVal = (int) rActShiftTiCor;
 
+	/* If new correction is out of range, do not use it */
+	if ((iIntShiftVal >= iNoIntpFreqPil) || (iIntShiftVal < 0))
+		iIntShiftVal = 0;
+
+	/* Actual rotation of vector */
 	vecrAvPoDeSp.Merge(vecrAvPoDeSp(iIntShiftVal + 1, iNoIntpFreqPil), 
 		vecrAvPoDeSp(1, iIntShiftVal));
 
@@ -96,17 +95,9 @@ void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 		/* Average result, Eq (16) (Should be a moving average function, for 
 		   simplicity we have chosen an IIR filter here) */
 		const CReal rLambda = 0.9;
-		vecrAvPoDeSp = rLambda * vecrAvPoDeSp + 
-			(1 - rLambda) * (Real(veccPilots) * Real(veccPilots) +
-			Imag(veccPilots) * Imag(veccPilots));
+		vecrAvPoDeSp = 
+			rLambda * vecrAvPoDeSp + (1 - rLambda) * SqMag(veccPilots);
 	}
-
-	/* Lower and higher bound */
-	rBoundHigher = Max(vecrAvPoDeSp) * rConst1;
-	rBoundLower = Min(vecrAvPoDeSp) * rConst2;
-
-	/* Calculate the peak bound, Eq (19) */
-	rPeakBound = Max(rBoundHigher, rBoundLower);
 
 	/* Rotate the averaged result vector to put the earlier peaks
 	   (which can also detected in a certain amount) at the beginning of
@@ -114,17 +105,27 @@ void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 	vecrAvPoDeSpRot.Merge(vecrAvPoDeSp(iStPoRot, iNoIntpFreqPil), 
 		vecrAvPoDeSp(1, iStPoRot - 1));
 
+
+	/* Lower and higher bound */
+	rBoundHigher = Max(vecrAvPoDeSpRot) * rConst1;
+	rBoundLower = Min(vecrAvPoDeSpRot) * rConst2;
+
+	/* Calculate the peak bound, Eq (19) */
+	rPeakBound = Max(rBoundHigher, rBoundLower);
+
 	/* Get final estimate, Eq (18) */
-	_BOOLEAN bDelayFound = FALSE;
+	bDelayFound = FALSE; /* Init flag */
 	for (i = 0; i < iNoIntpFreqPil - 1; i++)
 	{
+		/* We are only interested in the first peak */
 		if (bDelayFound == FALSE)
 		{
 			if ((vecrAvPoDeSpRot[i] > vecrAvPoDeSpRot[i + 1]) &&
 				(vecrAvPoDeSpRot[i] > rPeakBound))
 			{
-				/* The first path delay is found */
-				iFirstPathDelay = i;
+				/* The first path delay is found. Consider the rotation
+				   introduced for earlier peaks */
+				iFirstPathDelay = i + iStPoRot;
 
 				/* Set the flag */
 				bDelayFound = TRUE;
@@ -132,42 +133,46 @@ void CTimeSyncTrack::Process(CParameter& Parameter, CComplexVector& veccChanEst,
 		}
 	}
 
+
 	/* Only apply timing correction if search was successful and tracking is
 	   activated */
 	if ((bDelayFound == TRUE) && (bTracking == TRUE))
 	{
+		/* Correct timing offset -------------------------------------------- */
 		/* Final offset is target position in comparision to the estimated first
-		   path delay (rotation of vector must be considered here, too */
-		iTiOffset = 
-			iTargetTimingPos - iFirstPathDelay + iNoIntpFreqPil - iStPoRot;
+		   path delay. Since we have a delay from the channel estimation, the
+		   previous correction is subtracted "- vecrNewMeasHist[0]". If the
+		   "real" correction arrives after the delay, this correction is 
+		   compensated. The delay of the history buffer (vecrNewMeasHist) must
+		   be equal to the delay of the channel estimation */
+		rTiOffset = (_REAL) iTargetTimingPos - iFirstPathDelay + iNoIntpFreqPil 
+			- vecrNewMeasHist[0];
 
 		/* Adapt the linear control parameter to the region, where the peak was
 		   found. The region left of the desired timing position is critical, 
 		   because we imideately get ISI if a peak appers here. Therefore we
 		   apply fast correction here. At the other positions, we 
 		   smooth the controlling to improve the immunity against false peaks */
-		if (iTiOffset > 0)
+		if (rTiOffset > 0)
 			rPropGain = CONT_PROP_BEFORE_GUARD_INT;
 		else
 			rPropGain = CONT_PROP_IN_GUARD_INT;
 
+		/* Apply proportional control */
+		rTiOffset *= rPropGain;
 
-		/* Correct timing offset -------------------------------------------- */
-		/* Direct apply of the estimate, no filtering! The correction must be 
-		   delayed since we also have a delay in the system from timing
-		   correction unit to this unit */
-		iControlDelay++;
-		if (iControlDelay == iSymDelay)
-		{
-			/* Reset the counter */
-			iControlDelay = 0;
+		/* Manage correction history. The corrections stored in the history must
+		   be quantized to the upsampled output sample rate and is back 
+		   transformed to the low sample rate afterwards */
+		vecrNewMeasHist.AddEnd(0);
+		for (i = 0; i < iSymDelay - 1; i++)
+			vecrNewMeasHist[i] += (int) (rTiOffset * iDFTSize / iNoCarrier) * 
+				(_REAL) iNoCarrier / iDFTSize;
 
-			/* Apply correction. We need to consider the sample grid difference
-			   between measurement and correction domain with an additional 
-			   factor */
-			Parameter.rTimingOffsTrack = -(_REAL) iTiOffset * rPropGain *
-				Parameter.iFFTSizeN / iNoCarrier;
-		}
+		/* Apply correction. We need to consider the sample grid difference
+		   between measurement and correction domain with an additional 
+		   factor */
+		Parameter.rTimingOffsTrack = -rTiOffset * iDFTSize / iNoCarrier;
 	}
 }
 
@@ -176,8 +181,10 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	bIsInInit = TRUE;
 
 	/* This count prevents from using channel estimation information from time
-	   interpolation before the init process hasn't yet finished */
-	iInitCnt = INIT_CNT_BEF_CHAN_EST_USED;
+	   interpolation before the init process hasn't yet finished. We use 2 * 
+	   the symbol delay because we assume a symmetric filter for channel
+	   estimation in time direction */
+	iInitCnt = iNewSymbDelay * 2;
 
 	iNoCarrier = Parameter.iNoCarrier;
 	iScatPilFreqInt = Parameter.iScatPilFreqInt;
@@ -187,6 +194,9 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	/* Timing correction history */
 	iSymDelay = iNewSymbDelay;
 	vecTiCorrHist.Init(iSymDelay, 0);
+
+	/* History for new measurements (corrections) */
+	vecrNewMeasHist.Init(iSymDelay - 1, (_REAL) 0.0);
 
 	/* Init vector for received data at pilot positions */
 	veccPilots.Init(iNoIntpFreqPil);
@@ -211,9 +221,6 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	rConst1 = pow(10, (_REAL) -TETA1_DIST_FROM_MAX_DB / 10);
 	rConst2 = pow(10, (_REAL) TETA2_DIST_FROM_MIN_DB / 10);
 
-	/* Init first path delay estimation */
-	iFirstPathDelay = 0;
-
 	/* Define start point for rotation of detection vector for acausal taps.
 	   Per definition is this point somewhere in the region after the
 	   actual guard-interval window */
@@ -224,9 +231,6 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Init fractional part of timing correction to zero */
 	rFracPartTiCor = (CReal) 0.0;
-
-	/* Init counter for control delay */
-	iControlDelay = 0;
 
 	/* Define target position for first path. Should be close to zero but not
 	   exactely zero because even small estimation errors would lead to ISI */

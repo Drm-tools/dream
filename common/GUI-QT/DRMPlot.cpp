@@ -36,11 +36,11 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	/* Grid defaults */
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setGridMajPen(QPen(gray, 0, DotLine));
+	setGridMajPen(QPen(MAIN_GRID_COLOR_PLOT, 0, DotLine));
 
 	enableGridXMin(FALSE);
 	enableGridYMin(FALSE);
-	setGridMinPen(QPen(gray, 0, DotLine));
+	setGridMinPen(QPen(MAIN_GRID_COLOR_PLOT, 0, DotLine));
 
 	/* Fonts */
 	setTitleFont(QFont("SansSerif", 8, QFont::Bold));
@@ -56,7 +56,7 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 
 	/* Canvas */
 	setCanvasLineWidth(0);
-	setCanvasBackground(QColor(white)); 
+	setCanvasBackground(QColor(BCKGRD_COLOR_PLOT)); 
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
@@ -70,7 +70,7 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	curve1 = insertCurve("Graph 1");
 	
 	/* Curve color */
-	setCurvePen(curve1, QPen(blue));
+	setCurvePen(curve1, QPen(MAIN_PEN_COLOR_PLOT));
 
 	/* Copy data from vectors in temporary arrays */
 	for (int i = 0; i < vecrScale.Size(); i++)
@@ -150,8 +150,8 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	/* These bounds show the beginning and end of the guard-interval */
 	curveLeft = insertCurve("Guard-interval beginning");
 	curveRight = insertCurve("Guard-interval end");
-	setCurvePen(curveLeft, QPen(black, 1, DotLine));
-	setCurvePen(curveRight, QPen(black, 1, DotLine));
+	setCurvePen(curveLeft, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
+	setCurvePen(curveRight, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
 
 	dY[0] = cdAxMinLeft;
 	dY[1] = cdAxMaxLeft;
@@ -178,8 +178,8 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 #ifdef _DEBUG_
 	/* Insert lines for lower and higher bound */
 	curveLow = insertCurve("Lower Bound");
-	setCurvePen(curveLow, QPen(black));
-	setCurvePen(curveHigh, QPen(red));
+	setCurvePen(curveLow, QPen(SPEC_LINE2_COLOR_PLOT));
+	setCurvePen(curveHigh, QPen(SPEC_LINE1_COLOR_PLOT));
 
 	/* Lower bound */
 	dY[0] = dY[1] = rLowerB;
@@ -189,7 +189,7 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	dY[0] = dY[1] = rHigherB;
 #else
 	/* Only include highest bound */
-	setCurvePen(curveHigh, QPen(red, 1, DotLine));
+	setCurvePen(curveHigh, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
 	dY[0] = dY[1] = _max(rHigherB, rLowerB);
 #endif
 	setCurveData(curveHigh, dX, dY, 2);
@@ -237,7 +237,7 @@ void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 
 	/* Insert line for DC carrier */
 	lCurveDC = insertCurve("DC carrier");
-	setCurvePen(lCurveDC, QPen(red, 1, DotLine));
+	setCurvePen(lCurveDC, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
 
 	dX[0] = dX[1] = (_REAL) VIRTUAL_INTERMED_FREQ / 1000;
 
@@ -285,7 +285,7 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 
 	clear();
 	SetQAM4Grid();
-	SetData(veccData, blue, 4);
+	SetData(veccData, MAIN_PEN_COLOR_CONSTELLATION, 4);
 	replot();
 }
 
@@ -309,7 +309,7 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData, CParameter::ECodScheme e
 	else
 		SetQAM16Grid();
 
-	SetData(veccData, blue, 4);
+	SetData(veccData, MAIN_PEN_COLOR_CONSTELLATION, 4);
 	replot();
 }
 
@@ -333,7 +333,7 @@ void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData, CParameter::ECodScheme e
 	else
 		SetQAM64Grid();
 
-	SetData(veccData, blue, 2);
+	SetData(veccData, MAIN_PEN_COLOR_CONSTELLATION, 2);
 	replot();
 }
 
@@ -344,7 +344,7 @@ void CDRMPlot::SetQAM4Grid()
 	double	dX[2];
 
 	/* Set scale style */
-	QPen ScalePen(gray, 1, DotLine);
+	QPen ScalePen(MAIN_GRID_COLOR_PLOT, 1, DotLine);
 
 	/* Get bounds of scale */
 	dXMax[0] = axisScale(QwtPlot::xBottom)->lBound();
@@ -369,7 +369,7 @@ void CDRMPlot::SetQAM16Grid()
 	double	dX[2];
 
 	/* Set scale style */
-	QPen ScalePen(gray, 1, DotLine);
+	QPen ScalePen(MAIN_GRID_COLOR_PLOT, 1, DotLine);
 
 	/* Get bounds of scale */
 	dXMax[0] = axisScale(QwtPlot::xBottom)->lBound();
@@ -412,7 +412,7 @@ void CDRMPlot::SetQAM64Grid()
 	double	dX[2];
 
 	/* Set scale style */
-	QPen ScalePen(gray, 1, DotLine);
+	QPen ScalePen(MAIN_GRID_COLOR_PLOT, 1, DotLine);
 
 	/* Get bounds of scale */
 	dXMax[0] = axisScale(QwtPlot::xBottom)->lBound();

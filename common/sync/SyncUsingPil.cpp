@@ -38,7 +38,6 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 	_REAL		rMinValue;
 	_REAL		rSampFreqOffsetEst;
 	_COMPLEX	cOldFreqPilCorr;
-	int			iMiddleOfInterval;
 	_COMPLEX	cFreqOffsetEstTemp;
 	_REAL		rFreqOffsetEst;
 
@@ -55,16 +54,22 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		   averaging the Euclidean-norm of the resulting complex values */
 		rTimePilotCorr = (_REAL) 0.0;
 		for (i = 0; i < iNoDiffFact; i++)
-			rTimePilotCorr += norm((*pvecInputData)[vecDiffFact[i].iNoCarrier] *
+		{
+			_COMPLEX cErrVec = ((*pvecInputData)[vecDiffFact[i].iNoCarrier] *
 				vecDiffFact[i].cDiff - 
 				(*pvecInputData)[vecDiffFact[i].iNoCarrier + 1]);
 
+			/* Add squard magnitude of error vector */
+			rTimePilotCorr += SqMag(cErrVec);
+		}
+
 #ifdef _DEBUG_
-// Store frame-synchronization data in file
+/* Store frame-synchronization data in file */
 static FILE* pFile = fopen("test/testfra.dat", "w");
 fprintf(pFile, "%e\n", rTimePilotCorr);
 fflush(pFile);
 #endif
+
 
 		/* Store correlation results in a shift register for finding the peak */
 		vecrCorrHistory.AddEnd(rTimePilotCorr);
@@ -82,11 +87,9 @@ fflush(pFile);
 		}
 
 		/* If minimum is in the middle of the interval -> check frame sync */
-		iMiddleOfInterval = iNoSymPerFrame / 2;
-
 		if (iMinIndex == iMiddleOfInterval)
 		{
-			if (iSymbolCounterTiSy == iNoSymPerFrame - iMiddleOfInterval - 1)
+			if (iSymbCntFraSy == iNoSymPerFrame - iMiddleOfInterval - 1)
 			{
 				/* Reset flag */
 				bBadFrameSync = FALSE;
@@ -99,7 +102,7 @@ fflush(pFile);
 				if (bBadFrameSync == TRUE)
 				{
 					/* Reset symbol counter according to received data */
-					iSymbolCounterTiSy = iNoSymPerFrame - iMiddleOfInterval - 1;
+					iSymbCntFraSy = iNoSymPerFrame - iMiddleOfInterval - 1;
 
 					/* Reset flag */
 					bBadFrameSync = FALSE;
@@ -125,12 +128,12 @@ fflush(pFile);
 	}
 
 	/* Set current symbol number in extended data of output vector */
-	(*pvecOutputData).GetExData().iSymbolNo = iSymbolCounterTiSy;
+	(*pvecOutputData).GetExData().iSymbolNo = iSymbCntFraSy;
 
 	/* Increase symbol counter and take care of wrap around */
-	iSymbolCounterTiSy++;
-	if (iSymbolCounterTiSy == iNoSymPerFrame)
-		iSymbolCounterTiSy = 0;
+	iSymbCntFraSy++;
+	if (iSymbCntFraSy >= iNoSymPerFrame)
+		iSymbCntFraSy = 0;
 
 
 	/**************************************************************************\
@@ -212,10 +215,20 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 	CPilotModiClass::InitRot(ReceiverParam);
 
 	/* Init internal parameters from global struct */
-	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
 	iTotalNoUsefCarr = ReceiverParam.iNoCarrier;
 	iDFTSize = ReceiverParam.iFFTSizeN;
 	iShiftedKmin = ReceiverParam.iShiftedKmin;
+
+	/* Check if symbol number per frame has changed. If yes, reset the 
+	   symbol counter */
+	if (iNoSymPerFrame != ReceiverParam.iNoSymPerFrame)
+	{
+		/* Init internal counter for symbol number */
+		iSymbCntFraSy = 0;
+
+		/* Refresh parameter */
+		iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
+	}
 
 	/* After an initialization the frame sync must be adjusted */
 	bBadFrameSync = TRUE;
@@ -241,22 +254,28 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 			/* Calculate phase correction term. This term is needed, because the
 			   desired position of the main peak (line of sight) is the middle
 			   of the guard-interval */
-			rArgumentTemp = (_REAL) 2 * crPi / iDFTSize * ReceiverParam.iGuardSize / 2;
-			cPhaseCorTermDivi = _COMPLEX(cos(rArgumentTemp), -sin(rArgumentTemp));
+			rArgumentTemp = (_REAL) 2.0 * crPi / iDFTSize *
+				ReceiverParam.iGuardSize / 2;
+			cPhaseCorTermDivi = 
+				_COMPLEX(cos(rArgumentTemp), -sin(rArgumentTemp));
 
 			/* Calculate differential factor */
-			vecDiffFact[iNoDiffFact].cDiff = ReceiverParam.matcPilotCells[0][i + 1] / 
+			vecDiffFact[iNoDiffFact].cDiff = 
+				ReceiverParam.matcPilotCells[0][i + 1] / 
 				ReceiverParam.matcPilotCells[0][i] * cPhaseCorTermDivi;
 
 			iNoDiffFact++;
 		}
 	}
 
+	/* Set middle of observation interval */
+	iMiddleOfInterval = iNoSymPerFrame / 2;
+
 	/* Get position of frequency pilots */
 	int iFreqPilCount = 0;
 	for (i = 0; i < iTotalNoUsefCarr - 1; i++)
 	{
-		if (ReceiverParam.matiMapTab[0][i] & CM_FRE_PI)
+		if (_IsFreqPil(ReceiverParam.matiMapTab[0][i]))
 		{
 			iPosFreqPil[iFreqPilCount] = i;
 			iFreqPilCount++;
@@ -286,8 +305,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 void CSyncUsingPil::StartAcquisition() 
 {
 	/* Init internal counter for symbol number */
-	iSymbolCounterTiSy = 0;
+	iSymbCntFraSy = 0;
 
 	bAquisition = TRUE;
 }
-

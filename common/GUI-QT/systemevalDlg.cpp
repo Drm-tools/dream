@@ -41,7 +41,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
 	SliderNoOfIterations->setValue(DRMReceiver.GetMSCMLC()->GetNoIterations());
-	TextNoOfIterations->setText("MLC, No. of Iterations: " + 
+	TextNoOfIterations->setText("MLC, Number of Iterations: " + 
 		QString().setNum(DRMReceiver.GetMSCMLC()->GetNoIterations()));
 
 
@@ -74,7 +74,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	}
 
 	/* Init progress bar for SNR */
-	ThermoSNR->setRange(0.0, 40.0);
+	ThermoSNR->setRange(0.0, 30.0);
 	ThermoSNR->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
 	ThermoSNR->setFillColor(QColor(0, 190, 0));
 
@@ -181,10 +181,20 @@ void systemevalDlg::OnTimer()
 		DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2));
 #else
 	/* DC frequency */
-	TextFreqOffset->setText("DC Frequency of DRM signal: \t\n" + 
+	TextFreqOffset->setText("DC Frequency of DRM Signal: \t\n" + 
 		QString().setNum(
 		DRMReceiver.GetParameters()->GetDCFrequency(), 'f', 2) + " Hz");
 #endif
+
+
+
+// TEST
+// Sigma
+TextWiener->setText("Sigma: \t\n" + 
+	QString().setNum(
+	DRMReceiver.GetChanEst()->GetSigma(), 'f', 2) + " Hz");
+
+
 
 	/* Sample frequency offset estimation */
 	TextSampFreqOffset->setText("Sample Frequency Offset: \t\n" + QString().
@@ -437,7 +447,7 @@ void systemevalDlg::OnSliderIterChange(int value)
 	DRMReceiver.GetMSCMLC()->SetNoIterations(value);
 
 	/* Show the new value in the label control */
-	TextNoOfIterations->setText("MLC, No. of Iterations: " + 
+	TextNoOfIterations->setText("MLC, Number of Iterations: " + 
 		QString().setNum(value));
 }
 

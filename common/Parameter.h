@@ -38,7 +38,7 @@
 class CParameter : public CCellMappingTable
 {
 public:
-	CParameter() : bRunThread(FALSE), Stream(MAX_NO_STREAMS), 
+	CParameter() : bRunThread(FALSE), Stream(MAX_NO_STREAMS), iChanEstDelay(0),
 		FACRepitition(15) /* See 6.3.6 */ {}
 	virtual ~CParameter() {}
 
@@ -264,6 +264,7 @@ public:
 
 	/* Parameters controlled by FAC ----------------------------------------- */
 	void			SetInterleaverDepth(const ESymIntMod eNewDepth);
+	ESymIntMod		GetInterleaverDepth() {return eSymbolInterlMode;}
 
 	void			SetMSCCodingScheme(const ECodScheme eNewScheme);
 	void			SetSDCCodingScheme(const ECodScheme eNewScheme);
@@ -349,6 +350,12 @@ public:
 	_REAL				rSimSNRdB;
 	_REAL				rBitErrRate;
 	int					iNoBitErrors;
+	int					iChanEstDelay;
+
+
+// TEST
+_REAL rSNR4WienerFreq;
+
 
 	/* Simulation raw-data management. We have to implement a shift register
 	   with varying size. We do that by adding a variable for storing the

@@ -71,7 +71,7 @@ public:
 	CTimeWiener* GetTimeWiener() {return &TimeWiener;}
 	CTimeSyncTrack* GetTimeSyncTrack() {return &TimeSyncTrack;}
 
-	_REAL GetSNREstdB() const {return 20 * log10(rSNREstimate);}
+	_REAL GetSNREstdB() const {return 10 * log10(rSNREstimate);}
 
 	/* Set (get) frequency and time interpolation algorithm */
 	void SetFreqInt(ETypeIntFreq eNewTy) {TypeIntFreq = eNewTy;}
@@ -79,10 +79,13 @@ public:
 	void SetTimeInt(ETypeIntTime eNewTy) {TypeIntTime = eNewTy;
 		SetInitFlag();}
 	ETypeIntTime GetTimeInt() {return TypeIntTime;}
+	_REAL GetSigma() {return TimeWiener.GetSigma();}
 
 protected:
 	enum EDFTWinType {DFT_WIN_RECT, DFT_WIN_HAMM};
 	EDFTWinType			eDFTWindowingMethod;
+
+	int					iNoSymPerFrame;
 
 	CChanEstTime*		pTimeInt;
 
@@ -123,10 +126,13 @@ protected:
 	_REAL				rNoiseEst;
 	_REAL				rSignalEst;
 	_REAL				rSNREstimate;
+	_REAL				rSNRCorrectFact;
 
 	int					iStartZeroPadding;
 
 	/* Wiener interpolation in frequency direction */
+	void UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio);
+
 	CComplexVector FreqOptimalFilter(int iFreqInt, int iDiff, _REAL rSNR, 
 									 _REAL rRatGuarLen, int iLength);
 	_COMPLEX FreqCorrFct(int iCurPos, _REAL rRatGuarLen);
@@ -135,6 +141,10 @@ protected:
 	CVector<int>		veciPilOffTab;
 
 	int					iDCPos;
+	int					iPilOffset;
+	int					iNoWienerFilt;
+	CMatrix<CComplex>	matcWienerFilter;
+
 	
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

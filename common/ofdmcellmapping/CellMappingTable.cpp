@@ -398,7 +398,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				{
 					/* Set flag in mapping table, consider case of both, 
 					   scattered pilot and time pilot at same position */
-					if (matiMapTab[iSym][iCarArrInd] & CM_SCAT_PI)
+					if (_IsScatPil(matiMapTab[iSym][iCarArrInd]))
 						matiMapTab[iSym][iCarArrInd] |= CM_TI_PI;
 					else
 						matiMapTab[iSym][iCarArrInd] = CM_TI_PI;
@@ -415,7 +415,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				}
 			}
 
-
+			
 			/* Frequency-reference pilots ----------------------------------- */
 			/* These pilots are in all symbols, the positions are stored in 
 			   a table */
@@ -425,8 +425,8 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			{
 				/* Set flag in mapping table, consider case of multiple
 				   definitions of pilot-mapping */
-				if ((matiMapTab[iSym][iCarArrInd] & CM_TI_PI) ||
-					(matiMapTab[iSym][iCarArrInd] & CM_SCAT_PI))
+				if (_IsTiPil(matiMapTab[iSym][iCarArrInd]) ||
+					_IsScatPil(matiMapTab[iSym][iCarArrInd]))
 				{
 					matiMapTab[iSym][iCarArrInd] |= CM_FRE_PI;
 				}
@@ -495,6 +495,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	iMSCCounter = 0;
 
 	rAvPowPerSymbol = (_REAL) 0.0;
+	rAvPilPowPerSym = (_REAL) 0.0;
 
 	for (iSym = 0; iSym < iNoSymbolsPerSuperframe; iSym++)
 	{
@@ -506,7 +507,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		for (iCar = 0; iCar < iNoCarrier; iCar++)
 		{
 			/* MSC */
-			if (matiMapTab[iSym][iCar] & CM_MSC)
+			if (_IsMSC(matiMapTab[iSym][iCar]))
 			{
 				veciNoMSCSym[iSym]++;
 
@@ -515,11 +516,11 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			}
 
 			/* FAC */
-			if (matiMapTab[iSym][iCar] & CM_FAC)
+			if (_IsFAC(matiMapTab[iSym][iCar]))
 				veciNoFACSym[iSym]++;
 
 			/* SDC */
-			if (matiMapTab[iSym][iCar] & CM_SDC)
+			if (_IsSDC(matiMapTab[iSym][iCar]))
 			{
 				veciNoSDCSym[iSym]++;
 
@@ -530,11 +531,9 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 			/* Calculations for average power per symbol (needed for SNR 
 			   estimation and simulation). DC carrier is zero (contributes not
 			   to the average power) */
-			if (!(matiMapTab[iSym][iCar] & CM_DC))
+			if (!_IsDC(matiMapTab[iSym][iCar]))
 			{
-				if ((matiMapTab[iSym][iCar] & CM_FAC) ||
-					(matiMapTab[iSym][iCar] & CM_SDC) ||
-					(matiMapTab[iSym][iCar] & CM_MSC))
+				if (_IsData(matiMapTab[iSym][iCar]))
 				{
 					/* Data cells have average power of 1 */
 					rAvPowPerSymbol += (_REAL) 1.0;
@@ -543,10 +542,17 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				{
 					/* All pilots have power of 2 except of the boosted pilots
 					   at the edges of the spectrum (they have power of 4) */
-					if (matiMapTab[iSym][iCar] & CM_BOOSTED_PI)
+					if (_IsBoosPil(matiMapTab[iSym][iCar]))
+					{
 						rAvPowPerSymbol += (_REAL) 4.0;
+						rAvPilPowPerSym += (_REAL) 4.0;
+					}
 					else
+					{
+						/* Regular pilot has power of 2 */
 						rAvPowPerSymbol += (_REAL) 2.0;
+						rAvPilPowPerSym += (_REAL) 2.0;
+					}
 				}
 			}
 		}
@@ -576,8 +582,9 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	/* Correct last MSC count (because of dummy cells) */
 	veciNoMSCSym[iNoSymbolsPerSuperframe - 1] -= iNoMSCDummyCells;
 
-	/* Normalize the average power */
+	/* Normalize the average powers */
 	rAvPowPerSymbol /= iNoSymbolsPerSuperframe;
+	rAvPilPowPerSym /= iNoSymbolsPerSuperframe;
 
 
 /* ########################################################################## */
@@ -588,40 +595,40 @@ for (int i = 0; i < iNoSymbolsPerSuperframe; i++)
 {
 	for (int j = 0; j < iNoCarrier; j++)
 	{
-		if (matiMapTab[i][j] & CM_DC)
+		if (_IsDC(matiMapTab[i][j]))
 		{
 			fprintf(pFile, ":");
 			continue;
 		}
-		if (matiMapTab[i][j] & CM_MSC)
+		if (_IsMSC(matiMapTab[i][j]))
 		{
 			fprintf(pFile, ".");
 			continue;
 		}
-		if (matiMapTab[i][j] & CM_SDC)
+		if (_IsSDC(matiMapTab[i][j]))
 		{
 			fprintf(pFile, "S");
 			continue;
 		}
-		if (matiMapTab[i][j] & CM_FAC)
+		if (_IsFAC(matiMapTab[i][j]))
 		{
 			fprintf(pFile, "X");
 			continue;
 		}
-		if (matiMapTab[i][j] & CM_TI_PI)
+		if (_IsTiPil(matiMapTab[i][j]))
 		{
 			fprintf(pFile, "T");
 			continue;
 		}
-		if (matiMapTab[i][j] & CM_FRE_PI)
+		if (_IsFreqPil(matiMapTab[i][j]))
 		{
 			fprintf(pFile, "f");
 			continue;
 		}
-		if (matiMapTab[i][j] & CM_SCAT_PI)
+		if (_IsScatPil(matiMapTab[i][j]))
 		{
 			/* Special mark for boosted pilots */
-			if (matiMapTab[i][j] & CM_BOOSTED_PI)
+			if (_IsBoosPil(matiMapTab[i][j]))
 				fprintf(pFile, "*");
 			else
 				fprintf(pFile, "0");

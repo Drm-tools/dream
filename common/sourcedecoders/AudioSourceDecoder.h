@@ -40,7 +40,7 @@
 
 /* Definitions ****************************************************************/
 /* Forgetting factor for audio blocks in case CRC was wrong */
-#define FORFACT_AUD_BL_BAD_CRC			((_REAL) 0.7)
+#define FORFACT_AUD_BL_BAD_CRC			((_REAL) 0.8)
 
 
 /* Classes ********************************************************************/

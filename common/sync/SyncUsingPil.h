@@ -46,7 +46,7 @@ class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>,
 {
 public:
 	CSyncUsingPil() : bSyncInput(FALSE), bAquisition(FALSE), bTrackPil(FALSE),
-		iSymbolCounterTiSy(0) {}
+		iSymbCntFraSy(0), iNoSymPerFrame(0) {}
 	virtual ~CSyncUsingPil() {}
 
 	/* To set the module up for synchronized DRM input data stream */
@@ -82,7 +82,7 @@ protected:
 	_REAL					rNormConstFOE;
 	_REAL					rSampleFreqEst;
 
-	int						iSymbolCounterTiSy;
+	int						iSymbCntFraSy;
 
 	int						iNoSymPerFrame;
 
@@ -92,6 +92,8 @@ protected:
 
 	_BOOLEAN				bAquisition;
 	_BOOLEAN				bTrackPil;
+
+	int						iMiddleOfInterval;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

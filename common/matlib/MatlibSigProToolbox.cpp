@@ -29,6 +29,21 @@
 
 
 /* Implementation *************************************************************/
+CReal SqMag(const CComplex& cI)
+{
+	return cI.real() * cI.real() + cI.imag() * cI.imag();
+}
+
+CMatlibVector<CReal> SqMag(const CMatlibVector<CComplex>& veccI)
+{
+	CMatlibVector<CReal> vecrRet(veccI.GetSize(), VTY_TEMP);
+
+	for (int i = 0; i < veccI.GetSize(); i++)
+		vecrRet[i] = SqMag(veccI[i]);
+
+	return vecrRet;
+}
+
 CMatlibVector<CReal> Hann(const int iLen)
 {
 	int iHalf, i;
@@ -134,7 +149,7 @@ CMatlibVector<CReal> Filter(const CMatlibVector<CReal>& fvB,
 	CMatlibVector<CReal>	fvY(fvX.GetSize(), VTY_TEMP);
 	CMatlibVector<CReal>	fvANew, fvBNew;
 
-	/* Length of coefficiants */
+	/* Length of coefficients */
 	iLenCoeff = Max((CReal) fvB.GetSize(), (CReal) fvA.GetSize());
 
 	/* Make fvB and fvA the same length (zero padding) */

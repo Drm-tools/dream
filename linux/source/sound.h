@@ -46,7 +46,7 @@
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
 #define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
 
-#define RECORDING_CHANNEL		1		/* 0: Left, 1: Right
+#define RECORDING_CHANNEL		0		/* 0: Left, 1: Right
 
 /* Classes ********************************************************************/
 class CSound

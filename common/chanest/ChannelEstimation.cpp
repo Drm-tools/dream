@@ -33,6 +33,7 @@
 void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int			i, j;
+	int			iModSymNum;
 	_COMPLEX	cModChanEst;
 
 	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
@@ -45,11 +46,6 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Write new symbol in memory */
 	for (i = 0; i < iNoCarrier; i++)
 		matcHistory[iLenHistBuff - 1][i] = (*pvecInputData)[i];
-
-	/* Set the estimated SNR for the wiener filter in time direction. We use 
-	   only SNR measurement from channel estimation */
-	if (TypeIntTime == TWIENER)
-		TimeWiener.SetSNR(pow(10, rSNREstimate / 10));
 
 
 	/* Time interpolation *****************************************************/
@@ -175,56 +171,54 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* -------------------------------------------------------------------------
-	   Calculate symbol no of the current output block and set parameter */
+	   Calculate symbol number of the current output block and set parameter */
 	(*pvecOutputData).GetExData().iSymbolNo = 
 		(*pvecInputData).GetExData().iSymbolNo - iLenHistBuff + 1;
-
-	while ((*pvecOutputData).GetExData().iSymbolNo < 0)
-		(*pvecOutputData).GetExData().iSymbolNo += ReceiverParam.iNoSymPerFrame;
 
 
 	/* SNR estimation ------------------------------------------------------- */
 	/* Use estimated channel and compare it to the received pilots. This 
 	   estimation works only if the channel estimation was successful */
+	/* Modified symbol number, check range {0, ..., iNoSymPerFrame} */
+	iModSymNum = (*pvecOutputData).GetExData().iSymbolNo;
+
+	while (iModSymNum < 0)
+		iModSymNum += iNoSymPerFrame;
+
 	for (i = 0; i < iNoCarrier; i++)
 	{
 		/* Identify pilot positions. Use MODIFIED "iSymbolNo" (See lines
 		   above) */
-		if (ReceiverParam.matiMapTab[
-			(*pvecOutputData).GetExData().iSymbolNo][i] & CM_SCAT_PI)
+		if (_IsScatPil(ReceiverParam.matiMapTab[iModSymNum][i]))
 		{
 			/* Normalize the channel estimation to values of pilots 
 			   (h = received / pilot -> received = h * pilot) */
-			cModChanEst = veccChanEst[i] * ReceiverParam.matcPilotCells[
-				(*pvecOutputData).GetExData().iSymbolNo][i];
+			cModChanEst = 
+				veccChanEst[i] * ReceiverParam.matcPilotCells[iModSymNum][i];
 
 			/* Average noise and signal estimates */
-			const _REAL rLam = 0.99;
+			const _REAL rLam = 0.999;
 			rNoiseEst = rLam * rNoiseEst + 
-				(1 - rLam) * abs(matcHistory[0][i] - cModChanEst);
+				(1 - rLam) * SqMag(matcHistory[0][i] - cModChanEst);
 
 			rSignalEst = rLam * rSignalEst + 
-				(1 - rLam) * abs(veccChanEst[i]);
+				(1 - rLam) * SqMag(veccChanEst[i]);
 
 			/* Calculate final result (signal to noise ratio) */
-			rSNREstimate = rSignalEst / rNoiseEst;
+			rSNREstimate = rSignalEst / rNoiseEst * rSNRCorrectFact;
 		}
 	}
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 {
-	int				i, j;
-	int				iDiff;
-	int				iCurPil;
-	CComplexVector	veccTempFilt;
-
 	/* Get parameters from global struct */
 	iScatPilTimeInt = ReceiverParam.iScatPilTimeInt;
 	iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
 	iNoIntpFreqPil = ReceiverParam.iNoIntpFreqPil;
 	iNoCarrier = ReceiverParam.iNoCarrier;
 	iFFTSizeN = ReceiverParam.iFFTSizeN;
+	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
 
 	/* Length of guard-interval with respect to FFT-size! */
 	iGuardSizeFFT = iNoCarrier * 
@@ -237,9 +231,9 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	if (ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D)
 	{
 		/* Identify CD carrier position */
-		for (i = 0; i < iNoCarrier; i++)
+		for (int i = 0; i < iNoCarrier; i++)
 		{
-			if (ReceiverParam.matiMapTab[0][i] & CM_DC)
+			if (_IsDC(ReceiverParam.matiMapTab[0][i]))
 				iDCPos = i;
 		}
 	}
@@ -283,13 +277,17 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Init time synchronization tracking unit */
 	TimeSyncTrack.Init(ReceiverParam, iLenHistBuff);
 
+	/* Set channel estimation delay in global struct. This is needed for 
+	   simulation */
+	ReceiverParam.iChanEstDelay = iLenHistBuff;
+
 
 	/* Init window for DFT operation for frequency interpolation ------------ */
 	/* Init memory */
 	vecrDFTWindow.Init(iNoIntpFreqPil);
 	vecrDFTwindowInv.Init(iNoCarrier);
 
-	/* Set window coefficiants */
+	/* Set window coefficients */
 	switch (eDFTWindowingMethod)
 	{
 	case DFT_WIN_RECT:
@@ -321,12 +319,14 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rNoiseEst = (_REAL) 0.0;
 	rSignalEst = (_REAL) 0.0;
 
+	/* SNR correction factor. We need this factor since we evalute the 
+	   signal-to-noise ratio only on the pilots and these have a higher power as
+	   the other cells */
+	rSNRCorrectFact = 
+		ReceiverParam.rAvPilPowPerSym /	ReceiverParam.rAvPowPerSymbol;
+
 
 	/* Inits for Wiener interpolation in frequency direction ---------------- */
-	/* SNR definition */
-	const _REAL rSNRdB = (_REAL) 30.0;
-	_REAL rSNR = pow(10, rSNRdB / 10);       
-
 	/* Length of wiener filter */
 	switch (ReceiverParam.GetWaveMode())
 	{
@@ -347,9 +347,11 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		break;
 	}
 
+
+	/* Inits for wiener filter ---------------------------------------------- */
 	/* In frequency direction we can use pilots from both sides for 
 	   interpolation */
-	int iPilOffset = iLengthWiener / 2;
+	iPilOffset = iLengthWiener / 2;
 
 	/* Allocate memory */
 	matcFiltFreq.Init(iNoCarrier, iLengthWiener);
@@ -357,50 +359,29 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Pilot offset table */
 	veciPilOffTab.Init(iNoCarrier);
 
-	/* Allocate temporary matlib vector for filter coefficiants */
-	veccTempFilt.Init(iLengthWiener);
+	/* Number of different wiener filters */
+	iNoWienerFilt = (iLengthWiener - 1) * iScatPilFreqInt + 1;
 
-	/* One filter for all carriers */
-	for (j = 0; j < iNoCarrier; j++)
-	{
-		/* We define the current pilot position as the last pilot which the
-		   index "j" has passed */
-		iCurPil = (int) (j / iScatPilFreqInt);
+	/* Allocate temporary matlib vector for filter coefficients */
+	matcWienerFilter.Init(iNoWienerFilt, iLengthWiener);
 
-		/* Consider special cases at the edges of the DRM spectrum */
-		if (iCurPil < iPilOffset)
-		{
-			/* Special case: left edge */
-			veciPilOffTab[j] = 0;
-		}
-		else if (iCurPil - iPilOffset > iNoIntpFreqPil - iLengthWiener)
-		{
-			/* Special case: right edge */
-			veciPilOffTab[j] = iNoIntpFreqPil - iLengthWiener;
-		}
-		else
-		{
-			/* In the middle */
-			veciPilOffTab[j] = iCurPil - iPilOffset;
-		}
 
-		/* Difference between the position of the first pilot (for filtering)
-		   and the position of the observed carrier */
-		iDiff = j - veciPilOffTab[j] * iScatPilFreqInt;
+	/* SNR definition */
+	const _REAL rSNRdB = (_REAL) 30.0;
+	_REAL rSNR = pow(10, rSNRdB / 10);
 
-		/* Calculate wiener filter-taps */
-		veccTempFilt = FreqOptimalFilter(iScatPilFreqInt, iDiff, rSNR, 
-			(_REAL) ReceiverParam.RatioTgTu.iEnum / 
-			ReceiverParam.RatioTgTu.iDenom, iLengthWiener);
+// TEST
+rSNR = pow(10, - 10.0 * log10(ReceiverParam.rSNR4WienerFreq) / 10);
 
-		/* Copy result in matrix */
-		for (i = 0; i < iLengthWiener; i++)
-			matcFiltFreq[j][i] = veccTempFilt[i];
-	}
+
+	/* Update wiener filter */
+	UpdateWienerFiltCoef(rSNR, (_REAL) ReceiverParam.RatioTgTu.iEnum / 
+		ReceiverParam.RatioTgTu.iDenom);
+
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iNoCarrier;
-	iOutputBlockSize = iNoCarrier;
+	iOutputBlockSize = iNoCarrier; 
 }
 
 void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
@@ -478,3 +459,57 @@ _COMPLEX CChannelEstimation::FreqCorrFct(int iCurPos, _REAL rRatGuarLen)
 	}
 }
 
+void CChannelEstimation::UpdateWienerFiltCoef(_REAL rNewSNR, _REAL rNewRatio)
+{
+	int	j, i;
+	int	iDiff;
+	int	iCurPil;
+
+	CComplexVector veccTempFilt(iLengthWiener);
+
+	/* Calculate all possible wiener filter */
+	for (j = 0; j < iNoWienerFilt; j++)
+	{
+		/* Calculate wiener filter-taps */
+		veccTempFilt = FreqOptimalFilter(iScatPilFreqInt, j, rNewSNR, 
+			rNewRatio, iLengthWiener);
+
+		/* Copy result in matrix */
+		for (i = 0; i < iLengthWiener; i++)
+			matcWienerFilter[j][i] = veccTempFilt[i];
+	}
+
+
+	/* Set matrix with filter taps, one filter for each carrier */
+	for (j = 0; j < iNoCarrier; j++)
+	{
+		/* We define the current pilot position as the last pilot which the
+		   index "j" has passed */
+		iCurPil = (int) (j / iScatPilFreqInt);
+
+		/* Consider special cases at the edges of the DRM spectrum */
+		if (iCurPil < iPilOffset)
+		{
+			/* Special case: left edge */
+			veciPilOffTab[j] = 0;
+		}
+		else if (iCurPil - iPilOffset > iNoIntpFreqPil - iLengthWiener)
+		{
+			/* Special case: right edge */
+			veciPilOffTab[j] = iNoIntpFreqPil - iLengthWiener;
+		}
+		else
+		{
+			/* In the middle */
+			veciPilOffTab[j] = iCurPil - iPilOffset;
+		}
+
+		/* Difference between the position of the first pilot (for filtering)
+		   and the position of the observed carrier */
+		iDiff = j - veciPilOffTab[j] * iScatPilFreqInt;
+
+		/* Copy correct filter in matrix */
+		for (i = 0; i < iLengthWiener; i++)
+			matcFiltFreq[j][i] = matcWienerFilter[iDiff][i];
+	}
+}

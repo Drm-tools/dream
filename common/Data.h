@@ -84,11 +84,12 @@ class CGenSimData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
 	CGenSimData() : iNoSimBlocks(DEFAULT_NO_SIM_BLOCKS), eCntType(CT_TIME),
-		iCounter(0) {}
+		iCounter(0), iNoErrors(0) {}
 	virtual ~CGenSimData() {}
 
 	void SetSimTime(int iNewTi);
 	void SetNoErrors(int iNewNE);
+	int GetNoErrors() {return iNoErrors;}
 
 protected:
 	enum ECntType {CT_TIME, CT_ERRORS};
@@ -184,11 +185,11 @@ protected:
 
 
 /* Simulation for channel estimation ---------------------------------------- */
-class CEvalChanEst : public CSimulationModul<_COMPLEX, _COMPLEX>
+class CIdealChanEst : public CSimulationModul<_COMPLEX, CEquSig>
 {
 public:
-	CEvalChanEst() {}
-	virtual ~CEvalChanEst() {}
+	CIdealChanEst() {}
+	virtual ~CIdealChanEst() {}
 
 	void GetResults(CVector<_REAL>& vecrResults);
 
@@ -197,6 +198,7 @@ protected:
 	int iNoSymPerFrame;
 	int iStartDCCar;
 	int iNoDCCarriers;
+	int iChanEstDelay;
 
 	CMatrix<_COMPLEX>	matcHistOFDMDem;
 	CMatrix<_COMPLEX>	matcHistRefChan;

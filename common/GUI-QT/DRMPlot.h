@@ -34,6 +34,30 @@
 #include "../Parameter.h"
 
 
+/* Definitions ****************************************************************/
+/* Define the plot color profile */
+#define FHG_DRM_SOFTWARE_RADIO_CP
+//#define MATLAB_LIKE_CP
+
+#ifdef FHG_DRM_SOFTWARE_RADIO_CP
+# define MAIN_PEN_COLOR_PLOT			green
+# define MAIN_PEN_COLOR_CONSTELLATION	red
+# define BCKGRD_COLOR_PLOT				black
+# define MAIN_GRID_COLOR_PLOT			QColor(128, 0, 0)
+# define SPEC_LINE1_COLOR_PLOT			yellow
+# define SPEC_LINE2_COLOR_PLOT			blue
+#endif
+
+#ifdef MATLAB_LIKE_CP
+# define MAIN_PEN_COLOR_PLOT			blue
+# define MAIN_PEN_COLOR_CONSTELLATION	blue
+# define BCKGRD_COLOR_PLOT				white
+# define MAIN_GRID_COLOR_PLOT			gray
+# define SPEC_LINE1_COLOR_PLOT			red
+# define SPEC_LINE2_COLOR_PLOT			black
+#endif
+
+
 /* Classes ********************************************************************/
 class CDRMPlot : public QwtPlot
 {

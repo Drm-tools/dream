@@ -70,7 +70,7 @@ void CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	/* Identify and calculate transfer function at the pilot positions */
 	for (i = 0; i < iNoCarrier; i++)
 	{
-		if (veciMapTab[i] & CM_SCAT_PI)
+		if (_IsScatPil(veciMapTab[i]))
 		{
 			/* h = r / s, h: transfer function of channel, r: received signal, 
 			   s: transmitted signal */

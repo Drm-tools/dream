@@ -48,7 +48,7 @@
 
 #define NO_SOUND_BUFFERS_OUT	4		/* Number of sound card buffers */
 
-#define RECORDING_CHANNEL		1		/* 0: Left, 1: Right
+#define RECORDING_CHANNEL		0		/* 0: Left, 1: Right
 
 
 /* Classes ********************************************************************/

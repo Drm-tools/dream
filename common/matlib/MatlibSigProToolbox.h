@@ -56,5 +56,9 @@ CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal>& vecrRx,
 CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx, 
 								 const CMatlibVector<CComplex>& veccB);
 
+/* Squared magnitude */
+CReal					SqMag(const CComplex& cI);
+CMatlibVector<CReal>	SqMag(const CMatlibVector<CComplex>& veccI);
+
 
 #endif	/* _MATLIB_SIGNAL_PROC_TOOLBOX_H_ */

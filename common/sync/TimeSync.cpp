@@ -136,14 +136,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							conj(HistoryBufCorr[iCurPos + iLenUsefPart[j]]);
 
 						/* Energy calculation for ML solution */
-						rGuardPowBlock[j] += HistoryBufCorr[iCurPos].real() *
-							HistoryBufCorr[iCurPos].real() +
-							HistoryBufCorr[iCurPos].imag() *
-							HistoryBufCorr[iCurPos].imag() +
-							HistoryBufCorr[iCurPos + iLenUsefPart[j]].real() *
-							HistoryBufCorr[iCurPos + iLenUsefPart[j]].real() +
-							HistoryBufCorr[iCurPos + iLenUsefPart[j]].imag() *
-							HistoryBufCorr[iCurPos + iLenUsefPart[j]].imag();
+						rGuardPowBlock[j] += SqMag(HistoryBufCorr[iCurPos]) +
+							SqMag(HistoryBufCorr[iCurPos + iLenUsefPart[j]]);
 
 						/* If one complete block is ready -> store it. We need
 						   to add "1" to the k, because otherwise
@@ -642,6 +636,7 @@ void CTimeSync::StartAcquisition()
 
 	/* Reset lambda for averaging the guard-interval correlation results */
 	rLambdaCoAv = (_REAL) 1.0;
+	iCorrAvInd = 0;
 }
 
 void CTimeSync::SetFilterTaps(_REAL rNewOffsetNorm)

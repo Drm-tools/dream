@@ -188,16 +188,17 @@ public:
 	virtual _BOOLEAN	ProcessMultipleData(CParameter& Parameter, 
 											CBuffer<TInput>& InputBuffer,
 											CBuffer<TInput>& InputBuffer2, 
+											CBuffer<TInput>& InputBuffer3,
+											CBuffer<TInput>& InputBuffer4,
+											CBuffer<TOutput>& OutputBuffer);
+	virtual _BOOLEAN	ProcessMultipleData(CParameter& Parameter, 
+											CBuffer<TInput>& InputBuffer,
+											CBuffer<TInput>& InputBuffer2, 
 											CBuffer<TInput>& InputBuffer3, 
 											CBuffer<TOutput>& OutputBuffer, 
 											CBuffer<TOutput>& OutputBuffer2, 
 											CBuffer<TOutput>& OutputBuffer3, 
 											CBuffer<TOutput>& OutputBuffer4);
-	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
-								  CBuffer<TInput>& InputBuffer,
-								  CBuffer<TInput>& InputBuffer2, 
-								  CBuffer<TInput>& InputBuffer3, 
-								  CBuffer<TInput>& InputBuffer4);
 	virtual void TransferData(CParameter& Parameter, 
 							  CBuffer<TInput>& InputBuffer, 
 							  CBuffer<TOutput>& OutputBuffer);
@@ -988,6 +989,48 @@ void CSimulationModul<TInput, TOutput>::TransferData(CParameter& Parameter,
 	OutputBuffer3.Put(iOutputBlockSize3);
 }
 
+template<class TInput, class TOutput>
+_BOOLEAN CSimulationModul<TInput, TOutput>::
+	ProcessMultipleData(CParameter& Parameter, 
+						CBuffer<TInput>& InputBuffer,
+						CBuffer<TInput>& InputBuffer2, 
+						CBuffer<TInput>& InputBuffer3,
+						CBuffer<TInput>& InputBuffer4,
+						CBuffer<TOutput>& OutputBuffer)
+{
+	/* This flag shows, if enough data was in the input buffer for processing */
+	_BOOLEAN bEnoughData = FALSE;
+
+	/* Check if enough data is available in the input buffer for processing */
+	if ((InputBuffer.GetFillLevel() >= iInputBlockSize) &&
+		(InputBuffer2.GetFillLevel() >= iInputBlockSize2) && 
+		(InputBuffer3.GetFillLevel() >= iInputBlockSize3) && 
+		(InputBuffer4.GetFillLevel() >= iInputBlockSize4))
+	{
+		bEnoughData = TRUE;
+
+		/* Get vector from transfer-buffer */
+		pvecInputData = InputBuffer.Get(iInputBlockSize);
+		pvecInputData2 = InputBuffer2.Get(iInputBlockSize2);
+		pvecInputData3 = InputBuffer3.Get(iInputBlockSize3);
+		pvecInputData4 = InputBuffer4.Get(iInputBlockSize4);
+	
+		/* Query vector from output transfer-buffer for writing */
+		pvecOutputData = OutputBuffer.QueryWriteBuffer();
+
+		/* Copy extended data from FIRST input vector (definition!) */
+		(*pvecOutputData).SetExData((*pvecInputData).GetExData());
+
+		/* Call the underlying processing-routine */
+		ProcessDataInternal(Parameter);
+	
+		/* Write processed data from internal memory in transfer-buffer */
+		OutputBuffer.Put(iOutputBlockSize);
+	}
+
+	return bEnoughData;
+}
+
 template<class TInput, class TOutput> 
 _BOOLEAN CSimulationModul<TInput, TOutput>::
 	ProcessMultipleData(CParameter& Parameter,
@@ -1002,7 +1045,6 @@ _BOOLEAN CSimulationModul<TInput, TOutput>::
 	/* This flag shows, if enough data was in the input buffer for processing */
 	_BOOLEAN bEnoughData = FALSE;
 
-	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
 	/* Check if enough data is available in the input buffer for processing */
 	if ((InputBuffer.GetFillLevel() >= iInputBlockSize) &&
 		(InputBuffer2.GetFillLevel() >= iInputBlockSize2) && 
@@ -1029,39 +1071,6 @@ _BOOLEAN CSimulationModul<TInput, TOutput>::
 		OutputBuffer2.Put(iOutputBlockSize2);
 		OutputBuffer3.Put(iOutputBlockSize3);
 		OutputBuffer4.Put(iOutputBlockSize3);
-	}
-
-	return bEnoughData;
-}
-
-template<class TInput, class TOutput> 
-_BOOLEAN CSimulationModul<TInput, TOutput>::
-	WriteData(CParameter& Parameter, 
-			  CBuffer<TInput>& InputBuffer,
-			  CBuffer<TInput>& InputBuffer2, 
-			  CBuffer<TInput>& InputBuffer3, 
-			  CBuffer<TInput>& InputBuffer4)
-{
-	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
-	/* This flag shows, if enough data was in the input buffer for processing */
-	_BOOLEAN bEnoughData = FALSE;
-
-	/* Check if enough data is available in the input buffer for processing */
-	if ((InputBuffer.GetFillLevel() >= iInputBlockSize) &&
-		(InputBuffer2.GetFillLevel() >= iInputBlockSize2) && 
-		(InputBuffer3.GetFillLevel() >= iInputBlockSize3) && 
-		(InputBuffer4.GetFillLevel() >= iInputBlockSize4))
-	{
-		bEnoughData = TRUE;
-
-		/* Get vector from transfer-buffer */
-		pvecInputData = InputBuffer.Get(iInputBlockSize);
-		pvecInputData2 = InputBuffer2.Get(iInputBlockSize2);
-		pvecInputData3 = InputBuffer3.Get(iInputBlockSize3);
-		pvecInputData4 = InputBuffer4.Get(iInputBlockSize4);
-	
-		/* Call the underlying processing-routine */
-		ProcessDataInternal(Parameter);
 	}
 
 	return bEnoughData;

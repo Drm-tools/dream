@@ -16,9 +16,9 @@ fi
 libtoolize --automake
 
 if [ -x /usr/bin/automake-1.5 ]; then
-	automake-1.5 --add-missing
+	automake-1.5 --add-missing --copy
 else
-	automake --add-missing
+	automake --add-missing --copy
 fi
 if [ -x /usr/bin/autoconf-2.53 ]; then
 	autoconf-2.53

@@ -161,7 +161,7 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	for (i = 0; i < iNoCarrier; i++)
 	{
 		/* Use all carriers except of DC carriers */
-		if (!(ReceiverParam.matiMapTab[0][i] & CM_DC))
+		if (!_IsDC(ReceiverParam.matiMapTab[0][i]))
 		{
 			rUsNoPower += 
 				real((*pvecOutputData)[i] * conj((*pvecOutputData)[i]));

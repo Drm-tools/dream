@@ -46,8 +46,22 @@
 #define	CM_SCAT_PI		64	/* Bit 6 */
 #define	CM_BOOSTED_PI	128	/* Bit 7 */
 
-/* Function for determining if this is a pilot */
-#define _IsPilot(a) (((a) == CM_TI_PI) || ((a) == CM_FRE_PI) || ((a) == CM_SCAT_PI))
+/* Definitions for checking the cells */
+#define _IsDC(a)		((a) & CM_DC)
+
+#define _IsMSC(a)		((a) & CM_MSC)
+#define _IsSDC(a)		((a) & CM_SDC)
+#define _IsFAC(a)		((a) & CM_FAC)
+
+#define _IsData(a)		(((a) & CM_MSC) || ((a) & CM_SDC) || ((a) & CM_FAC))
+
+
+#define _IsTiPil(a)		((a) & CM_TI_PI)
+#define _IsFreqPil(a)	((a) & CM_FRE_PI)
+#define _IsScatPil(a)	((a) & CM_SCAT_PI)
+
+#define _IsPilot(a)		(((a) & CM_TI_PI) || ((a) & CM_FRE_PI) || ((a) & CM_SCAT_PI))
+#define _IsBoosPil(a)	((a) & CM_BOOSTED_PI)
 
 
 /* Classes ********************************************************************/
@@ -99,7 +113,8 @@ public:
 	int					iNoSDCCellsPerSFrame; /* Number of SDC cells per super-frame */
 
 	/* Needed for SNR estimation and simulation */
-	_REAL				rAvPowPerSymbol;
+	_REAL				rAvPowPerSymbol; /* Total average power per symbol */
+	_REAL				rAvPilPowPerSym; /* Average power of pilots per symbol */
 
 protected:
 	/* Internal parameters for MakeTable function --------------------------- */

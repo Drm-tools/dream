@@ -40,12 +40,11 @@
 /* Definitions ****************************************************************/
 /* Define the number of averaged estimates of the correlation of the channel in
    time direction. This number comes from robustness mode B with 10 kHz 
-   bandwidth -> after approx. 10000 symbols a good estimate was done: 
-   N = 10000 * 206 / PilGrid (= 2) approx. 1000000 */
-#define NO_SIGMA_AVER_UNTIL_USE			1000000
+   bandwidth -> after approx. 1000 symbols a good estimate was done */
+#define NO_SYM_AVER_TI_CORR				1000
 
 /* Define the following macro if you want to activate the continuous estimation 
-   of the optimal filter coefficiants continuous */
+   of the optimal filter coefficients continuous */
 #undef DO_WIENER_TIME_FILT_UPDATE
 
 
@@ -62,15 +61,16 @@ public:
 						  CVector<int>& veciMapTab, 
 						  CVector<_COMPLEX>& veccPilotCells);
 
-	void SetSNR(_REAL rNewSNR) {rSNR = rNewSNR;}
-	_REAL GetSigma() {return rSigma;}
+	_REAL GetSigma() {return rSigma * 2;}
 
 	
 protected:
-	CRealVector TimeOptimalFilter(int iTimeInt, int iDiff, _REAL rNewSNR, 
-								  _REAL rNewSigma, _REAL rTs, int iLength);
+	CReal TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt, 
+							const int iDiff, const CReal rNewSNR, 
+							const CReal rNewSigma, const CReal rTs, 
+							const int iLength);
 	inline int DisToNextPil(int iPiHiIndex, int iSymNo);
-	void UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
+	_REAL UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
 	_REAL ModLinRegr(CVector<_REAL>& vecrCorrEst);
 
 	int					iNoCarrier;
@@ -82,7 +82,9 @@ protected:
 	
 	CMatrix<_COMPLEX>	matcChanAtPilPos;
 
+	CMatrix<_REAL>		matrTiCorrEstHist;
 	CVector<_REAL>		vecrTiCorrEst;
+	int					iCurIndTiCor;
 
 	int					iScatPilFreqInt; /* Frequency interpolation */
 	int					iScatPilTimeInt; /* Time interpolation */

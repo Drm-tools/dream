@@ -103,7 +103,7 @@ SyncUsingPil.StartTrackPil();
 				bEnoughData = TRUE;
 			}
 
-			/* Synchronisation in the frequency domain (using pilots) ------- */
+			/* Synchronization in the frequency domain (using pilots) ------- */
 			if (SyncUsingPil.ProcessData(ReceiverParam, OFDMDemodBuf,
 				SyncUsingPilBuf))
 			{
@@ -151,14 +151,14 @@ SyncUsingPil.StartTrackPil();
 
 
 			/* MSC ---------------------------------------------------------- */
-			/* Convolutional deinterleaver */
+			/* Symbol de-interleaver */
 			if (SymbDeinterleaver.ProcessData(ReceiverParam, MSCCarDemapBuf,
 				DeintlBuf))
 			{
 				bEnoughData = TRUE;
 			}
 
-			/* MLC-decoder */
+			/* MLC decoder */
 			if (MSCMLCDecoder.ProcessData(ReceiverParam, DeintlBuf,
 				MSCMLCDecBuf))
 			{

@@ -34,53 +34,58 @@ void CDRMSimulation::SimScript()
 {
 	int				i;
 	_REAL			rSNRCnt;
-	FILE*			pFile;
+	FILE*			pFileBitEr;
+	FILE*			pFileMSE;
 	CVector<_REAL>	vecrMSE;
+	string			strSimFile;
+	_REAL			rStartSNR, rEndSNR, rStepSNR;
+	string			strSpecialRemark;
 
+
+	/**************************************************************************\
+	* Simulation settings vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv*
+	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
-	eSimType = ST_CHANEST;
+	eSimType = ST_BER_IDEALCHAN;
+	eSimType = ST_MSECHANEST;
 	eSimType = ST_BITERROR;
 	eSimType = ST_NONE;
 	
-
-	/* Set the simulation priority to lowest possible value */
-#ifdef _WIN32
 	if (eSimType != ST_NONE)
-		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
-#endif
-
-
-	switch (eSimType)
 	{
-	case ST_BITERROR:
-		/* Simulation: Bit error rate --------------------------------------- */
-		/* File naming convention:
-		   Ber: Bit error rate simulation
-		   B3: Robustness mode and spectrum occupancy
-		   Chan5: Which channel was used
-		   1k: Minimum amount of seconds defined in Data.cpp
-		   10k: Value set by "SetNoErrors()"
-		   NoSync: Additional remarks
-
-		   example: BerB3_Chan5_1k_10k_NoSync */
-		pFile = fopen("test/BerA3_Chan1_2k_1k_NoSyncOptimalPara.dat", "w");
-
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
-		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_3);
+		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 		Param.MSCPrLe.iPartB = 1;
-		Param.eMSCCodingScheme = CParameter::CS_3_SM;
-		Param.eSymbolInterlMode = CParameter::SI_LONG;
+		Param.eSymbolInterlMode = CParameter::SI_LONG;//SI_SHORT;//
+		Param.eMSCCodingScheme = CParameter::CS_3_SM;//CS_3_HMMIX;//CS_3_HMSYM;//
 
-//Param.eMSCCodingScheme = CParameter::CS_3_HMMIX;//CS_3_HMSYM;
+		Param.iDRMChannelNo = 5;
 
-		Param.iDRMChannelNo = 1;
+		rStartSNR = (_REAL) 100.0;
+		rEndSNR = (_REAL) 100.0;
+		rStepSNR = (_REAL) 0.3;
+		strSpecialRemark = "";
+
+		/* Length of simulation */
+		GenSimData.SetSimTime(10);
+//		GenSimData.SetNoErrors(100000);
+
+
+ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
+//ChannelEstimation.SetFreqInt(CChannelEstimation::FDFTFILTER);
+//ChannelEstimation.SetFreqInt(CChannelEstimation::FLINEAR);
+
+ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
+//ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
+
 
 		/* Init the modules to adapt to the new parameters. We need to do that
 		   because the following routines call modul internal functions which
 		   need correcetly initialized modules */
 		Init();
 
+		MSCMLCDecoder.SetNoIterations(1);
 
 		/* Define which synchronization algorithms we want to use */
 		/* In case of bit error simulations, a synchronized DRM data stream is
@@ -89,74 +94,157 @@ void CDRMSimulation::SimScript()
 		FreqSyncAcq.SetSyncInput(TRUE);
 		SyncUsingPil.SetSyncInput(TRUE);
 		TimeSync.SetSyncInput(TRUE);
+	/**************************************************************************\
+	* Simulation settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*
+	\**************************************************************************/
 
-//ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
-//ChannelEstimation.SetFreqInt(CChannelEstimation::FDFTFILTER);
 
 
-		/* Length of simulation */
-//		GenSimData.SetSimTime(200);
-		GenSimData.SetNoErrors(1000);
 
-		MSCMLCDecoder.SetNoIterations(1);
 
-		for (rSNRCnt = 12; rSNRCnt <= 16.5; rSNRCnt += 0.2)
+
+
+		/* Set the simulation priority to lowest possible value */
+#ifdef _WIN32
+		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
+#endif
+
+		if (eSimType == ST_MSECHANEST)
 		{
-			Param.rSimSNRdB = rSNRCnt;
+			/* Open simulation file */
+			strSimFile = SimFileName(Param, eSimType, strSpecialRemark);
+			pFileMSE = fopen(strSimFile.c_str(), "w");
+
+			Param.rSimSNRdB = rStartSNR;
 
 			Run();
 
-			/* Save results */
-			fprintf(pFile, "%e %e\n", rSNRCnt, Param.rBitErrRate);
-			fflush(pFile);
+			/* After the simulation get results */
+			IdealChanEst.GetResults(vecrMSE);
 
-			/* Additionally, show results directly */
-			printf("%e %e\n", rSNRCnt, Param.rBitErrRate);
+			/* Store results in a file */
+			for (i = 0; i < vecrMSE.Size(); i++)
+				fprintf(pFileMSE, "%e ", vecrMSE[i]);
+			fprintf(pFileMSE, "\n");
+			fclose(pFileMSE);
 		}
-		fclose(pFile);
-// clear all;close all;load BitErrors.dat;semilogy(BitErrors(:,1), BitErrors(:,2));grid on
-		break;
+		else
+		{
+			/* Open simulation file */
+			strSimFile = SimFileName(Param, eSimType, strSpecialRemark);
+			pFileBitEr = fopen(strSimFile.c_str(), "w");
 
+			for (rSNRCnt = rStartSNR; rSNRCnt <= rEndSNR; rSNRCnt += rStepSNR)
+			{
+				Param.rSimSNRdB = rSNRCnt;
 
+				Run();
 
+				/* Save results */
+				fprintf(pFileBitEr, "%e %e\n", rSNRCnt, Param.rBitErrRate);
+				fflush(pFileBitEr);
+// clear all;close all;load FileName.dat;semilogy(FileName(:,1), FileName(:,2));grid on
 
-	case ST_CHANEST:
-		/* Simulation: channel estimation ----------------------------------- */
-		pFile = fopen("test/mse.dat", "w");
+				/* Additionally, show results directly */
+				printf("%e %e\n", rSNRCnt, Param.rBitErrRate);
+			}
 
-ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
-//ChannelEstimation.SetFreqInt(CChannelEstimation::FDFTFILTER);
-//ChannelEstimation.SetFreqInt(CChannelEstimation::FLINEAR);
-
-//ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
-ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
-
-
-		Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-
-		Param.iDRMChannelNo = 7;
-
-		/* No of blocks for simulation */
-		GenSimData.SetSimTime(100);
-
-		Param.rSimSNRdB = 20;//rSNRCnt;
-
-		Run();
-
-		/* After the simulation get results */
-		EvalChanEst.GetResults(vecrMSE);
-
-		/* Store results in a file */
-		for (i = 0; i < vecrMSE.Size(); i++)
-			fprintf(pFile, "%e ", vecrMSE[i]);
-		fprintf(pFile, "\n");
-		fflush(pFile);
-
-		fclose(pFile);
-		break;
+			fclose(pFileBitEr);
+		}
 	}
+
 
 	/* At the end of the simulation, exit the application */
 	if (eSimType != ST_NONE)
 		exit(1);
+}
+
+string CDRMSimulation::SimFileName(CParameter& Param, ESimType eNewType,
+								   string strAddInf)
+{
+	/* File naming convention:
+	   BER: Bit error rate simulation
+	   MSE: MSE for channel estimation
+
+	   B3: Robustness mode and spectrum occupancy
+	   Ch5: Which channel was used
+
+	   10k: Value set by "SetNoErrors()"
+
+	   example: BER_B3_Ch5_10k_NoSync */
+	string strFileName = "test/";
+
+	/* What type of simulation */
+	switch (eNewType)
+	{
+	case ST_BITERROR:
+		strFileName += "BER_";
+		break;
+	case ST_MSECHANEST:
+		strFileName += "MSE_";
+		break;
+	case ST_BER_IDEALCHAN:
+		strFileName += "BERIDEAL_";
+		break;
+	}
+
+	/* Robustness mode and spectrum occupancy */
+	switch (Param.GetWaveMode())
+	{
+	case RM_ROBUSTNESS_MODE_A:
+		strFileName += "A";
+		break;
+	case RM_ROBUSTNESS_MODE_B:
+		strFileName += "B";
+		break;
+	case RM_ROBUSTNESS_MODE_C:
+		strFileName += "C";
+		break;
+	case RM_ROBUSTNESS_MODE_D:
+		strFileName += "D";
+		break;
+	}
+	switch (Param.GetSpectrumOccup())
+	{
+	case SO_0:
+		strFileName += "0_";
+		break;
+	case SO_1:
+		strFileName += "1_";
+		break;
+	case SO_2:
+		strFileName += "2_";
+		break;
+	case SO_3:
+		strFileName += "3_";
+		break;
+	case SO_4:
+		strFileName += "4_";
+		break;
+	case SO_5:
+		strFileName += "5_";
+		break;
+	}
+
+	/* Channel number */
+	strFileName += "CH";
+	char chNumTmp;
+	sprintf(&chNumTmp, "%d", Param.iDRMChannelNo);
+	strFileName += chNumTmp;
+	strFileName += "_";
+
+	/* Number of error events */
+	char chNumTmpLong[10];
+	sprintf(chNumTmpLong, "%d", GenSimData.GetNoErrors() / 1000);
+	strFileName += chNumTmpLong;
+	strFileName += "k";
+
+	/* Special remark */
+	if (!strAddInf.empty())
+	{
+		strFileName += "_";
+		strFileName += strAddInf;
+	}
+
+	return strFileName += ".dat";
 }

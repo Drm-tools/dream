@@ -44,6 +44,8 @@ public:
 	virtual ~COFDMCellMapping() {}
 
 protected:
+	int			iNoSymPerFrame;
+	int			iNoCarrier;
 	int			iSymbolCounter;
 	_COMPLEX*	pcDummyCells;
 
@@ -58,6 +60,11 @@ public:
 	virtual ~COFDMCellDemapping() {}
 
 protected:
+	int		iNoSymPerFrame;
+	int		iNoCarrier;
+	int		iNoUsefMSCCellsPerFrame;
+	int		iNoSDCCellsPerSFrame;
+
 	int		iSymbolCounter;
 	int		iCurrentFrameID;
 

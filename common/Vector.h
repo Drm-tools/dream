@@ -265,13 +265,13 @@ protected:
 /******************************************************************************\
 * CMatrix base class                                                           *
 \******************************************************************************/
-
-// TODO improve this class, its currently just a quick hack...
-
 template<class TData> class CMatrix
 {
 public:
 	CMatrix() : ppData(NULL), iRow(0) {}
+	CMatrix(const int iNewR, const int iNewC) {Init(iNewR, iNewC);}
+	CMatrix(const int iNewR, const int iNewC, const TData tInVa) 
+		{Init(iNewR, iNewC, tInVa);}
 	virtual	~CMatrix();
 
 	void Init(const int iNewRow, const int iNewColumn);
@@ -310,17 +310,20 @@ protected:
 template<class TData> void CMatrix<TData>::Init(const int iNewRow,
 												const int iNewColumn)
 {
-	/* Delete recources from previous init */
-	if (ppData != NULL)
-		delete[] ppData;
-
 	/* Set length of history-buffer */
 	iRow = iNewRow;
 
-	/* Allocate new memory for history buffer */
-	ppData = new CVector<TData>[iRow];
-	for (int i = 0; i < iRow; i++)
-		ppData[i].Init(iNewColumn);
+	if (iRow > 0)
+	{
+		/* Delete recources from previous init */
+		if (ppData != NULL)
+			delete[] ppData;
+
+		/* Allocate new memory for history buffer */
+		ppData = new CVector<TData>[iRow];
+		for (int i = 0; i < iRow; i++)
+			ppData[i].Init(iNewColumn);
+	}
 }
 
 template<class TData> void CMatrix<TData>::Init(const int iNewRow,

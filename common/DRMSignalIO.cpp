@@ -161,9 +161,8 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		iSpecificOutBlockSize = Parameter.iSymbolBlockSize;
 	}
 
-	/* Init vector for saving input data for spectrum. Use approx. half a second
-	   of sampled data for spectrum calculation */
-	vecrInpData.Init((int) ((_REAL) 0.4 * SOUNDCRD_SAMPLE_RATE));
+	/* Init vector for saving input data for spectrum */
+	vecrInpData.Init(NO_SMPLS_4_INPUT_SPECTRUM);
 
 	/* Define output block-size */
 	iOutputBlockSize = iSpecificOutBlockSize;
@@ -243,9 +242,8 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
 		/* Log power spectrum data */
 		for (i = 0; i < iLenSpecWithNyFreq; i++)
 		{
-			vecrData[i] = (_REAL) 10.0 * log10(
-				(veccSpectrum[i].real() * veccSpectrum[i].real() +
-				veccSpectrum[i].imag() * veccSpectrum[i].imag()) / rNormData);
+			vecrData[i] = 
+				(_REAL) 10.0 * log10(SqMag(veccSpectrum[i]) / rNormData);
 
 			vecrScale[i] = (_REAL) i * rFactorScale;
 		}

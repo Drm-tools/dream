@@ -63,43 +63,43 @@ void CTimeDecDir::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	/* Main loop ------------------------------------------------------------ */
 	for (i = 0; i < iNoCarrier; i++)
 	{
-		if (veciMapTab[i] & CM_SCAT_PI)
+		if (_IsScatPil(veciMapTab[i]))
 		{
 			// Diese Zelle ist scattered Pilot
 			// Complexer Wert in "veccPilotCells[i]"
 		}
 
-		if (veciMapTab[i] & CM_TI_PI)
+		if (_IsTiPil(veciMapTab[i]))
 		{
 			// Diese Zelle ist time Pilot
 			// Complexer Wert in "veccPilotCells[i]"
 		}
 
-		if (veciMapTab[i] & CM_FRE_PI)
+		if (_IsFreqPil(veciMapTab[i]))
 		{
 			// Diese Zelle ist frequency Pilot
 			// Complexer Wert in "veccPilotCells[i]"
 		}
 
-		if (veciMapTab[i] & CM_DC)
+		if (_IsDC(veciMapTab[i]))
 		{
 			// Diese Zelle ist DC carrier
 			// Nicht benutzt!!! Laut Standard
 		}
 
-		if (veciMapTab[i] & CM_FAC)
+		if (_IsFAC(veciMapTab[i]))
 		{
 			// Diese Zelle ist FAC
 			// Immer 4-QAM
 		}
 
-		if (veciMapTab[i] & CM_SDC)
+		if (_IsSDC(veciMapTab[i]))
 		{
 			// Diese Zelle ist SDC
 			// QAM modulation in "iSDCQAM"
 		}
 
-		if (veciMapTab[i] & CM_MSC)
+		if (_IsMSC(veciMapTab[i]))
 		{
 			// Diese Zelle ist MSC
 			// QAM modulation in "iMSCQAM"
