@@ -445,7 +445,7 @@ void CNoiseReduction::Process(CRealVector& vecrIn)
 	/* Update history of input signal */
 	vecrLongSignal.Merge(vecrOldSignal, vecrIn);
 
-	/* Update signal PSD estimation (first order IIR filter) */
+	/* Update signal PSD estimation */
 	veccSigFreq = rfft(vecrLongSignal, FftPlan);
 	vecrSqMagSigFreq = SqMag(veccSigFreq);
 
@@ -540,6 +540,7 @@ void CNoiseReduction::UpdateNoiseEst(CRealVector& vecrNoisePSD,
 		break;
 	}
 
+	/* Update signal PSD estimation (first order IIR filter) */
 	IIR1(vecrSigPSD, vecrSqMagSigFreq, rLamPSD);
 
 	for (int i = 0; i < iFreqBlLen; i++)
