@@ -777,27 +777,36 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 	   the module was already initialized */
 	if (iNumCarrier != 0)
 	{
+		_REAL rDiffPhase, rOldPhase;
+
 		/* Lock resources */
 		Lock();
 
-		/* Init old phase for group delay calculation */
-		_REAL rOldPhase = (_REAL) 0.0;
+		/* Init constant for normalization */
 		const _REAL rTu = (CReal) iFFTSizeN / SOUNDCRD_SAMPLE_RATE;
 
 		/* Copy data in output vector and set scale 
 		   (carrier index as x-scale) */
 		for (int i = 0; i < iNumCarrier; i++)
 		{
-			CReal rNormChanEst = Abs(veccChanEst[i]) / (CReal) iNumCarrier;
-
 			/* Transfer function */
+			const _REAL rNormChanEst =
+				Abs(veccChanEst[i]) / (_REAL) iNumCarrier;
+
 			if (rNormChanEst > 0)
-				vecrData[i] = (CReal) 20.0 * Log10(rNormChanEst);
+				vecrData[i] = (_REAL) 20.0 * Log10(rNormChanEst);
 			else
 				vecrData[i] = RET_VAL_LOG_0;
 
 			/* Group delay */
-			_REAL rDiffPhase = Angle(veccChanEst[i]) - rOldPhase;
+			if (i == 0)
+			{
+				/* At position 0 we cannot calculate a derivation -> use
+				   the same value as position 0 */
+				rDiffPhase = Angle(veccChanEst[1]) - Angle(veccChanEst[0]);
+			}
+			else
+				rDiffPhase = Angle(veccChanEst[i]) - rOldPhase;
 
 			/* Take care of wrap around of angle() function */
 			if (rDiffPhase > WRAP_AROUND_BOUND_GRP_DLY)
@@ -806,10 +815,7 @@ void CChannelEstimation::GetTransferFunction(CVector<_REAL>& vecrData,
 				rDiffPhase += 2.0 * crPi;
 
 			/* Apply normalization */
-			if (i == 0)
-				vecrGrpDly[i] = 0;
-			else
-				vecrGrpDly[i] = rDiffPhase * rTu * 1000.0 /* ms */;
+			vecrGrpDly[i] = rDiffPhase * rTu * 1000.0 /* ms */;
 
 			/* Store old phase */
 			rOldPhase = Angle(veccChanEst[i]);
