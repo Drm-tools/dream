@@ -54,7 +54,43 @@
 extern CDRMReceiver	DRMReceiver;
 
 
+/* Definitions ****************************************************************/
+/* Maximum number of levels. A maximum of 20 hierarchy levels is set
+   (including the Main Menu and the final Message Object) */
+#define MAX_NUM_LEV_JOURNALINE			20
+
+
 /* Classes ********************************************************************/
+class CNewIDHistory
+{
+public:
+	CNewIDHistory() : veciNewsID(MAX_NUM_LEV_JOURNALINE), iNumHist(0) {}
+	virtual ~CNewIDHistory() {}
+
+	void Add(const int iNewID)
+	{
+		veciNewsID[iNumHist] = iNewID;
+		iNumHist++;
+	}
+
+	int Back()
+	{
+		if (iNumHist > 0)
+		{
+			iNumHist--;
+			return veciNewsID[iNumHist];
+		}
+		else
+			return 0; /* Root ID */
+	}
+
+	void Reset() {iNumHist = 0;}
+
+protected:
+	CVector<int>	veciNewsID;
+	int				iNumHist;
+};
+
 class MultimediaDlg : public MultimediaDlgBase
 {
 	Q_OBJECT
@@ -73,12 +109,23 @@ protected:
 	virtual void			hideEvent(QHideEvent* pEvent);
 	CVector<CMOTObject>		vecRawImages;
 	int						iCurImagePos;
+	QString					strFhGIISText;
+	int						iCurJourObjID;
+	CDataDecoder::EAppType	eAppType;
+	CNewIDHistory			NewIDHistory;
 
-	void SetPicture();
-	void UpdateAccButtons();
+	void SetSlideShowPicture();
+	void SetJournalineText();
+	void UpdateAccButtonsSlideShow();
 	int GetIDLastPicture() {return vecRawImages.Size() - 1;}
 	void SavePicture(const int iPicID, const QString& strFileName);
-	void ClearAll();
+	void ClearAllSlideShow();
+
+	void InitApplication(CDataDecoder::EAppType eNewAppType);
+
+	void InitNotSupported();
+	void InitMOTSlideShow();
+	void InitJournaline();
 
 public slots:
 	void OnTimer();
@@ -88,6 +135,6 @@ public slots:
 	void OnButtonJumpEnd();
 	void OnSave();
 	void OnSaveAll();
-	void OnClearAll() {ClearAll();}
+	void OnClearAll() {ClearAllSlideShow();}
+	void OnTextChanged();
 };
-

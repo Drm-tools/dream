@@ -35,6 +35,7 @@
 #include "../CRC.h"
 #include "../Vector.h"
 #include "MOTSlideShow.h"
+#include "Journaline.h"
 
 
 /* Definitions ****************************************************************/
@@ -71,10 +72,14 @@ protected:
 class CDataDecoder : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CDataDecoder() : iServPacketID(0), DoNotProcessData(TRUE) {}
+	CDataDecoder() : iServPacketID(0), DoNotProcessData(TRUE),
+		eAppType(AT_NOT_SUP) {}
 	virtual ~CDataDecoder() {}
+	enum EAppType {AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE};
 
 	_BOOLEAN GetSlideShowPicture(CMOTObject& NewPic);
+	void GetNews(const int iObjID, CNews& News);
+	EAppType GetAppType() {return eAppType;}
 
 protected:
 	class CDataUnit
@@ -96,8 +101,6 @@ protected:
 	int						iNumDataPackets;
 	int						iMaxPacketDataSize;
 	int						iServPacketID;
-	CParameter::EApplDomain	eServAppDomain;
-	int						iDABUserAppIdent;
 	CVector<int>			veciCRCOk;
 
 	_BOOLEAN				DoNotProcessData;
@@ -105,6 +108,9 @@ protected:
 	int						iContInd[MAX_NUM_PACK_PER_STREAM];
 	CDataUnit				DataUnit[MAX_NUM_PACK_PER_STREAM];
 	CMOTSlideShowDecoder	MOTSlideShow[MAX_NUM_PACK_PER_STREAM];
+	CJournaline				Journaline[MAX_NUM_PACK_PER_STREAM];
+
+	EAppType				eAppType;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

@@ -34,6 +34,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/datadecoding/DataDecoder.cpp \
 	../common/datadecoding/DABMOT.cpp \
 	../common/datadecoding/MOTSlideShow.cpp \
+	../common/datadecoding/Journaline.cpp \
 	../common/FAC/FAC.cpp \
 	../common/matlib/MatlibSigProToolbox.cpp \
 	../common/matlib/MatlibStdToolbox.cpp \
@@ -96,6 +97,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/datadecoding/DataDecoder.h \
 	../common/datadecoding/DABMOT.h \
 	../common/datadecoding/MOTSlideShow.h \
+	../common/datadecoding/Journaline.h \
 	../common/FAC/FAC.h \
 	../common/matlib/Matlib.h \
 	../common/matlib/MatlibSigProToolbox.h \

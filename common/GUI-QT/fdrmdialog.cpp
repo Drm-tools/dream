@@ -158,7 +158,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 	pSysEvalDlg->hide();
 
 	/* Multimedia window */
-	pMultiMediaDlg = new MultimediaDlg(this, "MOT Slide Show", FALSE, 
+	pMultiMediaDlg = new MultimediaDlg(this, "Multimedia", FALSE, 
 			Qt::WGroupLeader | Qt::WStyle_MinMax);
 	pMultiMediaDlg->hide();
 
@@ -709,6 +709,10 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 
 				case 5:
 					strReturn += "DGPS";
+					break;
+
+				case 0x44A: /* Journaline */
+					strReturn += "NewsService Journaline";
 					break;
 				}
 			}

@@ -347,16 +347,18 @@ void CDataDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 				/* Decode all IDs regardless whether activated or not
 				   (iPacketID == or != iServPacketID) */
 				/* Only DAB multimedia is supported */
-				if (eServAppDomain == CParameter::AD_DAB_SPEC_APP)
+				switch (eAppType)
 				{
-					switch (iDABUserAppIdent)
-					{
-					case 2: /* MOTSlideshow */
-						/* Packet unit decoding */
-						MOTSlideShow[iPacketID].
-							AddDataUnit(DataUnit[iPacketID].vecbiData);
-						break;
-					}
+				case AT_MOTSLISHOW: /* MOTSlideshow */
+					/* Packet unit decoding */
+					MOTSlideShow[iPacketID].
+						AddDataUnit(DataUnit[iPacketID].vecbiData);
+					break;
+
+				case AT_JOURNALINE:
+					Journaline[iPacketID].
+						AddDataUnit(DataUnit[iPacketID].vecbiData);
+					break;
 				}
 
 				/* Packet was used, reset it now for new filling with new data
@@ -395,6 +397,9 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 	iTotalNumInputBits = ReceiverParam.iNumDataDecoderBits;
 	iTotalNumInputBytes = iTotalNumInputBits / SIZEOF__BYTE;
 
+	/* Init application type (will be overwritten by correct type later */
+	eAppType = AT_NOT_SUP;
+
 	/* Check, if service is activated. Also, only packet services can be
 	   decoded */
 	if ((iCurDataStreamID != STREAM_ID_NOT_USED) &&
@@ -430,13 +435,30 @@ void CDataDecoder::InitInternal(CParameter& ReceiverParam)
 				ReceiverParam.Service[iCurSelDataServ].DataParam.iPacketID;
 
 			/* Get application domain of selected service */
-			eServAppDomain =
+			CParameter::EApplDomain eServAppDomain =
 				ReceiverParam.Service[iCurSelDataServ].DataParam.eAppDomain;
 
 			/* Get application identifier of current selected service, only
 			   used with DAB */
-			iDABUserAppIdent = ReceiverParam.Service[iCurSelDataServ].
+			int iDABUserAppIdent = ReceiverParam.Service[iCurSelDataServ].
 				DataParam.iUserAppIdent;
+
+			/* Set application type of the data service */
+			if (eServAppDomain == CParameter::AD_DAB_SPEC_APP)
+			{
+				switch (iDABUserAppIdent)
+				{
+				case 2: /* MOTSlideshow */
+					eAppType = AT_MOTSLISHOW;
+					break;
+
+				/* The preliminary 11-bit user Application Type ID for the
+				   NewsService Journaline shall be 0x44A */
+				case 0x44A: /* Journaline */
+					eAppType = AT_JOURNALINE;
+					break;
+				}
+			}
 
 			/* Init vector for storing the CRC results for each packet */
 			veciCRCOk.Init(iNumDataPackets);
@@ -466,14 +488,24 @@ _BOOLEAN CDataDecoder::GetSlideShowPicture(CMOTObject& NewPic)
 	Lock();
 
 	/* Check if data service is SlideShow application */
-	if ((DoNotProcessData == FALSE) &&
-		(eServAppDomain == CParameter::AD_DAB_SPEC_APP))
-	{
+	if ((DoNotProcessData == FALSE) && (eAppType == AT_MOTSLISHOW))
 		bReturn = MOTSlideShow[iServPacketID].GetPicture(NewPic);
-	}
 
 	/* Release resources */
 	Unlock();
 
 	return bReturn;
+}
+
+void CDataDecoder::GetNews(const int iObjID, CNews& News)
+{
+	/* Lock resources */
+	Lock();
+
+	/* Check if data service is Journaline application */
+	if ((DoNotProcessData == FALSE) && (eAppType == AT_JOURNALINE))
+		Journaline[iServPacketID].GetNews(iObjID, News);
+
+	/* Release resources */
+	Unlock();
 }
