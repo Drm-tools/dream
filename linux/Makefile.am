@@ -58,6 +58,12 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/sync/TimeSync.cpp \
 	../common/sync/SyncUsingPil.cpp \
 	../common/sync/TimeSyncTrack.cpp \
+	../common/GUI-QT/DRMPlot.cpp \
+	../common/GUI-QT/fdrmdialog.cpp \
+	../common/GUI-QT/main.cpp \
+	../common/GUI-QT/MultColorLED.cpp \
+	../common/GUI-QT/systemevalDlg.cpp \
+	../common/GUI-QT/MultimediaDlg.cpp \
 	source/sound.cpp \
 	../common/Buffer.h \
 	../common/CRC.h \
@@ -112,12 +118,7 @@ drm_SOURCES = ../common/SimulationParameters.cpp \
 	../common/tables/TableFAC.h \
 	../common/tables/TableMLC.h \
 	../common/tables/TableQAMMapping.h \
-	../common/GUI-QT/DRMPlot.cpp \
-	../common/GUI-QT/fdrmdialog.cpp \
-	../common/GUI-QT/main.cpp \
-	../common/GUI-QT/MultColorLED.cpp \
-	../common/GUI-QT/systemevalDlg.cpp \
-	../common/GUI-QT/MultimediaDlg.cpp \
+	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialogbase.ui \
 	../common/GUI-QT/AboutDlgbase.ui \
 	../common/GUI-QT/systemevalDlgbase.ui \
