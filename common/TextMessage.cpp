@@ -532,6 +532,13 @@ void CTextMessageDecoder::SetText()
 #endif
 							break;
 
+#ifdef USE_QT_GUI
+						case '<':
+							/* This character is used for HTML tags in QT */
+							(*pstrText).append("&#60;", 5);
+							break;
+#endif
+
 						default:
 							/* Append new character */
 							(*pstrText).append(&cNewChar, 1);
