@@ -42,11 +42,28 @@
 #else
 # include "source/sound.h"
 #endif
+#ifdef HAVE_DFFTW_H
+# include <dfftw.h>
+#else
+# include <fftw.h>
+#endif
 
 
 /* Definitions ****************************************************************/
 /* In case of random-noise, define number of blocks */
 #define DEFAULT_NUM_SIM_BLOCKS		50
+
+/* Length of vector for audio spectrum. We use a power-of-two length to 
+   make the FFT work more efficient */
+#define NUM_SMPLS_4_AUDIO_SPECTRUM	256
+
+/* Time span used for averaging the audio spectrum. Shall be higher than the
+   400 ms DRM audio block */
+#define TIME_AV_AUDIO_SPECT_MS		500 /* ms */		
+
+/* Number of blocks for averaging the audio spectrum */
+#define NUM_BLOCKS_AV_AUDIO_SPEC	Ceil(((_REAL) SOUNDCRD_SAMPLE_RATE * \
+	TIME_AV_AUDIO_SPECT_MS / 1000 / NUM_SMPLS_4_AUDIO_SPECTRUM))
 
 
 /* Classes ********************************************************************/
@@ -71,8 +88,7 @@ protected:
 class CWriteData : public CReceiverModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CWriteData(CSound* pNS) : bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
-		pSound(pNS), bSoundBlocking(FALSE), bNewSoundBlocking(FALSE) {}
+	CWriteData(CSound* pNS);
 	virtual ~CWriteData() {}
 
 	void StartWriteWaveFile(const string strFileName);
@@ -85,13 +101,21 @@ public:
 	void SetSoundBlocking(const _BOOLEAN bNewBl)
 		{bNewSoundBlocking = bNewBl; SetInitFlag();}
 
+	void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+
 protected:
-	CSound*		pSound;
-	_BOOLEAN	bMuteAudio;
-	CWaveFile	WaveFileAudio;
-	_BOOLEAN	bDoWriteWaveFile;
-	_BOOLEAN	bSoundBlocking;
-	_BOOLEAN	bNewSoundBlocking;
+	CSound*			pSound;
+	_BOOLEAN		bMuteAudio;
+	CWaveFile		WaveFileAudio;
+	_BOOLEAN		bDoWriteWaveFile;
+	_BOOLEAN		bSoundBlocking;
+	_BOOLEAN		bNewSoundBlocking;
+
+	CShiftRegister<_SAMPLE>	vecsOutputData;
+	CFftPlans				FftPlan;
+	CComplexVector			veccFFTInput;
+	CComplexVector			veccFFTOutput;
+	CRealVector				vecrHammingWindow;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

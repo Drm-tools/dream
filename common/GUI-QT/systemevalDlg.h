@@ -67,7 +67,7 @@ class systemevalDlg : public systemevalDlgBase
 public:
 	enum ECharType {AVERAGED_IR, TRANSFERFUNCTION,
 					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
-					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV};
+					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM};
 
 	systemevalDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
@@ -112,6 +112,7 @@ public slots:
 	void OnButtonMSCConst();
 	void OnButtonPSD();
 	void OnButtonInpSpec();
+	void OnButtonAudioSpec();
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
 	void OnCheckWriteLog();

@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>706</width>
+            <width>702</width>
             <height>557</height>
         </rect>
     </property>
@@ -926,7 +926,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout22</cstring>
+                        <cstring>Layout21</cstring>
                     </property>
                     <property>
                         <name>layoutSpacing</name>
@@ -1067,6 +1067,25 @@
                             <property stdset="1">
                                 <name>text</name>
                                 <string>MSC</string>
+                            </property>
+                            <property stdset="1">
+                                <name>toggleButton</name>
+                                <bool>true</bool>
+                            </property>
+                            <property stdset="1">
+                                <name>toggleButton</name>
+                                <bool>true</bool>
+                            </property>
+                        </widget>
+                        <widget>
+                            <class>QPushButton</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>ButtonAudioSpec</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>text</name>
+                                <string>Audio Spectrum</string>
                             </property>
                             <property stdset="1">
                                 <name>toggleButton</name>

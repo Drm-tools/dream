@@ -103,6 +103,8 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnButtonPSD()));
 	connect(ButtonInpSpec, SIGNAL(clicked()),
 		this, SLOT(OnButtonInpSpec()));
+	connect(ButtonAudioSpec, SIGNAL(clicked()),
+		this, SLOT(OnButtonAudioSpec()));
 
 	connect(buttonOk, SIGNAL(clicked()),
 		this, SLOT(accept()));
@@ -325,6 +327,14 @@ void systemevalDlg::OnTimerChart()
 		/* Prepare graph and set data */
 		MainPlot->SetInpSpec(vecrData, vecrScale,
 			DRMReceiver.GetParameters()->GetDCFrequency());
+		break;
+
+	case AUDIO_SPECTRUM:
+		/* Get data from module */
+		DRMReceiver.GetWriteData()->GetAudioSpec(vecrData, vecrScale);
+
+		/* Prepare graph and set data */
+		MainPlot->SetAudioSpec(vecrData, vecrScale);
 		break;
 
 	case FAC_CONSTELLATION:
@@ -666,6 +676,14 @@ void systemevalDlg::OnButtonInpSpec()
 	CharType = INPUTSPECTRUM_NO_AV;
 }
 
+void systemevalDlg::OnButtonAudioSpec()
+{
+	/* Set all other buttons up */
+	OnlyThisButDown(ButtonAudioSpec);
+
+	CharType = AUDIO_SPECTRUM;
+}
+
 void systemevalDlg::OnlyThisButDown(QPushButton* pButton)
 {
 	/* Set all buttons of the chart group up */
@@ -676,6 +694,7 @@ void systemevalDlg::OnlyThisButDown(QPushButton* pButton)
 	if (ButtonMSCConst->isOn()) ButtonMSCConst->setOn(FALSE);
 	if (ButtonPSD->isOn()) ButtonPSD->setOn(FALSE);
 	if (ButtonInpSpec->isOn()) ButtonInpSpec->setOn(FALSE);
+	if (ButtonAudioSpec->isOn()) ButtonAudioSpec->setOn(FALSE);
 
 	/* If button was already down, put him back */
 	if (pButton->isOn() == FALSE)

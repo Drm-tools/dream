@@ -75,6 +75,7 @@ public:
 				 const _REAL rStartGuard, const _REAL rEndGuard, 
 				 const _REAL rBeginIR, const _REAL rEndIR);
 	void SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					const _REAL rDCFreq, const _REAL rBWCenter = (_REAL) 0.0,

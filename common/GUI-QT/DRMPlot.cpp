@@ -229,6 +229,28 @@ void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	replot();
 }
 
+void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+{
+	/* Init chart for audio spectrum */
+	setTitle("Audio Spectrum");
+	enableGridX(TRUE);
+	enableGridY(TRUE);
+	setAxisTitle(QwtPlot::xBottom, "Frequency [kHz]");
+	setAxisTitle(QwtPlot::yLeft, "AS [dB]");
+
+	/* Fixed scale */
+	setAxisScale(QwtPlot::yLeft, (double) -90.0, (double) -20.0);
+	double dBandwidth = (double) SOUNDCRD_SAMPLE_RATE / 2000;
+	if (SOUNDCRD_SAMPLE_RATE == 48000)
+		dBandwidth = (double) 20.0; /* Special value in case of 48 kHz */
+
+	setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
+
+	clear();
+	SetData(vecrData, vecrScale, 2);
+	replot();
+}
+
 void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
 	long	lCurveDC;

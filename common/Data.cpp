@@ -66,6 +66,8 @@ void CReadData::InitInternal(CParameter& TransmParam)
 /* Receiver ----------------------------------------------------------------- */
 void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 {
+	int i;
+
 	/* Send data to sound interface if audio is not muted */
 	if (bMuteAudio == FALSE)
 	{
@@ -78,25 +80,50 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Write data as wave in file */
 	if (bDoWriteWaveFile == TRUE)
 	{
-		for (int i = 0; i < iInputBlockSize; i += 2)
+		for (i = 0; i < iInputBlockSize; i += 2)
 			WaveFileAudio.AddStereoSample((*pvecInputData)[i] /* left */,
 				(*pvecInputData)[i + 1] /* right */);
 	}
+
+
+	/* Store data in buffer for spectrum calculation */
+	vecsOutputData.AddEnd((*pvecInputData), iInputBlockSize);
 }
 
 void CWriteData::InitInternal(CParameter& ReceiverParam)
 {
-	/* Define block-size for input, an audio frame always corresponds to 400 ms.
+	/* An audio frame always corresponds to 400 ms.
 	   We use always stereo blocks */
-	iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
+	const int iAudFrameSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+		(_REAL) 0.4 /* 400 ms */);
 
 	/* Check if blocking behaviour of sound interface shall be changed */
 	if (bNewSoundBlocking != bSoundBlocking)
 		bSoundBlocking = bNewSoundBlocking;
 
 	/* Init sound interface with blocking or non-blocking behaviour */
-	pSound->InitPlayback(iInputBlockSize, bSoundBlocking);
+	pSound->InitPlayback(iAudFrameSize * 2 /* stereo */, bSoundBlocking);
+
+	/* Inits for audio spectrum plot */
+	vecrHammingWindow = Hamming(NUM_SMPLS_4_AUDIO_SPECTRUM);
+	vecsOutputData.Reset(0); /* Reset audio data storage vector */
+
+	/* Define block-size for input (stereo input) */
+	iInputBlockSize = iAudFrameSize * 2 /* stereo */;
+}
+
+CWriteData::CWriteData(CSound* pNS) : pSound(pNS), /* Sound interface */
+	bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
+	bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
+	/* Inits for audio spectrum plotting */
+	vecsOutputData((int) NUM_BLOCKS_AV_AUDIO_SPEC * NUM_SMPLS_4_AUDIO_SPECTRUM *
+	2 /* stereo */, 0), /* Init with zeros */
+	FftPlan(NUM_SMPLS_4_AUDIO_SPECTRUM),
+	veccFFTInput(NUM_SMPLS_4_AUDIO_SPECTRUM),
+	veccFFTOutput(NUM_SMPLS_4_AUDIO_SPECTRUM),
+	vecrHammingWindow(NUM_SMPLS_4_AUDIO_SPECTRUM)
+{
+	/* Constructor */
 }
 
 void CWriteData::StartWriteWaveFile(const string strFileName)
@@ -117,6 +144,76 @@ void CWriteData::StopWriteWaveFile()
 	bDoWriteWaveFile = FALSE;
 
 	Unlock();
+}
+
+void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
+							  CVector<_REAL>& vecrScale)
+{
+	/* Real input signal -> symmetrical spectrum -> use only half of spectrum */
+	const int iLenPowSpec = NUM_SMPLS_4_AUDIO_SPECTRUM / 2;
+
+	/* Init output vectors */
+	vecrData.Init(iLenPowSpec, (_REAL) 0.0);
+	vecrScale.Init(iLenPowSpec, (_REAL) 0.0);
+
+	/* Do copying of data only if vector is of non-zero length which means that
+	   the module was already initialized */
+	if (iLenPowSpec != 0)
+	{
+		int i, j;
+
+		/* Lock resources */
+		Lock();
+
+		/* Init vector storing the average spectrum with zeros */
+		CVector<_REAL> veccAvSpectrum(iLenPowSpec, (_REAL) 0.0);
+
+		int iCurPosInStream = 0;
+		for (j = 0; j < NUM_BLOCKS_AV_AUDIO_SPEC; j++)
+		{
+			for (i = 0; i < NUM_SMPLS_4_AUDIO_SPECTRUM; i++)
+			{
+				/* Mix both channels */
+				veccFFTInput[i] =
+					((_REAL) vecsOutputData[(i + iCurPosInStream) * 2] +
+					vecsOutputData[(i + iCurPosInStream) * 2 + 1]) / 2;
+			}
+
+			/* Apply hamming window */
+			veccFFTInput *= vecrHammingWindow;
+
+			/* Calculate Fourier transformation to get the spectrum */
+			veccFFTOutput = Fft(veccFFTInput, FftPlan);
+
+			/* Average power (using power of this tap) */
+			for (i = 0; i < iLenPowSpec; i++)
+				veccAvSpectrum[i] += SqMag(veccFFTOutput[i]);
+
+			iCurPosInStream += NUM_SMPLS_4_AUDIO_SPECTRUM;
+		}
+
+		const _REAL rNormData = (_REAL) NUM_SMPLS_4_AUDIO_SPECTRUM *
+			NUM_SMPLS_4_AUDIO_SPECTRUM * _MAXSHORT * _MAXSHORT *
+			NUM_BLOCKS_AV_AUDIO_SPEC;
+		const _REAL rFactorScale =
+			(_REAL) SOUNDCRD_SAMPLE_RATE / iLenPowSpec / 2000;
+
+		/* Apply the normalization (due to the FFT) */
+		for (i = 0; i < iLenPowSpec; i++)
+		{
+			const _REAL rNormPowSpec = veccAvSpectrum[i] / rNormData;
+
+			if (rNormPowSpec > 0)
+				vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
+			else
+				vecrData[i] = RET_VAL_LOG_0;
+
+			vecrScale[i] = (_REAL) i * rFactorScale;
+		}
+
+		/* Release resources */
+		Unlock();
+	}
 }
 
 
