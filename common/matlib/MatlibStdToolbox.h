@@ -97,6 +97,10 @@ void						Max(CReal& rMaxVal /* out */, int& iMaxInd /* out */,
 
 inline CReal				Max(const CReal& r1, const CReal& r2, const CReal& r3)
 								{return Max(Max(r1, r2), r3);}
+inline CReal				Max(const CReal& r1, const CReal& r2, const CReal& r3, const CReal& r4,
+								const CReal& r5, const CReal& r6, const CReal& r7)
+								{return Max(Max(Max(Max(Max(Max(r1, r2), r3), r4), r5), r6), r7);}
+
 
 inline CMatlibVector<CReal>	Ones(const int iLen)
 								{_VECOP(CReal, iLen, (CReal) 1.0);}
@@ -223,7 +227,7 @@ inline CReal				Sign(const CReal& rI)
 								{return rI == 0 ? 0 : rI > 0 ? 1 : -1;}
 
 inline int					Mod(const int ix, const int iy)
-								{return ix < 0 ? ix % iy + iy : ix % iy;}
+								{return ix < 0 ? (ix % iy + iy) % iy : ix % iy;}
 
 template<class T> T			Sum(const CMatlibVector<T>& vecI);
 
