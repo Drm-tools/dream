@@ -84,7 +84,7 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 
 	/* Normalized offset correction factor for IF shift. Subtract the
 	   default IF frequency ("VIRTUAL_INTERMED_FREQ") */
-	_REAL rNormCurFreqOffset = (_REAL) -2.0 * crPi *
+	const _REAL rNormCurFreqOffset = (_REAL) -2.0 * crPi *
 		(rDefCarOffset - VIRTUAL_INTERMED_FREQ) / SOUNDCRD_SAMPLE_RATE;
 
 	/* Rotation vector for exp() calculation */
@@ -112,18 +112,18 @@ void COFDMModulation::InitInternal(CParameter& TransmParam)
 \******************************************************************************/
 void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int			i;
-	_REAL		rNormCurFreqOffset;
-	_REAL		rSkipGuardIntPhase;
-	_COMPLEX	cExpStep;
+	int		i;
+	_REAL	rSkipGuardIntPhase;
 
 	/* Total frequency offset from acquisition and tracking (we calculate the
 	   normalized frequency offset) */
-	rNormCurFreqOffset = (_REAL) 2.0 * crPi * (ReceiverParam.rFreqOffsetAcqui +
+	const _REAL rNormCurFreqOffset =
+		(_REAL) 2.0 * crPi * (ReceiverParam.rFreqOffsetAcqui +
 		ReceiverParam.rFreqOffsetTrack - rInternIFNorm);
 
 	/* New rotation vector for exp() calculation */
-	cExpStep = _COMPLEX(cos(rNormCurFreqOffset), sin(rNormCurFreqOffset));
+	const _COMPLEX cExpStep =
+		_COMPLEX(cos(rNormCurFreqOffset), sin(rNormCurFreqOffset));
 
 	/* To get a continuous counter we need to take the guard-interval and
 	   timing corrections into account */
