@@ -46,8 +46,8 @@
 #define TETA2_DIST_FROM_MIN_DB				23
 
 /* Control parameters */
-#define CONT_PROP_IN_GUARD_INT				((_REAL) 0.08)
-#define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.1)
+#define CONT_PROP_IN_GUARD_INT				((_REAL) 0.06)//((_REAL) 0.08)
+#define CONT_PROP_BEFORE_GUARD_INT			((_REAL) 0.08)//((_REAL) 0.1)
 
 /* Time constant for IIR averaging of PDS estimation */
 #define TICONST_PDS_EST_TISYNC				((CReal) 0.25) /* sec */
