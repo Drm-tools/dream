@@ -99,7 +99,7 @@ inline void				IIR1TwoSided(CReal& rY, const CReal& rX,
 
 /* Get lambda for one-pole recursion from time constant */
 inline CReal			IIR1Lam(const CReal& rTau, const CReal& rFs)
-	{return exp((CReal) -1.0 / (rTau * rFs));}
+							{return exp((CReal) -1.0 / (rTau * rFs));}
 
 
 #endif	/* _MATLIB_SIGNAL_PROC_TOOLBOX_H_ */

@@ -353,7 +353,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
 		case 2: /* 10 */
 			Parameter.SetMSCCodingScheme(CParameter::CS_3_HMSYM);
 			break;
-		
+
 		case 3: /* 11 */
 			Parameter.SetMSCCodingScheme(CParameter::CS_2_SM);
 			break;
