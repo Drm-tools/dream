@@ -109,22 +109,6 @@ CMatlibVector<CReal> Hamming(const int iLen)
 	}
 }
 
-CMatlibVector<CReal> Sinc(const CMatlibVector<CReal>& fvI)
-{
-	const int iSize = fvI.GetSize();
-	CMatlibVector<CReal> fvRet(iSize, VTY_TEMP);
-
-	for (int i = 0; i < iSize; i++)
-	{
-		if (fvI[i] == (CReal) 0.0)
-			fvRet[i] = (CReal) 1.0;
-		else
-			fvRet[i] = sin(crPi * fvI[i]) / (crPi * fvI[i]);
-	}
-
-	return fvRet;
-}
-
 CMatlibVector<CReal> Randn(const int iLength)
 {
 	/* Add some constant distributed random processes together */

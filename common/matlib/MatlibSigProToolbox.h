@@ -34,7 +34,6 @@
 
 /* Classes ********************************************************************/
 CMatlibVector<CReal>	Randn(const int iLength);
-CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI);
 CMatlibVector<CReal>	Hann(const int iLen);
 CMatlibVector<CReal>	Hamming(const int iLen);
 
@@ -52,6 +51,14 @@ CMatlibVector<CReal>	Levinson(const CMatlibVector<CReal>& vecrRx,
 CMatlibVector<CComplex>	Levinson(const CMatlibVector<CComplex>& veccRx, 
 								 const CMatlibVector<CComplex>& veccB);
 
+
+/* Sinc-function */
+inline CReal			Sinc(const CReal& rI)
+{
+	return rI == (CReal) 0.0 ? (CReal) 1.0 : sin(crPi * rI) / (crPi * rI);
+}
+CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI)
+							{_VECOP(CReal, fvI.GetSize(), Sinc(fvI[i]));}
 
 
 /* My own functions --------------------------------------------------------- */
