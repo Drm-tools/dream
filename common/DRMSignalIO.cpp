@@ -105,7 +105,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 				return;	
 			}
 			else
-			{	
+			{
 				/* Write internal output buffer */
 				(*pvecOutputData)[i] = rTemp;
 			}
