@@ -111,4 +111,3 @@ public slots:
 	void OnSoundOutDevice(int id);
 	void OnReceiverMode(int id);
 };
-
