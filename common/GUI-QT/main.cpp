@@ -26,11 +26,6 @@
  *
 \******************************************************************************/
 
-#include <qapplication.h>
-#include <qthread.h>
-#include <qmessagebox.h>
-#include "fdrmdialog.h"
-
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
@@ -42,9 +37,18 @@ CDRMReceiver	DRMReceiver;
 CDRMTransmitter	DRMTransmitter;
 CDRMSimulation	DRMSimulation;
 
+
+#ifdef USE_QT_GUI
+/******************************************************************************\
+* Using GUI with QT                                                            *
+\******************************************************************************/
+#include <qapplication.h>
+#include <qthread.h>
+#include <qmessagebox.h>
+#include "fdrmdialog.h"
+
 /* This pointer is only used for the post-event routine */
 QApplication*	pApp = NULL;	
-
 
 /* Thread class for the receiver */
 class ReceiverThread : public QThread 
@@ -139,21 +143,6 @@ void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam)
 	}
 }
 
-void DebugError(const char* pchErDescr, const char* pchPar1Descr, 
-				const double dPar1, const char* pchPar2Descr,
-				const double dPar2)
-{
-	FILE* pFile = fopen("test/DebugError.dat", "a");
-	fprintf(pFile, pchErDescr); fprintf(pFile, " ### ");
-	fprintf(pFile, pchPar1Descr); fprintf(pFile, ": ");
-	fprintf(pFile, "%e ### ", dPar1);
-	fprintf(pFile, pchPar2Descr); fprintf(pFile, ": ");
-	fprintf(pFile, "%e\n", dPar2);
-	fclose(pFile);
-	printf("\nDebug error, exit! For more information see DebugError.dat\n");
-	exit(1);
-}
-
 void ErrorMessage(string strErrorString)
 {
 	/* Workaround for the QT problem */
@@ -178,19 +167,32 @@ void ErrorMessage(string strErrorString)
 */
 	exit(1);
 }
-
-/* QT mutex wrapper */
-void CMutex::Lock()
+#else /* USE_QT_GUI */
+/******************************************************************************\
+* No GUI                                                                       *
+\******************************************************************************/
+int main(int argc, char** argv)
 {
-	Mutex.lock();
+	DRMSimulation.SimScript();
+	DRMReceiver.Start();
+	return 0;
 }
 
-void CMutex::Unlock()
-{
-	Mutex.unlock();
-}
+void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam) {}
+#endif /* USE_QT_GUI */
 
-_BOOLEAN CMutex::Locked()
+
+void DebugError(const char* pchErDescr, const char* pchPar1Descr, 
+				const double dPar1, const char* pchPar2Descr,
+				const double dPar2)
 {
-	return Mutex.locked();
+	FILE* pFile = fopen("test/DebugError.dat", "a");
+	fprintf(pFile, pchErDescr); fprintf(pFile, " ### ");
+	fprintf(pFile, pchPar1Descr); fprintf(pFile, ": ");
+	fprintf(pFile, "%e ### ", dPar1);
+	fprintf(pFile, pchPar2Descr); fprintf(pFile, ": ");
+	fprintf(pFile, "%e\n", dPar2);
+	fclose(pFile);
+	printf("\nDebug error, exit! For more information see DebugError.dat\n");
+	exit(1);
 }

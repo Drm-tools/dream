@@ -30,7 +30,7 @@
 #define DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include <complex>
-using namespace std;	// Because of the library: "complex"
+using namespace std; /* Because of the library: "complex" */
 #include <string>
 #include <stdio.h>
 #include <math.h>
@@ -48,8 +48,11 @@ using namespace std;	// Because of the library: "complex"
 #define _DEBUG_
 #undef _DEBUG_
 
-
 #define DREAM_VERSION_NUMBER			"0.9.3"
+
+/* Define whether using GUI or non-GUI receiver */
+#define USE_QT_GUI
+//#undef USE_QT_GUI
 
 
 /* Define the application specific data-types ------------------------------- */
@@ -84,7 +87,6 @@ typedef uint32_t						_UINT32BIT;
 #define SIZEOF__BYTE					8
 #define _MAXSHORT						32767
 #define _MAXREAL						((_REAL) 3.4e38) /* Max for float */
-
 
 
 /* Definitions for window message system ------------------------------------ */
@@ -139,18 +141,26 @@ public:
 
 /* Mutex object to access data savely from different threads */
 /* QT mutex */
+#ifdef USE_QT_GUI
 #include <qthread.h>
-typedef QMutex							_MUTEXTYPE;
 class CMutex
 {
 public:
-	void		Lock();
-	void		Unlock();
-	_BOOLEAN	Locked();
+	void Lock() {Mutex.lock();}
+	void Unlock() {Mutex.unlock();}
 
 protected:
-	_MUTEXTYPE	Mutex;
+	QMutex Mutex;
 };
+#else
+/* No GUI and no threads, we do not need mutex in this case */
+class CMutex
+{
+public:
+	void Lock() {}
+	void Unlock() {}
+};
+#endif
 
 class CGenErr
 {
@@ -158,7 +168,6 @@ public:
 	CGenErr(string strNE) : strError(strNE) {}
 	string strError;
 };
-
 
 // FIXME something nicer than using "MAX_NUM_TAPS_DRM_CHAN"
 /* For simulation, data from channel simulation */
@@ -174,8 +183,6 @@ public:
 };
 typedef CChanSimData<_REAL>		CChanSimDataMod; /* OFDM modulated signals */
 typedef CChanSimData<_COMPLEX>	CChanSimDataDemod; /* Demodulated signals */
-
-
 
 
 /* Prototypes for global functions ********************************************/
