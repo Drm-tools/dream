@@ -769,7 +769,7 @@ string CSettings::UsageArguments(char** argv)
 		"                              1: green-black\n"
 		"                              2: black-grey\n"
 		"  --mdioutadr <s>             MDI out network address\n"
-		"                              format [IP]:[port]\n"
+		"                              format [IP#]:[port]\n"
 		"  --mdiinport <n>             set MDI in port number\n"
 #endif
 
