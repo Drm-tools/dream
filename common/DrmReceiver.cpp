@@ -91,7 +91,7 @@ void CDRMReceiver::Run()
 						   done */
 						if (bWasFreqAcqu == TRUE)
 						{
-							/* Frequency acquisition is done, now the filter for 
+							/* Frequency acquisition is done, now the filter for
 							   guard-interval correlation can be designed */
 							TimeSync.
 								SetFilterTaps(ReceiverParam.rFreqOffsetAcqui);
@@ -133,6 +133,26 @@ void CDRMReceiver::Run()
 					SyncUsingPilBuf, ChanEstBuf))
 				{
 					bEnoughData = TRUE;
+
+
+					MutexHist.Lock(); /* MUTEX vvvvvvvvvv */
+
+					/* If this module has finished, all synchronization units
+					   have also finished their OFDM symbol based estimates.
+					   Update synchronization parameters histories */
+					/* TODO: do not use the shift register class, build a new
+					   one which just incremets a pointer in a buffer and put
+					   the new value at the position of the pointer instead of
+					   moving the total data all the time -> special care has
+					   to be taken when reading out the data */
+					/* Frequency offset tracking values */
+					vecrFreqSyncValHist.AddEnd(ReceiverParam.rFreqOffsetTrack *
+						SOUNDCRD_SAMPLE_RATE);
+
+					/* Sample rate offset estimation */
+					vecrSamOffsValHist.AddEnd(ReceiverParam.GetSampFreqEst());
+
+					MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
 				}
 
 				/* Demapping of the MSC, FAC, SDC and pilots off the carriers */
@@ -362,6 +382,15 @@ void CDRMReceiver::SetInStartMode()
 
 	/* Reset GUI lights */
 	PostWinMessage(MS_RESET_ALL);
+
+
+	MutexHist.Lock(); /* MUTEX vvvvvvvvvv */
+
+	/* Reset synchronization parameter histories */
+	vecrFreqSyncValHist.Reset((_REAL) 0.0);
+	vecrSamOffsValHist.Reset((_REAL) 0.0);
+
+	MutexHist.Unlock(); /* MUTEX ^^^^^^^^^^ */
 }
 
 void CDRMReceiver::SetInTrackingMode()
@@ -577,4 +606,35 @@ void CDRMReceiver::InitsForDataParam()
 	/* Set init flags */
 	MSCDemultiplexer.SetInitFlag();
 	DataDecoder.SetInitFlag();
+}
+
+void CDRMReceiver::GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
+									  CVector<_REAL>& vecrSamOffs,
+									  CVector<_REAL>& vecrScale,
+									  _REAL& rFreqAquVal)
+{
+	/* Init output vectors */
+	vecrFreqOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrSamOffs.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+	vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
+
+	/* Lock resources */
+	MutexHist.Lock();
+
+	/* Simply copy history buffers in output buffers */
+	vecrFreqOffs = vecrFreqSyncValHist;
+	vecrSamOffs = vecrSamOffsValHist;
+
+	/* Duration of OFDM symbol useful part */
+	const _REAL rTu = (_REAL) ReceiverParam.iFFTSizeN / SOUNDCRD_SAMPLE_RATE;
+
+	/* Calculate time scale */
+	for (int i = 0; i < LEN_HIST_PLOT_SYNC_PARMS; i++)
+		vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTu;
+
+	/* Value from frequency acquisition */
+	rFreqAquVal = ReceiverParam.rFreqOffsetAcqui * SOUNDCRD_SAMPLE_RATE;
+
+	/* Release resources */
+	MutexHist.Unlock();
 }

@@ -340,6 +340,60 @@ void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	replot();
 }
 
+void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
+								  CVector<_REAL>& vecrData2,
+								  CVector<_REAL>& vecrScale,
+								  const _REAL rFreqOffAcquVal)
+{
+	/* Init chart for transfer function. Enable right axis, too */
+	setTitle("Rel. Frequency Offset / Sample Rate Offset");
+	enableAxis(QwtPlot::yRight);
+	enableGridX(TRUE);
+	enableGridY(TRUE);
+	setAxisTitle(QwtPlot::xBottom, "Time [s]");
+	QString strYLeftLabel = "Freq. Offset [Hz] rel. to " +
+		QString().setNum(rFreqOffAcquVal) + " Hz";
+	setAxisTitle(QwtPlot::yLeft, strYLeftLabel);
+	setAxisTitle(QwtPlot::yRight, "Samp. Rate Offset [Hz]");
+
+	/* Customized auto-scaling. We adjust the y scale so that it is not larger
+	   than 2 * "rMinScaleRange"  */
+	const _REAL rMinScaleRange = (_REAL) 1.0; /* Hz */
+
+	/* Get maximum and minimum values */
+	_REAL MaxFreq = -_MAXREAL;
+	_REAL MinFreq = _MAXREAL;
+	_REAL MaxSam = -_MAXREAL;
+	_REAL MinSam = _MAXREAL;
+
+	const int iSize = vecrScale.Size();
+	for (int i = 0; i < iSize; i++)
+	{
+		if (vecrData[i] > MaxFreq)
+			MaxFreq = vecrData[i];
+
+		if (vecrData[i] < MinFreq)
+			MinFreq = vecrData[i];
+
+		if (vecrData2[i] > MaxSam)
+			MaxSam = vecrData2[i];
+
+		if (vecrData2[i] < MinSam)
+			MinSam = vecrData2[i];
+	}
+
+	/* Apply scale to plot */
+	setAxisScale(QwtPlot::yLeft, (double) Floor(MinFreq / rMinScaleRange),
+		(double) Ceil(MaxFreq / rMinScaleRange));
+	setAxisScale(QwtPlot::yRight, (double) Floor(MinSam / rMinScaleRange),
+		(double) Ceil(MaxSam / rMinScaleRange));
+	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], 0.0);
+
+	clear();
+	SetData(vecrData, vecrData2, vecrScale, 2, 1);
+	replot();
+}
+
 void CDRMPlot::SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
 	long	lCurveDC;

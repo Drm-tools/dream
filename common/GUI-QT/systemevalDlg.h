@@ -67,7 +67,8 @@ class systemevalDlg : public systemevalDlgBase
 public:
 	enum ECharType {AVERAGED_IR, TRANSFERFUNCTION,
 					FAC_CONSTELLATION, SDC_CONSTELLATION, MSC_CONSTELLATION,
-					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM};
+					POWER_SPEC_DENSITY, INPUTSPECTRUM_NO_AV, AUDIO_SPECTRUM,
+					FREQ_SAM_OFFS_HIST};
 
 	systemevalDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
 		WFlags f = 0);
@@ -84,7 +85,6 @@ protected:
 	QTimer			TimerLogFileStart;
 	ECharType		CharType;
 	int				iCurFrequency;
-	void			OnlyThisButDown(QPushButton* pButton);
     virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
@@ -92,6 +92,8 @@ protected:
 
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();
+
+	void			SetupChart(const ECharType eNewType);
 
 public slots:
 	void OnTimer();
@@ -107,14 +109,15 @@ public slots:
 	void OnRadioTiSyncFirstPeak();
 	void OnRadioTiSyncEnergy();
 	void OnSliderIterChange(int value);
-	void OnButtonAvIR();
-	void OnButtonTransFct();
-	void OnButtonFACConst();
-	void OnButtonSDCConst();
-	void OnButtonMSCConst();
-	void OnButtonPSD();
-	void OnButtonInpSpec();
-	void OnButtonAudioSpec();
+	void OnButtonAvIR() {SetupChart(AVERAGED_IR);}
+	void OnButtonTransFct() {SetupChart(TRANSFERFUNCTION);}
+	void OnButtonFreqSamHist() {SetupChart(FREQ_SAM_OFFS_HIST);}
+	void OnButtonFACConst() {SetupChart(FAC_CONSTELLATION);}
+	void OnButtonSDCConst() {SetupChart(SDC_CONSTELLATION);}
+	void OnButtonMSCConst() {SetupChart(MSC_CONSTELLATION);}
+	void OnButtonPSD() {SetupChart(POWER_SPEC_DENSITY);}
+	void OnButtonInpSpec() {SetupChart(INPUTSPECTRUM_NO_AV);}
+	void OnButtonAudioSpec() {SetupChart(AUDIO_SPECTRUM);}
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
 	void OnCheckWriteLog();

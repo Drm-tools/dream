@@ -52,7 +52,7 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 
 	/* Default chart (at startup) */
 	ButtonInpSpec->setOn(TRUE);
-	CharType = INPUTSPECTRUM_NO_AV;
+	OnButtonInpSpec();
 
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
@@ -118,6 +118,8 @@ systemevalDlg::systemevalDlg(QWidget* parent, const char* name, bool modal,
 		this, SLOT(OnButtonInpSpec()));
 	connect(ButtonAudioSpec, SIGNAL(clicked()),
 		this, SLOT(OnButtonAudioSpec()));
+	connect(ButtonFreqSamHist, SIGNAL(clicked()),
+		this, SLOT(OnButtonFreqSamHist()));
 
 	connect(buttonOk, SIGNAL(clicked()),
 		this, SLOT(accept()));
@@ -255,7 +257,7 @@ void systemevalDlg::UpdateControls()
 void systemevalDlg::showEvent(QShowEvent* pEvent)
 {
 	/* Activte real-time timers when window is shown */
-	TimerChart.start(GUI_CONTROL_UPDATE_TIME);
+	SetupChart(CharType);
 
 	/* Update window */
 	OnTimerChart();
@@ -318,6 +320,7 @@ void systemevalDlg::OnTimerChart()
 	_REAL				rLowerBound, rHigherBound;
 	_REAL				rStartGuard, rEndGuard;
 	_REAL				rPDSBegin, rPDSEnd;
+	_REAL				rFreqAcquVal;
 
 	/* CHART ******************************************************************/
 	switch (CharType)
@@ -365,6 +368,16 @@ void systemevalDlg::OnTimerChart()
 
 		/* Prepare graph and set data */
 		MainPlot->SetAudioSpec(vecrData, vecrScale);
+		break;
+
+	case FREQ_SAM_OFFS_HIST:
+		/* Get data from module */
+		DRMReceiver.GetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
+			rFreqAcquVal);
+
+		/* Prepare graph and set data */
+		MainPlot->SetFreqSamOffsHist(vecrData, vecrData2, vecrScale,
+			rFreqAcquVal);
 		break;
 
 	case FAC_CONSTELLATION:
@@ -665,85 +678,34 @@ void systemevalDlg::OnSliderIterChange(int value)
 		QString().setNum(value));
 }
 
-void systemevalDlg::OnButtonAvIR()
+void systemevalDlg::SetupChart(const ECharType eNewType)
 {
-	/* Set all other buttons up */
-	OnlyThisButDown(ButtonAvIR);
+	/* Set internal variable */
+	CharType = eNewType;
 
-	CharType = AVERAGED_IR;
-}
+	/* Set up timer */
+	switch (eNewType)
+	{
+	case AVERAGED_IR:
+	case TRANSFERFUNCTION:
+	case POWER_SPEC_DENSITY:
+		/* Fast update */
+		TimerChart.start(GUI_CONTROL_UPDATE_TIME_FAST);
+		break;
 
-void systemevalDlg::OnButtonTransFct()
-{
-	/* Set all other buttons up */
-	OnlyThisButDown(ButtonTransFct);
+	case FAC_CONSTELLATION:
+	case SDC_CONSTELLATION:
+	case MSC_CONSTELLATION:
+	case INPUTSPECTRUM_NO_AV:
+	case AUDIO_SPECTRUM:
+	case FREQ_SAM_OFFS_HIST:
+		/* Slow update of plot */
+		TimerChart.start(GUI_CONTROL_UPDATE_TIME);
+		break;
+	}
 
-	CharType = TRANSFERFUNCTION;
-}
-
-void systemevalDlg::OnButtonFACConst()
-{
-	/* Set all other buttons up */
-	OnlyThisButDown(ButtonFACConst);
-
-	CharType = FAC_CONSTELLATION;
-}
-
-void systemevalDlg::OnButtonSDCConst()
-{
-	/* Set all other buttons up */
-	OnlyThisButDown(ButtonSDCConst);
-
-	CharType = SDC_CONSTELLATION;
-}
-
-void systemevalDlg::OnButtonMSCConst()
-{
-	/* Set all other buttons up */
-	OnlyThisButDown(ButtonMSCConst);
-
-	CharType = MSC_CONSTELLATION;
-}
-
-void systemevalDlg::OnButtonPSD()
-{
-	/* Set all other buttons up */
-	OnlyThisButDown(ButtonPSD);
-
-	CharType = POWER_SPEC_DENSITY;
-}
-
-void systemevalDlg::OnButtonInpSpec()
-{
-	/* Set all other buttons up */
-	OnlyThisButDown(ButtonInpSpec);
-
-	CharType = INPUTSPECTRUM_NO_AV;
-}
-
-void systemevalDlg::OnButtonAudioSpec()
-{
-	/* Set all other buttons up */
-	OnlyThisButDown(ButtonAudioSpec);
-
-	CharType = AUDIO_SPECTRUM;
-}
-
-void systemevalDlg::OnlyThisButDown(QPushButton* pButton)
-{
-	/* Set all buttons of the chart group up */
-	if (ButtonAvIR->isOn()) ButtonAvIR->setOn(FALSE);
-	if (ButtonTransFct->isOn()) ButtonTransFct->setOn(FALSE);
-	if (ButtonFACConst->isOn()) ButtonFACConst->setOn(FALSE);
-	if (ButtonSDCConst->isOn()) ButtonSDCConst->setOn(FALSE);
-	if (ButtonMSCConst->isOn()) ButtonMSCConst->setOn(FALSE);
-	if (ButtonPSD->isOn()) ButtonPSD->setOn(FALSE);
-	if (ButtonInpSpec->isOn()) ButtonInpSpec->setOn(FALSE);
-	if (ButtonAudioSpec->isOn()) ButtonAudioSpec->setOn(FALSE);
-
-	/* If button was already down, put him back */
-	if (pButton->isOn() == FALSE)
-		pButton->setOn(TRUE);
+	/* Update chart */
+	OnTimerChart();
 }
 
 void systemevalDlg::OnCheckFlipSpectrum()

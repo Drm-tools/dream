@@ -156,6 +156,7 @@ typedef unsigned int					_MESSAGE_IDENT;
 #define MS_MOT_OBJ_STAT					8
 
 #define GUI_CONTROL_UPDATE_TIME			500	/* Milliseconds */
+#define GUI_CONTROL_UPDATE_TIME_FAST	250	/* Milliseconds */
 
 
 /* Global enumerations ------------------------------------------------------ */

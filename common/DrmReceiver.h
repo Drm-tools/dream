@@ -70,6 +70,9 @@
    for initalizing the channel estimation */
 #define NUM_FAC_DEL_TRACK_SWITCH		2
 
+/* Length of the history for synchronization parameters (used for the plot) */
+#define LEN_HIST_PLOT_SYNC_PARMS		1500
+
 
 /* Classes ********************************************************************/
 class CDRMReceiver
@@ -89,7 +92,9 @@ public:
 		iGoodSignCnt(0), bWasFreqAcqu(TRUE), bDoInitRun(FALSE),
 		eReceiverMode(RM_DRM), 	eNewReceiverMode(RM_NONE),
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
-		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0)
+		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0),
+		vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
+		vecrSamOffsValHist(LEN_HIST_PLOT_SYNC_PARMS)
 #ifdef USE_QT_GUI
 		, UtilizeFACData(&MDI), UtilizeSDCData(&MDI), MSCDemultiplexer(&MDI)
 #endif
@@ -209,6 +214,10 @@ public:
 	int iMainPlotColorStyle;
 #endif
 
+	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
+		CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
+		_REAL& rFreqAquVal);
+
 protected:
 	void					Run();
 	void					DetectAcquiFAC();
@@ -287,6 +296,13 @@ protected:
 
 	int						iSoundCrdDevIn;
 	int						iSoundCrdDevOut;
+
+
+	/* Storing parameters for plot */
+	CShiftRegister<_REAL>	vecrFreqSyncValHist;
+	CShiftRegister<_REAL>	vecrSamOffsValHist;
+
+	CMutex					MutexHist;
 };
 
 
