@@ -237,29 +237,6 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 		DRMReceiver.GeomSystemEvalDlg.bVisible = FALSE;
 	}
 
-	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(this, tr("Analog Demodulation"), FALSE,
-		Qt::WStyle_MinMax);
-
-	if (DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
-	{
-		/* If analog demodulation evaluation window was shown, the receiver
-		   certainly was in analog demodulation mode and we should set it to
-		   this mode now */
-		pReceiverModeMenu->setItemChecked(1, 1);
-		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_AM);
-
-		pAnalogDemDlg->show();
-	}
-	else
-	{
-		/* Default is DRM mode */
-		pReceiverModeMenu->setItemChecked(0, 1);
-		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
-
-		pAnalogDemDlg->hide();
-	}
-
 	/* Stations window */
 	pStationsDlg = new StationsDlg(this, tr("Stations"), FALSE,
 		Qt::WStyle_MinMax);
@@ -285,6 +262,29 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 		pMultiMediaDlg->show();
 	else
 		pMultiMediaDlg->hide();
+
+	/* Analog demodulation window */
+	pAnalogDemDlg = new AnalogDemDlg(this, tr("Analog Demodulation"), FALSE,
+		Qt::WStyle_MinMax);
+
+	/* Make sure that the stations and evaluation dialog is already constructed
+	   before making calls to SetReceiverMode()! */
+	if (DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
+	{
+		/* If analog demodulation evaluation window was shown, the receiver
+		   certainly was in analog demodulation mode and we should set it to
+		   this mode now */
+		SetReceiverMode(CDRMReceiver::RM_AM);
+
+		pAnalogDemDlg->show();
+	}
+	else
+	{
+		/* Default is DRM mode */
+		SetReceiverMode(CDRMReceiver::RM_DRM);
+
+		pAnalogDemDlg->hide();
+	}
 
 	/* Enable multimedia */
 	DRMReceiver.GetParameters()->EnableMultimedia(TRUE);
@@ -606,32 +606,54 @@ void FDRMDialog::OnTimer()
 	}
 }
 
-void FDRMDialog::OnReceiverMode(int id)
+void FDRMDialog::SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo)
 {
-	switch (id)
+	/* Set mode in receiver object */
+	DRMReceiver.SetReceiverMode(eNewReMo);
+
+	/* Make sure correct evaluation dialog is shown */
+	switch (eNewReMo)
 	{
-	case 0:
-		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+	case CDRMReceiver::RM_DRM:
 		if (pAnalogDemDlg->isVisible())
 		{
 			pAnalogDemDlg->hide();
 			pSysEvalDlg->show();
 		}
+
+		/* Load correct schedule */
+		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
 		break;
 
-	case 1:
-		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_AM);
+	case CDRMReceiver::RM_AM:
 		if (pSysEvalDlg->isVisible())
 		{
 			pSysEvalDlg->hide();
 			pAnalogDemDlg->show();
 		}
+
+		/* Load correct schedule */
+		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
 		break;
 	}
 
 	/* Taking care of checks in the menu */
-	pReceiverModeMenu->setItemChecked(0, 0 == id);
-	pReceiverModeMenu->setItemChecked(1, 1 == id);
+	pReceiverModeMenu->setItemChecked(0, eNewReMo == CDRMReceiver::RM_DRM);
+	pReceiverModeMenu->setItemChecked(1, eNewReMo == CDRMReceiver::RM_AM);
+}
+
+void FDRMDialog::OnReceiverMode(int id)
+{
+	switch (id)
+	{
+	case 0:
+		SetReceiverMode(CDRMReceiver::RM_DRM);
+		break;
+
+	case 1:
+		SetReceiverMode(CDRMReceiver::RM_AM);
+		break;
+	}
 }
 
 void FDRMDialog::OnSoundInDevice(int id)

@@ -48,21 +48,30 @@ extern "C"
 
 
 /* Implementation *************************************************************/
-CDRMSchedule::CDRMSchedule()
-{
-	ReadStatTabFromFile("DRMSchedule.ini");
-}
-
-void CDRMSchedule::ReadStatTabFromFile(const string strFileName)
+void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 {
 	const int	iMaxLenName = 256;
 	char		cName[iMaxLenName];
 	int			iFileStat;
 	_BOOLEAN	bReadOK = TRUE;
+	FILE*		pFile;
+
+	/* Save new mode */
+	eSchedMode = eNewSchM;
 
 	/* Open file and init table for stations */
 	StationsTable.Init(0);
-	FILE* pFile = fopen(strFileName.c_str(), "r");
+
+	switch (eNewSchM)
+	{
+	case SM_DRM:
+		pFile = fopen(DRMSCHEDULE_INI_FILE_NAME, "r");
+		break;
+
+	case SM_ANALOG:
+		pFile = fopen(AMSCHEDULE_INI_FILE_NAME, "r");
+		break;
+	}
 
 	/* Check if opening of file was successful */
 	if (pFile == 0)
@@ -230,7 +239,7 @@ _BOOLEAN CDRMSchedule::IsActive(int const iPos)
 }
 
 StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
-	WFlags f) :	CStationsDlgBase(parent, name, modal, f)
+	WFlags f) :	CStationsDlgBase(parent, name, modal, f), vecpListItems(0)
 #ifdef HAVE_LIBHAMLIB
 	, pRig(NULL)
 #endif
@@ -288,8 +297,8 @@ StationsDlg::StationsDlg(QWidget* parent, const char* name, bool modal,
 	ListViewStations->addColumn(tr("Site"));
 	ListViewStations->addColumn(tr("Language"));
 
-	/* Init vector for storing the pointer to the list view items */
-	vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
+	/* Load the current schedule from file and initialize list view */
+	LoadSchedule(CDRMSchedule::SM_DRM);
 
 	/* Set up frequency selector control (QWTCounter control) */
 	QwtCounterFrequency->setRange(0.0, 30000.0, 1.0);
@@ -680,22 +689,8 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 					tr("Update successful."), QMessageBox::Ok);
 #endif
 
-// FIXME: The following lines change the DRMSchedule object.
-// This operation is not thread safe! A mutex should be used!
 				/* Read updated ini-file */
-				DRMSchedule.ReadStatTabFromFile("DRMSchedule.ini");
-
-				/* Delete all old list view items */
-				for (int i = 0; i < vecpListItems.Size(); i++)
-					if (vecpListItems[i] != NULL)
-						delete vecpListItems[i];
-
-				/* Init vector for storing the pointer to the new list view
-				   items */
-				vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
-
-				/* Update list view */
-				SetStationsView();
+				LoadSchedule(CDRMSchedule::SM_DRM);
 			}
 		}
 	}
@@ -735,8 +730,38 @@ QString MyListViewItem::key(int column, bool ascending) const
 		return QListViewItem::key(column, ascending);
 }
 
+void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
+{
+	/* Lock mutex for modifying the vecpListItems */
+	ListItemsMutex.Lock();
+
+	/* Delete all old list view items (it is important that the vector
+	   "vecpListItems" was initialized to 0 at creation of the global object
+	   otherwise this may cause an segmentation fault) */
+	for (int i = 0; i < vecpListItems.Size(); i++)
+		if (vecpListItems[i] != NULL)
+			delete vecpListItems[i];
+
+	/* Read initialization file */
+	DRMSchedule.ReadStatTabFromFile(eNewSchM);
+
+	/* Init vector for storing the pointer to the list view items */
+	vecpListItems.Init(DRMSchedule.GetStationNumber(), NULL);
+
+	/* Unlock BEFORE calling the stations view update because in this function
+	   the mutex is locked, too! */
+	ListItemsMutex.Unlock();
+
+	/* Update list view */
+	SetStationsView();
+}
+
 void StationsDlg::SetStationsView()
 {
+	/* Set lock because of list view items. These items could be changed
+	   by another thread */
+	ListItemsMutex.Lock();
+
 	const int iNumStations = DRMSchedule.GetStationNumber();
 	_BOOLEAN bListHastChanged = FALSE;
 
@@ -815,6 +840,8 @@ void StationsDlg::SetStationsView()
 	/* Sort the list if items have changed */
 	if (bListHastChanged == TRUE)
 		ListViewStations->sort();
+
+	ListItemsMutex.Unlock();
 }
 
 void StationsDlg::OnFreqCntNewValue(double dVal)
@@ -842,7 +869,16 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
 		/* Now tell the receiver that the frequency has changed */
-		DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+		switch (DRMSchedule.GetSchedMode())
+		{
+		case CDRMSchedule::SM_DRM:
+			DRMReceiver.SetReceiverMode(CDRMReceiver::RM_DRM);
+			break;
+
+		case CDRMSchedule::SM_ANALOG:
+			DRMReceiver.SetReceiverMode(CDRMReceiver::RM_AM);
+			break;
+		}
 	}
 }
 

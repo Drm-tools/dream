@@ -103,6 +103,11 @@ extern CDRMReceiver	DRMReceiver;
 # endif
 #endif
 
+/* Name for DRM and AM schedule file. If you change something here, make sure
+   that you also change the strings and help texts!  */
+#define DRMSCHEDULE_INI_FILE_NAME		"DRMSchedule.ini"
+#define AMSCHEDULE_INI_FILE_NAME		"AMSchedule.ini"
+
 
 /* Classes ********************************************************************/
 class CStationsItem
@@ -141,17 +146,21 @@ public:
 class CDRMSchedule
 {
 public:
-	CDRMSchedule();
+	CDRMSchedule() {}
 	virtual ~CDRMSchedule() {}
 
-	void ReadStatTabFromFile(const string strFileName);
+	enum ESchedMode {SM_DRM, SM_ANALOG};
+
+	void ReadStatTabFromFile(const ESchedMode eNewSchM);
+	ESchedMode GetSchedMode() {return eSchedMode;}
 
 	int GetStationNumber() {return StationsTable.Size();}
 	CStationsItem& GetItem(int const iPos) {return StationsTable[iPos];}
 	_BOOLEAN IsActive(int const iPos);
 
 protected:
-	CVector<CStationsItem> StationsTable;
+	CVector<CStationsItem>	StationsTable;
+	ESchedMode				eSchedMode;
 };
 
 
@@ -178,6 +187,8 @@ public:
 		WFlags f = 0);
 	virtual ~StationsDlg();
 
+	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
+
 protected:
 	void			SetStationsView();
     virtual void	showEvent(QShowEvent* pEvent);
@@ -194,7 +205,9 @@ protected:
 	_BOOLEAN					bShowAll;
 	QUrlOperator				UrlUpdateSchedule;
 	QPopupMenu*					pViewMenu;
+
 	CVector<MyListViewItem*>	vecpListItems;
+	CMutex						ListItemsMutex;
 
 	QPopupMenu*					pRemoteMenu;
 

@@ -114,6 +114,7 @@ protected:
 	virtual void	customEvent(QCustomEvent* Event);
 	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
+	void			SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo);
 
 public slots:
 	void OnTimer();
