@@ -421,7 +421,7 @@ try
 		throw CInitErr();
 }
 
-catch(CInitErr)
+catch (CInitErr)
 {
 	/* Something was wrong, deactivate the module */
 	iInputBlockSize = 0;
