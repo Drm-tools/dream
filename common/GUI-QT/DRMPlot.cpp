@@ -414,6 +414,7 @@ void CDRMPlot::SetupFreqSamOffsHist()
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
+	setAxisTitle(QwtPlot::xBottom, "Time [s]");
 	setAxisTitle(QwtPlot::yRight, "Sample Rate Offset [Hz]");
 
 	/* Add main curves */
@@ -450,7 +451,7 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 	setAxisTitle(QwtPlot::yLeft, strYLeftLabel);
 
 	/* Customized auto-scaling. We adjust the y scale so that it is not larger
-	   than 2 * "rMinScaleRange"  */
+	   than rMinScaleRange"  */
 	const _REAL rMinScaleRange = (_REAL) 1.0; /* Hz */
 
 	/* Get maximum and minimum values */
@@ -480,7 +481,7 @@ void CDRMPlot::SetFreqSamOffsHist(CVector<_REAL>& vecrData,
 		(double) Ceil(MaxFreq / rMinScaleRange));
 	setAxisScale(QwtPlot::yRight, (double) Floor(MinSam / rMinScaleRange),
 		(double) Ceil(MaxSam / rMinScaleRange));
-	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], 0.0);
+	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
 	SetData(vecrData, vecrData2, vecrScale);
 	replot();
@@ -493,7 +494,7 @@ void CDRMPlot::SetupDopplerDelayHist()
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Time [s]");
+	setAxisTitle(QwtPlot::xBottom, "Time [min]");
 	setAxisTitle(QwtPlot::yLeft, "Delay [ms]");
 	setAxisTitle(QwtPlot::yRight, "Doppler [Hz]");
 
@@ -542,13 +543,9 @@ void CDRMPlot::SetupSNRAudHist()
 	enableAxis(QwtPlot::yRight);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Time [s]");
+	setAxisTitle(QwtPlot::xBottom, "Time [min]");
 	setAxisTitle(QwtPlot::yLeft, "SNR [dB]");
 	setAxisTitle(QwtPlot::yRight, "Num. Corr. Dec. Aud. Blocks / DRM Fra.");
-
-	/* Fixed scale */
-	setAxisScale(QwtPlot::yLeft, (double) 0.0, (double) 35.0);
-	setAxisScale(QwtPlot::yRight, (double) 0.0, (double) 50.0);
 
 	/* Add main curves */
 	clear();
@@ -577,7 +574,40 @@ void CDRMPlot::SetSNRAudHist(CVector<_REAL>& vecrData,
 		SetupSNRAudHist();
 	}
 
-	/* Fixed scale */
+	/* Customized auto-scaling. We adjust the y scale maximum so that it
+	   is not more than "rMaxDisToMax" to the curve */
+	const int iMaxDisToMax = 5; /* dB */
+	const int iMinValueSNRYScale = 15; /* dB */
+
+	/* Get maximum value */
+	_REAL MaxSNR = -_MAXREAL;
+
+	const int iSize = vecrScale.Size();
+	for (int i = 0; i < iSize; i++)
+	{
+		if (vecrData[i] > MaxSNR)
+			MaxSNR = vecrData[i];
+	}
+
+	/* Quantize scale to a multiple of "iMaxDisToMax" */
+	double dMaxYScaleSNR =
+		(double) (Ceil(MaxSNR / iMaxDisToMax) * iMaxDisToMax);
+
+	/* Bound at the minimum allowed value */
+	if (dMaxYScaleSNR < (double) iMinValueSNRYScale)
+		dMaxYScaleSNR = (double) iMinValueSNRYScale;
+
+	/* Ratio between the maximum values for audio and SNR. The ratio should be
+	   chosen so that the audio curve is not in the same range as the SNR curve
+	   under "normal" conditions to increase readability of curves.
+	   Since at very low SNRs, no audio can received anyway so we do not have to
+	   check whether the audio y-scale is in range of the curve */
+	const _REAL rRatioAudSNR = (double) 1.5;
+	const double dMaxYScaleAudio = dMaxYScaleSNR * (double) rRatioAudSNR;
+
+	/* Apply scale to plot */
+	setAxisScale(QwtPlot::yLeft, (double) 0.0, dMaxYScaleSNR);
+	setAxisScale(QwtPlot::yRight, (double) 0.0, dMaxYScaleAudio);
 	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
 	SetData(vecrData, vecrData2, vecrScale);

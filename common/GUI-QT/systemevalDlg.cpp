@@ -479,6 +479,45 @@ void systemevalDlg::OnTimerChart()
 	bOnTimerCharMutexFlag = FALSE;
 }
 
+void systemevalDlg::SetupChart(const ECharType eNewType)
+{
+	if (eNewType != NONE_OLD)
+	{
+		/* Set internal variable */
+		CharType = eNewType;
+
+		/* Update help text connected with the plot widget */
+		AddWhatsThisHelpChar(eNewType);
+
+		/* Update chart */
+		OnTimerChart();
+
+		/* Set up timer */
+		switch (eNewType)
+		{
+		case AVERAGED_IR:
+		case TRANSFERFUNCTION:
+		case POWER_SPEC_DENSITY:
+			/* Fast update */
+			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME_FAST);
+			break;
+
+		case FAC_CONSTELLATION:
+		case SDC_CONSTELLATION:
+		case MSC_CONSTELLATION:
+		case ALL_CONSTELLATION:
+		case INPUTSPECTRUM_NO_AV:
+		case AUDIO_SPECTRUM:
+		case FREQ_SAM_OFFS_HIST:
+		case DOPPLER_DELAY_HIST:
+		case SNR_AUDIO_HIST:
+			/* Slow update of plot */
+			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME);
+			break;
+		}
+	}
+}
+
 void systemevalDlg::OnTimer()
 {
 	_REAL rSNREstimate;
@@ -746,48 +785,6 @@ void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
 {
 	/* Get char type from selected item and setup chart */
 	SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());
-}
-
-void systemevalDlg::SetupChart(const ECharType eNewType)
-{
-	if (eNewType != NONE_OLD)
-	{
-		/* First, stop timer */
-		TimerChart.stop();
-
-		/* Set internal variable */
-		CharType = eNewType;
-
-		/* Update help text connected with the plot widget */
-		AddWhatsThisHelpChar(eNewType);
-
-		/* Update chart */
-		OnTimerChart();
-
-		/* Set up timer */
-		switch (eNewType)
-		{
-		case AVERAGED_IR:
-		case TRANSFERFUNCTION:
-		case POWER_SPEC_DENSITY:
-			/* Fast update */
-			TimerChart.start(GUI_CONTROL_UPDATE_TIME_FAST);
-			break;
-
-		case FAC_CONSTELLATION:
-		case SDC_CONSTELLATION:
-		case MSC_CONSTELLATION:
-		case ALL_CONSTELLATION:
-		case INPUTSPECTRUM_NO_AV:
-		case AUDIO_SPECTRUM:
-		case FREQ_SAM_OFFS_HIST:
-		case DOPPLER_DELAY_HIST:
-		case SNR_AUDIO_HIST:
-			/* Slow update of plot */
-			TimerChart.start(GUI_CONTROL_UPDATE_TIME);
-			break;
-		}
-	}
 }
 
 void systemevalDlg::OnCheckFlipSpectrum()
