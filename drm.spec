@@ -1,7 +1,7 @@
 # drm.spec
 #
 %define name            drm
-%define version         1.1.6cvs
+%define version         1.1.7cvs
 %define release         1
  
 Summary:	Digital Radio Mondiale (DRM) software receiver.
