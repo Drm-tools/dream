@@ -1,0 +1,4 @@
+AUTOMAKE_OPTIONS = foreign
+EXTRA_DIST = AUTHORS COPYING ChangeLog INSTALL README TODO configure.in depcomp 
+
+SUBDIRS = linux
