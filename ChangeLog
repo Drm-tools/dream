@@ -1,0 +1,10 @@
+0.9.1
+	Initial version
+	
+0.9.2
+	- Time synchronization acquisition algorithm improved
+	- Channel estimation: wiener filter with adaptation
+	- Log file support
+	- Improved metric for MLC decoder
+	- Improved (sample) frequency offset tracking, better averaging functions
+	- Bug fix in Windows sound interface
