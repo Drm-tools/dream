@@ -368,7 +368,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	iInitCnt = iLenHistBuff - 1;
 
 	/* Inits for SNR estimation (noise and signal averages) */
-	rSNREstimate = (_REAL) pow(10, (_REAL) 20.0 / 10);
+	rSNREstimate = (_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10);
 	rNoiseEst = (_REAL) 0.0;
 	rSignalEst = (_REAL) 0.0;
 
@@ -435,8 +435,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 
 	/* SNR definition */
-	const _REAL rSNRdB = (_REAL) 30.0;
-	_REAL rSNR = pow(10, rSNRdB / 10);
+	_REAL rSNR = pow(10, INIT_VALUE_SNR_WIEN_FREQ_DB / 10);
 
 	/* Init wiener filter */
 	UpdateWienerFiltCoef(rSNR, (_REAL) ReceiverParam.RatioTgTu.iEnum / 

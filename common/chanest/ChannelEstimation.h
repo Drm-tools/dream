@@ -58,6 +58,12 @@
 /* Time constant for IIR averaging of slow signal power estimation */
 #define TICONST_SNREST_SLOW				((CReal) 100.0) /* sec */
 
+/* Initial value for SNR */
+#define INIT_VALUE_SNR_WIEN_FREQ_DB		((_REAL) 30.0) /* dB */
+
+/* SNR estimation initial SNR value */
+#define INIT_VALUE_SNR_ESTIM_DB			((_REAL) 20.0) /* dB */
+
 
 /* Classes ********************************************************************/
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
