@@ -50,6 +50,8 @@ public:
 	void Init(const int iNewSize, const TData tIniVal);
 	void Reset(const TData tResetVal);
 
+	void Enlarge(const int iAddedSize);
+
 	inline int Size() const {return iVectorSize;}
 
 	/* This operator allows for a l-value assignment of this object:
@@ -116,7 +118,7 @@ template<class TData> void CVector<TData>::Init(const int iNewSize)
 	/* Clear old buffer and reserve memory for new buffer, get iterator
 	   for pointer operations */
 	clear();
-	reserve(iNewSize);
+	resize(iNewSize);
 	pData = begin();
 }
 
@@ -128,6 +130,16 @@ template<class TData> void CVector<TData>::Init(const int iNewSize,
 
 	/* Set values */
 	Reset(tIniVal);
+}
+
+template<class TData> void CVector<TData>::Enlarge(const int iAddedSize)
+{
+	iVectorSize += iAddedSize;
+	resize(iVectorSize);
+
+	/* We have to reset the pointer since it could be that the vector size was
+	   zero before enlarging the vector */
+	pData = begin();
 }
 
 template<class TData> void CVector<TData>::Reset(const TData tResetVal)
