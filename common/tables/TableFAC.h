@@ -50,7 +50,9 @@ const int iTableNoOfServices[5][5] = {
 };
 
 /* Language code */
-const string strTableLanguageCode[16] = {
+#define LEN_TABLE_LANGUAGE_CODE		16
+
+const string strTableLanguageCode[LEN_TABLE_LANGUAGE_CODE] = {
 	"No language specified", 
 	"Arabic", 
 	"Bengali", 
@@ -70,7 +72,9 @@ const string strTableLanguageCode[16] = {
 };
 
 /* Programme Type codes */
-const string strTableProgTypCod[32] = {
+#define LEN_TABLE_PROG_TYPE_CODE	32
+
+const string strTableProgTypCod[LEN_TABLE_PROG_TYPE_CODE] = {
 	"No programme type",
 	"News",
 	"Current Affairs",
