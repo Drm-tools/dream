@@ -227,6 +227,9 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		CReal rDiffSamOffset =
 			rPrevSamRateOffset - ReceiverParam.rResampleOffset;
 
+		/* Save current resample offset for next symbol */
+		rPrevSamRateOffset = ReceiverParam.rResampleOffset;
+
 		/* Correct sample-rate offset correction according to the proportional
 		   rule. Use relative DC frequency offset plus relative average offset
 		   of frequency pilots to the DC frequency. Normalize this offset so
@@ -238,9 +241,6 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Actual correction (rotate vector) */
 		cFreqOffVec *= CComplex(Cos(rPhaseCorr), Sin(rPhaseCorr));
-
-		/* Save current resample offset for next symbol */
-		rPrevSamRateOffset = ReceiverParam.rResampleOffset;
 
 
 		/* Average vector, real and imaginary part separately */
