@@ -56,6 +56,7 @@
 #else
 # include "moc/TransmDlgbase.h"
 #endif
+#include "DialogUtil.h"
 #include "../DrmTransmitter.h"
 #include "../Parameter.h"
 
@@ -112,10 +113,7 @@ protected:
 	void EnableAllControlsForSet();
 
 	QMenuBar*			pMenu;
-	QPopupMenu*			pSoundInMenu;
-	QPopupMenu*			pSoundOutMenu;
 	QPopupMenu*			pSettingsMenu;
-	int					iNumSoundDev;
 	QTimer				Timer;
 
 	CTransmitterThread	TransThread; /* Working thread object */
@@ -152,8 +150,6 @@ public slots:
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
 	void OnTextChangedSndCrdIF(const QString& strIF);
-	void OnSoundInDevice(int id);
-	void OnSoundOutDevice(int id);
 	void OnTimer();
 	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
 };

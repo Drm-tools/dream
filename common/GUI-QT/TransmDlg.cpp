@@ -269,56 +269,18 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 
 
 	/* Set Menu ***************************************************************/
-	/* Help menu ------------------------------------------------------------ */
-	QPopupMenu* HelpMenu = new QPopupMenu(this);
-	CHECK_PTR(HelpMenu);
-    HelpMenu->insertItem("What's &This", this ,
-		SLOT(OnHelpWhatsThis()), SHIFT+Key_F1);
-
-
 	/* Settings menu  ------------------------------------------------------- */
-	pSoundInMenu = new QPopupMenu(this);
-	CHECK_PTR(pSoundInMenu);
-	pSoundOutMenu = new QPopupMenu(this);
-	CHECK_PTR(pSoundOutMenu);
-
-	/* Get sound device names */
-	iNumSoundDev = TransThread.DRMTransmitter.GetSoundInterface()->GetNumDev();
-	for (i = 0; i < iNumSoundDev; i++)
-	{
-		string strName = TransThread.DRMTransmitter.GetSoundInterface()->
-			GetDeviceName(i);
-
-		pSoundInMenu->insertItem(QString(strName.c_str()), this,
-			SLOT(OnSoundInDevice(int)), 0, i);
-		pSoundOutMenu->insertItem(QString(strName.c_str()), this,
-			SLOT(OnSoundOutDevice(int)), 0, i);
-	}
-
-	/* Set wave mapper as default device. "iNumSoundDev" is no
-	   valid ID for a device, use this for wave-mapper */
-	pSoundInMenu->insertSeparator();
-	pSoundInMenu->insertItem(tr("Wave &Mapper Recording"), this,
-		SLOT(OnSoundInDevice(int)), 0, iNumSoundDev);
-	pSoundOutMenu->insertSeparator();
-	pSoundOutMenu->insertItem(tr("Wave &Mapper Playback"), this,
-		SLOT(OnSoundOutDevice(int)), 0, iNumSoundDev);
-
-	pSoundInMenu->setItemChecked(iNumSoundDev, TRUE);
-	pSoundOutMenu->setItemChecked(iNumSoundDev, TRUE);
-	TransThread.DRMTransmitter.GetSoundInterface()->SetInDev(iNumSoundDev);
-	TransThread.DRMTransmitter.GetSoundInterface()->SetOutDev(iNumSoundDev);
-
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
-	pSettingsMenu->insertItem(tr("Sound &In"), pSoundInMenu);
-	pSettingsMenu->insertItem(tr("Sound &Out"), pSoundOutMenu);
+	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
+		new CSoundCardSelMenu(TransThread.DRMTransmitter.
+		GetSoundInterface(), this));
 
 	/* Main menu bar */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
-	pMenu->insertItem(tr("&?"), HelpMenu);
+	pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
@@ -665,24 +627,6 @@ _BOOLEAN TransmDialog::GetMessageText(const int iID)
 		bTextIsNotEmpty = FALSE;
 
 	return bTextIsNotEmpty;
-}
-
-void TransmDialog::OnSoundInDevice(int id)
-{
-	TransThread.DRMTransmitter.GetSoundInterface()->SetInDev(id);
-
-	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
-	for (int i = 0; i < iNumSoundDev + 1; i++)
-		pSoundInMenu->setItemChecked(i, i == id);
-}
-
-void TransmDialog::OnSoundOutDevice(int id)
-{
-	TransThread.DRMTransmitter.GetSoundInterface()->SetOutDev(id);
-
-	/* Taking care of checks in the menu. "+ 1" because of wave mapper entry */
-	for (int i = 0; i < iNumSoundDev + 1; i++)
-		pSoundOutMenu->setItemChecked(i, i == id);
 }
 
 void TransmDialog::OnPushButtonAddText()
