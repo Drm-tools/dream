@@ -535,7 +535,7 @@ CComplex CChannelEstimation::FreqCorrFct(int iCurPos, CReal rRatPDSLen,
 	/* First calculate the argument of the sinc- and exp-function */
 	const CReal rArgSinc = (CReal) iCurPos * rRatPDSLen;
 	const CReal rArgExp =
-		(CReal) crPi * iCurPos * (rRatPDSLen + rRatPDSOffs);
+		(CReal) crPi * iCurPos * (rRatPDSLen + rRatPDSOffs * 2);
 
 	/* sinc(n * rat) * exp(pi * n * (rat + ratoffs)) */
 	return Sinc(rArgSinc) * CComplex(Cos(rArgExp), Sin(rArgExp));
