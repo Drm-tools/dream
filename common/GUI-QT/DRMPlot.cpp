@@ -108,84 +108,96 @@ void CDRMPlot::SetData(CVector<_COMPLEX>& veccData, QColor color,
 	}
 }
 
-void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
+void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 					   _REAL rLowerB, _REAL rHigherB,
-					   const _REAL rStartGuard, const _REAL rEndGuard, 
+					   const _REAL rStartGuard, const _REAL rEndGuard,
 					   const _REAL rEndIR)
 {
 	long	curveLow, curveHigh, curveLeft, curveRight, curveEndIR;
 	double	dX[2], dY[2];
 
-	/* Init chart for averaged impulse response */
-	setTitle("Estimated Channel Impulse Response");
-	enableGridX(TRUE);
-	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Time [ms]");
-	setAxisTitle(QwtPlot::yLeft, "IR [dB]");
+	if (vecrScale.Size() != 0)
+	{
+		/* Init chart for averaged impulse response */
+		setTitle("Estimated Channel Impulse Response");
+		enableGridX(TRUE);
+		enableGridY(TRUE);
+		setAxisTitle(QwtPlot::xBottom, "Time [ms]");
+		setAxisTitle(QwtPlot::yLeft, "IR [dB]");
 
-	/* Fixed scale */
-	const double cdAxMinLeft = (double) -20.0;
-	const double cdAxMaxLeft = (double) 40.0;
-	setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
-	setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], 
-		(double) vecrScale[vecrScale.Size() - 1]);
+		/* Fixed scale */
+		const double cdAxMinLeft = (double) -20.0;
+		const double cdAxMaxLeft = (double) 40.0;
+		setAxisScale(QwtPlot::yLeft, cdAxMinLeft, cdAxMaxLeft);
 
-	clear();
-	/* Vertical bounds ------------------------------------------------------ */
-	/* These bounds show the beginning and end of the guard-interval */
-	curveLeft = insertCurve("Guard-interval beginning");
-	curveRight = insertCurve("Guard-interval end");
-	curveEndIR = insertCurve("Estimated end of impulse response");
-	setCurvePen(curveLeft, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
-	setCurvePen(curveRight, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
-	setCurvePen(curveEndIR, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
+		setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], 
+			(double) vecrScale[vecrScale.Size() - 1]);
 
-	dY[0] = cdAxMinLeft;
-	dY[1] = cdAxMaxLeft;
-
-	/* Left bound */
-	dX[0] = dX[1] = rStartGuard;
-	setCurveData(curveLeft, dX, dY, 2);
-
-	/* Right bound */
-	dX[0] = dX[1] = rEndGuard;
-	setCurveData(curveRight, dX, dY, 2);
-
-	/* Estimated end of impulse response */
-	dX[0] = dX[1] = rEndIR;
-	setCurveData(curveEndIR, dX, dY, 2);
+		clear();
 
 
-	/* Data for the actual impulse response curve */
-	SetData(vecrData, vecrScale, 2);
+		/* Vertical bounds -------------------------------------------------- */
+		/* These bounds show the beginning and end of the guard-interval */
+		curveLeft = insertCurve("Guard-interval beginning");
+		curveRight = insertCurve("Guard-interval end");
+		curveEndIR = insertCurve("Estimated end of impulse response");
+		setCurvePen(curveLeft, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+		setCurvePen(curveRight, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+		setCurvePen(curveEndIR, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
+
+		dY[0] = cdAxMinLeft;
+		dY[1] = cdAxMaxLeft;
+
+		/* Left bound */
+		dX[0] = dX[1] = rStartGuard;
+		setCurveData(curveLeft, dX, dY, 2);
+
+		/* Right bound */
+		dX[0] = dX[1] = rEndGuard;
+		setCurveData(curveRight, dX, dY, 2);
+
+		/* Estimated end of impulse response */
+		dX[0] = dX[1] = rEndIR;
+		setCurveData(curveEndIR, dX, dY, 2);
 
 
-	/* Horizontal bounds ---------------------------------------------------- */
-	/* These bounds show the peak detection bound from timing tracking */
-	curveHigh = insertCurve("Higher Bound");
-	dX[0] = vecrScale[0];
-	dX[1] = vecrScale[vecrScale.Size() - 1];
+		/* Data for the actual impulse response curve */
+		SetData(vecrData, vecrScale, 2);
+
+
+		/* Horizontal bounds ------------------------------------------------ */
+		/* These bounds show the peak detection bound from timing tracking */
+		curveHigh = insertCurve("Higher Bound");
+		dX[0] = vecrScale[0];
+		dX[1] = vecrScale[vecrScale.Size() - 1];
 
 #ifdef _DEBUG_
-	/* Insert lines for lower and higher bound */
-	curveLow = insertCurve("Lower Bound");
-	setCurvePen(curveLow, QPen(SPEC_LINE1_COLOR_PLOT));
-	setCurvePen(curveHigh, QPen(SPEC_LINE2_COLOR_PLOT));
+		/* Insert lines for lower and higher bound */
+		curveLow = insertCurve("Lower Bound");
+		setCurvePen(curveLow, QPen(SPEC_LINE1_COLOR_PLOT));
+		setCurvePen(curveHigh, QPen(SPEC_LINE2_COLOR_PLOT));
 
-	/* Lower bound */
-	dY[0] = dY[1] = rLowerB;
-	setCurveData(curveLow, dX, dY, 2);
+		/* Lower bound */
+		dY[0] = dY[1] = rLowerB;
+		setCurveData(curveLow, dX, dY, 2);
 
-	/* Higher bound */
-	dY[0] = dY[1] = rHigherB;
+		/* Higher bound */
+		dY[0] = dY[1] = rHigherB;
 #else
-	/* Only include highest bound */
-	setCurvePen(curveHigh, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
-	dY[0] = dY[1] = Max(rHigherB, rLowerB);
+		/* Only include highest bound */
+		setCurvePen(curveHigh, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+		dY[0] = dY[1] = Max(rHigherB, rLowerB);
 #endif
-	setCurveData(curveHigh, dX, dY, 2);
+		setCurveData(curveHigh, dX, dY, 2);
 
-	replot();
+		replot();
+	}
+	else
+	{
+		/* No input data, just clear plot */
+		clear();
+		replot();
+	}
 }
 
 void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
