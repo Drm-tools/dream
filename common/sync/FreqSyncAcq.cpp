@@ -278,8 +278,10 @@ fclose(pFile1);
 	   frequency offest estimate by the desired frequency, because we know this
 	   value */
 	if (bSyncInput == TRUE)
+	{
 		ReceiverParam.rFreqOffsetAcqui = (_REAL) ReceiverParam.iIndexDCFreq /
 			ReceiverParam.iFFTSizeN;
+	}
 }
 
 void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)

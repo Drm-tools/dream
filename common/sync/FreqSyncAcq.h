@@ -80,6 +80,7 @@ public:
 	void SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize);
 
 	void StartAcquisition();
+	void StopAcquisition() {bAquisition = FALSE;}
 	_BOOLEAN GetAcquisition() {return bAquisition;}
 
 	/* To set the module up for synchronized DRM input data stream */
