@@ -88,7 +88,7 @@ protected:
 
 
 	/* MDI transmit --------------------------------------------------------- */
-	void SendPacket(CVector<_BINARY>& vecbiPacket);
+	void SendPacket(CVector<_BINARY> vecbiPacket);
 
 	void PrepareTag(CVector<_BINARY>& vecbiTag, const string strTagName,
 		const int iLenDataBits);

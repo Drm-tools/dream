@@ -166,7 +166,7 @@ _BOOLEAN CMDI::SetNetwOutAddr(const string strNewIPPort)
 	return bAddressOK;
 }
 
-void CMDI::SendPacket(CVector<_BINARY>& vecbiPacket)
+void CMDI::SendPacket(CVector<_BINARY> vecbiPacket)
 {
 	const int iSizeBytes =
 		(int) ceil((_REAL) vecbiPacket.Size() / SIZEOF__BYTE);
