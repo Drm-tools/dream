@@ -40,6 +40,10 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	short*				psDecOutSampleBuf;
 	faacDecFrameInfo	DecFrameInfo;
 
+	/* Check if something went wrong in the initialization routine */
+	if (DoNotProcessData == TRUE)
+		return;
+
 
 	/* Text Message ***********************************************************/
 	/* Total frame size depends on whether text message is used or not */
@@ -202,6 +206,24 @@ fflush(pFile2);
 		}
 		else
 		{
+
+
+#if 0
+// Store AAC-data in file
+static FILE* pFile2 = fopen("test/aac.dat", "w");
+
+int iNewFrL = veciFrameLength[j] + 1;
+
+// Frame length
+fprintf(pFile2, "%d\n", iNewFrL);
+
+for (int v = 0; v < veciFrameLength[j] + 1; v++)
+	fprintf(pFile2, "%d\n", vecbyPrepAudioFrame[v]);
+
+fflush(pFile2);
+#endif
+
+
 			/* Set AAC CRC result in log file */
 			ReceiverParam.ReceptLog.SetMSC(TRUE);
 
@@ -215,7 +237,7 @@ fflush(pFile2);
 			if (iNoChannelsAAC == 1)
 			{
 				/* Change type of data (short -> real) */
-				for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH; i++)
+				for (i = 0; i < iLenDecOutPerChan; i++)
 					vecTempResBufInLeft[i] = psDecOutSampleBuf[i];
 
 				/* Resample data */
@@ -229,7 +251,7 @@ fflush(pFile2);
 			else
 			{
 				/* Stereo */
-				for (i = 0; i < AUD_DEC_TRANSFROM_LENGTH; i++)
+				for (i = 0; i < iLenDecOutPerChan; i++)
 				{
 					vecTempResBufInLeft[i] = psDecOutSampleBuf[i * 2];
 					vecTempResBufInRight[i] = psDecOutSampleBuf[i * 2 + 1];
@@ -259,13 +281,17 @@ fflush(pFile2);
 
 void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 {
-	int	iCurAudioStreamID;
-	int iTotalNoInputBits;
+	int iCurAudioStreamID;
+	int iTotalNumInputBits;
 	int iMaxLenResamplerOutput;
 	int iCurSelServ;
+	int iDRMchanMode;
+	int iAudioSampleRate;
+	int iAACSampleRate;
 
-try
-{
+	/* Init error flag */
+	DoNotProcessData = FALSE;
+
 	/* Get current selected audio service */
 	iCurSelServ = ReceiverParam.GetCurSelAudioService();
 
@@ -282,7 +308,7 @@ try
 		iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
 		iLenAudLow = ReceiverParam.Stream[iCurAudioStreamID].iLenPartB;
 
-		iTotalNoInputBits = (iLenAudHigh + iLenAudLow) * SIZEOF__BYTE;
+		iTotalNumInputBits = (iLenAudHigh + iLenAudLow) * SIZEOF__BYTE;
 
 		/* Set number of AAC frames in a AAC super-frame */
 		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioSamplRate)
@@ -290,13 +316,13 @@ try
 		case CParameter::AS_12KHZ: 
 			iNumAACFrames = 5;
 			iNoHeaderBytes = 6;
-			iAudioSamplRate = 12000;
+			iAACSampleRate = 12000;
 			break;
 
 		case CParameter::AS_24KHZ: 
 			iNumAACFrames = 10;
 			iNoHeaderBytes = 14;
-			iAudioSamplRate = 24000;
+			iAACSampleRate = 24000;
 			break;
 		}
 
@@ -321,7 +347,7 @@ try
 
 			/* Total frame size is input block size minus the bytes for the text
 			   message */
-			iTotalFrameSize = iTotalNoInputBits - 
+			iTotalFrameSize = iTotalNumInputBits - 
 				SIZEOF__BYTE * NO_BYTES_TEXT_MESS_IN_AUD_STR;
 
 			/* Init vector for text message bytes */
@@ -332,18 +358,59 @@ try
 			bTextMessageUsed = FALSE;
 
 			/* All bytes are used for AAC data, no text message present */
-			iTotalFrameSize = iTotalNoInputBits;
+			iTotalFrameSize = iTotalNumInputBits;
 			break;
 		}
 
 		/* Number of channels for AAC: Mono, LC Stereo, Stereo */
-		if (ReceiverParam.Service[iCurSelServ].
-			AudioParam.eAudioMode == CParameter::AM_STEREO)
+		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioMode)
 		{
+		case CParameter::AM_MONO:
+			iNoChannelsAAC = 1;
+
+			if (ReceiverParam.Service[iCurSelServ].AudioParam.eSBRFlag ==
+				CParameter::SB_USED)
+			{
+				iDRMchanMode = DRMCH_SBR_MONO;
+			}
+			else
+				iDRMchanMode = DRMCH_MONO;
+			break;
+
+		case CParameter::AM_LC_STEREO:
+			/* Low-complexity only defined in SBR mode */
+			iNoChannelsAAC = 1;
+			iDRMchanMode = DRMCH_SBR_LC_STEREO;
+			break;
+
+		case CParameter::AM_STEREO:
 			iNoChannelsAAC = 2;
+
+			if (ReceiverParam.Service[iCurSelServ].AudioParam.eSBRFlag ==
+				CParameter::SB_USED)
+			{
+				iDRMchanMode = DRMCH_SBR_STEREO;
+			}
+			else
+			{
+				iDRMchanMode = DRMCH_STEREO;
+			}
+			break;
+		}
+
+		/* In case of SBR, AAC sample rate is half the total sample rate. Length
+		   of output is doubled if SBR is used */
+		if (ReceiverParam.Service[iCurSelServ].AudioParam.eSBRFlag ==
+			CParameter::SB_USED)
+		{
+			iAudioSampleRate = iAACSampleRate * 2;
+			iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH * 2;
 		}
 		else
-			iNoChannelsAAC = 1;
+		{
+			iAudioSampleRate = iAACSampleRate;
+			iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH;
+		}
 
 		/* The audio_payload_length is derived from the length of the audio 
 		   super frame (data_length_of_part_A + data_length_of_part_B) 
@@ -354,7 +421,10 @@ try
 
 		/* Check iAudioPayloadLen value, only positive values make sense */
 		if (iAudioPayloadLen < 0)
-			throw CInitErr();
+		{
+			iAudioPayloadLen = 0;
+			DoNotProcessData = TRUE;
+		}
 
 		/* Get number of bytes for higher protected blocks */
 		if (iLenAudHigh == 0)
@@ -371,22 +441,22 @@ try
 			(_REAL) 0.4 /* 400ms */ * 2 /* for stereo */);
 
 		iResOutBlockSize =
-			AUD_DEC_TRANSFROM_LENGTH * SOUNDCRD_SAMPLE_RATE / iAudioSamplRate;
+			iLenDecOutPerChan * SOUNDCRD_SAMPLE_RATE / iAudioSampleRate;
 
 		/* Additional buffers needed for resampling since we need conversation
 		   between _REAL and _SAMPLE. We have to init the buffers with
 		   zeros since it can happen, that we have bad CRC right at the
 		   start of audio blocks */
-		vecTempResBufInLeft.Init(AUD_DEC_TRANSFROM_LENGTH);
-		vecTempResBufInRight.Init(AUD_DEC_TRANSFROM_LENGTH);
+		vecTempResBufInLeft.Init(iLenDecOutPerChan);
+		vecTempResBufInRight.Init(iLenDecOutPerChan);
 		vecTempResBufOutLeft.Init(iResOutBlockSize, (_REAL) 0.0);
 		vecTempResBufOutRight.Init(iResOutBlockSize, (_REAL) 0.0);
 
 		/* Init resample objects */
-		ResampleObjL.Init(AUD_DEC_TRANSFROM_LENGTH,
-			SOUNDCRD_SAMPLE_RATE / iAudioSamplRate);
-		ResampleObjR.Init(AUD_DEC_TRANSFROM_LENGTH,
-			SOUNDCRD_SAMPLE_RATE / iAudioSamplRate);
+		ResampleObjL.Init(iLenDecOutPerChan,
+			SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
+		ResampleObjR.Init(iLenDecOutPerChan,
+			SOUNDCRD_SAMPLE_RATE / iAudioSampleRate);
 
 
 		/* AAC decoder ------------------------------------------------------ */
@@ -406,7 +476,7 @@ try
 		veciFrameLength.Init(iNumAACFrames);
 
 		/* Init AAC-decoder */
-		faacDecInitDRM(HandleAACDecoder, iAudioSamplRate, iNoChannelsAAC);
+		faacDecInitDRM(HandleAACDecoder, iAACSampleRate, iDRMchanMode);
 
 		/* With this parameter we define the maximum lenght of the output 
 		   buffer. The cyclic buffer is only needed if we do a sample rate
@@ -415,18 +485,13 @@ try
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
 
 		/* Define input block size of this module */
-		iInputBlockSize = iTotalNoInputBits;
+		iInputBlockSize = iTotalNumInputBits;
 	}
 	else
-		throw CInitErr();
-}
+		iInputBlockSize = 0;
 
-catch (CInitErr)
-{
-	/* Something was wrong, deactivate the module */
-	iInputBlockSize = 0;
+	/* Init output block size for the first time */
 	iOutputBlockSize = 0;
-}
 }
 
 CAudioSourceDecoder::CAudioSourceDecoder() 
@@ -436,7 +501,7 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 
 	/* Decoder MUST be initialized at least once, therefore do it here in the
 	   constructor with arbitrary values to be sure that this is satisfied */
-	faacDecInitDRM(HandleAACDecoder, 48000, 1);
+	faacDecInitDRM(HandleAACDecoder, 48000, DRMCH_MONO);
 }
 
 CAudioSourceDecoder::~CAudioSourceDecoder()

@@ -72,7 +72,6 @@ protected:
 	CVector<_REAL>		vecTempResBufInRight;
 	CVector<_REAL>		vecTempResBufOutLeft;
 	CVector<_REAL>		vecTempResBufOutRight;
-	int					iAudioSamplRate;
 
 	int					iNumHigherProtectedBytes;
 
@@ -84,6 +83,8 @@ protected:
 
 	int					iNoChannelsAAC;
 
+	int					iLenDecOutPerChan;
+
 	int					iBadBlockCount;
 	int					iTotalFrameSize;
 	int					iAudioPayloadLen;
@@ -92,6 +93,8 @@ protected:
 	CVector<_BINARY>	vecbiTextMessBuf;
 
 	_BOOLEAN			bAudioWasOK;
+
+	_BOOLEAN			DoNotProcessData;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
