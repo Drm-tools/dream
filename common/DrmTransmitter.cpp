@@ -115,20 +115,21 @@ void CDRMTransmitter::Init()
 	TransmitData.Init(TransmParam);
 }
 
-void CDRMTransmitter::StartParameters(CParameter& Param)
+CDRMTransmitter::CDRMTransmitter() : TransmitData(&SoundInterface),
+	ReadData(&SoundInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 {
 	/* Init streams */
-	Param.ResetServicesStreams();
+	TransmParam.ResetServicesStreams();
 
 	/* Init frame ID counter (index) */
-	Param.iFrameIDTransm = 0;
+	TransmParam.iFrameIDTransm = 0;
 
 	/* Date, time. TODO: use computer system time... */
-	Param.iDay = 0;
-	Param.iMonth = 0;
-	Param.iYear = 0;
-	Param.iUTCHour = 0;
-	Param.iUTCMin = 0;
+	TransmParam.iDay = 0;
+	TransmParam.iMonth = 0;
+	TransmParam.iYear = 0;
+	TransmParam.iUTCHour = 0;
+	TransmParam.iUTCMin = 0;
 
 
 	/**************************************************************************/
@@ -143,14 +144,14 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	   Available bandwidths:
 	   SO_0: 4.5 kHz, SO_1: 5 kHz, SO_2: 9 kHz, SO_3: 10 kHz, SO_4: 18 kHz,
 	   SO_5: 20 kHz */
-	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+	TransmParam.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
 
 	/* Protection levels for MSC. Depend on the modulation scheme. Look at
 	   TableMLC.h, iCodRateCombMSC16SM, iCodRateCombMSC64SM,
 	   iCodRateCombMSC64HMsym, iCodRateCombMSC64HMmix for available numbers */
-	Param.MSCPrLe.iPartA = 0;
-	Param.MSCPrLe.iPartB = 1;
-	Param.MSCPrLe.iHierarch = 0;
+	TransmParam.MSCPrLe.iPartA = 0;
+	TransmParam.MSCPrLe.iPartB = 1;
+	TransmParam.MSCPrLe.iHierarch = 0;
 
 	/* Either one audio or one data service can be chosen */
 	_BOOLEAN bIsAudio = TRUE;
@@ -160,62 +161,62 @@ void CDRMTransmitter::StartParameters(CParameter& Param)
 	if (bIsAudio == TRUE)
 	{
 		/* Audio */
-		Param.iNumAudioService = 1;
-		Param.iNumDataService = 0;
+		TransmParam.iNumAudioService = 1;
+		TransmParam.iNumDataService = 0;
 
-		Param.Service[0].eAudDataFlag = CParameter::SF_AUDIO;
-		Param.Service[0].AudioParam.iStreamID = 0;
+		TransmParam.Service[0].eAudDataFlag = CParameter::SF_AUDIO;
+		TransmParam.Service[0].AudioParam.iStreamID = 0;
 
 		/* Text message */
-		Param.Service[0].AudioParam.bTextflag = TRUE;
+		TransmParam.Service[0].AudioParam.bTextflag = TRUE;
 
 		/* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
-		Param.Service[0].iServiceDescr = 15; /* 15 -> other music */
+		TransmParam.Service[0].iServiceDescr = 15; /* 15 -> other music */
 	}
 	else
 	{
 		/* Data */
-		Param.iNumAudioService = 0;
-		Param.iNumDataService = 1;
+		TransmParam.iNumAudioService = 0;
+		TransmParam.iNumDataService = 1;
 
-		Param.Service[0].eAudDataFlag = CParameter::SF_DATA;
-		Param.Service[0].DataParam.iStreamID = 0;
+		TransmParam.Service[0].eAudDataFlag = CParameter::SF_DATA;
+		TransmParam.Service[0].DataParam.iStreamID = 0;
 
 		/* Init SlideShow application */
-		Param.Service[0].DataParam.iPacketLen = 45; /* TEST */
-		Param.Service[0].DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
-		Param.Service[0].DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
+		TransmParam.Service[0].DataParam.iPacketLen = 45; /* TEST */
+		TransmParam.Service[0].DataParam.eDataUnitInd = CParameter::DU_DATA_UNITS;
+		TransmParam.Service[0].DataParam.eAppDomain = CParameter::AD_DAB_SPEC_APP;
 
 		/* The value 0 indicates that the application details are provided
 		   solely by SDC data entity type 5 */
-		Param.Service[0].iServiceDescr = 0;
+		TransmParam.Service[0].iServiceDescr = 0;
 	}
 
 	/* Init service parameters, 24 bit unsigned integer number */
-	Param.Service[0].iServiceID = 163569;
+	TransmParam.Service[0].iServiceID = 163569;
 
 	/* Service label data. Up to 16 bytes defining the label using UTF-8
 	   coding */
-	Param.Service[0].strLabel = "Dream Test";
+	TransmParam.Service[0].strLabel = "Dream Test";
 
 	/* Language (see TableFAC.h, "strTableLanguageCode[]") */
-	Param.Service[0].iLanguage = 5; /* 5 -> english */
+	TransmParam.Service[0].iLanguage = 5; /* 5 -> english */
 
 	/* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
 	   short interleaving (400 ms): SI_SHORT */
-	Param.eSymbolInterlMode = CParameter::SI_LONG;
+	TransmParam.eSymbolInterlMode = CParameter::SI_LONG;
 
 	/* MSC modulation scheme. Available modes:
 	   16-QAM standard mapping (SM): CS_2_SM,
 	   64-QAM standard mapping (SM): CS_3_SM,
 	   64-QAM symmetrical hierarchical mapping (HMsym): CS_3_HMSYM,
 	   64-QAM mixture of the previous two mappings (HMmix): CS_3_HMMIX */
-	Param.eMSCCodingScheme = CParameter::CS_3_SM;
+	TransmParam.eMSCCodingScheme = CParameter::CS_3_SM;
 
 	/* SDC modulation scheme. Available modes:
 	   4-QAM standard mapping (SM): CS_1_SM,
 	   16-QAM standard mapping (SM): CS_2_SM */
-	Param.eSDCCodingScheme = CParameter::CS_2_SM;
+	TransmParam.eSDCCodingScheme = CParameter::CS_2_SM;
 
 	/* Set desired intermedia frequency (IF) in Hertz */
 	SetCarOffset(12000.0); /* Default: "VIRTUAL_INTERMED_FREQ" */
@@ -226,13 +227,13 @@ const _BOOLEAN bUEBIsUsed = FALSE; // TEST
 	if (bUEBIsUsed == TRUE)
 	{
 		// TEST
-		Param.Stream[0].iLenPartA = 80;
+		TransmParam.Stream[0].iLenPartA = 80;
 	}
 	else
 	{
 		/* Length of part B is set automatically (equal error protection (EEP),
 		   if "= 0"). Sets the number of bytes, should not exceed total number
 		   of bytes available in MSC block */
-		Param.Stream[0].iLenPartA = 0;
+		TransmParam.Stream[0].iLenPartA = 0;
 	}
 }

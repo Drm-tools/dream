@@ -51,12 +51,7 @@
 class CDRMTransmitter
 {
 public:
-	CDRMTransmitter() : TransmitData(&SoundInterface),
-		ReadData(&SoundInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
-	{
-		StartParameters(TransmParam);
-		SetCarOffset(rDefCarOffset);
-	}
+	CDRMTransmitter();
 	virtual ~CDRMTransmitter() {}
 
 	void Init();
@@ -82,7 +77,6 @@ public:
 	_REAL GetCarOffset() {return rDefCarOffset;}
 
 protected:
-	void StartParameters(CParameter& Param);
 	void Run();
 
 	/* Parameters */
