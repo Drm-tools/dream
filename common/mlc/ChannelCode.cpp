@@ -118,6 +118,9 @@ CVector<int> CChannelCode::GenPuncPatTable(CParameter::ECodScheme eNewCodingSche
 
 
 	/* Generate actual table for puncturing pattern ------------------------- */
+	/* Reset counter for puncturing */
+	iPunctCounter = 0;
+
 	for (i = 0; i < iNumOutBitsWithMemory; i++)
 	{
 		if (i < iNewNumOutBitsPartA)
