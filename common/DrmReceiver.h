@@ -59,9 +59,9 @@
    was successfully decoded */
 #define	NUM_FAC_FRA_U_ACQ_WITH			12
 
-/* Number of FAC frames until the acquisition is activated in case no signal
+/* Number of OFDM symbols until the acquisition is activated in case no signal
    could be decoded after previous acquisition try */
-#define	NUM_FAC_FRA_U_ACQ_WITHOUT		9
+#define	NUM_OFDMSYM_U_ACQ_WITHOUT		150
 
 /* Number of FAC blocks for delayed tracking mode switch (caused by time needed
    for initalizing the channel estimation */
@@ -82,11 +82,11 @@ public:
 	enum ERecMode {RM_DRM, RM_AM, RM_NONE};
 
 
-	CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquDetecCnt(0),
+	CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 		iGoodSignCnt(0), bWasFreqAcqu(TRUE), bDoInitRun(FALSE),
 		eReceiverMode(RM_DRM), 	eNewReceiverMode(RM_NONE),
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
-		rInitResampleOffset((_REAL) 0.0)
+		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0)
 #ifdef HAVE_LIBHAMLIB
 		, strHamlibConf(""), iHamlibModelID(0)
 #endif
@@ -188,7 +188,8 @@ public:
 
 protected:
 	void					Run();
-	void					DetectAcqui();
+	void					DetectAcquiFAC();
+	void					DetectAcquiSymbol();
 	void					InitReceiverMode();
 
 	/* Modules */
@@ -235,6 +236,7 @@ protected:
 	CCyclicBuffer<_SAMPLE>	AudSoDecBuf;
 
 	EAcqStat				eAcquiState;
+	int						iAcquRestartCnt;
 	int						iAcquDetecCnt;
 	int						iGoodSignCnt;
 	int						iDelayedTrackModeCnt;

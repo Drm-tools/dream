@@ -108,6 +108,10 @@ void CDRMReceiver::Run()
 					TimeSyncBuf))
 				{
 					bEnoughData = TRUE;
+
+					/* Use count of OFDM-symbols for detecting aquisition
+					   state */
+					DetectAcquiSymbol();
 				}
 
 				/* OFDM-demodulation ---------------------------------------- */
@@ -150,7 +154,7 @@ void CDRMReceiver::Run()
 
 					/* Use information of FAC CRC for detecting the acquisition
 					   requirement */
-					DetectAcqui();
+					DetectAcquiFAC();
 				}
 
 
@@ -205,7 +209,20 @@ void CDRMReceiver::Run()
 	} while (ReceiverParam.bRunThread && (!bDoInitRun));
 }
 
-void CDRMReceiver::DetectAcqui()
+void CDRMReceiver::DetectAcquiSymbol()
+{
+	/* Only for aquisition detection if no signal was decoded before */
+	if (eAcquiState == AS_NO_SIGNAL)
+	{
+		/* Increment symbol counter and check if bound is reached */
+		iAcquDetecCnt++;
+
+		if (iAcquDetecCnt > NUM_OFDMSYM_U_ACQ_WITHOUT)
+			SetInStartMode();			
+	}
+}
+
+void CDRMReceiver::DetectAcquiFAC()
 {
 	/* Acquisition switch */
 	if (!UtilizeFACData.GetCRCOk())
@@ -213,19 +230,13 @@ void CDRMReceiver::DetectAcqui()
 		/* Reset "good signal" count */
 		iGoodSignCnt = 0;
 
-		iAcquDetecCnt++;
+		iAcquRestartCnt++;
 
-		/* Different behavior for a situation WITH a signal which was already
-		   detected or WITHOUT successfully received any signal */
-		if (eAcquiState == AS_WITH_SIGNAL)
+		/* Check situation when receiver must be set back in start mode */
+		if ((eAcquiState == AS_WITH_SIGNAL) &&
+			(iAcquRestartCnt > NUM_FAC_FRA_U_ACQ_WITH))
 		{
-			if (iAcquDetecCnt > NUM_FAC_FRA_U_ACQ_WITH)
-				SetInStartMode();
-		}
-		else
-		{
-			if (iAcquDetecCnt > NUM_FAC_FRA_U_ACQ_WITHOUT)
-				SetInStartMode();			
+			SetInStartMode();
 		}
 	}
 	else
@@ -248,6 +259,7 @@ void CDRMReceiver::DetectAcqui()
 		{
 			/* If one CRC was correct, reset acquisition since
 			   we assume, that this was a correct detected signal */
+			iAcquRestartCnt = 0;
 			iAcquDetecCnt = 0;
 
 			/* Set in tracking mode */
@@ -343,6 +355,7 @@ void CDRMReceiver::SetInStartMode()
 
 	/* Reset counters for acquisition decision, "good signal" and delayed
 	   tracking mode counter */
+	iAcquRestartCnt = 0;
 	iAcquDetecCnt = 0;
 	iGoodSignCnt = 0;
 	iDelayedTrackModeCnt = NUM_FAC_DEL_TRACK_SWITCH;
