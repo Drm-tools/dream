@@ -581,6 +581,27 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 #ifdef _DEBUG_
 /* Save table in file */
 FILE* pFile = fopen("test/CarMapTable.dat", "w");
+
+/* Title */
+fprintf(pFile, "Robustness mode ");
+switch (eNewRobustnessMode)
+{
+case RM_ROBUSTNESS_MODE_A:
+	fprintf(pFile, "A");
+	break;
+case RM_ROBUSTNESS_MODE_B:
+	fprintf(pFile, "B");
+	break;
+case RM_ROBUSTNESS_MODE_C:
+	fprintf(pFile, "C");
+	break;
+case RM_ROBUSTNESS_MODE_D:
+	fprintf(pFile, "D");
+	break;
+}
+fprintf(pFile, " / Spectrum occupancy %d\n\n", iSpecOccArrayIndex);
+
+/* Actual table */
 for (int i = 0; i < iNumSymbolsPerSuperframe; i++)
 {
 	for (int j = 0; j < iNumCarrier; j++)
@@ -625,8 +646,14 @@ for (int i = 0; i < iNumSymbolsPerSuperframe; i++)
 			continue;
 		}
 	}
-	fprintf(pFile, "\n"); // New line
+	fprintf(pFile, "\n");
 }
+
+/* Legend */
+fprintf(pFile, "\n\nLegend:\n\t: DC-carrier\n\t. MCS cells\n\tS SDC cells");
+fprintf(pFile, "\n\tX FAC cells\n\tT time pilots\n\tf frequency pilots");
+fprintf(pFile, "\n\t0 scattered pilots\n\t* boosted scattered pilots\n");
+
 fclose(pFile);
 
 /* Save pilot values in file */
