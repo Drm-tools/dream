@@ -83,8 +83,8 @@ _REAL CTimeLinear::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			{
 				/* We need to correct pilots due to timing corrections ------ */
 				/* Calculate timing difference to old and new pilot */
-				iTimeDiffOld = vecTiCorrHist[j] - vecTiCorrHist[0];
-				iTimeDiffNew = vecTiCorrHist[j] /* - 0 */;
+				iTimeDiffOld = vecTiCorrHist[0]	- vecTiCorrHist[j];
+				iTimeDiffNew = 0				- vecTiCorrHist[j];
 				
 				/* Correct pilot information for phase rotation */
 				cOldPilot = Rotate(matcChanEstHist[0][i], i, iTimeDiffOld);

@@ -84,7 +84,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			for (j = 0; j < iNumTapsSigEst; j++)
 			{
 				/* Correct pilot information for phase rotation */
-				iTimeDiffNew = -vecTiCorrHist[iScatPilTimeInt * j];
+				iTimeDiffNew = vecTiCorrHist[iScatPilTimeInt * j];
 				cNewPilot = 
 					Rotate(matcChanAtPilPos[j][iPiHiIndex], i, iTimeDiffNew);
 
@@ -150,8 +150,9 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			{
 				/* We need to correct pilots due to timing corrections ------ */
 				/* Calculate timing difference */
-				iTimeDiffNew = vecTiCorrHist[iLenHistBuff - 1] - 
-					vecTiCorrHist[j * iScatPilTimeInt + iCurrFiltPhase];
+				iTimeDiffNew =
+					vecTiCorrHist[j * iScatPilTimeInt + iCurrFiltPhase]	-
+					vecTiCorrHist[iLenHistBuff - 1];
 
 				/* Correct pilot information for phase rotation */
 				cNewPilot = 

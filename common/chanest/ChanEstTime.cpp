@@ -34,7 +34,7 @@ void CPilotModiClass::InitRot(CParameter& Parameter)
 {
 	/* Inits for timing correction. We need FFT size and start carrier */
 	/* Pre calculate the argument of the exp function */
-	rArgMult = (_REAL) 2.0 * crPi / Parameter.iFFTSizeN;
+	rArgMult = (_REAL) -2.0 * crPi / Parameter.iFFTSizeN;
 	
 	/* Index of minimum useful carrier */
 	iKminAbs = Parameter.iShiftedKmin;
