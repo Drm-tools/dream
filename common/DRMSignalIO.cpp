@@ -55,6 +55,10 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	/* Open file for writing data for transmitting */
 	pFileTransmitter = fopen("test/TransmittedData.txt", "w");
+
+	/* Check for error */
+	if (pFileTransmitter == NULL)
+		throw CGenErr("The file test/TransmittedData.txt cannot be created.");
 }
 
 CTransmitData::~CTransmitData()
@@ -153,6 +157,10 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		/* Open file for reading data from transmitter. Open file only once */
 		if (pFileReceiver == NULL)
 			pFileReceiver = fopen("test/TransmittedData.txt", "r");
+
+		/* Check for error */
+		if (pFileReceiver == NULL)
+			throw CGenErr("The file test/TransmittedData.txt must exist.");
 	}
 
 	/* Init vector for saving input data for spectrum */
