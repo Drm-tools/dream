@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>721</width>
+            <width>717</width>
             <height>411</height>
         </rect>
     </property>
@@ -58,7 +58,7 @@
                     <class>QFrame</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Frame3_2</cstring>
+                        <cstring>FrameCarrierFrequency</cstring>
                     </property>
                     <property stdset="1">
                         <name>sizePolicy</name>
