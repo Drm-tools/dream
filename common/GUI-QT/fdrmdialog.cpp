@@ -482,6 +482,10 @@ void FDRMDialog::OnTimer()
 				m_StaticService[i] = "<b>" + strLabel + 
 					"</b>" + strSpace + SetServParamStr(i);
 
+				/* Bit-rate */
+				m_StaticService[i] += " (" + QString().setNum(DRMReceiver.
+					GetParameters()->GetBitRateKbps(i), 'f', 2) + " kbps)";
+
 				/* Show, if a multimedia stream is connected to this service */
 				if ((DRMReceiver.GetParameters()->Service[i].
 					eAudDataFlag == CParameter::SF_AUDIO) && 
@@ -870,8 +874,8 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 QString	FDRMDialog::SetBitrIDStr(int iServiceID)
 {
 	/* Bit-rate */
-	QString strServIDBitrate = "Bit Rate:" + QString().setNum(
-		DRMReceiver.GetParameters()->GetBitRate(iServiceID), 'f', 2) + " kbps";
+	QString strServIDBitrate = "Bit Rate:" + QString().setNum(DRMReceiver.
+		GetParameters()->GetBitRateKbps(iServiceID), 'f', 2) + " kbps";
 
 	/* Equal or unequal error protection */
 	if (DRMReceiver.GetParameters()->IsEEP(iServiceID) == TRUE)
