@@ -33,6 +33,8 @@ AC_ARG_WITH( qtdir,[  --with-qtdir=path to QT],QTDIR=$withval)
 
 AC_ARG_WITH( faad2,[  --with-faad2            use faad2 library for decoding AAC audio],WITHFAAD2=$withval, WITHFAAD2=yes)
 
+AC_ARG_WITH( faac,[  --with-faac              use faac library for encoding AAC audio],WITHFAAC=$withval, WITHFAAC=no)
+
 AC_ARG_WITH( journaline,[  --with-journaline       support Journaline],WITHJOURNALINE=$withval, WITHJOURNALINE=no)
 
 AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$withval, WITHHAMLIB=no)
@@ -46,6 +48,7 @@ if test "$enable_simulation" = "yes"; then
 	enable_sound=no
 	WITHQTGUI=no
 	WITHFAAD2=no
+	WITHFAAC=no
 	WITHJOURNALINE=no
 	WITHHAMLIB=no
 	WITHFREEIMAGE=no
@@ -150,6 +153,11 @@ if test "x$WITHFAAD2" = xyes; then
 		AC_MSG_ERROR( "*** libfaad build without DRM support ***" )
 	fi
 	AC_DEFINE(USE_FAAD2_LIBRARY, 1, [Define if you want to use the faad2 library])
+fi
+
+dnl faac (optional) -------------------------------------------------------------
+if test "x$WITHFAAC" = xyes; then
+	AC_HAVE_LIBRARY(faac, ,exit 1)
 fi
 
 dnl FreeImage (optional) --------------------------------------------------------
