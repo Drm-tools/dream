@@ -140,7 +140,7 @@ FDRMDialog::FDRMDialog(QWidget* parent, const char* name, bool modal, WFlags f)
 
 
 	/* Init current selected service */
-	DRMReceiver.GetParameters()->SetCurSelectedService(0);
+	DRMReceiver.GetParameters()->SetCurSelAudioService(0);
 	iCurSelServiceGUI = 0;
 	iOldNoServicesGUI = 0;
 
@@ -187,7 +187,7 @@ void FDRMDialog::OnTimer()
 	{
 		/* Receiver does receive a DRM signal ------------------------------- */
 		/* First get current selected service */
-		iCurSelServ = DRMReceiver.GetParameters()->GetCurSelectedService();
+		iCurSelServ = DRMReceiver.GetParameters()->GetCurSelAudioService();
 
 		/* If selected service is audio and text message is true */
 		if ((DRMReceiver.GetParameters()->Service[iCurSelServ].
@@ -403,7 +403,7 @@ void FDRMDialog::OnSoundOutDevice(int id)
 void FDRMDialog::OnButtonService1()
 {
 	/* If button was already down */
-	if (DRMReceiver.GetParameters()->GetCurSelectedService() == 0)
+	if (DRMReceiver.GetParameters()->GetCurSelAudioService() == 0)
 		PushButtonService1->setOn(TRUE);
 	else
 	{
@@ -412,7 +412,7 @@ void FDRMDialog::OnButtonService1()
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
-		DRMReceiver.GetParameters()->SetCurSelectedService(0);
+		DRMReceiver.GetParameters()->SetCurSelAudioService(0);
 		iCurSelServiceGUI = 0;
 	}
 }
@@ -420,7 +420,7 @@ void FDRMDialog::OnButtonService1()
 void FDRMDialog::OnButtonService2()
 {
 	/* If button was already down */
-	if (DRMReceiver.GetParameters()->GetCurSelectedService() == 1)
+	if (DRMReceiver.GetParameters()->GetCurSelAudioService() == 1)
 		PushButtonService2->setOn(TRUE);
 	else
 	{
@@ -429,7 +429,7 @@ void FDRMDialog::OnButtonService2()
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
-		DRMReceiver.GetParameters()->SetCurSelectedService(1);
+		DRMReceiver.GetParameters()->SetCurSelAudioService(1);
 		iCurSelServiceGUI = 1;
 	}
 }
@@ -437,7 +437,7 @@ void FDRMDialog::OnButtonService2()
 void FDRMDialog::OnButtonService3()
 {
 	/* If button was already down */
-	if (DRMReceiver.GetParameters()->GetCurSelectedService() == 2)
+	if (DRMReceiver.GetParameters()->GetCurSelAudioService() == 2)
 		PushButtonService3->setOn(TRUE);
 	else
 	{
@@ -446,7 +446,7 @@ void FDRMDialog::OnButtonService3()
 		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
 		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
 
-		DRMReceiver.GetParameters()->SetCurSelectedService(2);
+		DRMReceiver.GetParameters()->SetCurSelAudioService(2);
 		iCurSelServiceGUI = 2;
 	}
 }
@@ -454,7 +454,7 @@ void FDRMDialog::OnButtonService3()
 void FDRMDialog::OnButtonService4()
 {
 	/* If button was already down */
-	if (DRMReceiver.GetParameters()->GetCurSelectedService() == 3)
+	if (DRMReceiver.GetParameters()->GetCurSelAudioService() == 3)
 		PushButtonService4->setOn(TRUE);
 	else
 	{
@@ -463,7 +463,7 @@ void FDRMDialog::OnButtonService4()
 		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
 		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
 
-		DRMReceiver.GetParameters()->SetCurSelectedService(3);
+		DRMReceiver.GetParameters()->SetCurSelAudioService(3);
 		iCurSelServiceGUI = 3;
 	}
 }
