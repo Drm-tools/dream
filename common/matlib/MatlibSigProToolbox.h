@@ -36,6 +36,7 @@
 CMatlibVector<CReal>	Randn(const int iLength);
 CMatlibVector<CReal>	Hann(const int iLen);
 CMatlibVector<CReal>	Hamming(const int iLen);
+CMatlibVector<CReal>	Nuttallwin(const int iLen);
 
 
 /* Filter data with a recursive (IIR) or nonrecursive (FIR) filter */

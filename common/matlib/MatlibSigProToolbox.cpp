@@ -109,6 +109,27 @@ CMatlibVector<CReal> Hamming(const int iLen)
 	}
 }
 
+CMatlibVector<CReal> Nuttallwin(const int iLen)
+{
+	CMatlibVector<CReal> fvRet(iLen, VTY_TEMP);
+
+	/* Nuttall coefficients */
+	const CReal rA0 = (CReal) 0.3635819;
+	const CReal rA1 = (CReal) 0.4891775;
+	const CReal rA2 = (CReal) 0.1365995;
+	const CReal rA3 = (CReal) 0.0106411;
+
+	const CReal rArg = (CReal) 2.0 * crPi / (iLen - 1);
+
+	for (int i = 0; i < iLen; i++)
+	{
+		fvRet[i] = rA0 - rA1 * Cos(rArg * i) +
+			rA2 * Cos(rArg * i * 2) - rA3 * Cos(rArg * i * 3);
+	}
+
+	return fvRet;
+}
+
 CMatlibVector<CReal> Randn(const int iLength)
 {
 	/* Add some constant distributed random processes together */
