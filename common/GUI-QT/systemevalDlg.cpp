@@ -254,6 +254,10 @@ systemevalDlg::~systemevalDlg()
 	pDRMRec->GeomSystemEvalDlg.iYPos = WinGeom.y();
 	pDRMRec->GeomSystemEvalDlg.iHSize = WinGeom.height();
 	pDRMRec->GeomSystemEvalDlg.iWSize = WinGeom.width();
+
+	/* Call the hide event handler routine to make sure the chart window sizes
+	   and positions are stored */
+	hideEvent(NULL);
 }
 
 void systemevalDlg::UpdateControls()
@@ -338,18 +342,94 @@ void systemevalDlg::UpdateControls()
 
 void systemevalDlg::showEvent(QShowEvent* pEvent)
 {
+	/* Restore chart windows */
+	const int iNumChartWin = pDRMRec->GeomChartWindows.Size();
+
+	for (int i = 0; i < iNumChartWin; i++)
+	{
+		/* Convert int to enum type. TODO: better solution for storing enum
+		   types in init file! */
+		const CDRMPlot::ECharType eNewType =
+			(CDRMPlot::ECharType) pDRMRec->GeomChartWindows[i].iType;
+
+		/* Open new chart window */
+		CDRMPlot* pNewChartWin = OpenChartWin(eNewType);
+
+		/* Add window pointer in vector (needed for closing the windows) */
+		vecpDRMPlots.Add(pNewChartWin);
+
+#ifdef _WIN32 /* This works only reliable under Windows :-( */
+		/* Chart windows: get window geometry data from DRMReceiver module
+		   and apply it */
+		const QRect WinGeom(pDRMRec->GeomChartWindows[i].iXPos,
+			pDRMRec->GeomChartWindows[i].iYPos,
+			pDRMRec->GeomChartWindows[i].iWSize,
+			pDRMRec->GeomChartWindows[i].iHSize);
+
+		if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+			pNewChartWin->setGeometry(WinGeom);
+#endif
+	}
+
 	/* Update controls */
 	UpdateControls();
 }
 
 void systemevalDlg::hideEvent(QHideEvent* pEvent)
 {
-	/* Close all additional chart windows if this dialog is not shown */
+	/* Store size and position of all additional chart windows */
+	pDRMRec->GeomChartWindows.Init(0);
+
 	for (int i = 0; i < vecpDRMPlots.Size(); i++)
+	{
+		/* Check, if window wasn't closed by the user */
+		if (vecpDRMPlots[i]->isVisible())
+		{
+			const QRect CWGeom = vecpDRMPlots[i]->geometry();
+
+			/* Enlarge vector for storing parameters of new window */
+			const int iOldSizeCWV = pDRMRec->GeomChartWindows.Size();
+			pDRMRec->GeomChartWindows.Enlarge(1);
+
+			/* Set parameters */
+			pDRMRec->GeomChartWindows[iOldSizeCWV].iXPos = CWGeom.x();
+			pDRMRec->GeomChartWindows[iOldSizeCWV].iYPos = CWGeom.y();
+			pDRMRec->GeomChartWindows[iOldSizeCWV].iHSize = CWGeom.height();
+			pDRMRec->GeomChartWindows[iOldSizeCWV].iWSize = CWGeom.width();
+
+			/* Convert plot type into an integer type. TODO: better solution */
+			pDRMRec->GeomChartWindows[iOldSizeCWV].iType =
+				(int) vecpDRMPlots[i]->GetChartType();
+		}
+
+		/* Close window afterwards */
 		vecpDRMPlots[i]->close();
+	}
 
 	/* We do not need the pointers anymore, reset vector */
 	vecpDRMPlots.Init(0);
+}
+
+CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
+{
+	/* Create new chart window */
+	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
+	pNewChartWin->setCaption(tr("Chart Window"));
+
+	/* Set color scheme */
+	pNewChartWin->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
+
+	/* Set correct icon (use the same as this dialog) */
+	pNewChartWin->setIcon(*this->icon());
+
+	/* Set receiver object and correct chart type */
+	pNewChartWin->SetRecObj(pDRMRec);
+	pNewChartWin->SetupChart(eNewType);
+
+	/* Show new window */
+	pNewChartWin->show();
+
+	return pNewChartWin;
 }
 
 void systemevalDlg::SetStatus(int MessID, int iMessPara)
@@ -693,26 +773,10 @@ void systemevalDlg::OnListViContMenu()
 
 	if (pCurSelLVItem != NULL)
 	{
-		/* Open new chart window */
-		CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
-		pNewChartWin->setCaption(tr("Chart Window"));
-
-		/* Set color scheme */
-		pNewChartWin->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
-
-		/* Set correct icon (use the same as this dialog) */
-		pNewChartWin->setIcon(*this->icon());
-
-		/* Set receiver object and correct chart type */
-		pNewChartWin->SetRecObj(pDRMRec);
-		pNewChartWin->
-			SetupChart(((CCharSelItem*) pCurSelLVItem)->GetCharType());
-
-		/* Show new window */
-		pNewChartWin->show();
-
-		/* Add window pointer in vector (needed for closing the windows) */
-		vecpDRMPlots.Add(pNewChartWin);
+		/* Open new chart window and add window pointer in vector
+		   (needed for closing the windows) */
+		vecpDRMPlots.Add(
+			OpenChartWin(((CCharSelItem*) pCurSelLVItem)->GetCharType()));
 	}
 }
 

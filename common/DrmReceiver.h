@@ -109,7 +109,8 @@ public:
 		bModRigSettings(FALSE)
 #endif
 #if defined(USE_QT_GUI) || defined(_WIN32)
-		, iMainPlotColorStyle(0) /* default color scheme: blue-white */
+		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
+		GeomChartWindows(0)
 #endif
 		{}
 	virtual ~CDRMReceiver() {}
@@ -195,11 +196,12 @@ public:
 	{
 	public:
 		CWinGeom() : iXPos(0), iYPos(0), iHSize(0), iWSize(0),
-			bVisible(FALSE) {}
+			bVisible(FALSE), iType(0) {}
 
 		int iXPos, iYPos;
 		int iHSize, iWSize;
 		_BOOLEAN bVisible;
+		int iType;
 	};
 
 	/* Main window */
@@ -216,6 +218,9 @@ public:
 
 	/* Analog demodulation dialog */
 	CWinGeom GeomAnalogDemDlg;
+
+	/* Chart windows */
+	CVector<CWinGeom> GeomChartWindows;
 
 	int iMainPlotColorStyle;
 #endif

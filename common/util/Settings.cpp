@@ -178,6 +178,38 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
 		pDRMRec->GeomAnalogDemDlg.bVisible = bValue;
 
+	/* Chart windows */
+	int iNumChartWin = 0;
+	if (GetNumericIniSet(ini, "Window geometry", "numchartwin", 0, MAX_NUM_CHART_WIN_EV_DLG, iValue) == TRUE)
+		iNumChartWin = iValue;
+
+	pDRMRec->GeomChartWindows.Init(iNumChartWin);
+	for (int i = 0; i < iNumChartWin; i++)
+	{
+		/* Convert number to string */
+		char chNumTmpLong[256];
+
+		sprintf(chNumTmpLong, "chwin%dxpos", i);
+		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+			pDRMRec->GeomChartWindows[i].iXPos = iValue;
+
+		sprintf(chNumTmpLong, "chwin%dypos", i);
+		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+			pDRMRec->GeomChartWindows[i].iYPos = iValue;
+
+		sprintf(chNumTmpLong, "chwin%dhsize", i);
+		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+			pDRMRec->GeomChartWindows[i].iHSize = iValue;
+
+		sprintf(chNumTmpLong, "chwin%dwsize", i);
+		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+			pDRMRec->GeomChartWindows[i].iWSize = iValue;
+
+		sprintf(chNumTmpLong, "chwin%dtype", i);
+		if (GetNumericIniSet(ini, "Window geometry", chNumTmpLong, 0, MAX_IND_CHART_TYPES, iValue) == TRUE)
+			pDRMRec->GeomChartWindows[i].iType = iValue;
+	}
+
 
 	/* GUI customizations --------------------------------------------------- */
 	/* Color scheme main plot */
@@ -300,6 +332,31 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Window geometry", "analdemhsize", pDRMRec->GeomAnalogDemDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "analdemwsize", pDRMRec->GeomAnalogDemDlg.iWSize);
 	SetFlagIniSet(ini, "Window geometry", "analdemvis", pDRMRec->GeomAnalogDemDlg.bVisible);
+
+	/* Chart windows */
+	const int iNumChartWin = pDRMRec->GeomChartWindows.Size();
+	SetNumericIniSet(ini, "Window geometry", "numchartwin", iNumChartWin);
+
+	for (int i = 0; i < iNumChartWin; i++)
+	{
+		/* Convert number to string */
+		char chNumTmpLong[256];
+
+		sprintf(chNumTmpLong, "chwin%dxpos", i);
+		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iXPos);
+
+		sprintf(chNumTmpLong, "chwin%dypos", i);
+		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iYPos);
+
+		sprintf(chNumTmpLong, "chwin%dhsize", i);
+		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iHSize);
+
+		sprintf(chNumTmpLong, "chwin%dwsize", i);
+		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iWSize);
+
+		sprintf(chNumTmpLong, "chwin%dtype", i);
+		SetNumericIniSet(ini, "Window geometry", chNumTmpLong, pDRMRec->GeomChartWindows[i].iType);
+	}
 
 
 	/* GUI customizations --------------------------------------------------- */

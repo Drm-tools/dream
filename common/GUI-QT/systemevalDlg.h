@@ -103,6 +103,7 @@ protected:
 	virtual void		hideEvent(QHideEvent* pEvent);
 	void				UpdateControls();
 	void				AddWhatsThisHelp();
+	CDRMPlot*			OpenChartWin(const CDRMPlot::ECharType eNewType);
 
 	QString				GetRobModeStr();
 	QString				GetSpecOccStr();

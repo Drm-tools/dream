@@ -86,6 +86,10 @@
    this is the max size of a single line, NOT the max number of lines */
 #define MAX_INI_LINE				500
 
+/* Maximum number of chart windows and plot types */
+#define MAX_NUM_CHART_WIN_EV_DLG	50
+#define MAX_IND_CHART_TYPES			1000
+
 
 /* Classes ********************************************************************/
 class CSettings
