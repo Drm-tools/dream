@@ -50,12 +50,12 @@ public:
 	void SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
 
 protected:
-	int DataEntityType0(CVector<_BINARY>* pbiData, CParameter& Parameter);
-	int DataEntityType1(CVector<_BINARY>* pbiData, int ServiceID, CParameter& Parameter);
+	void DataEntityType0(CVector<_BINARY>& vecbiData, CParameter& Parameter);
+	void DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID, CParameter& Parameter);
 // ...
-	int DataEntityType5(CVector<_BINARY>* pbiData, int ServiceID, CParameter& Parameter);
+	void DataEntityType5(CVector<_BINARY>& vecbiData, int ServiceID, CParameter& Parameter);
 // ...
-	int DataEntityType9(CVector<_BINARY>* pbiData, int ServiceID, CParameter& Parameter);
+	void DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID, CParameter& Parameter);
 
 
 	CCRC CRCObject;
