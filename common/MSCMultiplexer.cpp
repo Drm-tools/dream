@@ -155,8 +155,10 @@ void CMSCDemultiplexer::GetStreamPos(CParameter& Param, const int iStreamID,
 		   (iLenPartA of all streams are added) 6.2.3.1 */
 		StPos.iOffsetLow = 0;
 		for (i = 0; i < veciActStreams.Size(); i++)
+		{
 			StPos.iOffsetLow +=
 				Param.Stream[veciActStreams[i]].iLenPartA * SIZEOF__BYTE;
+		}
 
 		/* Real start position of the streams */
 		StPos.iOffsetHigh = 0;

@@ -35,24 +35,17 @@
 \******************************************************************************/
 void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 {
-	int iCar;
-	int iMSCCounter;
-	int iFACCounter;
-	int iSDCCounter;
-	int iDummyCellCounter;
-	int iSymbolCounterAbs;
-
 	/* Mapping of the data and pilot cells on the OFDM symbol --------------- */
 	/* Set absolute symbol position */
-	iSymbolCounterAbs =
+	int iSymbolCounterAbs =
 		TransmParam.iFrameIDTransm * iNumSymPerFrame + iSymbolCounter;
 
 	/* Init temporary counter */
-	iDummyCellCounter = 0;
-	iMSCCounter = 0;
-	iFACCounter = 0;
-	iSDCCounter = 0;
-	for (iCar = 0; iCar < iNumCarrier; iCar++)
+	int iDummyCellCounter = 0;
+	int iMSCCounter = 0;
+	int iFACCounter = 0;
+	int iSDCCounter = 0;
+	for (int iCar = 0; iCar < iNumCarrier; iCar++)
 	{
 		/* MSC */
 		if (_IsMSC(TransmParam.matiMapTab[iSymbolCounterAbs][iCar]))
@@ -156,16 +149,9 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 \******************************************************************************/
 void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int iCar;
-	int iMSCCounter;
-	int iSDCCounter;
-	int iFACCounter;
-	int iSymbolCounterAbs;
-	int iNewSymbolCounter;
-	int iNewFrameID;
-
 	/* Set absolute symbol position */
-	iSymbolCounterAbs = iCurrentFrameID * iNumSymPerFrame + iSymbolCounter;
+	const int iSymbolCounterAbs =
+		iCurrentFrameID * iNumSymPerFrame + iSymbolCounter;
 
 	/* Set output block-sizes for this symbol */
 	iOutputBlockSize = ReceiverParam.veciNumMSCSym[iSymbolCounterAbs];
@@ -173,10 +159,10 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 	iOutputBlockSize3 = ReceiverParam.veciNumSDCSym[iSymbolCounterAbs];
 
 	/* Demap data from the cells */
-	iMSCCounter = 0;
-	iFACCounter = 0;
-	iSDCCounter = 0;
-	for (iCar = 0; iCar < iNumCarrier; iCar++)
+	int iMSCCounter = 0;
+	int iFACCounter = 0;
+	int iSDCCounter = 0;
+	for (int iCar = 0; iCar < iNumCarrier; iCar++)
 	{
 		/* MSC */
 		if (_IsMSC(ReceiverParam.matiMapTab[iSymbolCounterAbs][iCar]))
@@ -212,7 +198,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Get symbol-counter for next symbol and adjust frame-ID. Use the extended
 	   data, shipped with the input vector */
-	iNewSymbolCounter = (*pvecInputData).GetExData().iSymbolID + 1;
+	int iNewSymbolCounter = (*pvecInputData).GetExData().iSymbolID + 1;
 
 	/* Check range (iSymbolCounter must be in {0, ... , iNumSymPerFrame - 1} */
 	while (iNewSymbolCounter >= iNumSymPerFrame)
@@ -255,7 +241,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Frame ID of this FAC block stands for the "current" block. We need
 		   the ID of the next block, therefore we have to add "1" */
-		iNewFrameID = ReceiverParam.iFrameIDReceiv + 1;
+		int iNewFrameID = ReceiverParam.iFrameIDReceiv + 1;
 		if (iNewFrameID == NUM_FRAMES_IN_SUPERFRAME)
 			iNewFrameID = 0;
 
