@@ -51,7 +51,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	CReal		rWinEnergy;
 	CReal		rMaxWinEnergy;
 	_BOOLEAN	bDelayFound;
-	_BOOLEAN	bPSDResultFound;
+	_BOOLEAN	bPDSResultFound;
 
 	/* Rotate the averaged PDP to follow the time shifts -------------------- */
 	/* Update timing correction history (shift register) */
@@ -93,15 +93,9 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	   Eq (15) */
 	veccPilots = Ifft(veccPilots, FftPlan);
 
-	/* Do not use averaging before channel estimation was initialized */
-	if (iInitCnt > 0)
-		iInitCnt--;
-	else
-	{
-		/* Average result, Eq (16) (Should be a moving average function, for
-		   simplicity we have chosen an IIR filter here) */
-		IIR1(vecrAvPoDeSp, SqMag(veccPilots), rLamAvPDS);
-	}
+	/* Average result, Eq (16) (Should be a moving average function, for
+	   simplicity we have chosen an IIR filter here) */
+	IIR1(vecrAvPoDeSp, SqMag(veccPilots), rLamAvPDS);
 
 	/* Rotate the averaged result vector to put the earlier peaks
 	   (which can also detected in a certain amount) at the beginning of
@@ -174,7 +168,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 	/* Only apply timing correction if search was successful and tracking is
 	   activated */
-	if ((bDelayFound == TRUE) && (bTracking == TRUE))
+	if ((bDelayFound == TRUE) && (bTiSyncTracking == TRUE))
 	{
 		/* Consider the rotation introduced for earlier peaks in path delay.
 		   Since the "iStPoRot" is the position of the beginning of the block
@@ -235,47 +229,129 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	}
 
 
+	/* Sample rate offset estimation ---------------------------------------- */
+	int		iMaxInd;
+	CReal	rMax;
+
+	/* Find index of maximum peak in PDS estimation. This is our reference
+	   for this estimation method */
+	Max(rMax, iMaxInd, vecrAvPoDeSpRot);
+
+	/* Integration of timing corrections
+	   FIXME: Check for overrun of "iIntegTiCorrections" variable! */
+	iIntegTiCorrections += (long int) rActShiftTiCor;
+
+	/* We need to consider the timing corrections done by the timing unit. What
+	   we want to estimate is only the real movement of the detected maximum
+	   peak */
+	int iCurRes = iIntegTiCorrections + iMaxInd;
+	veciSRTiCorrHist.AddEnd(iCurRes);
+
+	/* We assumed that the detected peak is always the same peak in the actual
+	   PDS. But due to fading the maximum can change to a different peak. In
+	   this case the estimation would be wrong. We try to detect the detection
+	   of a different peak by defining a maximum sample rate change. The sample
+	   rate offset is very likely to be very constant since usually crystal
+	   oscialltors are used. Thus, if a larger change of sample rate offset
+	   happens, we assume that the maximum peak has changed */
+	int iNewDiff = veciSRTiCorrHist[iLenCorrectionHist - 2] - iCurRes;
+
+	/* If change is larger than 2, it is most likely that a new peak was chosen
+	   by the maximum function */
+	if (abs(iNewDiff) > 2)
+	{
+		/* Correct the complete history to the new reference peak. Reference
+		   peak was already added, therefore do not use last element */
+		for (i = 0; i < iLenCorrectionHist - 1; i++)
+			veciSRTiCorrHist[i] -= iNewDiff;
+	}
+
+	/* Check, if we are in acquisition phase */
+	if (iResOffsetAcquCnt > 0)
+	{
+		/* Acquisition phase */
+		iResOffsetAcquCnt--;
+	}
+	else
+	{
+		/* Apply the result from acquisition only once */
+		if (bSamRaOffsAcqu == TRUE)
+		{
+			/* End of acquisition phase */
+			bSamRaOffsAcqu = FALSE;
+
+			/* Set sample rate offset to initial estimate. We consider the
+			   initialization phase of channel estimation by "iSymDelay" */
+			CReal rInitSamOffset = GetSamOffHz(iCurRes - veciSRTiCorrHist[
+				iLenCorrectionHist - (iResOffAcqCntMax - iSymDelay)],
+				iResOffAcqCntMax - iSymDelay - 1);
+
+			/* Apply initial sample rate offset estimation */
+			Parameter.rResampleOffset = -rInitSamOffset;
+
+			/* Reset estimation history (init with zeros) since the sample
+			   rate offset was changed */
+			veciSRTiCorrHist.Init(iLenCorrectionHist, 0);
+			iIntegTiCorrections = 0;
+		}
+		else
+		{
+			/* Tracking phase */
+			/* Get actual sample rate offset in Hertz */
+			CReal rSamOffset =
+				GetSamOffHz(iCurRes - veciSRTiCorrHist[0], iLenCorrectionHist);
+
+			/* Apply result from sample rate offset estimation */
+			Parameter.rResampleOffset -= CONTR_SAMP_OFF_INT_FTI * rSamOffset;
+		}
+	}
+
+
 	/* Delay spread length estimation --------------------------------------- */
 	/* Total energy of estimated impulse response */
-	rTotalEnergy = Sum(vecrAvPoDeSp(1, Floor(rGuardSizeFFT)));
+	rTotalEnergy = Sum(vecrAvPoDeSp(1, (int) Ceil(rGuardSizeFFT)));
 
 	/* From left to the right -> search for end of PDS */
 	rEstPDSEnd = rGuardSizeFFT;
 	rCurEnergy = (CReal) 0.0;
-	bPSDResultFound = FALSE;
+	bPDSResultFound = FALSE;
 	for (i = 0; i < Ceil(rGuardSizeFFT); i++)
 	{
-		if (bPSDResultFound == FALSE)
+		if (bPDSResultFound == FALSE)
 		{
-			rCurEnergy += vecrAvPoDeSp[i];
-
-			if (rCurEnergy > ENERGY_WIN_WIENER_FREQ * rTotalEnergy)
+			if (rCurEnergy >= ENERGY_WIN_WIENER_FREQ * rTotalEnergy)
 			{
 				/* Delay index */
-				rEstPDSEnd = (_REAL) i;
+				rEstPDSEnd = (CReal) i;
 
-				bPSDResultFound = TRUE;
+				bPDSResultFound = TRUE;
 			}
+
+			rCurEnergy += vecrAvPoDeSp[i];
 		}
 	}
+
+	/* Bound PDS end on guard-interval bound */
+	if (rEstPDSEnd > rGuardSizeFFT)
+		rEstPDSEnd = rGuardSizeFFT;
 
 	/* From right to the left -> search for beginning of PDS */
 	rEstPDSBegin = (CReal) 0.0;
 	rCurEnergy = (CReal) 0.0;
-	bPSDResultFound = FALSE;
-	for (i = Floor(rGuardSizeFFT); i >= 0; i--)
+	bPDSResultFound = FALSE;
+	for (i = (int) Floor(rGuardSizeFFT); i >= 0; i--)
 	{
-		if (bPSDResultFound == FALSE)
+		if (bPDSResultFound == FALSE)
 		{
-			rCurEnergy += vecrAvPoDeSp[i];
-
 			if (rCurEnergy > ENERGY_WIN_WIENER_FREQ * rTotalEnergy)
 			{
 				/* Delay index */
-				rEstPDSBegin = (_REAL) i;
+				rEstPDSBegin = (CReal) i;
 
-				bPSDResultFound = TRUE;
+				bPDSResultFound = TRUE;
 			}
+
+			rCurEnergy += vecrAvPoDeSp[i];
 		}
 	}
 
@@ -286,12 +362,6 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 
 void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 {
-	/* This count prevents from using channel estimation information from time
-	   interpolation before the init process hasn't yet finished. We use 2 *
-	   the symbol delay because we assume a symmetric filter for channel
-	   estimation in time direction */
-	iInitCnt = iNewSymbDelay * 2;
-
 	iNumCarrier = Parameter.iNumCarrier;
 	iScatPilFreqInt = Parameter.iScatPilFreqInt;
 	iNumIntpFreqPil = Parameter.iNumIntpFreqPil;
@@ -318,7 +388,7 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 	vecrAvPoDeSpRot.Init(iNumIntpFreqPil);
 
 	/* Length of guard-interval with respect to FFT-size! */
-	rGuardSizeFFT = (_REAL) iNumCarrier *
+	rGuardSizeFFT = (CReal) iNumCarrier *
 		Parameter.RatioTgTu.iEnum / Parameter.RatioTgTu.iDenom;
 
 	/* Get the hamming window taps. The window is to reduce the leakage effect
@@ -362,6 +432,36 @@ void CTimeSyncTrack::Init(CParameter& Parameter, int iNewSymbDelay)
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iNumIntpFreqPil);
+
+
+	/* Inits for sample rate offset estimation ------------------------------ */
+	/* Calculate number of symbols for a given time span as defined for the
+	   length of the sample rate offset estimation history size */
+	iLenCorrectionHist = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+		HIST_LEN_SAM_OFF_EST_TI_CORR / Parameter.iSymbolBlockSize);
+
+	/* Init count for acquisition */
+	iResOffAcqCntMax = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+		SAM_OFF_EST_TI_CORR_ACQ_LEN / Parameter.iSymbolBlockSize);
+
+	/* Init sample rate offset estimation acquisition count */
+	iResOffsetAcquCnt = iResOffAcqCntMax;
+
+	veciSRTiCorrHist.Init(iLenCorrectionHist, 0); /* Init with zeros */
+	iIntegTiCorrections = 0;
+
+	/* Symbol block size converted in domain of estimated PDS */
+	rSymBloSiIRDomain =
+		(CReal) Parameter.iSymbolBlockSize * iNumCarrier / iDFTSize;
+}
+
+CReal CTimeSyncTrack::GetSamOffHz(int iDiff, int iLen)
+{
+	/* Calculate actual sample rate offset in Hertz */
+	const CReal rCurSampOffsNorm = (CReal) iDiff / iLen / rSymBloSiIRDomain;
+
+	return (CReal) SOUNDCRD_SAMPLE_RATE * ((CReal) 1.0 -
+		(CReal) 1.0 / ((CReal) 1.0 + rCurSampOffsNorm));
 }
 
 void CTimeSyncTrack::SetTiSyncTracType(ETypeTiSyncTrac eNewTy)

@@ -61,12 +61,23 @@
    estimated PDS which is in the range of the guard-interval */
 #define ENERGY_WIN_WIENER_FREQ				((CReal) 0.9995)
 
+/* Parameter of controlling the closed loop for sample rate offset */
+#define CONTR_SAMP_OFF_INT_FTI				((_REAL) 0.001)
+
+/* Length of history for sample rate offset estimation using time corrections
+   in seconds */
+#define HIST_LEN_SAM_OFF_EST_TI_CORR		((CReal) 30.0) /* sec */
+
+/* Length of history used for sample rate offset acquisition estimate */
+#define SAM_OFF_EST_TI_CORR_ACQ_LEN			((CReal) 2.0) /* sec */
+
 
 /* Classes ********************************************************************/
 class CTimeSyncTrack
 {
 public:
-	CTimeSyncTrack() : bTracking(FALSE), TypeTiSyncTrac(TSENERGY) {}
+	CTimeSyncTrack() : bTiSyncTracking(FALSE), TypeTiSyncTrac(TSENERGY),
+		bSamRaOffsAcqu(TRUE) {}
 	virtual ~CTimeSyncTrack() {}
 
 	enum ETypeTiSyncTrac {TSENERGY, TSFIRSTPEAK};
@@ -81,8 +92,12 @@ public:
 					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
 					 _REAL& rPDSEnd);
 
-	void StartTracking() {bTracking = TRUE;}
-	void StopTracking() {bTracking = FALSE;}
+	void StartTracking() {bTiSyncTracking = TRUE;}
+	void StopTracking() {bTiSyncTracking = FALSE;}
+
+	 /* SetInitFlag() is needed for this function. Is done in channel estimation
+	    module */
+	void StartSaRaOffAcq() {bSamRaOffsAcqu = TRUE;}
 
 	void SetTiSyncTracType(ETypeTiSyncTrac eNewTy);
 	ETypeTiSyncTrac GetTiSyncTracType() {return TypeTiSyncTrac;}
@@ -108,7 +123,8 @@ protected:
 	CReal					rFracPartTiCor;
 	int						iTargetTimingPos;
 
-	_BOOLEAN				bTracking;
+	_BOOLEAN				bTiSyncTracking;
+	_BOOLEAN				bSamRaOffsAcqu;
 
 	int						iDFTSize;
 
@@ -116,14 +132,21 @@ protected:
 	CReal					rBoundHigher;
 	CReal					rGuardSizeFFT;
 
-	int						iInitCnt;
-
 	CReal					rEstPDSEnd; /* Estimated end of PSD */
 	CReal					rEstPDSBegin; /* Estimated beginning of PSD */
 
 	CReal					rFracPartContr;
 
 	ETypeTiSyncTrac			TypeTiSyncTrac;
+
+	CShiftRegister<int>		veciSRTiCorrHist;
+	int						iLenCorrectionHist;
+	long int				iIntegTiCorrections;
+	CReal					rSymBloSiIRDomain;
+	int						iResOffsetAcquCnt;
+	int						iResOffAcqCntMax;
+
+	CReal GetSamOffHz(int iDiff, int iLen);
 };
 
 
