@@ -53,8 +53,22 @@ void CSound::Read(CVector<short>& psData)
 
 	/* Copy data from sound card in output buffer */
 	for (int i = 0; i < iBufferSizeIn; i++)
+	{
+#ifdef MIX_INPUT_CHANNELS
+		/* Mix left and right channel together. Prevent overflow! First,
+		   copy recorded data from "short" in "int" type variables */
+		const int iLeftChan =
+			psSoundcardBuffer[iWhichBufferIn][NO_IN_OUT_CHANNELS * i];
+		const int iRightChan =
+			psSoundcardBuffer[iWhichBufferIn][NO_IN_OUT_CHANNELS * i + 1];
+
+		psData[i] = (iLeftChan + iRightChan) / 2;
+#else
+		/* Use only desired channel, chosen by "RECORDING_CHANNEL" */
 		psData[i] = psSoundcardBuffer[iWhichBufferIn]
 			[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
+#endif
+	}
 
 	/* Add the buffer so that it can be filled with new samples */
 	AddInBuffer();

@@ -48,7 +48,13 @@
 
 #define NO_SOUND_BUFFERS_OUT	4		/* Number of sound card buffers */
 
-#define RECORDING_CHANNEL		0		/* 0: Left, 1: Right
+/* If this flag is defined, both input channels are mixed together, therefore
+   no right or left channel choice must be made */
+#undef MIX_INPUT_CHANNELS
+
+/* Chose recording channel: 0: Left, 1: Right, disabled if previous flag is
+   set! */
+#define RECORDING_CHANNEL		0
   
 /* Maximum number of recognized sound cards installed in the system */
 #define MAX_NUMBER_SOUND_CARDS	10
