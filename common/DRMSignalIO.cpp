@@ -220,7 +220,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 	rvecA[0] = (CReal) 1.0;
 
 	/* State memory (init with zeros) and data vector */
-	rvecZ.Init(NUM_TAPS_TRANSMFILTER, (CReal) 0.0);
+	rvecZ.Init(NUM_TAPS_TRANSMFILTER - 1, (CReal) 0.0);
 	rvecDataReal.Init(TransmParam.iSymbolBlockSize);
 	rvecDataImag.Init(TransmParam.iSymbolBlockSize);
 
