@@ -59,7 +59,8 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	setCanvasBackground(QColor(BCKGRD_COLOR_PLOT)); 
 }
 
-void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+					   const int size)
 {
 	long curve1;
 
@@ -70,7 +71,8 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	curve1 = insertCurve("Graph 1");
 	
 	/* Curve color */
-	setCurvePen(curve1, QPen(MAIN_PEN_COLOR_PLOT));
+	setCurvePen(curve1, QPen(MAIN_PEN_COLOR_PLOT, size, SolidLine, RoundCap,
+		RoundJoin));
 
 	/* Copy data from vectors in temporary arrays */
 	for (int i = 0; i < vecrScale.Size(); i++)
@@ -85,7 +87,8 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	delete[] pdScale;
 }
 
-void CDRMPlot::SetData(CVector<_COMPLEX>& veccData, QColor color, const int size)
+void CDRMPlot::SetData(CVector<_COMPLEX>& veccData, QColor color,
+					   const int size)
 {
 	long		lMarkerKey;
 	QwtSymbol	MarkerSym;
@@ -103,25 +106,6 @@ void CDRMPlot::SetData(CVector<_COMPLEX>& veccData, QColor color, const int size
 		setMarkerSymbol(lMarkerKey, MarkerSym);
 		setMarkerPos(lMarkerKey, veccData[i].real(), veccData[i].imag());
 	}
-}
-
-void CDRMPlot::SetIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
-{
-	/* Init chart for impulse response */
-	setTitle("Estimated Channel Impulse Response (Only Guard-Interval)");
-	enableGridX(TRUE);
-	enableGridY(TRUE);
-	setAxisTitle(QwtPlot::xBottom, "Time [ms]");
-	setAxisTitle(QwtPlot::yLeft, "IR [dB]");
-
-	/* Fixed scale */
-	setAxisScale(QwtPlot::xBottom, (double) 0.0, 
-		(double) vecrScale[vecrScale.Size() - 1]);
-	setAxisScale(QwtPlot::yLeft, (double) -50.0, (double) 0.0);
-
-	clear();
-	SetData(vecrData, vecrScale);
-	replot();
 }
 
 void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
@@ -166,7 +150,7 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 
 
 	/* Data for the actual impulse response curve */
-	SetData(vecrData, vecrScale);
+	SetData(vecrData, vecrScale, 2);
 
 
 	/* Horizontal bounds ---------------------------------------------------- */
@@ -211,7 +195,7 @@ void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 	setAxisScale(QwtPlot::xBottom, (double) 0.0, (double) vecrScale.Size());
 
 	clear();
-	SetData(vecrData, vecrScale);
+	SetData(vecrData, vecrScale, 2);
 	replot();
 }
 
@@ -289,7 +273,8 @@ void CDRMPlot::SetFACConst(CVector<_COMPLEX>& veccData)
 	replot();
 }
 
-void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData, CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData,
+						   CParameter::ECodScheme eNewCoSc)
 {
 	/* Init chart for SDC constellation */
 	setTitle("SDC Constellation");
@@ -313,7 +298,8 @@ void CDRMPlot::SetSDCConst(CVector<_COMPLEX>& veccData, CParameter::ECodScheme e
 	replot();
 }
 
-void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData, CParameter::ECodScheme eNewCoSc)
+void CDRMPlot::SetMSCConst(CVector<_COMPLEX>& veccData,
+						   CParameter::ECodScheme eNewCoSc)
 {
 	/* Init chart for MSC constellation */
 	setTitle("MSC Constellation");

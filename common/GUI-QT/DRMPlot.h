@@ -67,7 +67,6 @@ public:
 	CDRMPlot(QWidget *p = 0, const char *name = 0);
 	virtual ~CDRMPlot() {}
 
-	void SetIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 				 _REAL rLowerB, _REAL rHigherB,
 				 const _REAL rStartGuard, const _REAL rEndGuard);
@@ -75,11 +74,14 @@ public:
 	void SetPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetInpSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetFACConst(CVector<_COMPLEX>& veccData);
-	void SetSDCConst(CVector<_COMPLEX>& veccData, CParameter::ECodScheme eNewCoSc);
-	void SetMSCConst(CVector<_COMPLEX>& veccData, CParameter::ECodScheme eNewCoSc);
+	void SetSDCConst(CVector<_COMPLEX>& veccData,
+					 CParameter::ECodScheme eNewCoSc);
+	void SetMSCConst(CVector<_COMPLEX>& veccData,
+					 CParameter::ECodScheme eNewCoSc);
 
 protected:
-	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+				 const int  size = 0);
 	void SetData(CVector<_COMPLEX>& veccData, QColor color, const int  size);
 	void SetQAM4Grid();
 	void SetQAM16Grid();

@@ -113,30 +113,14 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	if (iCurIndTiCor == NO_SYM_AVER_TI_CORR)
 		iCurIndTiCor = 0;
 
-	/* Actual estimation of sigma */
-	rSigma = ModLinRegr(vecrTiCorrEst);
-
-
-#if 0
-// TEST
-FILE* pFile = fopen("test/sigma.dat", "w");
-for (i = 0; i < iNumTapsSigEst; i++)
-{
-	_REAL testsigma = 2 * rSigma;
-	_REAL test1 =
-		(CReal) -2.0 * crPi * crPi * Ts * Ts * testsigma * testsigma;
-
-	fprintf(pFile, "%e %e\n", vecrTiCorrEst[i],
-		exp(test1 * i * i) * vecrTiCorrEst[0]);
-}
-fclose(pFile);
-#endif
-
 	/* Update filter coefficients once in one DRM frame */
 	if (iUpCntWienFilt > 0)
 		iUpCntWienFilt--;
 	else
 	{
+		/* Actual estimation of sigma */
+		rSigma = ModLinRegr(vecrTiCorrEst);
+
 		/* Update the wiener filter */
 		UpdateFilterCoef(rSNR, rSigma);
 
@@ -220,12 +204,12 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	switch (ReceiverParam.GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:
-		iLengthWiener = 11;
+		iLengthWiener = 15;
 		rSigma = (_REAL) 2.0 / 2;
 		break;
 
 	case RM_ROBUSTNESS_MODE_B:
-		iLengthWiener = 15;
+		iLengthWiener = 20;
 		rSigma = (_REAL) 3.36 / 2;
 		break;
 	
