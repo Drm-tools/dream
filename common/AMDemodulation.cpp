@@ -208,6 +208,28 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 	rAvAmplEst = DES_AV_AMPL_AM_SIGNAL / AM_AMPL_CORR_FACTOR;
 
 
+	/* Inits for Hilbert and DC filter -------------------------------------- */
+	/* Init state vector for filtering with zeros */
+	rvecZReal.Init(NUM_TAPS_AM_DEMOD_FILTER - 1, (CReal) 0.0);
+	rvecZImag.Init(NUM_TAPS_AM_DEMOD_FILTER - 1, (CReal) 0.0);
+
+	rvecBReal.Init(NUM_TAPS_AM_DEMOD_FILTER);
+	rvecBImag.Init(NUM_TAPS_AM_DEMOD_FILTER);
+
+	/* Only FIR filter */
+	rvecA.Init(1, (CReal) 1.0);
+
+	/* Init DC filter for AM demodulation */
+	/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.999 * z^{-1}) */
+	rvecZAM.Init(2, (CReal) 0.0); /* Memory */
+	rvecBAM.Init(2);
+	rvecAAM.Init(2);
+	rvecBAM[0] = (CReal) 1.0;
+	rvecBAM[1] = (CReal) -1.0;
+	rvecAAM[0] = (CReal) 1.0;
+	rvecAAM[1] = (CReal) -0.999;
+
+
 	/* Inits for acquisition ------------------------------------------------ */
 	/* Total buffer size */
 	iTotalBufferSize = NUM_BLOCKS_CARR_ACQUISITION * iSymbolBlockSize;
@@ -271,8 +293,7 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 {
-	CVector<_REAL>	vecrFilter;
-	CReal			rBandWidth;
+	CVector<_REAL> vecrFilter;
 
 	/* Calculate filter taps for complex Hilbert filter --------------------- */
 	GetBWFilter(iFilterBW, rBandWidthNorm, vecrFilter);
@@ -298,9 +319,6 @@ void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 
 
 	/* Set filter coefficients ---------------------------------------------- */
-	rvecBReal.Init(NUM_TAPS_AM_DEMOD_FILTER);
-	rvecBImag.Init(NUM_TAPS_AM_DEMOD_FILTER);
-
 	for (int i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
 	{
 		rvecBReal[i] =
@@ -308,27 +326,6 @@ void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 
 		rvecBImag[i] =
 			vecrFilter[i] * Sin((CReal) 2.0 * crPi * rFiltCentOffsNorm * i);
-	}
-
-	/* Init state vector for filtering with zeros */
-	rvecZReal.Init(NUM_TAPS_AM_DEMOD_FILTER - 1, (CReal) 0.0);
-	rvecZImag.Init(NUM_TAPS_AM_DEMOD_FILTER - 1, (CReal) 0.0);
-
-	/* Only FIR filter */
-	rvecA.Init(1, (CReal) 1.0);
-
-	/* DC filter for AM demodulation */
-	if (eDemodType == DT_AM)
-	{
-		rvecZAM.Init(2, (CReal) 0.0);
-
-		/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.999 * z^{-1}) */
-		rvecBAM.Init(2);
-		rvecAAM.Init(2);
-		rvecBAM[0] = (CReal) 1.0;
-		rvecBAM[1] = (CReal) -1.0;
-		rvecAAM[0] = (CReal) 1.0;
-		rvecAAM[1] = (CReal) -0.999;
 	}
 
 
@@ -425,34 +422,42 @@ CVector<CReal> CAMDemodulation::ResampleFilterCoeff(const float* pfFilt,
 	if (rRatio > (CReal) 1.0)
 		rRatio = (CReal) 1.0;
 
-	/* Get delay of resample filters and calculate from that the
-	   total length needed for resampling */
-	const int iResampleDelay =
-		RES_FILT_NUM_TAPS_PER_PHASE / 2 + 1;
-	const int iResLen =
-		NUM_TAPS_AM_DEMOD_FILTER + iResampleDelay;
+	/* Calculate delay of resample filters */
+	const int iResampleDelay = RES_FILT_NUM_TAPS_PER_PHASE / 2 + 1;
 
-	ResampleObj.Init(iResLen);
-	CVector<CReal> vecInp(iResLen);
-	CVector<CReal> vecOut(iResLen, (CReal) 0.0); /* Init with zeros */
+	/* Calculate length for input vector so that the length after resampling
+	   is the same as the filter was before -> zero padding */
+	const int iResLen =
+		iResampleDelay + (int) Ceil((CReal) NUM_TAPS_AM_DEMOD_FILTER / rRatio);
+
+	/* Calculate offset to put input filter in the middle */
+	const CReal rInpFiltOffs = ((CReal) NUM_TAPS_AM_DEMOD_FILTER / rRatio -
+		NUM_TAPS_AM_DEMOD_FILTER) / 2;
+
+	/* We need an index -> use next integer */
+	const int iInpFiltOffsInt =	(int) Ceil(rInpFiltOffs);
+
+	/* Compensate for the rounding at the initialization of the resampler */
+	const CReal rResOutInitOffs =
+		(iInpFiltOffsInt - rInpFiltOffs) * INTERP_DECIM_I_D / rRatio;
+
+	ResampleObj.Init(iResLen,
+		iResampleDelay * INTERP_DECIM_I_D + rResOutInitOffs);
+
+	/* Init intermediate vectors (it is important to initialize with zeros) */
+	CVector<CReal> vecInp(iResLen, (CReal) 0.0);
+	CVector<CReal> vecOut(iResLen, (CReal) 0.0);
 
 	for (i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
-		vecInp[i] = pfFilt[i];
+		vecInp[i + iInpFiltOffsInt] = pfFilt[i];
 
+	/* Actual resampling */
 	ResampleObj.Resample(&vecInp, &vecOut, rRatio);
 
-	/* Calculate downsampled resample delay and IR length */
-	const int iDownSaResDelay = (int) Floor(iResampleDelay * rRatio);
-	const int iLenNewFilt = (int) Ceil(NUM_TAPS_AM_DEMOD_FILTER * rRatio);
-
-	/* Put resulting impulse response in the middle */
-	const int iOffset =
-		(int) Floor(NUM_TAPS_AM_DEMOD_FILTER * ((CReal) 1.0 - rRatio) / 2);
-
 	/* Copy new filter in output vector */
-	vecrReturn.Init(NUM_TAPS_AM_DEMOD_FILTER, (CReal) 0.0);
-	for (i = 0; i < iLenNewFilt; i++)
-		vecrReturn[i + iOffset] = vecOut[i + iDownSaResDelay];
+	vecrReturn.Init(NUM_TAPS_AM_DEMOD_FILTER);
+	for (i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
+		vecrReturn[i] = vecOut[i];
 
 #if 0
 /* Save filter coefficients */

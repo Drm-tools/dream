@@ -30,7 +30,7 @@ function [] = AMDemodulationFilter()
 PLOT = 1;
 
 % Number of taps
-nhil = 81;
+nhil = 101;
 
 % Other filter parameters
 fstart = 800;
