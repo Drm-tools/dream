@@ -226,6 +226,9 @@ void CDRMSimulation::Init()
 		DataConvChanResam.Init(Param, ChanResInBuf);
 
 		OFDMDemodulation.Init(Param, OFDMDemodBuf);
+
+		/* Set correct position for Hilbert filter */
+		TimeSync.SetFilterTaps(Param.rFreqOffsetAcqui);
 		break;
 	}
 
