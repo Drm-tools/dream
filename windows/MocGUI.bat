@@ -68,3 +68,5 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -o moc\AnalogDemDlgbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -i AnalogDemDlgbase.h -o moc\AnalogDemDlgbase.cpp  
 %qtdir%\bin\moc.exe moc\AnalogDemDlgbase.h -o moc\moc_AnalogDemDlgbase.cpp
+
+pause
