@@ -370,51 +370,67 @@ void CSound::Close()
 	MMRESULT	result;
 
 	/* Reset audio driver */
-	result = waveOutReset(m_WaveOut);
-	if (result != MMSYSERR_NOERROR)
-		throw CGenErr("Sound Interface, waveOutReset() failed.");
+	if (m_WaveOut != NULL)
+	{
+		result = waveOutReset(m_WaveOut);
+		if (result != MMSYSERR_NOERROR)
+			throw CGenErr("Sound Interface, waveOutReset() failed.");
+	}
 
-	result = waveInReset(m_WaveIn);
-	if (result != MMSYSERR_NOERROR)
-		throw CGenErr("Sound Interface, waveInReset() failed.");
+	if (m_WaveIn != NULL)
+	{
+		result = waveInReset(m_WaveIn);
+		if (result != MMSYSERR_NOERROR)
+			throw CGenErr("Sound Interface, waveInReset() failed.");
+	}
 
 	/* Set event to ensure that thread leaves the waiting function */
-	if (m_WaveInEvent)
+	if (m_WaveInEvent != NULL)
 		SetEvent(m_WaveInEvent);
 
 	/* Wait for the thread to terminate */
 	Sleep(500);
 
 	/* Unprepare wave-headers */
-	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
+	if (m_WaveIn != NULL)
 	{
-		result = waveInUnprepareHeader(
-			m_WaveIn, &m_WaveInHeader[i], sizeof(WAVEHDR));
+		for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
+		{
+			result = waveInUnprepareHeader(
+				m_WaveIn, &m_WaveInHeader[i], sizeof(WAVEHDR));
 
+			if (result != MMSYSERR_NOERROR)
+				throw CGenErr("Sound Interface, waveInUnprepareHeader()"
+					" failed.");
+		}
+
+		/* Close the sound in device */
+		result = waveInClose(m_WaveIn);
 		if (result != MMSYSERR_NOERROR)
-			throw CGenErr("Sound Interface, waveInUnprepareHeader() failed.");
+			throw CGenErr("Sound Interface, waveInClose() failed.");
 	}
 
-	for (i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
+	if (m_WaveOut != NULL)
 	{
-		result = waveOutUnprepareHeader(
-			m_WaveOut, &m_WaveOutHeader[i], sizeof(WAVEHDR));
+		for (i = 0; i < NUM_SOUND_BUFFERS_OUT; i++)
+		{
+			result = waveOutUnprepareHeader(
+				m_WaveOut, &m_WaveOutHeader[i], sizeof(WAVEHDR));
 
+			if (result != MMSYSERR_NOERROR)
+				throw CGenErr("Sound Interface, waveOutUnprepareHeader()"
+					" failed.");
+		}
+
+		/* Close the sound out device */
+		result = waveOutClose(m_WaveOut);
 		if (result != MMSYSERR_NOERROR)
-			throw CGenErr("Sound Interface, waveOutUnprepareHeader() failed.");
+			throw CGenErr("Sound Interface, waveOutClose() failed.");
 	}
-
-	/* Close the sound device */
-	result = waveOutClose(m_WaveOut);
-	if (result != MMSYSERR_NOERROR)
-		throw CGenErr("Sound Interface, waveOutClose() failed.");
-
-	result = waveInClose(m_WaveIn);
-	if (result != MMSYSERR_NOERROR)
-		throw CGenErr("Sound Interface, waveInClose() failed.");
 
 	/* Close the handle for the event */
-	CloseHandle(m_WaveInEvent);
+	if (m_WaveInEvent != NULL)
+		CloseHandle(m_WaveInEvent);
 }
 
 CSound::CSound()
