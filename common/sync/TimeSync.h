@@ -37,7 +37,11 @@
 
 
 /* Definitions ****************************************************************/
-#define LAMBDA_LOW_PASS_START			((_REAL) 0.99)
+/* Use 5 or 10 kHz bandwidth for guard-interval correlation. 10 kHz bandwidth
+   should be chosen when time domain freuqency offset estimation is used */
+#undef USE_10_KHZ_HILBFILT
+
+#define LAMBDA_LOW_PASS_START			((CReal) 0.99)
 #define TIMING_BOUND_ABS				150
 
 /* Non-linear correction of the timing if variation is too big */
@@ -45,15 +49,33 @@
 
 /* Definitions for robustness mode detection */
 #define NUM_BLOCKS_FOR_RM_CORR			16
-#define THRESHOLD_RELI_MEASURE			((_REAL) 8.0)
+#define THRESHOLD_RELI_MEASURE			((CReal) 8.0)
 
-/* Downsampling factor. We only use approx. 6 kHz for correlation, therefore
-   we can use a decimation of 8 (i.e., 48 kHz / 8 = 6 kHz). Must be 8 since
-   all symbol and guard-interval length at 48000 for all robustness modes are
-   dividable by 8 */
-#define GRDCRR_DEC_FACT					8
-
+/* The guard-interval correlation is only updated every "STEP_SIZE_GUARD_CORR"
+   samples to save computations */
 #define STEP_SIZE_GUARD_CORR			4
+
+/* "GRDCRR_DEC_FACT": Downsampling factor. We only use approx. 6 [12] kHz for
+   correlation, therefore we can use a decimation of 8 [4]
+   (i.e., 48 kHz / 8 [4] = 6 [12] kHz). Must be 8 [4] since all symbol and
+   guard-interval lengths at 48000 for all robustness modes are dividable
+   by 8 [4] */
+#ifdef USE_10_KHZ_HILBFILT
+# define GRDCRR_DEC_FACT				4
+# define NUM_TAPS_HILB_FILT				NUM_TAPS_HILB_FILT_10
+# define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_10
+static float* fHilLPProt =				fHilLPProt10;
+#else
+# define GRDCRR_DEC_FACT				8
+# define NUM_TAPS_HILB_FILT				NUM_TAPS_HILB_FILT_5
+# define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_5
+static float* fHilLPProt =				fHilLPProt5;
+#endif
+
+#ifdef USE_FRQOFFS_TRACK_GUARDCORR
+/* Time constant for IIR averaging of frequency offset estimation */
+# define TICONST_FREQ_OFF_EST_GUCORR		((CReal) 100.0) /* sec */
+#endif
 
 
 /* Classes ********************************************************************/
@@ -71,7 +93,7 @@ public:
 		rGuardPow(NUM_ROBUSTNESS_MODES),
 		cGuardCorrBlock(NUM_ROBUSTNESS_MODES),
 		rGuardPowBlock(NUM_ROBUSTNESS_MODES),
-		rLambdaCoAv((_REAL) 1.0) {}
+		rLambdaCoAv((CReal) 1.0) {}
 	virtual ~CTimeSync() {}
 
 	/* To set the module up for synchronized DRM input data stream */
@@ -80,7 +102,7 @@ public:
 	void StartAcquisition();
 	void StopTimingAcqu() {bTimingAcqu = FALSE;}
 	void StopRMDetAcqu() {bRobModAcqu = FALSE;}
-	void SetFilterTaps(_REAL rNewOffsetNorm);
+	void SetFilterTaps(CReal rNewOffsetNorm);
 
 protected:
 	int							iCorrCounter;
@@ -89,11 +111,11 @@ protected:
 
 	CShiftRegister<_REAL>		HistoryBuf;
 	CShiftRegister<_COMPLEX>	HistoryBufCorr;
-	CVector<_REAL>				vecrHistoryFilt;
-	CVector<_REAL>				pMovAvBuffer;
 	CShiftRegister<_REAL>		pMaxDetBuffer;
+	CRealVector					vecrHistoryFilt;
+	CRealVector					pMovAvBuffer;
 
-	CVector<_REAL>				vecCorrAvBuf;
+	CRealVector					vecCorrAvBuf;
 	int							iCorrAvInd;
 
 	int							iMaxDetBufSize;
@@ -106,10 +128,10 @@ protected:
 	int							iGuardSize;
 	int							iTimeSyncPos;
 	int							iDFTSize;
-	_REAL						rStartIndex;
+	CReal						rStartIndex;
 
 	int							iPosInMovAvBuffer;
-	_REAL						rGuardEnergy;
+	CReal						rGuardEnergy;
 
 	int							iCenterOfBuf;
 
@@ -121,31 +143,38 @@ protected:
 
 	int							iSelectedMode;
 
-	CComplexVector				cvecB;
 	CRealVector					rvecZ;
+	CComplexVector				cvecB;
 	CVector<_COMPLEX>			cvecOutTmpInterm;
 
-	_REAL						rLambdaCoAv;
+	CReal						rLambdaCoAv;
 
 
 	/* Intermediate correlation results and robustness mode detection */
-	CVector<_COMPLEX>			veccIntermCorrRes[NUM_ROBUSTNESS_MODES];
-	CVector<_REAL>				vecrIntermPowRes[NUM_ROBUSTNESS_MODES];
+	CComplexVector				veccIntermCorrRes[NUM_ROBUSTNESS_MODES];
+	CRealVector					vecrIntermPowRes[NUM_ROBUSTNESS_MODES];
 	CVector<int>				iLengthIntermCRes;
 	CVector<int>				iPosInIntermCResBuf;
 	CVector<int>				iLengthOverlap;
 	CVector<int>				iLenUsefPart;
 	CVector<int>				iLenGuardInt;
 
-	CVector<_COMPLEX>			cGuardCorr;
-	CVector<_COMPLEX>			cGuardCorrBlock;
-	CVector<_REAL>				rGuardPow;
-	CVector<_REAL>				rGuardPowBlock;
+	CComplexVector				cGuardCorr;
+	CComplexVector				cGuardCorrBlock;
+	CRealVector					rGuardPow;
+	CRealVector					rGuardPowBlock;
 
 	CRealVector					vecrRMCorrBuffer[NUM_ROBUSTNESS_MODES];
-	int							iRMCorrBufSize;
 	CRealVector					vecrCos[NUM_ROBUSTNESS_MODES];
+	int							iRMCorrBufSize;
 
+#ifdef USE_FRQOFFS_TRACK_GUARDCORR
+	CComplex					cFreqOffAv;
+	CReal						rIntPhase;
+	CReal						rLamFreqOff;
+	CReal						rNormConstFOE;
+	CReal						rPrevSamRateOffset;
+#endif
 
 	int GetIndFromRMode(ERobMode eNewMode);
 	ERobMode GetRModeFromInd(int iNewInd);
