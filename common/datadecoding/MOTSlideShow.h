@@ -47,6 +47,7 @@ public:
 
 	void AddFileName(const string& strFileName, const string& strFormat);
 	void ClearAllFileNames() {vecMOTPicture.Init(0);}
+	_BOOLEAN GetTransStat(string& strCurPict, _REAL& rCurPerc) const;
 
 protected:
 	void AddNextPicture();
@@ -55,6 +56,8 @@ protected:
 
 	CVector<CMOTObject>	vecMOTPicture;
 	int					iPictureCnt;
+
+	string				strCurObjName;
 };
 
 

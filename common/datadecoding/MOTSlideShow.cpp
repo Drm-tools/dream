@@ -42,11 +42,27 @@ void CMOTSlideShowEncoder::GetDataUnit(CVector<_BINARY>& vecbiNewData)
 		AddNextPicture();
 }
 
+_BOOLEAN CMOTSlideShowEncoder::GetTransStat(string& strCurPict,
+											_REAL& rCurPerc) const
+{
+/*
+	Name and current percentage of transmitted data of current picture.
+*/
+	strCurPict = strCurObjName;
+	rCurPerc = MOTDAB.GetProgPerc();
+
+	if (iPictureCnt != 0)
+		return TRUE;
+	else
+		return FALSE;
+}
+
 void CMOTSlideShowEncoder::Init()
 {
 	/* Reset picutre counter for browsing in the vector of file names. Start
 	   with first picture */
 	iPictureCnt = 0;
+	strCurObjName = "";
 
 	MOTDAB.Reset();
 
@@ -59,6 +75,8 @@ void CMOTSlideShowEncoder::AddNextPicture()
 	if (vecMOTPicture.Size() > 0)
 	{
 		/* Get current file name */
+		strCurObjName = vecMOTPicture[iPictureCnt].strName;
+
 		MOTDAB.SetMOTObject(vecMOTPicture[iPictureCnt]);
 
 		/* Set file counter to next picture, test for wrap around */

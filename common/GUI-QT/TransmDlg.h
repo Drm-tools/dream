@@ -49,6 +49,7 @@
 #include <qtimer.h>
 #include <qwt_thermo.h>
 #include <qwhatsthis.h>
+#include <qprogressbar.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/TransmDlgbase.h"

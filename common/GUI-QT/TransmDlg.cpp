@@ -55,6 +55,11 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	ProgrInputLevel->setAlarmLevel(-5.0);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
+	/* Init progress bar for current transmitted picture */
+	ProgressBarCurPict->setTotalSteps(100);
+	ProgressBarCurPict->setProgress(0);
+	TextLabelCurPict->setText("");
+
 	/* Output mode (real valued, I / Q or E / P) */
 	switch (TransThread.DRMTransmitter.GetTransData()->GetIQOutput())
 	{
@@ -390,6 +395,34 @@ void TransmDialog::OnTimer()
 	{
 		ProgrInputLevel->
 			setValue(TransThread.DRMTransmitter.GetReadData()->GetLevelMeter());
+
+		string strCPictureName;
+		_REAL rCPercent;
+
+		/* Activate progress bar for slide show pictures only if current state
+		   can be queried and if data service is active
+		   (check box is checked) */
+		if ((TransThread.DRMTransmitter.GetAudSrcEnc()->
+			GetTransStat(strCPictureName, rCPercent) ==	TRUE) &&
+			(CheckBoxEnableData->isChecked()))
+		{
+			/* Enable controls */
+			ProgressBarCurPict->setEnabled(TRUE);
+			TextLabelCurPict->setEnabled(TRUE);
+
+			/* We want to file name, not the complete path -> "QFileInfo" */
+			QFileInfo FileInfo(strCPictureName.c_str());
+
+			/* Show current file name and percentage */
+			TextLabelCurPict->setText(FileInfo.fileName());
+			ProgressBarCurPict->setProgress(rCPercent * 100); /* % */
+		}
+		else
+		{
+			/* Disable controls */
+			ProgressBarCurPict->setEnabled(FALSE);
+			TextLabelCurPict->setEnabled(FALSE);
+		}
 	}
 }
 
@@ -1014,8 +1047,10 @@ void TransmDialog::EnableAllControlsForSet()
 
 	GroupInput->setEnabled(FALSE); /* For run-mode */
 
-	/* Reset status bar */
+	/* Reset status bars */
 	ProgrInputLevel->setValue(RET_VAL_LOG_0);
+	ProgressBarCurPict->setProgress(0);
+	TextLabelCurPict->setText("");
 }
 
 void TransmDialog::AddWhatsThisHelp()

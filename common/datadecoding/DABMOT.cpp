@@ -479,20 +479,20 @@ _BOOLEAN CMOTDABEnc::GetDataGroup(CVector<_BINARY>& vecbiNewData)
 	if (bCurSegHeader == TRUE)
 	{
 		/* Check if this is last segment */
-		if (iSegmCnt == MOTObjSegments.vvbiHeader.Size() - 1)
+		if (iSegmCntHeader == MOTObjSegments.vvbiHeader.Size() - 1)
 			bLastSegment = TRUE;
 		else
 			bLastSegment = FALSE;
 
 		/* Generate MOT object for header */
-		GenMOTObj(vecbiNewData, MOTObjSegments.vvbiHeader[iSegmCnt], TRUE,
-			iSegmCnt, iTransportID, bLastSegment);
+		GenMOTObj(vecbiNewData, MOTObjSegments.vvbiHeader[iSegmCntHeader],
+			TRUE, iSegmCntHeader, iTransportID, bLastSegment);
 
-		iSegmCnt++;
-		if (iSegmCnt == MOTObjSegments.vvbiHeader.Size())
+		iSegmCntHeader++;
+		if (iSegmCntHeader == MOTObjSegments.vvbiHeader.Size())
 		{
-			/* Reset counter */
-			iSegmCnt = 0;
+			/* Reset counter for body */
+			iSegmCntBody = 0;
 
 			/* Header is ready, transmit body now */
 			bCurSegHeader = FALSE;
@@ -501,25 +501,25 @@ _BOOLEAN CMOTDABEnc::GetDataGroup(CVector<_BINARY>& vecbiNewData)
 	else
 	{
 		/* Check that body size is not zero */
-		if (iSegmCnt < MOTObjSegments.vvbiBody.Size())
+		if (iSegmCntBody < MOTObjSegments.vvbiBody.Size())
 		{
 			/* Check if this is last segment */
-			if (iSegmCnt == MOTObjSegments.vvbiBody.Size() - 1)
+			if (iSegmCntBody == MOTObjSegments.vvbiBody.Size() - 1)
 				bLastSegment = TRUE;
 			else
 				bLastSegment = FALSE;
 
 			/* Generate MOT object for Body */
-			GenMOTObj(vecbiNewData, MOTObjSegments.vvbiBody[iSegmCnt], FALSE,
-				iSegmCnt, iTransportID, bLastSegment);
+			GenMOTObj(vecbiNewData, MOTObjSegments.vvbiBody[iSegmCntBody],
+				FALSE, iSegmCntBody, iTransportID, bLastSegment);
 
-			iSegmCnt++;
+			iSegmCntBody++;
 		}
 
-		if (iSegmCnt == MOTObjSegments.vvbiBody.Size())
+		if (iSegmCntBody == MOTObjSegments.vvbiBody.Size())
 		{
-			/* Reset counter */
-			iSegmCnt = 0;
+			/* Reset counter for header */
+			iSegmCntHeader = 0;
 
 			/* Body is ready, transmit header from next object */
 			bCurSegHeader = TRUE;
@@ -534,6 +534,17 @@ _BOOLEAN CMOTDABEnc::GetDataGroup(CVector<_BINARY>& vecbiNewData)
 	return bObjectDone;
 }
 
+_REAL CMOTDABEnc::GetProgPerc() const
+{
+/*
+	Get percentage of processed data of current object.
+*/
+	const int iTotNumSeg =
+		MOTObjSegments.vvbiHeader.Size() + MOTObjSegments.vvbiBody.Size();
+
+	return ((_REAL) iSegmCntBody + (_REAL) bCurSegHeader) / iTotNumSeg;
+}
+
 void CMOTDABEnc::Reset()
 {
 	/* Reset continuity indices */
@@ -542,7 +553,8 @@ void CMOTDABEnc::Reset()
 	iTransportID = 0;
 
 	/* Init counter for segments */
-	iSegmCnt = 0;
+	iSegmCntHeader = 0;
+	iSegmCntBody = 0;
 
 	/* Init flag which shows what is currently generated, header or body */
 	bCurSegHeader = TRUE; /* Start with header */

@@ -68,6 +68,8 @@ public:
 		{DataEncoder.GetSliShowEnc()->AddFileName(strFileName, strFormat);}
 	void ClearPicFileNames()
 		{DataEncoder.GetSliShowEnc()->ClearAllFileNames();}
+	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
+		{return DataEncoder.GetSliShowEnc()->GetTransStat(strCPi, rCPe);}
 
 protected:
 	CTextMessageEncoder		TextMessage;

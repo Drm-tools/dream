@@ -97,6 +97,7 @@ public:
 	void Reset();
 	_BOOLEAN GetDataGroup(CVector<_BINARY>& vecbiNewData);
 	void SetMOTObject(CMOTObject& NewMOTObject);
+	_REAL GetProgPerc() const;
 
 protected:
 	class CMOTObjSegm
@@ -118,7 +119,8 @@ protected:
 	CMOTObject		MOTObject;
 	CMOTObjSegm		MOTObjSegments;
 
-	int				iSegmCnt;
+	int				iSegmCntHeader;
+	int				iSegmCntBody;
 	_BOOLEAN		bCurSegHeader;
 
 	int				iContIndexHeader;
