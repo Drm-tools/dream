@@ -54,6 +54,14 @@
    the following macro will enable the raw data option */
 #define FILE_DRM_USING_RAW_DATA
 
+/* If this flag is defined, both input channels are mixed together, therefore
+   no right or left channel choice must be made */
+#define MIX_INPUT_CHANNELS
+
+/* Chose recording channel: 0: Left, 1: Right, disabled if previous flag is
+   set! */
+#define RECORDING_CHANNEL			0
+
 
 /* Classes ********************************************************************/
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>

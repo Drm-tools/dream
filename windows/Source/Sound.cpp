@@ -72,22 +72,7 @@ _BOOLEAN CSound::Read(CVector<short>& psData)
 
 	/* Copy data from sound card in output buffer */
 	for (i = 0; i < iBufferSizeIn; i++)
-	{
-#ifdef MIX_INPUT_CHANNELS
-		/* Mix left and right channel together. Prevent overflow! First,
-		   copy recorded data from "short" in "int" type variables */
-		const int iLeftChan =
-			psSoundcardBuffer[iWhichBufferIn][NUM_IN_OUT_CHANNELS * i];
-		const int iRightChan =
-			psSoundcardBuffer[iWhichBufferIn][NUM_IN_OUT_CHANNELS * i + 1];
-
-		psData[i] = (iLeftChan + iRightChan) / 2;
-#else
-		/* Use only desired channel, chosen by "RECORDING_CHANNEL" */
-		psData[i] = psSoundcardBuffer[iWhichBufferIn]
-			[NUM_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
-#endif
-	}
+		psData[i] = psSoundcardBuffer[iWhichBufferIn][i];
 
 	/* Add the buffer so that it can be filled with new samples */
 	AddInBuffer();
@@ -119,21 +104,16 @@ void CSound::AddInBuffer()
 void CSound::PrepareInBuffer(int iBufNum)
 {
 	/* Set struct entries */
-	m_WaveInHeader[iBufNum].lpData = 
-		(LPSTR) &psSoundcardBuffer[iBufNum][0];
-	m_WaveInHeader[iBufNum].dwBufferLength =
-		iBufferSizeIn * BYTES_PER_SAMPLE * NUM_IN_OUT_CHANNELS;
+	m_WaveInHeader[iBufNum].lpData = (LPSTR) &psSoundcardBuffer[iBufNum][0];
+	m_WaveInHeader[iBufNum].dwBufferLength = iBufferSizeIn * BYTES_PER_SAMPLE;
 	m_WaveInHeader[iBufNum].dwFlags = 0;
-		
+
 	/* Prepare wave-header */
 	waveInPrepareHeader(m_WaveIn, &m_WaveInHeader[iBufNum], sizeof(WAVEHDR));
 }
 
 void CSound::InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
-	int			i;
-	MMRESULT	result;
-	
 	/* Check if device must be opened or reinitialized */
 	if (bChangDevIn == TRUE)
 	{
@@ -156,7 +136,7 @@ void CSound::InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	iWhichBufferIn = 0;
 
 	/* Create memory for sound card buffer */
-	for (i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
+	for (int i = 0; i < NUM_SOUND_BUFFERS_IN; i++)
 	{
 		/* Unprepare old wave-header in case that we "re-initialized" this
 		   module. Calling "waveInUnprepareHeader()" with an unprepared
@@ -167,7 +147,7 @@ void CSound::InitRecording(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		if (psSoundcardBuffer[i] != NULL)
 			delete[] psSoundcardBuffer[i];
 
-		psSoundcardBuffer[i] = new short[iBufferSizeIn * NUM_IN_OUT_CHANNELS];
+		psSoundcardBuffer[i] = new short[iBufferSizeIn];
 
 
 		/* Send all buffers to driver for filling the queue ----------------- */
@@ -339,8 +319,7 @@ void CSound::PrepareOutBuffer(int iBufNum)
 
 void CSound::InitPlayback(int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
-	int			i, j;
-	MMRESULT	result;
+	int	i, j;
 
 	/* Check if device must be opened or reinitialized */
 	if (bChangDevOut == TRUE)

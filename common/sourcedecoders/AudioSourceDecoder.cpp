@@ -115,7 +115,7 @@ void CAudioSourceEncoder::InitInternal(CParameter& TransmParam)
 	/* Define input and output block size */
 	iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
 	iInputBlockSize = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-		(_REAL) 0.4 /* 400 ms */);
+		(_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
 }
 
 void CAudioSourceEncoder::SetTextMessage(const string& strText)

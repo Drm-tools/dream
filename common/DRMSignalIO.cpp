@@ -258,7 +258,20 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 
 		/* Write data to output buffer */
 		for (i = 0; i < iOutputBlockSize; i++)
-			(*pvecOutputData)[i] = (_REAL) vecsSoundBuffer[i];
+		{
+#ifdef MIX_INPUT_CHANNELS
+			/* Mix left and right channel together. Prevent overflow! First,
+			   copy recorded data from "short" in "int" type variables */
+			const int iLeftChan = vecsSoundBuffer[2 * i];
+			const int iRightChan = vecsSoundBuffer[2 * i + 1];
+
+			(*pvecOutputData)[i] = (_REAL) ((iLeftChan + iRightChan) / 2);
+#else
+			/* Use only desired channel, chosen by "RECORDING_CHANNEL" */
+			(*pvecOutputData)[i] =
+				(_REAL) vecsSoundBuffer[2 * i + RECORDING_CHANNEL];
+#endif
+		}
 	}
 	else
 	{
@@ -329,10 +342,12 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 	if (bUseSoundcard == TRUE)
 	{
 		/* Init sound interface. Set it to one symbol. The sound card interface
-		   has to taken care about the buffering data of a whole MSC block */
-		pSound->InitRecording(Parameter.iSymbolBlockSize);
+		   has to taken care about the buffering data of a whole MSC block.
+		   Use stereo input (* 2) */
+		pSound->InitRecording(Parameter.iSymbolBlockSize * 2);
 
-		vecsSoundBuffer.Init(Parameter.iSymbolBlockSize);
+		/* Init buffer size for taking stereo input */
+		vecsSoundBuffer.Init(Parameter.iSymbolBlockSize * 2);
 	}
 	else
 	{

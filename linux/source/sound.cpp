@@ -476,7 +476,7 @@ public:
 			fill = SoundBufR.GetFillLevel();
 			SoundBufR.unlock();
 				
-			if (  (SOUNDBUFLEN - fill) > FRAGSIZE ) {
+			if (  (SOUNDBUFLEN - fill) > (FRAGSIZE * NUM_IN_OUT_CHANNELS) ) {
 //qDebug("f %d ", fill); fflush(stdout);
 				// enough space in the buffer
 				
@@ -485,15 +485,15 @@ public:
 				// common code
 				if (size > 0) {
 					CVectorEx<_SAMPLE>*	ptarget;
-					
+
 					/* Copy data from temporary buffer in output buffer */
 					SoundBufR.lock();
-		 			
+
 					ptarget = SoundBufR.QueryWriteBuffer();
-					
-					for (int i = 0; i < size; i++)
-						(*ptarget)[i] = tmprecbuf[NUM_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
-		 			
+
+					for (int i = 0; i < size * NUM_IN_OUT_CHANNELS; i++)
+						(*ptarget)[i] = tmprecbuf[i];
+
 					SoundBufR.Put( size );
 					SoundBufR.unlock();
 				}
