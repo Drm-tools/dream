@@ -65,6 +65,11 @@
 #define NUM_BLOCKS_AV_AUDIO_SPEC	Ceil(((_REAL) SOUNDCRD_SAMPLE_RATE * \
 	TIME_AV_AUDIO_SPECT_MS / 1000 / NUM_SMPLS_4_AUDIO_SPECTRUM))
 
+/* Normalization constant for two mixed signals. If this constant is 2, no
+   overrun of the "short" variable can happen but signal has quite much lower
+   power -> compromise */
+#define MIX_OUT_CHAN_NORM_CONST		((_REAL) 1.0 / sqrt((_REAL) 2.0))
+
 
 /* Classes ********************************************************************/
 /* MSC ---------------------------------------------------------------------- */
@@ -88,6 +93,9 @@ protected:
 class CWriteData : public CReceiverModul<_SAMPLE, _SAMPLE>
 {
 public:
+	enum EOutChanSel {CS_BOTH_BOTH, CS_LEFT_LEFT, CS_RIGHT_RIGHT,
+		CS_LEFT_MIX, CS_RIGHT_MIX};
+
 	CWriteData(CSound* pNS);
 	virtual ~CWriteData() {}
 
@@ -103,13 +111,19 @@ public:
 
 	void GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
+	void SetOutChanSel(const EOutChanSel eNS) {eOutChanSel = eNS;}
+	EOutChanSel GetOutChanSel() {return eOutChanSel;}
+
 protected:
-	CSound*			pSound;
-	_BOOLEAN		bMuteAudio;
-	CWaveFile		WaveFileAudio;
-	_BOOLEAN		bDoWriteWaveFile;
-	_BOOLEAN		bSoundBlocking;
-	_BOOLEAN		bNewSoundBlocking;
+	CSound*					pSound;
+	_BOOLEAN				bMuteAudio;
+	CWaveFile				WaveFileAudio;
+	_BOOLEAN				bDoWriteWaveFile;
+	_BOOLEAN				bSoundBlocking;
+	_BOOLEAN				bNewSoundBlocking;
+	CVector<_SAMPLE>		vecsTmpAudData;
+	EOutChanSel				eOutChanSel;
+	_REAL					rMixNormConst;
 
 	CShiftRegister<_SAMPLE>	vecsOutputData;
 	CFftPlans				FftPlan;

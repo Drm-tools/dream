@@ -71,7 +71,67 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Send data to sound interface if audio is not muted */
 	if (bMuteAudio == FALSE)
 	{
-		if (pSound->Write((*pvecInputData)) == FALSE)
+		const int iHalfBlSi = iInputBlockSize / 2;
+
+		switch (eOutChanSel)
+		{
+		case CS_BOTH_BOTH:
+			/* left -> left, right -> right */
+			vecsTmpAudData = *pvecInputData; /* Just copy data */
+			break;
+
+		case CS_LEFT_LEFT:
+			/* left -> left, right muted */
+			for (i = 0; i < iHalfBlSi; i++)
+			{
+				vecsTmpAudData[2 * i] = (*pvecInputData)[2 * i];
+				vecsTmpAudData[2 * i + 1] = 0; /* mute */
+			}
+			break;
+
+		case CS_RIGHT_RIGHT:
+			/* left muted, right -> right */
+			for (i = 0; i < iHalfBlSi; i++)
+			{
+				vecsTmpAudData[2 * i] = 0; /* mute */
+				vecsTmpAudData[2 * i + 1] = (*pvecInputData)[2 * i + 1];
+			}
+			break;
+
+		case CS_LEFT_MIX:
+			/* left -> mix, right muted */
+			for (i = 0; i < iHalfBlSi; i++)
+			{
+				/* Mix left and right channel together. Prevent overflow! First,
+				   copy recorded data from "short" in "_REAL" type variables */
+				const _REAL rLeftChan = (*pvecInputData)[2 * i];
+				const _REAL rRightChan = (*pvecInputData)[2 * i + 1];
+
+				vecsTmpAudData[2 * i] =
+					Real2Sample((rLeftChan + rRightChan) * rMixNormConst);
+
+				vecsTmpAudData[2 * i + 1] = 0; /* mute */
+			}
+			break;
+
+		case CS_RIGHT_MIX:
+			/* left muted, right -> mix */
+			for (i = 0; i < iHalfBlSi; i++)
+			{
+				/* Mix left and right channel together. Prevent overflow! First,
+				   copy recorded data from "short" in "_REAL" type variables */
+				const _REAL rLeftChan = (*pvecInputData)[2 * i];
+				const _REAL rRightChan = (*pvecInputData)[2 * i + 1];
+
+				vecsTmpAudData[2 * i] = 0; /* mute */
+				vecsTmpAudData[2 * i + 1] =
+					Real2Sample((rLeftChan + rRightChan) * rMixNormConst);
+			}
+			break;
+		}			
+
+		/* Put data to sound card interface. Show sound card state on GUI */
+		if (pSound->Write(vecsTmpAudData) == FALSE)
 			PostWinMessage(MS_IOINTERFACE, 0); /* green light */
 		else
 			PostWinMessage(MS_IOINTERFACE, 1); /* yellow light */
@@ -112,6 +172,9 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 	/* Init sound interface with blocking or non-blocking behaviour */
 	pSound->InitPlayback(iAudFrameSize * 2 /* stereo */, bSoundBlocking);
 
+	/* Init intermediate buffer needed for different channel selections */
+	vecsTmpAudData.Init(iAudFrameSize * 2 /* stereo */);
+
 	/* Inits for audio spectrum plot */
 	vecrHammingWindow = Hamming(NUM_SMPLS_4_AUDIO_SPECTRUM);
 	vecsOutputData.Reset(0); /* Reset audio data storage vector */
@@ -129,7 +192,8 @@ CWriteData::CWriteData(CSound* pNS) : pSound(pNS), /* Sound interface */
 	FftPlan(NUM_SMPLS_4_AUDIO_SPECTRUM),
 	veccFFTInput(NUM_SMPLS_4_AUDIO_SPECTRUM),
 	veccFFTOutput(NUM_SMPLS_4_AUDIO_SPECTRUM),
-	vecrHammingWindow(NUM_SMPLS_4_AUDIO_SPECTRUM)
+	vecrHammingWindow(NUM_SMPLS_4_AUDIO_SPECTRUM),
+	eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST)
 {
 	/* Constructor */
 }

@@ -521,6 +521,41 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		}
 
 
+		/* Output channel selection ----------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-u", "--outchansel", 0,
+			MAX_VAL_OUT_CHAN_SEL, rArgument) == TRUE)
+		{
+			switch ((int) rArgument)
+			{
+			case 0:
+				DRMReceiver.GetWriteData()->
+					SetOutChanSel(CWriteData::CS_BOTH_BOTH);
+				break;
+
+			case 1:
+				DRMReceiver.GetWriteData()->
+					SetOutChanSel(CWriteData::CS_LEFT_LEFT);
+				break;
+
+			case 2:
+				DRMReceiver.GetWriteData()->
+					SetOutChanSel(CWriteData::CS_RIGHT_RIGHT);
+				break;
+
+			case 3:
+				DRMReceiver.GetWriteData()->
+					SetOutChanSel(CWriteData::CS_LEFT_MIX);
+				break;
+
+			case 4:
+				DRMReceiver.GetWriteData()->
+					SetOutChanSel(CWriteData::CS_RIGHT_MIX);
+				break;
+			}
+			continue;
+		}
+
+
 #ifdef USE_QT_GUI /* QThread needed for log file timing */
 		/* Start log file flag ---------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-l", "--startlog", 1,
@@ -666,6 +701,12 @@ string CSettings::UsageArguments(char** argv)
 		"                              0: left channel\n"
 		"                              1: right channel\n"
 		"                              2: mix both channels (default)\n"
+		"  -u <n>, --outchansel <n>    output channel selection\n"
+		"                              0: L -> L, R -> R (default)\n"
+		"                              1: L -> L, R muted\n"
+		"                              2: L muted, R -> R\n"
+		"                              3: mix -> L, R muted\n"
+		"                              4: L muted, mix -> R\n"
 
 #ifdef USE_QT_GUI
 		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
