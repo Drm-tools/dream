@@ -31,15 +31,15 @@
 #include "../GlobalDefinitions.h"
 #include "../Vector.h"
 
-#ifdef _WIN32
-# include "NML.h"
-# include "newssvcdec.h"
-# include "dabdatagroupdecoder.h"
-#else
-# ifdef HAVE_JOURNALINE
-# include <journaline/NML.h>
-# include <journaline/newssvcdec.h>
-# include <journaline/dabdatagroupdecoder.h>
+#ifdef HAVE_JOURNALINE
+# ifdef _WIN32
+#  include <NML.h>
+#  include <newssvcdec.h>
+#  include <dabdatagroupdecoder.h>
+# else
+#  include <journaline/NML.h>
+#  include <journaline/newssvcdec.h>
+#  include <journaline/dabdatagroupdecoder.h>
 # endif 
 #endif
 
@@ -65,7 +65,7 @@ struct CNews
 };
 
 
-#if defined(_WIN32) || defined(HAVE_JOURNALINE)
+#ifdef HAVE_JOURNALINE
 class CJournaline
 {
 public:
