@@ -33,8 +33,6 @@
 #include "Modul.h"
 #include "FAC/FAC.h"
 #include "SDC/SDC.h"
-#include "interleaver/SymbolInterleaver.h"
-#include "chanest/ChanEstTime.h"
 #include <time.h>
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -68,13 +66,13 @@ protected:
 class CWriteData : public CReceiverModul<_SAMPLE, _SAMPLE>
 {
 public:
-	CWriteData() : bMuteAudio(FALSE) {}
+	CWriteData(CSound* pNS) : bMuteAudio(FALSE) {pSound = pNS;}
 	virtual ~CWriteData() {}
 
 	void MuteAudio(_BOOLEAN bNewMA) {bMuteAudio = bNewMA;}
 
 protected:
-	CSound		Sound;
+	CSound*		pSound;
 	_BOOLEAN	bMuteAudio;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
@@ -180,40 +178,6 @@ public:
 
 protected:
 	CSDCReceive SDCReceive;
-
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
-};
-
-
-/* Simulation for channel estimation ---------------------------------------- */
-class CIdealChanEst :
-	public CSimulationModul<CEquSig, CEquSig, CChanSimDataDemod>, 
-	public CPilotModiClass
-{
-public:
-	CIdealChanEst() {}
-	virtual ~CIdealChanEst() {}
-
-	void GetResults(CVector<_REAL>& vecrResults);
-
-protected:
-	int	iNoCarrier;
-	int iNoSymPerFrame;
-	int iStartDCCar;
-	int iNoDCCarriers;
-	int iChanEstDelay;
-
-	CVector<_COMPLEX>	veccEstChan;
-	CVector<_COMPLEX>	veccRefChan;
-	CVector<_REAL>		vecrMSEAverage;
-	long int			lAvCnt;
-
-	int					iStartCnt;
-
-	int					iNumTapsChan;
-	CComplexMatrix		matcRot;
-	CComplexMatrix		matH;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
