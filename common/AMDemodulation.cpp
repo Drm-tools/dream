@@ -110,8 +110,8 @@ void CAMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Cut out a spectrum part of desired bandwidth */
 		cvecHilbert = CComplexVector(
-			Filter(rvecBReal, rvecA, rvecInpTmp, rvecZReal),
-			Filter(rvecBImag, rvecA, rvecInpTmp, rvecZImag));
+			FftFilt(cvecBReal, rvecInpTmp, rvecZReal, FftPlans),
+			FftFilt(cvecBImag, rvecInpTmp, rvecZImag, FftPlans));
 
 		/* Mix it down to zero frequency */
 		for (i = 0; i < iInputBlockSize; i++)
@@ -232,15 +232,19 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Inits for Hilbert and DC filter -------------------------------------- */
+	/* Hilbert filter block length is the same as input block length */
+	iHilFiltBlLen = iSymbolBlockSize;
+
 	/* Init state vector for filtering with zeros */
-	rvecZReal.Init(NUM_TAPS_AM_DEMOD_FILTER - 1, (CReal) 0.0);
-	rvecZImag.Init(NUM_TAPS_AM_DEMOD_FILTER - 1, (CReal) 0.0);
+	rvecZReal.Init(iHilFiltBlLen, (CReal) 0.0);
+	rvecZImag.Init(iHilFiltBlLen, (CReal) 0.0);
 
-	rvecBReal.Init(NUM_TAPS_AM_DEMOD_FILTER);
-	rvecBImag.Init(NUM_TAPS_AM_DEMOD_FILTER);
+	/* "+ 1" because of the Nyquist frequency (filter in frequency domain) */
+	cvecBReal.Init(iHilFiltBlLen + 1);
+	cvecBImag.Init(iHilFiltBlLen + 1);
 
-	/* Only FIR filter */
-	rvecA.Init(1, (CReal) 1.0);
+	/* FFT plans are initialized with the long length */
+	FftPlans.Init(iHilFiltBlLen * 2);
 
 	/* Init DC filter */
 	/* IIR filter: H(Z) = (1 - z^{-1}) / (1 - 0.999 * z^{-1}) */
@@ -333,10 +337,27 @@ void CAMDemodulation::InitInternal(CParameter& ReceiverParam)
 
 void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 {
-	CVector<_REAL> vecrFilter;
-
 	/* Calculate filter taps for complex Hilbert filter --------------------- */
-	GetBWFilter(iFilterBW, rBandWidthNorm, vecrFilter);
+	const CReal rBWNormCutOff = (CReal) iFilterBW / SOUNDCRD_SAMPLE_RATE;
+
+	/* Actual filter design */
+	CRealVector vecrFilter(iHilFiltBlLen);
+	vecrFilter = FirLP(rBWNormCutOff, Nuttallwin(iHilFiltBlLen));
+
+	/* Actual bandwidth up to the point of approx. -60 dB */
+	rBandWidthNorm = (CReal) (iFilterBW + 200 /* Hz */) / SOUNDCRD_SAMPLE_RATE;
+
+
+#if 0
+/* Save filter coefficients */
+static FILE* pFile = fopen("test/AMDemFilt.dat", "w");
+for (int j = 0; j < iHilFiltBlLen; j++)
+	fprintf(pFile, "%e ", vecrFilter[j]);
+fprintf(pFile, "\n");
+fflush(pFile);
+// close all;load AMDemFilt.dat;[m,n]=size(AMDemFilt);for i=1:m;figure;freqz(AMDemFilt(i,:));end
+#endif
+
 
 	/* Adjust center of filter for respective demodulation types */
 	switch (eDemodType)
@@ -362,10 +383,13 @@ void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 	/* Set filter coefficients ---------------------------------------------- */
 	/* Make sure that the phase in the middle of the filter is always the same
 	   to avaoid clicks when the filter coefficients are changed */
-	const CReal rStartPhase = Ceil((CReal) NUM_TAPS_AM_DEMOD_FILTER / 2) *
-		(CReal) 2.0 * crPi * rFiltCentOffsNorm;
+	const CReal rStartPhase = (CReal) iHilFiltBlLen * crPi * rFiltCentOffsNorm;
 
-	for (int i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
+	/* Copy actual filter coefficients. It is important to initialize the
+	   vectors with zeros because we also do a zero-padding */
+	CRealVector rvecBReal(2 * iHilFiltBlLen, (CReal) 0.0);
+	CRealVector rvecBImag(2 * iHilFiltBlLen, (CReal) 0.0);
+	for (int i = 0; i < iHilFiltBlLen; i++)
 	{
 		rvecBReal[i] = vecrFilter[i] *
 			Cos((CReal) 2.0 * crPi * rFiltCentOffsNorm * i - rStartPhase);
@@ -373,6 +397,10 @@ void CAMDemodulation::SetCarrierFrequency(const CReal rNormCurFreqOffset)
 		rvecBImag[i] = vecrFilter[i] *
 			Sin((CReal) 2.0 * crPi * rFiltCentOffsNorm * i - rStartPhase);
 	}
+
+	/* Transformation in frequency domain for fft filter */
+	cvecBReal = rfft(rvecBReal, FftPlans);
+	cvecBImag = rfft(rvecBImag, FftPlans);
 
 
 	/* Set mixing constant -------------------------------------------------- */
@@ -389,131 +417,4 @@ void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 	/* Set the flag so that the parameters are not overwritten in the init
 	   function */
 	bSearWinWasSet = TRUE;
-}
-
-void CAMDemodulation::GetBWFilter(const int iFiltBW, CReal& rFreq,
-								  CVector<CReal>& vecrFilter)
-{
-	int i, j;
-
-	/* Init vector for storing the filter coefficients */
-	vecrFilter.Init(NUM_TAPS_AM_DEMOD_FILTER);
-
-	/* Search for filter which fits best */
-	/* Init for minimum filter bandwidth */
-	_BOOLEAN bFiltFound = FALSE;
-
-	if (iFiltBW < iHilLPProtAMDemodBW[0])
-	{
-		/* Minimum bandwidth is the lowest bandwidth of prototype filters */
-		rFreq = (CReal) iHilLPProtAMDemodBW[0];
-
-		/* Copy filter coefficients directly */
-		for (i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
-			vecrFilter[i] = fHilLPProtAMDemod[0][i];
-	}
-	else
-	{
-		for (int i = 1; i < NUM_AM_DEMOD_FILTER; i++)
-		{
-			if (bFiltFound == FALSE)
-			{
-				int iHilFilIn;
-
-				if (iFiltBW < iHilLPProtAMDemodBW[i])
-				{
-					/* Correct intervall found, use resampling routine to
-					   get a filter in between the prototype filters */
-					iHilFilIn = i - 1;
-					bFiltFound = TRUE;
-				}
-
-				if ((i == NUM_AM_DEMOD_FILTER - 1) &&
-					(iFiltBW >= iHilLPProtAMDemodBW[NUM_AM_DEMOD_FILTER - 1]))
-				{
-					/* Selected bandwidth is larger than the largest prototype
-					   filter */
-					iHilFilIn = NUM_AM_DEMOD_FILTER - 1;
-					bFiltFound = TRUE;
-				}
-
-				if (bFiltFound == TRUE)
-				{
-					/* Calculate ratio for resampler */
-					const CReal rResRatio =
-						(CReal) iHilLPProtAMDemodBW[iHilFilIn] / iFiltBW;
-
-					vecrFilter = ResampleFilterCoeff(
-						fHilLPProtAMDemod[iHilFilIn], rResRatio);
-
-					rFreq = (CReal) iFiltBW;
-				}
-			}
-		}
-
-	}
-
-	/* Return normalized frequency */
-	rFreq /= SOUNDCRD_SAMPLE_RATE;
-}
-
-CVector<CReal> CAMDemodulation::ResampleFilterCoeff(const float* pfFilt,
-													CReal rRatio)
-{
-	int				i;
-	CVector<CReal>	vecrReturn;
-	CResample		ResampleObj;
-
-	/* This resampling only works for ratios smaller than 1 */
-	if (rRatio > (CReal) 1.0)
-		rRatio = (CReal) 1.0;
-
-	/* Calculate delay of resample filters */
-	const int iResampleDelay = RES_FILT_NUM_TAPS_PER_PHASE / 2 + 1;
-
-	/* Calculate length for input vector so that the length after resampling
-	   is the same as the filter was before -> zero padding */
-	const int iResLen =
-		iResampleDelay + (int) Ceil((CReal) NUM_TAPS_AM_DEMOD_FILTER / rRatio);
-
-	/* Calculate offset to put input filter in the middle */
-	const CReal rInpFiltOffs = ((CReal) NUM_TAPS_AM_DEMOD_FILTER / rRatio -
-		NUM_TAPS_AM_DEMOD_FILTER) / 2;
-
-	/* We need an index -> use next integer */
-	const int iInpFiltOffsInt =	(int) Ceil(rInpFiltOffs);
-
-	/* Compensate for the rounding at the initialization of the resampler */
-	const CReal rResOutInitOffs =
-		(iInpFiltOffsInt - rInpFiltOffs) * INTERP_DECIM_I_D / rRatio;
-
-	ResampleObj.Init(iResLen,
-		iResampleDelay * INTERP_DECIM_I_D + rResOutInitOffs);
-
-	/* Init intermediate vectors (it is important to initialize with zeros) */
-	CVector<CReal> vecInp(iResLen, (CReal) 0.0);
-	CVector<CReal> vecOut(iResLen, (CReal) 0.0);
-
-	for (i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
-		vecInp[i + iInpFiltOffsInt] = pfFilt[i];
-
-	/* Actual resampling */
-	ResampleObj.Resample(&vecInp, &vecOut, rRatio);
-
-	/* Copy new filter in output vector */
-	vecrReturn.Init(NUM_TAPS_AM_DEMOD_FILTER);
-	for (i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
-		vecrReturn[i] = vecOut[i];
-
-#if 0
-/* Save filter coefficients */
-static FILE* pFile = fopen("test/AMDemFilt.dat", "w");
-for (i = 0; i < NUM_TAPS_AM_DEMOD_FILTER; i++)
-	fprintf(pFile, "%e ", vecrReturn[i]);
-fprintf(pFile, "\n");
-fflush(pFile);
-// close all;load AMDemFilt.dat;[m,n]=size(AMDemFilt);for i=1:m;figure;freqz(AMDemFilt(i,:));end
-#endif
-
-	return vecrReturn;
 }

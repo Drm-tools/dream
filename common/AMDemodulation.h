@@ -33,7 +33,6 @@
 #include "Modul.h"
 #include "Vector.h"
 #include "matlib/Matlib.h"
-#include "AMDemodulationFilter.h"
 #include "resample/Resample.h"
 
 #ifdef HAVE_DRFFTW_H
@@ -95,17 +94,15 @@ public:
 
 protected:
 	void SetCarrierFrequency(const CReal rNormCurFreqOffset);
-	void GetBWFilter(const int iFiltBW, CReal& rFreq,
-		CVector<CReal>& vecrFilter);
-	CVector<CReal> ResampleFilterCoeff(const float* pfFilt, CReal rRatio);
 
-	CRealVector					rvecA;
-	CRealVector					rvecBReal;
-	CRealVector					rvecBImag;
+	CComplexVector				cvecBReal;
+	CComplexVector				cvecBImag;
 	CRealVector					rvecZReal;
 	CRealVector					rvecZImag;
 	CRealVector					rvecInpTmp;
 	CComplexVector				cvecHilbert;
+	int							iHilFiltBlLen;
+	CFftPlans					FftPlans;
 
 	CRealVector					rvecZAM;
 	CRealVector					rvecADC;
