@@ -231,7 +231,8 @@ void systemevalDlg::OnTimerChart()
 		DRMReceiver.GetReceiver()->GetInputSpec(vecrData, vecrScale);
 
 		/* Prepare graph and set data */
-		MainPlot->SetInpSpec(vecrData, vecrScale);
+		MainPlot->SetInpSpec(vecrData, vecrScale,
+			DRMReceiver.GetParameters()->GetDCFrequency());
 		break;
 
 	case FAC_CONSTELLATION:
