@@ -147,15 +147,16 @@ if (iNoBitsOutDec != iNoEncBits)
 void CMLCEncoder::InitInternal(CParameter& TransmParam)
 {
 	int i;
+	int	iNumInBits;
 
 	CalculateParam(TransmParam, eChannelType);
 	
-	iNoInBits = iL[0] + iL[1] + iL[2];
+	iNumInBits = iL[0] + iL[1] + iL[2];
 
 
 	/* Init modules --------------------------------------------------------- */
 	/* Energy dispersal */
-	EnergyDisp.Init(iNoInBits, iL[2]);
+	EnergyDisp.Init(iNumInBits, iL[2]);
 
 	/* Encoder */
 	for (i = 0; i < iLevels; i++)
@@ -192,7 +193,7 @@ void CMLCEncoder::InitInternal(CParameter& TransmParam)
 	}
 
 	/* Define block-size for input and output */
-	iInputBlockSize = iNoInBits;
+	iInputBlockSize = iNumInBits;
 	iOutputBlockSize = iN_mux;
 }
 
@@ -229,7 +230,7 @@ fflush(pFile);
 
 
 	/* Iteration loop */
-	for (k = 0; k < iNoIterations + 1; k++)
+	for (k = 0; k < iNumIterations + 1; k++)
 	{
 		for (j = 0; j < iLevels; j++)
 		{
@@ -258,8 +259,8 @@ fflush(pFile);
 			   the very last loop */
 			/* "iLevels - 1" for iLevels = 1, 2, 3
 			   "iLevels - 2" for iLevels = 6 */
-			if ((k < iNoIterations) ||
-				((k == iNoIterations) && !(j >= iIndexLastBranch)))
+			if ((k < iNumIterations) ||
+				((k == iNumIterations) && !(j >= iIndexLastBranch)))
 			{
 				/* Convolutional encoder ------------------------------------ */
 				ConvEncoder[j].Encode(vecbiDecOutBits[j], vecbiSubsetDef[j]);
@@ -355,7 +356,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	CalculateParam(ReceiverParam, eChannelType);
 
 	/* Coding scheme could have be changed, update number of iterations */
-	SetNoIterations(iNoIterations);
+	SetNumIterations(iNumIterations);
 
 	/* Set this parameter to identify the last level of coder (important for
 	   very last loop */
@@ -414,7 +415,7 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 		vecbiDecOutBits[i].Init(iM[i][0] + iM[i][1]);
 
 	/* Buffers for subset definition (always number of encoded bits long) */
-	for (i = 0; i < MC_MAX_NO_LEVELS; i++)
+	for (i = 0; i < MC_MAX_NUM_LEVELS; i++)
 		vecbiSubsetDef[i].Init(iNoEncBits);
 
 	/* Init buffer for signal space */
@@ -425,14 +426,14 @@ void CMLCDecoder::InitInternal(CParameter& ReceiverParam)
 	iOutputBlockSize = iNoOutBits;
 }
 
-void CMLCDecoder::SetNoIterations(int iNewNoIterations)
+void CMLCDecoder::SetNumIterations(int iNewNumIterations)
 {
 	/* Reasonable number of iterations depends on coding scheme. With a
 	   4-QAM no iteration is possible */
 	if (eCodingScheme == CParameter::CS_1_SM)
-		iNoIterations = 0;
+		iNumIterations = 0;
 	else
-		iNoIterations = iNewNoIterations;
+		iNumIterations = iNewNumIterations;
 }
 
 void CMLCDecoder::GetVectorSpace(CVector<_COMPLEX>& veccData)
@@ -465,9 +466,9 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 	/* FAC ********************************************************************/
 	case CParameter::CT_FAC:
 		eCodingScheme = CParameter::CS_1_SM;
-		iN_mux = NO_FAC_CELLS;
+		iN_mux = NUM_FAC_CELLS;
 
-		iNoEncBits = NO_FAC_CELLS * 2;
+		iNoEncBits = NUM_FAC_CELLS * 2;
 
 		iLevels = 1;
 
@@ -507,7 +508,7 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 	/* SDC ********************************************************************/
 	case CParameter::CT_SDC:
 		eCodingScheme = Parameter.eSDCCodingScheme;
-		iN_mux = Parameter.iNoSDCCellsPerSFrame;
+		iN_mux = Parameter.iNumSDCCellsPerSFrame;
 
 		iNoEncBits = iN_mux * 2;
 
@@ -600,14 +601,14 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		}
 
 		/* Set number of bits for one SDC-block */
-		Parameter.SetNoDecodedBitsSDC(iL[1]);
+		Parameter.SetNumDecodedBitsSDC(iL[1]);
 		break;
 
 
 	/* MSC ********************************************************************/
 	case CParameter::CT_MSC:
 		eCodingScheme = Parameter.eMSCCodingScheme;
-		iN_mux = Parameter.iNoUsefMSCCellsPerFrame;
+		iN_mux = Parameter.iNumUsefMSCCellsPerFrame;
 
 		/* Data length for part A is the sum of all lengths of the streams */
 		iMSCDataLenPartA = Parameter.Stream[0].iLenPartA +
@@ -991,11 +992,11 @@ void CMLC::CalculateParam(CParameter& Parameter, int iNewChannelType)
 		}
 
 		/* Set No of output bits for next module */
-		Parameter.SetNoDecodedBitsMSC(iL[0] + iL[1] + iL[2]);
+		Parameter.SetNumDecodedBitsMSC(iL[0] + iL[1] + iL[2]);
 
 		/* Set total number of bits for hiearchical frame (needed for MSC
 		   demultiplexer module) */
-		Parameter.iNoBitsHierarchFrameTotal = iL[2];
+		Parameter.iNumBitsHierarchFrameTotal = iL[2];
 		break;
 	}
 }

@@ -41,10 +41,10 @@ public:
 	virtual ~CEngergyDispersal() {}
 
 	void ProcessData(CVector<_BINARY>* pbiData);		
-	void Init(int iNewNoInBits, int iNewLengthVSPP);
+	void Init(int iNewNumInBits, int iNewLengthVSPP);
 
 protected:
-	int			iNoInBits;
+	int			iNumInBits;
 	int			iStartIndVSPP;
 	int			iEndIndVSPP;
 	_UINT32BIT	iShiftRegisterSPP;

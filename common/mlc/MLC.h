@@ -57,11 +57,11 @@ protected:
 	   Protection level.
 	   For three levels: [M_0,l  M_1,l  M2,l]
 	   For six levels: [M_0,lRe  M_0,lIm  M_1,lRe  M_1,lIm  M_2,lRe  ...  ] */
-	int	iM[MC_MAX_NO_LEVELS][2];
+	int	iM[MC_MAX_NUM_LEVELS][2];
 	int iN[2];
 	int iL[3];
 	int iN_mux;
-	int iCodeRate[MC_MAX_NO_LEVELS][2];
+	int iCodeRate[MC_MAX_NUM_LEVELS][2];
 
 	const int* piInterlSequ;
 
@@ -79,17 +79,15 @@ public:
 	virtual ~CMLCEncoder() {}
 
 protected:
-	CConvEncoder		ConvEncoder[MC_MAX_NO_LEVELS];
+	CConvEncoder		ConvEncoder[MC_MAX_NUM_LEVELS];
 	/* Two different types of interleaver table */
 	CBitInterleaver		BitInterleaver[2];
 	CQAMMapping			QAMMapping;
 	CEngergyDispersal	EnergyDisp;
 
 	/* Internal buffers */
-	CVector<_BINARY>	vecbiEncInBuffer[MC_MAX_NO_LEVELS];
-	CVector<_BINARY>	vecbiEncOutBuffer[MC_MAX_NO_LEVELS];
-
-	int					iNoInBits;
+	CVector<_BINARY>	vecbiEncInBuffer[MC_MAX_NUM_LEVELS];
+	CVector<_BINARY>	vecbiEncOutBuffer[MC_MAX_NUM_LEVELS];
 
 	virtual void InitInternal(CParameter& TransmParam);
 	virtual void ProcessDataInternal(CParameter& Parameter);
@@ -99,28 +97,28 @@ class CMLCDecoder : public CReceiverModul<CEquSig, _BINARY>,
 					public CMLC
 {
 public:
-	CMLCDecoder() {iNoIterations = MC_NO_ITERATIONS;}
+	CMLCDecoder() {iNumIterations = MC_NUM_ITERATIONS;}
 	virtual ~CMLCDecoder() {}
 
 	_REAL GetAccMetric() const {return 10 * log10(rAccMetric);}
 	void GetVectorSpace(CVector<_COMPLEX>& veccData);
-	void SetNoIterations(int iNewNoIterations);
-	int GetNoIterations() const {return iNoIterations;}
+	void SetNumIterations(int iNewNumIterations);
+	int GetNumIterations() const {return iNumIterations;}
 
 protected:
-	CViterbiDecoder		ViterbiDecoder[MC_MAX_NO_LEVELS];
+	CViterbiDecoder		ViterbiDecoder[MC_MAX_NUM_LEVELS];
 	CMLCMetric			MLCMetric;
 	/* Two different types of deinterleaver table */
 	CBitDeinterleaver	BitDeinterleaver[2];
 	CBitInterleaver		BitInterleaver[2];
-	CConvEncoder		ConvEncoder[MC_MAX_NO_LEVELS];
+	CConvEncoder		ConvEncoder[MC_MAX_NUM_LEVELS];
 	CEngergyDispersal	EnergyDisp;
 
 	/* Internal buffers */
 	CVector<CDistance>	vecMetric;
 
-	CVector<_BINARY>	vecbiDecOutBits[MC_MAX_NO_LEVELS];
-	CVector<_BINARY>	vecbiSubsetDef[MC_MAX_NO_LEVELS];
+	CVector<_BINARY>	vecbiDecOutBits[MC_MAX_NUM_LEVELS];
+	CVector<_BINARY>	vecbiSubsetDef[MC_MAX_NUM_LEVELS];
 	int					iNoOutBits;
 
 	/* Accumulated metric */
@@ -129,7 +127,7 @@ protected:
 	/* Internal buffer for GetVectorSpace function */
 	CVector<_COMPLEX>	vecSigSpacBuf;
 
-	int					iNoIterations;
+	int					iNumIterations;
 	int					iIndexLastBranch;
 
 	virtual void InitInternal(CParameter& ReceiverParam);

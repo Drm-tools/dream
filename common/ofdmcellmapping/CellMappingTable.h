@@ -68,7 +68,7 @@
 class CCellMappingTable
 {
 public:
-	CCellMappingTable() : iNoSymbolsPerSuperframe(0) {}
+	CCellMappingTable() : iNumSymbolsPerSuperframe(0) {}
 	virtual ~CCellMappingTable() {}
 
 	void MakeTable(ERobMode eNewRobustnessMode, ESpecOcc eNewSpectOccup);
@@ -79,24 +79,22 @@ public:
 	CMatrix<int>		matiMapTab; 
 	CMatrix<_COMPLEX>	matcPilotCells;
 
-	int					iNoSymbolsPerSuperframe;
-	int					iNoSymPerFrame; /* Number of symbols per frame */
-	int					iNoCarrier;
+	int					iNumSymbolsPerSuperframe;
+	int					iNumSymPerFrame; /* Number of symbols per frame */
+	int					iNumCarrier;
 	int					iScatPilTimeInt; /* Time interpolation */
 	int					iScatPilFreqInt; /* Frequency interpolation */
 
-	int					iMaxNoMSCSym; /* Max number of MSC cells in a symbol */
-	int					iMaxNoFACSym; /* Max number of FAC cells in a symbol */
-	int					iMaxNoSDCSym; /* Max number of SDC cells in a symbol */
+	int					iMaxNumMSCSym; /* Max number of MSC cells in a symbol */
 
 	/* Number of MSC cells in a symbol */
-	CVector<int>		veciNoMSCSym; 
+	CVector<int>		veciNumMSCSym; 
 
 	/* Number of FAC cells in a symbol */
-	CVector<int>		veciNoFACSym; 
+	CVector<int>		veciNumFACSym; 
 
 	/* Number of SDC cells in a symbol */
-	CVector<int>		veciNoSDCSym;
+	CVector<int>		veciNumSDCSym;
 
 	int					iFFTSizeN; /* FFT size of the OFDM modulation */
 	int					iCarrierKmin; /* Carrier index of carrier with lowest frequency */
@@ -107,10 +105,10 @@ public:
 	CRatio				RatioTgTu; /* Ratio between guard-interval and useful part */
 	int					iGuardSize; /* Length of guard-interval measured in "time-bins" */
 	int					iSymbolBlockSize; /* Useful part plus guard-interval in "time-bins" */
-	int					iNoIntpFreqPil; /* No of time-interploated frequency pilots */
+	int					iNumIntpFreqPil; /* Number of time-interploated frequency pilots */
 
-	int					iNoUsefMSCCellsPerFrame; /* Number of MSC cells per multiplex frame N_{MUX} */
-	int					iNoSDCCellsPerSFrame; /* Number of SDC cells per super-frame */
+	int					iNumUsefMSCCellsPerFrame; /* Number of MSC cells per multiplex frame N_{MUX} */
+	int					iNumSDCCellsPerSFrame; /* Number of SDC cells per super-frame */
 
 	/* Needed for SNR estimation and simulation */
 	_REAL				rAvPowPerSymbol; /* Total average power per symbol */

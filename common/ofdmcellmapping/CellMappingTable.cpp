@@ -42,7 +42,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 								  ESpecOcc eNewSpectOccup)
 {
 	int				iNoMSCDummyCells; /* Number of MSC dummy cells */
-	int				iNoTimePilots; /* No of time pilots per frame */
+	int				iNumTimePilots; /* Number of time pilots per frame */
 	CScatPilots		ScatPilots;
 	int				iSym;
 	int				iFrameSym;
@@ -100,10 +100,10 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		RatioTgTu.iEnum = RMA_ENUM_TG_TU;
 		RatioTgTu.iDenom = RMA_DENOM_TG_TU;
 
-		iNoSymPerFrame = RMA_NO_SYM_PER_FRAME;
-		iNoSymbolsPerSuperframe = iNoSymPerFrame * NO_FRAMES_IN_SUPERFRAME;
+		iNumSymPerFrame = RMA_NUM_SYM_PER_FRAME;
+		iNumSymbolsPerSuperframe = iNumSymPerFrame * NUM_FRAMES_IN_SUPERFRAME;
 		piTableFAC = &iTableFACRobModA[0][0];
-		iNoTimePilots = RMA_NO_TIME_PIL;
+		iNumTimePilots = RMA_NUM_TIME_PIL;
 		piTableTimePilots = &iTableTimePilRobModA[0][0];
 		piTableFreqPilots = &iTableFreqPilRobModA[0][0];
 		iScatPilTimeInt = RMA_SCAT_PIL_TIME_INT;
@@ -127,10 +127,10 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		RatioTgTu.iEnum = RMB_ENUM_TG_TU;
 		RatioTgTu.iDenom = RMB_DENOM_TG_TU;
 
-		iNoSymPerFrame = RMB_NO_SYM_PER_FRAME;
-		iNoSymbolsPerSuperframe = iNoSymPerFrame * NO_FRAMES_IN_SUPERFRAME;
+		iNumSymPerFrame = RMB_NUM_SYM_PER_FRAME;
+		iNumSymbolsPerSuperframe = iNumSymPerFrame * NUM_FRAMES_IN_SUPERFRAME;
 		piTableFAC = &iTableFACRobModB[0][0];
-		iNoTimePilots = RMB_NO_TIME_PIL;
+		iNumTimePilots = RMB_NUM_TIME_PIL;
 		piTableTimePilots = &iTableTimePilRobModB[0][0];
 		piTableFreqPilots = &iTableFreqPilRobModB[0][0];
 		iScatPilTimeInt = RMB_SCAT_PIL_TIME_INT;
@@ -154,10 +154,10 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		RatioTgTu.iEnum = RMC_ENUM_TG_TU;
 		RatioTgTu.iDenom = RMC_DENOM_TG_TU;
 
-		iNoSymPerFrame = RMC_NO_SYM_PER_FRAME;
-		iNoSymbolsPerSuperframe = iNoSymPerFrame * NO_FRAMES_IN_SUPERFRAME;
+		iNumSymPerFrame = RMC_NUM_SYM_PER_FRAME;
+		iNumSymbolsPerSuperframe = iNumSymPerFrame * NUM_FRAMES_IN_SUPERFRAME;
 		piTableFAC = &iTableFACRobModC[0][0];
-		iNoTimePilots = RMC_NO_TIME_PIL;
+		iNumTimePilots = RMC_NUM_TIME_PIL;
 		piTableTimePilots = &iTableTimePilRobModC[0][0];
 		piTableFreqPilots = &iTableFreqPilRobModC[0][0];
 		iScatPilTimeInt = RMC_SCAT_PIL_TIME_INT;
@@ -181,10 +181,10 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		RatioTgTu.iEnum = RMD_ENUM_TG_TU;
 		RatioTgTu.iDenom = RMD_DENOM_TG_TU;
 
-		iNoSymPerFrame = RMD_NO_SYM_PER_FRAME;
-		iNoSymbolsPerSuperframe = iNoSymPerFrame * NO_FRAMES_IN_SUPERFRAME;
+		iNumSymPerFrame = RMD_NUM_SYM_PER_FRAME;
+		iNumSymbolsPerSuperframe = iNumSymPerFrame * NUM_FRAMES_IN_SUPERFRAME;
 		piTableFAC = &iTableFACRobModD[0][0];
-		iNoTimePilots = RMD_NO_TIME_PIL;
+		iNumTimePilots = RMD_NUM_TIME_PIL;
 		piTableTimePilots = &iTableTimePilRobModD[0][0];
 		piTableFreqPilots = &iTableFreqPilRobModD[0][0];
 		iScatPilTimeInt = RMD_SCAT_PIL_TIME_INT;
@@ -201,8 +201,8 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		break;
 	}
 
-	/* Get No of carriers with DC */
-	iNoCarrier = iCarrierKmax - iCarrierKmin + 1;
+	/* Get number of carriers with DC */
+	iNumCarrier = iCarrierKmax - iCarrierKmin + 1;
 
 	/* Length of guard-interval measured in "time-bins". We do the calculation
 	   with integer variables -> "/ RatioTgTu.iDenom" MUST be the last
@@ -226,23 +226,23 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	   with robustness mode D: pilots in all carriers! BUT: DC carrier is
 	   counted as a pilot in that case!!! Be aware of that! */
 	if (iScatPilFreqInt > 1)
-		iNoIntpFreqPil = (int) ((_REAL) iNoCarrier / iScatPilFreqInt + 1);
+		iNumIntpFreqPil = (int) ((_REAL) iNumCarrier / iScatPilFreqInt + 1);
 	else
-		iNoIntpFreqPil = iNoCarrier;
+		iNumIntpFreqPil = iNumCarrier;
 
 
 	/* Allocate memory for vectors and matrices ----------------------------- */
 	/* Allocate memory for mapping table (Matrix) */
-	matiMapTab.Init(iNoSymbolsPerSuperframe, iNoCarrier);
+	matiMapTab.Init(iNumSymbolsPerSuperframe, iNumCarrier);
 
 	/* Allocate memory for pilot cells definition and set it to zero */
-	matcPilotCells.Init(iNoSymbolsPerSuperframe, iNoCarrier, 
+	matcPilotCells.Init(iNumSymbolsPerSuperframe, iNumCarrier, 
 		_COMPLEX((_REAL) 0.0, (_REAL) 0.0));
 
 	/* Allocate memory for vectors with number of certain cells */
-	veciNoMSCSym.Init(iNoSymbolsPerSuperframe);
-	veciNoFACSym.Init(iNoSymbolsPerSuperframe);
-	veciNoSDCSym.Init(iNoSymbolsPerSuperframe);
+	veciNumMSCSym.Init(iNumSymbolsPerSuperframe);
+	veciNumFACSym.Init(iNumSymbolsPerSuperframe);
+	veciNumSDCSym.Init(iNumSymbolsPerSuperframe);
 
 
 	/* Build table ************************************************************/
@@ -250,10 +250,10 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	   definitions! E.g., first define all carriers as MSC cells */
 	iFreqPilotsCounter = 0;
 	iTimePilotsCounter = 0;
-	for (iSym = 0; iSym < iNoSymbolsPerSuperframe; iSym++)
+	for (iSym = 0; iSym < iNumSymbolsPerSuperframe; iSym++)
 	{
 		/* Frame symbol: Counts symbols in one frame, not super frame! */
-		iFrameSym = iSym % iNoSymPerFrame;
+		iFrameSym = iSym % iNumSymPerFrame;
 
 		/* Reset FAC counter at the beginning of each new frame */
 		if (iFrameSym == 0)
@@ -300,13 +300,13 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 			/* FAC ---------------------------------------------------------- */
 			/* FAC positions are defined in a table */
-			if (iFACCounter <= NO_FAC_CELLS)
+			if (iFACCounter <= NUM_FAC_CELLS)
 			{
 				/* piTableFAC[x * 2]: first column; piTableFAC[x * 2 + 1]: 
 				   second column */
-				if (piTableFAC[iFACCounter * 2] * iNoCarrier +
+				if (piTableFAC[iFACCounter * 2] * iNumCarrier +
 					piTableFAC[iFACCounter * 2 + 1] == iFrameSym * 
-					iNoCarrier + iCar)
+					iNumCarrier + iCar)
 				{
 					iFACCounter++;
 					matiMapTab[iSym][iCarArrInd] = CM_FAC;
@@ -365,7 +365,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				/* Test, if current carrier-index is one of the "boosted pilots"
 				   position */
 				_BOOLEAN bIsBoostedPilot = FALSE;
-				for (i = 0; i < NO_BOOSTED_SCAT_PILOTS; i++)
+				for (i = 0; i < NUM_BOOSTED_SCAT_PILOTS; i++)
 				{
 					/* In case of match set flag */
 					if (ScatPilots.piGainTable[i] == iCar)
@@ -408,7 +408,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 						Polar2Cart(sqrt((_REAL) 2.0),
 						piTableTimePilots[iTimePilotsCounter * 2 + 1]);
 
-					if (iTimePilotsCounter == iNoTimePilots - 1)
+					if (iTimePilotsCounter == iNumTimePilots - 1)
 						iTimePilotsCounter = 0;
 					else
 						iTimePilotsCounter++;
@@ -439,8 +439,8 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 				if (eNewRobustnessMode == RM_ROBUSTNESS_MODE_D)
 				{
 					/* For robustness mode D, carriers 7 and 21 (Means: first
-					   and second pilot, not No. 28 (NO_FREQ_PILOTS - 1) */
-					if (iFreqPilotsCounter != NO_FREQ_PILOTS - 1)
+					   and second pilot, not No. 28 (NUM_FREQ_PILOTS - 1) */
+					if (iFreqPilotsCounter != NUM_FREQ_PILOTS - 1)
 					{
 						/* Test for odd values of "s" (iSym) */
 						if ((iFrameSym % 2) == 1)
@@ -460,7 +460,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 						piTableFreqPilots[iFreqPilotsCounter * 2 + 1]);
 
 				/* Increase counter and wrap if needed */
-				if (iFreqPilotsCounter == NO_FREQ_PILOTS - 1)
+				if (iFreqPilotsCounter == NUM_FREQ_PILOTS - 1)
 					iFreqPilotsCounter = 0;
 				else
 					iFreqPilotsCounter++;
@@ -488,28 +488,26 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 	/* We need to count the cells in a symbol for defining how many values from
 	   each source is needed to generate one symbol in carrier-mapping */
 	/* Init all counters */
-	iMaxNoMSCSym = 0;
-	iMaxNoFACSym = 0;
-	iMaxNoSDCSym = 0;
-	iNoSDCCellsPerSFrame = 0;
+	iMaxNumMSCSym = 0;
+	iNumSDCCellsPerSFrame = 0;
 	iMSCCounter = 0;
 
 	rAvPowPerSymbol = (_REAL) 0.0;
 	rAvPilPowPerSym = (_REAL) 0.0;
 
-	for (iSym = 0; iSym < iNoSymbolsPerSuperframe; iSym++)
+	for (iSym = 0; iSym < iNumSymbolsPerSuperframe; iSym++)
 	{
 		/* Init all counters */
-		veciNoMSCSym[iSym] = 0;
-		veciNoFACSym[iSym] = 0;
-		veciNoSDCSym[iSym] = 0;
+		veciNumMSCSym[iSym] = 0;
+		veciNumFACSym[iSym] = 0;
+		veciNumSDCSym[iSym] = 0;
 		
-		for (iCar = 0; iCar < iNoCarrier; iCar++)
+		for (iCar = 0; iCar < iNumCarrier; iCar++)
 		{
 			/* MSC */
 			if (_IsMSC(matiMapTab[iSym][iCar]))
 			{
-				veciNoMSCSym[iSym]++;
+				veciNumMSCSym[iSym]++;
 
 				/* Count ALL MSC cells per super-frame */
 				iMSCCounter++;
@@ -517,15 +515,15 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 			/* FAC */
 			if (_IsFAC(matiMapTab[iSym][iCar]))
-				veciNoFACSym[iSym]++;
+				veciNumFACSym[iSym]++;
 
 			/* SDC */
 			if (_IsSDC(matiMapTab[iSym][iCar]))
 			{
-				veciNoSDCSym[iSym]++;
+				veciNumSDCSym[iSym]++;
 
 				/* Count ALL SDC cells per super-frame */
-				iNoSDCCellsPerSFrame++;
+				iNumSDCCellsPerSFrame++;
 			}
 
 			/* Calculations for average power per symbol (needed for SNR 
@@ -559,41 +557,33 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 		/* Set maximum for symbol */
 		/* MSC */
-		if (iMaxNoMSCSym < veciNoMSCSym[iSym])
-			iMaxNoMSCSym = veciNoMSCSym[iSym];
-
-		/* FAC */
-		if (iMaxNoFACSym < veciNoFACSym[iSym])
-			iMaxNoFACSym = veciNoFACSym[iSym];
-
-		/* SDC */
-		if (iMaxNoSDCSym < veciNoSDCSym[iSym])
-			iMaxNoSDCSym = veciNoSDCSym[iSym];
+		if (iMaxNumMSCSym < veciNumMSCSym[iSym])
+			iMaxNumMSCSym = veciNumMSCSym[iSym];
 	}
 
 	/* Set number of useful MSC cells */
-	iNoUsefMSCCellsPerFrame = 
-		(int) (iMSCCounter / NO_FRAMES_IN_SUPERFRAME);
+	iNumUsefMSCCellsPerFrame = 
+		(int) (iMSCCounter / NUM_FRAMES_IN_SUPERFRAME);
 
 	/* Calculate dummy cells for MSC */
-	iNoMSCDummyCells = iMSCCounter - iNoUsefMSCCellsPerFrame  * 
-		NO_FRAMES_IN_SUPERFRAME;
+	iNoMSCDummyCells = iMSCCounter - iNumUsefMSCCellsPerFrame  * 
+		NUM_FRAMES_IN_SUPERFRAME;
 
 	/* Correct last MSC count (because of dummy cells) */
-	veciNoMSCSym[iNoSymbolsPerSuperframe - 1] -= iNoMSCDummyCells;
+	veciNumMSCSym[iNumSymbolsPerSuperframe - 1] -= iNoMSCDummyCells;
 
 	/* Normalize the average powers */
-	rAvPowPerSymbol /= iNoSymbolsPerSuperframe;
-	rAvPilPowPerSym /= iNoSymbolsPerSuperframe;
+	rAvPowPerSymbol /= iNumSymbolsPerSuperframe;
+	rAvPilPowPerSym /= iNumSymbolsPerSuperframe;
 
 
 /* ########################################################################## */
 #ifdef _DEBUG_
 /* Save table in file */
 FILE* pFile = fopen("test/CarMapTable.dat", "w");
-for (int i = 0; i < iNoSymbolsPerSuperframe; i++)
+for (int i = 0; i < iNumSymbolsPerSuperframe; i++)
 {
-	for (int j = 0; j < iNoCarrier; j++)
+	for (int j = 0; j < iNumCarrier; j++)
 	{
 		if (_IsDC(matiMapTab[i][j]))
 		{
@@ -648,9 +638,9 @@ fclose(pFile);
 the lower plot.)
 */
 pFile = fopen("test/PilotCells.dat", "w");
-for (int z = 0; z < iNoSymbolsPerSuperframe; z++)
+for (int z = 0; z < iNumSymbolsPerSuperframe; z++)
 {
-	for (int v = 0; v < iNoCarrier; v++)
+	for (int v = 0; v < iNumCarrier; v++)
 		fprintf(pFile, "%e %e ", matcPilotCells[z][v].real(), 
 			matcPilotCells[z][v].imag());
 

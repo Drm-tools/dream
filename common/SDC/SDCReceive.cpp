@@ -41,7 +41,7 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	/* Calculate length of data field in bytes
 	   (consistant to table 61 in (6.4.1)) */
 	iLengthDataFieldBytes = 
-		(int) ((_REAL) (Parameter.iNoSDCBitsPerSFrame - 20) / 8);
+		(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 20) / 8);
 
 	/* 20 bits from AFS index and CRC */
 	iUsefulBitsSDC = 20 + iLengthDataFieldBytes * 8;
@@ -137,7 +137,7 @@ _BOOLEAN CSDCReceive::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody,
 								  CParameter& Parameter)
 {
-	int						iNoStreams;
+	int						iNumStreams;
 	int						i;
 	CParameter::CMSCProtLev	MSCPrLe;
 	_BOOLEAN				bWithHierarch;
@@ -146,12 +146,12 @@ void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody,
 
 	/* The receiver may determine the number of streams present in the multiplex
 	   by dividing the length field of the header by three (6.4.3.1) */
-	iNoStreams = iLengthOfBody / 3;
+	iNumStreams = iLengthOfBody / 3;
 
 	/* Check number of streams for overflow
 	   TODO: Error handling at this point! */
-	if (iNoStreams > MAX_NUM_STREAMS)
-		iNoStreams = MAX_NUM_STREAMS;
+	if (iNumStreams > MAX_NUM_STREAMS)
+		iNumStreams = MAX_NUM_STREAMS;
 
 	/* Get protection levels */
 	/* Protection level for part A */
@@ -164,7 +164,7 @@ void CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody,
 	bWithHierarch = FALSE;
 
 	/* Get stream parameters */
-	for (i = 0; i < iNoStreams; i++)
+	for (i = 0; i < iNumStreams; i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hirarchical data */

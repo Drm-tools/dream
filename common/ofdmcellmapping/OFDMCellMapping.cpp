@@ -45,19 +45,19 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 	/* Mapping of the data and pilot cells on the OFDM symbol --------------- */
 	/* Set absolute symbol position */
 	iSymbolCounterAbs =
-		TransmParam.iFrameIDTransm * iNoSymPerFrame + iSymbolCounter;
+		TransmParam.iFrameIDTransm * iNumSymPerFrame + iSymbolCounter;
 
 	/* Init temporary counter */
 	iDummyCellCounter = 0;
 	iMSCCounter = 0;
 	iFACCounter = 0;
 	iSDCCounter = 0;
-	for (iCar = 0; iCar < iNoCarrier; iCar++)
+	for (iCar = 0; iCar < iNumCarrier; iCar++)
 	{
 		/* MSC */
 		if (_IsMSC(TransmParam.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
-			if (iMSCCounter >= TransmParam.veciNoMSCSym[iSymbolCounterAbs])
+			if (iMSCCounter >= TransmParam.veciNumMSCSym[iSymbolCounterAbs])
 			{
 				/* Insert dummy cells */
 				(*pvecOutputData)[iCar] = pcDummyCells[iDummyCellCounter];
@@ -98,30 +98,30 @@ void COFDMCellMapping::ProcessDataInternal(CParameter& TransmParam)
 
 	/* Increase symbol-counter and wrap if needed */
 	iSymbolCounter++;
-	if (iSymbolCounter == iNoSymPerFrame)
+	if (iSymbolCounter == iNumSymPerFrame)
 	{
 		iSymbolCounter = 0;
 
 		/* Increase frame-counter (ID) (Used also in FAC.cpp) */
 		TransmParam.iFrameIDTransm++;
-		if (TransmParam.iFrameIDTransm == NO_FRAMES_IN_SUPERFRAME)
+		if (TransmParam.iFrameIDTransm == NUM_FRAMES_IN_SUPERFRAME)
 			TransmParam.iFrameIDTransm = 0;
 	}
 
 	/* Set absolute symbol position (for updated relative positions) */
 	iSymbolCounterAbs =
-		TransmParam.iFrameIDTransm * iNoSymPerFrame + iSymbolCounter;
+		TransmParam.iFrameIDTransm * iNumSymPerFrame + iSymbolCounter;
 
 	/* Set input block-sizes for next symbol */
-	iInputBlockSize = TransmParam.veciNoMSCSym[iSymbolCounterAbs];
-	iInputBlockSize2 = TransmParam.veciNoFACSym[iSymbolCounterAbs];
-	iInputBlockSize3 = TransmParam.veciNoSDCSym[iSymbolCounterAbs];
+	iInputBlockSize = TransmParam.veciNumMSCSym[iSymbolCounterAbs];
+	iInputBlockSize2 = TransmParam.veciNumFACSym[iSymbolCounterAbs];
+	iInputBlockSize3 = TransmParam.veciNumSDCSym[iSymbolCounterAbs];
 }
 
 void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 {
-	iNoSymPerFrame = TransmParam.iNoSymPerFrame;
-	iNoCarrier = TransmParam.iNoCarrier;
+	iNumSymPerFrame = TransmParam.iNumSymPerFrame;
+	iNumCarrier = TransmParam.iNumCarrier;
 
 	/* Init symbol-counter */
 	iSymbolCounter = 0;
@@ -144,10 +144,10 @@ void COFDMCellMapping::InitInternal(CParameter& TransmParam)
 	}
 
 	/* Define block-sizes for input and output of the module ---------------- */
-	iInputBlockSize = TransmParam.veciNoMSCSym[0]; /* MSC */
-	iInputBlockSize2 = TransmParam.veciNoFACSym[0]; /* FAC */
-	iInputBlockSize3 = TransmParam.veciNoSDCSym[0]; /* SDC */
-	iOutputBlockSize = TransmParam.iNoCarrier; /* Output */
+	iInputBlockSize = TransmParam.veciNumMSCSym[0]; /* MSC */
+	iInputBlockSize2 = TransmParam.veciNumFACSym[0]; /* FAC */
+	iInputBlockSize3 = TransmParam.veciNumSDCSym[0]; /* SDC */
+	iOutputBlockSize = TransmParam.iNumCarrier; /* Output */
 }
 
 
@@ -165,24 +165,24 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 	int iNewFrameID;
 
 	/* Set absolute symbol position */
-	iSymbolCounterAbs = iCurrentFrameID * iNoSymPerFrame + iSymbolCounter;
+	iSymbolCounterAbs = iCurrentFrameID * iNumSymPerFrame + iSymbolCounter;
 
 	/* Set output block-sizes for this symbol */
-	iOutputBlockSize = ReceiverParam.veciNoMSCSym[iSymbolCounterAbs];
-	iOutputBlockSize2 = ReceiverParam.veciNoFACSym[iSymbolCounterAbs];
-	iOutputBlockSize3 = ReceiverParam.veciNoSDCSym[iSymbolCounterAbs];
+	iOutputBlockSize = ReceiverParam.veciNumMSCSym[iSymbolCounterAbs];
+	iOutputBlockSize2 = ReceiverParam.veciNumFACSym[iSymbolCounterAbs];
+	iOutputBlockSize3 = ReceiverParam.veciNumSDCSym[iSymbolCounterAbs];
 
 	/* Demap data from the cells */
 	iMSCCounter = 0;
 	iFACCounter = 0;
 	iSDCCounter = 0;
-	for (iCar = 0; iCar < iNoCarrier; iCar++)
+	for (iCar = 0; iCar < iNumCarrier; iCar++)
 	{
 		/* MSC */
 		if (_IsMSC(ReceiverParam.matiMapTab[iSymbolCounterAbs][iCar]))
 		{
 			/* Ignore dummy cells */
-			if (iMSCCounter < ReceiverParam.veciNoMSCSym[iSymbolCounterAbs])
+			if (iMSCCounter < ReceiverParam.veciNumMSCSym[iSymbolCounterAbs])
 			{
 				(*pvecOutputData)[iMSCCounter] = (*pvecInputData)[iCar];
 
@@ -212,17 +212,17 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 	/* Get symbol-counter for next symbol and adjust frame-ID. Use the extended
 	   data, shipped with the input vector */
-	iNewSymbolCounter = (*pvecInputData).GetExData().iSymbolNo + 1;
+	iNewSymbolCounter = (*pvecInputData).GetExData().iSymbolID + 1;
 
-	/* Check range (iSymbolCounter must be in {0, ... , iNoSymPerFrame - 1} */
-	while (iNewSymbolCounter >= iNoSymPerFrame)
-		iNewSymbolCounter -= iNoSymPerFrame;
+	/* Check range (iSymbolCounter must be in {0, ... , iNumSymPerFrame - 1} */
+	while (iNewSymbolCounter >= iNumSymPerFrame)
+		iNewSymbolCounter -= iNumSymPerFrame;
 	while (iNewSymbolCounter < 0)
-		iNewSymbolCounter += iNoSymPerFrame;
+		iNewSymbolCounter += iNumSymPerFrame;
 
 	/* Increment internal symbol counter and take care of wrap around */
 	iSymbolCounter++;
-	if (iSymbolCounter == iNoSymPerFrame)
+	if (iSymbolCounter == iNumSymPerFrame)
 		iSymbolCounter = 0;
 
 	/* Check if symbol counter has changed (e.g. due to frame synchronization
@@ -247,7 +247,7 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 		   output cyclic-buffer. An incorrect number of FAC cells can be if
 		   the "iSymbolCounterAbs" was changed, e.g. by the synchronization
 		   units */
-		if (iFACCellCounter != NO_FAC_CELLS)
+		if (iFACCellCounter != NUM_FAC_CELLS)
 			SetBufReset2(); /* FAC: buffer number 2 */
 
 		/* Reset FAC cell counter */
@@ -256,12 +256,12 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Frame ID of this FAC block stands for the "current" block. We need
 		   the ID of the next block, therefore we have to add "1" */
 		iNewFrameID = ReceiverParam.iFrameIDReceiv + 1;
-		if (iNewFrameID == NO_FRAMES_IN_SUPERFRAME)
+		if (iNewFrameID == NUM_FRAMES_IN_SUPERFRAME)
 			iNewFrameID = 0;
 
 		/* Increment internal frame ID and take care of wrap around */
 		iCurrentFrameID++;
-		if (iCurrentFrameID == NO_FRAMES_IN_SUPERFRAME)
+		if (iCurrentFrameID == NUM_FRAMES_IN_SUPERFRAME)
 			iCurrentFrameID = 0;
 
 		/* Check if frame ID has changed, if yes, reset output buffers to avoid
@@ -281,12 +281,12 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 		{
 			/* Super-frame bound reached, test cell-counters (same as with the
 			   FAC cells, see above) */
-			if (iMSCCellCounter != iNoUsefMSCCellsPerFrame *
-				NO_FRAMES_IN_SUPERFRAME)
+			if (iMSCCellCounter != iNumUsefMSCCellsPerFrame *
+				NUM_FRAMES_IN_SUPERFRAME)
 			{
 				SetBufReset1(); /* MSC: buffer number 1 */
 			}
-			if (iSDCCellCounter != iNoSDCCellsPerSFrame)
+			if (iSDCCellCounter != iNumSDCCellsPerSFrame)
 				SetBufReset3(); /* SDC: buffer number 3 */
 
 			/* Reset counters */
@@ -298,10 +298,10 @@ void COFDMCellDemapping::ProcessDataInternal(CParameter& ReceiverParam)
 
 void COFDMCellDemapping::InitInternal(CParameter& ReceiverParam)
 {
-	iNoSymPerFrame = ReceiverParam.iNoSymPerFrame;
-	iNoCarrier = ReceiverParam.iNoCarrier;
-	iNoUsefMSCCellsPerFrame = ReceiverParam.iNoUsefMSCCellsPerFrame;
-	iNoSDCCellsPerSFrame = ReceiverParam.iNoSDCCellsPerSFrame;
+	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
+	iNumCarrier = ReceiverParam.iNumCarrier;
+	iNumUsefMSCCellsPerFrame = ReceiverParam.iNumUsefMSCCellsPerFrame;
+	iNumSDCCellsPerSFrame = ReceiverParam.iNumSDCCellsPerSFrame;
 
 	/* Init symbol-counter and internal frame counter */
 	iSymbolCounter = 0;
@@ -314,21 +314,21 @@ void COFDMCellDemapping::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-sizes for input and output of the module ---------------- */
 	/* Input */
-	iInputBlockSize = iNoCarrier;
+	iInputBlockSize = iNumCarrier;
 
 	/* Define space for output cyclic buffers. We must consider enough headroom
 	   otherwise the buffers could overrun */
 	/* FAC, one block is exactly finished when last symbol with FAC cells is
 	   processed */
-	iMaxOutputBlockSize2 = NO_FAC_BITS_PER_BLOCK;
+	iMaxOutputBlockSize2 = NUM_FAC_BITS_PER_BLOCK;
 	/* SDC, one block is exactly finished when last symbol with SDC cells is
 	   processed */
-	iMaxOutputBlockSize3 = ReceiverParam.iNoSDCCellsPerSFrame;
+	iMaxOutputBlockSize3 = ReceiverParam.iNumSDCCellsPerSFrame;
 	/* MSC, since the MSC logical frames must not end at the end of one symbol
 	   (could be somewhere in the middle of the symbol), the output buffer must
 	   accept more cells than one logical MSC frame is long. The worst case is
 	   that the block ends right at the beginning of one symbol; in this case we
 	   have an overhang of approximately one symbol of MSC cells */
-	iMaxOutputBlockSize = ReceiverParam.iNoUsefMSCCellsPerFrame +
-		ReceiverParam.iMaxNoMSCSym;
+	iMaxOutputBlockSize = ReceiverParam.iNumUsefMSCCellsPerFrame +
+		ReceiverParam.iMaxNumMSCSym;
 }

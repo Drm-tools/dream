@@ -44,7 +44,7 @@ void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
 	/* Calculate length of data field in bytes 
 	   (consistant to table 61 in (6.4.1)) */
 	iLengthDataFieldBytes = 
-		(int) ((_REAL) (Parameter.iNoSDCBitsPerSFrame - 20) / 8);
+		(int) ((_REAL) (Parameter.iNumSDCBitsPerSFrame - 20) / 8);
 
 	/* 20 bits from AFS index and CRC */
 	iUsefulBitsSDC = 20 + iLengthDataFieldBytes * 8;

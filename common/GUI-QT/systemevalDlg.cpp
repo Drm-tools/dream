@@ -41,9 +41,9 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
-	SliderNoOfIterations->setValue(DRMReceiver.GetMSCMLC()->GetNoIterations());
+	SliderNoOfIterations->setValue(DRMReceiver.GetMSCMLC()->GetNumIterations());
 	TextNoOfIterations->setText("MLC: Number of Iterations: " +
-		QString().setNum(DRMReceiver.GetMSCMLC()->GetNoIterations()));
+		QString().setNum(DRMReceiver.GetMSCMLC()->GetNumIterations()));
 
 
 	/* Inits for channel estimation and time sync switches */
@@ -415,9 +415,9 @@ void systemevalDlg::OnTimer()
 
 	/* Number of services #################### */
 	strFACInfo = "Number of Services: \t\tAudio: ";
-	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->iNoAudioService);
+	strFACInfo += QString().setNum(DRMReceiver.GetParameters()->iNumAudioService);
 	strFACInfo += " / Data: ";
-	strFACInfo +=QString().setNum(DRMReceiver.GetParameters()->iNoDataService);
+	strFACInfo +=QString().setNum(DRMReceiver.GetParameters()->iNumDataService);
 
 	FACNumServices->setText(strFACInfo);
 
@@ -525,7 +525,7 @@ void systemevalDlg::OnRadioTiSyncEnergy()
 void systemevalDlg::OnSliderIterChange(int value)
 {
 	/* Set new value in working thread module */
-	DRMReceiver.GetMSCMLC()->SetNoIterations(value);
+	DRMReceiver.GetMSCMLC()->SetNumIterations(value);
 
 	/* Show the new value in the label control */
 	TextNoOfIterations->setText("MLC: Number of Iterations: " +
