@@ -602,7 +602,7 @@ QString	FDRMDialog::SetServParamStr(int iServiceID)
 			strTableLanguageCode[DRMReceiver.GetParameters()->Service[
 			iServiceID].iLanguage].c_str();
 
-		/* Programm type */
+		/* Program type */
 		strReturn += " / ";
 		strReturn += 
 			strTableProgTypCod[DRMReceiver.GetParameters()->Service[
