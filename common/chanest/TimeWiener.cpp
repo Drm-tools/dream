@@ -121,9 +121,9 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 	CVector<_REAL> vecrTiCorrEstTmp(iLengthWiener);
 	for (i = 1; i < iLengthWiener; i++)
 	{
-		if (vecrTiCorrEst[i] < vecrTiCorrEst[0] / 10)
-			vecrTiCorrEstTmp[i] = (_REAL) 0.0;
-		else
+//		if (vecrTiCorrEst[i] < vecrTiCorrEst[0] / 10)
+//			vecrTiCorrEstTmp[i] = (_REAL) 0.0;
+//		else
 			vecrTiCorrEstTmp[i] = vecrTiCorrEst[i];
 	}
 
@@ -133,12 +133,17 @@ void CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 /*
 // TEST
-static FILE* pFile = fopen("test/v.dat", "w");
+FILE* pFile = fopen("test/v.dat", "w");
 for (i = 0; i < iLengthWiener; i++)
-	fprintf(pFile, "%e ", vecrTiCorrEst[i]);
-fprintf(pFile, "\n");
-fflush(pFile);
-*/	
+{
+	_REAL test1 = 
+		(CReal) -2.0 * crPi * crPi * Ts * Ts * rSigma * rSigma;
+
+	fprintf(pFile, "%e %e\n", vecrTiCorrEst[i], 
+		exp(test1 * i * i) * vecrTiCorrEst[0]);
+}
+fclose(pFile);
+*/
 
 
 

@@ -134,6 +134,8 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 				const double dPar1, const char* pchPar2Descr,
 				const double dPar2);
 
+void ErrorMessage(string strErrorString);
+
 
 /* Global functions ***********************************************************/
 /* min() max() functions */

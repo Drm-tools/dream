@@ -60,10 +60,8 @@ CSound::CSound()
 
 CSound::~CSound()
 {
-	int i;
-
 	/* Delete allocated memory */
-	for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
+	for (int i = 0; i < NO_SOUND_BUFFERS_IN; i++)
 	{
 		if (psSoundcardBuffer[i] != NULL)
 			delete[] psSoundcardBuffer[i];
@@ -76,14 +74,12 @@ CSound::~CSound()
 \******************************************************************************/
 void CSound::Read(CVector<short>& psData)
 {
-	int i;
-
 	/* Wait until data is available */
 	if (!(m_WaveInHeader[iWhichBufferIn].dwFlags & WHDR_DONE))
 		 WaitForSingleObject(m_WaveInEvent, INFINITE);
 
 	/* Copy data from sound card in output buffer */
-	for (i = 0; i < iBufferSizeIn; i++)
+	for (int i = 0; i < iBufferSizeIn; i++)
 		psData[i] = psSoundcardBuffer[iWhichBufferIn]
 			[NO_IN_OUT_CHANNELS * i + RECORDING_CHANNEL];
 
@@ -96,6 +92,21 @@ void CSound::Read(CVector<short>& psData)
 
 void CSound::AddInBuffer()
 {
+	/* Unprepare wave-header */
+	waveInUnprepareHeader(
+		m_WaveIn, &m_WaveInHeader[iWhichBufferIn], sizeof(WAVEHDR));
+
+	/* Reset struct entries */
+	m_WaveInHeader[iWhichBufferIn].lpData = 
+		(LPSTR) &psSoundcardBuffer[iWhichBufferIn][0];
+	m_WaveInHeader[iWhichBufferIn].dwBufferLength =
+		iBufferSizeIn * BYTES_PER_SAMPLE * NO_IN_OUT_CHANNELS;
+	m_WaveInHeader[iWhichBufferIn].dwFlags = 0;
+		
+	/* Prepare wave-header */
+	waveInPrepareHeader(
+		m_WaveIn, &m_WaveInHeader[iWhichBufferIn], sizeof(WAVEHDR));
+
 	/* Send buffer to driver for filling with new data */
 	waveInAddBuffer(m_WaveIn, &m_WaveInHeader[iWhichBufferIn], sizeof(WAVEHDR));
 
@@ -171,7 +182,7 @@ void CSound::InitRecording(int iNewBufferSize)
 	for (i = 0; i < NO_SOUND_BUFFERS_IN; i++)
 		AddInBuffer();
 
-	/* Notify that sound-capturing can start now */
+	/* Notify that sound capturing can start now */
 	waveInStart(m_WaveIn);
 
 	/* Reset event for initialization */
@@ -195,15 +206,14 @@ void CSound::StopRecording()
 	Sleep(500);
 
 	/* Unprepare wave-headers */
-	result =
-		waveInUnprepareHeader(m_WaveIn, &m_WaveInHeader[0], sizeof(WAVEHDR));
-	if (result != MMSYSERR_NOERROR)
-		throw 0;
+	for (int i = 0; i < NO_SOUND_BUFFERS_IN; i++)
+	{
+		result = waveInUnprepareHeader(
+			m_WaveIn, &m_WaveInHeader[i], sizeof(WAVEHDR));
 
-	result =
-		waveInUnprepareHeader(m_WaveIn, &m_WaveInHeader[1], sizeof(WAVEHDR));
-	if (result != MMSYSERR_NOERROR)
-		throw 0;
+		if (result != MMSYSERR_NOERROR)
+			throw 0;
+	}
 
 	/* Close the sound device */
 	result = waveInClose(m_WaveIn);

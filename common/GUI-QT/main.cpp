@@ -28,6 +28,7 @@
 
 #include <qapplication.h>
 #include <qthread.h>
+#include <qmessagebox.h>
 #include "fdrmdialog.h"
 
 #include "../GlobalDefinitions.h"
@@ -126,5 +127,15 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 	fprintf(pFile, "%e\n", dPar2);
 	fclose(pFile);
 	printf("\nDebug error, exit! For more information see DebugError.dat\n");
+	exit(1);
+}
+
+void ErrorMessage(string strErrorString)
+{
+	QMessageBox::critical(0, "Dream",
+		QString("The following error occured: ") + 
+		QString(strErrorString.c_str()) +
+		"The application will now exit.");
+
 	exit(1);
 }

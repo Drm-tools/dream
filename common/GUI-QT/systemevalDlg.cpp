@@ -41,7 +41,7 @@ systemevalDlg::systemevalDlg( QWidget* parent, const char* name, bool modal, WFl
 	/* Init slider control */
 	SliderNoOfIterations->setRange(0, 4);
 	SliderNoOfIterations->setValue(DRMReceiver.GetMSCMLC()->GetNoIterations());
-	TextNoOfIterations->setText("MLC, Number of Iterations: " + 
+	TextNoOfIterations->setText("MLC: Number of Iterations: " + 
 		QString().setNum(DRMReceiver.GetMSCMLC()->GetNoIterations()));
 
 
@@ -165,10 +165,14 @@ void systemevalDlg::OnTimer()
 	CVector<_COMPLEX>*	pveccData;
 	_REAL				rLowerBound, rHigherBound;
 	_REAL				rStartGuard, rEndGuard;
+	_REAL				rSNREstimate;
 
 	/* SNR estimate */
-	ThermoSNR->setValue(Min(DRMReceiver.GetChanEst()->GetSNREstdB(),
-		DRMReceiver.GetOFDMDemod()->GetSNREstdB()));
+	rSNREstimate = Min(DRMReceiver.GetChanEst()->GetSNREstdB(), 
+		DRMReceiver.GetOFDMDemod()->GetSNREstdB());
+
+	ThermoSNR->setValue(rSNREstimate);
+	TextSNR->setText("SNR\n" + QString().setNum(rSNREstimate, 'f', 1) + " dB");
 
 #ifdef _DEBUG_
 	/* Metric values */
@@ -447,7 +451,7 @@ void systemevalDlg::OnSliderIterChange(int value)
 	DRMReceiver.GetMSCMLC()->SetNoIterations(value);
 
 	/* Show the new value in the label control */
-	TextNoOfIterations->setText("MLC, Number of Iterations: " + 
+	TextNoOfIterations->setText("MLC: Number of Iterations: " + 
 		QString().setNum(value));
 }
 

@@ -148,7 +148,15 @@ void CReceiveData::InitInternal(CParameter& Parameter)
 		iSpecificOutBlockSize = Parameter.iSymbolBlockSize;
 
 		/* Init sound interface */
-		Sound.InitRecording(iSpecificOutBlockSize);
+		try
+		{
+			Sound.InitRecording(iSpecificOutBlockSize);
+		}
+
+		catch (...)
+		{
+			ErrorMessage("Sound card initialization failure.");
+		}
 
 		vecsSoundBuffer.Init(iSpecificOutBlockSize);
 	}

@@ -150,8 +150,8 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	/* These bounds show the beginning and end of the guard-interval */
 	curveLeft = insertCurve("Guard-interval beginning");
 	curveRight = insertCurve("Guard-interval end");
-	setCurvePen(curveLeft, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
-	setCurvePen(curveRight, QPen(SPEC_LINE2_COLOR_PLOT, 1, DotLine));
+	setCurvePen(curveLeft, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
+	setCurvePen(curveRight, QPen(SPEC_LINE1_COLOR_PLOT, 1, DotLine));
 
 	dY[0] = cdAxMinLeft;
 	dY[1] = cdAxMaxLeft;
@@ -178,8 +178,8 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 #ifdef _DEBUG_
 	/* Insert lines for lower and higher bound */
 	curveLow = insertCurve("Lower Bound");
-	setCurvePen(curveLow, QPen(SPEC_LINE2_COLOR_PLOT));
-	setCurvePen(curveHigh, QPen(SPEC_LINE1_COLOR_PLOT));
+	setCurvePen(curveLow, QPen(SPEC_LINE1_COLOR_PLOT));
+	setCurvePen(curveHigh, QPen(SPEC_LINE2_COLOR_PLOT));
 
 	/* Lower bound */
 	dY[0] = dY[1] = rLowerB;
