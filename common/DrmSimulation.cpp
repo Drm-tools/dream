@@ -267,6 +267,7 @@ CDRMSimulation::CDRMSimulation()
 	Param.Service[0].eAudDataFlag = CParameter::SF_DATA;
 	Param.Service[0].DataParam.iStreamID = 0;
 	Param.Service[0].DataParam.ePacketModInd = CParameter::PM_SYNCHRON_STR_MODE;
+	Param.Service[0].iServiceID = 1; /* Service ID must be set for activation */
 
 	/* Stream */
 	Param.Stream[0].iLenPartA = 0; // EEP, if "= 0"
@@ -290,9 +291,6 @@ CDRMSimulation::CDRMSimulation()
 	Param.iTimingOffsTrack = 0;
 
 	Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-	Param.iNumAudioService = 1;
-	Param.iNumDataService = 0;
-	Param.Service[0].AudioParam.iStreamID = 0;
 
 	Param.MSCPrLe.iPartA = 1;
 	Param.MSCPrLe.iPartB = 1;
