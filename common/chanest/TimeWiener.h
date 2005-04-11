@@ -42,8 +42,8 @@
 #define NO_TAPS_USED4SIGMA_EST			3
 
 /* Lengths of wiener filter for wiener filtering in time direction */
-#define LEN_WIENER_FILT_TIME_RMA		15
-#define LEN_WIENER_FILT_TIME_RMB		20
+#define LEN_WIENER_FILT_TIME_RMA		5
+#define LEN_WIENER_FILT_TIME_RMB		7
 #define LEN_WIENER_FILT_TIME_RMC		9
 #define LEN_WIENER_FILT_TIME_RMD		9
 
