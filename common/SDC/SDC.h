@@ -33,6 +33,7 @@
 #include "../Parameter.h"
 #include "../CRC.h"
 #include "../Vector.h"
+#include "../util/Utilities.h"
 
 
 /* Definitions ****************************************************************/
@@ -70,13 +71,13 @@ public:
 	_BOOLEAN SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
 
 protected:
-	void DataEntityType0(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
-	void DataEntityType1(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
 // ...
-	void DataEntityType5(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
 // ...
-	void DataEntityType8(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
-	void DataEntityType9(CVector<_BINARY>* pbiData, int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
+	_BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody, CParameter& Parameter);
 
 
 	CCRC CRCObject;
