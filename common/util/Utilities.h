@@ -6,7 +6,10 @@
  *	Volker Fischer
  *
  * Description:
- *	See Utilities.cpp
+ *	Implements:
+ *	- Signal level meter
+ *	- Bandpass filter
+ *	- Modified Julian Date
  *
  ******************************************************************************
  *
@@ -39,6 +42,7 @@
 
 
 /* Classes ********************************************************************/
+/* Signal level meter ------------------------------------------------------- */
 class CSignalLevelMeter
 {
 public:
@@ -53,6 +57,46 @@ public:
 
 protected:
 	_REAL rCurLevel;
+};
+
+
+/* Bandpass filter ---------------------------------------------------------- */
+class CDRMBandpassFilt
+{
+public:
+	void Init(const int iNewBlockSize, const _REAL rOffsetHz,
+		const ESpecOcc eSpecOcc);
+	void Process(CVector<_COMPLEX>& veccData);
+
+protected:
+	int				iBlockSize;
+
+	CComplexVector	cvecDataTmp;
+
+	CRealVector		rvecZReal; /* State memory real part */
+	CRealVector		rvecZImag; /* State memory imaginary part */
+	CRealVector		rvecDataReal;
+	CRealVector		rvecDataImag;
+	CFftPlans		FftPlanBP;
+	CComplexVector	cvecB;
+};
+
+
+/* Modified Julian Date ----------------------------------------------------- */
+class CModJulDate
+{
+public:
+	CModJulDate() : iYear(0), iDay(0), iMonth(0) {}
+	CModJulDate(const uint32_t iModJulDate) {Set(iModJulDate);}
+
+	void Set(const uint32_t iModJulDate);
+
+	int GetYear() {return iYear;}
+	int GetDay() {return iDay;}
+	int GetMonth() {return iMonth;}
+
+protected:
+	int iYear, iDay, iMonth;
 };
 
 
