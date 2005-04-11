@@ -44,9 +44,9 @@
 
 /* Set this number as high as we have to prebuffer symbols for one MSC block.
    In case of robustness mode D we have 24 symbols */
-#define NUM_SOUND_BUFFERS_IN	30		/* Number of sound card buffers */
+#define NUM_SOUND_BUFFERS_IN	24		/* Number of sound card buffers */
 
-#define NUM_SOUND_BUFFERS_OUT	4		/* Number of sound card buffers */
+#define NUM_SOUND_BUFFERS_OUT	3		/* Number of sound card buffers */
 
 /* Maximum number of recognized sound cards installed in the system */
 #define MAX_NUMBER_SOUND_CARDS	10
