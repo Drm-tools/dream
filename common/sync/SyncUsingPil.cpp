@@ -235,7 +235,7 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 		   is mandatory if large sample rate offsets occur */
 
 		/* Get sample rate offset change */
-		CReal rDiffSamOffset =
+		const CReal rDiffSamOffset =
 			rPrevSamRateOffset - ReceiverParam.rResampleOffset;
 
 		/* Save current resample offset for next symbol */
@@ -302,11 +302,21 @@ fflush(pFile);
 	if (bSyncInput == TRUE)
 		ReceiverParam.rFreqOffsetTrack = (CReal) 0.0;
 
+	/* Do not ship data before first frame synchronization was done. The flag
+	   "bAquisition" must not be set to FALSE since in that case we would run
+	   into an infinite loop since we would not ever ship any data. But since
+	   the flag is set after this module, we should be fine with that. */
+	if ((bInitFrameSync == TRUE) && (bSyncInput == FALSE))
+		iOutputBlockSize = 0;
+	else
+	{
+		iOutputBlockSize = iNumCarrier;
 
-	/* Copy data from input to the output. Data is not modified in this
-	   module */
-	for (i = 0; i < iOutputBlockSize; i++)
-		(*pvecOutputData)[i] = (*pvecInputData)[i];
+		/* Copy data from input to the output. Data is not modified in this
+		   module */
+		for (i = 0; i < iOutputBlockSize; i++)
+			(*pvecOutputData)[i] = (*pvecInputData)[i];
+	}
 }
 
 void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
@@ -332,11 +342,6 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 		/* Refresh parameter */
 		iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
 	}
-
-	/* After an initialization the frame sync must be adjusted */
-	bBadFrameSync = TRUE;
-	bInitFrameSync = TRUE; /* Set flag to show that (re)-init was done */
-	bFrameSyncWasOK = FALSE;
 
 	/* Allocate memory for histories. Init history with small values, because
 	   we search for maximum! */
@@ -454,7 +459,7 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iNumCarrier;
-	iOutputBlockSize = iNumCarrier;
+	iMaxOutputBlockSize = iNumCarrier;
 }
 
 void CSyncUsingPil::StartAcquisition()
@@ -466,4 +471,9 @@ void CSyncUsingPil::StartAcquisition()
 	vecrCorrHistory.Reset(-_MAXREAL);
 
 	bAquisition = TRUE;
+
+	/* After an initialization the frame sync must be adjusted */
+	bBadFrameSync = TRUE;
+	bInitFrameSync = TRUE; /* Set flag to show that (re)-init was done */
+	bFrameSyncWasOK = FALSE;
 }
