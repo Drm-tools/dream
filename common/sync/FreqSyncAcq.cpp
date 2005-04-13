@@ -401,7 +401,7 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 
 	/* Init bandpass filter object */
 	BPFilter.Init(ReceiverParam.iSymbolBlockSize, VIRTUAL_INTERMED_FREQ,
-		ReceiverParam.GetSpectrumOccup());
+		ReceiverParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_RECEIVER);
 
 
 	/* Define block-sizes for input (The output block size is set inside

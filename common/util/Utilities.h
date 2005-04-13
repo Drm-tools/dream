@@ -64,8 +64,10 @@ protected:
 class CDRMBandpassFilt
 {
 public:
+	enum EFiltType {FT_TRANSMITTER, FT_RECEIVER};
+
 	void Init(const int iNewBlockSize, const _REAL rOffsetHz,
-		const ESpecOcc eSpecOcc);
+		const ESpecOcc eSpecOcc, const EFiltType eNFiTy);
 	void Process(CVector<_COMPLEX>& veccData);
 
 protected:

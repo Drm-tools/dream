@@ -158,7 +158,7 @@ void CTransmitData::InitInternal(CParameter& TransmParam)
 
 	/* Init bandpass filter object */
 	BPFilter.Init(iSymbolBlockSize, rDefCarOffset,
-		TransmParam.GetSpectrumOccup());
+		TransmParam.GetSpectrumOccup(), CDRMBandpassFilt::FT_TRANSMITTER);
 
 
 	/* All robustness modes and spectrum occupancies should have the same output

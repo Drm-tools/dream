@@ -100,8 +100,10 @@ void CDRMBandpassFilt::Process(CVector<_COMPLEX>& veccData)
 }
 
 void CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
-							const ESpecOcc eSpecOcc)
+							const ESpecOcc eSpecOcc, const EFiltType eNFiTy)
 {
+	CReal rMargin;
+
 	/* Set internal parameter */
 	iBlockSize = iNewBlockSize;
 
@@ -113,7 +115,12 @@ void CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
 	   of the DC frequency */
 	CReal rNormCurFreqOffset;
 	CReal rBPFiltBW; /* Band-pass filter bandwidth */
-	const CReal rMargin = (CReal) 300.0; /* Hz */
+
+	/* Negative margin for receiver filter for better interferer rejection */
+	if (eNFiTy == FT_TRANSMITTER)
+		rMargin = (CReal) 300.0; /* Hz */
+	else
+		rMargin = (CReal) -200.0; /* Hz */
 
 	switch (eSpecOcc)
 	{
