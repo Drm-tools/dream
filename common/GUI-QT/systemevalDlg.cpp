@@ -110,6 +110,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		tr("Audio Spectrum"), CDRMPlot::AUDIO_SPECTRUM);
 	new CCharSelItem(pSpectrumLiViIt, tr("Shifted PSD"),
 		CDRMPlot::POWER_SPEC_DENSITY);
+	new CCharSelItem(pSpectrumLiViIt, tr("Waterfall Input Spectrum"),
+		CDRMPlot::INP_SPEC_WATERF);
 	new CCharSelItem(pSpectrumLiViIt, tr("Input Spectrum"),
 		CDRMPlot::INPUTSPECTRUM_NO_AV);
 	CCharSelItem* pListItInpPSD = new CCharSelItem(pSpectrumLiViIt,
@@ -324,7 +326,7 @@ void systemevalDlg::UpdateControls()
 	CheckBoxSaveAudioWave->
 		setChecked(pDRMRec->GetWriteData()->GetIsWriteWaveFile());
 
-	CheckBoxRecFilter->setChecked(pDRMRec->GetOFDMDemod()->GetRecFilter());
+	CheckBoxRecFilter->setChecked(pDRMRec->GetFreqSyncAcq()->GetRecFilter());
 	CheckBoxModiMetric->setChecked(pDRMRec->GetChanEst()->GetIntCons());
 
 	/* Update frequency edit control (frequency could be changed by
@@ -790,8 +792,11 @@ void systemevalDlg::OnCheckFlipSpectrum()
 void systemevalDlg::OnCheckRecFilter()
 {
 	/* Set parameter in working thread module */
-	pDRMRec->GetOFDMDemod()->
+	pDRMRec->GetFreqSyncAcq()->
 		SetRecFilter(CheckBoxRecFilter->isChecked());
+
+	/* If filter status is changed, a new aquisition is necessary */
+	pDRMRec->SetReceiverMode(CDRMReceiver::RM_DRM);
 }
 
 void systemevalDlg::OnCheckModiMetric()
