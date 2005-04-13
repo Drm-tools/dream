@@ -60,7 +60,7 @@
 /* Definitions ****************************************************************/
 /* Number of FAC frames until the acquisition is activated in case a signal
    was successfully decoded */
-#define	NUM_FAC_FRA_U_ACQ_WITH			12
+#define	NUM_FAC_FRA_U_ACQ_WITH			4
 
 /* Number of OFDM symbols until the acquisition is activated in case no signal
    could be decoded after previous acquisition try */
@@ -267,9 +267,9 @@ protected:
 
 	/* Buffers */
 	CSingleBuffer<_REAL>	RecDataBuf;
-	CCyclicBuffer<_REAL>	FreqSyncAcqBuf;
 	CCyclicBuffer<_REAL>	InpResBuf;
-	CSingleBuffer<_REAL>	TimeSyncBuf;
+	CCyclicBuffer<_COMPLEX>	FreqSyncAcqBuf;
+	CSingleBuffer<_COMPLEX>	TimeSyncBuf;
 	CSingleBuffer<_COMPLEX>	OFDMDemodBuf;
 	CSingleBuffer<_COMPLEX>	SyncUsingPilBuf;
 	CSingleBuffer<CEquSig>	ChanEstBuf;

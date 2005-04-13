@@ -115,14 +115,14 @@ default: /* Other types like ST_BITERROR or ST_SYNC_PARAM */
 		   type of input buffers */
 		DataConvChanResam.ProcessData(Param, RecDataBuf, ChanResInBuf);
 
-		/* Frequency synchronization acquisition */
-		FreqSyncAcq.ProcessData(Param, ChanResInBuf, FreqSyncAcqBuf);
-
 		/* Resample input DRM-stream */
-		InputResample.ProcessData(Param, FreqSyncAcqBuf, InpResBuf);
+		InputResample.ProcessData(Param, ChanResInBuf, InpResBuf);
+
+		/* Frequency synchronization acquisition */
+		FreqSyncAcq.ProcessData(Param, InpResBuf, FreqSyncAcqBuf);
 
 		/* Time synchronization */
-		TimeSync.ProcessData(Param, InpResBuf, TimeSyncBuf);
+		TimeSync.ProcessData(Param, FreqSyncAcqBuf, TimeSyncBuf);
 
 		/* OFDM-demodulation */
 		OFDMDemodulation.ProcessData(Param, TimeSyncBuf, OFDMDemodBuf);
@@ -231,6 +231,39 @@ void CDRMSimulation::Init()
 		TimeSync.SetFilterTaps(Param.rFreqOffsetAcqui);
 		break;
 	}
+
+
+	/* Clear all buffers ---------------------------------------------------- */
+	/* The buffers must be cleared in case there is some data left in the
+	   buffers from the last simulation (with, e.g., different SNR) */
+	DataBuf.Clear();
+	MLCEncBuf.Clear();
+	IntlBuf.Clear();
+	GenFACDataBuf.Clear();
+	FACMapBuf.Clear();
+	GenSDCDataBuf.Clear();
+	SDCMapBuf.Clear();
+	CarMapBuf.Clear();
+	OFDMModBuf.Clear();
+	OFDMDemodBufChan2.Clear();
+	ChanEstInBufSim.Clear();
+	ChanEstOutBufChan.Clear();
+	RecDataBuf.Clear();
+	ChanResInBuf.Clear();
+	InpResBuf.Clear();
+	FreqSyncAcqBuf.Clear();
+	TimeSyncBuf.Clear();
+	OFDMDemodBuf.Clear();
+	SyncUsingPilBuf.Clear();
+	ChanEstBuf.Clear();
+	MSCCarDemapBuf.Clear();
+	FACCarDemapBuf.Clear();
+	SDCCarDemapBuf.Clear();
+	DeintlBuf.Clear();
+	FACDecBuf.Clear();
+	SDCDecBuf.Clear();
+	MSCMLCDecBuf.Clear();
+
 
 	/* We only want to simulate tracking performance ------------------------ */
 	TimeSync.StopTimingAcqu();

@@ -73,48 +73,45 @@ protected:
 	/* Parameters */
 	CParameter				Param;
 	
+
+	/* Buffers -------------------------------------------------------------- */
+	/* If you want to add a new buffer, make sure that it is cleared in the
+	   "Init()" routine! */
 	/* Transmitter buffers */
-	CSingleBuffer<_BINARY>	DataBuf;
-	CSingleBuffer<_COMPLEX>	MLCEncBuf;
-	CCyclicBuffer<_COMPLEX>	IntlBuf;
-
-	CSingleBuffer<_BINARY>	GenFACDataBuf;
-	CCyclicBuffer<_COMPLEX>	FACMapBuf;
-
-	CSingleBuffer<_BINARY>	GenSDCDataBuf;
-	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
-	
-	CSingleBuffer<_COMPLEX>	CarMapBuf;
-	CSingleBuffer<_COMPLEX>	OFDMModBuf;
-
+	CSingleBuffer<_BINARY>				DataBuf;
+	CSingleBuffer<_COMPLEX>				MLCEncBuf;
+	CCyclicBuffer<_COMPLEX>				IntlBuf;
+	CSingleBuffer<_BINARY>				GenFACDataBuf;
+	CCyclicBuffer<_COMPLEX>				FACMapBuf;
+	CSingleBuffer<_BINARY>				GenSDCDataBuf;
+	CCyclicBuffer<_COMPLEX>				SDCMapBuf;
+	CSingleBuffer<_COMPLEX>				CarMapBuf;
+	CSingleBuffer<_COMPLEX>				OFDMModBuf;
 
 	/* Simulation */
 	CCyclicBuffer<CChanSimDataDemod>	OFDMDemodBufChan2;
-
 	CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
 	CSingleBuffer<CChanSimDataDemod>	ChanEstOutBufChan;
-
 	CSingleBuffer<CChanSimDataMod>		RecDataBuf;
 	CSingleBuffer<_REAL>				ChanResInBuf;
 
-
 	/* Receiver buffers */
-	CSingleBuffer<_REAL>	FreqSyncAcqBuf;
-	CCyclicBuffer<_REAL>	InpResBuf;
-	CSingleBuffer<_REAL>	TimeSyncBuf;
-	CSingleBuffer<_COMPLEX>	OFDMDemodBuf;
-	CSingleBuffer<_COMPLEX>	SyncUsingPilBuf;
-	CSingleBuffer<CEquSig>	ChanEstBuf;
-	CCyclicBuffer<CEquSig>	MSCCarDemapBuf;
-	CCyclicBuffer<CEquSig>	FACCarDemapBuf;
-	CCyclicBuffer<CEquSig>	SDCCarDemapBuf;
-	CSingleBuffer<CEquSig>	DeintlBuf;
-	CSingleBuffer<_BINARY>	FACDecBuf;
-	CSingleBuffer<_BINARY>	SDCDecBuf;
-	CSingleBuffer<_BINARY>	MSCMLCDecBuf;
+	CCyclicBuffer<_REAL>				InpResBuf;
+	CSingleBuffer<_COMPLEX>				FreqSyncAcqBuf;
+	CSingleBuffer<_COMPLEX>				TimeSyncBuf;
+	CSingleBuffer<_COMPLEX>				OFDMDemodBuf;
+	CSingleBuffer<_COMPLEX>				SyncUsingPilBuf;
+	CSingleBuffer<CEquSig>				ChanEstBuf;
+	CCyclicBuffer<CEquSig>				MSCCarDemapBuf;
+	CCyclicBuffer<CEquSig>				FACCarDemapBuf;
+	CCyclicBuffer<CEquSig>				SDCCarDemapBuf;
+	CSingleBuffer<CEquSig>				DeintlBuf;
+	CSingleBuffer<_BINARY>				FACDecBuf;
+	CSingleBuffer<_BINARY>				SDCDecBuf;
+	CSingleBuffer<_BINARY>				MSCMLCDecBuf;
 
 
-
+	/* Modules -------------------------------------------------------------- */
 	/* Transmitter modules */
 	CGenSimData				GenSimData;			
 

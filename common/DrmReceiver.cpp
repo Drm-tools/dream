@@ -312,6 +312,11 @@ void CDRMReceiver::InitReceiverMode()
 	/* Init all modules */
 	SetInStartMode();
 
+	/* Reset audio cyclic-buffer since AM mode and DRM mode use the same
+	   buffer. When init is called or modes are switched, the buffer could
+	   have some data left which lead to overrun */
+	AudSoDecBuf.Clear();
+
 	/* Reset new mode flag */
 	eNewReceiverMode = RM_NONE;
 }
@@ -554,6 +559,7 @@ void CDRMReceiver::InitsForWaveMode()
 void CDRMReceiver::InitsForSpectrumOccup()
 {
 	/* Set init flags */
+	FreqSyncAcq.SetInitFlag(); // Because of bandpass filter
 	OFDMDemodulation.SetInitFlag();
 	SyncUsingPil.SetInitFlag();
 	ChannelEstimation.SetInitFlag();
