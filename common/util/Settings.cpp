@@ -75,7 +75,7 @@ void CSettings::ReadIniFile()
 
 	/* Bandpass filter flag */
 	if (GetFlagIniSet(ini, "Receiver", "filter", bValue) == TRUE)
-		pDRMRec->GetOFDMDemod()->SetRecFilter(bValue);
+		pDRMRec->GetFreqSyncAcq()->SetRecFilter(bValue);
 
 	/* Modified metrics flag */
 	if (GetFlagIniSet(ini, "Receiver", "modmetric", bValue) == TRUE)
@@ -254,7 +254,7 @@ void CSettings::WriteIniFile()
 
 	/* Bandpass filter flag */
 	SetFlagIniSet(ini, "Receiver", "filter",
-		pDRMRec->GetOFDMDemod()->GetRecFilter());
+		pDRMRec->GetFreqSyncAcq()->GetRecFilter());
 
 	/* Modified metrics flag */
 	SetFlagIniSet(ini, "Receiver", "modmetric",
@@ -491,7 +491,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		/* Bandpass filter flag --------------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-F", "--filter") == TRUE)
 		{
-			pDRMRec->GetOFDMDemod()->SetRecFilter(TRUE);
+			pDRMRec->GetFreqSyncAcq()->SetRecFilter(TRUE);
 			continue;
 		}
 
