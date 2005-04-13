@@ -32,6 +32,7 @@
 #include "../Parameter.h"
 #include "../Modul.h"
 #include "../matlib/Matlib.h"
+#include "../util/Utilities.h"
 
 #ifdef HAVE_DRFFTW_H
 # include <drfftw.h>
@@ -44,7 +45,7 @@
 /* Bound for peak detection between filtered signal (in frequency direction) 
    and the unfiltered signal. Define different bounds for different relative
    search window sizes */
-#define PEAK_BOUND_FILT2SIGNAL_1		((CReal) 1.5)
+#define PEAK_BOUND_FILT2SIGNAL_1		((CReal) 1.7)
 #define PEAK_BOUND_FILT2SIGNAL_0_042	((CReal) 1.0)
 
 /* This value MUST BE AT LEAST 2, because otherwise we would get an overrun
@@ -55,26 +56,25 @@
 # define NUM_BLOCKS_4_FREQ_ACQU			5
 #endif
 
-/* Number of blocks before using the average of input spectrum */
-#define NUM_BLOCKS_BEFORE_US_AV			10
+/* Number of block used for averaging */
+#define NUM_BLOCKS_USED_FOR_AV			3
 
-/* The average symbol duration of all possible robustness modes is 22.5 ms. A
-   timeout of approx. 2 seconds corresponds from that to 100 */
-#define AVERAGE_TIME_OUT_NUMBER			100
+/* Lambda for IIR filter for estimating noise floor in frequency domain */
+#define LAMBDA_FREQ_IIR_FILT			((CReal) 0.9)
 
 /* Ratio between highest and second highest peak at the frequency pilot
    positions in the PSD estimation (after peak detection) */
-#define MAX_RAT_PEAKS_AT_PIL_POS		2 /* 3 dB */
+#define MAX_RAT_PEAKS_AT_PIL_POS		1.5
 
 
 /* Classes ********************************************************************/
-class CFreqSyncAcq : public CReceiverModul<_REAL, _REAL>
+class CFreqSyncAcq : public CReceiverModul<_REAL, _COMPLEX>
 {
 public:
 	CFreqSyncAcq() : bSyncInput(FALSE), bAquisition(FALSE), 
 		rWinSize((_REAL) SOUNDCRD_SAMPLE_RATE / 2),
 		veciTableFreqPilots(3), /* 3 freqency pilots */
-		rCenterFreq((_REAL) SOUNDCRD_SAMPLE_RATE / 4) {}
+		rCenterFreq((_REAL) SOUNDCRD_SAMPLE_RATE / 4), bUseRecFilter(FALSE) {}
 	virtual ~CFreqSyncAcq() {}
 
 	void SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize);
@@ -82,6 +82,9 @@ public:
 	void StartAcquisition();
 	void StopAcquisition() {bAquisition = FALSE;}
 	_BOOLEAN GetAcquisition() {return bAquisition;}
+
+	void SetRecFilter(const _BOOLEAN bNewF) {bUseRecFilter = bNewF;}
+	_BOOLEAN GetRecFilter() {return bUseRecFilter;}
 
 	/* To set the module up for synchronized DRM input data stream */
 	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
@@ -93,8 +96,10 @@ protected:
 	CFftPlans					FftPlan;
 	CRealVector					vecrFFTInput;
 	CComplexVector				veccFFTOutput;
+	CRealVector					vecrHammingWin;
 
 	int							iTotalBufferSize;
+	int							iHistBufSize;
 
 	int							iFFTSize;
 
@@ -111,16 +116,18 @@ protected:
 	_REAL						rPeakBoundFiltToSig;
 
 	CRealVector					vecrPSDPilCor;
-	CRealVector					vecrPSD;
 	int							iHalfBuffer;
 	int							iSearchWinSize;
 	CRealVector					vecrFiltResLR;
 	CRealVector					vecrFiltResRL;
 	CRealVector					vecrFiltRes;
 	CVector<int>				veciPeakIndex;
-	int							iAverageCounter;
 
-	int							iAverTimeOutCnt;
+	_COMPLEX					cCurExp;
+	_REAL						rInternIFNorm;
+
+	CDRMBandpassFilt			BPFilter;
+	_BOOLEAN					bUseRecFilter;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);
