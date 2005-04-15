@@ -477,23 +477,23 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 					/* Real part -------------------------------------------- */
 #ifdef USE_MAX_LOG_MAP
-				vecMetric[k].rTow0 =
-					Minimum4((*pcInSymb)[i].cSig.real(), 
-					rTableQAM64SM[BI_000 /* [0 0 0] */][0],
-					rTableQAM64SM[BI_100 /* [1 0 0] */][0],
-					rTableQAM64SM[BI_001 /* [0 0 1] */][0],
-					rTableQAM64SM[BI_101 /* [1 0 1] */][0],
-					(*pcInSymb)[i].rChan,
-					vecSubsetDef1[k]);
+					vecMetric[k].rTow0 =
+						Minimum4((*pcInSymb)[i].cSig.real(), 
+						rTableQAM64SM[BI_000 /* [0 0 0] */][0],
+						rTableQAM64SM[BI_100 /* [1 0 0] */][0],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][0],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][0],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k]);
 
-				vecMetric[k].rTow1 =
-					Minimum4((*pcInSymb)[i].cSig.real(),
-					rTableQAM64SM[BI_010 /* [0 1 0] */][0], 
-					rTableQAM64SM[BI_110 /* [1 1 0] */][0], 
-					rTableQAM64SM[BI_011 /* [0 1 1] */][0], 
-					rTableQAM64SM[BI_111 /* [1 1 1] */][0],
-					(*pcInSymb)[i].rChan,
-					vecSubsetDef1[k]);
+					vecMetric[k].rTow1 =
+						Minimum4((*pcInSymb)[i].cSig.real(),
+						rTableQAM64SM[BI_010 /* [0 1 0] */][0], 
+						rTableQAM64SM[BI_110 /* [1 1 0] */][0], 
+						rTableQAM64SM[BI_011 /* [0 1 1] */][0], 
+						rTableQAM64SM[BI_111 /* [1 1 1] */][0],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k]);
 #else
 					iTabInd0 = ((ExtractBit(vecSubsetDef1[k]) & 1) << 2);
 					vecMetric[k].rTow0 =
@@ -512,23 +512,23 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 
 					/* Imaginary part --------------------------------------- */
 #ifdef USE_MAX_LOG_MAP
-				vecMetric[k + 1].rTow0 =
-					Minimum4((*pcInSymb)[i].cSig.imag(), 
-					rTableQAM64SM[BI_000 /* [0 0 0] */][1],
-					rTableQAM64SM[BI_100 /* [1 0 0] */][1],
-					rTableQAM64SM[BI_001 /* [0 0 1] */][1],
-					rTableQAM64SM[BI_101 /* [1 0 1] */][1],
-					(*pcInSymb)[i].rChan,
-					vecSubsetDef1[k + 1]);
+					vecMetric[k + 1].rTow0 =
+						Minimum4((*pcInSymb)[i].cSig.imag(), 
+						rTableQAM64SM[BI_000 /* [0 0 0] */][1],
+						rTableQAM64SM[BI_100 /* [1 0 0] */][1],
+						rTableQAM64SM[BI_001 /* [0 0 1] */][1],
+						rTableQAM64SM[BI_101 /* [1 0 1] */][1],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k + 1]);
 
-				vecMetric[k + 1].rTow1 =
-					Minimum4((*pcInSymb)[i].cSig.imag(),
-					rTableQAM64SM[BI_010 /* [0 1 0] */][1], 
-					rTableQAM64SM[BI_110 /* [1 1 0] */][1], 
-					rTableQAM64SM[BI_011 /* [0 1 1] */][1], 
-					rTableQAM64SM[BI_111 /* [1 1 1] */][1],
-					(*pcInSymb)[i].rChan,
-					vecSubsetDef1[k + 1]);
+					vecMetric[k + 1].rTow1 =
+						Minimum4((*pcInSymb)[i].cSig.imag(),
+						rTableQAM64SM[BI_010 /* [0 1 0] */][1], 
+						rTableQAM64SM[BI_110 /* [1 1 0] */][1], 
+						rTableQAM64SM[BI_011 /* [0 1 1] */][1], 
+						rTableQAM64SM[BI_111 /* [1 1 1] */][1],
+						(*pcInSymb)[i].rChan,
+						vecSubsetDef1[k + 1]);
 #else
 					iTabInd0 = ((ExtractBit(vecSubsetDef1[k + 1]) & 1) << 2);
 					vecMetric[k + 1].rTow0 =
@@ -1045,15 +1045,31 @@ void CMLCMetric::CalculateMetric(CVector<CEquSig>* pcInSymb,
 	}
 
 #ifdef USE_ERASURE_FOR_FASTER_ACQ
-	for (i = 0; i < iInputBlockSize; i++)
+	/* Take care of special case with "CS_3_HMMIX" */
+	if (eMapType != CParameter::CS_3_HMMIX)
 	{
-		/* If input symbol is erasure, reset metrics to zero */
-		if ((*pcInSymb)[i].rChan == ERASURE_TAG_VALUE)
+		for (i = 0; i < iInputBlockSize; i++)
 		{
-			vecMetric[2 * i].rTow0 = (_REAL) 0.0;
-			vecMetric[2 * i].rTow1 = (_REAL) 0.0;
-			vecMetric[2 * i + 1].rTow0 = (_REAL) 0.0;
-			vecMetric[2 * i + 1].rTow1 = (_REAL) 0.0;
+			/* If input symbol is erasure, reset metrics to zero */
+			if ((*pcInSymb)[i].rChan == ERASURE_TAG_VALUE)
+			{
+				vecMetric[2 * i].rTow0 = (_REAL) 0.0;
+				vecMetric[2 * i].rTow1 = (_REAL) 0.0;
+				vecMetric[2 * i + 1].rTow0 = (_REAL) 0.0;
+				vecMetric[2 * i + 1].rTow1 = (_REAL) 0.0;
+			}
+		}
+	}
+	else
+	{
+		for (i = 0; i < iInputBlockSize; i++)
+		{
+			/* If input symbol is erasure, reset metrics to zero */
+			if ((*pcInSymb)[i].rChan == ERASURE_TAG_VALUE)
+			{
+				vecMetric[i].rTow0 = (_REAL) 0.0;
+				vecMetric[i].rTow1 = (_REAL) 0.0;
+			}
 		}
 	}
 #endif
