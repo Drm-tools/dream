@@ -60,7 +60,7 @@
 /* Definitions ****************************************************************/
 /* Number of FAC frames until the acquisition is activated in case a signal
    was successfully decoded */
-#define	NUM_FAC_FRA_U_ACQ_WITH			4
+#define	NUM_FAC_FRA_U_ACQ_WITH			10
 
 /* Number of OFDM symbols until the acquisition is activated in case no signal
    could be decoded after previous acquisition try */
