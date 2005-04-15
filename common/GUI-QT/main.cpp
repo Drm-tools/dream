@@ -116,7 +116,7 @@ try
 		app.installTranslator(&translator);
 
 #ifdef _WIN32
-	/* Set priority call for this application */
+	/* Set priority class for this application */
 	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
 	/* Low priority for GUI thread */
