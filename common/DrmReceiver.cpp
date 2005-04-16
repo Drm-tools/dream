@@ -84,24 +84,6 @@ void CDRMReceiver::Run()
 					FreqSyncAcqBuf))
 				{
 					bEnoughData = TRUE;
-
-					if (FreqSyncAcq.GetAcquisition() == FALSE)
-					{
-						/* This flag ensures that the following functions are
-						   called only once after frequency acquisition was
-						   done */
-						if (bWasFreqAcqu == TRUE)
-						{
-							/* Frequency acquisition is done, now the filter for
-							   guard-interval correlation can be designed */
-							TimeSync.
-								SetFilterTaps(ReceiverParam.rFreqOffsetAcqui);
-
-							bWasFreqAcqu = FALSE;
-						}
-					}
-					else
-						bWasFreqAcqu = TRUE;
 				}
 
 				/* Time synchronization ------------------------------------- */
@@ -364,10 +346,6 @@ void CDRMReceiver::SetInStartMode()
 
 	/* Set flag for receiver state */
 	eReceiverState = RS_ACQUISITION;
-
-	/* This flag is to ensure that some functions are called only once
-	   after frequency acquisition values was done */
-	bWasFreqAcqu = TRUE;
 
 	/* Reset counters for acquisition decision, "good signal" and delayed
 	   tracking mode counter */

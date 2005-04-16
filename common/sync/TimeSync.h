@@ -82,27 +82,15 @@ static float* fHilLPProt =				fHilLPProt5;
 class CTimeSync : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
-	CTimeSync() : iTimeSyncPos(0), bSyncInput(FALSE), bTimingAcqu(FALSE),
-		bAcqWasActive(FALSE), bRobModAcqu(FALSE),
-		iLengthIntermCRes(NUM_ROBUSTNESS_MODES),
-		iPosInIntermCResBuf(NUM_ROBUSTNESS_MODES),
-		iLengthOverlap(NUM_ROBUSTNESS_MODES),
-		iLenUsefPart(NUM_ROBUSTNESS_MODES),
-		iLenGuardInt(NUM_ROBUSTNESS_MODES),
-		cGuardCorr(NUM_ROBUSTNESS_MODES),
-		rGuardPow(NUM_ROBUSTNESS_MODES),
-		cGuardCorrBlock(NUM_ROBUSTNESS_MODES),
-		rGuardPowBlock(NUM_ROBUSTNESS_MODES),
-		rLambdaCoAv((CReal) 1.0) {}
+	CTimeSync();
 	virtual ~CTimeSync() {}
 
 	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
+	void SetSyncInput(const _BOOLEAN bNewS) {bSyncInput = bNewS;}
 
 	void StartAcquisition();
 	void StopTimingAcqu() {bTimingAcqu = FALSE;}
 	void StopRMDetAcqu() {bRobModAcqu = FALSE;}
-	void SetFilterTaps(CReal rNewOffsetNorm);
 
 protected:
 	int							iCorrCounter;
@@ -175,8 +163,9 @@ protected:
 	CReal						rNormConstFOE;
 #endif
 
-	int GetIndFromRMode(ERobMode eNewMode);
-	ERobMode GetRModeFromInd(int iNewInd);
+	int			GetIndFromRMode(ERobMode eNewMode);
+	ERobMode	GetRModeFromInd(int iNewInd);
+	void		SetFilterTaps(const CReal rNewOffsetNorm);
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

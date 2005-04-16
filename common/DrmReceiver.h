@@ -89,7 +89,7 @@ public:
 
 
 	CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
-		iGoodSignCnt(0), bWasFreqAcqu(TRUE), bDoInitRun(FALSE),
+		iGoodSignCnt(0), bDoInitRun(FALSE),
 		eReceiverMode(RM_DRM), 	eNewReceiverMode(RM_NONE),
 		ReceiveData(&SoundInterface), WriteData(&SoundInterface),
 		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0),
@@ -299,7 +299,6 @@ protected:
 	CMDI					MDI;
 #endif
 
-	_BOOLEAN				bWasFreqAcqu;
 	_BOOLEAN				bDoInitRun;
 
 	_REAL					rInitResampleOffset;

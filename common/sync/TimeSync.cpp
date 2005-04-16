@@ -763,7 +763,7 @@ void CTimeSync::StartAcquisition()
 	iCorrAvInd = 0;
 }
 
-void CTimeSync::SetFilterTaps(CReal rNewOffsetNorm)
+void CTimeSync::SetFilterTaps(const CReal rNewOffsetNorm)
 {
 #ifndef USE_10_KHZ_HILBFILT
 	/* The filter should be on the right of the DC carrier in 5 kHz mode */
@@ -780,6 +780,21 @@ void CTimeSync::SetFilterTaps(CReal rNewOffsetNorm)
 
 	/* Init state vector for filtering with zeros */
 	cvecZ.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
+}
+
+CTimeSync::CTimeSync() : iTimeSyncPos(0), bSyncInput(FALSE), bTimingAcqu(FALSE),
+	bAcqWasActive(FALSE), bRobModAcqu(FALSE),
+	iLengthIntermCRes(NUM_ROBUSTNESS_MODES),
+	iPosInIntermCResBuf(NUM_ROBUSTNESS_MODES),
+	iLengthOverlap(NUM_ROBUSTNESS_MODES), iLenUsefPart(NUM_ROBUSTNESS_MODES),
+	iLenGuardInt(NUM_ROBUSTNESS_MODES), cGuardCorr(NUM_ROBUSTNESS_MODES),
+	rGuardPow(NUM_ROBUSTNESS_MODES), cGuardCorrBlock(NUM_ROBUSTNESS_MODES),
+	rGuardPowBlock(NUM_ROBUSTNESS_MODES), rLambdaCoAv((CReal) 1.0)
+{
+	/* Init Hilbert filter. Since the frequency offset correction was
+	   done in the previous module, the offset for the filter is
+	   always "VIRTUAL_INTERMED_FREQ" */
+	SetFilterTaps((_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE);
 }
 
 int CTimeSync::GetIndFromRMode(ERobMode eNewMode)
