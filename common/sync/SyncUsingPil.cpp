@@ -225,6 +225,11 @@ void CSyncUsingPil::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Save "old" frequency pilots for next symbol. Special treatment
 			   for robustness mode D (carriers 7 and 21) necessary 
 			   (See 8.4.2.2) */
+
+// TODO: take care of initialization phase: do not start using estimates until
+// the first "old pilots" were stored. Also, an "initial frequecy offset
+// estimate" should be made and rFreqOffsetTrack should be set to this value!
+
 			if ((ReceiverParam.GetWaveMode() == RM_ROBUSTNESS_MODE_D) &&
 				(i < 2))
 			{

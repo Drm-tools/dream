@@ -69,7 +69,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		   the timing and we must assume the worst-case, therefore use only
 		   from DC to 4.5 kHz. If the macro "USE_10_KHZ_HILBFILT" is defined,
 		   a bandwith of approx. 10 kHz is used. In this case, we have better
-		   performance with the most probabale 10 kHz mode but may have worse
+		   performance with the most probable 10 kHz mode but may have worse
 		   performance with the 4.5 or 5 kHz modes (for the acquisition) */
 
 		/* The FIR filter intermediate buffer must be adjusted to the new
