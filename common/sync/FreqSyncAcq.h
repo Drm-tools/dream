@@ -53,7 +53,7 @@
 #ifdef USE_FRQOFFS_TRACK_GUARDCORR
 # define NUM_BLOCKS_4_FREQ_ACQU			30 /* Accuracy must be higher */
 #else
-# define NUM_BLOCKS_4_FREQ_ACQU			5
+# define NUM_BLOCKS_4_FREQ_ACQU			6
 #endif
 
 /* Number of block used for averaging */
