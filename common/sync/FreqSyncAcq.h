@@ -45,8 +45,8 @@
 /* Bound for peak detection between filtered signal (in frequency direction) 
    and the unfiltered signal. Define different bounds for different relative
    search window sizes */
-#define PEAK_BOUND_FILT2SIGNAL_1		((CReal) 1.7)
-#define PEAK_BOUND_FILT2SIGNAL_0_042	((CReal) 1.0)
+#define PEAK_BOUND_FILT2SIGNAL_1		((CReal) 9)
+#define PEAK_BOUND_FILT2SIGNAL_0_042	((CReal) 7)
 
 /* This value MUST BE AT LEAST 2, because otherwise we would get an overrun
    when we try to add a complete symbol to the buffer! */
@@ -60,11 +60,15 @@
 #define NUM_BLOCKS_USED_FOR_AV			3
 
 /* Lambda for IIR filter for estimating noise floor in frequency domain */
-#define LAMBDA_FREQ_IIR_FILT			((CReal) 0.95)
+#define LAMBDA_FREQ_IIR_FILT			((CReal) 0.87)
 
 /* Ratio between highest and second highest peak at the frequency pilot
    positions in the PSD estimation (after peak detection) */
-#define MAX_RAT_PEAKS_AT_PIL_POS		1.5
+#define MAX_RAT_PEAKS_AT_PIL_POS_HIGH	((CReal) 0.99)
+
+/* Ratio between highest and lowest peak at frequency pilot positions (see
+   above) */
+#define MAX_RAT_PEAKS_AT_PIL_POS_LOW	((CReal) 0.8)
 
 /* Number of blocks storing the squared magnitude of FFT used for
    averaging */

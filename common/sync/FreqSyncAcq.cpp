@@ -42,7 +42,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	int			iDiffTemp;
 	CReal		rLevDiff;
 	_BOOLEAN	bNoPeaksLeft;
-	CRealVector vecrPSDPilPoin(3);
+	CRealVector	vecrPSDPilPoin(3);
 
 	if (bAquisition == TRUE)
 	{
@@ -96,8 +96,63 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 						(j + 1) * iHalfBuffer);
 				}
 
-				/* Correlate known frequency-pilot structure with power
-				   spectrum */
+
+				/* -------------------------------------------------------------
+				   Low pass filtering over frequency axis. We do the filtering
+				   from both sides, once from right to left and then from left
+				   to the right side. Afterwards, these results are averaged
+				   This way, the noise floor is estimated */
+
+// TODO: Introduce offset to debar peak at DC frequency (cause by DC offset of
+// sound cards). Set "iStartFilt" in Init() routine!
+const int iStartFilt = 0; // <- no offset right now
+
+				/* Reset vectors for intermediate filtered result */
+				vecrFiltResLR.Reset((CReal) 0.0);
+				vecrFiltResRL.Reset((CReal) 0.0);
+
+				/* From the left edge to the right edge */
+				vecrFiltResLR[iStartFilt] = vecrPSD[iStartFilt];
+				for (i = iStartFilt + 1; i < iHalfBuffer; i++)
+				{
+					vecrFiltResLR[i] = (vecrFiltResLR[i - 1] - vecrPSD[i]) *
+						LAMBDA_FREQ_IIR_FILT + vecrPSD[i];
+				}
+
+				/* From the right edge to the left edge */
+				vecrFiltResRL[iHalfBuffer - 1] =
+					vecrPSD[iHalfBuffer - 1];
+				for (i = iHalfBuffer - 2; i >= iStartFilt; i--)
+				{
+					vecrFiltResRL[i] = (vecrFiltResRL[i + 1] - vecrPSD[i]) *
+						LAMBDA_FREQ_IIR_FILT + vecrPSD[i];
+				}
+
+				/* Average RL and LR filter outputs */
+				vecrFiltRes = (vecrFiltResLR + vecrFiltResRL) / 2;
+
+#ifdef _DEBUG_
+#if 0
+/* Stores curves for PSD estimation and filtering */
+FILE* pFile2 = fopen("test/freqacqFilt.dat", "w");
+for (i = 0; i < iHalfBuffer; i++)
+	fprintf(pFile2, "%e %e\n", vecrPSD[i], vecrFiltRes[i]);
+fclose(pFile2);
+#endif
+#endif
+
+				/* Equalize PSD by "noise floor estimate" */
+				for (i = 0; i < iHalfBuffer; i++)
+				{
+					/* Make sure we do not devide by zero */
+					if (vecrFiltRes[i] != 0.0)
+						vecrPSD[i] /= vecrFiltRes[i];
+					else
+						vecrPSD[i] = 0.0;
+				}
+
+				/* Correlate known frequency-pilot structure with equalized
+				   power spectrum */
 				for (i = 0; i < iSearchWinSize; i++)
 				{
 					vecrPSDPilCor[i] =
@@ -107,39 +162,13 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 				}
 
 
-				/* -------------------------------------------------------------
-				   Low pass filtering over frequency axis. We do the filtering 
-				   from both sides, once from right to left and then from left 
-				   to the right side. Afterwards, these results are averaged */
-				/* From the left edge to the right edge */
-				vecrFiltResLR[0] = vecrPSDPilCor[0];
-				for (i = 1; i < iSearchWinSize; i++)
-				{
-					vecrFiltResLR[i] =
-						(vecrFiltResLR[i - 1] - vecrPSDPilCor[i]) *
-						LAMBDA_FREQ_IIR_FILT + vecrPSDPilCor[i];
-				}
-
-				/* From the right edge to the left edge */
-				vecrFiltResRL[iSearchWinSize - 1] =
-					vecrPSDPilCor[iSearchWinSize - 1];
-				for (i = iSearchWinSize - 2; i >= 0; i--)
-				{
-					vecrFiltResRL[i] =
-						(vecrFiltResRL[i + 1] - vecrPSDPilCor[i]) *
-						LAMBDA_FREQ_IIR_FILT + vecrPSDPilCor[i];
-				}
-
-				/* Average RL and LR filter outputs */
-				vecrFiltRes = vecrFiltResLR + vecrFiltResRL;
-
-
-				/* Detect peaks by the distance to the filtered curve ------- */
+				/* Detect peaks --------------------------------------------- */
 				/* Get peak indices of detected peaks */
 				iNumDetPeaks = 0;
 				for (i = iStartDCSearch; i < iEndDCSearch; i++)
 				{
-					if (vecrPSDPilCor[i] / vecrFiltRes[i] > rPeakBoundFiltToSig)
+					/* Test peaks against a bound */
+					if (vecrPSDPilCor[i] > rPeakBoundFiltToSig)
 					{
 						veciPeakIndex[iNumDetPeaks] = i;
 						iNumDetPeaks++;
@@ -159,7 +188,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 					   correct places (positions of the desired pilots) */
 					for (i = 0; i < iNumDetPeaks; i++)
 					{
-						/* Fill the vector with the values at the desired 
+						/* Fill the vector with the values at the desired
 						   pilot positions */
 						vecrPSDPilPoin[0] =
 							vecrPSD[veciPeakIndex[i] + veciTableFreqPilots[0]];
@@ -173,9 +202,13 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 						vecrPSDPilPoin = Sort(vecrPSDPilPoin);
 
 						/* Debar peak, if it is much higher than second highest
-						   peak (most probably a sinusoid interferer) */
-						if (vecrPSDPilPoin[2] / vecrPSDPilPoin[1] >
-							MAX_RAT_PEAKS_AT_PIL_POS)
+						   peak (most probably a sinusoid interferer). The
+						   highest peak is stored at "vecrPSDPilPoin[2]". Also
+						   test for lowest peak */
+						if ((vecrPSDPilPoin[1] / vecrPSDPilPoin[2] <
+							MAX_RAT_PEAKS_AT_PIL_POS_HIGH) &&
+							(vecrPSDPilPoin[0] / vecrPSDPilPoin[2] <
+							MAX_RAT_PEAKS_AT_PIL_POS_LOW))
 						{
 							/* Reset "good-flag" */
 							vecbFlagVec[i] = 0;
@@ -184,8 +217,8 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 					/* Get maximum ------------------------------------------ */
-					/* First, get the first valid peak entry and init the 
-					   maximum with this value. We also detect, if a peak is 
+					/* First, get the first valid peak entry and init the
+					   maximum with this value. We also detect, if a peak is
 					   left */
 					bNoPeaksLeft = TRUE;
 					for (i = 0; i < iNumDetPeaks; i++)
@@ -221,18 +254,19 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 FILE* pFile1 = fopen("test/freqacq.dat", "w");
 int iPeakCnt = 0;
 for (i = 1; i < iSearchWinSize; i++) {
-_REAL rPeakMarker, rFinPM;
-if (iPeakCnt < iNumDetPeaks) {
-	if (i == veciPeakIndex[iPeakCnt]) {
-		rPeakMarker = vecrPSDPilCor[i];
-		if (vecbFlagVec[iPeakCnt] == 1) rFinPM = vecrPSDPilCor[i]; else rFinPM = 0;
-		iPeakCnt++;
-	} else {rPeakMarker = 0; rFinPM = 0;}
-} else {rPeakMarker = 0; rFinPM = 0;}
-fprintf(pFile1, "%e %e %e %e\n", vecrPSDPilCor[i], vecrFiltRes[i] / 2, rPeakMarker, rFinPM);
+	_REAL rPM, rFinPM; /* rPM: peak marker, rFinPM: final peak marker */
+	if (iPeakCnt < iNumDetPeaks) {
+		if (i == veciPeakIndex[iPeakCnt]) {
+			rPM = vecrPSDPilCor[i];
+			if (vecbFlagVec[iPeakCnt] == 1) rFinPM = vecrPSDPilCor[i]; else rFinPM = 0;
+			iPeakCnt++;
+		} else {rPM = 0; rFinPM = 0;}
+	} else {rPM = 0; rFinPM = 0;}
+	fprintf(pFile1, "%e %e %e\n", vecrPSDPilCor[i], rPM, rFinPM);
 }
 fclose(pFile1);
-// close all;load freqacq.dat;semilogy(freqacq(:,1:2));hold;plot(freqacq(:,3),'*y');plot(freqacq(:,4),'*k');
+// close all;load freqacq.dat;load freqacqFilt.dat;subplot(211),semilogy(freqacq(:,1));hold;plot(freqacq(:,2),'*y');plot(freqacq(:,3),'*k');subplot(212),semilogy(freqacqFilt)
+// close all;load freqacq.dat;semilogy(freqacq(:,1));hold;plot(freqacq(:,2),'*y');plot(freqacq(:,3),'*k');
 #endif
 
 
