@@ -56,34 +56,45 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 
 	/* "- 4": Four bits already used, "/ SIZEOF__BYTE": We add bytes, not bits,
 	   "- 2": 16 bits for CRC at the end */
-	for (int i = 0; i < (iUsefulBitsSDC - 4) / SIZEOF__BYTE - 2; i++)
+	const int iNumBytesForCRCCheck = (iUsefulBitsSDC - 4) / SIZEOF__BYTE - 2;
+	for (int i = 0; i < iNumBytesForCRCCheck; i++)
 		CRCObject.AddByte((_BYTE) (*pbiData).Separate(SIZEOF__BYTE));
 
 	if (CRCObject.CheckCRC((*pbiData).Separate(16)) == TRUE)
 	{
-		/* CRC-check successful, extract data from SDC-stream */
+		/* CRC-check successful, extract data from SDC-stream --------------- */
+		int			iLengthOfBody;
+		_BOOLEAN	bError = FALSE;
+
 		/* Reset separation function */
 		(*pbiData).ResetBitAccess();
 
-		/* SDC Header ------------------------------------------------------- */
 		/* AFS index */
 		/* Reconfiguration index (not used by this application) */
 		(*pbiData).Separate(4);
 
+		/* Init bit count and total number of bits for body */
+		int			iBitsConsumed = 4; /* 4 bits for AFS index */
+		const int	iTotNumBitsWithoutCRC = iUsefulBitsSDC - 16;
+
 		/* Length of the body, excluding the initial 4 bits ("- 4"),
 		   measured in bytes ("/ 8").
 		   With this condition also the error code of the "Separate" function
-		   is checked! (implicitly) */
-		_BOOLEAN	bError = FALSE;
-		int			iLengthOfBody;
-
+		   is checked! (implicitly)
+		   Check for: -end tag, -error, -no more data available */
 		while (((iLengthOfBody = (*pbiData).Separate(7)) != 0) &&
-			(bError == FALSE))
+			(bError == FALSE) && (iBitsConsumed < iTotNumBitsWithoutCRC))
 		{
 			/* Version flag (not used in this implementation) */
 			(*pbiData).Separate(1);
 
 			/* Data entity type */
+			/* First calculate number of bits for this entity ("+ 4" because of:
+			   "The body of the data entities shall be at least 4 bits long. The
+			   length of the body, excluding the initial 4 bits, shall be
+			   signalled by the header") */
+			const int iNumBitsEntity = iLengthOfBody * 8 + 4;
+
 			/* Call the routine for the signalled type */
 			switch ((*pbiData).Separate(4))
 			{
@@ -114,12 +125,13 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 
 			default:
 				/* This type is not supported, delete all bits of this entity
-				   from the queue ("+ 4" because of: "The body of the data
-				   entities shall be at least 4 bits long. The length of the
-				   body, excluding the initial 4 bits, shall be signalled by the
-				   header") */
-				(*pbiData).Separate(iLengthOfBody * 8 + 4);
+				   from the queue */
+				(*pbiData).Separate(iNumBitsEntity);
 			}
+
+			/* Count number of bits consumed (7 for length, 1 for version flag,
+			   4 for type = 12 plus actual entitiy body data) */
+			iBitsConsumed += 12 + iNumBitsEntity;
 		}
 
 		/* If error was detected, return proper error code */
