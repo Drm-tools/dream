@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#if !defined(AFX_SOUNDIN_H__9518A621345F78_11D3_8C0D_EEBF182CF549__INCLUDED_)
-#define AFX_SOUNDIN_H__9518A621345F78_11D3_8C0D_EEBF182CF549__INCLUDED_
+#ifndef _SOUND_H
+#define _SOUND_H
 
 #include "../../common/GlobalDefinitions.h"
 #include "../../common/Vector.h"
@@ -93,4 +93,4 @@ protected:
 };
 
 
-#endif // !defined(AFX_SOUNDIN_H__9518A621345F78_11D3_8C0D_EEBF182CF549__INCLUDED_)
+#endif

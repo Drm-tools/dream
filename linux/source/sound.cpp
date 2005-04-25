@@ -488,8 +488,9 @@ public:
 					SoundBufR.Put( size * NUM_IN_OUT_CHANNELS );
 					SoundBufR.unlock();
 				}
-			} else
-				usleep( 1000 );
+			} else {
+				msleep( 1 );
+			}
 		}
 		qDebug("Rec Thread stopped");
 	}
@@ -558,7 +559,7 @@ class PlayThread : public QThread {
 public:
 	virtual void run() {
 	
-		while (SoundBufP.keep_running) {
+		while ( SoundBufP.keep_running ) {
 			int fill;
 
 			SoundBufP.lock();
@@ -584,7 +585,7 @@ public:
 			} else {
 			
 				do {			
-					usleep( 1000 );
+					msleep( 1 );
 					
 					SoundBufP.lock();
 					fill = SoundBufP.GetFillLevel();
@@ -626,7 +627,7 @@ _BOOLEAN CSound::Write(CVector< _SAMPLE >& psData)
 
 	if ( bBlockingPlay ) {
 		// blocking write
-		while(1){
+		while( SoundBufP.keep_running ) {
 			SoundBufP.lock();
 			int fill = SOUNDBUFLEN - SoundBufP.GetFillLevel();
 			SoundBufP.unlock();
@@ -655,16 +656,20 @@ _BOOLEAN CSound::Write(CVector< _SAMPLE >& psData)
 }
 void CSound::Close()
 {
-	qDebug("stoprec");
+	qDebug("stoprec/play");
 	
 	// stop the recording and playback threads
 	
-	SoundBufR.keep_running = FALSE;
-	SoundBufP.keep_running = FALSE;
-
-	// wait 1sec max. for the threads to terminate
-	RecThread1.wait(1000);
-	PlayThread1.wait(1000);
+	if (RecThread1.running() ) {
+		SoundBufR.keep_running = FALSE;
+		// wait 1sec max. for the threads to terminate
+		RecThread1.wait(1000);
+	}
+	
+	if (PlayThread1.running() ) {
+		SoundBufP.keep_running = FALSE;
+		PlayThread1.wait(1000);
+	}
 	
 	close_HW();	
 }
