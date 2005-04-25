@@ -265,6 +265,9 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 		eSpectOccup = SO_3;
 	}
 
+	/* Store new value in reception log */
+	ReceptLog.SetRobMode(eNewWaveMode);
+
 	/* Apply changes only if new paramter differs from old one */
 	if (eRobustnessMode != eNewWaveMode)
 	{
@@ -417,6 +420,9 @@ void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
 	/* In case parameters have changed, set init flags */
 	if (bParamersHaveChanged == TRUE)
 		DRMReceiver.InitsForMSC();
+
+	/* Set new protection levels in reception log file */
+	ReceptLog.SetProtLev(MSCPrLe);
 }
 
 void CParameter::SetAudioParam(const int iShortID,
@@ -453,7 +459,6 @@ void CParameter::SetInterleaverDepth(const ESymIntMod eNewDepth)
 		/* Set init flags */
 		DRMReceiver.InitsForInterlDepth();
 	}
-
 }
 
 void CParameter::SetMSCCodingScheme(const ECodScheme eNewScheme)
@@ -465,6 +470,9 @@ void CParameter::SetMSCCodingScheme(const ECodScheme eNewScheme)
 		/* Set init flags */
 		DRMReceiver.InitsForMSCCodSche();
 	}
+
+	/* Set new coding scheme in reception log */
+	ReceptLog.SetMSCScheme(eNewScheme);
 }
 
 void CParameter::SetSDCCodingScheme(const ECodScheme eNewScheme)
@@ -705,6 +713,16 @@ void CParameter::CReceptLog::ResetLog(const _BOOLEAN bIsLong)
 	}
 }
 
+void CParameter::CReceptLog::ResetTransParams()
+{
+	/* Reset transmission parameters */
+	eCurMSCScheme = CParameter::CS_3_SM;
+	eCurRobMode = RM_NO_MODE_DETECTED;
+	CurProtLev.iPartA = 0;
+	CurProtLev.iPartB = 0;
+	CurProtLev.iHierarch = 0;
+}
+
 void CParameter::CReceptLog::SetSync(const _BOOLEAN bCRCOk)
 {
 	if (bLogActivated == TRUE)
@@ -880,12 +898,13 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 		{
 #ifdef _DEBUG_
 			/* In case of debug mode, use more paramters */
-			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, "
-				"MSC, AUDIO, AUDIOOK, DOPPLER, DELAY,  DC-FREQ, SAMRATEOFFS\n");
+			fprintf(pFile, "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    "
+				"SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY,  "
+				"DC-FREQ, SAMRATEOFFS\n");
 #else
 			/* The long version of log file has different header */
-			fprintf(pFile, " FREQ,       DATE,       TIME,    SNR, SYNC, FAC, "
-				"MSC, AUDIO, AUDIOOK, DOPPLER, DELAY\n");
+			fprintf(pFile, "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    "
+				"SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY\n");
 #endif
 		}
 
@@ -935,6 +954,7 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 
 			if (bIsLong == TRUE)
 			{
+				/* Log LONG ------------------------------------------------- */
 				int			iSyncInd, iFACInd, iMSCInd;
 				struct tm*	TimeNow;
 
@@ -967,13 +987,61 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 						rDoppler = (_REAL) 0.0;
 				}
 
+				/* Get robustness mode string */
+				char chRobMode;
+				switch (eCurRobMode)
+				{
+				case RM_ROBUSTNESS_MODE_A:
+					chRobMode = 'A';
+					break;
+
+				case RM_ROBUSTNESS_MODE_B:
+					chRobMode = 'B';
+					break;
+
+				case RM_ROBUSTNESS_MODE_C:
+					chRobMode = 'C';
+					break;
+
+				case RM_ROBUSTNESS_MODE_D:
+					chRobMode = 'D';
+					break;
+
+				case RM_NO_MODE_DETECTED:
+					chRobMode = 'X';
+					break;
+				}
+
+				/* Get MSC scheme */
+				int iCurMSCSc;
+				switch (eCurMSCScheme)
+				{
+				case CParameter::CS_3_SM:
+					iCurMSCSc = 0;
+					break;
+
+				case CParameter::CS_3_HMMIX:
+					iCurMSCSc = 1;
+					break;
+
+				case CParameter::CS_3_HMSYM:
+					iCurMSCSc = 2;
+					break;
+
+				case CParameter::CS_2_SM:
+					iCurMSCSc = 3;
+					break;
+				}
+
 #ifdef _DEBUG_
 				/* Some more parameters in debug mode */
 				fprintf(pFileLong,
-					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   "
-					"%1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f, %8.2f,       "
-					"%5.2f\n",
-					iFrequency,	TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
+					" %5d/%c%d%d%d%d        , %d-%02d-%02d, %02d:%02d:%02d.0, "
+					"%6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, "
+					"%5.2f, %8.2f,       %5.2f\n",
+					iFrequency,	chRobMode, iCurMSCSc, CurProtLev.iPartA,
+					CurProtLev.iPartB, CurProtLev.iHierarch,
+					TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
 					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
 					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
 					iNumCRCMSCLong, iNumCRCOkMSCLong,
@@ -983,9 +1051,12 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 #else
 				/* This data can be read by Microsoft Excel */
 				fprintf(pFileLong,
-					"%5d, %d-%02d-%02d, %02d:%02d:%02d.0, %6.2f,    %1d,   "
-					"%1d,   %1d,   %3d,     %3d,   %5.2f, %5.2f\n",
-					iFrequency,	TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
+					" %5d/%c%d%d%d%d        , %d-%02d-%02d, %02d:%02d:%02d.0, "
+					"%6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, "
+					"%5.2f\n",
+					iFrequency,	chRobMode, iCurMSCSc, CurProtLev.iPartA,
+					CurProtLev.iPartB, CurProtLev.iHierarch,
+					TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
 					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
 					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
 					iNumCRCMSCLong, iNumCRCOkMSCLong,
@@ -994,6 +1065,7 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 			}
 			else
 			{
+				/* Log SHORT ------------------------------------------------ */ 
 				int iAverageSNR, iTmpNumAAC;
 
 				/* Avoid division by zero */

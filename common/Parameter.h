@@ -384,6 +384,11 @@ public:
 		_BOOLEAN IsDelLogStart() {return bDelayedLogStart;}
 		int GetDelLogStart() {return iSecDelLogStart;}
 
+		void ResetTransParams();
+		void SetMSCScheme(const ECodScheme eNewMCS) {eCurMSCScheme = eNewMCS;}
+		void SetRobMode(const ERobMode eNewRM) {eCurRobMode = eNewRM;}
+		void SetProtLev(const CMSCProtLev eNPL) {CurProtLev = eNPL;}
+
 	protected:
 		void ResetLog(const _BOOLEAN bIsLong);
 		void CloseFile(FILE* pFile, const _BOOLEAN bIsLong);
@@ -405,6 +410,10 @@ public:
 		string			strLongitude;
 		_BOOLEAN		bDelayedLogStart;
 		int				iSecDelLogStart;
+
+		ERobMode		eCurRobMode;
+		ECodScheme		eCurMSCScheme;
+		CMSCProtLev		CurProtLev;
 
 		CMutex			Mutex;
 	} ReceptLog;

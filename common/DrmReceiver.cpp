@@ -474,6 +474,9 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	Param.rFreqOffsetTrack = (_REAL) 0.0;
 	Param.iTimingOffsTrack = 0;
 
+	/* Init reception log (log long) transmission parameters. TODO: better solution */
+	Param.ReceptLog.ResetTransParams();
+
 	/* Initialization of the modules */
 	InitsForAllModules();
 }

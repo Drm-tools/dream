@@ -898,6 +898,14 @@ void systemevalDlg::OnCheckWriteLog()
 		string strTemp = strAddText.latin1();
 		pDRMRec->GetParameters()->ReceptLog.SetAdditText(strTemp);
 
+		/* Set current transmission parameters. TDOD: better solution */
+		pDRMRec->GetParameters()->ReceptLog.
+			SetRobMode(pDRMRec->GetParameters()->GetWaveMode());
+		pDRMRec->GetParameters()->ReceptLog.
+			SetMSCScheme(pDRMRec->GetParameters()->eMSCCodingScheme);
+		pDRMRec->GetParameters()->ReceptLog.
+			SetProtLev(pDRMRec->GetParameters()->MSCPrLe);
+
 		/* Activate log file */
 		pDRMRec->GetParameters()->ReceptLog.SetLog(TRUE);
 	}
