@@ -130,6 +130,8 @@ protected:
 	_BOOLEAN					bRobModAcqu;
 	_BOOLEAN					bAcqWasActive;
 
+	int							iRobModInitCnt;
+
 	int							iSelectedMode;
 
 	CComplexVector				cvecZ;

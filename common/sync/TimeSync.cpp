@@ -328,47 +328,62 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 			/* Robustness mode detection ------------------------------------ */
 			if (bRobModAcqu == TRUE)
 			{
-				/* Correlation of guard-interval correlation with prepared
-				   cos-vector. Store highest peak */
-				rMaxValRMCorr = (CReal) 0.0;
-				for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
+				/* Start robustness mode detection not until the buffer is
+				   filled */
+				if (iRobModInitCnt > 1)
 				{
-					/* Correlation with symbol rate frequency (Correlations must
-					   be normalized to be comparable! ("/ iGuardSizeX")) */
-					rResMode[j] = Abs(Sum(vecrRMCorrBuffer[j] * vecrCos[j])) / 
-						iLenGuardInt[j];
-
-					/* Search for maximum */
-					if (rResMode[j] > rMaxValRMCorr)
+					/* Decrease counter */
+					iRobModInitCnt--;
+				}
+				else
+				{
+					/* Correlation of guard-interval correlation with prepared
+					   cos-vector. Store highest peak */
+					rMaxValRMCorr = (CReal) 0.0;
+					for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
 					{
-						rMaxValRMCorr = rResMode[j];
-						iDetectedRModeInd = j;
+						/* Correlation with symbol rate frequency (Correlations
+						   must be normalized to be comparable!
+						   ("/ iGuardSizeX")) */
+						rResMode[j] =
+							Abs(Sum(vecrRMCorrBuffer[j] * vecrCos[j])) /
+							iLenGuardInt[j];
+
+						/* Search for maximum */
+						if (rResMode[j] > rMaxValRMCorr)
+						{
+							rMaxValRMCorr = rResMode[j];
+							iDetectedRModeInd = j;
+						}
 					}
-				}
 
-				/* Get second highest peak */
-				rSecHighPeak = (CReal) 0.0;
-				for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
-				{
-					if ((rResMode[j] > rSecHighPeak) && (iDetectedRModeInd != j))
-						rSecHighPeak = rResMode[j];
-				}
-
-				/* Find out if we have a reliable measure
-				   (distance to next peak) */
-				if ((rMaxValRMCorr / rSecHighPeak) > THRESHOLD_RELI_MEASURE)
-				{
-					/* Reset aquisition flag for robustness mode detection */
-					bRobModAcqu = FALSE;
-
-					/* Set wave mode */
-					if (ReceiverParam.
-						SetWaveMode(GetRModeFromInd(iDetectedRModeInd)) == TRUE)
+					/* Get second highest peak */
+					rSecHighPeak = (CReal) 0.0;
+					for (j = 0; j < NUM_ROBUSTNESS_MODES; j++)
 					{
-						/* Reset output cyclic-buffer because wave mode has
-						   changed and the data written in the buffer is not
-						   valid anymore */
-						SetBufReset1();
+						if ((rResMode[j] > rSecHighPeak) &&
+							(iDetectedRModeInd != j))
+						{
+							rSecHighPeak = rResMode[j];
+						}
+					}
+
+					/* Find out if we have a reliable measure
+					   (distance to next peak) */
+					if ((rMaxValRMCorr / rSecHighPeak) > THRESHOLD_RELI_MEASURE)
+					{
+						/* Reset aquisition flag for robustness mode detection */
+						bRobModAcqu = FALSE;
+
+						/* Set wave mode */
+						if (ReceiverParam.
+							SetWaveMode(GetRModeFromInd(iDetectedRModeInd)) == TRUE)
+						{
+							/* Reset output cyclic-buffer because wave mode has
+							   changed and the data written in the buffer is not
+							   valid anymore */
+							SetBufReset1();
+						}
 					}
 				}
 			}
@@ -635,6 +650,10 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 	/* Size for robustness mode correlation buffer */
 	iRMCorrBufSize = (int) ((CReal) NUM_BLOCKS_FOR_RM_CORR * iDecSymBS
 		/ STEP_SIZE_GUARD_CORR);
+
+	/* Init init count for robustness mode detection (do not use the very first
+	   block) */
+	iRobModInitCnt = NUM_BLOCKS_FOR_RM_CORR + 1;
 
 	for (i = 0; i < NUM_ROBUSTNESS_MODES; i++)
 	{
