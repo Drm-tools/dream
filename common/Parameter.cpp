@@ -1033,14 +1033,29 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 					break;
 				}
 
+				/* Copy protection levels */
+				int iCurProtLevPartA = CurProtLev.iPartA;
+				int iCurProtLevPartB = CurProtLev.iPartB;
+				int iCurProtLevPartH = CurProtLev.iHierarch;
+
+				/* Only show mode if FAC CRC was ok */
+				if (iFACInd == 0)
+				{
+					chRobMode = 'X';
+					iCurMSCSc = 0;
+					iCurProtLevPartA = 0;
+					iCurProtLevPartB = 0;
+					iCurProtLevPartH = 0;
+				}
+
 #ifdef _DEBUG_
 				/* Some more parameters in debug mode */
 				fprintf(pFileLong,
 					" %5d/%c%d%d%d%d        , %d-%02d-%02d, %02d:%02d:%02d.0, "
 					"%6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, "
 					"%5.2f, %8.2f,       %5.2f\n",
-					iFrequency,	chRobMode, iCurMSCSc, CurProtLev.iPartA,
-					CurProtLev.iPartB, CurProtLev.iHierarch,
+					iFrequency,	chRobMode, iCurMSCSc, iCurProtLevPartA,
+					iCurProtLevPartB, iCurProtLevPartH,
 					TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
 					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
 					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
@@ -1054,8 +1069,8 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 					" %5d/%c%d%d%d%d        , %d-%02d-%02d, %02d:%02d:%02d.0, "
 					"%6.2f,    %1d,   %1d,   %1d,   %3d,     %3d,   %5.2f, "
 					"%5.2f\n",
-					iFrequency,	chRobMode, iCurMSCSc, CurProtLev.iPartA,
-					CurProtLev.iPartB, CurProtLev.iHierarch,
+					iFrequency,	chRobMode, iCurMSCSc, iCurProtLevPartA,
+					iCurProtLevPartB, iCurProtLevPartH,
 					TimeNow->tm_year + 1900, TimeNow->tm_mon + 1,
 					TimeNow->tm_mday, TimeNow->tm_hour, TimeNow->tm_min,
 					TimeNow->tm_sec, rCurSNR, iSyncInd, iFACInd, iMSCInd,
