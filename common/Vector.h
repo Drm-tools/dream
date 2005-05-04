@@ -52,7 +52,7 @@ public:
 		vector<TData>(static_cast<const vector<TData>&>(vecI)), 
 		iVectorSize(vecI.Size()), pData(begin()), iBitArrayCounter(0) {}
 
-	void Init(const int iNewSize);
+	virtual void Init(const int iNewSize);
 
 	/* Use this init to give all elements a defined value */
 	void Init(const int iNewSize, const TData tIniVal);
@@ -204,11 +204,10 @@ template<class TData> uint32_t CVector<TData>::Separate(const int iNumOfBits)
 template<class TData> class CShiftRegister : public CVector<TData>
 {
 public:
-	CShiftRegister() {}
+	CShiftRegister() : CVector<TData>() {}
 	CShiftRegister(const int iNeSi) : CVector<TData>(iNeSi) {}
 	CShiftRegister(const int iNeSi, const TData tInVa) :
 		CVector<TData>(iNeSi, tInVa) {}
-	virtual ~CShiftRegister() {}
 
 	/* Add one value at the beginning, shift the others to the right */
 	void AddBegin(const TData tNewD);
@@ -257,6 +256,43 @@ template<class TData> void CShiftRegister<TData>::AddEnd(const CVector<TData>& v
 	/* Add new block of data */
 	for (i = 0; i < iLen; i++)
 		pData[iBlockEnd++] = vectNewD[i];
+}
+
+
+/******************************************************************************\
+* CFIFO class (first in, first out)                                            *
+\******************************************************************************/
+template<class TData> class CFIFO : public CVector<TData>
+{
+public:
+	CFIFO() : CVector<TData>(), iCurIdx(0) {}
+	CFIFO(const int iNeSi) : CVector<TData>(iNeSi), iCurIdx(0) {}
+	CFIFO(const int iNeSi, const TData tInVa) :
+		CVector<TData>(iNeSi, tInVa), iCurIdx(0) {}
+
+	void Add(const TData tNewD);
+	inline TData Get() {return pData[iCurIdx];}
+
+	virtual void Init(const int iNewSize);
+
+protected:
+	int iCurIdx;
+};
+
+template<class TData> void CFIFO<TData>::Init(const int iNewSize)
+{
+	iCurIdx = 0;
+	CVector<TData>::Init(iNewSize);
+}
+
+template<class TData> void CFIFO<TData>::Add(const TData tNewD)
+{
+	pData[iCurIdx] = tNewD;
+
+	/* Increment index */
+	iCurIdx++;
+	if (iCurIdx >= iVectorSize)
+		iCurIdx = 0;
 }
 
 
