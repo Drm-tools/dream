@@ -12,7 +12,7 @@
             <x>0</x>
             <y>0</y>
             <width>738</width>
-            <height>559</height>
+            <height>561</height>
         </rect>
     </property>
     <property stdset="1">
@@ -1483,7 +1483,7 @@
                             </property>
                             <property stdset="1">
                                 <name>title</name>
-                                <string>Log File, Save Data</string>
+                                <string>Log File, Audio</string>
                             </property>
                             <property stdset="1">
                                 <name>alignment</name>
@@ -1561,15 +1561,43 @@
                                     </hbox>
                                 </widget>
                                 <widget>
-                                    <class>QCheckBox</class>
+                                    <class>QLayoutWidget</class>
                                     <property stdset="1">
                                         <name>name</name>
-                                        <cstring>CheckBoxSaveAudioWave</cstring>
+                                        <cstring>Layout21</cstring>
                                     </property>
-                                    <property stdset="1">
-                                        <name>text</name>
-                                        <string>Save Audio as WAV</string>
-                                    </property>
+                                    <hbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>6</number>
+                                        </property>
+                                        <widget>
+                                            <class>QCheckBox</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>CheckBoxSaveAudioWave</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>Save Audio as WAV</string>
+                                            </property>
+                                        </widget>
+                                        <widget>
+                                            <class>QCheckBox</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>CheckBoxReverb</cstring>
+                                            </property>
+                                            <property stdset="1">
+                                                <name>text</name>
+                                                <string>Reverberation</string>
+                                            </property>
+                                        </widget>
+                                    </hbox>
                                 </widget>
                             </vbox>
                         </widget>

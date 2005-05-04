@@ -485,8 +485,10 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 
 			/* Extract lower protected part bytes (8 bits per byte) */
 			for (j = 0; j < iNumLowerProtectedBytes; j++)
+			{
 				audio_frame[i][iNumHigherProtectedBytes + j] =
 					(*pvecInputData).Separate(8);
+			}
 		}
 	}
 
@@ -578,12 +580,22 @@ fflush(pFile2);
 				   fading which gives a log-fading impression */
 				for (i = 0; i < iResOutBlockSize; i++)
 				{
-					/* Linear attenuation with time */
+					/* Linear attenuation with time of OLD buffer */
 					const _REAL rAtt =
 						(_REAL) 1.0 - (_REAL) i / iResOutBlockSize;
 
 					vecTempResBufOutOldLeft[i] *= rAtt;
 					vecTempResBufOutOldRight[i] *= rAtt;
+
+					if (bUseReverbEffect == TRUE)
+					{
+						/* Cross-fade reverberation effect */
+						vecTempResBufOutOldLeft[i] += (1.0 - rAtt) * AudioRevL.
+							ProcessSample(vecTempResBufOutOldLeft[i]);
+
+						vecTempResBufOutOldRight[i] += (1.0 - rAtt) * AudioRevR.
+							ProcessSample(vecTempResBufOutOldRight[i]);
+					}
 				}
 
 				/* Set flag to show that audio block was bad */
@@ -593,9 +605,27 @@ fflush(pFile2);
 			{
 				/* Post message to show that CRC was wrong (red light) */
 				PostWinMessage(MS_MSC_CRC, 2);
+
+				if (bUseReverbEffect == TRUE)
+				{
+
+// TODO: Add reverberation effect only to useful signal bandwidth otherwise, if the
+// useful signal has small bandwidth, the reverbration adds high frequencies which
+// were not in the original signal which sounds weird
+
+					/* Add Reverberation effect */
+					for (i = 0; i < iResOutBlockSize; i++)
+					{
+						vecTempResBufOutOldLeft[i] = AudioRevL.
+							ProcessSample(vecTempResBufOutOldLeft[i]);
+
+						vecTempResBufOutOldRight[i] = AudioRevR.
+							ProcessSample(vecTempResBufOutOldRight[i]);
+					}
+				}
 			}
 
-			/* Write zeros in output buffer */
+			/* Write zeros in current output buffer */
 			for (i = 0; i < iResOutBlockSize; i++)
 			{
 				vecTempResBufOutCurLeft[i] = (_REAL) 0.0;
@@ -648,6 +678,19 @@ fflush(pFile2);
 
 			if (bAudioWasOK == FALSE)
 			{
+				if (bUseReverbEffect == TRUE)
+				{
+					/* Add "last" reverbration only to old block */
+					for (i = 0; i < iResOutBlockSize; i++)
+					{
+						vecTempResBufOutOldLeft[i] = AudioRevL.
+							ProcessSample(vecTempResBufOutOldLeft[i]);
+
+						vecTempResBufOutOldRight[i] = AudioRevR.
+							ProcessSample(vecTempResBufOutOldRight[i]);
+					}
+				}
+
 				/* Fade-in new block to avoid "clicks" in audio. We use linear
 				   fading which gives a log-fading impression */
 				for (i = 0; i < iResOutBlockSize; i++)
@@ -657,6 +700,16 @@ fflush(pFile2);
 
 					vecTempResBufOutCurLeft[i] *= rAtt;
 					vecTempResBufOutCurRight[i] *= rAtt;
+
+					if (bUseReverbEffect == TRUE)
+					{
+						/* Cross-fade reverberation effect */
+						vecTempResBufOutCurLeft[i] += (1.0 - rAtt) * AudioRevL.
+							ProcessSample(0);
+
+						vecTempResBufOutCurRight[i] += (1.0 - rAtt) * AudioRevR.
+							ProcessSample(0);
+					}
 				}
 
 				/* Reset flag */
@@ -964,6 +1017,10 @@ int CAudioSourceDecoder::GetNumCorDecAudio()
 }
 
 CAudioSourceDecoder::CAudioSourceDecoder()
+#ifdef USE_FAAD2_LIBRARY
+	: AudioRevL((CReal) 1.0 /* seconds delay */),
+	AudioRevR((CReal) 1.0), bUseReverbEffect(TRUE)
+#endif
 {
 #ifdef USE_FAAD2_LIBRARY
 	/* Open AACEncoder instance */

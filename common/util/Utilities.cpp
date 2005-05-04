@@ -264,3 +264,155 @@ void CModJulDate::Set(const uint32_t iModJulDate)
 	else
 		iYear = iC - 4715;
 }
+
+
+/******************************************************************************\
+* Audio Reverbration                                                           *
+\******************************************************************************/
+/*
+	The following code is based on "JCRev: John Chowning's reverberator class"
+	by Perry R. Cook and Gary P. Scavone, 1995 - 2004
+	which is in "The Synthesis ToolKit in C++ (STK)"
+	http://ccrma.stanford.edu/software/stk
+
+	Original description:
+    This class is derived from the CLM JCRev function, which is based on the use
+	of networks of simple allpass and comb delay filters. This class implements
+	three series allpass units, followed by four parallel comb filters, and two
+	decorrelation delay lines in parallel at the output.
+*/
+CAudioReverb::CAudioReverb(const CReal rT60)
+{
+	/* Delay lengths for 44100 Hz sample rate */
+	int lengths[9] = {1777, 1847, 1993, 2137, 389, 127, 43, 211, 179};
+	CReal scaler = (CReal) SOUNDCRD_SAMPLE_RATE / 44100.0;
+
+	int delay, i;
+	if (scaler != 1.0)
+	{
+		for (i = 0; i < 9; i++)
+		{
+			delay = (int) Floor(scaler * lengths[i]);
+
+			if ((delay & 1) == 0)
+				delay++;
+
+			while (!isPrime(delay))
+				delay += 2;
+
+			lengths[i] = delay;
+		}
+	}
+
+	for (i = 0; i < 3; i++)
+		allpassDelays_[i].Init(lengths[i + 4]);
+
+	for (i = 0; i < 4; i++)
+		combDelays_[i].Init(lengths[i]);
+
+	setT60(rT60);
+	allpassCoefficient_ = (CReal) 0.7;
+	Clear();
+}
+
+_BOOLEAN CAudioReverb::isPrime(const int number)
+{
+/*
+	Returns true if argument value is prime. Taken from "class Effect" in
+	"STK abstract effects parent class".
+*/
+	if (number == 2)
+		return TRUE;
+
+	if (number & 1)
+	{
+		for (int i = 3; i < (int) Sqrt((CReal) number) + 1; i += 2)
+		{
+			if ((number % i) == 0)
+				return FALSE;
+		}
+
+		return TRUE; /* prime */
+	}
+	else
+		return FALSE; /* even */
+}
+
+void CAudioReverb::Clear()
+{
+	/* Reset and clear all internal state */
+	allpassDelays_[0].Reset((CReal) 0.0);
+	allpassDelays_[1].Reset((CReal) 0.0);
+	allpassDelays_[2].Reset((CReal) 0.0);
+	combDelays_[0].Reset((CReal) 0.0);
+	combDelays_[1].Reset((CReal) 0.0);
+	combDelays_[2].Reset((CReal) 0.0);
+	combDelays_[3].Reset((CReal) 0.0);
+}
+
+void CAudioReverb::setT60(const CReal rT60)
+{
+	/* Set the reverberation T60 decay time */
+	for (int i = 0; i < 4; i++)
+	{
+		combCoefficient_[i] = pow((CReal) 10.0, (-3.0 * combDelays_[i].Size() /
+			(rT60 * SOUNDCRD_SAMPLE_RATE)));
+	}
+}
+
+CReal CAudioReverb::ProcessSample(const CReal input)
+{
+	/* Compute one output sample */
+	CReal temp, temp0, temp1, temp2;
+
+
+
+// TEST
+/* Low-pass filter input signal to avoid high frequency artefacts */
+#if 0 // sounds better but requires significantly more CPU
+static CReal rZ0;
+static CReal rZ1;
+static CReal rZ2;
+
+/* This is a butterworth IIR filter with cut-off of 3 kHz.
+   It was generated in Matlab with [b, a] = butter(3, 3000 / 24000); */
+CReal filtinput = ((CReal) 0.00530040979453 * input + rZ0);
+rZ0 = (CReal) 0.01590122938358 * input + rZ1 - (CReal) -2.21916861831167 * filtinput;
+rZ1 = (CReal) 0.01590122938358 * input + rZ2 - (CReal) 1.71511783003340 * filtinput;
+rZ2 = (CReal) 0.00530040979453 * input - (CReal) -0.45354593336553 * filtinput;
+#else
+CReal filtinput = input;
+#endif
+
+
+
+	temp = allpassDelays_[0].Get();
+	temp0 = allpassCoefficient_ * temp;
+	temp0 += filtinput;
+	allpassDelays_[0].Add(temp0);
+	temp0 = -(allpassCoefficient_ * temp0) + temp;
+
+	temp = allpassDelays_[1].Get();
+	temp1 = allpassCoefficient_ * temp;
+	temp1 += temp0;
+	allpassDelays_[1].Add(temp1);
+	temp1 = -(allpassCoefficient_ * temp1) + temp;
+
+	temp = allpassDelays_[2].Get();
+	temp2 = allpassCoefficient_ * temp;
+	temp2 += temp1;
+	allpassDelays_[2].Add(temp2);
+	temp2 = -(allpassCoefficient_ * temp2) + temp;
+
+	const CReal temp3 = temp2 + (combCoefficient_[0] * combDelays_[0].Get());
+	const CReal temp4 = temp2 + (combCoefficient_[1] * combDelays_[1].Get());
+	const CReal temp5 = temp2 + (combCoefficient_[2] * combDelays_[2].Get());
+	const CReal temp6 = temp2 + (combCoefficient_[3] * combDelays_[3].Get());
+
+	combDelays_[0].Add(temp3);
+	combDelays_[1].Add(temp4);
+	combDelays_[2].Add(temp5);
+	combDelays_[3].Add(temp6);
+
+	return 0.5 * (temp3 + temp4 + temp5 + temp6);
+}

@@ -36,6 +36,7 @@
 #include "../TextMessage.h"
 #include "../resample/Resample.h"
 #include "../datadecoding/DataDecoder.h"
+#include "../util/Utilities.h"
 
 #ifdef USE_FAAD2_LIBRARY
 # include "neaacdec.h"
@@ -110,6 +111,8 @@ public:
 	virtual ~CAudioSourceDecoder();
 
 	int GetNumCorDecAudio();
+	void SetReverbEffect(const _BOOLEAN bNER) {bUseReverbEffect = bNER;}
+	_BOOLEAN GetReverbEffect() {return bUseReverbEffect;}
 
 protected:
 	enum EInitErr {ET_ALL, ET_AAC}; /* ET: Error type */
@@ -132,12 +135,17 @@ protected:
 	int					iTotalFrameSize;
 	int					iNumCorDecAudio;
 
+	_BOOLEAN			bUseReverbEffect;
+
 #ifdef USE_FAAD2_LIBRARY
 	/* AAC decoding */
 	NeAACDecHandle		HandleAACDecoder;
 
 	CAudioResample		ResampleObjL;
 	CAudioResample		ResampleObjR;
+
+	CAudioReverb		AudioRevL;
+	CAudioReverb		AudioRevR;
 
 	CVector<_REAL>		vecTempResBufInLeft;
 	CVector<_REAL>		vecTempResBufInRight;

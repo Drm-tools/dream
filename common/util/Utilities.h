@@ -102,4 +102,24 @@ protected:
 };
 
 
+/* Audio Reverbration ------------------------------------------------------- */
+class CAudioReverb
+{
+public:
+	CAudioReverb(const CReal rT60 = (CReal) 1.0);
+
+	void Clear();
+	CReal ProcessSample(const CReal input);
+
+protected:
+	void setT60(const CReal rT60);
+	_BOOLEAN isPrime(const int number);
+
+	CFIFO<CReal>	allpassDelays_[3];
+	CFIFO<CReal>	combDelays_[4];
+	CReal			allpassCoefficient_;
+	CReal			combCoefficient_[4];
+};
+
+
 #endif // !defined(UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_)

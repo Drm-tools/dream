@@ -110,6 +110,8 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"<p>Ptolemy Project (http://ptolemy.eecs.berkeley.edu)</p>"
 		"<p>Tavernini, Lucio (http://tavernini.com/home.html)</p>"
 		"<p>The Math Forum (http://mathforum.org)</p>"
+		"<p>The Synthesis ToolKit in C++ (STK) "
+		"(http://ccrma.stanford.edu/software/stk)</p>"
 		"</center>"
 		"<br><b>Supporters</b>"
 		"<center>"

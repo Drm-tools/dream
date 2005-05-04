@@ -223,6 +223,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		this, SLOT(OnCheckRecFilter()));
 	connect(CheckBoxModiMetric, SIGNAL(clicked()),
 		this, SLOT(OnCheckModiMetric()));
+	connect(CheckBoxReverb, SIGNAL(clicked()),
+		this, SLOT(OnCheckBoxReverb()));
 
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
@@ -320,14 +322,16 @@ void systemevalDlg::UpdateControls()
 	}
 
 	/* Update settings checkbuttons */
+	CheckBoxReverb->setChecked(pDRMRec->GetAudSorceDec()->GetReverbEffect());
+	CheckBoxRecFilter->setChecked(pDRMRec->GetFreqSyncAcq()->GetRecFilter());
+	CheckBoxModiMetric->setChecked(pDRMRec->GetChanEst()->GetIntCons());
 	CheckBoxMuteAudio->setChecked(pDRMRec->GetWriteData()->GetMuteAudio());
 	CheckBoxFlipSpec->
 		setChecked(pDRMRec->GetReceiver()->GetFlippedSpectrum());
+
 	CheckBoxSaveAudioWave->
 		setChecked(pDRMRec->GetWriteData()->GetIsWriteWaveFile());
 
-	CheckBoxRecFilter->setChecked(pDRMRec->GetFreqSyncAcq()->GetRecFilter());
-	CheckBoxModiMetric->setChecked(pDRMRec->GetChanEst()->GetIntCons());
 
 	/* Update frequency edit control (frequency could be changed by
 	   schedule dialog */
@@ -815,6 +819,12 @@ void systemevalDlg::OnCheckBoxMuteAudio()
 	pDRMRec->GetWriteData()->MuteAudio(CheckBoxMuteAudio->isChecked());
 }
 
+void systemevalDlg::OnCheckBoxReverb()
+{
+	/* Set parameter in working thread module */
+	pDRMRec->GetAudSorceDec()->SetReverbEffect(CheckBoxReverb->isChecked());
+}
+
 void systemevalDlg::OnCheckSaveAudioWAV()
 {
 /*
@@ -1151,6 +1161,12 @@ void systemevalDlg::AddWhatsThisHelp()
 		tr("<b>Mute Audio:</b> The audio can be muted by "
 		"checking this box. The reaction of checking or unchecking this box "
 		"is delayed by approx. 1 second due to the audio buffers."));
+
+	/* Reverberation Effect */
+	QWhatsThis::add(CheckBoxReverb,
+		tr("<b>Reverberation Effect:</b> If this check box is checked, a "
+		"reverberation effect is applied each time an audio drop-out occurs. "
+		"With this effect it is possible to mask short drop-outs."));
 
 	/* Log File */
 	QWhatsThis::add(CheckBoxWriteLog,

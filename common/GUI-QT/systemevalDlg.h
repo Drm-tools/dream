@@ -126,6 +126,7 @@ public slots:
 	void OnSliderIterChange(int value);
 	void OnCheckFlipSpectrum();
 	void OnCheckBoxMuteAudio();
+	void OnCheckBoxReverb();
 	void OnCheckWriteLog();
 	void OnCheckSaveAudioWAV();
 	void OnCheckRecFilter();

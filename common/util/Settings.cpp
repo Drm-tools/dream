@@ -73,9 +73,15 @@ void CSettings::ReadIniFile()
 		pDRMRec->GetWriteData()->MuteAudio(bValue);
 
 
+	/* Reverberation flag */
+	if (GetFlagIniSet(ini, "Receiver", "reverb", bValue) == TRUE)
+		pDRMRec->GetAudSorceDec()->SetReverbEffect(bValue);
+
+
 	/* Bandpass filter flag */
 	if (GetFlagIniSet(ini, "Receiver", "filter", bValue) == TRUE)
 		pDRMRec->GetFreqSyncAcq()->SetRecFilter(bValue);
+
 
 	/* Modified metrics flag */
 	if (GetFlagIniSet(ini, "Receiver", "modmetric", bValue) == TRUE)
@@ -252,9 +258,15 @@ void CSettings::WriteIniFile()
 		pDRMRec->GetWriteData()->GetMuteAudio());
 
 
+	/* Reverberation */
+	SetFlagIniSet(ini, "Receiver", "reverb",
+		pDRMRec->GetAudSorceDec()->GetReverbEffect());
+
+
 	/* Bandpass filter flag */
 	SetFlagIniSet(ini, "Receiver", "filter",
 		pDRMRec->GetFreqSyncAcq()->GetRecFilter());
+
 
 	/* Modified metrics flag */
 	SetFlagIniSet(ini, "Receiver", "modmetric",
