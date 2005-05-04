@@ -510,9 +510,13 @@ void systemevalDlg::OnTimer()
 		}
 
 		/* Sample frequency offset estimation */
+		const _REAL rCurSamROffs = pDRMRec->GetParameters()->GetSampFreqEst();
+
+		/* Display value in [Hz] and [ppm] (parts per million) */
 		ValueSampFreqOffset->setText(
-			QString().setNum(pDRMRec->GetParameters()->
-			GetSampFreqEst(), 'f', 2) +	" Hz");
+			QString().setNum(rCurSamROffs, 'f', 2) + " Hz (" +
+			QString().setNum((int) (rCurSamROffs / SOUNDCRD_SAMPLE_RATE * 1e6))
+			+ " ppm)");
 	}
 	else
 	{
