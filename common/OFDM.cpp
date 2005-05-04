@@ -121,11 +121,33 @@ void COFDMDemodulation::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Calculate Fourier transformation (actual OFDM demodulation) */
 	veccFFTOutput = Fft(veccFFTInput, FftPlan);
 
-	/* Use only useful carriers and normalize with the block-size ("N") */
-	for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
+	/* Use only useful carriers and normalize with the block-size ("N"). Check
+	   if spectrum can be cut in one step or two steps */
+	if (iShiftedKmin < 0)
 	{
-		(*pvecOutputData)[i - iShiftedKmin] =
-			veccFFTOutput[i] / (CReal) iDFTSize;
+		/* Spectrum must be cut in two steps since some parts are on the left
+		   side of the DC frequency */
+		for (i = iShiftedKmin; i < 0; i++)
+		{
+			(*pvecOutputData)[i - iShiftedKmin] =
+				veccFFTOutput[iDFTSize + i] / (CReal) iDFTSize;
+		}
+
+		for (i = 0; i < iShiftedKmax + 1; i++)
+		{
+			(*pvecOutputData)[i - iShiftedKmin] =
+				veccFFTOutput[i] / (CReal) iDFTSize;
+		}
+	}
+	else
+	{
+		/* DRM spectrum is completely on the right side of the DC carrier and
+		   can be cut in one step */
+		for (i = iShiftedKmin; i < iShiftedKmax + 1; i++)
+		{
+			(*pvecOutputData)[i - iShiftedKmin] =
+				veccFFTOutput[i] / (CReal) iDFTSize;
+		}
 	}
 
 
