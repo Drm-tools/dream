@@ -46,6 +46,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
+#else /* Under Linux only restore the size */
+	resize(pDRMRec->GeomFdrmdialog.iWSize,
+		pDRMRec->GeomFdrmdialog.iHSize);
 #endif
 
 

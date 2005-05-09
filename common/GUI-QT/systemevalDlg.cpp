@@ -46,6 +46,9 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
+#else /* Under Linux only restore the size */
+	resize(pDRMRec->GeomSystemEvalDlg.iWSize,
+		pDRMRec->GeomSystemEvalDlg.iHSize);
 #endif
 
 
@@ -374,6 +377,9 @@ void systemevalDlg::showEvent(QShowEvent* pEvent)
 
 		if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 			pNewChartWin->setGeometry(WinGeom);
+#else /* Under Linux only restore the size */
+		resize(pDRMRec->GeomChartWindows[i].iWSize,
+			pDRMRec->GeomChartWindows[i].iHSize);
 #endif
 	}
 

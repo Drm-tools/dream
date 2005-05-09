@@ -42,6 +42,9 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
+#else /* Under Linux only restore the size */
+	resize(pDRMRec->GeomMultimediaDlg.iWSize,
+		pDRMRec->GeomMultimediaDlg.iHSize);
 #endif
 
 	/* Picture controls should be invisable. These controls are only used for

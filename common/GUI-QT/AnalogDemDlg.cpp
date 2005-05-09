@@ -45,6 +45,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
+#else /* Under Linux only restore the size */
+	resize(pDRMRec->GeomAnalogDemDlg.iWSize,
+		pDRMRec->GeomAnalogDemDlg.iHSize);
 #endif
 
 

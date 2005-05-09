@@ -257,6 +257,9 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
 		setGeometry(WinGeom);
+#else /* Under Linux only restore the size */
+	resize(pDRMRec->GeomStationsDlg.iWSize,
+		pDRMRec->GeomStationsDlg.iHSize);
 #endif
 
 	/* Define size of the bitmaps */
