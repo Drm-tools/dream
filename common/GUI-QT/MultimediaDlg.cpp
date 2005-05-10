@@ -379,6 +379,13 @@ void MultimediaDlg::SetSlideShowPicture()
 			"save it to file and use an external viewer") + "</center>");
 	}
 
+	/* Add tool tip showing the name of the picture */
+	if (vecRawImages[iCurImagePos].strName.length() != 0)
+	{
+		QToolTip::add(TextBrowser,
+			QString(vecRawImages[iCurImagePos].strName.c_str()));
+	}
+
 	UpdateAccButtonsSlideShow();
 }
 
@@ -514,6 +521,9 @@ void MultimediaDlg::ClearAllSlideShow()
 
 	/* Update GUI */
 	UpdateAccButtonsSlideShow();
+
+	/* Remove tool tips */
+	QToolTip::remove(TextBrowser);
 }
 
 void MultimediaDlg::InitNotSupported()
@@ -527,6 +537,7 @@ void MultimediaDlg::InitNotSupported()
 	PushButtonJumpEnd->hide();
 	LabelCurPicNum->hide();
 	PushButtonStepBack->hide();
+	QToolTip::remove(TextBrowser);
 
 	/* Show that application is not supported */
 	TextBrowser->setText("<center><h2>" + tr("No data service or data service "
@@ -547,6 +558,11 @@ void MultimediaDlg::InitMOTSlideShow()
 	iCurImagePos = GetIDLastPicture();
 	if (iCurImagePos >= 0)
 		SetSlideShowPicture();
+	else
+	{
+		/* Remove tool tips */
+		QToolTip::remove(TextBrowser);
+	}
 
 	/* Update buttons and menu */
 	UpdateAccButtonsSlideShow();
@@ -575,6 +591,9 @@ void MultimediaDlg::InitJournaline()
 	/* Init text browser window */
 	iCurJourObjID = 0;
 	SetJournalineText();
+
+	/* Remove tool tips */
+	QToolTip::remove(TextBrowser);
 
 	NewIDHistory.Reset();
 }
