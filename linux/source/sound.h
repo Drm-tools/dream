@@ -77,6 +77,13 @@ public:
 protected:
 	int 	iBufferSize, iInBufferSize;
 	void Init_HW( int mode );
+
+	friend class RecThread;
+	friend class PlayThread;
+	static int read_HW( void * recbuf, int size);
+	static int write_HW( _SAMPLE *playbuf, int size );
+	void close_HW( void );
+	
 	short int *tmpplaybuf, *tmprecbuf;
 	_BOOLEAN	bBlockingRec;
 	_BOOLEAN	bBlockingPlay;

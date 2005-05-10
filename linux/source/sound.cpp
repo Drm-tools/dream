@@ -60,10 +60,9 @@ void CSound::Init_HW( int mode )
 	int arg;      /* argument for ioctl calls */
 	int status;   /* return status of system calls */
 	
-	qDebug("fdsound: %d", fdSound);
 	if (fdSound >0) 
 	{
-		qDebug("already open");
+//		qDebug("already open");
 		return;	// already open
 	}
 
@@ -121,7 +120,7 @@ void CSound::Init_HW( int mode )
 }
 
 
-static int read_HW( void * recbuf, int size) {
+int CSound::read_HW( void * recbuf, int size) {
 	
 	int ret = read(fdSound, recbuf, size * NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE );
 
@@ -134,7 +133,7 @@ static int read_HW( void * recbuf, int size) {
 		return ret / (NUM_IN_OUT_CHANNELS * BYTES_PER_SAMPLE);
 }
 
-static int write_HW( _SAMPLE *playbuf, int size ){
+int CSound::write_HW( _SAMPLE *playbuf, int size ){
 
 	int start = 0;
 	int ret;
@@ -157,7 +156,7 @@ static int write_HW( _SAMPLE *playbuf, int size ){
 	return 0;
 }
 
-static void close_HW( void ) {
+void CSound::close_HW( void ) {
 
 	if (fdSound >0)
 		close(fdSound);
@@ -274,7 +273,7 @@ void CSound::Init_HW( int mode ){
                 qDebug("Unable to get buffer size for playback: %s\n", snd_strerror(err));
 		throw CGenErr("alsa CSound::Init_HW ");
         }
-	qDebug("buffer size %d", buffer_size);
+	// qDebug("buffer size %d", buffer_size);
         /* set the period time */
 	unsigned int period_time = 100000;              /* period time in us */
         err = snd_pcm_hw_params_set_period_time_near(handle, hwparams, &period_time, &dir);
@@ -287,7 +286,7 @@ void CSound::Init_HW( int mode ){
                 qDebug("Unable to get period size for playback: %s\n", snd_strerror(err));
 		throw CGenErr("alsa CSound::Init_HW ");
         }
-	qDebug("period size %d", period_size);
+	// qDebug("period size %d", period_size);
 
 	/* Write the parameters to device */
 	err = snd_pcm_hw_params(handle, hwparams);
@@ -332,7 +331,7 @@ void CSound::Init_HW( int mode ){
 
 }
 
-static int read_HW( void * recbuf, int size) {
+int CSound::read_HW( void * recbuf, int size) {
 
 	int ret = snd_pcm_readi(rhandle, recbuf, size);
 
@@ -384,7 +383,7 @@ static int read_HW( void * recbuf, int size) {
 			
 }
 
-static int write_HW( _SAMPLE *playbuf, int size ){
+int CSound::write_HW( _SAMPLE *playbuf, int size ){
 
 	int start = 0;
 	int ret;
@@ -427,7 +426,7 @@ qDebug("strpipe");
 	}
 	return 0;
 }
-static void close_HW( void ) {
+void CSound::close_HW( void ) {
 
 	if (rhandle != NULL)
 		snd_pcm_close( rhandle );
@@ -471,7 +470,7 @@ public:
 			if (  (SOUNDBUFLEN - fill) > (FRAGSIZE * NUM_IN_OUT_CHANNELS) ) {
 				// enough space in the buffer
 				
-				int size = read_HW( tmprecbuf, FRAGSIZE);
+				int size = CSound::read_HW( tmprecbuf, FRAGSIZE);
 
 				// common code
 				if (size > 0) {
@@ -580,7 +579,7 @@ public:
 
 				SoundBufP.unlock();
 				
-				write_HW( tmpplaybuf, FRAGSIZE );
+				CSound::write_HW( tmpplaybuf, FRAGSIZE );
 
 			} else {
 			
