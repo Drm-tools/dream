@@ -354,7 +354,7 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Stations Preview menu ------------------------------------------------ */
 	pPreviewMenu = new QPopupMenu(this);
 	CHECK_PTR(pPreviewMenu);
-	pPreviewMenu->insertItem(tr("&Don't active stations preview"), this,
+	pPreviewMenu->insertItem(tr("&Disabled"), this,
 		SLOT(OnShowPreviewMenu(int)), 0, 0);
 	pPreviewMenu->insertItem(tr("&5 minutes"), this,
 		SLOT(OnShowPreviewMenu(int)), 0, 1);
