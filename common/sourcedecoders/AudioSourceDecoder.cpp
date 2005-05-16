@@ -589,10 +589,14 @@ fflush(pFile2);
 
 					if (bUseReverbEffect == TRUE)
 					{
+						/* Fade in input signal for reverberation to avoid
+						   clicks */
+						const _REAL rAttRev = (_REAL) i / iResOutBlockSize;
+
 						/* Cross-fade reverberation effect */
 						const _REAL rRevSam = (1.0 - rAtt) * AudioRev.
-							ProcessSample(vecTempResBufOutOldLeft[i],
-							vecTempResBufOutOldRight[i]);
+							ProcessSample(vecTempResBufOutOldLeft[i] * rAttRev,
+							vecTempResBufOutOldRight[i] * rAttRev);
 
 						/* Mono reverbration signal */
 						vecTempResBufOutOldLeft[i] += rRevSam;
@@ -610,19 +614,13 @@ fflush(pFile2);
 
 				if (bUseReverbEffect == TRUE)
 				{
-
-// TODO: Add reverberation effect only to useful signal bandwidth otherwise, if the
-// useful signal has small bandwidth, the reverbration adds high frequencies which
-// were not in the original signal which sounds weird
-
 					/* Add Reverberation effect */
 					for (i = 0; i < iResOutBlockSize; i++)
 					{
 						/* Mono reverberation signal */
 						vecTempResBufOutOldLeft[i] =
 							vecTempResBufOutOldRight[i] = AudioRev.
-							ProcessSample(vecTempResBufOutOldLeft[i],
-							vecTempResBufOutOldRight[i]);
+							ProcessSample(0, 0);
 					}
 				}
 			}

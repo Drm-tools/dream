@@ -267,7 +267,7 @@ void CModJulDate::Set(const uint32_t iModJulDate)
 
 
 /******************************************************************************\
-* Audio Reverbration                                                           *
+* Audio Reverberation                                                          *
 \******************************************************************************/
 /*
 	The following code is based on "JCRev: John Chowning's reverberator class"
@@ -276,7 +276,7 @@ void CModJulDate::Set(const uint32_t iModJulDate)
 	http://ccrma.stanford.edu/software/stk
 
 	Original description:
-    This class is derived from the CLM JCRev function, which is based on the use
+	This class is derived from the CLM JCRev function, which is based on the use
 	of networks of simple allpass and comb delay filters. This class implements
 	three series allpass units, followed by four parallel comb filters, and two
 	decorrelation delay lines in parallel at the output.
@@ -285,7 +285,7 @@ CAudioReverb::CAudioReverb(const CReal rT60)
 {
 	/* Delay lengths for 44100 Hz sample rate */
 	int lengths[9] = {1777, 1847, 1993, 2137, 389, 127, 43, 211, 179};
-	CReal scaler = (CReal) SOUNDCRD_SAMPLE_RATE / 44100.0;
+	const CReal scaler = (CReal) SOUNDCRD_SAMPLE_RATE / 44100.0;
 
 	int delay, i;
 	if (scaler != 1.0)
@@ -368,28 +368,9 @@ CReal CAudioReverb::ProcessSample(const CReal rLInput, const CReal rRInput)
 	/* Mix stereophonic input signals to mono signal */
 	const CReal input = (CReal) 0.5 * (rLInput + rRInput);
 
-
-// TEST
-/* Low-pass filter input signal to avoid high frequency artefacts */
-#if 0 // sounds better but requires significantly more CPU
-static CReal rZ0;
-static CReal rZ1;
-static CReal rZ2;
-
-/* This is a butterworth IIR filter with cut-off of 3 kHz.
-   It was generated in Matlab with [b, a] = butter(3, 3000 / 24000); */
-CReal filtinput = ((CReal) 0.00530040979453 * input + rZ0);
-rZ0 = (CReal) 0.01590122938358 * input + rZ1 - (CReal) -2.21916861831167 * filtinput;
-rZ1 = (CReal) 0.01590122938358 * input + rZ2 - (CReal) 1.71511783003340 * filtinput;
-rZ2 = (CReal) 0.00530040979453 * input - (CReal) -0.45354593336553 * filtinput;
-#else
-CReal filtinput = input;
-#endif
-
-
 	temp = allpassDelays_[0].Get();
 	temp0 = allpassCoefficient_ * temp;
-	temp0 += filtinput;
+	temp0 += input;
 	allpassDelays_[0].Add((int) temp0);
 	temp0 = -(allpassCoefficient_ * temp0) + temp;
 
@@ -415,5 +396,5 @@ CReal filtinput = input;
 	combDelays_[2].Add((int) temp5);
 	combDelays_[3].Add((int) temp6);
 
-	return 0.5 * (temp3 + temp4 + temp5 + temp6);
+	return temp3 + temp4 + temp5 + temp6;
 }
