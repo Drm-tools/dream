@@ -75,3 +75,84 @@ and the source code.
 
 Homepage:
 http://drm.sourceforge.net
+
+
+
+
+Dream code Code-Style definitions
+---------------------------------
+
+# GENERAL CONVENTIONS
+
+- tap size: 4 (taps are NOT replaced by spaces)
+- maximum line width: 80 characters
+
+
+
+# USAGE OF BRACKETS
+
+- if, while, do commands:
+
+[command1]
+{
+	/* Code 1 */
+
+	[command2]
+	{
+		/* Code 2 */
+	}
+}
+
+- switch command:
+
+switch ([variable])
+{
+case [condition1]:
+	/* Code for condition 1 */
+	break;
+
+case [condition2]:
+	/* Code for condition 2 */
+	break;
+}
+
+
+
+# COMMENTS
+
+- Comments start with capital letters
+- regular comments shall be placed in front of the command:
+
+/* This is the comment for the next line */
+[command]
+
+- short comments can be placed right after the command:
+
+[command] /* Short comment (1 space between command and comment) */
+
+- long comments (e.g. a function description):
+
+/*
+	This is a long description for the following section of code. The text is
+	written with increased indent whereby the indent is realized with tabs.
+*/
+
+- sections comments (there are always two empty lines before a section):
+
+/******************************************************************************\
+* This is a section                                                            *
+\******************************************************************************/
+
+/* This is a subsection *******************************************************/
+
+/* This is a subsubsection -------------------------------------------------- */
+
+
+
+# PREPROCESSOR DIRECTIVES
+
+- insert spaces if preprocessor directives are in if condition:
+
+#ifdef HAVE_CONFIG_H
+# include "config.h" /* Here, a space is included between # and the command */
+#endif
