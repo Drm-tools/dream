@@ -55,7 +55,7 @@ public:
 	virtual void Init(const int iNewSize);
 
 	/* Use this init to give all elements a defined value */
-	void Init(const int iNewSize, const TData tIniVal);
+	virtual void Init(const int iNewSize, const TData tIniVal);
 	void Reset(const TData tResetVal);
 
 	void Enlarge(const int iAddedSize);
@@ -290,6 +290,70 @@ template<class TData> void CFIFO<TData>::Add(const TData tNewD)
 	pData[iCurIdx] = tNewD;
 
 	/* Increment index */
+	iCurIdx++;
+	if (iCurIdx >= iVectorSize)
+		iCurIdx = 0;
+}
+
+
+/******************************************************************************\
+* CMovingAv class (moving average)                                             *
+\******************************************************************************/
+template<class TData> class CMovingAv : public CVector<TData>
+{
+public:
+	CMovingAv() : CVector<TData>(), iCurIdx(0) {}
+	CMovingAv(const int iNeSi) : CVector<TData>(iNeSi), iCurIdx(0) {}
+	CMovingAv(const int iNeSi, const TData tInVa) :
+		CVector<TData>(iNeSi, tInVa), iCurIdx(0) {}
+
+	void Add(const TData tNewD);
+	inline TData GetAverage() {return tCurAvResult;}
+
+	virtual void Init(const int iNewSize);
+	void InitVec(const int iNewSize, const int iNewVecSize);
+
+protected:
+	int		iCurIdx;
+	TData	tCurAvResult;
+};
+
+template<class TData> void CMovingAv<TData>::InitVec(const int iNewSize,
+													 const int iNewVecSize)
+{
+	iCurIdx = 0;
+	CVector<TData>::Init(iNewSize);
+
+	/* Init each vector in vector */
+	for (int i = 0; i < iNewSize; i++)
+		pData[i].Init(iNewVecSize, 0);
+
+	/* Init current average result */
+	tCurAvResult.Init(iNewVecSize, 0);
+}
+
+template<class TData> void CMovingAv<TData>::Init(const int iNewSize)
+{
+	iCurIdx = 0;
+	tCurAvResult = TData(0); /* Only for scalars! */
+	CVector<TData>::Init(iNewSize);
+}
+
+template<class TData> void CMovingAv<TData>::Add(const TData tNewD)
+{
+/*
+	Optimized calculation of the moving average. We only add a new value and
+	subtract the old value from the result. We only need one addition and a
+	history buffer
+*/
+	/* Subtract oldest value */
+	tCurAvResult -= pData[iCurIdx];
+
+	/* Add new value and write in memory */
+	tCurAvResult += tNewD;
+	pData[iCurIdx] = tNewD;
+
+	/* Increase position pointer and test if wrap */
 	iCurIdx++;
 	if (iCurIdx >= iVectorSize)
 		iCurIdx = 0;
