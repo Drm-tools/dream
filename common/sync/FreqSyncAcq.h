@@ -105,11 +105,10 @@ protected:
 	CRealVector					vecrFFTInput;
 	CRealVector					vecrSqMagFFTOut;
 	CRealVector					vecrHammingWin;
-	CRealVector					vecrFFTResHist;
+	CMovingAv<CRealVector>		vvrPSDMovAv;
 
 	int							iFrAcFFTSize;
 	int							iHistBufSize;
-	int							iFFTResHistSize;
 
 	int							iFFTSize;
 

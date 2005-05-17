@@ -74,11 +74,8 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 			vecrSqMagFFTOut =
 				SqMag(rfft(vecrFFTInput * vecrHammingWin, FftPlan));
 
-			/* Store result (shift register) */
-// TODO: order does not care with this shift register -> more efficient solution possible
-			vecrFFTResHist.Merge(
-				vecrFFTResHist(iHalfBuffer + 1, iFFTResHistSize),
-				vecrSqMagFFTOut);
+			/* Calculate moving average for better estimate of PSD */
+			vvrPSDMovAv.Add(vecrSqMagFFTOut);
 
 			/* Wait until we have sufficient data for averaging */
 			if (iAverageCounter > 1)
@@ -88,13 +85,8 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 			}
 			else
 			{
-				/* Average results */
-				CRealVector	vecrPSD(iHalfBuffer, (CReal) 0.0);
-				for (j = 0; j < NUM_FFT_RES_AV_BLOCKS; j++)
-				{
-					vecrPSD += vecrFFTResHist(j * iHalfBuffer + 1,
-						(j + 1) * iHalfBuffer);
-				}
+				/* Get PSD estimate */
+				const CRealVector vecrPSD(vvrPSDMovAv.GetAverage());
 
 
 				/* -------------------------------------------------------------
@@ -439,9 +431,8 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	vecrHammingWin.Init(iFrAcFFTSize);
 	vecrHammingWin = Hamming(iFrAcFFTSize);
 
-	/* Init history for SqMag FFT results */
-	iFFTResHistSize = iHalfBuffer * NUM_FFT_RES_AV_BLOCKS;
-	vecrFFTResHist.Init(iFFTResHistSize, (CReal) 0.0);
+	/* Init moving average class for SqMag FFT results */
+	vvrPSDMovAv.InitVec(NUM_FFT_RES_AV_BLOCKS, iHalfBuffer);
 
 
 	/* Frequency correction */
