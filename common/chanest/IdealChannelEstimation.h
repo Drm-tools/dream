@@ -30,9 +30,9 @@
 #define IDEALCHANEST_H__3B0BA660_CA3452341912__INCLUDED_
 
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "../matlib/Matlib.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "ChanEstTime.h" /* Because of "CPilotModiClass" */
 #include "../interleaver/SymbolInterleaver.h" /* Because of "D_LENGTH_LONG_INTERL" */
 

@@ -30,7 +30,7 @@
 #define CHANEST_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "../ofdmcellmapping/OFDMCellMapping.h"
 #include "../tables/TableQAMMapping.h"
 #include "../matlib/Matlib.h"
