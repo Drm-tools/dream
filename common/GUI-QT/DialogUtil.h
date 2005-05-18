@@ -42,7 +42,7 @@
 # include "moc/AboutDlgbase.h"
 #endif
 #include "../DrmReceiver.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 
 /* Classes ********************************************************************/

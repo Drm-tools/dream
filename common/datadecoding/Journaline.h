@@ -29,7 +29,7 @@
 #define JOURNALINE_H__3B0UBVE987346456363LIHGEW982__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 #ifdef HAVE_JOURNALINE
 # ifdef _WIN32

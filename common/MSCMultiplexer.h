@@ -31,9 +31,9 @@
 
 #include "GlobalDefinitions.h"
 #include "Parameter.h"
-#include "Buffer.h"
-#include "Modul.h"
-#include "Vector.h"
+#include "util/Buffer.h"
+#include "util/Modul.h"
+#include "util/Vector.h"
 #ifdef USE_QT_GUI
 # include "MDI.h"
 #endif

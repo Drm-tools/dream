@@ -53,7 +53,7 @@
 # include "moc/StationsDlgbase.h"
 #endif
 #include "../DrmReceiver.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 #ifdef HAVE_LIBHAMLIB
 # include <hamlib/rig.h>

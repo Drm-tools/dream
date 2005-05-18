@@ -31,8 +31,8 @@
 
 #include "GlobalDefinitions.h"
 #include "Parameter.h"
-#include "Vector.h"
-#include "Buffer.h"
+#include "util/Vector.h"
+#include "util/Buffer.h"
 #include "util/CRC.h"
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>

@@ -31,9 +31,9 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../Modul.h"
+#include "../util/Modul.h"
 #include "../util/CRC.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "MOTSlideShow.h"
 #include "Journaline.h"
 

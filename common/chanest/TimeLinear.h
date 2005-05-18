@@ -31,7 +31,7 @@
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../ofdmcellmapping/OFDMCellMapping.h"
 #include "../matlib/Matlib.h"
 #include "ChanEstTime.h"

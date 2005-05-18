@@ -30,7 +30,7 @@
 #define DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include <iostream>
-#include "Buffer.h"
+#include "util/Buffer.h"
 #include "Parameter.h"
 #include "DataIO.h"
 #include "mlc/MLC.h"

@@ -35,7 +35,7 @@
 #include <qpainter.h>
 #include <qtimer.h>
 #include <qwhatsthis.h>
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../Parameter.h"
 #include "../DrmReceiver.h"
 

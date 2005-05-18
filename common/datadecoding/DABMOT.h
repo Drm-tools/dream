@@ -30,7 +30,7 @@
 #define DABMOT_H__3B0UBVE98732KJVEW363E7A0D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "../util/CRC.h"
 
 

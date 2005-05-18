@@ -33,7 +33,7 @@
 #define UTILITIES_H__3B0BA660_CA63_4344_B3452345D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
+#include "Vector.h"
 #include "../matlib/Matlib.h"
 
 

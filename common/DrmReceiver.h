@@ -31,7 +31,7 @@
 
 #include <iostream>
 #include "Parameter.h"
-#include "Buffer.h"
+#include "util/Buffer.h"
 #include "DataIO.h"
 #include "OFDM.h"
 #include "DRMSignalIO.h"

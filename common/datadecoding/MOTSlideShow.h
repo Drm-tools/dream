@@ -29,7 +29,7 @@
 #define MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 #include "DABMOT.h"
 
 

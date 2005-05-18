@@ -51,7 +51,7 @@
 #include "AnalogDemDlg.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
-#include "../Vector.h"
+#include "../util/Vector.h"
 
 
 /* Classes ********************************************************************/
