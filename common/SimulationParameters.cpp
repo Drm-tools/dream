@@ -38,12 +38,15 @@
 /* Implementation *************************************************************/
 void CDRMSimulation::SimScript()
 {
-	int				i;
-	_REAL			rSNRCnt;
-	FILE*			pFileSimRes;
-	CVector<_REAL>	vecrMSE;
-	string			strSimFile;
-	string			strSpecialRemark;
+	int									i;
+	int									iNumItMLC;
+	_REAL								rSNRCnt;
+	FILE*								pFileSimRes;
+	CVector<_REAL>						vecrMSE;
+	string								strSimFile;
+	string								strSpecialRemark;
+	CChannelEstimation::ETypeIntFreq	eChanEstFreqIntType;
+	CChannelEstimation::ETypeIntTime	eChanEstTimIntType;
 
 
 	/**************************************************************************\
@@ -51,56 +54,44 @@ void CDRMSimulation::SimScript()
 	\**************************************************************************/
 	/* Choose which type of simulation, if you choose "ST_NONE", the regular
 	   application will be started */
-	Param.eSimType = CParameter::ST_BITERROR;
 	Param.eSimType = CParameter::ST_MSECHANEST;
 	Param.eSimType = CParameter::ST_SYNC_PARAM; /* Check "SetSyncInput()"s! */
+	Param.eSimType = CParameter::ST_BITERROR;
 	Param.eSimType = CParameter::ST_BER_IDEALCHAN;
 	Param.eSimType = CParameter::ST_NONE; /* No simulation, regular GUI */
 
+
 	if (Param.eSimType != CParameter::ST_NONE)
 	{
-		Param.iDRMChannelNum = 5;
+		Param.iDRMChannelNum = 8;
+Param.iChan8Doppler = 2; /* Hz (integer value!) */
 
-		rStartSNR = (_REAL) 20.0;
-		rEndSNR = (_REAL) 20.0;
-		rStepSNR = (_REAL) 0.5;
-		strSpecialRemark = "test";
+		rStartSNR = (_REAL) 15;
+		rEndSNR = (_REAL) 25;
+		rStepSNR = (_REAL) 1.0;
+		strSpecialRemark = "refideal";
 
 		/* Length of simulation */
-//		iSimTime = 200;
-		iSimNumErrors = 1000000;
+//		iSimTime = 100;
+		iSimNumErrors = 100000;
 
 
-		if (Param.iDRMChannelNum < 3)
-		{
-			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2);
-			Param.eSymbolInterlMode = CParameter::SI_SHORT;
-		}
-		else
-		{
-			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
-			Param.eSymbolInterlMode = CParameter::SI_LONG;
-		}
+		iNumItMLC = 1; /* Number of iterations for MLC */
 
 		/* The associated code rate is R = 0,6 and the modulation is 64-QAM */
 		Param.MSCPrLe.iPartB = 1;
 		Param.eMSCCodingScheme = CParameter::CS_3_SM;
 
 
-ChannelEstimation.SetFreqInt(CChannelEstimation::FWIENER);
-//ChannelEstimation.SetFreqInt(CChannelEstimation::FDFTFILTER);
-//ChannelEstimation.SetFreqInt(CChannelEstimation::FLINEAR);
-
-ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
-//ChannelEstimation.SetTimeInt(CChannelEstimation::TLINEAR);
+// TEST (for schnieter)
+//Param.eMSCCodingScheme = CParameter::CS_2_SM;
+//Param.eSDCCodingScheme = CParameter::CS_1_SM;
 
 
-		/* Init the modules to adapt to the new parameters. We need to do that
-		   because the following routines call modul internal functions which
-		   need correctly initialized modules */
-		Init();
 
-		MSCMLCDecoder.SetNumIterations(1);
+		eChanEstFreqIntType = CChannelEstimation::FWIENER;//FDFTFILTER;//FLINEAR;
+		eChanEstTimIntType = CChannelEstimation::TWIENER;//TLINEAR;
+
 
 		/* Define which synchronization algorithms we want to use */
 		/* In case of bit error simulations, a synchronized DRM data stream is
@@ -109,14 +100,42 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		FreqSyncAcq.SetSyncInput(TRUE);
 		SyncUsingPil.SetSyncInput(TRUE);
 		TimeSync.SetSyncInput(TRUE);
+
+
+		if (Param.iDRMChannelNum < 3)
+		{
+			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_A, SO_2);
+			Param.eSymbolInterlMode = CParameter::SI_SHORT;
+		}
+		else if (Param.iDRMChannelNum == 8)
+		{
+			/* Special setting for channel 8 */
+			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_0);
+			Param.eSymbolInterlMode = CParameter::SI_LONG;
+		}
+		else
+		{
+			Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+			Param.eSymbolInterlMode = CParameter::SI_LONG;
+		}
+
+
+// TEST -> for robustness mode detection
+//Param.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
+
+
 	/**************************************************************************\
 	* Simulation settings ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^*
 	\**************************************************************************/
 
 
+		/* Apply settings --------------------------------------------------- */
+		/* Set channel estimation interpolation type */
+		ChannelEstimation.SetFreqInt(eChanEstFreqIntType);
+		ChannelEstimation.SetTimeInt(eChanEstTimIntType);
 
-
-
+		/* Number of iterations for MLC */
+		MSCMLCDecoder.SetNumIterations(iNumItMLC);
 
 
 		/* Set the simulation priority to lowest possible value */
@@ -124,6 +143,7 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 		SetPriorityClass(GetCurrentProcess(), IDLE_PRIORITY_CLASS);
 #else
 # ifdef HAVE_UNISTD_H
+		/* re-nice the process to highest possible value -> 19 */
 		nice(19);
 
 		/* Try to get hostname */
@@ -150,11 +170,18 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 				SimFileName(Param, strSpecialRemark, TRUE));
 		}
 
-		/* Open file for storing simulation results */
+		/* Set file name for simulation results output */
 		strSimFile = string(SIM_OUT_FILES_PATH) +
 			SimFileName(Param, strSpecialRemark, FALSE) + string(".dat");
-		pFileSimRes = fopen(strSimFile.c_str(), "w");
+
 		printf("%s\n", strSimFile.c_str()); /* Show name directly */
+
+		/* Open file for storing simulation results */
+		pFileSimRes = fopen(strSimFile.c_str(), "w");
+
+		/* If opening of file was not successful, exit simulation */
+		if (pFileSimRes == NULL)
+			exit(1);
 
 		/* Main SNR loop */
 		for (rSNRCnt = rStartSNR; rSNRCnt <= rEndSNR; rSNRCnt += rStepSNR)
@@ -177,14 +204,12 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 				break;
 
 			case CParameter::ST_SYNC_PARAM:
-				/* Show results directly and save them in the file */
-				printf("%e %e\n", rSNRCnt, Param.rSyncTestParam);
+				/* Save results in the file */
 				fprintf(pFileSimRes, "%e %e\n", rSNRCnt, Param.rSyncTestParam);
 				break;
 
 			default:
-				/* Show results directly and save them in the file */
-				printf("%e %e\n", rSNRCnt, Param.rBitErrRate);
+				/* Save results in the file */
 				fprintf(pFileSimRes, "%e %e\n", rSNRCnt, Param.rBitErrRate);
 				break;
 			}
@@ -197,12 +222,10 @@ ChannelEstimation.SetTimeInt(CChannelEstimation::TWIENER);
 
 		/* Close simulation results file afterwards */
 		fclose(pFileSimRes);
-	}
 
-
-	/* At the end of the simulation, exit the application */
-	if (Param.eSimType != CParameter::ST_NONE)
+		/* At the end of the simulation, exit the application */
 		exit(1);
+	}
 }
 
 string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
@@ -216,16 +239,18 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	SYNC: Simulation for a synchronization paramter (usually variance)
 
 	B3: Robustness mode and spectrum occupancy
-	Ch5: Which channel was used
+	CH5: Channel number
+	It: Number of iterations in MLC decoder
+	PL: Protection level of channel code
+	"64SM": Modulation
+	"T50": Length of simulation
 
-	10k: Value set by "SetNumErrors()"
-
-	example: BER_B3_Ch5_10k_NoSync
+	example: BERIDEAL_CH8_B0_It1_PL1_64SM_T50_MyRemark
 */
-	char chNumTmpLong[10];
+	char chNumTmpLong[256];
 	string strFileName = "";
 
-	/* What type of simulation */
+	/* What type of simulation ---------------------------------------------- */
 	switch (Param.eSimType)
 	{
 	case CParameter::ST_BITERROR:
@@ -243,15 +268,20 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	}
 
 
-	/* Channel number */
-	strFileName += "CH";
-	char chNumTmp;
-	sprintf(&chNumTmp, "%d", Param.iDRMChannelNum);
-	strFileName += chNumTmp;
-	strFileName += "_";
+	/* Channel -------------------------------------------------------------- */
+	/* In case of channel 8 also write Doppler frequency in file name */
+	if (Param.iDRMChannelNum == 8)
+	{
+		sprintf(chNumTmpLong, "CH%d_%dHz_",
+			Param.iDRMChannelNum, Param.iChan8Doppler);
+	}
+	else
+		sprintf(chNumTmpLong, "CH%d_", Param.iDRMChannelNum);
+
+	strFileName += chNumTmpLong;
 
 
-	/* Robustness mode and spectrum occupancy */
+	/* Robustness mode and spectrum occupancy ------------------------------- */
 	switch (Param.GetWaveMode())
 	{
 	case RM_ROBUSTNESS_MODE_A:
@@ -290,21 +320,51 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	}
 
 
-	/* Number of iterations in MLC decoder */
-	strFileName += "It";
-	sprintf(chNumTmpLong, "%d", MSCMLCDecoder.GetInitNumIterations());
+	/* Channel estimation method -------------------------------------------- */
+	/* In case of BER simulation, print out channel estimation methods used */
+	if (Param.eSimType == CParameter::ST_BITERROR)
+	{
+		/* Time direction */
+		switch (ChannelEstimation.GetTimeInt())
+		{
+		case CChannelEstimation::TLINEAR:
+			strFileName += "Tl";
+			break;
+
+		case CChannelEstimation::TWIENER:
+			strFileName += "Tw";
+			break;
+		}
+
+		/* Frequency direction */
+		switch (ChannelEstimation.GetFreqInt())
+		{
+		case CChannelEstimation::FLINEAR:
+			strFileName += "Fl_";
+			break;
+
+		case CChannelEstimation::FDFTFILTER:
+			strFileName += "Fd_";
+			break;
+
+		case CChannelEstimation::FWIENER:
+			strFileName += "Fw_";
+			break;
+		}
+	}
+
+
+	/* Number of iterations in MLC decoder ---------------------------------- */
+	sprintf(chNumTmpLong, "It%d_", MSCMLCDecoder.GetInitNumIterations());
 	strFileName += chNumTmpLong;
-	strFileName += "_";
 
 
-	/* Protection level part B */
-	strFileName += "PL";
-	sprintf(chNumTmpLong, "%d", Param.MSCPrLe.iPartB);
+	/* Protection level part B ---------------------------------------------- */
+	sprintf(chNumTmpLong, "PL%d_", Param.MSCPrLe.iPartB);
 	strFileName += chNumTmpLong;
-	strFileName += "_";
 
 
-	/* MSC coding scheme */
+	/* MSC coding scheme ---------------------------------------------------- */
 	switch (Param.eMSCCodingScheme)
 	{
 	case CParameter::CS_2_SM:
@@ -325,7 +385,7 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	}
 
 
-	/* Number of error events or simulation time */
+	/* Number of error events or simulation time ---------------------------- */
 	int iCurNum;
 	string strMultPl = "_";
 	if (iSimTime != 0)
@@ -356,7 +416,7 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 	strFileName += strMultPl;
 
 
-	/* SNR range (optional) */
+	/* SNR range (optional) ------------------------------------------------- */
 	if (bWithSNR == TRUE)
 	{
 		strFileName += "SNR";
@@ -367,7 +427,6 @@ string CDRMSimulation::SimFileName(CParameter& Param, string strAddInf,
 		sprintf(chNumTmpLong, "%.1f_", rEndSNR);
 		strFileName += chNumTmpLong;
 	}
-
 
 	/* Special remark */
 	if (!strAddInf.empty())
