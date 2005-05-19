@@ -32,6 +32,7 @@
 #include "../Parameter.h"
 #include "../util/Modul.h"
 #include "../ofdmcellmapping/OFDMCellMapping.h"
+#include "../ofdmcellmapping/CellMappingTable.h"
 #include "../tables/TableQAMMapping.h"
 #include "../matlib/Matlib.h"
 #include "TimeLinear.h"
@@ -120,6 +121,8 @@ public:
 	ETypeSNREst GetSNREst() {return TypeSNREst;}
 
 	_BOOLEAN GetSNREstdB(_REAL& rSNREstRes) const;
+	_REAL GetMSCMEREstdB(); /* MER on MSC cells */
+	_REAL GetMSCWMEREstdB(); /* Weighted MER on MSC cells */
 	_BOOLEAN GetSigma(_REAL& rSigma);
 	_REAL GetDelay() const;
 	_REAL GetMinDelay();
@@ -175,6 +178,7 @@ protected:
 	CReal					rLamMSCSNREst;
 
 	_REAL					rNoiseEst;
+	_REAL					rNoiseEstMSCMER;
 	_REAL					rSignalEst;
 	CVector<_REAL>			vecrNoiseEstMSC;
 	CVector<_REAL>			vecrSigEstMSC;

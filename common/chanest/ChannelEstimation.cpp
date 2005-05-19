@@ -236,13 +236,14 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	while (iModSymNum < 0)
 		iModSymNum += iNumSymPerFrame;
 
-	for (i = 0; i < iNumCarrier; i++)
+	/* Two different types of SNR estimation are available */
+	switch (TypeSNREst)
 	{
-		switch (TypeSNREst)
+	case SNR_PIL:
+		/* Use estimated channel and compare it to the received pilots. This
+		   estimation works only if the channel estimation was successful */
+		for (i = 0; i < iNumCarrier; i++)
 		{
-		case SNR_PIL:
-			/* Use estimated channel and compare it to the received pilots. This
-			   estimation works only if the channel estimation was successful */
 			/* Identify pilot positions. Use MODIFIED "iSymbolID" (See lines
 			   above) */
 			if (_IsScatPil(ReceiverParam.matiMapTab[iModSymNum][i]))
@@ -273,11 +274,15 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				IIR1TwoSided(rSNREstimate, rCurSNREst / rSNRTotToPilCorrFact,
 					rLamSNREstFast,	rLamSNREstSlow);
 			}
-			break;
+		}
+		break;
 
-		case SNR_FAC:
-			/* SNR estimation with initialization */
-			if (iSNREstInitCnt > 0)
+	case SNR_FAC:
+		/* SNR estimation based on FAC cells and hard decisions */
+		/* SNR estimation with initialization */
+		if (iSNREstInitCnt > 0)
+		{
+			for (i = 0; i < iNumCarrier; i++)
 			{
 				/* Only use the last frame of the initialization phase for
 				   initial SNR estimation to debar initialization phase of
@@ -306,22 +311,25 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 						iSNREstIniNoiseAvCnt++;
 					}
 				}
-
-				iSNREstInitCnt--;
 			}
-			else
+
+			iSNREstInitCnt--;
+		}
+		else
+		{
+			/* Only right after initialization phase apply initial SNR
+			   value */
+			if (bSNRInitPhase == TRUE)
 			{
-				/* Only right after initialization phase apply initial SNR
-				   value */
-				if (bSNRInitPhase == TRUE)
-				{
-					/* Normalize average */
-					rSignalEst /= iSNREstIniSigAvCnt;
-					rNoiseEst /= iSNREstIniNoiseAvCnt;
+				/* Normalize average */
+				rSignalEst /= iSNREstIniSigAvCnt;
+				rNoiseEst /= iSNREstIniNoiseAvCnt;
 
-					bSNRInitPhase = FALSE;
-				}
+				bSNRInitPhase = FALSE;
+			}
 
+			for (i = 0; i < iNumCarrier; i++)
+			{
 				/* Only use FAC cells for this SNR estimation method */
 				if (_IsFAC(ReceiverParam.matiMapTab[iModSymNum][i]))
 				{
@@ -339,16 +347,16 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 					IIR1(rSignalEst, vecrSqMagChanEst[i],
 						rLamSNREstFast);
-
-					/* Calculate final result (signal to noise ratio) */
-					rCurSNREst = CalAndBoundSNR(rSignalEst, rNoiseEst);
-
-					/* Consider correction factor for average signal energy */
-					rSNREstimate = rCurSNREst * rSNRFACSigCorrFact;
 				}
 			}
-			break;
+
+			/* Calculate final result (signal to noise ratio) */
+			rCurSNREst = CalAndBoundSNR(rSignalEst, rNoiseEst);
+
+			/* Consider correction factor for average signal energy */
+			rSNREstimate = rCurSNREst * rSNRFACSigCorrFact;
 		}
+		break;
 	}
 
 
@@ -383,6 +391,9 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 			IIR1(vecrSigEstMSC[i], vecrSqMagChanEst[i],
 				rLamMSCSNREst);
+
+			/* Calculate MER on MSC cells */
+			IIR1(rNoiseEstMSCMER, rCurErrPow, rLamSNREstFast);
 		}
 	}
 
@@ -521,6 +532,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* Inits for SNR estimation (noise and signal averages) */
 	rSignalEst = (_REAL) 0.0;
 	rNoiseEst = (_REAL) 0.0;
+	rNoiseEstMSCMER = (_REAL) 0.0;
 	rSNREstimate = (_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10);
 	vecrNoiseEstMSC.Init(iNumCarrier, (_REAL) 0.0);
 	vecrSigEstMSC.Init(iNumCarrier, (_REAL) 0.0);
@@ -538,7 +550,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 
 	/* 5 DRM frames to start initial SNR estimation after initialization phase
 	   of other units */
-	iSNREstInitCnt = 5 * iNumSymPerFrame * iNumCarrier;
+	iSNREstInitCnt = 5 * iNumSymPerFrame;
 
 	/* Lambda for IIR filter */
 	rLamSNREstFast = IIR1Lam(TICONST_SNREST_FAST, (CReal) SOUNDCRD_SAMPLE_RATE /
@@ -794,6 +806,49 @@ _BOOLEAN CChannelEstimation::GetSNREstdB(_REAL& rSNREstRes) const
 		return FALSE;
 	else
 		return TRUE;
+}
+
+_REAL CChannelEstimation::GetMSCMEREstdB()
+{
+	/* Calculate final result (signal to noise ratio) and consider correction
+	   factor for average signal energy */
+	const _REAL rCurMSCMEREst = rSNRSysToNomBWCorrFact *
+		CalAndBoundSNR(AV_DATA_CELLS_POWER, rNoiseEstMSCMER);
+
+	/* Bound the MCS MER at 0 dB */
+	if (rCurMSCMEREst > (_REAL) 1.0)
+		return (_REAL) 10.0 * log10(rCurMSCMEREst);
+	else
+		return (_REAL) 0.0;
+}
+
+_REAL CChannelEstimation::GetMSCWMEREstdB()
+{
+	_REAL rAvNoiseEstMSC = (_REAL) 0.0;
+	_REAL rAvSigEstMSC = (_REAL) 0.0;
+
+	/* Lock resources */
+	Lock(); /* Lock start */
+	{
+		/* Average results from all carriers */
+		for (int i = 0; i < iNumCarrier; i++)
+		{
+			rAvNoiseEstMSC += vecrNoiseEstMSC[i];
+			rAvSigEstMSC += vecrSigEstMSC[i];
+		}
+	}
+	Unlock(); /* Lock end */
+
+	/* Calculate final result (signal to noise ratio) and consider correction
+	   factor for average signal energy */
+	const _REAL rCurMSCWMEREst = rSNRSysToNomBWCorrFact *
+		CalAndBoundSNR(rAvSigEstMSC, rAvNoiseEstMSC);
+
+	/* Bound the MCS MER at 0 dB */
+	if (rCurMSCWMEREst > (_REAL) 1.0)
+		return (_REAL) 10.0 * log10(rCurMSCWMEREst);
+	else
+		return (_REAL) 0.0;
 }
 
 _BOOLEAN CChannelEstimation::GetSigma(_REAL& rSigma)

@@ -494,14 +494,25 @@ void systemevalDlg::OnTimer()
 		/* Get SNR value and use it if available and valid */
 		if (pDRMRec->GetChanEst()->GetSNREstdB(rSNREstimate))
 		{
+			/* SNR */
 			ValueSNR->setText("<b>" +
 				QString().setNum(rSNREstimate, 'f', 1) + " dB</b>");
+
+			/* MSC WMER / MER */
+			ValueMERWMER->setText(QString().
+				setNum(pDRMRec->GetChanEst()->GetMSCWMEREstdB(), 'f', 1) +
+				" dB / " + QString().
+				setNum(pDRMRec->GetChanEst()->GetMSCMEREstdB(), 'f', 1) +
+				" dB");
 
 			/* Set SNR for log file */
 			pDRMRec->GetParameters()->ReceptLog.SetSNR(rSNREstimate);
 		}
 		else
+		{
 			ValueSNR->setText("<b>---</b>");
+			ValueMERWMER->setText("<b>---</b>");
+		}
 
 		/* Doppler estimation (assuming Gaussian doppler spectrum) */
 		if (pDRMRec->GetChanEst()->GetSigma(rSigmaEst))
@@ -531,6 +542,7 @@ void systemevalDlg::OnTimer()
 	else
 	{
 		ValueSNR->setText("<b>---</b>");
+		ValueMERWMER->setText("<b>---</b>");
 		ValueWiener->setText("--- / ---");
 		ValueSampFreqOffset->setText("---");
 	}
@@ -561,6 +573,7 @@ void systemevalDlg::OnTimer()
 	if (pDRMRec->GetMDI()->GetMDIInEnabled() == TRUE)
 	{
 		ValueSNR->setText("<b>---</b>");
+		ValueMERWMER->setText("<b>---</b>");
 		ValueWiener->setText("--- / ---");
 		ValueSampFreqOffset->setText("---");
 		ValueFreqOffset->setText("---");
@@ -1271,6 +1284,26 @@ void systemevalDlg::AddWhatsThisHelp()
 
 	QWhatsThis::add(ValueSNR, strSNREst);
 	QWhatsThis::add(TextSNRText, strSNREst);
+
+	/* MSC WMER / MSC MER */
+	const QString strMERWMEREst =
+		tr("<b>MSC WMER / MSC MER:</b> Modulation Error Ratio (MER) and "
+		"weighted MER (WMER) calculated on the MSC cells is shown. The MER is "
+		"calculated as follows: For each equalized MSC cell (only MSC cells, "
+		"no FAC cells, no SDC cells, no pilot cells), the error vector from "
+		"the nearest ideal point of the constellation diagram is measured. The "
+		"squared magnitude of this error is found, and a mean of the squared "
+		"errors is calculated (over one frame). The MER is the ratio in [dB] "
+		"of the mean of the squared magnitudes of the ideal points of the "
+		"constellation diagram to the mean squared error. This gives an "
+		"estimate of the ratio of the total signal power to total noise "
+		"power at the input to the equalizer for channels with flat frequency "
+		"response.<br> In case of the WMER, the calculations of the means are "
+		"multiplied by the squared magnitude of the estimated channel "
+		"response.<br>For more information see ETSI TS 102 349.");
+
+	QWhatsThis::add(ValueMERWMER, strMERWMEREst);
+	QWhatsThis::add(TextMERWMER, strMERWMEREst);
 
 	/* DRM Mode / Bandwidth */
 	const QString strRobustnessMode =
