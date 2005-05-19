@@ -314,56 +314,56 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
 {
 	/* Lock resources */
-	Lock();
-	{ /* Lock start */
+	Lock(); /* Lock start */
+	{
 		if (bAutoFreqAcquIsEnabled == TRUE)
 			FreqOffsAcq.Start(rNewNormCenter);
 		else
 			SetNormCurMixFreqOffs(rNewNormCenter / 2);
-	} /* Lock end */
-	Unlock();
+	}
+	Unlock(); /* Lock end */
 }
 
 void CAMDemodulation::SetDemodType(const EDemodType eNewType)
 {
 	/* Lock resources */
-	Lock();
-	{ /* Lock start */
+	Lock(); /* Lock start */
+	{
 		/* Set internal demodulation type flag */
 		eDemodType = eNewType;
 
 		/* Init band-pass filter according to new demodulation method */
 		SetBPFilter(rBPNormBW, rNormCurMixFreqOffs, eDemodType);
-	} /* Lock end */
-	Unlock();
+	}
+	Unlock(); /* Lock end */
 }
 
 void CAMDemodulation::SetFilterBW(const int iNewBW)
 {
 	/* Lock resources */
-	Lock();
-	{ /* Lock start */
+	Lock(); /* Lock start */
+	{
 		SetBPFilter((CReal) iNewBW / SOUNDCRD_SAMPLE_RATE, rNormCurMixFreqOffs,
 			eDemodType);
-	} /* Lock end */
-	Unlock();
+	}
+	Unlock(); /* Lock end */
 }
 
 void CAMDemodulation::SetAGCType(const CAGC::EType eNewType)
 {
 	/* Lock resources */
-	Lock();
-	{ /* Lock start */
+	Lock(); /* Lock start */
+	{
 		AGC.SetType(eNewType);
-	} /* Lock end */
-	Unlock();
+	}
+	Unlock(); /* Lock end */
 }
 
 void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
 {
 	/* Lock resources */
-	Lock();
-	{ /* Lock start */
+	Lock(); /* Lock start */
+	{
 		NoiRedType = eNewType;
 
 		switch (NoiRedType)
@@ -380,8 +380,8 @@ void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
 				NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
 				break;
 		}
-	} /* Lock end */
-	Unlock();
+	}
+	Unlock(); /* Lock end */
 }
 
 _BOOLEAN CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
@@ -389,13 +389,13 @@ _BOOLEAN CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
 	_BOOLEAN bReturn;
 
 	/* Lock resources */
-	Lock();
-	{ /* Lock start */
+	Lock(); /* Lock start */
+	{
 		/* Phase is only valid if PLL is enabled. Return status */
 		rPhaseOut = PLL.GetCurPhase();
 		bReturn = bPLLIsEnabled;
-	} /* Lock end */
-	Unlock();
+	}
+	Unlock(); /* Lock end */
 
 	return bReturn;
 }
