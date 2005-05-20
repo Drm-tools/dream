@@ -110,6 +110,10 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 				bError = DataEntityType3(pbiData, iLengthOfBody, Parameter);
 				break;
 
+			case 4: /* Type 4 */
+				bError = DataEntityType4(pbiData, iLengthOfBody, Parameter);
+				break;
+
 			case 5: /* Type 5 */
 				bError = DataEntityType5(pbiData, iLengthOfBody, Parameter);
 				break;
@@ -409,17 +413,52 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		/* Frequency value 15 bits. This field is coded as an unsigned integer
 		   and gives the frequency in kHz */
 		const int iFreqVal = (*pbiData).Separate(15);
-
-/*
-// TEST
-static FILE* pFile = fopen("test/freqsched.dat", "w");
-fprintf(pFile, "%d%d%d%d %d\n", bSyncMultplxFlag, bEnhanceFlag, bServRestrFlag, bRegionSchedFlag, iFreqVal);
-fflush(pFile);
-*/
-
 	}
 
 	return FALSE;
+}
+
+
+/******************************************************************************\
+* Data entity Type 4 (Alternative frequency signalling: Schedule definition)   *
+\******************************************************************************/
+_BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
+									  const int iLengthOfBody,
+									  CParameter& Parameter)
+{
+	/* Check length -> must be 4 bytes */
+	if (iLengthOfBody != 4)
+		return TRUE;
+
+	/* Schedule Id: this field indicates the Schedule Id for the defined
+	   schedule. Up to 15 different schedules with an individual Schedule Id
+	   (values 1 to 15) can be defined; the value 0 shall not be used, since it
+	   indicates "unspecified schedule" in data entity type 3 and 11 */
+	const int iScheduleID = (*pbiData).Separate(4);
+
+	/* Day Code: this field indicates which days the frequency schedule (the
+	   following Start Time and Duration) applies to. The msb indicates Monday,
+	   the lsb Sunday. Between one and seven bits may be set to 1 */
+	const int iDayCode = (*pbiData).Separate(7);
+
+	/* Start Time: this field indicates the time from when the frequency is
+	   valid. The time is expressed in minutes since midnight UTC. Valid values
+	   range from 0 to 1439 (representing 00:00 to 23:59) */
+	const int iStartTime = (*pbiData).Separate(11);
+
+	/* Duration: this field indicates how long the frequency is valid starting
+	   from the indicated Start Time. The time is expressed in minutes. Valid
+	   values range from 1 to 16383 */
+	const int iDuration = (*pbiData).Separate(14);
+
+	/* Error checking */
+	if ((iScheduleID == 0) || (iDayCode == 0) || (iStartTime > 1439) ||
+		(iDuration > 16383) || (iDuration == 0))
+	{
+		return TRUE;
+	}
+	else
+		return FALSE;
 }
 
 
