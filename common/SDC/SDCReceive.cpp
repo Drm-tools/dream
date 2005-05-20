@@ -6,7 +6,7 @@
  *	Volker Fischer
  *
  * Description:
- *	SDC
+ *	SDC data stream decoding (receiver)
  *
  ******************************************************************************
  *
@@ -98,28 +98,27 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 			/* Call the routine for the signalled type */
 			switch ((*pbiData).Separate(4))
 			{
-			case 0:
-				/* Type 0 */
+			case 0: /* Type 0 */
 				bError = DataEntityType0(pbiData, iLengthOfBody, Parameter);
 				break;
 
-			case 1:
-				/* Type 1 */
+			case 1: /* Type 1 */
 				bError = DataEntityType1(pbiData, iLengthOfBody, Parameter);
 				break;
 
-			case 5:
-				/* Type 5 */
+			case 3: /* Type 3 */
+				bError = DataEntityType3(pbiData, iLengthOfBody, Parameter);
+				break;
+
+			case 5: /* Type 5 */
 				bError = DataEntityType5(pbiData, iLengthOfBody, Parameter);
 				break;
 
-			case 8:
-				/* Type 8 */
+			case 8: /* Type 8 */
 				bError = DataEntityType8(pbiData, iLengthOfBody, Parameter);
 				break;
 
-			case 9:
-				/* Type 9 */
+			case 9: /* Type 9 */
 				bError = DataEntityType9(pbiData, iLengthOfBody, Parameter);
 				break;
 
@@ -182,15 +181,19 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
-		if ((i == 0) && ((Parameter.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
+		if ((i == 0) &&
+			((Parameter.eMSCCodingScheme == CParameter::CS_3_HMSYM) ||
 			(Parameter.eMSCCodingScheme == CParameter::CS_3_HMMIX)))
 		{
 			/* Protection level for hierarchical */
 			MSCPrLe.iHierarch = (*pbiData).Separate(2);
 			bWithHierarch = TRUE;
 
-			/* rfu */
-			(*pbiData).Separate(10);
+			/* rfu: these 10 bits shall be reserved for future use by the stream
+			   description field and shall be set to zero until they are
+			   defined */
+			if ((*pbiData).Separate(10) != 0)
+				return TRUE;
 
 			/* Data length for hierarchical */
 			iLenPartB = (*pbiData).Separate(12);
@@ -229,8 +232,10 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 	/* Short ID (the short ID is the index of the service-array) */
 	const int iTempShortID = (*pbiData).Separate(2);
 
-	/* rfu */
-	(*pbiData).Separate(2);
+	/* rfu: these 2 bits are reserved for future use and shall be set to zero
+	   until they are defined */
+	if ((*pbiData).Separate(2) != 0)
+		return TRUE;
 
 
 	/* Get label string ----------------------------------------------------- */
@@ -259,6 +264,166 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
 
 
 /******************************************************************************\
+* Data entity Type 3 (Alternative frequency signalling)                        *
+\******************************************************************************/
+_BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
+									  const int iLengthOfBody,
+									  CParameter& Parameter)
+{
+	_BOOLEAN bSyncMultplxFlag;
+	_BOOLEAN bEnhanceFlag;
+	_BOOLEAN bServRestrFlag;
+	_BOOLEAN bRegionSchedFlag;
+
+	/* Init number of frequency count */
+	int iNumFreq = iLengthOfBody;
+
+	/* Synchronous Multiplex flag: this flag indicates whether the multiplex is
+	   broadcast synchronously */
+	switch ((*pbiData).Separate(1))
+	{
+	case 0: /* 0 */
+		/* Multiplex is not synchronous (different content and/or channel
+		   parameters and/or multiplex parameters and/or signal timing in target
+		   area) */
+		bSyncMultplxFlag = FALSE;
+		break;
+
+	case 1: /* 1 */
+		/* Multiplex is synchronous (identical content and channel parameters
+		   and multiplex parameters and signal timing in target area) */
+		bSyncMultplxFlag = TRUE;
+		break;
+	}
+
+	/* Layer flag: this flag indicates whether the frequencies given apply to
+	   the base layer of the DRM multiplex or to the enhancement layer */
+	switch ((*pbiData).Separate(1))
+	{
+	case 0: /* 0 */
+		/* Base layer */
+		bEnhanceFlag = FALSE;
+		break;
+
+	case 1: /* 1 */
+		/* Enhancement layer */
+		bEnhanceFlag = TRUE;
+		break;
+	}
+
+	/* Service Restriction flag: this flag indicates whether all or just some of
+	   the services of the tuned multiplex are available in the DRM multiplex on
+	   the frequencies */
+	switch ((*pbiData).Separate(1))
+	{
+	case 0: /* 0 */
+		/* All services in the tuned multiplex are available on the frequencies
+		   given */
+		bServRestrFlag = FALSE;
+		break;
+
+	case 1: /* 1 */
+		/* A restricted set of services are available on the frequencies
+		   given */
+		bServRestrFlag = TRUE;
+		break;
+	}
+
+	/* Region/Schedule flag: this field indicates whether the list of
+	   frequencies is restricted by region and/or schedule or not */
+	switch ((*pbiData).Separate(1))
+	{
+	case 0: /* 0 */
+		/* No restriction */
+		bRegionSchedFlag = FALSE;
+		break;
+
+	case 1: /* 1 */
+		/* Region and/or schedule applies to this list of frequencies */
+		bRegionSchedFlag = TRUE;
+		break;
+	}
+
+	/* Service Restriction field: this 8 bit field is only present if the
+	   Service Restriction flag is set to 1 */
+	if (bServRestrFlag == TRUE)
+	{
+		/* Short Id flags 4 bits. This field indicates, which services
+		   (identified by their Short Id) of the tuned DRM multiplex are carried
+		   in the DRM multiplex on the alternative frequencies by setting the
+		   corresponding bit to 1. The first bit (msb) refers to Short Id 3,
+		   while the last bit (lsb) refers to Short Id 0 of the tuned DRM
+		   multiplex */
+		(*pbiData).Separate(4);
+
+		/* rfa 4 bits. This field (if present) is reserved for future additions
+		   and shall be set to zero until it is defined */
+		if ((*pbiData).Separate(4) != 0)
+			return TRUE;
+
+		/* Remove one byte from frequency count */
+		iNumFreq--;
+	}
+
+	/* Region/Schedule field: this 8 bit field is only present if the
+	   Region/Schedule flag is set to 1 */
+	if (bRegionSchedFlag == TRUE)
+	{
+		/* Region Id 4 bits. This field indicates whether the region is
+		   unspecified (value 0) or whether the alternative frequencies are
+		   valid just in certain geographic areas, in which case it carries
+		   the Region Id (value 1 to 15). The region may be described by one or
+		   more "Alternative frequency signalling: Region definition data entity
+		   - type 7" with this Region Id */
+		(*pbiData).Separate(4);
+
+		/* Schedule Id 4 bits. This field indicates whether the schedule is
+		   unspecified (value 0) or whether the alternative frequencies are
+		   valid just at certain times, in which case it carries the Schedule Id
+		   (value 1 to 15). The schedule is described by one or more
+		   "Alternative frequency signalling: Schedule definition data entity
+		   - type 4" with this Schedule Id */
+		(*pbiData).Separate(4);
+
+		/* Remove one byte from frequency count */
+		iNumFreq--;
+	}
+
+	/* Check for error (length of body must be so long to include Service
+	   Restriction field and Region/Schedule field, also check that
+	   remaining number of bytes is devidable by 2 since we read 16 bits) */
+	if ((iNumFreq < 0) || (iNumFreq % 2 != 0))
+		return TRUE;
+
+	/* n frequencies: this field carries n 16 bit fields. n is in the
+	   range 1 to 16. The number of frequencies, n, is determined from the
+	   length field of the header and the value of the Service Restriction flag
+	   and the Region/Schedule flag */
+	for (int i = 0; i < iNumFreq / 2 /* 16 bits are read */; i++)
+	{
+		/* rfu 1 bit. This field is reserved for future use of the frequency
+		   value field and shall be set to zero until defined */
+		if ((*pbiData).Separate(1) != 0)
+			return TRUE;
+
+		/* Frequency value 15 bits. This field is coded as an unsigned integer
+		   and gives the frequency in kHz */
+		const int iFreqVal = (*pbiData).Separate(15);
+
+/*
+// TEST
+static FILE* pFile = fopen("test/freqsched.dat", "w");
+fprintf(pFile, "%d%d%d%d %d\n", bSyncMultplxFlag, bEnhanceFlag, bServRestrFlag, bRegionSchedFlag, iFreqVal);
+fflush(pFile);
+*/
+
+	}
+
+	return FALSE;
+}
+
+
+/******************************************************************************\
 * Data entity Type 5 (Application information data entity)					   *
 \******************************************************************************/
 _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
@@ -280,7 +445,7 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
 	case 0: /* 0 */
 		DataParam.ePacketModInd = CParameter::PM_SYNCHRON_STR_MODE;
 
-		/* Descriptor (Dummy bits, not used) */
+		/* Descriptor (not used) */
 		(*pbiData).Separate(7);
 		break;
 
