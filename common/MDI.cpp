@@ -98,6 +98,11 @@ void CMDI::SetFACData(CVectorEx<_BINARY>& vecbiFACData, CParameter& Parameter)
 	/* SDC channel information tag must be created here because it must be sent
 	   with each AF packet */
 	GenTagSDCChanInf(Parameter);
+
+	/* RSCI tags ------------------------------------------------------------ */
+
+// TODO
+
 }
 
 void CMDI::SetSDCData(CVectorEx<_BINARY>& vecbiSDCData)
@@ -520,6 +525,32 @@ void CMDI::GenTagInfo(string strUTF8Text)
 	}
 }
 
+void CMDI::GenTagFACWMER(const _BOOLEAN bIsValid, const _REAL rRWMF)
+{
+	/* Weighted Modulation Error Ratio for FAC cells (rwmf) */
+	/* If no FWMER value is available, set tag length to zero */
+	if (bIsValid == FALSE)
+	{
+		/* Length: 0 byte */
+		PrepareTag(vecbiTagRWMF, "rwmf", 0);
+	}
+	else
+	{
+		/* Length: 2 bytes = 16 bits */
+		PrepareTag(vecbiTagRWMF, "rwmf", 16);
+
+		/* Set value: the format of this single value is (Byte1 + Byte2 / 256)
+		   = (Byte1.Byte2) in [dB] with: Byte1 is an 8-bit signed integer value;
+		   and Byte2 is an 8-bit unsigned integer value */
+		/* Integer part */
+		vecbiTagRWMF.Enqueue((uint32_t) rRWMF, SIZEOF__BYTE);
+
+		/* Fractional part */
+		const _REAL rFracPart = rRWMF - (int) rRWMF;
+		vecbiTagRWMF.Enqueue((uint32_t) (rFracPart * 256), SIZEOF__BYTE);
+	}
+}
+
 void CMDI::PrepareTag(CVector<_BINARY>& vecbiTag, const string strTagName,
 					  const int iLenDataBits)
 {
@@ -547,6 +578,7 @@ void CMDI::ResetTags(const _BOOLEAN bResetSDC)
 	vecbiTagSDCChanInf.Init(0); /* sdci tag */
 	vecbiTagRobMod.Init(0); /* robm tag */
 	vecbiTagInfo.Init(0); /* info tag */
+	vecbiTagRWMF.Init(0); /* RWMF tag */
 
 	for (int i = 0; i < MAX_NUM_STREAMS; i++)
 		vecbiTagStr[i].Init(0); /* strx tag */

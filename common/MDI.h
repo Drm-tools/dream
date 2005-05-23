@@ -108,6 +108,7 @@ protected:
 	void GenTagRobMod(const ERobMode eCurRobMode);
 	void GenTagStr(const int iStrNum, CVectorEx<_BINARY>& vecbiStrData);
 	void GenTagInfo(string strUTF8Text);
+	void GenTagFACWMER(const _BOOLEAN bIsValid, const _REAL rRWMF);
 
 	CVector<_BINARY> GenAFPacket(const _BOOLEAN bWithSDC);
 	void ResetTags(const _BOOLEAN bResetSDC);
@@ -130,6 +131,7 @@ protected:
 	CVector<_BINARY>			vecbiTagRobMod; /* robm tag */
 	CVector<_BINARY>			vecbiTagInfo; /* info tag */
 	CVector<CVector<_BINARY> >	vecbiTagStr; /* strx tag */
+	CVector<_BINARY>			vecbiTagRWMF; /* RWMF tag */
 
 	/* Special settings */
 	_BOOLEAN					bUseAFCRC;
