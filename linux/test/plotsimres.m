@@ -26,7 +26,7 @@
 %*
 %******************************************************************************/
 
-function [] = plotsimres(doremcompname)
+function [] = plotsimres(doremcompnamein)
 global plotcolors;
 global LW;
 global figstretch;
@@ -35,8 +35,10 @@ global doremcompname;
 	% Check parameters
 	if nargin < 1
         doremcompname = 0; % do not remove by default
+    else
+        doremcompname = doremcompnamein;
 	end
-	
+
 	close all;
 	
 	% definitions
