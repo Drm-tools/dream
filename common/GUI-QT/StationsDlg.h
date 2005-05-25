@@ -93,14 +93,19 @@
 #define NUM_SECONDS_PREV_15MIN			900
 #define NUM_SECONDS_PREV_30MIN			1800
 
+/* String definitions for schedule days */
+#define FLAG_STR_IRREGULAR_TRANSM		"0000000"
+#define CHR_ACTIVE_DAY_MARKER			'1'
+
 
 /* Classes ********************************************************************/
 class CStationsItem
 {
 public:
-	CStationsItem() : iStartHour(0), iStartMinute(0), iStopHour(0),
-		iStopMinute(0), iFreq(0), iDays(0), strName(""), strTarget(""),
-		strLanguage(""), strSite(""), strCountry(""), rPower((_REAL) 0.0) {}
+	CStationsItem() : iStartHour(0), iStartMinute(0), iStopHour(0), strName(""),
+		iStopMinute(0), iFreq(0), strDaysFlags(""), strDaysShow(""),
+		strTarget(""), strLanguage(""), strSite(""), strCountry(""),
+		rPower((_REAL) 0.0) {}
 
 	int GetStartTimeNum() {return iStartHour * 100 + iStartMinute;}
 	int GetStopTimeNum() {return iStopHour * 100 + iStopMinute;}
@@ -117,17 +122,20 @@ public:
 		iStopMinute = iStopTime - iStopHour * 100;
 	}
 
+	void SetDaysFlagString(const string strNewDaysFlags);
+
 	int		iStartHour;
 	int		iStartMinute;
 	int		iStopHour;
 	int		iStopMinute;
 	int		iFreq;
-	int		iDays;
 	string	strName;
 	string	strTarget;
 	string	strLanguage;
 	string	strSite;
 	string	strCountry;
+	string	strDaysFlags;
+	string	strDaysShow;
 	_REAL	rPower;
 };
 

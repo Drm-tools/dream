@@ -96,9 +96,20 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 		}
 
 		/* Days */
-		iFileStat = fscanf(pFile, "Days[SMTWTFS]=%d\n", &StationsItem.iDays);
+		/* Init days with the "irregular" marker in case no valid string could
+		   be read */
+		string strNewDaysFlags = FLAG_STR_IRREGULAR_TRANSM;
+
+		iFileStat = fscanf(pFile, "Days[SMTWTFS]=%255[^\n|^\r]\n", cName);
 		if (iFileStat != 1)
-			bReadOK = FALSE;
+			fscanf(pFile, "\n");
+		else
+		{
+			/* Check for length of input string (must be 7) */
+			const string strTMP = cName;
+			if (strTMP.length() == 7)
+				strNewDaysFlags = strTMP;
+		}
 
 		/* Frequency */
 		iFileStat = fscanf(pFile, "Frequency=%d\n", &StationsItem.iFreq);
@@ -106,42 +117,42 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 			bReadOK = FALSE;
 
 		/* Target */
-		iFileStat = fscanf(pFile, "Target=%255[^\n]\n", cName);
+		iFileStat = fscanf(pFile, "Target=%255[^\n|^\r]\n", cName);
 		if (iFileStat != 1)
 			fscanf(pFile, "\n");
 		else
 			StationsItem.strTarget = cName;
 
 		/* Power */
-		iFileStat = fscanf(pFile, "Power=%255[^\n]\n", cName);
+		iFileStat = fscanf(pFile, "Power=%255[^\n|^\r]\n", cName);
 		if (iFileStat != 1)
 			fscanf(pFile, "\n");
 		else
 			StationsItem.rPower = QString(cName).toFloat();
 
 		/* Name of the station */
-		iFileStat = fscanf(pFile, "Programme=%255[^\n]\n", cName);
+		iFileStat = fscanf(pFile, "Programme=%255[^\n|^\r]\n", cName);
 		if (iFileStat != 1)
 			fscanf(pFile, "\n");
 		else
 			StationsItem.strName = cName;
 
 		/* Language */
-		iFileStat = fscanf(pFile, "Language=%255[^\n]\n", cName);
+		iFileStat = fscanf(pFile, "Language=%255[^\n|^\r]\n", cName);
 		if (iFileStat != 1)
 			fscanf(pFile, "\n");
 		else
 			StationsItem.strLanguage = cName;
 
 		/* Site */
-		iFileStat = fscanf(pFile, "Site=%255[^\n]\n", cName);
+		iFileStat = fscanf(pFile, "Site=%255[^\n|^\r]\n", cName);
 		if (iFileStat != 1)
 			fscanf(pFile, "\n");
 		else
 			StationsItem.strSite = cName;
 
 		/* Country */
-		iFileStat = fscanf(pFile, "Country=%255[^\n]\n", cName);
+		iFileStat = fscanf(pFile, "Country=%255[^\n|^\r]\n", cName);
 		if (iFileStat != 1)
 			fscanf(pFile, "\n");
 		else
@@ -149,10 +160,16 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 
 		iFileStat = fscanf(pFile, "\n");
 
-
-		/* Add new item in table */
+		/* Check for error before applying data */
 		if (bReadOK == TRUE)
+		{
+			/* Set "days flag string" and generate strings for displaying active
+			   days */
+			StationsItem.SetDaysFlagString(strNewDaysFlags);
+
+			/* Add new item in table */
 			StationsTable.Add(StationsItem);
+		}
 	} while (!((iFileStat == EOF) || (bReadOK == FALSE)));
 
 	fclose(pFile);
@@ -219,17 +236,15 @@ _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 	}
 
 	/* Check day
-	   tm_wday: day of week (0 - 6; Sunday = 0). "iDays" are coded with pseudo
-	   binary representation. A one signalls that day is active. The most
-	   significant 1 is the sunday, then followed the monday and so on. Dividing
-	   by 10 moves the one to the right. "6 -" because we want to start on the
-	   left with the sunday */
-	if (((int) (StationsTable[iPos].iDays /
-		pow((_REAL) 10.0, (6 - gmtCur->tm_wday))) % 2 == 1) ||
+	   tm_wday: day of week (0 - 6; Sunday = 0). "strDaysFlags" are coded with
+	   pseudo binary representation. A one signalls that day is active. The most
+	   significant 1 is the sunday, then followed the monday and so on. */
+	if ((StationsTable[iPos].strDaysFlags[gmtCur->tm_wday] ==
+		CHR_ACTIVE_DAY_MARKER) ||
 		/* Check also for special case: days are 0000000. This is reserved for
 		   DRM test transmissions or irregular transmissions. We define here
 		   that these stations are transmitting every day */
-		(StationsTable[iPos].iDays == 0))
+		(StationsTable[iPos].strDaysFlags == FLAG_STR_IRREGULAR_TRANSM))
 	{
 		/* Check time interval */
 		if (lStopTime > lStartTime)
@@ -255,6 +270,57 @@ _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
 	}
 
 	return FALSE;
+}
+
+void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
+{
+	/* Set internal "days flag" string and "show days" string */
+	strDaysFlags = strNewDaysFlags;
+	strDaysShow = "";
+
+	/* Init days string vector */
+	const QString strDayDef [] =
+	{
+		QObject::tr("Sun"),
+		QObject::tr("Mon"),
+		QObject::tr("Tue"),
+		QObject::tr("Wed"),
+		QObject::tr("Thu"),
+		QObject::tr("Fri"),
+		QObject::tr("Sat")
+	};
+
+	/* First test for day constellations which allow to apply special names */
+	if (strDaysFlags == FLAG_STR_IRREGULAR_TRANSM)
+		strDaysShow = QObject::tr("irregular");
+	else if (strDaysFlags == "1111111")
+		strDaysShow = QObject::tr("daily");
+	else if (strDaysFlags == "1111100")
+		strDaysShow = QObject::tr("from Sun to Thu");
+	else if (strDaysFlags == "1111110")
+		strDaysShow = QObject::tr("from Sun to Fri");
+	else if (strDaysFlags == "0111110")
+		strDaysShow = QObject::tr("from Mon to Fri");
+	else if (strDaysFlags == "0111111")
+		strDaysShow = QObject::tr("from Mon to Sat");
+	else
+	{
+		/* No special name could be applied, just list all active days */
+		for (int i = 0; i < 7; i++)
+		{
+			/* Check if day is active */
+			if (strDaysFlags[i] == CHR_ACTIVE_DAY_MARKER)
+			{
+				/* Set commas in between the days, to not set a comma at
+				   the beginning */
+				if (strDaysShow != "") 
+					strDaysShow += ",";
+
+				/* Add current day */
+				strDaysShow += strDayDef[i];
+			}
+		}
+	}
 }
 
 StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
@@ -318,6 +384,7 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	ListViewStations->addColumn(tr("Country"));
 	ListViewStations->addColumn(tr("Site"));
 	ListViewStations->addColumn(tr("Language"));
+	ListViewStations->addColumn(tr("Days"));
 
 	/* Load the current schedule from file and initialize list view */
 	LoadSchedule(CDRMSchedule::SM_DRM);
@@ -851,6 +918,10 @@ void StationsDlg::SetStationsView()
 					DRMSchedule.GetItem(i).strSite.c_str()     /* site */,
 					DRMSchedule.GetItem(i).strLanguage.c_str() /* language */);
 
+				/* Show list of days */
+				vecpListItems[i]->setText(8,
+					DRMSchedule.GetItem(i).strDaysShow.c_str());
+
 				/* Insert this new item in list. The item object is destroyed by
 				   the list view control when this is destroyed */
 				ListViewStations->insertItem(vecpListItems[i]);
@@ -864,8 +935,11 @@ void StationsDlg::SetStationsView()
 			if (DRMSchedule.CheckState(i) == CDRMSchedule::IS_ACTIVE)
 			{
 				/* Check for "special case" transmissions */
-				if (DRMSchedule.GetItem(i).iDays == 0)
+				if (DRMSchedule.GetItem(i).strDaysFlags ==
+					FLAG_STR_IRREGULAR_TRANSM)
+				{
 					vecpListItems[i]->setPixmap(0, BitmCubeYellow);
+				}
 				else
 					vecpListItems[i]->setPixmap(0, BitmCubeGreen);
 			}
