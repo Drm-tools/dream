@@ -36,8 +36,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 						    CVector<_COMPLEX>& veccPilotCells, _REAL rSNR)
 {
 	int			j, i;
-	int			iPiHiIndex;
-	int			iCurrFiltPhase;
+	int			iPiHiIdx;
 	int			iTimeDiffNew;
 	_COMPLEX	cNewPilot;
 
@@ -51,28 +50,23 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 
 
 	/* Update histories for channel estimates at the pilot positions -------- */
-	for (i = 0; i < iNumCarrier; i++)
+	for (i = 0, iPiHiIdx = 0; i < iNumCarrier; i += iScatPilFreqInt, iPiHiIdx++)
 	{
 		/* Identify and calculate transfer function at the pilot positions */
 		if (_IsScatPil(veciMapTab[i]))
 		{
-			/* Pilots are only every "iScatPilFreqInt"'th carrier. It is not
-			   possible just to increase the "iPiHiIndex" because not in all
-			   cases a pilot is at position zero in "matiMapTab[]" */
-			iPiHiIndex = i / iScatPilFreqInt;
-
 			/* Save channel estimates at the pilot positions for each carrier
 			   Move old estimates and put new value. Use reversed order to
 			   prepare vector for convolution */
 			for (j = iLengthWiener - 1; j > 0; j--)
 			{
-				matcChanAtPilPos[j][iPiHiIndex] =
-					matcChanAtPilPos[j - 1][iPiHiIndex];
+				matcChanAtPilPos[j][iPiHiIdx] =
+					matcChanAtPilPos[j - 1][iPiHiIdx];
 			}
 
 			/* Add new channel estimate: h = r / s, h: transfer function of the
 			   channel, r: received signal, s: transmitted signal */
-			matcChanAtPilPos[0][iPiHiIndex] =
+			matcChanAtPilPos[0][iPiHiIdx] =
 				(*pvecInputData)[i] / veccPilotCells[i];
 
 
@@ -83,14 +77,47 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			{
 				/* Correct pilot information for phase rotation */
 				iTimeDiffNew = vecTiCorrHist[iScatPilTimeInt * j];
-				cNewPilot = Rotate(matcChanAtPilPos[j][iPiHiIndex], i,
+				cNewPilot = Rotate(matcChanAtPilPos[j][iPiHiIdx], i,
 					iTimeDiffNew);
 
 				/* Use IIR filtering for averaging */
 				IIR1(veccTiCorrEst[j],
-					Conj(matcChanAtPilPos[0][iPiHiIndex]) * cNewPilot,
+					Conj(matcChanAtPilPos[0][iPiHiIdx]) * cNewPilot,
 					rLamTiCorrAv);
 			}
+		}
+
+
+		/* Wiener interpolation and filtering ------------------------------- */
+		/* This check is for robustness mode D since "iScatPilFreqInt" is "1"
+		   in this case it would include the DC carrier in the for-loop */
+		if (!_IsDC(veciMapTab[i]))
+		{
+			/* Read current filter phase from table */
+			const int iCurrFiltPhase = matiFiltPhaseTable[iPiHiIdx]
+				[(*pvecInputData).GetExData().iSymbolID];
+
+			/* Convolution with one phase of the optimal filter */
+			/* Init sum */
+			_COMPLEX cCurChanEst = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
+			for (j = 0; j < iLengthWiener; j++)
+			{
+				/* We need to correct pilots due to timing corrections */
+				/* Calculate timing difference */
+				iTimeDiffNew =
+					vecTiCorrHist[j * iScatPilTimeInt + iCurrFiltPhase] -
+					vecTiCorrHist[iLenHistBuff - 1];
+
+				/* Correct pilot information for phase rotation */
+				cNewPilot =
+					Rotate(matcChanAtPilPos[j][iPiHiIdx], i, iTimeDiffNew);
+
+				/* Actual convolution with filter phase */
+				cCurChanEst += cNewPilot * matrFiltTime[iCurrFiltPhase][j];
+			}
+
+			/* Copy channel estimation from current symbol in output buffer */
+			veccOutputData[iPiHiIdx] = cCurChanEst;
 		}
 	}
 
@@ -134,69 +161,12 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		}
 	}
 
-
-	/* Wiener interpolation, filtering and prediction ----------------------- */
-	for (i = 0; i < iNumCarrier; i += iScatPilFreqInt)
-	{
-		/* This check is for robustness mode D since "iScatPilFreqInt" is "1"
-		   in this case it would include the DC carrier in the for-loop */
-		if (!_IsDC(veciMapTab[i]))
-		{
-			/* Pilots are only every "iScatPilFreqInt"'th carrier */
-			iPiHiIndex = i / iScatPilFreqInt;
-
-			/* Calculate current filter phase, use distance to next pilot */
-			iCurrFiltPhase = (iScatPilTimeInt - DisToNextPil(iPiHiIndex,
-				(*pvecInputData).GetExData().iSymbolID)) % iScatPilTimeInt;
-
-			/* Convolution with one phase of the optimal filter */
-			/* Init sum */
-			_COMPLEX cCurChanEst = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
-			for (j = 0; j < iLengthWiener; j++)
-			{
-				/* We need to correct pilots due to timing corrections ------ */
-				/* Calculate timing difference */
-				iTimeDiffNew =
-					vecTiCorrHist[j * iScatPilTimeInt + iCurrFiltPhase] -
-					vecTiCorrHist[iLenHistBuff - 1];
-
-				/* Correct pilot information for phase rotation */
-				cNewPilot = 
-					Rotate(matcChanAtPilPos[j][iPiHiIndex], i, iTimeDiffNew);
-
-				/* Actual convolution with filter phase */
-				cCurChanEst +=
-					cNewPilot * matrFiltTime[iCurrFiltPhase][j];
-			}
-
-
-			/* Copy channel estimation from current symbol in output buffer - */
-			veccOutputData[iPiHiIndex] = cCurChanEst;
-		}
-	}
-
-	/* Return the SNR improvement by wiener interpolation in time direction */
-	return 1 / rMMSE;
-}
-
-int CTimeWiener::DisToNextPil(const int iPiHiIndex, const int iSymNum) const
-{
-	/* Distance to next pilot (later in time!) of one specific
-	   carrier (with pilot). We do the "iNumSymPerFrame - iSymNum" to avoid
-	   negative numbers in the modulo operation */
-	return (iNumSymPerFrame - iSymNum + iFirstSymbWithPi + iPiHiIndex) %
-		iScatPilTimeInt;
+	/* Return the SNR improvement by Wiener interpolation in time direction */
+	return (_REAL) 1.0 / rMMSE;
 }
 
 int CTimeWiener::Init(CParameter& ReceiverParam)
 {
-	int		i, j;
-	int		iNoPiFreqDirAll;
-	int		iSymDelyChanEst;
-	int		iNumPilOneOFDMSym;
-	int		iNumIntpFreqPil;
-	_REAL	rSNR;
-
 	/* Init base class, must be at the beginning of this init! */
 	CPilotModiClass::InitRot(ReceiverParam);
 
@@ -205,10 +175,11 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	iScatPilTimeInt = ReceiverParam.iScatPilTimeInt;
 	iScatPilFreqInt = ReceiverParam.iScatPilFreqInt;
 	iNumSymPerFrame = ReceiverParam.iNumSymPerFrame;
-	iNumIntpFreqPil = ReceiverParam.iNumIntpFreqPil;
+	const int iNumIntpFreqPil = ReceiverParam.iNumIntpFreqPil;
 
-	/* We have to consider the last pilot at the end of the symbol ("+ 1") */
-	iNoPiFreqDirAll = iNumCarrier / iScatPilFreqInt + 1;
+	/* Generate filter phase table for Wiener filter */
+	GenFiltPhaseTable(ReceiverParam.matiMapTab, iNumCarrier, iNumSymPerFrame,
+		iScatPilTimeInt);
 
 	/* Init length of filter and maximum value of sigma (doppler) */
 	switch (ReceiverParam.GetWaveMode())
@@ -237,27 +208,31 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	/* Set delay of this channel estimation type. The longer the delay is, the
 	   more "acausal" pilots can be used for interpolation. We use the same
 	   amount of causal and acausal filter taps here */
-	iSymDelyChanEst = (iLengthWiener / 2) * iScatPilTimeInt - 1;
+	const int iSymDelyChanEst = (iLengthWiener / 2) * iScatPilTimeInt - 1;
 
 	/* Set number of phases for wiener filter */
-	iNoFiltPhasTi = iScatPilTimeInt;
+	iNumFiltPhasTi = iScatPilTimeInt;
 
 	/* Set length of history-buffer */
 	iLenHistBuff = iSymDelyChanEst + 1;
 
 	/* Duration of useful part plus-guard interval */
-	Ts = (_REAL) ReceiverParam.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
+	rTs = (_REAL) ReceiverParam.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
+
+	/* Total number of interpolated pilots in frequency direction. We have to
+	   consider the last pilot at the end ("+ 1") */
+	const int iTotNumPiFreqDir = iNumCarrier / iScatPilFreqInt + 1;
 
 	/* Allocate memory for Channel at pilot positions (matrix) and init with
 	   ones */
-	matcChanAtPilPos.Init(iLengthWiener, iNoPiFreqDirAll,
+	matcChanAtPilPos.Init(iLengthWiener, iTotNumPiFreqDir,
 		_COMPLEX((_REAL) 1.0, (_REAL) 0.0));
 
 	/* Set number of taps for sigma estimation */
-	if (iLengthWiener < NO_TAPS_USED4SIGMA_EST)
+	if (iLengthWiener < NUM_TAPS_USED4SIGMA_EST)
 		iNumTapsSigEst = iLengthWiener;
 	else
-		iNumTapsSigEst = NO_TAPS_USED4SIGMA_EST;
+		iNumTapsSigEst = NUM_TAPS_USED4SIGMA_EST;
 
 	/* Init vector for estimation of the correlation function in time direction
 	   (IIR average) */
@@ -266,14 +241,14 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	/* Init time constant for IIR filter for averaging correlation estimation.
 	   Consider averaging over frequency axis, too. Pilots in frequency
 	   direction are "iScatPilTimeInt * iScatPilFreqInt" apart */
-	iNumPilOneOFDMSym = iNumIntpFreqPil / iScatPilTimeInt;
+	const int iNumPilOneOFDMSym = iNumIntpFreqPil / iScatPilTimeInt;
 	rLamTiCorrAv = IIR1Lam(TICONST_TI_CORREL_EST * iNumPilOneOFDMSym,
 		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
 
-	/* Init Update counter for wiener filter update. We immediatly use the
+	/* Init update counter for Wiener filter update. We immediatly use the
 	   filtered result although right at the beginning there is no averaging.
-	   But sine the estimation usually starts with bigger values and goes down
-	   to the correct one, this should be not critical */
+	   But sine the estimation usually starts with higher values and goes down
+	   to the correct one, this should not be critical */
 	iUpCntWienFilt = iNumSymPerFrame;
 
 	/* Init averaging of SNR values */
@@ -282,23 +257,18 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 
 	/* Allocate memory for filter phases (Matrix) */
-	matrFiltTime.Init(iNoFiltPhasTi, iLengthWiener);
+	matrFiltTime.Init(iNumFiltPhasTi, iLengthWiener);
 
 	/* Length of the timing correction history buffer */
-	iLenTiCorrHist = iLengthWiener * iNoFiltPhasTi;
+	iLenTiCorrHist = iLengthWiener * iNumFiltPhasTi;
 
 	/* Init timing correction history with zeros */
 	vecTiCorrHist.Init(iLenTiCorrHist, 0);
 
-	/* Get the index of first symbol in a super-frame on where the first cell
-	   (carrier-index = 0) is a pilot. This is needed for determining the
-	   correct filter phase for the convolution */
-	iFirstSymbWithPi = 0;
-	while (!_IsScatPil(ReceiverParam.matiMapTab[iFirstSymbWithPi][0]))
-		iFirstSymbWithPi++;
-
 
 	/* Calculate optimal filter --------------------------------------------- */
+	_REAL rSNR;
+
 	/* Distinguish between simulation and regular receiver. When we run a
 	   simulation, the parameters are taken from simulation init */
 	if (ReceiverParam.eSimType == CParameter::ST_NONE)
@@ -354,41 +324,56 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	return iLenHistBuff;
 }
 
-_REAL CTimeWiener::UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma)
+void CTimeWiener::GenFiltPhaseTable(CMatrix<int>& matiMapTab,
+									const int iNumCarrier,
+									const int iNumSymPerFrame,
+									const int iScatPilTimeInt)
 {
-	int		j;
-	int		iCurrDiffPhase;
-	_REAL	rMMSE;
+	/* Init matrix */
+	matiFiltPhaseTable.Init(iNumCarrier, iNumSymPerFrame);
 
+	/* Get the index of first symbol in a super-frame on where the first cell
+	   (carrier-index = 0) is a pilot. This is needed for determining the
+	   correct filter phase for the convolution */
+	int iFirstSymWithPilot = 0;
+	while (!_IsScatPil(matiMapTab[iFirstSymWithPilot][0]))
+		iFirstSymWithPilot++;
+
+	for (int i = 0; i < iNumCarrier; i++)
+	{
+		for (int j = 0; j < iNumSymPerFrame; j++)
+		{
+			/* Calculate filter phases for Wiener filter for each OFDM cell in
+			   a DRM frame */
+			matiFiltPhaseTable[i][j] = (iScatPilTimeInt -
+				(iNumSymPerFrame - j + iFirstSymWithPilot + i) %
+				iScatPilTimeInt) % iScatPilTimeInt;
+		}
+	}
+}
+
+_REAL CTimeWiener::UpdateFilterCoef(const _REAL rNewSNR, const _REAL rNewSigma)
+{
 	/* Calculate MMSE for wiener filtering for all phases and average */
-	rMMSE = (_REAL) 0.0;
+	_REAL rMMSE = (_REAL) 0.0;
 
 	/* One filter for all possible filter phases */
-	for (j = 0; j < iNoFiltPhasTi; j++)
+	for (int j = 0; j < iNumFiltPhasTi; j++)
 	{
 		/* We have to define the dependency between the difference between the
 		   current pilot to the observed symbol in the history buffer and the
 		   indizes of the FiltTime array. Definition:
 		   Largest distance = index zero, index increases to smaller
 		   distances */
-		iCurrDiffPhase = -(iLenHistBuff - j - 1);
+		const int iCurrDiffPhase = -(iLenHistBuff - j - 1);
 
 		/* Calculate filter phase and average MMSE */
 		rMMSE += TimeOptimalFilter(matrFiltTime[j], iScatPilTimeInt,
-			iCurrDiffPhase,	rNewSNR, rNewSigma, Ts, iLengthWiener);
+			iCurrDiffPhase,	rNewSNR, rNewSigma, rTs, iLengthWiener);
 	}
 
-#if 0
-/* Save filter coefficients */
-static FILE* pFile = fopen("test/wienertime.dat", "w");
-for (int i = 0; i < iLengthWiener; i++)
-	for (j = 0; j < iNoFiltPhasTi; j++)
-		fprintf(pFile, "%e\n", matrFiltTime[j][i]);
-fflush(pFile);
-#endif
-
 	/* Normalize averaged MMSE */
-	rMMSE /= iNoFiltPhasTi;
+	rMMSE /= iNumFiltPhasTi;
 
 	return rMMSE;
 }
@@ -398,10 +383,8 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 									 const CReal rNewSigma, const CReal rTs,
 									 const int iLength)
 {
-	int			i;
-	CReal		rFactorArgExp;
-	CReal		rMMSE;
-	int			iCurPos;
+	int i;
+	int iCurPos;
 
 	CRealVector	vecrReturn(iLength);
 	CRealVector vecrRpp(iLength);
@@ -409,7 +392,7 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 
 	/* Factor for the argument of the exponetial function to generate the
 	   correlation function */
-	rFactorArgExp = 
+	const CReal rFactorArgExp = 
 		(CReal) -2.0 * crPi * crPi * rTs * rTs * rNewSigma * rNewSigma;
 
 	/* Doppler-spectrum for short-wave channel is Gaussian
@@ -436,10 +419,8 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	/* Call levinson algorithm to solve matrix system for optimal solution */
 	vecrTaps = Levinson(vecrRpp, vecrRhp);
 
-	/* Calculate MMSE for the current wiener filter */
-	rMMSE = (CReal) 1.0 - Sum(vecrRhp * vecrTaps);
-
-	return rMMSE;
+	/* Return MMSE for the current wiener filter */
+	return (CReal) 1.0 - Sum(vecrRhp * vecrTaps);
 }
 
 CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
@@ -462,8 +443,8 @@ CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
 	for (int i = 0; i < iVecLen; i++)
 		Tau[i] = (CReal) (i * iScatPilTimeInt);
 
-	/* Linearize acf equation:  y = a * exp(-b * x^2)
-	   z = ln(y);   w = x^2
+	/* Linearize acf equation:  y = a * exp(-b * x ^ 2)
+	   z = ln(y); w = x ^ 2
 	   -> z = a0 + a1 * w */
 	Z = Log(Abs(veccCorrEst));
 
@@ -477,7 +458,7 @@ CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
 	A1 = Sum(Wmrem * (Z - Zm)) / Sum(Wmrem * Wmrem);
 
 	/* Final sigma calculation from estimation and assumed Gaussian model */
-	rSigmaRet = (CReal) 0.5 / crPi * Sqrt((CReal) -2.0 * A1) / Ts;
+	rSigmaRet = (CReal) 0.5 / crPi * Sqrt((CReal) -2.0 * A1) / rTs;
 
 	/* Bound estimated sigma value */
 	if (rSigmaRet > rSigmaMax)

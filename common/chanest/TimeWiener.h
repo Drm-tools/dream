@@ -39,7 +39,7 @@
 
 /* Definitions ****************************************************************/
 /* Number of taps we want to use for sigma estimation */
-#define NO_TAPS_USED4SIGMA_EST			3
+#define NUM_TAPS_USED4SIGMA_EST			3
 
 /* Lengths of wiener filter for wiener filtering in time direction */
 #define LEN_WIENER_FILT_TIME_RMA		5
@@ -100,14 +100,18 @@ protected:
 							const int iDiff, const CReal rNewSNR, 
 							const CReal rNewSigma, const CReal rTs, 
 							const int iLength);
-	int DisToNextPil(const int iPiHiIndex, const int iSymNum) const;
-	_REAL UpdateFilterCoef(_REAL rNewSNR, _REAL rNewSigma);
+	void GenFiltPhaseTable(CMatrix<int>& matiMapTab, const int iNumCarrier,
+						   const int iNumSymPerFrame,
+						   const int iScatPilTimeInt);
+	_REAL UpdateFilterCoef(const _REAL rNewSNR, const _REAL rNewSigma);
 	CReal ModLinRegr(const CComplexVector& veccCorrEst);
+
+	CMatrix<int>		matiFiltPhaseTable;
 
 	int					iNumCarrier;
 
 	int					iLengthWiener;
-	int					iNoFiltPhasTi;
+	int					iNumFiltPhasTi;
 	CRealMatrix			matrFiltTime;
 	
 	CMatrix<_COMPLEX>	matcChanAtPilPos;
@@ -119,9 +123,6 @@ protected:
 	int					iScatPilTimeInt; /* Time interpolation */
 	int					iNumSymPerFrame;
 
-	/* Number of first symbol with pilot at carrier-number 0 */
-	int					iFirstSymbWithPi;
-
 	int					iLenHistBuff;
 
 	CShiftRegister<int>	vecTiCorrHist;
@@ -129,7 +130,7 @@ protected:
 	int					iNumTapsSigEst;
 	int					iUpCntWienFilt;
 
-	_REAL				Ts;
+	_REAL				rTs;
 	_REAL				rSigma;
 	_REAL				rSigmaMax;
 
