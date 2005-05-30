@@ -107,42 +107,42 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Inser actual items. The list is not sorted -> items which are inserted
 	   first show up at the end of the list */
 	/* Spectrum */
-	new CCharSelItem(pSpectrumLiViIt, tr("SNR Spectrum"),
-		CDRMPlot::SNR_SPECTRUM);
+	CCharSelItem* pListItSNRSpec = new CCharSelItem(pSpectrumLiViIt,
+		tr("SNR Spectrum"), CDRMPlot::SNR_SPECTRUM);
 	CCharSelItem* pListItAudSpec = new CCharSelItem(pSpectrumLiViIt,
 		tr("Audio Spectrum"), CDRMPlot::AUDIO_SPECTRUM);
-	new CCharSelItem(pSpectrumLiViIt, tr("Shifted PSD"),
-		CDRMPlot::POWER_SPEC_DENSITY);
-	new CCharSelItem(pSpectrumLiViIt, tr("Waterfall Input Spectrum"),
-		CDRMPlot::INP_SPEC_WATERF);
-	new CCharSelItem(pSpectrumLiViIt, tr("Input Spectrum"),
-		CDRMPlot::INPUTSPECTRUM_NO_AV);
+	CCharSelItem* pListItPowSpecDens = new CCharSelItem(pSpectrumLiViIt,
+		tr("Shifted PSD"), CDRMPlot::POWER_SPEC_DENSITY);
+	CCharSelItem* pListItInpSpecWater = new CCharSelItem(pSpectrumLiViIt,
+		tr("Waterfall Input Spectrum"), CDRMPlot::INP_SPEC_WATERF);
+	CCharSelItem* pListItInpSpectrNoAv = new CCharSelItem(pSpectrumLiViIt,
+		tr("Input Spectrum"), CDRMPlot::INPUTSPECTRUM_NO_AV);
 	CCharSelItem* pListItInpPSD = new CCharSelItem(pSpectrumLiViIt,
 		tr("Input PSD"), CDRMPlot::INPUT_SIG_PSD);
 
 	/* Constellation */
-	new CCharSelItem(pConstellationLiViIt, tr("MSC"),
-		CDRMPlot::MSC_CONSTELLATION);
-	new CCharSelItem(pConstellationLiViIt, tr("SDC"),
-		CDRMPlot::SDC_CONSTELLATION);
-	new CCharSelItem(pConstellationLiViIt, tr("FAC"),
-		CDRMPlot::FAC_CONSTELLATION);
-	new CCharSelItem(pConstellationLiViIt, tr("FAC / SDC / MSC"),
-		CDRMPlot::ALL_CONSTELLATION);
+	CCharSelItem* pListItConstMSC = new CCharSelItem(pConstellationLiViIt,
+		tr("MSC"), CDRMPlot::MSC_CONSTELLATION);
+	CCharSelItem* pListItConstSDC = new CCharSelItem(pConstellationLiViIt,
+		tr("SDC"), CDRMPlot::SDC_CONSTELLATION);
+	CCharSelItem* pListItConstFAC = new CCharSelItem(pConstellationLiViIt,
+		tr("FAC"), CDRMPlot::FAC_CONSTELLATION);
+	CCharSelItem* pListItConstAll = new CCharSelItem(pConstellationLiViIt,
+		tr("FAC / SDC / MSC"), CDRMPlot::ALL_CONSTELLATION);
 
 	/* History */
-	new CCharSelItem(pHistoryLiViIt, "Frequency / Sample Rate",
-		CDRMPlot::FREQ_SAM_OFFS_HIST);
-	new CCharSelItem(pHistoryLiViIt, tr("Delay / Doppler"),
-		CDRMPlot::DOPPLER_DELAY_HIST);
-	new CCharSelItem(pHistoryLiViIt, tr("SNR / Audio"),
-		CDRMPlot::SNR_AUDIO_HIST);
+	CCharSelItem* pListItHistFrSa = new CCharSelItem(pHistoryLiViIt,
+		tr("Frequency / Sample Rate"), CDRMPlot::FREQ_SAM_OFFS_HIST);
+	CCharSelItem* pListItHistDeDo = new CCharSelItem(pHistoryLiViIt,
+		tr("Delay / Doppler"), CDRMPlot::DOPPLER_DELAY_HIST);
+	CCharSelItem* pListItHistSNRAu = new CCharSelItem(pHistoryLiViIt,
+		tr("SNR / Audio"), CDRMPlot::SNR_AUDIO_HIST);
 
 	/* Channel */
-	new CCharSelItem(pChannelLiViIt, tr("Transfer Function"),
-		CDRMPlot::TRANSFERFUNCTION);
-	new CCharSelItem(pChannelLiViIt, tr("Impulse Response"),
-		CDRMPlot::AVERAGED_IR);
+	CCharSelItem* pListItChanTF = new CCharSelItem(pChannelLiViIt,
+		tr("Transfer Function"), CDRMPlot::TRANSFERFUNCTION);
+	CCharSelItem* pListItChanIR = new CCharSelItem(pChannelLiViIt,
+		tr("Impulse Response"), CDRMPlot::AVERAGED_IR);
 
 /* _WIN32 fix because in Visual c++ the GUI files are always compiled even
    if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */
@@ -169,10 +169,99 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	}
 	else
 	{
-		/* Default chart (at startup) */
-		ListViewCharSel->setSelected(pListItInpPSD, TRUE);
-		ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-		MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD);
+		/* Set chart type */
+		switch (pDRMRec->iSysEvalDlgPlotType)
+		{
+		case (int) CDRMPlot::POWER_SPEC_DENSITY:
+			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItPowSpecDens, TRUE);
+			MainPlot->SetupChart(CDRMPlot::POWER_SPEC_DENSITY);
+			break;
+
+		case (int) CDRMPlot::INPUTSPECTRUM_NO_AV:
+			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItInpSpectrNoAv, TRUE);
+			MainPlot->SetupChart(CDRMPlot::INPUTSPECTRUM_NO_AV);
+			break;
+
+		case (int) CDRMPlot::AUDIO_SPECTRUM:
+			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItAudSpec, TRUE);
+			MainPlot->SetupChart(CDRMPlot::AUDIO_SPECTRUM);
+			break;
+
+		case (int) CDRMPlot::SNR_SPECTRUM:
+			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItSNRSpec, TRUE);
+			MainPlot->SetupChart(CDRMPlot::SNR_SPECTRUM);
+			break;
+
+		case (int) CDRMPlot::INP_SPEC_WATERF:
+			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItInpSpecWater, TRUE);
+			MainPlot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
+			break;
+
+		case (int) CDRMPlot::TRANSFERFUNCTION:
+			ListViewCharSel->setOpen(pChannelLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItChanTF, TRUE);
+			MainPlot->SetupChart(CDRMPlot::TRANSFERFUNCTION);
+			break;
+
+		case (int) CDRMPlot::AVERAGED_IR:
+			ListViewCharSel->setOpen(pChannelLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItChanIR, TRUE);
+			MainPlot->SetupChart(CDRMPlot::AVERAGED_IR);
+			break;
+
+		case (int) CDRMPlot::FAC_CONSTELLATION:
+			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItConstFAC, TRUE);
+			MainPlot->SetupChart(CDRMPlot::FAC_CONSTELLATION);
+			break;
+
+		case (int) CDRMPlot::SDC_CONSTELLATION:
+			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItConstSDC, TRUE);
+			MainPlot->SetupChart(CDRMPlot::SDC_CONSTELLATION);
+			break;
+
+		case (int) CDRMPlot::MSC_CONSTELLATION:
+			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItConstMSC, TRUE);
+			MainPlot->SetupChart(CDRMPlot::MSC_CONSTELLATION);
+			break;
+
+		case (int) CDRMPlot::ALL_CONSTELLATION:
+			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItConstAll, TRUE);
+			MainPlot->SetupChart(CDRMPlot::ALL_CONSTELLATION);
+			break;
+
+		case (int) CDRMPlot::FREQ_SAM_OFFS_HIST:
+			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItHistFrSa, TRUE);
+			MainPlot->SetupChart(CDRMPlot::FREQ_SAM_OFFS_HIST);
+			break;
+
+		case (int) CDRMPlot::DOPPLER_DELAY_HIST:
+			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItHistDeDo, TRUE);
+			MainPlot->SetupChart(CDRMPlot::DOPPLER_DELAY_HIST);
+			break;
+
+		case (int) CDRMPlot::SNR_AUDIO_HIST:
+			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItHistSNRAu, TRUE);
+			MainPlot->SetupChart(CDRMPlot::SNR_AUDIO_HIST);
+			break;
+
+		default: /* INPUT_SIG_PSD, includes INPUT_SIG_PSD_ANALOG and NONE_OLD */
+			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
+			ListViewCharSel->setSelected(pListItInpPSD, TRUE);
+			MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD);
+			break;
+		}
 	}
 #endif
 
@@ -261,6 +350,10 @@ systemevalDlg::~systemevalDlg()
 	pDRMRec->GeomSystemEvalDlg.iYPos = WinGeom.y();
 	pDRMRec->GeomSystemEvalDlg.iHSize = WinGeom.height();
 	pDRMRec->GeomSystemEvalDlg.iWSize = WinGeom.width();
+
+	/* Store current plot type. Convert plot type into an integer type.
+       TODO: better solution */
+	pDRMRec->iSysEvalDlgPlotType = (int) MainPlot->GetChartType();
 
 	/* Call the hide event handler routine to make sure the chart window sizes
 	   and positions are stored */

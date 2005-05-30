@@ -222,10 +222,15 @@ void CSettings::ReadIniFile()
 	}
 
 
-	/* GUI customizations --------------------------------------------------- */
+	/* Other ---------------------------------------------------------------- */
 	/* Color scheme main plot */
 	if (GetNumericIniSet(ini, "GUI", "colorscheme", 0, MAX_COLOR_SCHEMES_VAL, iValue) == TRUE)
 		pDRMRec->iMainPlotColorStyle = iValue;
+
+	/* System evaluation dialog plot type. Maximum value is the last element
+	   in the plot type enum! */
+	if (GetNumericIniSet(ini, "GUI", "sysevplottype", 0, CDRMPlot::NONE_OLD, iValue) == TRUE)
+		pDRMRec->iSysEvalDlgPlotType = iValue;
 #endif
 
 
@@ -383,9 +388,12 @@ void CSettings::WriteIniFile()
 	}
 
 
-	/* GUI customizations --------------------------------------------------- */
+	/* Other ---------------------------------------------------------------- */
 	/* Color scheme main plot */
 	SetNumericIniSet(ini, "GUI", "colorscheme", pDRMRec->iMainPlotColorStyle);
+
+	/* System evaluation dialog plot type */
+	SetNumericIniSet(ini, "GUI", "sysevplottype", pDRMRec->iSysEvalDlgPlotType);
 #endif
 
 
