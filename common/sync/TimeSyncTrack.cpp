@@ -61,7 +61,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		(_REAL) vecTiCorrHist[0] * iNumCarrier / iDFTSize;
 
 	/* Integer part of shift */
-	const int iIntPartTiCorr = Round(rActShiftTiCor);
+	const int iIntPartTiCorr = (int) Round(rActShiftTiCor);
 
 	/* Extract the fractional part since we can only correct integer timing
 	   shifts */
