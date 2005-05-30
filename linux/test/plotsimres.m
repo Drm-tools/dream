@@ -436,12 +436,14 @@ return;
 % set legend
 function [] = setlegend(simres, handles)
 global figstretch;
+	
+	if (length(handles) > 0)
+	    legend(handles, simres.name, 'Location', 'NorthEastOutside');
 
-    legend(handles, simres.name, 'Location', 'NorthEastOutside');
-
-    % stretch figure since we want to have the legend outside on the right
-    figpos = get(gcf, 'Position');
-    set(gcf, 'Position', [figpos(1) figpos(2) figpos(3) * figstretch figpos(4)]);
+	    % stretch figure since we want to have the legend outside on the right
+	    figpos = get(gcf, 'Position');
+	    set(gcf, 'Position', [figpos(1) figpos(2) figpos(3) * figstretch figpos(4)]);
+	end
 return;
 
 
