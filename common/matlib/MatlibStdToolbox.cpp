@@ -258,9 +258,9 @@ printf("couldn't invert matrix, possibly singular.\n");
 
 /* This function is not listed in the header file. It shall be used only for
    Matlib internal calculations */
-CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
-				const CReal errorBound, CReal& integralBound,
-				_BOOLEAN& integralError, const CReal ru)
+CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
+				   const CReal errorBound, CReal& integralBound,
+				   _BOOLEAN& integralError, const CReal ru)
 {
 /*
 	The following code (inclusive the actual Quad() function) is based on a
@@ -269,103 +269,29 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 
 	Description: Adaptive Simpson's Quadrature
 
-    _integral(f, a, b, errorBound) attempts to integrate f from
-    a to b while keeping the asymptotic error estimate below
-    errorBound using an adaptive implementation of Simpson's rule.
+	_integral(f, a, b, errorBound) attempts to integrate f from
+	a to b while keeping the asymptotic error estimate below
+	errorBound using an adaptive implementation of Simpson's rule.
 
-    The integrand can be unbounded and the limits can be infinite.
-
-	Note: Instead of NaN we use _MAXREAL.
+	Notes: Instead of NaN we use _MAXREAL. Infinite bounds are not allowed! The
+	lower bound must always be smaller than the higher bound!
 */
 
-	CReal	left, right, fa, fb, v1, v2;
-	CReal	error, bound, h, h6, value, result;
-	int		m1, jend, mstart, j;
+	CReal		left, right, h, h6, bound;
+	CComplex	fa, fb, v1, v2, error, value;
+	int			m1, jend, mstart, j;
 
 	if (integralError)
 		return _MAXREAL; /* NaN */
-
-	/* Swap integration limits? */
-	if (a > b)
-	{
-		return -_integral(f, b, a, errorBound,
-			integralBound, integralError, ru);
-	}
-
-	/* Integrate over ]-infinity,+infinity[? */
-	if ((a == -_MAXREAL) && (b == _MAXREAL))
-	{
-		return _integral(f, 0, b, 0.5 * errorBound, integralBound,
-			integralError, ru) + _integral(f, a, 0, 0.5 * errorBound,
-			integralBound, integralError, ru);
-	}
-
-	/* Integrate over [a,+infinity[? */
-	if (b == _MAXREAL)
-	{
-		h = 5;
-		left = a;
-		right = a + h;
-		result = 0;
-
-		do
-		{
-			value = _integral(f, left, right, errorBound / h, integralBound,
-				integralError, ru);
-
-			result += value;
-			h = 2 * h;
-			left = right;
-			right = left + h;
-		}
-		while ((value != _MAXREAL /* NaN */) && (Abs(value) >=
-			0.5 * errorBound / h) && (left < right));
-
-		if (integralError)
-			result = _MAXREAL; /* NaN */
-
-		return result;
-	}
-
-	/* Integrate over ]-infinity,b]? */
-	if (a == -_MAXREAL)
-	{
-		h = 5;
-		left = b - h;
-		right = b;
-		result = 0;
-		
-		do
-		{
-			value = _integral(f, left, right, errorBound / h, integralBound,
-				integralError, ru);
-
-			result += value;
-			h = 2 * h;
-			right = left;
-			left = right - h;
-		}
-		while ((value != _MAXREAL /* NaN */) && (Abs(value) >=
-			0.5 * errorBound / h) && (left < right));
-		
-		if (integralError)
-			result = _MAXREAL; /* NaN */
-
-		return result;
-	}
-
-	if (integralError)
-		return _MAXREAL; /* NaN */
-
 
 	/* Integrate over [a,b]. Initialize */
 	const int max = 1024;
 	CRealVector x(max);
-	CRealVector f1(max);
-	CRealVector f2(max);
-	CRealVector f3(max);
-	CRealVector v(max);
-  
+	CComplexVector f1(max);
+	CComplexVector f2(max);
+	CComplexVector f3(max);
+	CComplexVector v(max);
+
 	int step = 1;
 	int m = 1;
 	bound = errorBound;
@@ -373,9 +299,9 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	h = b - a;
 	x[0] = a;
 	f1[0] = f(a);
-	f2[0] = f(0.5 * (a + b));
+	f2[0] = f((CReal) 0.5 * (a + b));
 	f3[0] = f(b);
-	v[0] = h * (f1[0] + 4 * f2[0] + f3[0]) / 6;
+	v[0] = h * (f1[0] + (CReal) 4.0 * f2[0] + f3[0]) / (CReal) 6.0;
 
 	do
 	{
@@ -399,33 +325,30 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 			mstart = max - 1;
 		}
 		
-		h = 0.5 * h;
+		h = (CReal) 0.5 * h;
 		h6 = h / 6;
-		bound = 0.5 * bound;
+		bound = (CReal) 0.5 * bound;
 		
 		do
 		{
 			left = x[j];
-			right = x[j] + 0.5 * h;
+			right = x[j] + (CReal) 0.5 * h;
 
 			/* Complete loss of significance? */
 			if (left >= right)
 			{
-//				alert('integral: Error 1');
+				printf("integral: Error 1");
 				return value;
 			}
-			
-			fa = f(x[j] + 0.5 * h);
-			fb = f(x[j] + 1.5 * h);
-			v1 = h6 * (f1[j] + 4 * fa + f2[j]);
-			v2 = h6 * (f2[j] + 4 * fb + f3[j]);
-			
-			error = (v[j] - v1 - v2) / 15;
-			
+
+			fa = f(x[j] + (CReal) 0.5 * h);
+			fb = f(x[j] + (CReal) 1.5 * h);
+			v1 = h6 * (f1[j] + (CReal) 4.0 * fa + f2[j]);
+			v2 = h6 * (f2[j] + (CReal) 4.0 * fb + f3[j]);
+			error = (v[j] - v1 - v2) / (CReal) 15.0;
+
 			if ((Abs(error) <= bound) || (Abs(v1 + v2) < Abs(value) * ru))
-			{
 				value = ((v1 + v2) + value) - error;
-			}
 			else
 			{
 				if (integralError)
@@ -435,12 +358,12 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 				if (m == j)
 				{
 					left = x[j];
-					right = x[j] + 0.5 * h;
+					right = x[j] + (CReal) 0.5 * h;
 
 					/* Complete loss of significance? */
 					if (left >= right)
 					{
-//						alert('integral: Error 2');
+						printf("integral: Error 2");
 						return value;
 					}
 
@@ -451,7 +374,7 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 				{
 					/* No, we are not */
 					left = x[j];
-					right = x[j] + 0.125 * h;
+					right = x[j] + (CReal) 0.125 * h;
 
 					if (left >= right)
 					{
@@ -459,7 +382,7 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 						integralError = TRUE;
 						return _MAXREAL; /* NaN */
 					}
-					
+
 					m1 = m + step;
 					x[m] = x[j];
 					x[m1] = x[j] + h;
@@ -480,21 +403,18 @@ CReal _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	}
 	while (m != mstart);
 
-	result = value;
-
 	if (integralError)
-		result = _MAXREAL; /* NaN */
-
-	return result;
+		return _MAXREAL; /* NaN */
+	else
+		return value;
 }
 
-CReal Quad(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
-		   const CReal errorBound)
+CComplex Quad(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
+			  const CReal errorBound)
 {
-	CReal value;
-
 	/* Set globals */
 	/* Generate rounding unit */
+	CReal value;
 	CReal ru = (CReal) 1.0;
 	do
 	{

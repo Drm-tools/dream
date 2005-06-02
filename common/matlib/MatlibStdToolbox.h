@@ -261,8 +261,8 @@ CMatlibVector<CReal>		FftFilt(const CMatlibVector<CComplex>& rvH,
 
 
 /* Numerical integration */
-typedef CReal(MATLIB_CALLBACK_QAUD)(CReal rX); /* Callback function definition */
-CReal						Quad(MATLIB_CALLBACK_QAUD f, const CReal a,
+typedef CComplex(MATLIB_CALLBACK_QAUD)(CReal rX); /* Callback function definition */
+CComplex					Quad(MATLIB_CALLBACK_QAUD f, const CReal a,
 								 const CReal b, const CReal errorBound = 1.e-6);
 
 
