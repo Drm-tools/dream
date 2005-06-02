@@ -8,22 +8,22 @@
  * Description:
  *
  * 11/10/2004 Stephane Fillod
- *  - QT translation
+ *	- QT translation
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -101,14 +101,14 @@ try
 {
 	CDRMSimulation DRMSimulation;
 
-	/* Parse arguments and load settings from init-file */
-	CSettings Settings(&DRMReceiver);
-	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
-
-	/* Call simulation script. If simulation is activated, application is 
+	/* Call simulation script. If simulation is activated, application is
 	   automatically exit in that routine. If in the script no simulation is
 	   activated, this function will immediately return */
 	DRMSimulation.SimScript();
+
+	/* Parse arguments and load settings from init-file */
+	CSettings Settings(&DRMReceiver);
+	const _BOOLEAN bIsReceiver = Settings.Load(argc, argv);
 
 	/* Load and install multi-language support (if available) */
 	QTranslator translator(0);
@@ -244,7 +244,7 @@ void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam) {}
 #endif /* USE_QT_GUI */
 
 
-void DebugError(const char* pchErDescr, const char* pchPar1Descr, 
+void DebugError(const char* pchErDescr, const char* pchPar1Descr,
 				const double dPar1, const char* pchPar2Descr,
 				const double dPar2)
 {
