@@ -39,6 +39,7 @@
 #include <qdatetime.h>
 #include <qregexp.h>
 #include <qtooltip.h>
+#include <qtextstream.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/MultimediaDlgbase.h"
@@ -111,7 +112,7 @@ protected:
 	QTimer					Timer;
 	QMenuBar*				pMenu;
 	QPopupMenu*				pFileMenu;
-    virtual void			showEvent(QShowEvent* pEvent);
+	virtual void			showEvent(QShowEvent* pEvent);
 	virtual void			hideEvent(QHideEvent* pEvent);
 	CVector<CMOTObject>		vecRawImages;
 	int						iCurImagePos;
@@ -135,6 +136,9 @@ protected:
 	void InitJournaline();
 
 	void JpgToPng(CMOTObject& NewPic);
+
+	void ExtractJournalineBody(const int iCurJourID, const _BOOLEAN bHTMLExport,
+		QString &strTitle, QString &strItems);
 
 public slots:
 	void OnTimer();

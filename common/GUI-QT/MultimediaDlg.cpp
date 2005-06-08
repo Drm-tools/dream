@@ -5,8 +5,8 @@
  * Author(s):
  *	Volker Fischer
  *
- * Description:
- *
+ * 6/8/2005 Andrea Russo
+ *	- save Journaline pages as HTML
  *
  ******************************************************************************
  *
@@ -70,7 +70,6 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		"<table><tr><td><img source=\"PixmapLogoJournaline\"></td>"
 		"<td><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
 		"</h2></td></tr></table>";
-
 
 	/* Set Menu ***************************************************************/
 	/* File menu ------------------------------------------------------------ */
@@ -213,22 +212,32 @@ void MultimediaDlg::OnTimer()
 	}
 }
 
-void MultimediaDlg::SetJournalineText()
+void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
+										  const _BOOLEAN bHTMLExport,
+										  QString& strTitle, QString& strItems)
 {
 	/* Get news from actual Journaline decoder */
 	CNews News;
-	pDRMRec->GetDataDecoder()->GetNews(iCurJourObjID, News);
+	pDRMRec->GetDataDecoder()->GetNews(iCurJourID, News);
 
 	/* Decode UTF-8 coding for title */
-	QString strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));
+	strTitle = QString().fromUtf8(QCString(News.sTitle.c_str()));
 
-	/* News items */
-	QString strItems("");
+	strItems = "";
 	for (int i = 0; i < News.vecItem.Size(); i++)
 	{
-		/* Decode UTF-8 coding of this item text */
-		QString strCurItem = QString().fromUtf8(
-			QCString(News.vecItem[i].sText.c_str()));
+		QString strCurItem;
+		if (bHTMLExport == FALSE)
+		{
+			/* Decode UTF-8 coding of this item text */
+			strCurItem = QString().fromUtf8(
+				QCString(News.vecItem[i].sText.c_str()));
+		}
+		else
+		{
+			/* In case of HTML export, do not decode UTF-8 coding */
+			strCurItem = News.vecItem[i].sText.c_str();
+		}
 
 		/* Replace \n by html command <br> */
 		strCurItem = strCurItem.replace(QRegExp("\n"), "<br>");
@@ -245,18 +254,31 @@ void MultimediaDlg::SetJournalineText()
 		}
 		else
 		{
-			QString strLinkStr = QString().setNum(News.vecItem[i].iLink);
+			if (bHTMLExport == FALSE) 
+			{
+				QString strLinkStr = QString().setNum(News.vecItem[i].iLink);
 
-			/* Un-ordered list item with link */
-			strItems += QString("<li><a href=\"") + strLinkStr +
-				QString("\">") + strCurItem +
-				QString("</a></li>");
+				/* Un-ordered list item with link */
+				strItems += QString("<li><a href=\"") + strLinkStr +
+					QString("\">") + strCurItem +
+					QString("</a></li>");
 
-			/* Store link location in factory (stores ID) */
-			QMimeSourceFactory::defaultFactory()->
-				setText(strLinkStr, strLinkStr);
+				/* Store link location in factory (stores ID) */
+				QMimeSourceFactory::defaultFactory()->
+					setText(strLinkStr, strLinkStr);
+			}
+			else
+				strItems += QString("<li>") + strCurItem + QString("</li>");
 		}
 	}
+}
+
+void MultimediaDlg::SetJournalineText()
+{
+	/* Get title and body with html links */
+	QString strTitle("");
+	QString strItems("");
+	ExtractJournalineBody(iCurJourObjID, FALSE, strTitle, strItems);
 
 	/* Set html text. Standard design. The first character must be a "<". This
 	   is used to identify whether normal text is displayed or an ID was set */
@@ -273,6 +295,12 @@ void MultimediaDlg::SetJournalineText()
 	/* Only update text browser if text has changed */
 	if (TextBrowser->text().compare(strAllText) != 0)
 		TextBrowser->setText(strAllText);
+
+	/* Enable / disable "save" menu item if title is present or not */
+	if (strTitle == "")
+		pFileMenu->setItemEnabled(1, FALSE);
+	else
+		pFileMenu->setItemEnabled(1, TRUE);
 }
 
 void MultimediaDlg::showEvent(QShowEvent* pEvent)
@@ -443,22 +471,64 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 
 void MultimediaDlg::OnSave()
 {
-	/* Show "save file" dialog */
-	/* Set file name */
-	QString strDefFileName = vecRawImages[iCurImagePos].strName.c_str();
+	QString strFileName;
+	QString strDefFileName;
 
-	/* Use default file name if no file name was transmitted */
-	if (strDefFileName.length() == 0)
-		strDefFileName = "RecPic";
+	switch (eAppType)
+	{
+	case CDataDecoder::AT_MOTSLISHOW:
+		/* Show "save file" dialog */
+		/* Set file name */
+		strDefFileName = vecRawImages[iCurImagePos].strName.c_str();
 
-	QString strFileName =
-		QFileDialog::getSaveFileName(strDefFileName + "." +
-		QString(vecRawImages[iCurImagePos].strFormat.c_str()),
-		"*." + QString(vecRawImages[iCurImagePos].strFormat.c_str()), this);
+		/* Use default file name if no file name was transmitted */
+		if (strDefFileName.length() == 0)
+			strDefFileName = "RecPic";
 
-	/* Check if user not hit the cancel button */
-    if (!strFileName.isNull())
-		SavePicture(iCurImagePos, strFileName);
+		strFileName =
+			QFileDialog::getSaveFileName(strDefFileName + "." +
+			QString(vecRawImages[iCurImagePos].strFormat.c_str()),
+			"*." + QString(vecRawImages[iCurImagePos].strFormat.c_str()), this);
+
+		/* Check if user not hit the cancel button */
+		if (!strFileName.isNull())
+			SavePicture(iCurImagePos, strFileName);
+		break;
+
+	case CDataDecoder::AT_JOURNALINE:
+		/* Save to file current journaline page */
+		QString strTitle("");
+		QString strItems("");
+
+		/* TRUE = without html links */
+		ExtractJournalineBody(iCurJourObjID, TRUE, strTitle, strItems);
+
+		/* Prepare HTML page for storing the content (header, body tags, etc) */
+		QString strJornalineText = "<html>\n<head>\n"
+			"<meta http-equiv=\"content-Type\" "
+			"content=\"text/html; charset=utf-8\">\n<title>" + strTitle +
+			"</title>\n</head>\n\n<body>\n<table>\n"
+			"<tr><th>" + strTitle + "</th></tr>\n"
+			"<tr><td><ul type=\"square\">" + strItems + "</ul></td></tr>\n"
+			"</table>\n</body>\n</html>";
+
+		strFileName = QFileDialog::getSaveFileName(strTitle + ".html",
+			"*.html", this);
+
+		if (!strFileName.isNull())
+		{
+			/* Save Journaline page as a text stream */
+			QFile FileObj(strFileName);
+
+			if (FileObj.open(IO_WriteOnly))
+			{
+				QTextStream TextStream(&FileObj);
+				TextStream << strJornalineText; /* Actual writing */
+				FileObj.close();
+			}
+		}
+		break;
+	}
 }
 
 void MultimediaDlg::OnSaveAll()
@@ -467,7 +537,7 @@ void MultimediaDlg::OnSaveAll()
 	QString strDirName =
 		QFileDialog::getExistingDirectory(NULL, this);
 
-    if (!strDirName.isNull())
+	if (!strDirName.isNull())
 	{
 		/* Loop over all pictures received yet */
 		for (int j = 0; j < GetIDLastPicture() + 1; j++)
