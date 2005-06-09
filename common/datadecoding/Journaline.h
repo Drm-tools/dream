@@ -58,8 +58,11 @@ struct CNewsItem
 	int		iLink;
 };
 
-struct CNews
+class CNews
 {
+public:
+	CNews() : sTitle(""), vecItem(0) {}
+
 	string				sTitle;
 	CVector<CNewsItem>	vecItem;
 };
