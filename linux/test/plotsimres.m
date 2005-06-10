@@ -52,6 +52,10 @@ global doremcompname;
 
 	% Get file names of simulation results files
 	files = dir('*.dat');
+	if (length(files) == 0)
+		disp('no simulation output files found');
+		return;
+	end
 
 	% sort files by date
 	filedates = [];
