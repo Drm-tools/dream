@@ -45,7 +45,7 @@ global doremcompname;
 	% definitions
 	plotcolors = {'b-' 'g-' 'r-' 'k-' 'm-' 'y-' 'c-' ...
         'b--' 'g--' 'r--' 'k--' 'm--' 'y--' 'c--' ...
-        'b.-' 'g.-' 'r.-' 'k.-' 'm.-' 'y.-' 'c.-'};
+        'b-.' 'g-.' 'r-.' 'k-.' 'm-.' 'y-.' 'c-.'};
 	LW = 2; % line width
 	figstretch = 1.6;
 
