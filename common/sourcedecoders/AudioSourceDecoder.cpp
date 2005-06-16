@@ -295,11 +295,15 @@ else
 // TEST needed since 960 transform length is not yet implemented in faac!
 int iBitRate;
 if (lNumSampEncIn == 1024)
+{
 	iBitRate = (int) (((_REAL) iActEncOutBytes * SIZEOF__BYTE * 960.0 / 1024.0) /
 		iTimeEachAudBloMS * 1000);
+}
 else
+{
 	iBitRate = (int) (((_REAL) iActEncOutBytes * SIZEOF__BYTE) /
 		iTimeEachAudBloMS * 1000);
+}
 
 		/* Set encoder configuration */
 		CurEncFormat = faacEncGetCurrentConfiguration(hEncoder);
@@ -326,11 +330,15 @@ else
 		/* Init resample objects */
 // TEST needed since 960 transform length is not yet implemented in faac!
 if (lNumSampEncIn == 1024)
+{
 	ResampleObj.Init(iNumInSamplesMono,
 		(_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE * 1024.0 / 960.0);
+}
 else
+{
 	ResampleObj.Init(iNumInSamplesMono,
 		(_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE);
+}
 
 		/* Calculate number of bytes for higher protected blocks */
 		iNumHigherProtectedBytes =
@@ -396,7 +404,13 @@ CAudioSourceEncoder::~CAudioSourceEncoder()
 \******************************************************************************/
 void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int i;
+	int					i, j;
+	_BOOLEAN			bCurBlockOK;
+#ifdef USE_FAAD2_LIBRARY
+	faacDecFrameInfo	DecFrameInfo;
+	_BOOLEAN			bGoodValues;
+	short*				psDecOutSampleBuf;
+#endif
 
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == TRUE)
@@ -415,99 +429,124 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 
-#ifdef USE_FAAD2_LIBRARY
-	faacDecFrameInfo	DecFrameInfo;
-	_BOOLEAN			bGoodValues;
-	short*				psDecOutSampleBuf;
-	int					j;
-
-	/* Check if AAC should not be decoded */
-	if (DoNotProcessAAC == TRUE)
+	/* Audio data header parsing **********************************************/
+	/* Check if audio shall not be decoded */
+	if (DoNotProcessAudDecoder == TRUE)
 		return;
-
-
-	/* Extract audio data from stream *****************************************/
+	
 	/* Reset bit extraction access */
 	(*pvecInputData).ResetBitAccess();
 
 
-	/* AAC super-frame-header ----------------------------------------------- */
-	int iPrevBorder = 0;
-	for (i = 0; i < iNumBorders; i++)
+	/* Check which audio coding type is used */
+	if (eAudioCoding == CParameter::AC_AAC)
 	{
-		/* Frame border in bytes (12 bits) */
-		const int iFrameBorder = (*pvecInputData).Separate(12);
-
-		/* The lenght is difference between borders */
-		veciFrameLength[i] = iFrameBorder - iPrevBorder;
-		iPrevBorder = iFrameBorder;
-	}
-
-	/* Byte-alignment (4 bits) in case of 10 audio frames */
-	if (iNumBorders == 9)
-		(*pvecInputData).Separate(4); 
-
-	/* Frame length of last frame */
-	veciFrameLength[iNumBorders] = iAudioPayloadLen - iPrevBorder;
-
-	/* Check if frame length entries represent possible values */
-	bGoodValues = TRUE;
-	for (i = 0; i < iNumAACFrames; i++)
-	{
-		if ((veciFrameLength[i] < 0) ||
-			(veciFrameLength[i] > iMaxLenOneAudFrame))
+#ifdef USE_FAAD2_LIBRARY
+		/* AAC super-frame-header ------------------------------------------- */
+		int iPrevBorder = 0;
+		for (i = 0; i < iNumBorders; i++)
 		{
-			bGoodValues = FALSE;
-		}
-	}
+			/* Frame border in bytes (12 bits) */
+			const int iFrameBorder = (*pvecInputData).Separate(12);
 
-	if (bGoodValues == TRUE)
-	{
-		/* Higher-protected part -------------------------------------------- */
-		for (i = 0; i < iNumAACFrames; i++)
-		{
-			/* Extract higher protected part bytes (8 bits per byte) */
-			for (j = 0; j < iNumHigherProtectedBytes; j++)
-				audio_frame[i][j] = (*pvecInputData).Separate(8);
-
-			/* Extract CRC bits (8 bits) */
-			aac_crc_bits[i] = (*pvecInputData).Separate(8);
+			/* The lenght is difference between borders */
+			veciFrameLength[i] = iFrameBorder - iPrevBorder;
+			iPrevBorder = iFrameBorder;
 		}
 
+		/* Byte-alignment (4 bits) in case of 10 audio frames */
+		if (iNumBorders == 9)
+			(*pvecInputData).Separate(4); 
 
-		/* Lower-protected part --------------------------------------------- */
-		for (i = 0; i < iNumAACFrames; i++)
+		/* Frame length of last frame */
+		veciFrameLength[iNumBorders] = iAudioPayloadLen - iPrevBorder;
+
+		/* Check if frame length entries represent possible values */
+		bGoodValues = TRUE;
+		for (i = 0; i < iNumAudioFrames; i++)
 		{
-			/* First calculate frame length, derived from higher protected part
-			   frame length and total size */
-			const int iNumLowerProtectedBytes =
-				veciFrameLength[i] - iNumHigherProtectedBytes;
-
-			/* Extract lower protected part bytes (8 bits per byte) */
-			for (j = 0; j < iNumLowerProtectedBytes; j++)
+			if ((veciFrameLength[i] < 0) ||
+				(veciFrameLength[i] > iMaxLenOneAudFrame))
 			{
-				audio_frame[i][iNumHigherProtectedBytes + j] =
-					(*pvecInputData).Separate(8);
+				bGoodValues = FALSE;
 			}
 		}
+
+		if (bGoodValues == TRUE)
+		{
+			/* Higher-protected part */
+			for (i = 0; i < iNumAudioFrames; i++)
+			{
+				/* Extract higher protected part bytes (8 bits per byte) */
+				for (j = 0; j < iNumHigherProtectedBytes; j++)
+					audio_frame[i][j] = (*pvecInputData).Separate(8);
+
+				/* Extract CRC bits (8 bits) */
+				aac_crc_bits[i] = (*pvecInputData).Separate(8);
+			}
+
+			/* Lower-protected part */
+			for (i = 0; i < iNumAudioFrames; i++)
+			{
+				/* First calculate frame length, derived from higher protected
+				   part frame length and total size */
+				const int iNumLowerProtectedBytes =
+					veciFrameLength[i] - iNumHigherProtectedBytes;
+
+				/* Extract lower protected part bytes (8 bits per byte) */
+				for (j = 0; j < iNumLowerProtectedBytes; j++)
+				{
+					audio_frame[i][iNumHigherProtectedBytes + j] =
+						(*pvecInputData).Separate(8);
+				}
+			}
+		}
+#endif
+	}
+	else if (eAudioCoding == CParameter::AC_CELP)
+	{
+		/* celp_super_frame(celp_table_ind) --------------------------------- */
+		/* Higher-protected part */
+		for (i = 0; i < iNumAudioFrames; i++)
+		{
+			celp_frame[i].ResetBitAccess();
+
+			/* Extract higher protected part bits */
+			for (j = 0; j < iNumHigherProtectedBits; j++)
+				celp_frame[i].Enqueue((*pvecInputData).Separate(1), 1);
+
+			/* Extract CRC bits (8 bits) if used */
+			if (bCELPCRC == TRUE)
+				celp_crc_bits[i] = (*pvecInputData).Separate(8);
+		}
+
+		/* Lower-protected part */
+		for (i = 0; i < iNumAudioFrames; i++)
+		{
+			for (j = 0; j < iNumLowerProtectedBits; j++)
+				celp_frame[i].Enqueue((*pvecInputData).Separate(1), 1);
+		}
 	}
 
 
-	/* AAC decoder ************************************************************/
+	/* Audio decoding *********************************************************/
 	/* Init output block size to zero, this variable is also used for
 	   determining the position for writing the output vector */
 	iOutputBlockSize = 0;
 
-	for (j = 0; j < iNumAACFrames; j++)
+	for (j = 0; j < iNumAudioFrames; j++)
 	{
-		if (bGoodValues == TRUE)
+		if (eAudioCoding == CParameter::AC_AAC)
 		{
-			/* Prepare data vector with CRC at the beginning (the definition
-			   with faad2 DRM interface) */
-			vecbyPrepAudioFrame[0] = aac_crc_bits[j];
+#ifdef USE_FAAD2_LIBRARY
+			if (bGoodValues == TRUE)
+			{
+				/* Prepare data vector with CRC at the beginning (the definition
+				   with faad2 DRM interface) */
+				vecbyPrepAudioFrame[0] = aac_crc_bits[j];
 
-			for (i = 0; i < veciFrameLength[j]; i++)
-				vecbyPrepAudioFrame[i + 1] = audio_frame[j][i];
+				for (i = 0; i < veciFrameLength[j]; i++)
+					vecbyPrepAudioFrame[i + 1] = audio_frame[j][i];
 
 #if 0
 // Store AAC-data in file
@@ -542,31 +581,154 @@ if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
 	strAACTestFileName += "_sbr";
 }
 strAACTestFileName += ".dat";
-
 static FILE* pFile2 = fopen(strAACTestFileName.c_str(), "wb");
-
 int iNewFrL = veciFrameLength[j] + 1;
-
-// Frame length
-fwrite((void*) &iNewFrL, size_t(4), size_t(1), pFile2);
-
-size_t count = veciFrameLength[j] + 1; /* Number of bytes to write */
-fwrite((void*) &vecbyPrepAudioFrame[0], size_t(1), count, pFile2);
-
+fwrite((void*) &iNewFrL, size_t(4), size_t(1), pFile2); // frame length
+fwrite((void*) &vecbyPrepAudioFrame[0], size_t(1), size_t(iNewFrL), pFile2); // data
 fflush(pFile2);
 #endif
 
-			/* Call decoder routine */
-			psDecOutSampleBuf = (short*) NeAACDecDecode(HandleAACDecoder,
-				&DecFrameInfo, &vecbyPrepAudioFrame[0], veciFrameLength[j] + 1);
+				/* Call decoder routine */
+				psDecOutSampleBuf = (short*) NeAACDecDecode(HandleAACDecoder,
+					&DecFrameInfo, &vecbyPrepAudioFrame[0],
+					veciFrameLength[j] + 1);
+
+				if (DecFrameInfo.error != 0)
+					bCurBlockOK = FALSE; /* Set error flag */
+				else
+				{
+					bCurBlockOK = TRUE;
+
+					/* Conversion from _SAMPLE vector to _REAL vector for
+					   resampling. ATTENTION: We use a vector which was
+					   allocated inside the AAC decoder! */
+					if (DecFrameInfo.channels == 1)
+					{
+						/* Change type of data (short -> real) */
+						for (i = 0; i < iLenDecOutPerChan; i++)
+							vecTempResBufInLeft[i] = psDecOutSampleBuf[i];
+
+						/* Resample data */
+						ResampleObjL.Resample(vecTempResBufInLeft,
+							vecTempResBufOutCurLeft);
+
+						/* Mono (write the same audio material in both
+						   channels) */
+						for (i = 0; i < iResOutBlockSize; i++)
+						{
+							vecTempResBufOutCurRight[i] =
+								vecTempResBufOutCurLeft[i];
+						}
+					}
+					else
+					{
+						/* Stereo */
+						for (i = 0; i < iLenDecOutPerChan; i++)
+						{
+							vecTempResBufInLeft[i] =
+								psDecOutSampleBuf[i * 2];
+							vecTempResBufInRight[i] =
+								psDecOutSampleBuf[i * 2 + 1];
+						}
+
+						/* Resample data */
+						ResampleObjL.Resample(vecTempResBufInLeft,
+							vecTempResBufOutCurLeft);
+						ResampleObjR.Resample(vecTempResBufInRight,
+							vecTempResBufOutCurRight);
+					}
+				}
+			}
+			else
+			{
+				/* DRM AAC header was wrong, set flag to "bad block" */
+				bCurBlockOK = FALSE;
+			}
+#endif
+	}
+	else if (eAudioCoding == CParameter::AC_CELP)
+	{
+		if (bCELPCRC == TRUE)
+		{
+			/* Prepare CRC object and data stream */
+			CELPCRCObject.Reset(8);
+			celp_frame[j].ResetBitAccess();
+
+			for (i = 0; i < iNumHigherProtectedBits; i++)
+				CELPCRCObject.AddBit((_BINARY) celp_frame[j].Separate(1));
+
+			bCurBlockOK = CELPCRCObject.CheckCRC(celp_crc_bits[j]);
 		}
 		else
-		{
-			/* DRM AAC header was wrong, set decoder error code */
-			DecFrameInfo.error = 1;
-		}
+			bCurBlockOK = TRUE;
 
-		if (DecFrameInfo.error != 0)
+
+#if 0
+// Store CELP-data in file
+char cDummy[200];
+string strCELPTestFileName = "test/celp_";
+if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].
+	AudioParam.eAudioSamplRate == CParameter::AS_8_KHZ)
+{
+	strCELPTestFileName += "8kHz_";
+	strCELPTestFileName += _itoa(iTableCELP8kHzUEPParams[ReceiverParam.Service[
+		ReceiverParam.GetCurSelAudioService()].AudioParam.iCELPIndex][0], cDummy, 10);
+}
+else
+{
+	strCELPTestFileName += "16kHz_";
+	strCELPTestFileName += _itoa(iTableCELP16kHzUEPParams[ReceiverParam.Service[
+		ReceiverParam.GetCurSelAudioService()].AudioParam.iCELPIndex][0], cDummy, 10);
+}
+strCELPTestFileName += "bps";
+
+if (ReceiverParam.Service[ReceiverParam.GetCurSelAudioService()].AudioParam.
+	eSBRFlag == CParameter::SB_USED)
+{
+	strCELPTestFileName += "_sbr";
+}
+strCELPTestFileName += ".dat";
+
+static FILE* pFile2 = fopen(strCELPTestFileName.c_str(), "wb");
+int iTotNumBits = iNumHigherProtectedBits + iNumLowerProtectedBits;
+int iNewFrL = (int) Ceil((CReal) iTotNumBits / 8);
+fwrite((void*) &iNewFrL, size_t(4), size_t(1), pFile2); // frame length
+celp_frame[j].ResetBitAccess();
+for (i = 0; i < iNewFrL; i++)
+{
+	int iNumBits = Min(iTotNumBits - i * 8, 8);
+	_BYTE bCurVal = (_BYTE) celp_frame[j].Separate(iNumBits);
+	fwrite((void*) &bCurVal, size_t(1), size_t(1), pFile2); // data
+}
+fflush(pFile2);
+#endif
+
+
+
+#ifdef USE_CELP_DECODER
+
+/* Write zeros in current output buffer since we do not have a decoder */
+for (i = 0; i < iResOutBlockSize; i++)
+{
+	vecTempResBufOutCurLeft[i] = (_REAL) 0.0;
+	vecTempResBufOutCurRight[i] = (_REAL) 0.0;
+}
+
+#endif
+
+	}
+	else
+		bCurBlockOK = FALSE;
+
+
+
+
+
+// This code is independent of particular audio source type and should work
+// fine with CELP and HVXC
+
+		/* Postprocessing of audio blocks, status informations -------------- */
+		if (bCurBlockOK == FALSE)
 		{
 			/* Set AAC CRC result in log file */
 			ReceiverParam.ReceptLog.SetMSC(FALSE);
@@ -643,39 +805,6 @@ fflush(pFile2);
 			/* Post message to show that CRC was OK */
 			PostWinMessage(MS_MSC_CRC, 0);
 
-			/* Conversion from _SAMPLE vector to _REAL vector for resampling.
-			   ATTENTION: We use a vector which was allocated inside
-			   the AAC decoder! */
-			if (DecFrameInfo.channels == 1)
-			{
-				/* Change type of data (short -> real) */
-				for (i = 0; i < iLenDecOutPerChan; i++)
-					vecTempResBufInLeft[i] = psDecOutSampleBuf[i];
-
-				/* Resample data */
-				ResampleObjL.Resample(vecTempResBufInLeft,
-					vecTempResBufOutCurLeft);
-
-				/* Mono (write the same audio material in both channels) */
-				for (i = 0; i < iResOutBlockSize; i++)
-					vecTempResBufOutCurRight[i] = vecTempResBufOutCurLeft[i];
-			}
-			else
-			{
-				/* Stereo */
-				for (i = 0; i < iLenDecOutPerChan; i++)
-				{
-					vecTempResBufInLeft[i] = psDecOutSampleBuf[i * 2];
-					vecTempResBufInRight[i] = psDecOutSampleBuf[i * 2 + 1];
-				}
-
-				/* Resample data */
-				ResampleObjL.Resample(vecTempResBufInLeft,
-					vecTempResBufOutCurLeft);
-				ResampleObjR.Resample(vecTempResBufInRight,
-					vecTempResBufOutCurRight);
-			}
-
 			if (bAudioWasOK == FALSE)
 			{
 				if (bUseReverbEffect == TRUE)
@@ -737,7 +866,6 @@ fflush(pFile2);
 			vecTempResBufOutOldRight[i] = vecTempResBufOutCurRight[i];
 		}
 	}
-#endif
 }
 
 void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
@@ -752,24 +880,23 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 	int iCurAudioStreamID;
 	int iMaxLenResamplerOutput;
 	int iCurSelServ;
-	int iDRMchanMode;
 	int iAudioSampleRate;
-	int iAACSampleRate;
-	int	iLenAudHigh;
-	int	iNumHeaderBytes;
+
+	/* Init error flags and output block size parameter. The output block
+	   size is set in the processing routine. We must set it here in case
+	   of an error in the initialization, this part in the processing
+	   routine is not being called */
+	DoNotProcessAudDecoder = FALSE;
+	DoNotProcessData = FALSE;
+	iOutputBlockSize = 0;
 
 	try
 	{
-		/* Init error flags and output block size parameter. The output block
-		   size is set in the processing routine. We must set it here in case
-		   of an error in the initialization, this part in the processing
-		   routine is not being called */
-		DoNotProcessAAC = FALSE;
-		DoNotProcessData = FALSE;
-		iOutputBlockSize = 0;
-
 		/* Init counter for correctly decoded audio blocks */
 		iNumCorDecAudio = 0;
+
+		/* Init "audio was ok" flag */
+		bAudioWasOK = TRUE;
 
 		/* Get number of total input bits for this module */
 		iInputBlockSize = ReceiverParam.iNumAudioDecoderBits;
@@ -818,112 +945,227 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 			break;
 		}
 
+		/* Get audio coding type */
+		eAudioCoding =
+			ReceiverParam.Service[iCurSelServ].AudioParam.eAudioCoding;
 
+
+		if (eAudioCoding == CParameter::AC_AAC)
+		{
 #ifdef USE_FAAD2_LIBRARY
-		/* Init for AAC decoding -------------------------------------------- */
-		/* Check, if AAC is used */
-		if (ReceiverParam.Service[iCurSelServ].AudioParam.
-			eAudioCoding != CParameter::AC_AAC)
-		{
-			throw CInitErr(ET_AAC);
-		}
+			/* Init for AAC decoding ---------------------------------------- */
+			int iAACSampleRate, iNumHeaderBytes, iDRMchanMode;
 
-		/* Init "audio was ok" flag */
-		bAudioWasOK = TRUE;
+			/* Length of higher protected part of audio stream */
+			const int iLenAudHigh =
+				ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
 
-		/* Length of higher protected part of audio stream */
-		iLenAudHigh = ReceiverParam.Stream[iCurAudioStreamID].iLenPartA;
+			/* Set number of AAC frames in a AAC super-frame */
+			switch (ReceiverParam.Service[iCurSelServ].AudioParam.
+				eAudioSamplRate) /* Only 12 kHz and 24 kHz is allowed */
+			{
+			case CParameter::AS_12KHZ:
+				iNumAudioFrames = 5;
+				iNumHeaderBytes = 6;
+				iAACSampleRate = 12000;
+				break;
 
-		/* Set number of AAC frames in a AAC super-frame */
-		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioSamplRate)
-		{ /* only 12 kHz and 24 kHz is allowed */
-		case CParameter::AS_12KHZ:
-			iNumAACFrames = 5;
-			iNumHeaderBytes = 6;
-			iAACSampleRate = 12000;
-			break;
+			case CParameter::AS_24KHZ:
+				iNumAudioFrames = 10;
+				iNumHeaderBytes = 14;
+				iAACSampleRate = 24000;
+				break;
 
-		case CParameter::AS_24KHZ:
-			iNumAACFrames = 10;
-			iNumHeaderBytes = 14;
-			iAACSampleRate = 24000;
-			break;
+			default:
+				/* Some error occurred, throw error */
+				throw CInitErr(ET_AUDDECODER);
+				break;
+			}
 
-		default:
-			/* Some error occurred, throw error */
-			throw CInitErr(ET_AAC);
-			break;
-		}
+			/* Number of borders */
+			iNumBorders = iNumAudioFrames - 1;
 
-		/* Number of borders */
-		iNumBorders = iNumAACFrames - 1;
+			/* Number of channels for AAC: Mono, PStereo, Stereo */
+			switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioMode)
+			{
+			case CParameter::AM_MONO:
+				if (ReceiverParam.Service[iCurSelServ].AudioParam.
+					eSBRFlag == CParameter::SB_USED)
+				{
+					iDRMchanMode = DRMCH_SBR_MONO;
+				}
+				else
+					iDRMchanMode = DRMCH_MONO;
+				break;
 
-		/* Set number of AAC frames for log file */
-		ReceiverParam.ReceptLog.SetNumAAC(iNumAACFrames);
+			case CParameter::AM_P_STEREO:
+				/* Low-complexity only defined in SBR mode */
+				iDRMchanMode = DRMCH_SBR_PS_STEREO;
+				break;
 
-		/* Number of channels for AAC: Mono, PStereo, Stereo */
-		switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioMode)
-		{
-		case CParameter::AM_MONO:
+			case CParameter::AM_STEREO:
+				if (ReceiverParam.Service[iCurSelServ].AudioParam.
+					eSBRFlag == CParameter::SB_USED)
+				{
+					iDRMchanMode = DRMCH_SBR_STEREO;
+				}
+				else
+				{
+					iDRMchanMode = DRMCH_STEREO;
+				}
+				break;
+			}
+
+			/* In case of SBR, AAC sample rate is half the total sample rate.
+			   Length of output is doubled if SBR is used */
 			if (ReceiverParam.Service[iCurSelServ].AudioParam.
 				eSBRFlag == CParameter::SB_USED)
 			{
-				iDRMchanMode = DRMCH_SBR_MONO;
-			}
-			else
-				iDRMchanMode = DRMCH_MONO;
-			break;
-
-		case CParameter::AM_P_STEREO:
-			/* Low-complexity only defined in SBR mode */
-			iDRMchanMode = DRMCH_SBR_PS_STEREO;
-			break;
-
-		case CParameter::AM_STEREO:
-			if (ReceiverParam.Service[iCurSelServ].AudioParam.
-				eSBRFlag == CParameter::SB_USED)
-			{
-				iDRMchanMode = DRMCH_SBR_STEREO;
+				iAudioSampleRate = iAACSampleRate * 2;
+				iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH * 2;
 			}
 			else
 			{
-				iDRMchanMode = DRMCH_STEREO;
+				iAudioSampleRate = iAACSampleRate;
+				iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH;
 			}
-			break;
+
+			/* The audio_payload_length is derived from the length of the audio
+			   super frame (data_length_of_part_A + data_length_of_part_B)
+			   subtracting the audio super frame overhead (bytes used for the
+			   audio super frame header() and for the aac_crc_bits)
+			   (5.3.1.1, Table 5) */
+			iAudioPayloadLen = iTotalFrameSize / SIZEOF__BYTE -
+				iNumHeaderBytes - iNumAudioFrames;
+
+			/* Check iAudioPayloadLen value, only positive values make sense */
+			if (iAudioPayloadLen < 0)
+				throw CInitErr(ET_AUDDECODER);
+
+			/* Calculate number of bytes for higher protected blocks */
+			iNumHigherProtectedBytes = (iLenAudHigh - iNumHeaderBytes -
+				iNumAudioFrames /* CRC bytes */) / iNumAudioFrames;
+
+			if (iNumHigherProtectedBytes < 0)
+				iNumHigherProtectedBytes = 0;
+
+			/* The maximum length for one audio frame is "iAudioPayloadLen". The
+			   regular size will be much shorter since all audio frames share
+			   the total size, but we do not know at this time how the data is
+			   split in the transmitter source coder */
+			iMaxLenOneAudFrame = iAudioPayloadLen;
+			audio_frame.Init(iNumAudioFrames, iMaxLenOneAudFrame);
+
+			/* Init vector which stores the data with the CRC at the beginning
+			   ("+ 1" for CRC) */
+			vecbyPrepAudioFrame.Init(iMaxLenOneAudFrame + 1);
+
+			/* Init storage for CRCs and frame lengths */
+			aac_crc_bits.Init(iNumAudioFrames);
+			veciFrameLength.Init(iNumAudioFrames);
+
+			/* Init AAC-decoder */
+			NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate, iDRMchanMode);
+#else
+			/* No AAC decoder available */
+			throw CInitErr(ET_AUDDECODER);
+#endif
 		}
-
-		/* In case of SBR, AAC sample rate is half the total sample rate. Length
-		   of output is doubled if SBR is used */
-		if (ReceiverParam.Service[iCurSelServ].AudioParam.
-			eSBRFlag == CParameter::SB_USED)
+		else if (eAudioCoding == CParameter::AC_CELP)
 		{
-			iAudioSampleRate = iAACSampleRate * 2;
-			iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH * 2;
+			/* Init for CELP decoding --------------------------------------- */
+			int iCurCelpIdx, iCelpFrameLength;
+
+			/* Set number of AAC frames in a AAC super-frame */
+			switch (ReceiverParam.Service[iCurSelServ].AudioParam.
+				eAudioSamplRate) /* Only 8000 and 16000 is allowed */
+			{
+			case CParameter::AS_8_KHZ:
+				/* Check range */
+				iCurCelpIdx =
+					ReceiverParam.Service[iCurSelServ].AudioParam.iCELPIndex;
+
+				if ((iCurCelpIdx > 0) &&
+					(iCurCelpIdx < LEN_CELP_8KHZ_UEP_PARAMS_TAB))
+				{
+					/* CELP frame length */
+					iCelpFrameLength = iTableCELP8kHzUEPParams[iCurCelpIdx][1];
+
+					/* Number of bits for lower and higher protected parts */
+					iNumHigherProtectedBits =
+						iTableCELP8kHzUEPParams[iCurCelpIdx][2];
+					iNumLowerProtectedBits =
+						iTableCELP8kHzUEPParams[iCurCelpIdx][3];
+				}
+				break;
+
+			case CParameter::AS_16KHZ:
+				/* Check range */
+				iCurCelpIdx =
+					ReceiverParam.Service[iCurSelServ].AudioParam.iCELPIndex;
+
+				if ((iCurCelpIdx > 0) &&
+					(iCurCelpIdx < LEN_CELP_16KHZ_UEP_PARAMS_TAB))
+				{
+					/* CELP frame length */
+					iCelpFrameLength = iTableCELP16kHzUEPParams[iCurCelpIdx][1];
+
+					/* Number of bits for lower and higher protected parts */
+					iNumHigherProtectedBits =
+						iTableCELP16kHzUEPParams[iCurCelpIdx][2];
+					iNumLowerProtectedBits =
+						iTableCELP16kHzUEPParams[iCurCelpIdx][3];
+				}
+				break;
+
+			default:
+				/* Some error occurred, throw error */
+				throw CInitErr(ET_AUDDECODER);
+				break;
+			}
+
+			/* Check lengths of iNumHigherProtectedBits and
+			   iNumLowerProtectedBits for overrun */
+			const int iTotalNumCELPBits =
+				iNumHigherProtectedBits + iNumLowerProtectedBits;
+
+			if (iTotalNumCELPBits * SIZEOF__BYTE > iTotalFrameSize )
+				throw CInitErr(ET_AUDDECODER);
+
+			/* Calculate number of audio frames (one audio super frame is
+			   always 400 ms long) */
+			iNumAudioFrames = 400 /* ms */ / iCelpFrameLength /* ms */;
+
+			/* Set CELP CRC flag */
+			bCELPCRC = ReceiverParam.Service[iCurSelServ].AudioParam.bCELPCRC;
+
+			/* Init vectors storing the CELP raw data and CRCs */
+			celp_frame.Init(iNumAudioFrames, iTotalNumCELPBits);
+			celp_crc_bits.Init(iNumAudioFrames);
+
+
+// TEST
+iLenDecOutPerChan = 0;
+
+
+#ifdef USE_CELP_DECODER
+
+// TODO put decoder initialization here
+
+#else
+			/* No CELP decoder available */
+			throw CInitErr(ET_AUDDECODER);
+#endif
 		}
 		else
 		{
-			iAudioSampleRate = iAACSampleRate;
-			iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH;
+			/* Audio codec not supported */
+			throw CInitErr(ET_AUDDECODER);
 		}
 
-		/* The audio_payload_length is derived from the length of the audio
-		   super frame (data_length_of_part_A + data_length_of_part_B)
-		   subtracting the audio super frame overhead (bytes used for the audio
-		   super frame header() and for the aac_crc_bits) (5.3.1.1, Table 5) */
-		iAudioPayloadLen =
-			iTotalFrameSize / SIZEOF__BYTE - iNumHeaderBytes - iNumAACFrames;
 
-		/* Check iAudioPayloadLen value, only positive values make sense */
-		if (iAudioPayloadLen < 0)
-			throw CInitErr(ET_AAC);
-
-		/* Calculate number of bytes for higher protected blocks */
-		iNumHigherProtectedBytes =
-			(iLenAudHigh - iNumHeaderBytes - iNumAACFrames /* CRC bytes */) /
-			iNumAACFrames;
-
-		if (iNumHigherProtectedBytes < 0)
-			iNumHigherProtectedBytes = 0;
+		/* Set number of AAC frames for log file */
+		ReceiverParam.ReceptLog.SetNumAAC(iNumAudioFrames);
 
 		/* Since we do not correct for sample rate offsets here (yet), we do not
 		   have to consider larger buffers. An audio frame always corresponds
@@ -938,8 +1180,8 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		   between _REAL and _SAMPLE. We have to init the buffers with
 		   zeros since it can happen, that we have bad CRC right at the
 		   start of audio blocks */
-		vecTempResBufInLeft.Init(iLenDecOutPerChan);
-		vecTempResBufInRight.Init(iLenDecOutPerChan);
+		vecTempResBufInLeft.Init(iLenDecOutPerChan, (_REAL) 0.0);
+		vecTempResBufInRight.Init(iLenDecOutPerChan, (_REAL) 0.0);
 		vecTempResBufOutCurLeft.Init(iResOutBlockSize, (_REAL) 0.0);
 		vecTempResBufOutCurRight.Init(iResOutBlockSize, (_REAL) 0.0);
 		vecTempResBufOutOldLeft.Init(iResOutBlockSize, (_REAL) 0.0);
@@ -954,36 +1196,12 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 		/* Clear reverberation object */
 		AudioRev.Clear();
 
-
-		/* AAC decoder ------------------------------------------------------ */
-		/* The maximum length for one audio frame is "iAudioPayloadLen". The
-		   regular size will be much shorter since all audio frames share the
-		   total size, but we do not know at this time how the data is 
-		   split in the transmitter source coder */
-		iMaxLenOneAudFrame = iAudioPayloadLen;
-		audio_frame.Init(iNumAACFrames, iMaxLenOneAudFrame);
-
-		/* Init vector which stores the data with the CRC at the beginning
-		   ("+ 1" for CRC) */
-		vecbyPrepAudioFrame.Init(iMaxLenOneAudFrame + 1);
-
-		/* Init storage for CRCs and frame lengths */
-		aac_crc_bits.Init(iNumAACFrames);
-		veciFrameLength.Init(iNumAACFrames);
-
-		/* Init AAC-decoder */
-		NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate, iDRMchanMode);
-
 		/* With this parameter we define the maximum lenght of the output
 		   buffer. The cyclic buffer is only needed if we do a sample rate
 		   correction due to a difference compared to the transmitter. But for
 		   now we do not correct and we could stay with a single buffer
 		   Maybe TODO: sample rate correction to avoid audio dropouts */
 		iMaxOutputBlockSize = iMaxLenResamplerOutput;
-#else
-		/* No audio output if AAC library is not used */
-		iOutputBlockSize = 0;
-#endif
 	}
 
 	catch (CInitErr CurErr)
@@ -995,9 +1213,9 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 			DoNotProcessData = TRUE;
 			break;
 
-		case ET_AAC:
-			/* AAC part should not be decdoded, set flag */
-			DoNotProcessAAC = TRUE;
+		case ET_AUDDECODER:
+			/* Audio part should not be decdoded, set flag */
+			DoNotProcessAudDecoder = TRUE;
 			break;
 
 		default:
