@@ -70,6 +70,26 @@ void CCRC::AddByte(const _BYTE byNewInput)
 	}
 }
 
+void CCRC::AddBit(const _BINARY biNewInput)
+{
+	/* Shift bits in shift-register for transistion */
+	iStateShiftReg <<= 1;
+
+	/* Take bit, which was shifted out of the register-size and place it
+	   at the beginning (LSB)
+	   (If condition is not satisfied, implicitely a "0" is added) */
+	if ((iStateShiftReg & iBitOutPosMask) > 0)
+		iStateShiftReg |= 1;
+
+	/* Add new data bit to the LSB */
+	if (biNewInput > 0)
+		iStateShiftReg ^= 1;
+
+	/* Add mask to shift-register if first bit is true */
+	if (iStateShiftReg & 1)
+		iStateShiftReg ^= iPolynMask[iDegIndex];
+}
+
 uint32_t CCRC::GetCRC()
 {
 	/* Return inverted shift-register (1's complement) */
@@ -79,7 +99,7 @@ uint32_t CCRC::GetCRC()
 	return iStateShiftReg & (iBitOutPosMask - 1);
 }
 
-_BOOLEAN CCRC::CheckCRC(uint32_t iCRC)
+_BOOLEAN CCRC::CheckCRC(const uint32_t iCRC)
 {
 	if (iCRC == GetCRC())
 		return TRUE;
