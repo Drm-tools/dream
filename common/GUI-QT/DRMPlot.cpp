@@ -1223,16 +1223,29 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData,
 		iLenScale = CanvSize.width();
 	}
 
-	/* Move complete block one line further. Use old bitmap */
 	const QPixmap* pBPixmap = canvas()->backgroundPixmap();
 
 	QPixmap Canvas(CanvSize);
-	/* In case the canvas size has changed or there is no bitmap, reset
+	/* In case the canvas width has changed or there is no bitmap, reset
 	   background */
-	if ((pBPixmap == NULL) || (LastCanvasSize != CanvSize))
+	if ((pBPixmap == NULL) || (LastCanvasSize.width() != CanvSize.width()))
 		Canvas.fill(backgroundColor());
 	else
 	{
+		/* If height is larger, write background color in new space */
+		if (LastCanvasSize.height() < CanvSize.height())
+		{
+			/* Prepare bitmap for copying background color */
+			QPixmap CanvasTMP(CanvSize);
+			CanvasTMP.fill(backgroundColor());
+
+			/* Actual copy */
+			bitBlt(&Canvas, 0, LastCanvasSize.height(), &CanvasTMP, 0, 0,
+				CanvSize.width(), CanvSize.height() - LastCanvasSize.height(),
+				Qt::CopyROP);
+		}
+
+		/* Move complete block one line further. Use old bitmap */
 		bitBlt(&Canvas, 0, 1, pBPixmap, 0, 0,
 			CanvSize.width(), CanvSize.height() - 1, Qt::CopyROP);
 	}
