@@ -162,6 +162,7 @@ fi
 dnl faac (optional) -------------------------------------------------------------
 if test "x$WITHFAAC" = xyes; then
 	AC_HAVE_LIBRARY(faac, ,exit 1)
+	AC_DEFINE(USE_FAAC_LIBRARY, 1, [Define if you want to use the faac library])
 fi
 
 dnl FreeImage (optional) --------------------------------------------------------
