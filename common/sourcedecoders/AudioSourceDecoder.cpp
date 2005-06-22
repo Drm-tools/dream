@@ -1097,6 +1097,11 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 					iNumLowerProtectedBits =
 						iTableCELP8kHzUEPParams[iCurCelpIdx][3];
 				}
+				else
+					throw CInitErr(ET_AUDDECODER);
+
+				/* Set audio sample rate */
+				iAudioSampleRate = 8000;
 				break;
 
 			case CParameter::AS_16KHZ:
@@ -1116,6 +1121,11 @@ void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
 					iNumLowerProtectedBits =
 						iTableCELP16kHzUEPParams[iCurCelpIdx][3];
 				}
+				else
+					throw CInitErr(ET_AUDDECODER);
+
+				/* Set audio sample rate */
+				iAudioSampleRate = 16000;
 				break;
 
 			default:
