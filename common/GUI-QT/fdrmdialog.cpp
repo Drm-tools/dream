@@ -291,10 +291,17 @@ void FDRMDialog::OnTimer()
 
 
 		/* Update service selector ------------------------------------------ */
-		/* Make sure a possible service was selected. If not, correct */
-		if ((!pDRMRec->GetParameters()->Service[iCurSelServiceGUI].IsActive()) ||
-			(!((iCurSelServiceGUI == iCurSelAudioServ) ||
-			(iCurSelServiceGUI == iCurSelDataServ))))
+		/* Make sure a possible service was selected. If not, correct. Make sure
+		   an audio service is selected. If we have a data only service, we do
+		   not want to have the button pressed */
+		if (((!pDRMRec->GetParameters()->Service[iCurSelServiceGUI].IsActive()) ||
+			(iCurSelServiceGUI != iCurSelAudioServ) &&
+			pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive()) &&
+			/* Make sure current selected audio service is not a data only
+			   serivce */
+			(pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive() &&
+			(pDRMRec->GetParameters()->Service[iCurSelAudioServ].eAudDataFlag !=
+			CParameter::SF_DATA)))
 		{
 			/* Reset checks */
 			PushButtonService1->setOn(FALSE);
@@ -325,6 +332,15 @@ void FDRMDialog::OnTimer()
 				iCurSelServiceGUI = 3;
 				break;
 			}
+		}
+		else if (pDRMRec->GetParameters()->Service[iCurSelServiceGUI].
+			eAudDataFlag ==	CParameter::SF_DATA)
+		{
+			/* In case we only have data services, reset checks */
+			PushButtonService1->setOn(FALSE);
+			PushButtonService2->setOn(FALSE);
+			PushButtonService3->setOn(FALSE);
+			PushButtonService4->setOn(FALSE);
 		}
 
 
