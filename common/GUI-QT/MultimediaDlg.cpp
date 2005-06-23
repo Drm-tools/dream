@@ -529,7 +529,11 @@ void MultimediaDlg::OnSave()
 			"</title>\n</head>\n\n<body>\n<table>\n"
 			"<tr><th>" + strTitle + "</th></tr>\n"
 			"<tr><td><ul type=\"square\">" + strItems + "</ul></td></tr>\n"
-			"</table>\n</body>\n</html>";
+			"</table>\n"
+			/* Add current date and time */
+			"<br><p align=right><font size=-2><i>" +
+			QDateTime().currentDateTime().toString() + "</i></font></p>"
+			"</body>\n</html>";
 
 		strFileName = QFileDialog::getSaveFileName(strCurrentSavePath +
 			strTitle + ".html", "*.html", this);
