@@ -136,7 +136,7 @@ MultimediaDlg::~MultimediaDlg()
 	pDRMRec->GeomMultimediaDlg.iWSize = WinGeom.width();
 
 	/* Store save path */
-	pDRMRec->strStoragePathMMDlg = strCurrentSavePath;
+	pDRMRec->strStoragePathMMDlg = strCurrentSavePath.latin1();
 }
 
 void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
