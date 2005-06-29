@@ -242,6 +242,8 @@ CMatlibMatrix<CComplex>		Diag(const CMatlibVector<CComplex>& cvI);
 
 CReal						Trace(const CMatlibMatrix<CReal>& rmI);
 
+CMatlibMatrix<CComplex>		Toeplitz(const CMatlibVector<CComplex>& cvI);
+
 /* Matrix transpose */
 CMatlibMatrix<CComplex>		Transp(const CMatlibMatrix<CComplex>& cmI);
 inline

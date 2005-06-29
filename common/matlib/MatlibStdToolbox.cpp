@@ -159,6 +159,26 @@ CReal Trace(const CMatlibMatrix<CReal>& rmI)
 	return rReturn;
 }
 
+CMatlibMatrix<CComplex> Toeplitz(const CMatlibVector<CComplex>& cvI)
+{
+	const int				iSize = cvI.GetSize();
+	CMatlibMatrix<CComplex>	matcRet(iSize, iSize, VTY_TEMP);
+
+	/* Create Toeplitz matrix */
+	for (int i = 0; i < iSize; i++)
+	{
+		for (int j = 0; j < iSize; j++)
+		{
+			if (i < j)
+				matcRet[i][j] = cvI[j - i];
+			else
+				matcRet[i][j] = Conj(cvI[i - j]);
+		}
+	}
+
+	return matcRet;
+}
+
 CMatlibMatrix<CComplex> Transp(const CMatlibMatrix<CComplex>& cmI)
 {
 	const int iRowSize = cmI.GetRowSize();
