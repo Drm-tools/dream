@@ -274,6 +274,7 @@ public:
 	inline TData Get() {return pData[iCurIdx];}
 
 	virtual void Init(const int iNewSize);
+	virtual void Init(const int iNewSize, const TData tIniVal);
 
 protected:
 	int iCurIdx;
@@ -283,6 +284,13 @@ template<class TData> void CFIFO<TData>::Init(const int iNewSize)
 {
 	iCurIdx = 0;
 	CVector<TData>::Init(iNewSize);
+}
+
+template<class TData> void CFIFO<TData>::Init(const int iNewSize,
+											  const TData tIniVal)
+{
+	iCurIdx = 0;
+	CVector<TData>::Init(iNewSize, tIniVal);
 }
 
 template<class TData> void CFIFO<TData>::Add(const TData tNewD)
