@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -35,6 +35,9 @@
 #include "../ofdmcellmapping/OFDMCellMapping.h"
 #include "../matlib/Matlib.h"
 #include "ChanEstTime.h"
+#ifdef USE_DD_WIENER_FILT_TIME
+# include "../tables/TableQAMMapping.h"
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -85,9 +88,9 @@ public:
 	virtual ~CTimeWiener() {}
 
 	virtual int Init(CParameter& ReceiverParam);
-	virtual _REAL Estimate(CVectorEx<_COMPLEX>* pvecInputData, 
-						   CComplexVector& veccOutputData, 
-						   CVector<int>& veciMapTab, 
+	virtual _REAL Estimate(CVectorEx<_COMPLEX>* pvecInputData,
+						   CComplexVector& veccOutputData,
+						   CVector<int>& veciMapTab,
 						   CVector<_COMPLEX>& veccPilotCells, _REAL rSNR);
 
 	_REAL GetSigma() {return rSigma * 2;}
@@ -96,15 +99,41 @@ public:
 	void StopTracking() {bTracking = FALSE;}
 	
 protected:
-	CReal TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt, 
-							const int iDiff, const CReal rNewSNR, 
-							const CReal rNewSigma, const CReal rTs, 
+	CReal TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
+							const int iDiff, const CReal rNewSNR,
+							const CReal rNewSigma, const CReal rTs,
 							const int iLength);
 	void GenFiltPhaseTable(CMatrix<int>& matiMapTab, const int iNumCarrier,
 						   const int iNumSymPerFrame,
 						   const int iScatPilTimeInt);
 	_REAL UpdateFilterCoef(const _REAL rNewSNR, const _REAL rNewSigma);
 	CReal ModLinRegr(const CComplexVector& veccCorrEst);
+
+
+#ifdef USE_DD_WIENER_FILT_TIME
+	/* Decision directed Wiener */
+	class CDDPilIdx
+	{
+	public:
+		CDDPilIdx() : iIdx(0), bIsPilot(FALSE) {}
+		CDDPilIdx(int iNI, _BOOLEAN bNP) : iIdx(iNI), bIsPilot(bNP) {}
+		int			iIdx;
+		_BOOLEAN	bIsPilot;
+	};
+
+	CReal TimeOptimalFiltDD(CRealVector& vecrTaps, const int iTimeInt,
+							const int iDiff, const CReal rNewSNR,
+							const CReal rNewSigma, const CReal rTs,
+							const int iLength, const int iFiltPhase);
+
+	CMatrix<_COMPLEX>				matcChanAtDataPos;
+	int								iLenDDHist;
+	CParameter::ECodScheme			eMSCQAMMode, eSDCQAMMode;
+	CVector<CVector<CDDPilIdx> >	vecvecPilIdx;
+	CVector<CFIFO<CComplex> >		matcRecSigHist;
+	CVector<CFIFO<int> >			matiMapTabHist;
+#endif
+
 
 	CMatrix<int>		matiFiltPhaseTable;
 

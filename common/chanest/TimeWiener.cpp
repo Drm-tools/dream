@@ -55,7 +55,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 		/* Identify and calculate transfer function at the pilot positions */
 		if (_IsScatPil(veciMapTab[i]))
 		{
-			/* Save channel estimates at the pilot positions for each carrier
+			/* Save channel estimates at the pilot positions for each carrier.
 			   Move old estimates and put new value. Use reversed order to
 			   prepare vector for convolution */
 			for (j = iLengthWiener - 1; j > 0; j--)
@@ -97,6 +97,94 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 			const int iCurrFiltPhase = matiFiltPhaseTable[iPiHiIdx]
 				[(*pvecInputData).GetExData().iSymbolID];
 
+
+#ifdef USE_DD_WIENER_FILT_TIME
+// Get length of current filter, TODO: better solution
+			const int iCurFiltLen = vecvecPilIdx[iCurrFiltPhase].Size();
+			CComplexVector veccZFHestDD(iCurFiltLen);
+
+			int iPilIdx = 0;
+			int iDatIdx = 0;
+
+			for (j = 0; j < iCurFiltLen; j++)
+			{
+				/* Build vector for filtering. Make sure that pilot cells and
+				   DD-data cells are at the correct place */
+				CComplex cNewPilot;
+				if (vecvecPilIdx[iCurrFiltPhase][j].bIsPilot == TRUE)
+				{
+					cNewPilot = matcChanAtPilPos[iPilIdx][iPiHiIdx];
+					iPilIdx++;
+				}
+				else
+				{
+					cNewPilot = matcChanAtDataPos[iDatIdx][iPiHiIdx];
+					iDatIdx++;
+				}
+
+				/* We need to correct pilots due to timing corrections */
+				/* Calculate timing difference */
+				iTimeDiffNew = vecTiCorrHist[
+					vecvecPilIdx[iCurrFiltPhase][j].iIdx + iCurrFiltPhase] -
+					vecTiCorrHist[iLenHistBuff - 1];
+
+				/* Correct pilot information for phase rotation */
+				veccZFHestDD[j] = Rotate(cNewPilot, i, iTimeDiffNew);
+			}
+
+			/* Convolution */
+			const CComplex cCurChanEst =
+				Sum(veccZFHestDD * matrFiltTime[iCurrFiltPhase]);
+
+			/* Received signal must be delayed (we are using a FIFO here) */
+			matcRecSigHist[iPiHiIdx].Add((*pvecInputData)[i]);
+			matiMapTabHist[iPiHiIdx].Add(veciMapTab[i]);
+
+			const CComplex cCurRecSig = matcRecSigHist[iPiHiIdx].Get();
+			const int iCurMapTab = matiMapTabHist[iPiHiIdx].Get();
+
+			/* Make decision and store result in history */
+			/* Make sure current cell is a data cell */
+			if (!_IsPilot(iCurMapTab))
+			{
+				/* The dicision directed channel estimation is calculated as
+				   follows: h_DD = r / Dec(r / h) */
+				CComplex cCurDDChanEst;
+
+				/* Find out which coding scheme is used for this cell */
+				if (_IsFAC(iCurMapTab) || (_IsSDC(iCurMapTab) &&
+					(eSDCQAMMode == CParameter::CS_1_SM)))
+				{
+					/* 4-QAM */
+					cCurDDChanEst =
+						cCurRecSig / Dec4QAM(cCurRecSig / cCurChanEst);
+				}
+				else if (_IsSDC(iCurMapTab) || (_IsMSC(iCurMapTab) &&
+					(eMSCQAMMode == CParameter::CS_2_SM)))
+				{
+					/* 16-QAM */
+					cCurDDChanEst =
+						cCurRecSig / Dec16QAM(cCurRecSig / cCurChanEst);
+				}
+				else
+				{
+					/* 64-QAM */
+					cCurDDChanEst =
+						cCurRecSig / Dec64QAM(cCurRecSig / cCurChanEst);
+				}
+
+				/* Save channel estimates at the data positions for each
+				   carrier. Move old estimates and put new value. Use reversed
+				   order */
+				for (j = iLenDDHist - 1; j > 0; j--)
+				{
+					matcChanAtDataPos[j][iPiHiIdx] =
+						matcChanAtDataPos[j - 1][iPiHiIdx];
+				}
+
+				matcChanAtDataPos[0][iPiHiIdx] = cCurDDChanEst;
+			}
+#else
 			/* Convolution with one phase of the optimal filter */
 			/* Init sum */
 			_COMPLEX cCurChanEst = _COMPLEX((_REAL) 0.0, (_REAL) 0.0);
@@ -115,6 +203,7 @@ _REAL CTimeWiener::Estimate(CVectorEx<_COMPLEX>* pvecInputData,
 				/* Actual convolution with filter phase */
 				cCurChanEst += cNewPilot * matrFiltTime[iCurrFiltPhase][j];
 			}
+#endif
 
 			/* Copy channel estimation from current symbol in output buffer */
 			veccOutputData[iPiHiIdx] = cCurChanEst;
@@ -223,7 +312,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	/* Set length of history-buffer */
 	iLenHistBuff = iSymDelyChanEst + 1;
 
-	/* Duration of useful part plus-guard interval */
+	/* Duration of useful part plus guard interval */
 	rTs = (_REAL) ReceiverParam.iSymbolBlockSize / SOUNDCRD_SAMPLE_RATE;
 
 	/* Total number of interpolated pilots in frequency direction. We have to
@@ -271,6 +360,40 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 
 	/* Init timing correction history with zeros */
 	vecTiCorrHist.Init(iLenTiCorrHist, 0);
+
+
+#ifdef USE_DD_WIENER_FILT_TIME
+	/* Allocate memory for Channel at data positions and init with ones */
+// TODO: we init the vectors longer than needed
+	iLenDDHist = iLengthWiener * iScatPilTimeInt;
+
+	matcChanAtDataPos.Init(iLenDDHist, iTotNumPiFreqDir, (CReal) 1.0);
+
+	/* Get modulation alphabet of MSC and SDC (MSC can only be 16- or 64-QAM,
+	   for SDC, only 4- or 16-QAM is possible) */
+	if (ReceiverParam.eMSCCodingScheme == CParameter::CS_2_SM)
+		eMSCQAMMode = CParameter::CS_2_SM;
+	else
+		eMSCQAMMode = CParameter::CS_3_SM;
+
+	if (ReceiverParam.eSDCCodingScheme == CParameter::CS_1_SM)
+		eSDCQAMMode = CParameter::CS_1_SM;
+	else
+		eSDCQAMMode = CParameter::CS_2_SM;
+
+	/* Init matrix for pilot and data indices */
+	vecvecPilIdx.Init(iNumFiltPhasTi);
+
+	/* Allocate memory for received signal history buffer and zero out */
+	matcRecSigHist.Init(iTotNumPiFreqDir);
+	matiMapTabHist.Init(iTotNumPiFreqDir);
+
+	for (int i = 0; i < iTotNumPiFreqDir; i++)
+	{
+		matcRecSigHist[i].Init(iLenHistBuff, (CReal) 0.0);
+		matiMapTabHist[i].Init(iLenHistBuff, 0);
+	}
+#endif
 
 
 	/* Calculate optimal filter --------------------------------------------- */
@@ -378,8 +501,13 @@ _REAL CTimeWiener::UpdateFilterCoef(const _REAL rNewSNR, const _REAL rNewSigma)
 		const int iCurrDiffPhase = -(iLenHistBuff - j - 1);
 
 		/* Calculate filter phase and average MMSE */
+#ifdef USE_DD_WIENER_FILT_TIME
+		rMMSE += TimeOptimalFiltDD(matrFiltTime[j], iScatPilTimeInt,
+			iCurrDiffPhase,	rNewSNR, rNewSigma, rTs, iLengthWiener, j);
+#else
 		rMMSE += TimeOptimalFilter(matrFiltTime[j], iScatPilTimeInt,
 			iCurrDiffPhase,	rNewSNR, rNewSigma, rTs, iLengthWiener);
+#endif
 	}
 
 	/* Normalize averaged MMSE */
@@ -400,7 +528,7 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 
 	/* Factor for the argument of the exponetial function to generate the
 	   correlation function */
-	const CReal rFactorArgExp = 
+	const CReal rFactorArgExp =
 		(CReal) -2.0 * crPi * crPi * rTs * rTs * rNewSigma * rNewSigma;
 
 	/* Doppler-spectrum for short-wave channel is Gaussian
@@ -430,6 +558,96 @@ CReal CTimeWiener::TimeOptimalFilter(CRealVector& vecrTaps, const int iTimeInt,
 	/* Return MMSE for the current wiener filter */
 	return (CReal) 1.0 - Sum(vecrRhp * vecrTaps);
 }
+
+#ifdef USE_DD_WIENER_FILT_TIME
+CReal CTimeWiener::TimeOptimalFiltDD(CRealVector& vecrTaps, const int iTimeInt,
+									 const int iDiff, const CReal rNewSNR,
+									 const CReal rNewSigma, const CReal rTs,
+									 const int iLength, const int iFiltPhase)
+{
+	int i, j;
+
+	/* Calculate number of pilot and DD cells. We use all cells up to the cell
+	   to be interpolated as pilot cells and after that only the regular
+	   pilot cells */
+	const int iTotNumCellsInRange = (iLength - 1) * iTimeInt + 1;
+
+	vecvecPilIdx[iFiltPhase].Init(0);
+	for (i = 0; i < iTotNumCellsInRange; i++)
+	{
+		if (i < -iDiff + 1)
+		{
+			/* Use only real pilots */
+			if (i % iTimeInt == 0)
+				vecvecPilIdx[iFiltPhase].Add(CDDPilIdx(i, TRUE));
+		}
+		else
+		{
+			if (i % iTimeInt == 0) /* Pilot or data cell? */
+				vecvecPilIdx[iFiltPhase].Add(CDDPilIdx(i, TRUE));
+			else
+				vecvecPilIdx[iFiltPhase].Add(CDDPilIdx(i, FALSE));
+		}
+	}
+
+	const int iNewLength = vecvecPilIdx[iFiltPhase].Size();
+
+	CComplexMatrix matcRpp(iNewLength, iNewLength);
+	CComplexVector veccRhp(iNewLength);
+
+	/* Factor for the argument of the exponetial function to generate the
+	   correlation function */
+	const CReal rFactorArgExp =
+		(CReal) -2.0 * crPi * crPi * rTs * rTs * rNewSigma * rNewSigma;
+
+	/* Doppler-spectrum for short-wave channel is Gaussian
+	   (Calculation of R_hp!) */
+	for (i = 0; i < iNewLength; i++)
+	{
+		const int iCurPos = vecvecPilIdx[iFiltPhase][i].iIdx + iDiff;
+
+		veccRhp[i] = exp(rFactorArgExp * iCurPos * iCurPos);
+	}
+
+	/* Doppler-spectrum for short-wave channel is Gaussian
+	   (Calculation of R_pp!) */
+	for (i = 0; i < iNewLength; i++)
+	{
+		for (j = 0; j < iNewLength; j++)
+		{
+			const int iCurPos = vecvecPilIdx[iFiltPhase][i].iIdx -
+				vecvecPilIdx[iFiltPhase][j].iIdx;
+
+			matcRpp[i][j] = exp(rFactorArgExp * iCurPos * iCurPos);
+
+			/* Add SNR (dependent on pilot or DD cell) */
+			if (i == j)
+			{
+				if (j % iTimeInt == 0)
+					matcRpp[i][j] += (CReal) 1.0 / rNewSNR;
+				else
+				{
+					/* DD cell has lower SNR */
+// TODO consider boosted pilots, consider decision errors!
+					matcRpp[i][j] += (CReal) 1.0 / rNewSNR *
+						AV_PILOT_POWER / AV_DATA_CELLS_POWER;
+				}
+			}
+		}
+	}
+
+	/* Call levinson algorithm to solve matrix system for optimal solution */
+// make sure size is correct FIXME: better solution!
+	vecrTaps.Init(iNewLength);
+
+	/* Calculate optimal filter (Since our correlations are real, the filter
+	   taps must be real, too */
+	vecrTaps = Real(Inv(matcRpp) * veccRhp);
+
+	/* Return MMSE for the current wiener filter */
+	return (CReal) 1.0 - Sum(Real(veccRhp * vecrTaps));
+}
+#endif
 
 CReal CTimeWiener::ModLinRegr(const CComplexVector& veccCorrEst)
 {

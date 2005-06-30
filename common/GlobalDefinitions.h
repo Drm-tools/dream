@@ -105,6 +105,12 @@ using namespace std; /* Because of the library: "complex" */
    history */
 #define USE_ERASURE_FOR_FASTER_ACQ
 
+/* If the following macro is defined, the Wiener filter for channel estimation
+   in time direction will be a Decision-Directed channel estimation ->
+   additional to the actual pilot cells, hard decisions about the data cells
+   are used as new pilots, too */
+#undef USE_DD_WIENER_FILT_TIME
+
 
 /* Define the application specific data-types ------------------------------- */
 typedef	double							_REAL;

@@ -143,6 +143,30 @@ void CDRMReceiver::Run()
 					/* Use information of FAC CRC for detecting the acquisition
 					   requirement */
 					DetectAcquiFAC();
+
+/*
+// TEST store information about alternative frequency transmitted in SDC
+static FILE* pFile = fopen("test/altfreq.dat", "w");
+
+int inum = ReceiverParam.AltFreqSign.vecAltFreq.Size();
+for (int z = 0; z < inum; z++)
+{
+	fprintf(pFile, "sync:%d sr:", ReceiverParam.AltFreqSign.vecAltFreq[z].bIsSyncMultplx);
+
+	for (int k = 0; k < 4; k++)
+		fprintf(pFile, "%d", ReceiverParam.AltFreqSign.vecAltFreq[z].veciServRestrict[k]);
+	fprintf(pFile, " fr:");
+
+	for (int kk = 0; kk < ReceiverParam.AltFreqSign.vecAltFreq[z].veciFrequencies.Size(); kk++)
+		fprintf(pFile, "%d ", ReceiverParam.AltFreqSign.vecAltFreq[z].veciFrequencies[kk]);
+
+	fprintf(pFile, " rID:%d sID:%d   /   ", ReceiverParam.AltFreqSign.vecAltFreq[z].iRegionID,
+		ReceiverParam.AltFreqSign.vecAltFreq[z].iScheduleID);
+}
+fprintf(pFile, "\n");
+fflush(pFile);
+*/
+
 				}
 
 
@@ -438,7 +462,12 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	/* Select the service we want to decode. Always zero, because we do not
 	   know how many services are transmitted in the signal we want to
 	   decode */
-	Param.ResetCurSelAudDatServ();
+
+// TODO: if service 0 is not used but another service is the audio serivce we
+// have a problem. We should check as soon as we have information about services
+// if service 0 is really the audio service
+
+Param.ResetCurSelAudDatServ();
 
 	/* Reset alternative frequencys */
 	Param.AltFreqSign.Reset();
@@ -576,6 +605,10 @@ void CDRMReceiver::InitsForSDCCodSche()
 {
 	/* Set init flags */
 	SDCMLCDecoder.SetInitFlag();
+
+#ifdef USE_DD_WIENER_FILT_TIME
+	ChannelEstimation.SetInitFlag();
+#endif
 }
 
 void CDRMReceiver::InitsForNoDecBitsSDC()
@@ -597,6 +630,10 @@ void CDRMReceiver::InitsForMSCCodSche()
 	/* Set init flags */
 	MSCMLCDecoder.SetInitFlag();
 	MSCDemultiplexer.SetInitFlag(); // Not sure if really needed, look at code! TODO
+
+#ifdef USE_DD_WIENER_FILT_TIME
+	ChannelEstimation.SetInitFlag();
+#endif
 }
 
 void CDRMReceiver::InitsForMSC()

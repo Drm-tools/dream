@@ -35,6 +35,7 @@
 #include "../ofdmcellmapping/CellMappingTable.h"
 #include "../tables/TableQAMMapping.h"
 #include "../matlib/Matlib.h"
+#include "../sync/TimeSyncTrack.h"
 #include "TimeLinear.h"
 #include "TimeWiener.h"
 
@@ -43,8 +44,6 @@
 #else
 # include <fftw.h>
 #endif
-
-#include "../sync/TimeSyncTrack.h"
 
 
 /* Definitions ****************************************************************/
@@ -222,6 +221,9 @@ protected:
 	int						iNumWienerFilt;
 	CComplexMatrix			matcWienerFilter;
 
+#ifdef USE_DD_WIENER_FILT_TIME
+	int						iCurrentFrameID;
+#endif
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

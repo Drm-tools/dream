@@ -46,6 +46,8 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 		return;
 	}
 
+
+// TODO: use CFIFO class for "matcHistory"!
 	/* Move data in history-buffer (from iLenHistBuff - 1 towards 0) */
 	for (j = 0; j < iLenHistBuff - 1; j++)
 	{
@@ -59,14 +61,37 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 
 	/* Time interpolation *****************************************************/
+#ifdef USE_DD_WIENER_FILT_TIME
+	/* For decision directed channel estimation, it is important to know the
+	   types of all cells, not only the pilot cells. Therefore, we have to take
+	   care of frame ID here, too */
+	const int iSymbolCounter = (*pvecInputData).GetExData().iSymbolID;
+
+	if (iSymbolCounter == 0)
+	{
+		/* Frame ID of this FAC block stands for the new block. We need
+		   the ID of the old block, therefore we have to subtract "1" */
+		iCurrentFrameID = ReceiverParam.iFrameIDReceiv - 1;
+		if (iCurrentFrameID < 0)
+			iCurrentFrameID = NUM_FRAMES_IN_SUPERFRAME - 1;
+	}
+
+	/* Set absolute symbol position */
+	const int iCurSymbIDTiInt =
+		iCurrentFrameID * iNumSymPerFrame + iSymbolCounter;
+#else
+	/* For regular channel estimation, only the positions of the pilots are
+	   important. These positions are the same in each frame, independent of the
+	   frame number */
+	const int iCurSymbIDTiInt = (*pvecInputData).GetExData().iSymbolID;
+#endif
+
 	/* Get symbol-counter for next symbol. Use the count from the frame 
 	   synchronization (in OFDM.cpp). Call estimation routine */
 	const _REAL rSNRAftTiInt = 
 		pTimeInt->Estimate(pvecInputData, veccPilots, 
-						   ReceiverParam.matiMapTab[(*pvecInputData).
-						   GetExData().iSymbolID],
-						   ReceiverParam.matcPilotCells[(*pvecInputData).
-						   GetExData().iSymbolID],
+						   ReceiverParam.matiMapTab[iCurSymbIDTiInt],
+						   ReceiverParam.matcPilotCells[iCurSymbIDTiInt],
 						   /* The channel estimation is based on the pilots so
 						      it needs the SNR on the pilots. Do a correction */
 						   rSNREstimate * rSNRTotToPilCorrFact);
@@ -468,6 +493,11 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 		pTimeInt = &TimeWiener;
 		break;
 	}
+
+#ifdef USE_DD_WIENER_FILT_TIME
+	/* Reset frame ID counter */
+	iCurrentFrameID = 0;
+#endif
 
 	/* Init time interpolation interface and set delay for interpolation */
 	iLenHistBuff = pTimeInt->Init(ReceiverParam);
