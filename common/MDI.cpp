@@ -641,13 +641,14 @@ void CMDI::GetSDCData(CVectorEx<_BINARY>& vecbiSDCData)
 	bSDCWasSet = TRUE;
 	MDIInBuffer.Get(CurMDIPkt);
 
-	if (CurMDIPkt.vecbiSDCData.Size() > 0)
+	const int iLenBitsMDISDCdata = CurMDIPkt.vecbiSDCData.Size();
+	if (iLenBitsMDISDCdata > 0)
 	{
 		/* If receiver is correctly initialized, the input vector should be
 		   large enough for the SDC data */
 		const int iLenSDCDataBits = vecbiSDCData.Size();
 
-		if (vecbiSDCData.Size() >= iLenSDCDataBits)
+		if (iLenSDCDataBits >= iLenBitsMDISDCdata)
 		{
 			/* Copy incoming MDI SDC data */
 			vecbiSDCData.ResetBitAccess();
@@ -655,7 +656,7 @@ void CMDI::GetSDCData(CVectorEx<_BINARY>& vecbiSDCData)
 
 			/* We have to copy bits instead of bytes since the length of SDC
 			   data is usually not a multiple of 8 */
-			for (int i = 0; i < iLenSDCDataBits; i++)
+			for (int i = 0; i < iLenBitsMDISDCdata; i++)
 				vecbiSDCData.Enqueue(CurMDIPkt.vecbiSDCData.Separate(1), 1);
 		}
 	}
@@ -993,6 +994,10 @@ void CMDI::DecTagFAC(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
 void CMDI::DecTagSDC(CMDIInPkt& MDIInPkt, CVector<_BINARY>& vecbiTag,
 					 const int iLen)
 {
+	/* Check that this is not a dummy packet with zero length */
+	if (iLen == 0)
+		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
+
 	/* Rfu */
 	vecbiTag.Separate(4);
 
