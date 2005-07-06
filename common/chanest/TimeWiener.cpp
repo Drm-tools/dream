@@ -623,7 +623,7 @@ CReal CTimeWiener::TimeOptimalFiltDD(CRealVector& vecrTaps, const int iTimeInt,
 			/* Add SNR (dependent on pilot or DD cell) */
 			if (i == j)
 			{
-				if (j % iTimeInt == 0)
+				if (vecvecPilIdx[iFiltPhase][j].bIsPilot == TRUE)
 					matcRpp[i][j] += (CReal) 1.0 / rNewSNR;
 				else
 				{
