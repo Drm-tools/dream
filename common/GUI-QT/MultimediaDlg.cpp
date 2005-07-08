@@ -401,6 +401,11 @@ void MultimediaDlg::SetSlideShowPicture()
 		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
 			NewImage.convertToImage());
 
+#ifndef _WIN32
+		/* Under Linux the slideshow pictures are not updated correctly */
+		TextBrowser->setText("");
+#endif
+
 		TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
 			"</center>");
 	}
