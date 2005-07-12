@@ -261,6 +261,16 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 					/* Fshift: */	(_REAL) 0.0,
 					/* Fd: */		(_REAL) 1.0);
 		break;
+
+	case 10:
+		/* Frequency offset */
+		iNumTaps = 1;
+
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 2.0, /* Hz <- shift paramter!) */
+					/* Fd: */		(_REAL) 0.0);
+		break;
 	}
 
 
