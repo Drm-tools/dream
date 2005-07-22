@@ -69,8 +69,8 @@ void CDRMChannel::ProcessDataInternal(CParameter& ReceiverParam)
 		for (i = 0; i < iInputBlockSize; i++)
 		{
 			cCurTapSamp = tap[j].Update() * cCurExp[j];
-			
-			veccOutput[i] += 
+
+			veccOutput[i] +=
 				veccHistory[i + iMaxDelay - tap[j].GetDelay()] * cCurTapSamp;
 
 			/* See above */
@@ -333,7 +333,8 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
 }
 
-void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNewFd)
+void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift,
+					_REAL rNewFd)
 {
 	_REAL	s;
 	int		k;
@@ -355,16 +356,17 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNe
 		interpol = 0;
 		polyinterpol = 1;
 		phase = -1;
-	} 
+	}
 	else
+	{
 		if (s > 0.017)
 		{
 			interpol = 0;
 			polyinterpol = 2;
 			phase = 0;
-
 		} 
 		else
+		{
 			if (s > 0.0084)
 			{
 				interpol = 0;
@@ -372,12 +374,12 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNe
 				phase = 0;
 			} 
 			else
+			{
 				if (s > 0.0042)
 				{
 					interpol = 0;
 					polyinterpol = 8;
 					phase = 0;
-
 				} 
 				else
 				{
@@ -386,6 +388,9 @@ void CTapgain::Init(_REAL rNewDelay, _REAL rNewGain, _REAL rNewFshift, _REAL rNe
 					s = s * interpol;
 					phase = 0;
 				}
+			}
+		}
+	}
 
 	gausstp(taps, s, polyinterpol);
 
@@ -463,8 +468,8 @@ _COMPLEX CTapgain::Update()
 				nextI +=
 					fir_buff[(k + fir_index) % FIRLENGTH][0] *
 					taps[polyinterpol * (FIRLENGTH - k) - phase - 1];
-				nextQ += 
-					fir_buff[(k + fir_index) % FIRLENGTH][1] * 
+				nextQ +=
+					fir_buff[(k + fir_index) % FIRLENGTH][1] *
 					taps[polyinterpol * (FIRLENGTH - k) - phase - 1];
 			}
 
