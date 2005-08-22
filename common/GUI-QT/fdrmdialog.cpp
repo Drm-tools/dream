@@ -690,9 +690,12 @@ void FDRMDialog::OnMenuSetDisplayColor()
 
 void FDRMDialog::OnMenuPlotStyle(int value)
 {
+	/* Save new style in global variable */
+	pDRMRec->iMainPlotColorStyle = value;
+
 	/* Set new plot style in other dialogs */
-	pSysEvalDlg->SetPlotsStyle(value);
-	pAnalogDemDlg->SetPlotsStyle(value);
+	pSysEvalDlg->UpdatePlotsStyle();
+	pAnalogDemDlg->UpdatePlotsStyle();
 
 	/* Taking care of the checks */
 	for (int i = 0; i < NUM_AVL_COLOR_SCHEMES_PLOT; i++)

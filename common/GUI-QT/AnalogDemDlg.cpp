@@ -272,7 +272,7 @@ void AnalogDemDlg::UpdateControls()
 	CheckBoxPLL->setChecked(pDRMRec->GetAMDemod()->PLLEnabled());
 }
 
-void AnalogDemDlg::SetPlotsStyle(const int iNewStyleID)
+void AnalogDemDlg::UpdatePlotsStyle()
 {
 	/* Update main plot window */
 	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
