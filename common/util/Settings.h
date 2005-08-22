@@ -93,6 +93,9 @@
 /* Maximum for preview */
 #define MAX_NUM_SEC_PREVIEW			3600
 
+/* Maximum value for rgb-colors encoded as integers */
+#define MAX_NUM_COL_MAIN_DISP		16777215
+
 
 /* Classes ********************************************************************/
 class CSettings

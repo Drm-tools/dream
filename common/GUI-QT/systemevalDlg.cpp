@@ -515,6 +515,19 @@ void systemevalDlg::hideEvent(QHideEvent* pEvent)
 	vecpDRMPlots.Init(0);
 }
 
+void systemevalDlg::SetPlotsStyle(const int iNewStyleID)
+{
+	/* Save new style in global variable */
+	pDRMRec->iMainPlotColorStyle = iNewStyleID;
+
+	/* Update chart windows */
+	for (int i = 0; i < vecpDRMPlots.Size(); i++)
+		vecpDRMPlots[i]->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
+
+	/* Update main plot window */
+	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
+}
+
 CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
 {
 	/* Create new chart window */

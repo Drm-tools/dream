@@ -231,6 +231,10 @@ void CSettings::ReadIniFile()
 	   in the plot type enum! */
 	if (GetNumericIniSet(ini, "GUI", "sysevplottype", 0, CDRMPlot::NONE_OLD, iValue) == TRUE)
 		pDRMRec->iSysEvalDlgPlotType = iValue;
+
+	/* Main window display color */
+	if (GetNumericIniSet(ini, "GUI", "maindispcolor", 0, MAX_NUM_COL_MAIN_DISP, iValue) == TRUE)
+		pDRMRec->iMainDisplayColor = iValue;
 #endif
 
 
@@ -395,6 +399,9 @@ void CSettings::WriteIniFile()
 
 	/* System evaluation dialog plot type */
 	SetNumericIniSet(ini, "GUI", "sysevplottype", pDRMRec->iSysEvalDlgPlotType);
+
+	/* Main window display color */
+	SetNumericIniSet(ini, "GUI", "maindispcolor", pDRMRec->iMainDisplayColor);
 #endif
 
 

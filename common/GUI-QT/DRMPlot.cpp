@@ -349,8 +349,8 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 	setGridMinPen(QPen(MainGridColorPlot, 0, DotLine));
 	setCanvasBackground(QColor(BckgrdColorPlot));
 
-	/* Refresh the plot */
-	replot();
+	/* Make sure that plot are being initialized again */
+	InitCharType = NONE_OLD;
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)

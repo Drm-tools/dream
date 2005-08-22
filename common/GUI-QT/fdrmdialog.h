@@ -37,7 +37,8 @@
 #include <qcstring.h>
 #include <qlayout.h>
 #include <qwhatsthis.h>
-
+#include <qpalette.h>
+#include <qcolordialog.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/fdrmdialogbase.h"
@@ -75,6 +76,7 @@ protected:
 	QMenuBar*		pMenu;
 	QPopupMenu*		pReceiverModeMenu;
 	QPopupMenu*		pSettingsMenu;
+	QPopupMenu*		pPlotStyleMenu;
 	int				iCurSelServiceGUI;
 	int				iOldNoServicesGUI;
 	QTimer			Timer;
@@ -83,12 +85,15 @@ protected:
 	_BOOLEAN		bSysEvalDlgWasVis;
 	_BOOLEAN		bMultMedDlgWasVis;
 
-	QString			SetServParamStr(int iServiceID);
-	QString			SetBitrIDStr(int iServiceID);
 	virtual void	customEvent(QCustomEvent* Event);
 	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
 	void			SetReceiverMode(const CDRMReceiver::ERecMode eNewReMo);
+
+	QString			GetCodecString(const int iServiceID);
+	QString			GetTypeString(const int iServiceID);
+
+	void			SetDisplayColor(const QColor newColor);
 
 public slots:
 	void OnTimer();
@@ -101,4 +106,6 @@ public slots:
 	void OnViewStationsDlg();
 	void OnSwitchToDRM() {SetReceiverMode(CDRMReceiver::RM_DRM);}
 	void OnSwitchToAM() {SetReceiverMode(CDRMReceiver::RM_AM);}
+	void OnMenuSetDisplayColor();
+	void OnMenuPlotStyle(int value);
 };

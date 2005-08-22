@@ -68,6 +68,7 @@ public:
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~AnalogDemDlg() {}
+	void SetPlotsStyle(const int iNewStyleID);
 
 protected:
 	CDRMReceiver*	pDRMRec;

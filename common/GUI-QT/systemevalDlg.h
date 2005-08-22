@@ -72,6 +72,7 @@ public:
 	virtual ~systemevalDlg();
 
 	void SetStatus(int MessID, int iMessPara);
+	void SetPlotsStyle(const int iNewStyleID);
 
 protected:
 	class CCharSelItem : public QListViewItem

@@ -75,6 +75,22 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 		SLOT(OnSwitchToAM()), CTRL+Key_A);
 	pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
 		SLOT(OnSwitchToDRM()), CTRL+Key_D);
+	pSettingsMenu->insertSeparator();
+	pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
+		SLOT(OnMenuSetDisplayColor()));
+
+	/* Plot style settings */
+	pPlotStyleMenu = new QPopupMenu(this);
+	pPlotStyleMenu->insertItem(tr("&Blue / White"), this,
+		SLOT(OnMenuPlotStyle(int)), 0, 0);
+	pPlotStyleMenu->insertItem(tr("&Green / Black"), this,
+		SLOT(OnMenuPlotStyle(int)), 0, 1);
+	pPlotStyleMenu->insertItem(tr("B&lack / Grey"), this,
+		SLOT(OnMenuPlotStyle(int)), 0, 2);
+	pSettingsMenu->insertItem(tr("&Plot Style"), pPlotStyleMenu);
+
+	/* Set check */
+	pPlotStyleMenu->setItemChecked(pDRMRec->iMainPlotColorStyle, TRUE);
 
 
 	/* Main menu bar -------------------------------------------------------- */
@@ -90,11 +106,17 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 
 	/* Digi controls */
+	/* Set display color */
+	SetDisplayColor(CRGBConversion::int2RGB(pDRMRec->iMainDisplayColor));
+
 	/* Reset text */
-	TextServiceIDRate->setText("");
-	TextServiceLabel->setText("");
-	TextServiceAudio->setText("");
-	
+	LabelBitrate->setText("");
+	LabelCodec->setText("");
+	LabelStereoMono->setText("");
+	LabelServiceLabel->setText("");
+	LabelProgrType->setText("");
+	LabelLanguage->setText("");
+	LabelServiceID->setText("");
 
 	/* Init progress bar for input signal level */
 	ProgrInputLevel->setRange(-50.0, 0.0);
@@ -191,7 +213,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 
 	/* Disable text message label */
 	TextTextMessage->setText("");
-	TextTextMessage->hide();
+	TextTextMessage->setEnabled(FALSE);
 
 	/* Set timer for real-time controls */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -251,7 +273,7 @@ void FDRMDialog::OnTimer()
 			AudioParam.bTextflag == TRUE))
 		{
 			/* Activate text window */
-			TextTextMessage->show();
+			TextTextMessage->setEnabled(TRUE);
 
 			/* Text message of current selected audio service 
 			   (UTF-8 decoding) */
@@ -262,7 +284,7 @@ void FDRMDialog::OnTimer()
 		else
 		{
 			/* Deactivate text window */
-			TextTextMessage->hide();
+			TextTextMessage->setEnabled(FALSE);
 
 			/* Clear Text */
 			TextTextMessage->setText("");
@@ -272,21 +294,68 @@ void FDRMDialog::OnTimer()
 		if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].IsActive())
 		{
 			/* Service label (UTF-8 encoded string -> convert) */
-			TextServiceLabel->setText(QString().fromUtf8(QCString(
+			LabelServiceLabel->setText(QString().fromUtf8(QCString(
 				pDRMRec->GetParameters()->Service[iCurSelAudioServ].
 				strLabel.c_str())));
 
-			TextServiceIDRate->setText(SetBitrIDStr(iCurSelAudioServ));
+			/* Bit-rate */
+			QString strBitrate = QString().setNum(pDRMRec->GetParameters()->
+				GetBitRateKbps(iCurSelAudioServ, FALSE), 'f', 2) +
+				tr(" kbps");
 
-			/* Audio informations digi-string */
-			TextServiceAudio->setText(SetServParamStr(iCurSelAudioServ));
+			/* Equal or unequal error protection */
+			const _REAL rPartABLenRat =
+				pDRMRec->GetParameters()->PartABLenRatio(iCurSelAudioServ);
+
+			if (rPartABLenRat != (_REAL) 0.0)
+			{
+				/* Print out the percentage of part A length to total length */
+				strBitrate += " UEP (" +
+					QString().setNum(rPartABLenRat * 100, 'f', 1) + " %)";
+			}
+			else
+			{
+				/* If part A is zero, equal error protection (EEP) is used */
+				strBitrate += " EEP";
+			}
+			LabelBitrate->setText(strBitrate);
+
+			/* Service ID */
+			LabelServiceID->setText("ID:" +
+				QString().setNum((long) pDRMRec->GetParameters()->
+				Service[iCurSelAudioServ].iServiceID));
+
+			/* Codec label */
+			LabelCodec->setText(GetCodecString(iCurSelAudioServ));
+
+			/* Type (Mono / Stereo) label */
+			LabelStereoMono->setText(GetTypeString(iCurSelAudioServ));
+
+			/* Language and program type labels (only for audio service) */
+			if (pDRMRec->GetParameters()->Service[iCurSelAudioServ].
+				eAudDataFlag == CParameter::SF_AUDIO)
+			{
+				/* Language */
+				LabelLanguage->setText(strTableLanguageCode[pDRMRec->
+					GetParameters()->
+					Service[iCurSelAudioServ].iLanguage].c_str());
+
+				/* Program type */
+				LabelProgrType->setText(strTableProgTypCod[pDRMRec->
+					GetParameters()->
+					Service[iCurSelAudioServ].iServiceDescr].c_str());
+			}
 		}
 		else
 		{
-			TextServiceLabel->setText(tr("No Service"));
+			LabelServiceLabel->setText(tr("No Service"));
 
-			TextServiceIDRate->setText("");
-			TextServiceAudio->setText("");
+			LabelBitrate->setText("");
+			LabelCodec->setText("");
+			LabelStereoMono->setText("");
+			LabelProgrType->setText("");
+			LabelLanguage->setText("");
+			LabelServiceID->setText("");
 		}
 
 
@@ -345,8 +414,6 @@ void FDRMDialog::OnTimer()
 
 
 		/* Service selector ------------------------------------------------- */
-		QString strSpace = "   |   ";
-
 		/* Enable only so many number of channel switches as present in the
 		   stream */
 		const int iNumServices = pDRMRec->GetParameters()->GetTotNumServices();
@@ -372,10 +439,11 @@ void FDRMDialog::OnTimer()
 				QString strLabel = QString().fromUtf8(QCString(pDRMRec->
 					GetParameters()->Service[i].strLabel.c_str()));
 
-				/* Print out label in bold letters (rich text). Problem, if 
-				   html tags are used in the label: FIXME */
-				m_StaticService[i] = "<b>" + strLabel + 
-					"</b>" + strSpace + SetServParamStr(i);
+				/* Label for service selection button (service label, codec
+				   and Mono / Stereo information) */
+				m_StaticService[i] = strLabel + "  |   ";
+				m_StaticService[i] += GetCodecString(i) + " ";
+				m_StaticService[i] += GetTypeString(i);
 
 				/* Bit-rate (only show if greater than 0) */
 				const _REAL rBitRate =
@@ -442,14 +510,18 @@ void FDRMDialog::OnTimer()
 		TextMiniService4->setText("");
 
 		/* Main text labels */
-		TextServiceAudio->setText("");
-		TextServiceIDRate->setText("");
+		LabelBitrate->setText("");
+		LabelCodec->setText("");
+		LabelStereoMono->setText("");
+		LabelProgrType->setText("");
+		LabelLanguage->setText("");
+		LabelServiceID->setText("");
 
 		/* Hide text message label */
-		TextTextMessage->hide();
+		TextTextMessage->setEnabled(FALSE);
 		TextTextMessage->setText("");
 
-		TextServiceLabel->setText(tr("Scanning..."));
+		LabelServiceLabel->setText(tr("Scanning..."));
 	}
 }
 
@@ -604,164 +676,27 @@ void FDRMDialog::OnViewStationsDlg()
 	pStationsDlg->show();
 }
 
-QString	FDRMDialog::SetServParamStr(int iServiceID)
+void FDRMDialog::OnMenuSetDisplayColor()
 {
-	QString strReturn;
-
-	if (pDRMRec->GetParameters()->Service[iServiceID].
-		eAudDataFlag == CParameter::SF_AUDIO)
+    const QColor newColor = QColorDialog::getColor(
+		CRGBConversion::int2RGB(pDRMRec->iMainDisplayColor), this);
+    if (newColor.isValid())
 	{
-		/* Audio service ---------------------------------------------------- */
-		/* Audio coding */
-		switch (pDRMRec->GetParameters()->Service[iServiceID].
-			AudioParam.eAudioCoding)
-		{
-		case CParameter::AC_AAC:	
-			strReturn = "AAC(";
-			break;
-
-		case CParameter::AC_CELP:
-			strReturn = "Celp(";
-			break;
-
-		case CParameter::AC_HVXC:
-			strReturn = "HVXC(";
-			break;
-		}
-
-		/* Sample rate */
-		switch (pDRMRec->GetParameters()->Service[iServiceID].
-			AudioParam.eAudioSamplRate)
-		{
-		case CParameter::AS_8_KHZ:	
-			strReturn += "8 kHz)";
-			break;
-
-		case CParameter::AS_12KHZ:	
-			strReturn += "12 kHz)";
-			break;
-
-		case CParameter::AS_16KHZ:	
-			strReturn += "16 kHz)";
-			break;
-
-		case CParameter::AS_24KHZ:	
-			strReturn += "24 kHz)";
-			break;
-		}
-
-		/* SBR */
-		if (pDRMRec->GetParameters()->Service[iServiceID].
-			AudioParam.eSBRFlag == CParameter::SB_USED)
-		{
-			strReturn += "+SBR";
-		}
-
-		/* Mono-Stereo */
-		switch (pDRMRec->GetParameters()->
-			Service[iServiceID].AudioParam.eAudioMode)
-		{
-			case CParameter::AM_MONO:
-				strReturn += " Mono";
-				break;
-
-			case CParameter::AM_P_STEREO:
-				strReturn += " P-Stereo";
-				break;
-
-			case CParameter::AM_STEREO:
-				strReturn += " Stereo";
-				break;
-		}
-
-		/* Language */
-		strReturn += " / ";
-		strReturn += strTableLanguageCode[pDRMRec->GetParameters()->
-			Service[iServiceID].iLanguage].c_str();
-
-		/* Program type */
-		strReturn += " / ";
-		strReturn += strTableProgTypCod[pDRMRec->GetParameters()->
-			Service[iServiceID].iServiceDescr].c_str();
+		/* Store new color and update display */
+		SetDisplayColor(newColor);
+		pDRMRec->iMainDisplayColor = CRGBConversion::RGB2int(newColor);
 	}
-	else
-	{
-		/* Data service ----------------------------------------------------- */
-		strReturn = "Data Service: ";
-
-		if (pDRMRec->GetParameters()->Service[iServiceID].DataParam.
-			ePacketModInd == CParameter::PM_PACKET_MODE)
-		{
-			if (pDRMRec->GetParameters()->Service[iServiceID].DataParam.
-				eAppDomain == CParameter::AD_DAB_SPEC_APP)
-			{
-				switch (pDRMRec->GetParameters()->Service[iServiceID].
-					DataParam.iUserAppIdent)
-				{
-				case 1:
-					strReturn += "Dynamic labels";
-					break;
-
-				case 2:
-					strReturn += "MOT Slideshow";
-					break;
-
-				case 3:
-					strReturn += "MOT Broadcast Web Site";
-					break;
-
-				case 4:
-					strReturn += "TPEG";
-					break;
-
-				case 5:
-					strReturn += "DGPS";
-					break;
-
-				case 0x44A: /* Journaline */
-					strReturn += "NewsService Journaline";
-					break;
-				}
-			}
-			else
-				strReturn += tr("Unknown Service");
-		}
-		else
-			strReturn += tr("Unknown Service");
-	}
-
-	return strReturn;
 }
 
-QString	FDRMDialog::SetBitrIDStr(int iServiceID)
+void FDRMDialog::OnMenuPlotStyle(int value)
 {
-	/* Bit-rate */
-	QString strServIDBitrate = tr("Bit Rate:") + QString().setNum(pDRMRec->
-		GetParameters()->GetBitRateKbps(iServiceID, FALSE), 'f', 2) +
-		tr(" kbps");
+	/* Set new plot style in other dialogs */
+	pSysEvalDlg->SetPlotsStyle(value);
+	pAnalogDemDlg->SetPlotsStyle(value);
 
-	/* Equal or unequal error protection */
-	const _REAL rPartABLenRat =
-		pDRMRec->GetParameters()->PartABLenRatio(iServiceID);
-
-	if (rPartABLenRat != (_REAL) 0.0)
-	{
-		/* Print out the percentage of part A length to total length */
-		strServIDBitrate += " UEP (" +
-			QString().setNum(rPartABLenRat * 100, 'f', 1) + " %)";
-	}
-	else
-	{
-		/* If part A is zero, equal error protection (EEP) is used */
-		strServIDBitrate += " EEP";
-	}
-
-	/* Service ID */
-	strServIDBitrate += " / ID:";
-	strServIDBitrate += QString().setNum((long) pDRMRec->GetParameters()->
-		Service[iServiceID].iServiceID);
-
-	return strServIDBitrate;
+	/* Taking care of the checks */
+	for (int i = 0; i < NUM_AVL_COLOR_SCHEMES_PLOT; i++)
+		pPlotStyleMenu->setItemChecked(i, i == value);
 }
 
 void FDRMDialog::customEvent(QCustomEvent* Event)
@@ -801,6 +736,186 @@ void FDRMDialog::customEvent(QCustomEvent* Event)
 	}
 }
 
+QString FDRMDialog::GetCodecString(const int iServiceID)
+{
+	QString strReturn;
+
+	/* First check if it is audio or data service */
+	if (pDRMRec->GetParameters()->Service[iServiceID].
+		eAudDataFlag == CParameter::SF_AUDIO)
+	{
+		/* Audio service */
+		const CParameter::EAudSamRat eSamRate = pDRMRec->GetParameters()->
+			Service[iServiceID].AudioParam.eAudioSamplRate;
+
+		/* Audio coding */
+		switch (pDRMRec->GetParameters()->Service[iServiceID].
+			AudioParam.eAudioCoding)
+		{
+		case CParameter::AC_AAC:
+			/* Only 12 and 24 kHz sample rates are supported for AAC encoding */
+			if (eSamRate == CParameter::AS_12KHZ)
+				strReturn = "aac";
+			else
+				strReturn = "AAC";
+			break;
+
+		case CParameter::AC_CELP:
+			/* Only 8 and 16 kHz sample rates are supported for CELP encoding */
+			if (eSamRate == CParameter::AS_8_KHZ)
+				strReturn = "celp";
+			else
+				strReturn = "CELP";
+			break;
+
+		case CParameter::AC_HVXC:
+			strReturn = "HVXC";
+			break;
+		}
+
+		/* SBR */
+		if (pDRMRec->GetParameters()->Service[iServiceID].
+			AudioParam.eSBRFlag == CParameter::SB_USED)
+		{
+			strReturn += "+";
+		}
+	}
+	else
+	{
+		/* Data service */
+		strReturn = "Data:";
+	}
+
+	return strReturn;
+}
+
+QString FDRMDialog::GetTypeString(const int iServiceID)
+{
+	QString strReturn;
+
+	/* First check if it is audio or data service */
+	if (pDRMRec->GetParameters()->Service[iServiceID].
+		eAudDataFlag == CParameter::SF_AUDIO)
+	{
+		/* Audio service */
+		/* Mono-Stereo */
+		switch (pDRMRec->GetParameters()->
+			Service[iServiceID].AudioParam.eAudioMode)
+		{
+			case CParameter::AM_MONO:
+				strReturn = "Mono";
+				break;
+
+			case CParameter::AM_P_STEREO:
+				strReturn = "P-Stereo";
+				break;
+
+			case CParameter::AM_STEREO:
+				strReturn = "Stereo";
+				break;
+		}
+	}
+	else
+	{
+		/* Data service */
+		if (pDRMRec->GetParameters()->Service[iServiceID].DataParam.
+			ePacketModInd == CParameter::PM_PACKET_MODE)
+		{
+			if (pDRMRec->GetParameters()->Service[iServiceID].DataParam.
+				eAppDomain == CParameter::AD_DAB_SPEC_APP)
+			{
+				switch (pDRMRec->GetParameters()->Service[iServiceID].
+					DataParam.iUserAppIdent)
+				{
+				case 1:
+					strReturn = "Dynamic labels";
+					break;
+
+				case 2:
+					strReturn = "MOT Slideshow";
+					break;
+
+				case 3:
+					strReturn = "MOT WebSite";
+					break;
+
+				case 4:
+					strReturn = "TPEG";
+					break;
+
+				case 5:
+					strReturn = "DGPS";
+					break;
+
+				case 0x44A: /* Journaline */
+					strReturn = "Journaline";
+					break;
+				}
+			}
+			else
+				strReturn = "Unknown Service";
+		}
+		else
+			strReturn = "Unknown Service";
+	}
+
+	return strReturn;
+}
+
+void FDRMDialog::SetDisplayColor(const QColor newColor)
+{
+	/* Collect pointer to the desired controls in a vector */
+	CVector<QWidget*> vecpWidgets(0);
+	vecpWidgets.Add(TextTextMessage);
+	vecpWidgets.Add(LabelBitrate);
+	vecpWidgets.Add(LabelCodec);
+	vecpWidgets.Add(LabelStereoMono);
+	vecpWidgets.Add(FrameAudioDataParams);
+	vecpWidgets.Add(LabelProgrType);
+	vecpWidgets.Add(LabelLanguage);
+	vecpWidgets.Add(LabelServiceID);
+	vecpWidgets.Add(TextLabelInputLevel);
+	vecpWidgets.Add(ProgrInputLevel);
+	vecpWidgets.Add(CLED_FAC);
+	vecpWidgets.Add(CLED_SDC);
+	vecpWidgets.Add(CLED_MSC);
+	vecpWidgets.Add(FrameMainDisplay);
+
+	for (int i = 0; i < vecpWidgets.Size(); i++)
+	{
+		/* Request old palette */
+		QPalette CurPal(vecpWidgets[i]->palette());
+
+		/* Change colors */
+		CurPal.setColor(QPalette::Active, QColorGroup::Foreground, newColor);
+		CurPal.setColor(QPalette::Active, QColorGroup::Button, newColor);
+		CurPal.setColor(QPalette::Active, QColorGroup::Text, newColor);
+		CurPal.setColor(QPalette::Active, QColorGroup::Light, newColor);
+		CurPal.setColor(QPalette::Active, QColorGroup::Dark, newColor);
+
+		CurPal.setColor(QPalette::Inactive, QColorGroup::Foreground, newColor);
+		CurPal.setColor(QPalette::Inactive, QColorGroup::Button, newColor);
+		CurPal.setColor(QPalette::Inactive, QColorGroup::Text, newColor);
+		CurPal.setColor(QPalette::Inactive, QColorGroup::Light, newColor);
+		CurPal.setColor(QPalette::Inactive, QColorGroup::Dark, newColor);
+
+		/* Special treatment for text message window. This should always be
+		   black color of the text */
+		if (vecpWidgets[i] == TextTextMessage)
+		{
+			CurPal.setColor(QPalette::Active, QColorGroup::Text, black);
+			CurPal.setColor(QPalette::Inactive, QColorGroup::Text, black);
+
+			/* We need to specify special color for disabled */
+			CurPal.setColor(QPalette::Disabled, QColorGroup::Light, black);
+			CurPal.setColor(QPalette::Disabled, QColorGroup::Dark, black);
+		}
+
+		/* Set new palette */
+		vecpWidgets[i]->setPalette(CurPal);
+	}
+}
+
 void FDRMDialog::AddWhatsThisHelp()
 {
 /*
@@ -831,7 +946,6 @@ void FDRMDialog::AddWhatsThisHelp()
 		"the current CRC status of the three logical channels of a DRM stream. "
 		"These LEDs are the same as the top LEDs on the Evaluation Dialog.");
 
-	QWhatsThis::add(TextLabelStatusLEDs, strStatusLEDS);
 	QWhatsThis::add(CLED_MSC, strStatusLEDS);
 	QWhatsThis::add(CLED_SDC, strStatusLEDS);
 	QWhatsThis::add(CLED_FAC, strStatusLEDS);
@@ -840,30 +954,32 @@ void FDRMDialog::AddWhatsThisHelp()
 	const QString strStationLabelOther =
 		tr("<b>Station Label and Info Display:</b> In the "
 		"big label with the black background the station label and some other "
-		"information about the current selected service is displayed. The red "
-		"text on the top shows the audio compression format (e.g. AAC), the "
-		"sample rate of the core coder without SBR (e.g. 24 kHz), if SBR is "
-		"used and what audio mode is used (mono, stereo, P-stereo -> "
-		"low-complexity or parametric stereo). In case SBR is used, the actual "
-		"sample rate is twice the sample rate of the core AAC decoder. The "
-		"next two types of information are the language and the program type "
-		"of the service (e.g. German / News).<br>The big "
-		"turquoise text in the middle is the station label. This label may "
-		"appear later than the red text since this information is transmitted "
-		"in a different logical channel of a DRM stream.<br>The "
-		"turquoise text on the bottom shows the gross bit-rate in kbits per "
-		"second of the current selected service. The abbreviations EEP and "
+		"information about the current selected service is displayed. The "
+		"magenta text on the top shows the bit-rate of the current selected "
+		"service (The abbreviations EEP and "
 		"UEP stand for Equal Error Protection and Unequal Error Protection. "
 		"UEP is a feature of DRM for a graceful degradation of the decoded "
 		"audio signal in case of a bad reception situation. UEP means that "
 		"some parts of the audio is higher protected and some parts are lower "
 		"protected (the ratio of higher protected part length to total length "
-		"is shown in the brackets). On the right, the ID number connected with "
-		"this service is shown.");
+		"is shown in the brackets)), the audio compression format "
+		"(e.g. AAC), if SBR is used and what audio mode is used (Mono, Stereo, "
+		"P-Stereo -> low-complexity or parametric stereo). In case SBR is "
+		"used, the actual sample rate is twice the sample rate of the core AAC "
+		"decoder. The next two types of information are the language and the "
+		"program type of the service (e.g. German / News).<br>The big "
+		"turquoise text in the middle is the station label. This label may "
+		"appear later than the magenta text since this information is "
+		"transmitted in a different logical channel of a DRM stream. On the "
+		"right, the ID number connected with this service is shown.");
 
-	QWhatsThis::add(TextServiceAudio, strStationLabelOther);
-	QWhatsThis::add(TextServiceLabel, strStationLabelOther);
-	QWhatsThis::add(TextServiceIDRate, strStationLabelOther);
+	QWhatsThis::add(LabelBitrate, strStationLabelOther);
+	QWhatsThis::add(LabelCodec, strStationLabelOther);
+	QWhatsThis::add(LabelStereoMono, strStationLabelOther);
+	QWhatsThis::add(LabelServiceLabel, strStationLabelOther);
+	QWhatsThis::add(LabelProgrType, strStationLabelOther);
+	QWhatsThis::add(LabelServiceID, strStationLabelOther);
+	QWhatsThis::add(FrameAudioDataParams, strStationLabelOther);
 
 	/* Service Selectors */
 	const QString strServiceSel =
@@ -885,9 +1001,4 @@ void FDRMDialog::AddWhatsThisHelp()
 	QWhatsThis::add(TextMiniService2, strServiceSel);
 	QWhatsThis::add(TextMiniService3, strServiceSel);
 	QWhatsThis::add(TextMiniService4, strServiceSel);
-
-	/* Dream Logo */
-	QWhatsThis::add(PixmapLabelDreamLogo,
-		tr("<b>Dream Logo:</b> This is the official logo "
-		"of the Dream software."));
 }

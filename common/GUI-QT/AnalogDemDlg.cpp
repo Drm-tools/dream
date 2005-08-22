@@ -272,6 +272,12 @@ void AnalogDemDlg::UpdateControls()
 	CheckBoxPLL->setChecked(pDRMRec->GetAMDemod()->PLLEnabled());
 }
 
+void AnalogDemDlg::SetPlotsStyle(const int iNewStyleID)
+{
+	/* Update main plot window */
+	MainPlot->SetPlotStyle(pDRMRec->iMainPlotColorStyle);
+}
+
 void AnalogDemDlg::OnTimer()
 {
 	/* Carrier frequency of AM signal */

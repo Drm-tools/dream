@@ -106,4 +106,27 @@ public slots:
 };
 
 
+/* GUI help functions ------------------------------------------------------- */
+/* Converts from RGB to integer and back */
+class CRGBConversion
+{
+public:
+	static int RGB2int(const QColor newColor)
+	{
+		/* R, G and B are encoded as 8-bit numbers */
+		int iReturn = newColor.red();
+		iReturn <<= 8;
+		iReturn |= newColor.green();
+		iReturn <<= 8;
+		iReturn |= newColor.blue();
+		return iReturn;
+	}
+
+	static QColor int2RGB(const int iValue)
+	{
+		return QColor((iValue >> 16) & 255, (iValue >> 8) & 255, iValue & 255);
+	}
+};
+
+
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
