@@ -907,7 +907,9 @@ void FDRMDialog::SetDisplayColor(const QColor newColor)
 		if (vecpWidgets[i] == TextTextMessage)
 		{
 			CurPal.setColor(QPalette::Active, QColorGroup::Text, black);
+			CurPal.setColor(QPalette::Active, QColorGroup::Foreground, black);
 			CurPal.setColor(QPalette::Inactive, QColorGroup::Text, black);
+			CurPal.setColor(QPalette::Inactive, QColorGroup::Foreground, black);
 
 			/* We need to specify special color for disabled */
 			CurPal.setColor(QPalette::Disabled, QColorGroup::Light, black);
