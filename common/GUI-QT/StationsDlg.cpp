@@ -1003,6 +1003,7 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		   "ReceptLog.SetFrequency()" needed, too */
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
+#ifdef HAVE_LIBHAMLIB
 		/* Now tell the receiver that the frequency has changed */
 		switch (DRMSchedule.GetSchedMode())
 		{
@@ -1014,6 +1015,7 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 			pDRMRec->SetReceiverMode(CDRMReceiver::RM_AM);
 			break;
 		}
+#endif
 	}
 }
 
