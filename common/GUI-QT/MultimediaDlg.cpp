@@ -484,7 +484,7 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 
 void MultimediaDlg::SetCurrentSavePath(const QString strFileName)
 {
-	strCurrentSavePath = QFileInfo(QFile(strFileName)).dirPath();
+	strCurrentSavePath = QFileInfo(strFileName).dirPath();
 
 	if (strCurrentSavePath.right(1).latin1() != QString("/"))
 		strCurrentSavePath += "/";
