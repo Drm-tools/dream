@@ -76,6 +76,12 @@ CMatlibVector<CReal>	Sinc(const CMatlibVector<CReal>& fvI)
 
 
 /* My own functions --------------------------------------------------------- */
+/* Dominant eigenvector */
+CMatlibVector<CReal>	DomEig(const CMatlibMatrix<CReal>& rmI, const CReal rEpsilon = 1e-5);
+
+/* Linear regression */
+CReal					LinRegr(const CMatlibVector<CReal>& rvX, const CMatlibVector<CReal>& rvY);
+
 /* Lowpass filter design using windowing method */
 CMatlibVector<CReal>	FirLP(const CReal rNormBW,
 							  const CMatlibVector<CReal>& rvWin);

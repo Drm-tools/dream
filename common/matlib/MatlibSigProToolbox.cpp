@@ -556,3 +556,51 @@ CMatlibVector<CComplex> Levinson(const CMatlibVector<CComplex>& veccRx,
 
 	return veccX;
 }
+
+CMatlibVector<CReal> DomEig(const CMatlibMatrix<CReal>& rmI,
+							const CReal rEpsilon)
+{
+	const int				iMaxNumIt = 150; /* Maximum number of iterations */
+	const int				iSize = rmI.GetColSize();
+	CMatlibVector<CReal>	vecrV(iSize, VTY_TEMP);
+	CMatlibVector<CReal>	vecrVold(iSize);
+	CMatlibVector<CReal>	vecrY(iSize);
+	CReal					rLambda, rLambdaold, rError;
+
+	/* Implementing the power method for getting the dominant eigenvector */
+	/* Start value for eigenvector */
+	vecrV = Ones(iSize);
+	rLambda = rLambdaold = (CReal) 1.0;
+	rError = _MAXREAL;
+	int iItCnt = iMaxNumIt;
+
+	while ((iItCnt > 0) && (rError > rEpsilon))
+	{
+		/* Save old values needed error calculation */
+		vecrVold = vecrV;
+		rLambdaold = rLambda;
+
+		/* Actual power method calculations */
+		rLambda = Max(Abs(vecrV));
+		vecrV = (CReal) 1.0 / rLambda * rmI * vecrV;
+
+		/* Take care of number of iterations and error calculations */
+		iItCnt--;
+		rError =
+			Max(Abs(rLambda - rLambdaold), Max(Abs(vecrV - vecrVold)));
+	}
+
+	return vecrV;
+}
+
+CReal LinRegr(const CMatlibVector<CReal>& rvX, const CMatlibVector<CReal>& rvY)
+{
+	/* Linear regression */
+	CRealVector Xm(Mean(rvX));
+	CRealVector Ym(Mean(rvY));
+
+	CRealVector Xmrem(rvX - Xm); /* Remove mean of W */
+
+	/* Return only the gradient, we do not calculate and return the offset */
+	return Sum(Xmrem * (rvY - Ym)) / Sum(Xmrem * Xmrem);
+}

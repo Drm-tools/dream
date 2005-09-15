@@ -708,6 +708,25 @@ operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibVector<CComplex>& cvB
 }
 
 /* operator* */
+inline CMatlibVector<CReal> // rm, rv
+operator*(const CMatlibMatrix<CReal>& rmA, const CMatlibVector<CReal>& rvB)
+{
+	const int iRowSizeA = rmA.GetRowSize();
+	const int iSizeB = rvB.GetSize();
+	CMatlibVector<CReal> vecRet(iSizeB, VTY_TEMP);
+
+	for (int j = 0; j < iRowSizeA; j++)
+	{
+		vecRet[j] = (CReal) 0.0;
+
+		for (int i = 0; i < iSizeB; i++)
+			vecRet[j] += rmA[j][i] * rvB[i];
+	}
+
+	return vecRet;
+}
+
+/* operator* */
 inline CMatlibMatrix<CComplex> // cm, cm
 operator*(const CMatlibMatrix<CComplex>& cmA, const CMatlibMatrix<CComplex>& cmB)
 {
@@ -742,6 +761,23 @@ operator*(const CComplex& cA, const CMatlibMatrix<CComplex>& cmB)
 	{
 		for (int j = 0; j < iRowSizeB; j++)
 			matRet[j][k] = cA * cmB[j][k];
+	}
+
+	return matRet;
+}
+
+/* operator* */
+inline CMatlibMatrix<CReal> // r, rm
+operator*(const CReal& rA, const CMatlibMatrix<CReal>& rmB)
+{
+	const int iRowSizeB = rmB.GetRowSize();
+	const int iColSizeB = rmB.GetColSize();
+	CMatlibMatrix<CReal> matRet(iRowSizeB, iColSizeB, VTY_TEMP);
+
+	for (int k = 0; k < iColSizeB; k++)
+	{
+		for (int j = 0; j < iRowSizeB; j++)
+			matRet[j][k] = rA * rmB[j][k];
 	}
 
 	return matRet;
