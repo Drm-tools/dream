@@ -664,7 +664,8 @@ for (int i = 0; i < iNumSymbolsPerSuperframe; i++)
 }
 
 /* Legend */
-fprintf(pFile, "\n\nLegend:\n\t: DC-carrier\n\t. MCS cells\n\tS SDC cells");
+fprintf(pFile, "\n------------------>\n subcarrier index");
+fprintf(pFile, "\n\n\nLegend:\n\t: DC-carrier\n\t. MCS cells\n\tS SDC cells");
 fprintf(pFile, "\n\tX FAC cells\n\tT time pilots\n\tf frequency pilots");
 fprintf(pFile, "\n\t0 scattered pilots\n\t* boosted scattered pilots\n");
 
