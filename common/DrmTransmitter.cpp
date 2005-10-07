@@ -193,7 +193,7 @@ CDRMTransmitter::CDRMTransmitter() : TransmitData(&SoundInterface),
 	}
 
 	/* Init service parameters, 24 bit unsigned integer number */
-	TransmParam.Service[0].iServiceID = 163569;
+	TransmParam.Service[0].iServiceID = 0;
 
 	/* Service label data. Up to 16 bytes defining the label using UTF-8
 	   coding */
