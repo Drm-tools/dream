@@ -596,8 +596,8 @@ CMatlibVector<CReal> DomEig(const CMatlibMatrix<CReal>& rmI,
 CReal LinRegr(const CMatlibVector<CReal>& rvX, const CMatlibVector<CReal>& rvY)
 {
 	/* Linear regression */
-	CRealVector Xm(Mean(rvX));
-	CRealVector Ym(Mean(rvY));
+	CReal Xm(Mean(rvX));
+	CReal Ym(Mean(rvY));
 
 	CRealVector Xmrem(rvX - Xm); /* Remove mean of W */
 
