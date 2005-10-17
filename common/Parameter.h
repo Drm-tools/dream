@@ -87,7 +87,7 @@ public:
 	enum EChanType {CT_MSC, CT_SDC, CT_FAC};
 
 	/* ST: Simulation Type */
-	enum ESimType {ST_NONE, ST_BITERROR, ST_MSECHANEST, ST_BER_IDEALCHAN, ST_SYNC_PARAM};
+	enum ESimType {ST_NONE, ST_BITERROR, ST_MSECHANEST, ST_BER_IDEALCHAN, ST_SYNC_PARAM, ST_SINR};
 
 
 	/* Classes -------------------------------------------------------------- */
@@ -499,6 +499,7 @@ public:
 	_REAL				rBitErrRate;
 	_REAL				rSyncTestParam; /* For any other simulations, used
 										   with "ST_SYNC_PARAM" type */
+	_REAL				rSINR;
 	int					iNumBitErrors;
 	int					iChanEstDelay;
 
