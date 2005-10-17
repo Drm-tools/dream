@@ -310,6 +310,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 	FILE*		pFileCurPos;
 	time_t		tiElTi;
 	long int	lReTi;
+	_REAL		rReDays;
 
 	/* Get elapsed time since this run was started (seconds) */
 	tiElTi = time(NULL) - tiStartTime;
@@ -333,20 +334,25 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 					"time remaining: %d min)", iCounter, iNumSimBlocks,
 					tiElTi / 60, lReTi / 60);
 
-				if (TransmParam.eSimType == CParameter::ST_SYNC_PARAM)
+				/* Write current paramter value */
+				_REAL rCurParamVal;
+				switch(TransmParam.eSimType)
 				{
-					/* Write sync paramter */
-					fprintf(pFileCurPos, "\n%e %e",
-						TransmParam.GetNominalSNRdB(),
-						TransmParam.rSyncTestParam);
+				case CParameter::ST_SYNC_PARAM:
+					rCurParamVal = TransmParam.rSyncTestParam;
+					break;
+
+				case CParameter::ST_SINR:
+					rCurParamVal = TransmParam.rSINR;
+					break;
+
+				default:
+					rCurParamVal = TransmParam.rBitErrRate;
+					break;
 				}
-				else
-				{
-					/* Add current value of BER */
-					fprintf(pFileCurPos, "\n%e %e",
-						TransmParam.GetNominalSNRdB(),
-						TransmParam.rBitErrRate);
-				}
+				fprintf(pFileCurPos, "\n%e %e",
+					TransmParam.GetNominalSNRdB(), rCurParamVal);
+
 				fclose(pFileCurPos);
 			}
 		}
@@ -373,13 +379,17 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 					(((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
 					TransmParam.iNumBitErrors * tiElTi);
 
+				/* Estimated remaining days ( x / (60 * 60 * 24) ) */
+				rReDays = (_REAL) lReTi / 86400;
+
 				/* Store current counter position in file */
 				pFileCurPos = fopen(strFileName.c_str(), "w");
 				if (pFileCurPos != NULL)
 				{
 					fprintf(pFileCurPos, "%d / %d (%d min elapsed, estimated "
-						"time remaining: %d min)", TransmParam.iNumBitErrors,
-						iNumErrors,	tiElTi / 60, lReTi / 60);
+						"time remaining: %d min [%.1f days])",
+						TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
+						lReTi / 60, rReDays);
 
 					/* Add current value of BER */
 					fprintf(pFileCurPos, "\n%e %e", TransmParam.
