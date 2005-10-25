@@ -765,7 +765,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 #endif
 
 #ifdef HAVE_LIBHAMLIB
-		/* Hamlib Model ID -------------------------------------------------- */
+		/* Hamlib config string --------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-C", "--hamlib-config",
 			strArgument) == TRUE)
 		{
@@ -774,7 +774,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		}
 
 
-		/* Hamlib config string --------------------------------------------- */
+		/* Hamlib Model ID -------------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-M", "--hamlib-model", 0,
 			MAX_ID_HAMLIB, rArgument) == TRUE)
 		{
