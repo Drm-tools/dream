@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrea Russo
  *
  * Description:
  *	See DABMOT.cpp
@@ -33,28 +33,74 @@
 #include "../util/Vector.h"
 #include "../util/CRC.h"
 
+#ifdef HAVE_LIBFREEIMAGE
+# include <FreeImage.h>
+#endif
+
+
+/* Definitions ****************************************************************/
+/* Invalid data segment number. Shall be a negative value since the test for
+   invalid data segment number is always "if (iDataSegNum < 0)" */
+#define INVALID_DATA_SEG_NUM			-1
+
+/* Maximum number of bytes for zip'ed files. We need to specify this number to
+   avoid segmentation faults due to erroneous zip header giving a much too high
+   number of bytes */
+#define MAX_DEC_NUM_BYTES_ZIP_DATA		1000000 /* 1 MB */
+
 
 /* Classes ********************************************************************/
+class CDataUnit
+{
+public:
+	CDataUnit() {Reset();}
+
+	CDataUnit& operator=(const CDataUnit& nDU)
+	{
+		ResizeAndCopyVector(nDU.vecbiData);
+		bReady = nDU.bReady;
+		bOK = nDU.bOK;
+		iDataSegNum = nDU.iDataSegNum;
+		return *this;
+	}
+
+	void Reset();
+	void Add(CVector<_BINARY>& vecbiNewData, const int iSegmentSize,
+		const int iSegNum);
+	void ResizeAndCopyVector(const CVector<_BINARY>& vecbiNewData);
+
+	CVector<_BINARY>	vecbiData;
+	_BOOLEAN			bOK, bReady;
+	int					iDataSegNum;
+};
+
 class CMOTObjectRaw
 {
 public:
-	class CDataUnit
+	CMOTObjectRaw() {Reset();}
+
+	CMOTObjectRaw& operator=(const CMOTObjectRaw& nOR)
 	{
-	public:
-		CDataUnit() {Reset();}
+		iTransportID = nOR.iTransportID;
+		bDispose = nOR.bDispose;
+		Header = nOR.Header;
+		Body = nOR.Body;
+		return *this; 
+	}
 
-		void Reset();
-		void Add(CVector<_BINARY>& vecbiNewData,
-			const int iSegmentSize, const int iSegNum);
-
-		CVector<_BINARY>	vecbiData;
-		_BOOLEAN			bOK, bReady;
-		int					iDataSegNum;
-	};
+	void Reset();
 
 	int			iTransportID;
+	_BOOLEAN	bDispose;
 	CDataUnit	Header;
 	CDataUnit	Body;
+};
+
+class CMOTDirectoryHeader
+{
+public:
+	int			iTransportID;
+	CDataUnit	Header;
 };
 
 class CMOTObject
@@ -62,12 +108,20 @@ class CMOTObject
 public:
 	CMOTObject() {Reset();}
 	CMOTObject(const CMOTObject& NewObj) : vecbRawData(NewObj.vecbRawData),
-		strFormat(NewObj.strFormat), strName(NewObj.strName) {}
+		strFormat(NewObj.strFormat), strName(NewObj.strName),
+		strMimeType(NewObj.strMimeType),
+		iCompressionType(NewObj.iCompressionType),
+		strContentDescription(NewObj.strContentDescription) {}
 
 	inline CMOTObject& operator=(const CMOTObject& NewObj)
 	{
 		strName = NewObj.strName;
 		strFormat = NewObj.strFormat;
+		strMimeType = NewObj.strMimeType;
+		iCompressionType = NewObj.iCompressionType;
+		strContentDescription = NewObj.strContentDescription;
+		iVersion = NewObj.iVersion;
+
 		vecbRawData.Init(NewObj.vecbRawData.Size());
 		vecbRawData = NewObj.vecbRawData;
 
@@ -79,11 +133,19 @@ public:
 		vecbRawData.Init(0);
 		strFormat = "";
 		strName = "";
+		strMimeType = "";
+		iCompressionType = 0;
+		strContentDescription = "";
+		iVersion = 0;
 	}
 
 	CVector<_BYTE>	vecbRawData;
 	string			strName;
 	string			strFormat;
+	string			strMimeType;
+	int				iCompressionType;
+	string			strContentDescription;
+	int				iVersion;
 };
 
 
@@ -134,18 +196,34 @@ protected:
 class CMOTDABDec
 {
 public:
-	CMOTDABDec() {}
+	CMOTDABDec() : iDirectoryTransportId(0) {vecMOTCarouselRaw.Init(0);}
 	virtual ~CMOTDABDec() {}
 
-	_BOOLEAN	AddDataGroup(CVector<_BINARY>& vecbiNewData);
-	void		GetMOTObject(CMOTObject& NewMOTObject)
-					{NewMOTObject = MOTObject; /* Simply copy object */}
+	_BOOLEAN AddDataGroup(CVector<_BINARY>& vecbiNewData);
+	void GetMOTObject(CMOTObject& NewMOTObject)
+		{NewMOTObject = MOTObject; /* Simply copy object */}
 
 protected:
 	void DecodeObject(CMOTObjectRaw& MOTObjectRaw);
+	_BOOLEAN GetObjectHeader(const int iTransportID,
+		CMOTObjectRaw& MOTObjectRaw);
 
-	CMOTObject		MOTObject;
-	CMOTObjectRaw	MOTObjectRaw;
+	int FindObjectIntoCarousel(const int iTransportID);
+	int AddCarouselObject(CMOTObjectRaw& MOTObjectRaw);
+	string ExtractString(CVector<_BINARY>& vecbiData, const int iDataLen);
+
+	void BinaryVecToByteVec(CVector<_BINARY>& vecbiIn,
+		CVector<_BYTE>& vecbReturn);
+
+	_BOOLEAN IsZipped(CVector<_BINARY>& vecbiData);
+	unsigned int gzGetOriginalSize(const CVector<_BYTE>& vecbData);
+
+	CMOTObject						MOTObject;
+	CVector<CMOTObjectRaw>			vecMOTCarouselRaw;
+	CMOTObjectRaw					MOTObjectRaw;
+	CMOTObjectRaw					MOTDirectoryRaw;
+	CVector<CMOTDirectoryHeader>	vecMOTDirectoryHeaders;
+	int								iDirectoryTransportId;
 };
 
 

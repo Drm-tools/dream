@@ -3,13 +3,15 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer, Doyle Richard
+ *	Volker Fischer, Andrea Russo, Doyle Richard
  *
  * Description:
  *	DAB MOT interface implementation
  *
  * 12/22/2003 Doyle Richard
- *  - Header extension decoding
+ *	- Header extension decoding
+ * 10/13/2005 Andrea Russo
+ *	- Broadcast WebSite application
  *
  ******************************************************************************
  *
@@ -230,8 +232,8 @@ void CMOTDABEnc::PartitionUnits(CVector<_BINARY>& vecbiSource,
 								CVector<CVector<_BINARY> >& vecbiDest,
 								const int iPartiSize)
 {
-	int	i, j;
-	int	iActSegSize;
+	int i, j;
+	int iActSegSize;
 
 	/* Divide the generated units in partitions */
 	const int iSourceSize = vecbiSource.Size() / SIZEOF__BYTE;
@@ -572,17 +574,29 @@ void CMOTDABEnc::Reset()
 \******************************************************************************/
 _BOOLEAN CMOTDABDec::AddDataGroup(CVector<_BINARY>& vecbiNewData)
 {
-	int			i;
-	int			iSegmentNum;
-	int			iLenIndicat;
-	int			iLenGroupDataField;
-	int			iSegmentSize;
-	int			iTransportID;
-	_BINARY		biLastFlag;
-	_BINARY		biTransportIDFlag;
-	CCRC		CRCObject;
-	FILE*		pFiBody;
-	_BOOLEAN	bCRCOk;
+	int					i, j;
+	int					iSegmentNum;
+	int					iLenIndicat;
+	int					iLenGroupDataField;
+	int					iSegmentSize;
+	int					iTransportID;
+
+	int					iIndex;
+	int					iNumberOfObjects;
+	int					iDirectoryExtensionLength;
+	CMOTObjectRaw		MOTObjectRawTemp;
+
+	CVector<_BINARY>	vecbiDirectoryExtension; 
+	int					iTranspostIdNew;
+	CVector<_BINARY>	vecbiHeaderPart;
+	int					iHeaderSize;
+	int					iBodySize;
+	
+	_BINARY				biLastFlag;
+	_BINARY				biTransportIDFlag;
+	CCRC				CRCObject;
+	FILE*				pFiBody;
+	_BOOLEAN			bCRCOk;
 
 	/* Init return value with "not ready". If not MOT object is ready after
 	   adding this new data group, this flag is overwritten with "TRUE" */
@@ -689,7 +703,6 @@ _BOOLEAN CMOTDABDec::AddDataGroup(CVector<_BINARY>& vecbiNewData)
 		/* Segment size */
 		iSegmentSize = (int) vecbiNewData.Separate(13);
 
-
 		/* Get MOT data ----------------------------------------------------- */
 		/* Segment number and user access data is needed */
 		if ((biSegmentFlag == TRUE) && (biUserAccFlag == TRUE) &&
@@ -763,6 +776,32 @@ _BOOLEAN CMOTDABDec::AddDataGroup(CVector<_BINARY>& vecbiNewData)
 			{
 				/* Body data segments are transferred in Data Group type 4 */
 				/* Body ----------------------------------------------------- */
+				MOTObjectRawTemp = MOTObjectRaw;
+
+				/* Find if this TransportID is already in vecMOTCarouselRaw */
+				iIndex = FindObjectIntoCarousel(iTransportID);
+				if (iIndex < 0)
+				{
+					/* Object not found in carousel. Check if header was already
+					   received and stored in the MOT directory. If it is
+					   available, copy it */
+					if (GetObjectHeader(iTransportID, MOTObjectRaw))
+					{
+						MOTObjectRaw.Body.Reset();
+						iIndex = AddCarouselObject(MOTObjectRaw);
+					}
+				}
+				else
+				{
+					/* If ready do not decode it because this part of the
+					   directory is ready */
+					if (vecMOTCarouselRaw[iIndex].Body.bReady == TRUE)
+						iIndex = INVALID_DATA_SEG_NUM;
+				}
+
+				if (iIndex >= 0)
+					MOTObjectRaw = vecMOTCarouselRaw[iIndex];
+
 				if (iSegmentNum == 0)
 				{
 					/* The first segment was received, reset body */
@@ -818,6 +857,209 @@ _BOOLEAN CMOTDABDec::AddDataGroup(CVector<_BINARY>& vecbiNewData)
 						MOTObjectRaw.Body.bReady = TRUE;
 					}
 				}
+
+				if (iIndex >= 0)
+				{
+					/* Use MOT object --------------------------------------- */
+					/* Test if MOT object is ready */
+					if ((MOTObjectRaw.Header.bReady == TRUE) &&
+						(MOTObjectRaw.Body.bReady == TRUE))
+					{
+						DecodeObject(MOTObjectRaw);
+
+						/* Set flag that new object was successfully decoded */
+						bMOTObjectReady = TRUE;
+
+						/* Reset raw MOT object and dispose logically */
+						vecMOTCarouselRaw[iIndex].Reset();
+						vecMOTCarouselRaw[iIndex].bDispose = TRUE;
+					}
+					else
+						vecMOTCarouselRaw[iIndex] = MOTObjectRaw;
+
+					MOTObjectRaw = MOTObjectRawTemp;
+					MOTObjectRawTemp.Reset();
+				}
+			}
+			else if (iDataGroupType == 6) /* MOT directory */
+			{
+				if (iSegmentNum == 0)
+				{
+					/* The first segment was received, reset body */
+					MOTDirectoryRaw.Body.Reset();
+
+					/* The first occurrence of a Data Group type 6 containing
+					   header information is referred as the beginning of the
+					   object transmission. Set new transport ID */
+					MOTDirectoryRaw.iTransportID = iTransportID;
+
+					/* Init flag for body ok */
+					MOTDirectoryRaw.Body.bOK = TRUE;
+
+					/* Add new segment data */
+					MOTDirectoryRaw.Body.Add(vecbiNewData, iSegmentSize,
+						iSegmentNum);
+				}
+				else
+				{
+					/* Check transport ID */
+					if (MOTDirectoryRaw.iTransportID != iTransportID)
+						MOTDirectoryRaw.Body.Reset();
+					else
+					{
+						/* Sometimes a packet is transmitted more than once,
+						   only use packets which are not already received
+						   correctly */
+						if (MOTDirectoryRaw.Body.iDataSegNum != iSegmentNum)
+						{
+							/* Check segment number */
+							if (MOTDirectoryRaw.Body.iDataSegNum + 1 !=
+								iSegmentNum)
+							{
+								/* A packet is missing, reset body */
+								MOTDirectoryRaw.Body.Reset();
+							}
+							else
+							{
+								/* Add data */
+								MOTDirectoryRaw.Body.Add(vecbiNewData,
+									iSegmentSize, iSegmentNum);
+							}
+						}
+					}
+				}
+
+				/* Test if last flag is active */
+				if (biLastFlag == TRUE)
+				{
+					if (MOTDirectoryRaw.Body.bOK == TRUE)
+					{
+						/* This was the last segment and all segments were ok.
+						   Mark body as ready */
+						MOTDirectoryRaw.Body.bReady = TRUE;
+					}
+				}
+
+				if (MOTDirectoryRaw.Body.bReady == TRUE)
+				{
+					/* Decode the directory --------------------------------- */
+					MOTDirectoryRaw.Body.vecbiData.ResetBitAccess();
+
+					/* Not used */
+					MOTDirectoryRaw.Body.vecbiData.Separate(2);
+
+					/* Directory size: not used */
+					MOTDirectoryRaw.Body.vecbiData.Separate(30);
+
+					/* Number of objects */
+					iNumberOfObjects =
+						(int) MOTDirectoryRaw.Body.vecbiData.Separate(16);
+
+					/* Carousel period: not used */
+					MOTDirectoryRaw.Body.vecbiData.Separate(24);
+
+					/* Not used */
+					MOTDirectoryRaw.Body.vecbiData.Separate(1);
+
+					/* Rfa: not used */
+					MOTDirectoryRaw.Body.vecbiData.Separate(2);
+
+					/* Segment size: not used */
+					iSegmentSize =
+						(int) MOTDirectoryRaw.Body.vecbiData.Separate(13);
+
+					/* Directory extension length */
+					iDirectoryExtensionLength =
+						(int) MOTDirectoryRaw.Body.vecbiData.Separate(16);
+
+					/* Copy directory extension in separate vector */
+					vecbiDirectoryExtension.
+						Init(iDirectoryExtensionLength * SIZEOF__BYTE);
+					for (i = 0; i < vecbiDirectoryExtension.Size(); i++)
+					{
+						vecbiDirectoryExtension[i] = (_BINARY) MOTDirectoryRaw.
+							Body.vecbiData.Separate(1);
+					}
+
+					MOTDirectoryRaw.Header.Add(vecbiDirectoryExtension,
+						vecbiDirectoryExtension.Size(), 1);
+
+					vecMOTDirectoryHeaders.Init(0);
+
+					int iEntryNumber = 1;
+					while (iEntryNumber <= iNumberOfObjects)
+					{
+						iTranspostIdNew =
+							(int) MOTDirectoryRaw.Body.vecbiData.Separate(16);
+
+						/* Header core */
+						const int iHeaderPartSize = 7 * SIZEOF__BYTE;
+						vecbiHeaderPart.Init(iHeaderPartSize);
+						for (i = 0; i < iHeaderPartSize; i++)
+						{
+							vecbiHeaderPart[i] = (_BINARY) MOTDirectoryRaw.Body.
+								vecbiData.Separate(1);
+						}
+
+						vecbiHeaderPart.ResetBitAccess();
+
+						/* Body size is not used */
+						iBodySize = (int) vecbiHeaderPart.Separate(28);
+						iHeaderSize = (int) vecbiHeaderPart.Separate(13);
+
+						/* Add remaining part */
+						const int iTotHeaderSize = iHeaderSize * SIZEOF__BYTE;
+						const int iRemPartSize =
+							iTotHeaderSize - iHeaderPartSize;
+
+						if (iRemPartSize > 0)
+						{
+							/* Enlarge vector size first */
+							vecbiHeaderPart.Enlarge(iRemPartSize);
+
+							/* Actual copying */
+							for (i = iHeaderPartSize; i < iTotHeaderSize; i++)
+							{
+								vecbiHeaderPart[i] = (_BINARY) MOTDirectoryRaw.
+									Body.vecbiData.Separate(1);
+							}
+						}
+
+						/* Add only transport ID and header data vector */
+						CMOTDirectoryHeader	MOTDirectoryHeaderEmpty;
+						vecMOTDirectoryHeaders.Add(MOTDirectoryHeaderEmpty);
+
+						vecMOTDirectoryHeaders[iEntryNumber - 1].iTransportID =
+							iTranspostIdNew;
+						vecMOTDirectoryHeaders[iEntryNumber - 1].Header.
+							ResizeAndCopyVector(vecbiHeaderPart);
+
+						iEntryNumber = iEntryNumber + 1;
+					}
+
+					iDirectoryTransportId = iTransportID;
+
+					/* Delete in the Carousel old objects not completed */
+					_BOOLEAN bFound;
+					for (i = 0; i < vecMOTCarouselRaw.Size(); i++)
+					{
+						bFound = FALSE;
+						for (j = 0; j < vecMOTDirectoryHeaders.Size(); j++)
+						{
+							if (vecMOTDirectoryHeaders[j].iTransportID ==
+								vecMOTCarouselRaw[i].iTransportID)
+							{
+								bFound = TRUE;
+							}
+						}
+
+						if (bFound == FALSE)
+						{
+							vecMOTCarouselRaw[i].Reset();
+							vecMOTCarouselRaw[i].bDispose = TRUE;
+						}
+					}
+				}
 			}
 
 
@@ -832,8 +1074,7 @@ _BOOLEAN CMOTDABDec::AddDataGroup(CVector<_BINARY>& vecbiNewData)
 				bMOTObjectReady = TRUE;
 
 				/* Reset raw MOT object */
-				MOTObjectRaw.Header.Reset();
-				MOTObjectRaw.Body.Reset();
+				MOTObjectRaw.Reset();
 			}
 		}
 	}
@@ -844,6 +1085,7 @@ _BOOLEAN CMOTDABDec::AddDataGroup(CVector<_BINARY>& vecbiNewData)
 
 void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 {
+	int				iCharacterSet;
 	int				i;
 	int				iDaSiBytes;
 	unsigned char	ucParamId;
@@ -871,13 +1113,14 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 		/* PLI (Parameter Length Indicator) */
 		int iPLI = (int) MOTObjectRaw.Header.vecbiData.Separate(2);
 
+		ucParamId = (unsigned char)
+			MOTObjectRaw.Header.vecbiData.Separate(6);
+
 		switch(iPLI)
 		{
 		case 0:
 			/* Total parameter length = 1 byte; no DataField
 			   available */
-			ucParamId = (unsigned char)
-				MOTObjectRaw.Header.vecbiData.Separate(6);
 
 			/* TODO: Use "ucParamId" */
 
@@ -887,13 +1130,16 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 		case 1:
 			/* Total parameter length = 2 bytes, length of DataField
 			   is 1 byte */
-			ucParamId = (unsigned char)
-				MOTObjectRaw.Header.vecbiData.Separate(6);
-
 			ucDatafield = (unsigned char)
 				MOTObjectRaw.Header.vecbiData.Separate(8);
 
-			/* TODO: Use information in data field */
+			/* Version */
+			if (ucParamId == 6)
+				MOTObject.iVersion = (int) ucDatafield;
+
+			/* Compression Type */
+			if (ucParamId == 17)
+				MOTObject.iCompressionType = (int) ucDatafield;
 
 			iSizeRec -= 2; /* 6 + 8 + 2 (PLI) bits */
 			break;
@@ -901,9 +1147,6 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 		case 2:
 			/* Total parameter length = 5 bytes; length of DataField
 			   is 4 bytes */
-			ucParamId = (unsigned char)
-				MOTObjectRaw.Header.vecbiData.Separate(6);
-
 			for (i = 0; i < 4; i++)
 			{
 				ucDatafield = (unsigned char)
@@ -918,9 +1161,6 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 			/* Total parameter length depends on the DataFieldLength
 			   indicator (the maximum parameter length is
 			   32770 bytes) */
-			ucParamId = (unsigned char)
-				MOTObjectRaw.Header.vecbiData.Separate(6);
-
 			iSizeRec -= 1; /* 2 (PLI) + 6 bits */
 
 			/* Ext (ExtensionFlag): This 1-bit field specifies the
@@ -951,86 +1191,296 @@ void CMOTDABDec::DecodeObject(CMOTObjectRaw& MOTObjectRaw)
 				iSizeRec -= 2;
 			}
 
-			/* Store data in vector */
-			CVector<char> veccNewData(iDataFieldLen);
-			for (i = 0; i < iDataFieldLen; i++)
+			if (iDataFieldLen > 0)
 			{
-				veccNewData[i] = (char)
-					MOTObjectRaw.Header.vecbiData.Separate(8);
-			}
-
-			/* Decode label (P.10 Label) */
-			if ((ucParamId == 12) && (iDataFieldLen > 0))
-			{
-				/* Only use "0 0 0 0 complete EBU Latin based repertoire"
-				   character set */
-				if (veccNewData[0] == 0)
+				if (ucParamId == 6) /* Version */
 				{
-					/* Copy name of object (first byte is character set
-					   indicator) */
-					MOTObject.strName = "";
-					for(i = 1; i < iDataFieldLen; i++)
-						MOTObject.strName.append(&veccNewData[i], 1);
+					MOTObject.iVersion = (int) MOTObjectRaw.Header.vecbiData.
+						Separate(SIZEOF__BYTE);
+				}
+
+				if (ucParamId == 12) /* Content Name */
+				{
+					/* Only use "0 0 0 0 complete EBU Latin based repertoire"
+					   character set */
+					iCharacterSet = MOTObjectRaw.Header.vecbiData.Separate(4);
+
+					/* rfa not used */
+					MOTObjectRaw.Header.vecbiData.Separate(4);
+
+					if (iCharacterSet == 0)
+					{
+						MOTObject.strName = ExtractString(
+							MOTObjectRaw.Header.vecbiData, iDataFieldLen - 1);
+					}
+				}
+
+				if (ucParamId == 15) /* Content Description */
+				{
+					/* Only use "0 0 0 0 complete EBU Latin based repertoire"
+					   character set */
+					iCharacterSet = MOTObjectRaw.Header.vecbiData.Separate(4);
+
+					/* rfa not used */
+					MOTObjectRaw.Header.vecbiData.Separate(4);
+
+					if (iCharacterSet == 0)
+					{
+						MOTObject.strContentDescription = ExtractString(
+							MOTObjectRaw.Header.vecbiData, iDataFieldLen - 1);
+					}
+				}
+
+				if (ucParamId == 16) /* Mime Type */
+				{
+					MOTObject.strMimeType = ExtractString(
+						MOTObjectRaw.Header.vecbiData, iDataFieldLen);
+				}
+
+				if (ucParamId == 17) /* Compression Type */
+				{
+					MOTObject.iCompressionType = (int) MOTObjectRaw.Header.
+						vecbiData.Separate(iDataFieldLen * SIZEOF__BYTE);
 				}
 			}
 			break;
 		}
 	}
 
+	BinaryVecToByteVec(MOTObjectRaw.Body.vecbiData, MOTObject.vecbRawData);
+
+	/* Take care of zip compression */
+	if (IsZipped(MOTObjectRaw.Body.vecbiData) /* ||
+		(MOTObject.iCompressionType == 1) */ )
+	{
+#ifdef HAVE_LIBFREEIMAGE
+		CVector<_BYTE> vecbRawDataOut;
+		CVector<_BYTE> vecbRawDataIn;
+
+		BinaryVecToByteVec(MOTObjectRaw.Body.vecbiData, vecbRawDataIn);
+
+		/* Extract the original file size */
+		const unsigned long dest_len = gzGetOriginalSize(vecbRawDataIn);
+
+		if (dest_len < MAX_DEC_NUM_BYTES_ZIP_DATA)
+		{
+			vecbRawDataOut.Init(dest_len);
+
+			/* Actual decompression call */
+			const int zerr = FreeImage_ZLibGUnzip(&vecbRawDataOut[0],
+				dest_len, &vecbRawDataIn[0], vecbRawDataIn.Size());
+
+			if (zerr > 0)
+			{
+				/* Copy data */
+				MOTObject.vecbRawData.Init(zerr);
+				MOTObject.vecbRawData = vecbRawDataOut;
+			}
+			else
+				MOTObject.vecbRawData.Init(0);
+		}
+		else
+			MOTObject.vecbRawData.Init(0);
+#else
+		/* Can't unzip so change the filename */
+		MOTObject.strName = MOTObject.strName + ".gz";
+#endif
+	}
+
 
 	/* Body ----------------------------------------------------------------- */
-	/* We only use images */
-	if (iContentType == 2 /* image */)
+	switch(iContentType)
 	{
-		/* Check range of content sub type */
-		if (iContentSubType < 4)
-		{
-			/* Set up MOT picture ------------------------------------------- */
-			/* Reset bit access to extract data from body */
-			MOTObjectRaw.Body.vecbiData.ResetBitAccess();
-
-			/* Data size in bytes */
-			iDaSiBytes =
-				MOTObjectRaw.Body.vecbiData.Size() / SIZEOF__BYTE;
-
-			/* Copy data */
-			MOTObject.vecbRawData.Init(iDaSiBytes);
-			for (int i = 0; i < iDaSiBytes;	i++)
-			{
-				MOTObject.vecbRawData[i] = (_BYTE) MOTObjectRaw.Body.
-					vecbiData.Separate(SIZEOF__BYTE);
-			}
-
-			/* Set format */
+		case 1: /* text */
 			switch (iContentSubType)
 			{
-			case 0: /* gif */
-				MOTObject.strFormat = "gif";
-				break;
+				case 2: /* html */
+					MOTObject.strFormat = "html";
+					break;
 
-			case 1: /* jfif */
-				MOTObject.strFormat = "jpeg";
-				break;
-
-			case 2: /* bmp */
-				MOTObject.strFormat = "bmp";
-				break;
-
-			case 3: /* png */
-				MOTObject.strFormat = "png";
-				break;
-
-			default:
-				MOTObject.strFormat = "";
-				break;
+				default:
+					MOTObject.strFormat = "text";
+					break;
 			}
-		}
+			break;
+
+		case 2: /* image */
+			/* Check range of content sub type */
+			if (iContentSubType < 4)
+			{
+				/* Set up MOT picture --------------------------------------- */
+				/* Set format */
+				switch (iContentSubType)
+				{
+				case 0: /* gif */
+					MOTObject.strFormat = "gif";
+					break;
+
+				case 1: /* jfif */
+					MOTObject.strFormat = "jpeg";
+					break;
+
+				case 2: /* bmp */
+					MOTObject.strFormat = "bmp";
+					break;
+
+				case 3: /* png */
+					MOTObject.strFormat = "png";
+					break;
+
+				default:
+					MOTObject.strFormat = "";
+					break;
+				}
+			}
+			else
+				MOTObject.vecbRawData.Init(0);
+		break;
 	}
 }
 
-void CMOTObjectRaw::CDataUnit::Add(CVector<_BINARY>& vecbiNewData,
-								   const int iSegmentSize,
-								   const int iSegNum)
+string CMOTDABDec::ExtractString(CVector<_BINARY>& vecbiData,
+								 const int iDataLen)
+{
+	string strVar = "";
+	for (int i = 0; i < iDataLen; i++)
+	{
+		/* Get character and append it to string */
+		char cNewChar = (char) vecbiData.Separate(SIZEOF__BYTE);
+		strVar.append(&cNewChar, 1);
+	}
+
+	return strVar;
+}
+
+void CMOTDABDec::BinaryVecToByteVec(CVector<_BINARY>& vecbiIn,
+									CVector<_BYTE>& vecbReturn)
+{
+	/* Data size in bytes */
+	const int iSizeOfBytes = vecbiIn.Size() / SIZEOF__BYTE;
+	
+	/* Copy data */
+	vecbReturn.Init(iSizeOfBytes);
+	vecbiIn.ResetBitAccess();
+	for (int i = 0; i < iSizeOfBytes; i++)
+		vecbReturn[i] = (_BYTE) vecbiIn.Separate(SIZEOF__BYTE);
+}
+
+_BOOLEAN CMOTDABDec::IsZipped(CVector<_BINARY>& vecbiData)
+{
+/*
+	Check if the header file is a gzip header
+
+	see GZIP file format specification
+	http://www.ietf.org/rfc/rfc1952.txt
+*/
+	CVector<_BYTE> byHeader(3);
+
+	vecbiData.ResetBitAccess();
+	for (int i = 0; i < 3; i++)
+		byHeader[i] = (_BYTE) vecbiData.Separate(SIZEOF__BYTE);
+
+	/* Check for gzip header [31, 139, 8] */
+	if ((byHeader[0] == 31) && (byHeader[1] == 139) && (byHeader[2] == 8))
+		return TRUE;
+	else
+		return FALSE;
+}
+
+unsigned int CMOTDABDec::gzGetOriginalSize(const CVector<_BYTE>& vecbData)
+{
+/*
+	Get the original size from a gzip file
+	last 4 bytes contains the original file size (ISIZE)
+
+	see GZIP file format specification
+	http://www.ietf.org/rfc/rfc1952.txt
+*/
+	CVector<_BYTE> byHeader(4);
+
+	const int iLastByte = vecbData.Size() - 1;
+
+	byHeader[0] = vecbData[iLastByte - 3];
+	byHeader[1] = vecbData[iLastByte - 2];
+	byHeader[2] = vecbData[iLastByte - 1];
+	byHeader[3] = vecbData[iLastByte];
+
+	return byHeader[0] + (byHeader[1] << 8) + (byHeader[2] << 16) +
+		(byHeader[3] << 24);
+}
+
+_BOOLEAN CMOTDABDec::GetObjectHeader(const int iTransportID,
+									 CMOTObjectRaw& MOTObjectRaw)
+{
+	_BOOLEAN bFound = FALSE;
+	int i = 0;
+
+	while ((i < vecMOTDirectoryHeaders.Size()) && (bFound == FALSE))
+	{
+		if (vecMOTDirectoryHeaders[i].iTransportID == iTransportID)
+		{
+			MOTObjectRaw.iTransportID = iTransportID;
+			MOTObjectRaw.Header.Reset();
+			MOTObjectRaw.Header.ResizeAndCopyVector(
+				vecMOTDirectoryHeaders[i].Header.vecbiData);
+
+			MOTObjectRaw.Header.bOK = TRUE;
+			MOTObjectRaw.Header.bReady = TRUE;
+
+			bFound = TRUE; 
+		}
+		else
+			i++;
+	}
+
+	return bFound;
+}
+
+int CMOTDABDec::FindObjectIntoCarousel(const int iTransportID)
+{
+	int iResult = INVALID_DATA_SEG_NUM;
+	int i = 0;
+
+	while ((i < vecMOTCarouselRaw.Size()) && (iResult < 0))
+	{
+		if (vecMOTCarouselRaw[i].iTransportID == iTransportID)
+			iResult = i;
+		else
+			i++;
+	}
+
+	return iResult;
+}
+
+int CMOTDABDec::AddCarouselObject(CMOTObjectRaw& MOTObjectRaw)
+{
+	int iIndex = INVALID_DATA_SEG_NUM;
+	int i = 0;
+
+	/* First search for object marked as "dispose" */
+	while ((i < vecMOTCarouselRaw.Size()) && (iIndex < 0))
+	{
+		if (vecMOTCarouselRaw[i].bDispose == TRUE)
+			iIndex = i;
+		else
+			i++;
+	}
+
+	/* If now object for disposal found, create new one */
+	if (iIndex < 0)
+	{
+		vecMOTCarouselRaw.Add(MOTObjectRaw);
+		iIndex = vecMOTCarouselRaw.Size() - 1;
+	}
+	else
+		vecMOTCarouselRaw[iIndex] = MOTObjectRaw;
+
+	return iIndex;
+}
+
+void CDataUnit::Add(CVector<_BINARY>& vecbiNewData,
+					const int iSegmentSize,
+					const int iSegNum)
 {
 	/* Add new data (bit-wise copying) */
 	const int iOldDataSize = vecbiData.Size();
@@ -1050,10 +1500,24 @@ void CMOTObjectRaw::CDataUnit::Add(CVector<_BINARY>& vecbiNewData,
 	iDataSegNum = iSegNum;
 }
 
-void CMOTObjectRaw::CDataUnit::Reset()
+void CDataUnit::Reset()
 {
 	vecbiData.Init(0);
 	bOK = FALSE;
 	bReady = FALSE;
-	iDataSegNum = -1;
+	iDataSegNum = INVALID_DATA_SEG_NUM;
+}
+
+void CDataUnit::ResizeAndCopyVector(const CVector<_BINARY>& vecbiNewData)
+{
+	vecbiData.Init(vecbiNewData.Size());
+	vecbiData = vecbiNewData;
+}
+
+void CMOTObjectRaw::Reset()
+{
+	iTransportID = 0;
+	bDispose = FALSE;
+	Header.Reset();
+	Body.Reset();
 }
