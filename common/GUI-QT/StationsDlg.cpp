@@ -641,12 +641,15 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
+
+	connect(ListViewStations->header(), SIGNAL(clicked(int)),
+		this, SLOT(OnHeaderClicked(int)));
+
 	connect(&UrlUpdateSchedule, SIGNAL(finished(QNetworkOperation*)),
 		this, SLOT(OnUrlFinished(QNetworkOperation*)));
 
 	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
 		this, SLOT(OnFreqCntNewValue(double)));
-
 
 	/* Set up timers */
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
@@ -665,6 +668,20 @@ StationsDlg::~StationsDlg()
 
 	/* Store preview settings */
 	pDRMRec->iSecondsPreview = DRMSchedule.GetSecondsPreview();
+
+	/* Store sort settings */
+	switch (DRMSchedule.GetSchedMode())
+	{
+	case CDRMSchedule::SM_DRM:
+		pDRMRec->SortParamDRM.iColumn = iCurrentSortColumn;
+		pDRMRec->SortParamDRM.bAscending = bCurrentSortAscending;
+		break;
+
+	case CDRMSchedule::SM_ANALOG:
+		pDRMRec->SortParamAnalog.iColumn = iCurrentSortColumn;
+		pDRMRec->SortParamAnalog.bAscending = bCurrentSortAscending;
+		break;
+	}
 }
 
 void StationsDlg::SetUTCTimeLabel()
@@ -860,13 +877,20 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 	switch (eNewSchM)
 	{
 	case CDRMSchedule::SM_DRM:
-		/* Sort list by transmit power (5th column), most powerful on top */
-		ListViewStations->setSorting(4, FALSE);
+		ListViewStations->setSorting(pDRMRec->SortParamDRM.iColumn,
+			pDRMRec->SortParamDRM.bAscending);
+
+		iCurrentSortColumn = pDRMRec->SortParamDRM.iColumn;
+		bCurrentSortAscending = pDRMRec->SortParamDRM.bAscending;
 		break;
 
 	case CDRMSchedule::SM_ANALOG:
-		/* Sort list by station name (1th column) */
-		ListViewStations->setSorting(0, TRUE);
+		ListViewStations->setSorting(pDRMRec->SortParamAnalog.iColumn,
+			pDRMRec->SortParamAnalog.bAscending);
+
+		iCurrentSortColumn = pDRMRec->SortParamAnalog.iColumn;
+		bCurrentSortAscending = pDRMRec->SortParamAnalog.bAscending;
+
 		break;
 	}
 
@@ -988,6 +1012,17 @@ void StationsDlg::OnFreqCntNewValue(double dVal)
 
 	/* Set selected frequency in log file class */
 	pDRMRec->GetParameters()->ReceptLog.SetFrequency((int) dVal);
+}
+
+void StationsDlg::OnHeaderClicked(int c)
+{
+	/* Store the "direction" of sorting */
+	if (iCurrentSortColumn == c)
+		bCurrentSortAscending = !bCurrentSortAscending;
+	else
+		bCurrentSortAscending = TRUE;
+
+	iCurrentSortColumn = c;
 }
 
 void StationsDlg::OnListItemClicked(QListViewItem* item)

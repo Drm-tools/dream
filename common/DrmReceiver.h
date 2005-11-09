@@ -109,7 +109,10 @@ public:
 		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
 		iSecondsPreview(0), GeomChartWindows(0), bEnableSMeter(TRUE),
 		iSysEvalDlgPlotType(0), strStoragePathMMDlg(""),
-		iMainDisplayColor(16711680) /* Red */
+		iMainDisplayColor(16711680), /* Red */
+		SortParamAnalog(0, TRUE), /* Sort list by station name  */
+		/* Sort list by transmit power (5th column), most powerful on top */
+		SortParamDRM(4, FALSE)
 #endif
 		{}
 	virtual ~CDRMReceiver() {}
@@ -209,8 +212,26 @@ public:
 	/* Chart windows */
 	CVector<CWinGeom> GeomChartWindows;
 
-	int			iMainPlotColorStyle;
-	int			iSecondsPreview;
+	int iMainPlotColorStyle;
+	int iSecondsPreview;
+
+	/* Sort parameters for stations dialog */
+	class CSortParam
+	{
+	public:
+		CSortParam(const int iCol,const _BOOLEAN bAsc) :
+			iColumn(iCol), bAscending(bAsc) {}
+
+		int			iColumn;
+		_BOOLEAN	bAscending;
+	};
+
+	/* Analog sort parameter in stations dialog */	
+	CSortParam SortParamAnalog;
+
+	/* DRM sort parameter in stations dialog */
+	CSortParam SortParamDRM;
+
 	_BOOLEAN	bEnableSMeter;
 	int			iSysEvalDlgPlotType;
 	string		strStoragePathMMDlg;

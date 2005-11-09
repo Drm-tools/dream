@@ -129,6 +129,17 @@ void CSettings::ReadIniFile()
 	if (GetNumericIniSet(ini, "Stations dialog", "preview", 0, MAX_NUM_SEC_PREVIEW, iValue) == TRUE)
 		pDRMRec->iSecondsPreview = iValue;
 
+	/* Sort order and column for DRM schedule and analog schedule */
+	if (GetNumericIniSet(ini, "Stations dialog", "sortcolumndrm", 0, MAX_COLUMN_NUMBER, iValue) == TRUE)
+		pDRMRec->SortParamDRM.iColumn = iValue;
+	if (GetNumericIniSet(ini, "Stations dialog", "sortcolumnanalog", 0, MAX_COLUMN_NUMBER, iValue) == TRUE)
+		pDRMRec->SortParamAnalog.iColumn = iValue;
+
+	if (GetFlagIniSet(ini, "Stations dialog", "sortascendingdrm", bValue) == TRUE)
+		pDRMRec->SortParamDRM.bAscending = bValue;
+	if (GetFlagIniSet(ini, "Stations dialog", "sortascendinganalog", bValue) == TRUE)
+		pDRMRec->SortParamAnalog.bAscending = bValue;
+
 
 	/* Window geometry ------------------------------------------------------ */
 	/* Main window */
@@ -330,6 +341,16 @@ void CSettings::WriteIniFile()
 	/* Seconds for preview into Stations Dialog if zero then inactive */
 	SetNumericIniSet(ini, "Stations dialog", "preview",
 		pDRMRec->iSecondsPreview);
+
+	/* Sort order and column for DRM schedule and analog schedule */
+	SetNumericIniSet(ini, "Stations dialog", "sortcolumndrm",
+		pDRMRec->SortParamDRM.iColumn);
+	SetNumericIniSet(ini, "Stations dialog", "sortcolumnanalog",
+		pDRMRec->SortParamAnalog.iColumn);
+	SetFlagIniSet(ini, "Stations dialog", "sortascendingdrm",
+		pDRMRec->SortParamDRM.bAscending);
+	SetFlagIniSet(ini, "Stations dialog", "sortascendinganalog",
+		pDRMRec->SortParamAnalog.bAscending);
 
 
 	/* Window geometry ------------------------------------------------------ */

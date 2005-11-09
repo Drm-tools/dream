@@ -26,6 +26,7 @@
  *
 \******************************************************************************/
 
+#include <qheader.h>
 #include <qlistview.h>
 #include <qpixmap.h>
 #include <qbuttongroup.h>
@@ -166,13 +167,15 @@ protected:
 	ESchedMode				eSchedMode;
 
 	/* Minutes for stations preview in seconds if zero then no active */
-    int						iSecondsPreview;
+	int						iSecondsPreview;
 };
 
 
 class MyListViewItem : public QListViewItem
 {
 public:
+	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
+	   Settings.h! */
 	MyListViewItem(QListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
@@ -189,15 +192,19 @@ class StationsDlg : public CStationsDlgBase
 	Q_OBJECT
 
 public:
+
 	StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 	virtual ~StationsDlg();
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
 
+	int				iCurrentSortColumn;
+	_BOOLEAN		bCurrentSortAscending;
+
 protected:
 	void			SetStationsView();
-    virtual void	showEvent(QShowEvent* pEvent);
+	virtual void	showEvent(QShowEvent* pEvent);
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
 	void			EnableSMeter(const _BOOLEAN bStatus);
@@ -249,4 +256,5 @@ public slots:
 	void OnShowPreviewMenu(int iID);
 	void OnGetUpdate();
 	void OnFreqCntNewValue(double dVal);
+	void OnHeaderClicked(int c);
 };
