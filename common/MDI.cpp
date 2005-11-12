@@ -3,7 +3,7 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Julian Cable
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
@@ -707,6 +707,44 @@ _BOOLEAN CMDI::SetNetwInPort(const int iPort)
 
 	/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
 	return SocketDevice.bind(QHostAddress((Q_UINT32) 0), iPort);
+}
+
+_BOOLEAN CMDI::SetNetwInMcast(const string strNewIPIP)
+{
+	struct ip_mreq mreq;
+
+	/* Copy string in QT-String "QString" */
+	const QString strIPIP = strNewIPIP.c_str();
+
+	/* The address should be in the form of [IP]:[IP], so first get the
+	   position of the colon (and check if a colon is present) */
+	const int iPosofColon = strIPIP.find(':');
+
+	/* The IP address has at least seven digits */
+	if (iPosofColon >= 7)
+	{
+		/* Get group IP from string. Use the part of the string which is
+		   on the left side of the colon */
+		const QString strGroup = strIPIP.left(iPosofColon);
+
+		/* Get interface IP from string. Use the part of the string which is
+		   on the right side of the colon */
+		const QString strIface =
+			strIPIP.right(strIPIP.length() - iPosofColon - 1);
+
+		mreq.imr_multiaddr.s_addr = inet_addr(strGroup.latin1());
+		mreq.imr_interface.s_addr = inet_addr(strIface.latin1());
+
+		if ((ntohl(mreq.imr_multiaddr.s_addr) & 0xe0000000) == 0xe0000000)
+		{
+			const SOCKET s = SocketDevice.socket();
+
+			return setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq,
+				sizeof(mreq)) != SOCKET_ERROR;
+		}
+	}
+
+	return FALSE;
 }
 
 void CMDI::OnDataReceived()

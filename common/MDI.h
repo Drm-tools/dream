@@ -36,6 +36,13 @@
 #include "util/CRC.h"
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>
+#ifdef _WIN32
+# include <winsock2.h>
+# include <ws2tcpip.h>
+#else
+# include <netinet/in.h>
+# include <arpa/inet.h>
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -59,6 +66,13 @@
 
 /* Length of the MDI in buffer */
 #define MDI_IN_BUF_LEN				4
+
+/* Some defines needed for compatibility when using Linux */
+#ifndef _WIN32
+typedef int SOCKET;
+# define SOCKET_ERROR				(-1)
+# define INVALID_SOCKET				(-1)
+#endif
 
 
 /* Classes ********************************************************************/
@@ -86,6 +100,7 @@ public:
 	void GetStreamData(CVectorEx<_BINARY>& vecbiStrData, const int iLen,
 		const int iStrNum);
 	_BOOLEAN SetNetwInPort(const int iPort);
+	_BOOLEAN SetNetwInMcast(const string strNewIPIP);
 	_BOOLEAN GetMDIInEnabled() {return bMDIInEnabled;}
 
 protected:

@@ -783,6 +783,15 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			pDRMRec->GetMDI()->SetNetwInPort((int) rArgument);
 			continue;
 		}
+
+
+		/* MDI in multi cast params ------------------------------------------ */
+		if (GetStringArgument(argc, argv, i, "--mdiinmreq", "--mdiinmreq",
+			strArgument) == TRUE)
+		{
+			pDRMRec->GetMDI()->SetNetwInMcast(strArgument);
+			continue;
+		}
 #endif
 
 #ifdef HAVE_LIBHAMLIB
@@ -910,6 +919,8 @@ string CSettings::UsageArguments(char** argv)
 		"  --mdioutadr <s>             MDI out network address\n"
 		"                              format [IP#]:[port]\n"
 		"  --mdiinport <n>             set MDI in port number\n"
+		"  --mdiinmreq <s>             MDI in multicast group address and\n"
+		"                              interface format [IP#]:[IP#]\n"
 #endif
 
 		"  -I <n>, --snddevin <n>      set sound in device\n"
