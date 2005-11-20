@@ -122,20 +122,16 @@ typedef bool							_BOOLEAN;
 // bool seems not to work with linux TODO: Fix Me!
 typedef unsigned char/*bool*/			_BINARY;
 
-#if defined(_WIN32)
+#if HAVE_STDINT_H
+# include <stdint.h>
+#elif HAVE_INTTYPES_H
+# include <inttypes.h>
+#elif defined(_WIN32)
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int16 uint16_t;
 #else
-#if HAVE_INTTYPES_H
-# include <inttypes.h>
-#else
-# if HAVE_STDINT_H
-#  include <stdint.h>
-# else
 typedef unsigned long uint32_t;
 typedef unsigned int uint16_t;
-# endif
-#endif
 #endif
 
 /* Define type-specific information */
