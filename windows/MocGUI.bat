@@ -1,6 +1,6 @@
 rem/******************************************************************************\
 rem * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
-rem * Copyright (c) 2001
+rem * Copyright (c) 2001-2005
 rem *
 rem * Author(s):
 rem *	Volker Fischer
@@ -68,5 +68,9 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -o moc\AnalogDemDlgbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -i AnalogDemDlgbase.h -o moc\AnalogDemDlgbase.cpp  
 %qtdir%\bin\moc.exe moc\AnalogDemDlgbase.h -o moc\moc_AnalogDemDlgbase.cpp
+
+%qtdir%\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -o moc\AMSSDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -i AMSSDlgbase.h -o moc\AMSSDlgbase.cpp  
+%qtdir%\bin\moc.exe moc\AMSSDlgbase.h -o moc\moc_AMSSDlgbase.cpp
 
 pause

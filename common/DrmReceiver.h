@@ -3,11 +3,14 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy
  *
  * Description:
  *	See DrmReceiver.cpp
  *
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- Additions to include AMSS demodulation
+ * 
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -48,6 +51,7 @@
 #include "sync/TimeSync.h"
 #include "sync/SyncUsingPil.h"
 #include "AMDemodulation.h"
+#include "AMSSDemodulation.h"
 #ifdef USE_QT_GUI
 # include "MDI.h"
 #endif
@@ -146,6 +150,8 @@ public:
 	CSound*					GetSoundInterface() {return &SoundInterface;}
 	CDataDecoder*			GetDataDecoder() {return &DataDecoder;}
 	CAMDemodulation*		GetAMDemod() {return &AMDemodulation;}
+	CAMSSPhaseDemod*		GetAMSSPhaseDemod() {return &AMSSPhaseDemod;}
+	CAMSSDecode*			GetAMSSDecode() {return &AMSSDecode;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
 #ifdef USE_QT_GUI
@@ -209,11 +215,14 @@ public:
 	/* Analog demodulation dialog */
 	CWinGeom GeomAnalogDemDlg;
 
+	/* Analog demodulation dialog */
+	CWinGeom GeomAMSSDlg;
+
 	/* Chart windows */
 	CVector<CWinGeom> GeomChartWindows;
 
-	int iMainPlotColorStyle;
-	int iSecondsPreview;
+	int			iMainPlotColorStyle;
+	int			iSecondsPreview;
 
 	/* Sort parameters for stations dialog */
 	class CSortParam
@@ -273,12 +282,22 @@ protected:
 	CAudioSourceDecoder		AudioSourceDecoder;
 	CDataDecoder			DataDecoder;
 	CWriteData				WriteData;
+	CSplit					Split;
 	CAMDemodulation			AMDemodulation;
+	CAMSSPhaseDemod			AMSSPhaseDemod;
+	CAMSSExtractBits		AMSSExtractBits;
+	CAMSSDecode				AMSSDecode;
 
 	/* Parameters */
 	CParameter				ReceiverParam;
 
 	/* Buffers */
+	CSingleBuffer<_REAL>	AMDataBuf;
+	CSingleBuffer<_REAL>	AMSSDataBuf;
+	CSingleBuffer<_REAL>	AMSSPhaseBuf;
+	CCyclicBuffer<_REAL>	AMSSResPhaseBuf;
+	CCyclicBuffer<_BINARY>	AMSSBitsBuf;
+	
 	CSingleBuffer<_REAL>	RecDataBuf;
 	CCyclicBuffer<_REAL>	InpResBuf;
 	CCyclicBuffer<_COMPLEX>	FreqSyncAcqBuf;

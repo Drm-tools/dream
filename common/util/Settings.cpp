@@ -200,6 +200,18 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Window geometry", "analdemvis", bValue) == TRUE)
 		pDRMRec->GeomAnalogDemDlg.bVisible = bValue;
 
+	/* AMSS dialog */
+	if (GetNumericIniSet(ini, "Window geometry", "amssxpos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomAMSSDlg.iXPos = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "amssypos", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomAMSSDlg.iYPos = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "amsshsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomAMSSDlg.iHSize = iValue;
+	if (GetNumericIniSet(ini, "Window geometry", "amsswsize", 0, MAX_WIN_GEOM_VAL, iValue) == TRUE)
+		pDRMRec->GeomAMSSDlg.iWSize = iValue;
+	if (GetFlagIniSet(ini, "Window geometry", "amssvis", bValue) == TRUE)
+		pDRMRec->GeomAMSSDlg.bVisible = bValue;
+
 	/* Chart windows */
 	int iNumChartWin = 0;
 	if (GetNumericIniSet(ini, "Window geometry", "numchartwin", 0, MAX_NUM_CHART_WIN_EV_DLG, iValue) == TRUE)
@@ -387,6 +399,13 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Window geometry", "analdemhsize", pDRMRec->GeomAnalogDemDlg.iHSize);
 	SetNumericIniSet(ini, "Window geometry", "analdemwsize", pDRMRec->GeomAnalogDemDlg.iWSize);
 	SetFlagIniSet(ini, "Window geometry", "analdemvis", pDRMRec->GeomAnalogDemDlg.bVisible);
+
+	/* AMSS dialog */
+	SetNumericIniSet(ini, "Window geometry", "amssxpos", pDRMRec->GeomAMSSDlg.iXPos);
+	SetNumericIniSet(ini, "Window geometry", "amssypos", pDRMRec->GeomAMSSDlg.iYPos);
+	SetNumericIniSet(ini, "Window geometry", "amsshsize", pDRMRec->GeomAMSSDlg.iHSize);
+	SetNumericIniSet(ini, "Window geometry", "amsswsize", pDRMRec->GeomAMSSDlg.iWSize);
+	SetFlagIniSet(ini, "Window geometry", "amssvis", pDRMRec->GeomAMSSDlg.bVisible);
 
 	/* Chart windows */
 	const int iNumChartWin = pDRMRec->GeomChartWindows.Size();

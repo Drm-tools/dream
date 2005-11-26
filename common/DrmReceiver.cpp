@@ -1,15 +1,18 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy
  *
  * Description:
  *	DRM-receiver
  * The hand over of data is done via an intermediate-buffer. The calling
  * convention is always "input-buffer, output-buffer". Additional, the
  * DRM-parameters are fed to the function.
+ *
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- Additions to include AMSS demodulation
  *
  ******************************************************************************
  *
@@ -62,12 +65,55 @@ void CDRMReceiver::Run()
 
 			if ((eReceiverMode == RM_AM) || bDoInitRun)
 			{
+				/* The incoming samples are split 2 ways using a new CSplit
+				   class. One set are passed to the existing AM demodulator.
+				   The other set are passed to the new AMSS demodulator. The
+				   AMSS and AM demodulators work completely independently */
+				if (Split.ProcessData(ReceiverParam, RecDataBuf, AMDataBuf,
+					AMSSDataBuf))
+				{
+					bEnoughData = TRUE;
+				}
+
+
 				/* AM demodulation ------------------------------------------ */
-				if (AMDemodulation.ProcessData(ReceiverParam, RecDataBuf,
+				if (AMDemodulation.ProcessData(ReceiverParam, AMDataBuf,
 					AudSoDecBuf))
 				{
 					bEnoughData = TRUE;
 				}
+
+				/* AMSS phase demodulation */
+				if (AMSSPhaseDemod.ProcessData(ReceiverParam, AMSSDataBuf,
+					AMSSPhaseBuf))
+				{
+					bEnoughData = TRUE;
+				}
+
+				
+				/* AMSS resampling */
+				if (InputResample.ProcessData(ReceiverParam, AMSSPhaseBuf,
+					AMSSResPhaseBuf))
+				{
+					bEnoughData = TRUE;
+				}
+
+				/* AMSS bit extraction */
+				if (AMSSExtractBits.ProcessData(ReceiverParam, AMSSResPhaseBuf,
+					AMSSBitsBuf))
+				{
+					bEnoughData = TRUE;
+				}
+
+				/* AMSS data decoding */
+				if (AMSSDecode.ProcessData(ReceiverParam, AMSSBitsBuf,
+					SDCDecBuf))
+				{
+					bEnoughData = TRUE;
+				}
+
+				if (UtilizeSDCData.WriteData(ReceiverParam, SDCDecBuf))
+					bEnoughData = TRUE;
 			}
 
 			if ((eReceiverMode == RM_DRM) || bDoInitRun)
@@ -176,6 +222,7 @@ fflush(pFile);
 				{
 					bEnoughData = TRUE;
 				}
+
 				if (UtilizeSDCData.WriteData(ReceiverParam, SDCDecBuf))
 					bEnoughData = TRUE;
 
@@ -217,7 +264,6 @@ fflush(pFile);
 					iCurrentCDAud = AudioSourceDecoder.GetNumCorDecAudio();
 				}
 			}
-
 			/* Save or dump the data */
 			if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
 				bEnoughData = TRUE;
@@ -318,6 +364,14 @@ void CDRMReceiver::InitReceiverMode()
 	/* Init all modules */
 	SetInStartMode();
 
+	if (eReceiverMode == RM_AM)
+	{
+		/* Tell the SDC decoder that it's AMSS to decode (no AFS index) */
+		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_AMSS);
+	}
+	else
+		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_DRM);
+
 	/* Reset new mode flag */
 	eNewReceiverMode = RM_NONE;
 }
@@ -342,7 +396,10 @@ void CDRMReceiver::SetAMDemodAcq(_REAL rNewNorCen)
 	/* Set the frequency where the AM demodulation should look for the
 	   aquisition. Receiver must be in AM demodulation mode */
 	if (eReceiverMode == RM_AM)
+	{
 		AMDemodulation.SetAcqFreq(rNewNorCen);
+		AMSSPhaseDemod.SetAcqFreq(rNewNorCen);
+	}
 }
 
 void CDRMReceiver::SetInStartMode()
@@ -471,6 +528,7 @@ Param.ResetCurSelAudDatServ();
 
 	/* Reset alternative frequencys */
 	Param.AltFreqSign.Reset();
+	Param.AltFreqOtherServicesSign.Reset();
 
 
 	/* Set the following parameters to zero states (initial states) --------- */
@@ -529,13 +587,27 @@ void CDRMReceiver::InitsForAllModules()
 	AudioSourceDecoder.SetInitFlag();
 	DataDecoder.SetInitFlag();
 	WriteData.SetInitFlag();
+	
+	Split.SetInitFlag();
 	AMDemodulation.SetInitFlag();
+
+	/* AMSS */
+	AMSSPhaseDemod.SetInitFlag();
+	AMSSExtractBits.SetInitFlag();
+	AMSSDecode.SetInitFlag();	
 
 	/* Clear all buffers (this is especially important for the "AudSoDecBuf"
 	   buffer since AM mode and DRM mode use the same buffer. When init is
 	   called or modes are switched, the buffer could have some data left which
 	   lead to an overrun) */
 	RecDataBuf.Clear();
+	AMDataBuf.Clear();
+	
+	AMSSDataBuf.Clear();
+	AMSSPhaseBuf.Clear();
+	AMSSResPhaseBuf.Clear();
+	AMSSBitsBuf.Clear();
+	
 	InpResBuf.Clear();
 	FreqSyncAcqBuf.Clear();
 	TimeSyncBuf.Clear();
@@ -575,7 +647,13 @@ void CDRMReceiver::InitsForWaveMode()
 	ReceiveData.SetInitFlag();
 	InputResample.SetInitFlag();
 	FreqSyncAcq.SetInitFlag();
+	Split.SetInitFlag();
 	AMDemodulation.SetInitFlag();
+	
+	AMSSPhaseDemod.SetInitFlag();
+	AMSSExtractBits.SetInitFlag();
+	AMSSDecode.SetInitFlag();
+	
 	TimeSync.SetInitFlag();
 	OFDMDemodulation.SetInitFlag();
 	SyncUsingPil.SetInitFlag();

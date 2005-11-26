@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
  *	Volker Fischer
@@ -8,7 +8,11 @@
  * Description:
  *	See Parameter.cpp
  *
- ******************************************************************************
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- Additions to include AMSS demodulation (Added class
+ *    CAltFreqOtherServicesSign)
+ *
+ *******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -43,7 +47,8 @@ public:
 		{}
 	virtual ~CParameter() {}
 
-	/* Enumerations --------------------------------------------------------- */
+
+	/* Enumerations --------------------------------------------------------- */	
 	/* CA: CA system */
 	enum ECACond {CA_USED, CA_NOT_USED};
 
@@ -87,7 +92,8 @@ public:
 	enum EChanType {CT_MSC, CT_SDC, CT_FAC};
 
 	/* ST: Simulation Type */
-	enum ESimType {ST_NONE, ST_BITERROR, ST_MSECHANEST, ST_BER_IDEALCHAN, ST_SYNC_PARAM, ST_SINR};
+	enum ESimType {ST_NONE, ST_BITERROR, ST_MSECHANEST, ST_BER_IDEALCHAN,
+		ST_SYNC_PARAM, ST_SINR};
 
 
 	/* Classes -------------------------------------------------------------- */
@@ -189,6 +195,7 @@ public:
 			return FALSE;
 		}
 	};
+
 
 	class CService
 	{
@@ -317,6 +324,96 @@ public:
 		_BOOLEAN			bVersionFlag;
 	} AltFreqSign;
 
+	/* Other Services alternative frequency signalling class */
+	class CAltFreqOtherServicesSign
+	{
+	public:
+		CAltFreqOtherServicesSign() {Reset();}
+
+		class CAltFreqOtherServices
+		{
+		public:
+			CAltFreqOtherServices() {Reset();}
+			CAltFreqOtherServices(const CAltFreqOtherServices& nAF) :
+				veciFrequencies(nAF.veciFrequencies),
+				bShortIDAnnounceFlag(nAF.bShortIDAnnounceFlag),
+				iShortIDAnnounce(nAF.bShortIDAnnounceFlag),
+				bRegionSchedFlag(nAF.bRegionSchedFlag),
+				bSameService(nAF.bSameService),
+				iSystemID(nAF.iSystemID),
+				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
+				iOtherServiceID(nAF.iOtherServiceID)
+				{}
+
+			CAltFreqOtherServices& operator=(const CAltFreqOtherServices& nAF)
+			{
+				veciFrequencies.Init(nAF.veciFrequencies.Size());
+				veciFrequencies = nAF.veciFrequencies;
+
+				bShortIDAnnounceFlag = nAF.bShortIDAnnounceFlag;
+				iShortIDAnnounce = nAF.bShortIDAnnounceFlag;
+				bRegionSchedFlag = nAF.bRegionSchedFlag;
+				bSameService = nAF.bSameService;
+				iSystemID = nAF.iSystemID;
+				iRegionID = nAF.iRegionID;
+				iScheduleID = nAF.iScheduleID;
+				iOtherServiceID = nAF.iOtherServiceID;
+
+				return *this;
+			}
+
+			_BOOLEAN operator==(const CAltFreqOtherServices& nAF)
+			{
+				int i;
+
+				/* Vector sizes */
+				if (veciFrequencies.Size() != nAF.veciFrequencies.Size()) return FALSE;
+
+				/* Vector contents */
+				for (i = 0; i < veciFrequencies.Size(); i++)
+					if (veciFrequencies[i] != nAF.veciFrequencies[i]) return FALSE;
+				
+				if (bShortIDAnnounceFlag != nAF.bShortIDAnnounceFlag) return FALSE;
+				if (iShortIDAnnounce != nAF.iShortIDAnnounce) return FALSE;
+				if (bRegionSchedFlag != nAF.bRegionSchedFlag) return FALSE;
+				if (bSameService != nAF.bSameService) return FALSE;
+
+				if (iSystemID != nAF.iSystemID) return FALSE;
+				if (iRegionID != nAF.iRegionID) return FALSE;
+				if (iScheduleID != nAF.iScheduleID) return FALSE;
+				if (iOtherServiceID != nAF.iOtherServiceID) return FALSE;
+				return TRUE;
+			}
+
+			void Reset()
+			{
+				veciFrequencies.Init(0);
+				bShortIDAnnounceFlag = FALSE;
+				iShortIDAnnounce = 0;
+				bRegionSchedFlag = FALSE;
+				bSameService = TRUE;
+				iSystemID = 0;
+				iRegionID = iScheduleID = 0;
+				iOtherServiceID = 0;
+			}
+
+			CVector<int>	veciFrequencies;
+			_BOOLEAN		bShortIDAnnounceFlag;
+			int				iShortIDAnnounce;
+			_BOOLEAN		bRegionSchedFlag;
+			_BOOLEAN		bSameService;
+			int				iSystemID;
+			int				iRegionID;
+			int				iScheduleID;
+			unsigned long	iOtherServiceID;
+		};
+
+		void Reset() {vecAltFreqOtherServices.Init(0); bVersionFlag = FALSE;}
+
+		CVector<CAltFreqOtherServices>	vecAltFreqOtherServices;
+		_BOOLEAN						bVersionFlag;
+	} AltFreqOtherServicesSign;
+
 	void			ResetServicesStreams();
 	void			GetActiveServices(CVector<int>& veciActServ);
 	void			GetActiveStreams(CVector<int>& veciActStr);
@@ -377,6 +474,9 @@ public:
 
 	int				iNumAudioService;
 	int				iNumDataService;
+
+	/* AMSS */
+	int				iAMSSCarrierMode;
 
 
 	/* Parameters controlled by SDC ----------------------------------------- */

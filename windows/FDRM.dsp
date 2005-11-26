@@ -1,24 +1,24 @@
 # Microsoft Developer Studio Project File - Name="FDRM" - Package Owner=<4>
 # Microsoft Developer Studio Generated Build File, Format Version 6.00
-# ** NICHT BEARBEITEN **
+# ** DO NOT EDIT **
 
 # TARGTYPE "Win32 (x86) Application" 0x0101
 
 CFG=FDRM - Win32 Debug
-!MESSAGE Dies ist kein gültiges Makefile. Zum Erstellen dieses Projekts mit NMAKE
-!MESSAGE verwenden Sie den Befehl "Makefile exportieren" und führen Sie den Befehl
+!MESSAGE This is not a valid makefile. To build this project using NMAKE,
+!MESSAGE use the Export Makefile command and run
 !MESSAGE 
 !MESSAGE NMAKE /f "FDRM.mak".
 !MESSAGE 
-!MESSAGE Sie können beim Ausführen von NMAKE eine Konfiguration angeben
-!MESSAGE durch Definieren des Makros CFG in der Befehlszeile. Zum Beispiel:
+!MESSAGE You can specify a configuration when running NMAKE
+!MESSAGE by defining the macro CFG on the command line. For example:
 !MESSAGE 
 !MESSAGE NMAKE /f "FDRM.mak" CFG="FDRM - Win32 Debug"
 !MESSAGE 
-!MESSAGE Für die Konfiguration stehen zur Auswahl:
+!MESSAGE Possible choices for configuration are:
 !MESSAGE 
-!MESSAGE "FDRM - Win32 Release" (basierend auf  "Win32 (x86) Application")
-!MESSAGE "FDRM - Win32 Debug" (basierend auf  "Win32 (x86) Application")
+!MESSAGE "FDRM - Win32 Release" (based on "Win32 (x86) Application")
+!MESSAGE "FDRM - Win32 Debug" (based on "Win32 (x86) Application")
 !MESSAGE 
 
 # Begin Project
@@ -104,6 +104,10 @@ SOURCE=.\moc\AboutDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\AMSSDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\AnalogDemDlgbase.cpp
 # End Source File
 # Begin Source File
@@ -113,6 +117,10 @@ SOURCE=.\moc\fdrmdialogbase.cpp
 # Begin Source File
 
 SOURCE=.\moc\moc_AboutDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_AMSSDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -441,6 +449,10 @@ SOURCE=..\common\AMDemodulation.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\AMSSDemodulation.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\sourcedecoders\AudioSourceDecoder.cpp
 # End Source File
 # Begin Source File
@@ -595,6 +607,10 @@ SOURCE=..\common\mlc\ViterbiDecoder.h
 # Begin Group "Header Tables"
 
 # PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\tables\TableAMSS.h
+# End Source File
 # Begin Source File
 
 SOURCE=..\common\tables\TableCarMap.h
@@ -763,6 +779,10 @@ SOURCE=..\common\util\Vector.h
 # Begin Source File
 
 SOURCE=..\common\AMDemodulation.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\AMSSDemodulation.h
 # End Source File
 # Begin Source File
 

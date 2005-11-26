@@ -14,6 +14,7 @@ drmwithoutqt_SOURCES = \
 	../common/Parameter.cpp \
 	../common/TextMessage.cpp \
 	../common/AMDemodulation.cpp \
+	../common/AMSSDemodulation.cpp \
 	../common/datadecoding/DataDecoder.cpp \
 	../common/datadecoding/DABMOT.cpp \
 	../common/datadecoding/MOTSlideShow.cpp \
@@ -66,6 +67,7 @@ drmwithoutqt_SOURCES = \
 	../common/Parameter.h \
 	../common/TextMessage.h \
 	../common/AMDemodulation.h \
+	../common/AMSSDemodulation.h \
 	../common/datadecoding/DataDecoder.h \
 	../common/datadecoding/DABMOT.h \
 	../common/datadecoding/MOTSlideShow.h \
@@ -109,6 +111,7 @@ drmwithoutqt_SOURCES = \
 	../common/sync/TimeSync.h \
 	../common/sync/TimeSyncFilter.h \
 	../common/sync/TimeSyncTrack.h \
+	../common/sync/TableAMSS.h \
 	../common/tables/TableCarMap.h \
 	../common/tables/TableDRMGlobal.h \
 	../common/tables/TableFAC.h \
@@ -136,6 +139,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/MultimediaDlgbase.ui \
 	../common/GUI-QT/StationsDlgbase.ui \
 	../common/GUI-QT/AnalogDemDlgbase.ui \
+	../common/GUI-QT/AMSSDlgbase.ui \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialog.h \
 	../common/GUI-QT/TransmDlg.h \
@@ -163,6 +167,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_StationsDlg.cpp moc/moc_StationsDlgbase.cpp moc/StationsDlgbase.h moc/StationsDlgbase.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
+	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
 	moc/moc_MDI.cpp
 
 # and should be cleaned by make clean
@@ -271,7 +276,17 @@ moc/AnalogDemDlgbase.h: ../common/GUI-QT/AnalogDemDlgbase.ui
 	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -o moc/AnalogDemDlgbase.h
 
 moc/AnalogDemDlgbase.cpp: ../common/GUI-QT/AnalogDemDlgbase.ui moc/AnalogDemDlgbase.h
-	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -i moc/AnalogDemDlgbase.h -o moc/AnalogDemDlgbase.cpp	
+	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -i moc/AnalogDemDlgbase.h -o moc/AnalogDemDlgbase.cpp
+	
+	
+moc/moc_AMSSDlgbase.cpp: moc/AMSSDlgbase.h
+	$(MOC) moc/AMSSDlgbase.h -o moc/moc_AMSSDlgbase.cpp
+	
+moc/AMSSDlgbase.h: ../common/GUI-QT/AMSSDlgbase.ui
+	$(UIC) ../common/GUI-QT/AMSSDlgbase.ui -o moc/AMSSDlgbase.h
+	
+moc/AMSSDlgbase.cpp: ../common/GUI-QT/AMSSDlgbase.ui moc/AMSSDlgbase.h
+	$(UIC) ../common/GUI-QT/AMSSDlgbase.ui -i moc/AMSSDlgbase.h -o moc/AMSSDlgbase.cpp		
 
 
 # QT translation file (added by Stephane Fillod 11/10/2004)

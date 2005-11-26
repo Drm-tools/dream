@@ -1,12 +1,15 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy
  *
  * Description:
  *	See Data.cpp
+ *
+ * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
+ *	- Addition GetSDCReceive(), Added CSplit class
  *
  ******************************************************************************
  *
@@ -247,6 +250,8 @@ public:
 #endif
 	virtual ~CUtilizeSDCData() {}
 
+	CSDCReceive* GetSDCReceive() {return &SDCReceive;}
+
 protected:
 	CSDCReceive SDCReceive;
 
@@ -262,7 +267,7 @@ protected:
 
 
 /******************************************************************************\
-* Data type conversion classes needed for simulation						   *
+* Data type conversion classes needed for simulation and AMSS decoding         *
 \******************************************************************************/
 /* Conversion from channel output to resample module input */
 class CDataConvChanResam : public CReceiverModul<CChanSimDataMod, _REAL>
@@ -277,6 +282,26 @@ protected:
 	{
 		for (int i = 0; i < iOutputBlockSize; i++)
 			(*pvecOutputData)[i] = (*pvecInputData)[i].tOut;
+	}
+};
+
+/* Takes an input buffer and splits it 2 ways */
+class CSplit: public CReceiverModul<_REAL, _REAL>
+{
+protected:
+	virtual void InitInternal(CParameter& ReceiverParam)
+	{
+		iInputBlockSize = ReceiverParam.iSymbolBlockSize;
+		iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
+		iOutputBlockSize2 = ReceiverParam.iSymbolBlockSize;
+	}
+	virtual void ProcessDataInternal(CParameter& ReceiverParam)
+	{
+		for (int i = 0; i < iInputBlockSize; i++)
+		{
+			(*pvecOutputData)[i] = (*pvecInputData)[i];
+			(*pvecOutputData2)[i] = (*pvecInputData)[i];
+		}
 	}
 };
 
