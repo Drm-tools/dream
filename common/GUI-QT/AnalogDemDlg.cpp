@@ -513,8 +513,9 @@ void AnalogDemDlg::OnButtonWaterfall()
 
 void AnalogDemDlg::OnButtonAMSS()
 {
-	/* Open AMSS window */
+	/* Open AMSS window and set in foreground */
 	AMSSDlg.show();
+	AMSSDlg.raise();
 }
 
 void AnalogDemDlg::AddWhatsThisHelp()
@@ -813,7 +814,6 @@ void CAMSSDlg::OnTimer()
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						iOtherServiceID, 16);
 				}
-
 				break;
 
 			case 3:
@@ -849,7 +849,6 @@ void CAMSSDlg::OnTimer()
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						iOtherServiceID, 16);
 				}
-
 				break;
 
 			case 6:
@@ -885,8 +884,6 @@ void CAMSSDlg::OnTimer()
 						AltFreqOtherServicesSign.vecAltFreqOtherServices[i].
 						iOtherServiceID, 16);
 				}
-
-				
 				break;
 
 			default:
