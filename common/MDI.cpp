@@ -992,7 +992,9 @@ void CMDI::DecTagProTy(CVector<_BINARY>& vecbiTag, const int iLen)
 		strProtType += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 
 	if (strProtType.compare("DMDI") != 0)
-		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!!
+	{
+		// TODO
+	}
 
 	/* Get major and minor revision of protocol */
 	const int iMdiMajRev = (int) vecbiTag.Separate(16);

@@ -74,7 +74,7 @@
 /* Maximum value for color schemes for main plot */
 # define MAX_COLOR_SCHEMES_VAL		(NUM_AVL_COLOR_SCHEMES_PLOT - 1)
 
-# define MAX_MDI_PORT_IN_NUM		32768
+# define MAX_MDI_PORT_IN_NUM		65535
 #endif
 
 #ifdef HAVE_LIBHAMLIB
