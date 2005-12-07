@@ -12,6 +12,10 @@
  * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
  *	- AMSS data entity groups (no AFS index), added eSDCType, data type 11
  *
+ * 11/28/2005 Andrea Russo
+ *	- Added code for store alternative frequencies informations about Regions
+ *      and Schedules.
+ *
  ******************************************************************************
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -500,6 +504,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		AltFreq.bIsSyncMultplx = bSyncMultplxFlag;
 		AltFreq.iRegionID = iRegionID;
 		AltFreq.iScheduleID = iScheduleID;
+		AltFreq.bRegionSchedFlag = bRegionSchedFlag;
 
 		/* Set Service Restriction */
 		if (bServRestrFlag == TRUE)
@@ -578,14 +583,41 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 	const int iDuration = (*pbiData).Separate(14);
 
 	/* Error checking */
-	if ((iScheduleID == 0) || (iDayCode == 0) || (iStartTime > 1439) ||
-		(iDuration > 16383) || (iDuration == 0))
+	if ((iScheduleID == 0) || (iDayCode == 0) || (iDayCode > 127) ||
+		(iStartTime > 1439) || (iDuration > 16383) || (iDuration == 0))
 	{
 		return TRUE;
 	}
 	else
+	{
+		/* Create temporary object and reset for initialization */
+		CParameter::CAltFreqSched AltFreqSched;
+		AltFreqSched.Reset();
+
+		AltFreqSched.iScheduleID = iScheduleID;
+		AltFreqSched.iDayCode = iDayCode;
+		AltFreqSched.iStartTime = iStartTime;
+		AltFreqSched.iDuration = iDuration;
+
+		/* Now apply temporary object to global struct (first check if new
+		   object is not already there) */
+		int iCurNumAltFreqSched =
+			Parameter.AltFreqSign.vecAltFreqSchedules.Size();
+
+		_BOOLEAN bAltFreqSchedIsAlreadyThere = FALSE;
+		for (int i = 0; i < iCurNumAltFreqSched; i++)
+		{
+			if (Parameter.AltFreqSign.vecAltFreqSchedules[i] == AltFreqSched)
+				bAltFreqSchedIsAlreadyThere = TRUE;
+		}
+
+		if (bAltFreqSchedIsAlreadyThere == FALSE)
+			Parameter.AltFreqSign.vecAltFreqSchedules.Add(AltFreqSched);
+
 		return FALSE;
+	}
 }
+
 
 
 /******************************************************************************\
@@ -692,6 +724,8 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 									  CParameter& Parameter,
 									  const _BOOLEAN bVersion)
 {
+	int i;
+
 	/* Region Id: this field indicates the identifier for this region
 	   definition. Up to 15 different geographic regions with an individual
 	   Region Id (values 1 to 15) can be defined; the value 0 shall not be used,
@@ -723,7 +757,10 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 	/* n CIRAF Zones: this field carries n CIRAF zones (n in the range 0 to 16).
 	   The number of CIRAF zones, n, is determined from the length field of the
 	   header - 4 */
-	for (int i = 0; i < iLengthOfBody - 4; i++)
+	CVector<int> veciCIRAFZones;
+	veciCIRAFZones.Init(0);
+	
+	for (i = 0; i < iLengthOfBody - 4; i++)
 	{
 		/* Each CIRAF zone is coded as an 8 bit unsigned binary number in the
 		   range 1 to 85 */
@@ -731,6 +768,8 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 
 		if ((iCIRAFZone == 0) || (iCIRAFZone > 85))
 			return TRUE; /* Error */
+		else
+			veciCIRAFZones.Add(iCIRAFZone);
 
 /*
 	TODO: To check whether a certain longitude value is inside the specified
@@ -749,7 +788,38 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 		return TRUE; /* Error */
 	}
 	else
+	{
+		/* Create temporary object and reset for initialization */
+		CParameter::CAltFreqRegion AltFreqRegion;
+		AltFreqRegion.Reset();
+
+		AltFreqRegion.iRegionID = iRegionID;
+		AltFreqRegion.iLatitude = iLatitude;
+		AltFreqRegion.iLongitude = iLongitude;
+		AltFreqRegion.iLatitudeEx = iLatitudeEx;
+		AltFreqRegion.iLongitudeEx = iLongitudeEx;
+
+		/* Set frequencies */
+		for (i = 0; i < veciCIRAFZones.Size(); i++)
+			AltFreqRegion.veciCIRAFZones.Add(veciCIRAFZones[i]);
+
+		/* Now apply temporary object to global struct (first check if new
+		   object is not already there) */
+		int iCurNumAltFreqRegion =
+			Parameter.AltFreqSign.vecAltFreqRegions.Size();
+
+		_BOOLEAN bAltFreqRegionIsAlreadyThere = FALSE;
+		for (i = 0; i < iCurNumAltFreqRegion; i++)
+		{
+			if (Parameter.AltFreqSign.vecAltFreqRegions[i] == AltFreqRegion)
+				bAltFreqRegionIsAlreadyThere = TRUE;
+		}
+
+		if (bAltFreqRegionIsAlreadyThere == FALSE)
+			Parameter.AltFreqSign.vecAltFreqRegions.Add(AltFreqRegion);
+
 		return FALSE;
+	}
 }
 
 

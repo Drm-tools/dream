@@ -3,7 +3,7 @@
  * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy, Andrea Russo
  *
  * Description:
  *	See Parameter.cpp
@@ -11,6 +11,9 @@
  * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
  *	- Additions to include AMSS demodulation (Added class
  *    CAltFreqOtherServicesSign)
+ *
+ * 11/28/2005 Andrea Russo
+ *	- Added classes for store alternative frequencies schedules and regions
  *
  *******************************************************************************
  *
@@ -253,6 +256,118 @@ public:
 		}
 	};
 
+
+	/* Alternative Frequency Signalling ***************************************/
+	/* Alternative frequency signalling Schedules informations class */
+	class CAltFreqSched
+	{
+	public:
+		CAltFreqSched() {Reset();}
+		CAltFreqSched(const CAltFreqSched& nAFS) :
+			iScheduleID(nAFS.iScheduleID),
+			iDayCode(nAFS.iDayCode),
+			iStartTime(nAFS.iStartTime),
+			iDuration(nAFS.iDuration) {}
+
+		CAltFreqSched& operator=(const CAltFreqSched& nAFS)
+		{
+			iScheduleID = nAFS.iScheduleID;
+			iDayCode = nAFS.iDayCode;
+			iStartTime = nAFS.iStartTime;
+			iDuration = nAFS.iDuration;
+
+			return *this; 
+		}
+
+		_BOOLEAN operator==(const CAltFreqSched& nAFS)
+		{
+			if (iScheduleID != nAFS.iScheduleID) return FALSE;
+			if (iDayCode != nAFS.iDayCode) return FALSE;
+			if (iStartTime != nAFS.iStartTime) return FALSE;
+			if (iDuration != nAFS.iDuration) return FALSE;
+
+			return TRUE;
+		}
+
+		void Reset()
+		{
+			iScheduleID = 0;
+			iDayCode = 0;
+			iStartTime = 0;
+			iDuration = 0;
+		}
+
+		int iScheduleID;
+		int iDayCode;
+		int iStartTime;
+		int iDuration;
+	};
+
+	/* Alternative frequency signalling Regions informations class */
+	class CAltFreqRegion
+	{
+	public:
+		CAltFreqRegion() {Reset();}
+		CAltFreqRegion(const CAltFreqRegion& nAFR) :
+			iRegionID(nAFR.iRegionID),
+			iLatitude(nAFR.iLatitude),
+			iLongitude(nAFR.iLongitude),
+			iLatitudeEx(nAFR.iLatitudeEx),
+			iLongitudeEx(nAFR.iLongitudeEx),
+			veciCIRAFZones(nAFR.veciCIRAFZones) {}
+
+		CAltFreqRegion& operator=(const CAltFreqRegion& nAFR)
+		{
+			iRegionID = nAFR.iRegionID;
+
+			iLatitude = nAFR.iLatitude;
+			iLongitude = nAFR.iLongitude;
+			iLatitudeEx = nAFR.iLatitudeEx;
+			iLongitudeEx = nAFR.iLongitudeEx;
+
+			veciCIRAFZones.Init(nAFR.veciCIRAFZones.Size());
+			veciCIRAFZones = nAFR.veciCIRAFZones;
+
+			return *this; 
+		}
+
+		_BOOLEAN operator==(const CAltFreqRegion& nAFR)
+		{
+			if (iRegionID != nAFR.iRegionID) return FALSE;
+
+			if (iLatitude != nAFR.iLatitude) return FALSE;
+			if (iLongitude != nAFR.iLongitude) return FALSE;
+			if (iLatitudeEx != nAFR.iLatitudeEx) return FALSE;
+			if (iLongitudeEx != nAFR.iLongitudeEx) return FALSE;
+
+			/* Vector sizes */
+			if (veciCIRAFZones.Size() != nAFR.veciCIRAFZones.Size()) return FALSE;
+
+			/* Vector contents */
+			for (int i = 0; i < veciCIRAFZones.Size(); i++)
+				if (veciCIRAFZones[i] != nAFR.veciCIRAFZones[i]) return FALSE;
+
+			return TRUE;
+		}
+
+		void Reset()
+		{
+			iRegionID = 0;
+			veciCIRAFZones.Init(0);
+			iLatitude = 0;
+			iLongitude = 0;
+			iLatitudeEx = 0;
+			iLongitudeEx = 0;
+		}
+
+		int				iRegionID;
+		CVector<int>	veciCIRAFZones;
+		int				iLatitude;
+		int				iLongitude;
+		int				iLatitudeEx;
+		int				iLongitudeEx;
+	};
+
 	/* Alternative frequency signalling class */
 	class CAltFreqSign
 	{
@@ -267,7 +382,8 @@ public:
 				veciFrequencies(nAF.veciFrequencies),
 				veciServRestrict(nAF.veciServRestrict),
 				bIsSyncMultplx(nAF.bIsSyncMultplx),
-				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID) {}
+				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
+				bRegionSchedFlag(nAF.bRegionSchedFlag) {}
 
 			CAltFreq& operator=(const CAltFreq& nAF)
 			{
@@ -280,6 +396,7 @@ public:
 				bIsSyncMultplx = nAF.bIsSyncMultplx;
 				iRegionID = nAF.iRegionID;
 				iScheduleID = nAF.iScheduleID;
+				bRegionSchedFlag = nAF.bRegionSchedFlag;
 				return *this; 
 			}
 
@@ -300,6 +417,9 @@ public:
 				if (bIsSyncMultplx != nAF.bIsSyncMultplx) return FALSE;
 				if (iRegionID != nAF.iRegionID) return FALSE;
 				if (iScheduleID != nAF.iScheduleID) return FALSE;
+
+				if (bRegionSchedFlag != nAF.bRegionSchedFlag) return FALSE;
+
 				return TRUE;
 			}
 
@@ -308,20 +428,30 @@ public:
 				veciFrequencies.Init(0);
 				veciServRestrict.Init(MAX_NUM_SERVICES, 0);
 				bIsSyncMultplx = FALSE;
+				bRegionSchedFlag = FALSE;
 				iRegionID = iScheduleID = 0;
 			}
 
 			CVector<int>	veciFrequencies;
 			CVector<int>	veciServRestrict;
 			_BOOLEAN		bIsSyncMultplx;
+			_BOOLEAN		bRegionSchedFlag;
 			int				iRegionID;
 			int				iScheduleID;
 		};
 
-		void Reset() {vecAltFreq.Init(0); bVersionFlag = FALSE;}
+		void Reset()
+		{
+			vecAltFreqRegions.Init(0);
+			vecAltFreqSchedules.Init(0);
+			vecAltFreq.Init(0);
+			bVersionFlag = FALSE;
+		}
 
-		CVector<CAltFreq>	vecAltFreq;
-		_BOOLEAN			bVersionFlag;
+		CVector<CAltFreq>		vecAltFreq;
+		CVector<CAltFreqSched>	vecAltFreqSchedules;
+		CVector<CAltFreqRegion>	vecAltFreqRegions;
+		_BOOLEAN				bVersionFlag;
 	} AltFreqSign;
 
 	/* Other Services alternative frequency signalling class */
@@ -414,6 +544,8 @@ public:
 		_BOOLEAN						bVersionFlag;
 	} AltFreqOtherServicesSign;
 
+
+	/* Misc. Functions ------------------------------------------------------ */
 	void			ResetServicesStreams();
 	void			GetActiveServices(CVector<int>& veciActServ);
 	void			GetActiveStreams(CVector<int>& veciActStr);
