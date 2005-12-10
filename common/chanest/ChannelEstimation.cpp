@@ -592,7 +592,7 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	rSignalEst = (_REAL) 0.0;
 	rNoiseEst = (_REAL) 0.0;
 	rNoiseEstMSCMER = (_REAL) 0.0;
-	rSNREstimate = (_REAL) pow(10, INIT_VALUE_SNR_ESTIM_DB / 10);
+	rSNREstimate = (_REAL) pow((_REAL) 10.0, INIT_VALUE_SNR_ESTIM_DB / 10);
 	vecrNoiseEstMSC.Init(iNumCarrier, (_REAL) 0.0);
 	vecrSigEstMSC.Init(iNumCarrier, (_REAL) 0.0);
 
@@ -676,16 +676,18 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	{
 		/* Initial Wiener filter. Use initial SNR definition and assume that the
 		   PDS ranges from the beginning of the guard-intervall to the end */
-		UpdateWienerFiltCoef(pow(10, INIT_VALUE_SNR_WIEN_FREQ_DB / 10),
-			(_REAL) ReceiverParam.RatioTgTu.iEnum /
+		UpdateWienerFiltCoef(
+			pow((CReal) 10.0, INIT_VALUE_SNR_WIEN_FREQ_DB / 10),
+			(CReal) ReceiverParam.RatioTgTu.iEnum /
 			ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
 	}
 	else
 	{
 		/* Get simulation SNR on the pilot positions and set PDS to entire
 		   guard-interval length */
-		UpdateWienerFiltCoef(pow(10, ReceiverParam.GetSysSNRdBPilPos() / 10),
-			(_REAL) ReceiverParam.RatioTgTu.iEnum /
+		UpdateWienerFiltCoef(
+			pow((CReal) 10.0, ReceiverParam.GetSysSNRdBPilPos() / 10),
+			(CReal) ReceiverParam.RatioTgTu.iEnum /
 			ReceiverParam.RatioTgTu.iDenom, (CReal) 0.0);
 	}
 

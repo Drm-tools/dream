@@ -271,6 +271,32 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 					/* Fshift: */	(_REAL) ReceiverParam.iSpecChDoppler,
 					/* Fd: */		(_REAL) 0.0);
 		break;
+
+	case 11:
+		/* Same as channel 5 but with variable Doppler */
+		iNumTaps = 2;
+
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) ReceiverParam.iSpecChDoppler);
+
+		tap[1].Init(/* Delay: */	(_REAL) 4.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) ReceiverParam.iSpecChDoppler);
+		break;
+
+	case 12:
+		/* Same as 8 but we need to redefined because of OFDM.cpp module and
+		   MMSE estimation */
+		iNumTaps = 1;
+
+		tap[0].Init(/* Delay: */	(_REAL) 0.0,
+					/* Gain: */		(_REAL) 1.0,
+					/* Fshift: */	(_REAL) 0.0,
+					/* Fd: */		(_REAL) ReceiverParam.iSpecChDoppler);
+		break;
 	}
 
 
@@ -321,7 +347,8 @@ void CDRMChannel::InitInternal(CParameter& ReceiverParam)
 	const _REAL rBWFactor = (_REAL) SOUNDCRD_SAMPLE_RATE / 2 / rSpecOcc;
 
 	/* Calculation of the gain factor for noise generator */
-	rNoisepwrFactor = sqrt(pow(10, -ReceiverParam.GetSystemSNRdB() / 10) *
+	rNoisepwrFactor =
+		sqrt(pow((_REAL) 10.0, -ReceiverParam.GetSystemSNRdB() / 10) *
 		ReceiverParam.rAvPowPerSymbol * 2 * rBWFactor);
 
 

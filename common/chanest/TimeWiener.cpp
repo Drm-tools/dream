@@ -404,7 +404,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	if (ReceiverParam.eSimType == CParameter::ST_NONE)
 	{
 		/* Init SNR value */
-		rSNR = pow(10, INIT_VALUE_SNR_WIEN_TIME_DB / 10);
+		rSNR = pow((CReal) 10.0, INIT_VALUE_SNR_WIEN_TIME_DB / 10);
 
 		/* Init sigma with a large value. This make the acquisition more
 		   robust in case of a large sample frequency offset. But we get more
@@ -415,7 +415,7 @@ int CTimeWiener::Init(CParameter& ReceiverParam)
 	else
 	{
 		/* Get SNR on the pilot positions */
-		rSNR = pow(10, ReceiverParam.GetSysSNRdBPilPos() / 10);
+		rSNR = pow((CReal) 10.0, ReceiverParam.GetSysSNRdBPilPos() / 10);
 	
 		/* Sigma from channel profiles */
 		switch (ReceiverParam.iDRMChannelNum)
