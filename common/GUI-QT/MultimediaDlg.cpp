@@ -11,6 +11,8 @@
  *	- save path for storing pictures or Journaline pages
  * 11/17/2005 Andrea Russo
  * - BroadcastWebSite implementation
+ * 11/29/2005 Andrea Russo
+ * - set and save the TextBrowser font
  *
  ******************************************************************************
  *
@@ -52,8 +54,35 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		pDRMRec->GeomMultimediaDlg.iHSize);
 #endif
 
+	/* Store the default font */
+	fontDefault = TextBrowser->font();
+
 	/* Retrieve the setting saved into the .ini file */
 	SetCurrentSavePath(pDRMRec->strStoragePathMMDlg.c_str());
+
+	/* Retrieve the font setting saved into the .ini file */
+	if (pDRMRec->FontParamMMDlg.strFamily != "")
+	{
+		fontTextBrowser =
+			QFont(QString(pDRMRec->FontParamMMDlg.strFamily.c_str()),
+			pDRMRec->FontParamMMDlg.intPointSize,
+			pDRMRec->FontParamMMDlg.intWeight,
+			pDRMRec->FontParamMMDlg.bItalic);
+	}
+	else
+	{
+		/* If not defined, retrieve the default font */
+		fontTextBrowser = fontDefault;
+	}
+
+	/* Add body's stylesheet */
+	QStyleSheetItem* styleBody =
+		new QStyleSheetItem(TextBrowser->styleSheet(), "stylebody");
+
+	styleBody->setFontFamily(fontTextBrowser.family());
+	styleBody->setFontSize(fontTextBrowser.pointSize());
+	styleBody->setFontWeight(fontTextBrowser.weight());
+	styleBody->setFontItalic(fontTextBrowser.italic());
 
 	/* Picture controls should be invisable. These controls are only used for
 	   storing the resources */
@@ -67,7 +96,8 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		PixmapLogoJournaline->pixmap()->convertToImage());
 
 	/* Set FhG IIS text */
-	strFhGIISText = "<table><tr><td><img source=\"PixmapFhGIIS\"></td>"
+	strFhGIISText =
+		"<table><tr><td><img source=\"PixmapFhGIIS\"></td>"
 		"<td><font face=\"Courier\" size=\"-1\">Features NewsService "
 		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
 		"Germany. For more information visit http://www.iis.fhg.de/dab"
@@ -98,10 +128,17 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pFileMenu->insertItem(tr("&Close"), this, SLOT(close()), 0, 3);
 
 
+	/* Settings menu  ------------------------------------------------------- */
+	QPopupMenu* pSettingsMenu = new QPopupMenu(this);
+	CHECK_PTR(pSettingsMenu);
+	pSettingsMenu->insertItem(tr("Set &Font..."), this, SLOT(OnSetFont()));
+
+
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
 	pMenu->insertItem(tr("&File"), pFileMenu);
+	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
 
 	/* Now tell the layout about the menu */
 	MultimediaDlgBaseLayout->setMenuBar(pMenu);
@@ -145,6 +182,12 @@ MultimediaDlg::~MultimediaDlg()
 
 	/* Store save path */
 	pDRMRec->strStoragePathMMDlg = strCurrentSavePath.latin1();
+
+	/* Store current TextBrowser font */
+	pDRMRec->FontParamMMDlg.strFamily = fontTextBrowser.family().latin1();
+	pDRMRec->FontParamMMDlg.intPointSize = fontTextBrowser.pointSize();
+	pDRMRec->FontParamMMDlg.intWeight = fontTextBrowser.weight();
+	pDRMRec->FontParamMMDlg.bItalic = fontTextBrowser.italic();
 }
 
 void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
@@ -268,7 +311,6 @@ void MultimediaDlg::OnTimer()
 				}
 			}
 		}
-
 		break;
 
 	case CDataDecoder::AT_JOURNALINE:
@@ -351,8 +393,9 @@ void MultimediaDlg::SetJournalineText()
 		"<table>"
 		"<tr><th>" + strJournalineHeadText + "</th></tr>"
 		"<tr><td><hr></td></tr>" /* horizontial line */
-		"<tr><th>" + strTitle + "</th></tr>"
-		"<tr><td><ul type=\"square\">" + strItems + "</ul></td></tr>"
+		"<tr><th><stylebody><b>" + strTitle + "</b></stylebody></th></tr>"
+		"<tr><td><stylebody><ul type=\"square\">" + strItems +
+		"</ul></stylebody></td></tr>"
 		"<tr><td><hr></td></tr>" /* horizontial line */
 		"<tr><td>" + strFhGIISText + "</td></tr>"
 		"</table>";
@@ -1015,4 +1058,34 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 		NewPic.strFormat = "png"; /* New format string */
 	}
 #endif
+}
+
+void MultimediaDlg::OnSetFont()
+{
+	_BOOLEAN bok;
+
+	/* Open the font dialog */
+	QFont newFont = QFontDialog::getFont(&bok, fontTextBrowser, this);
+
+	if (bok == TRUE)
+	{
+		/* Store the current text and then reset it */
+		QString strOldText = TextBrowser->text();
+		TextBrowser->setText("");
+
+		/* Set the new font */
+		fontTextBrowser = newFont;
+
+		/* Change the body stylesheet */
+		QStyleSheetItem* styleBody =
+			TextBrowser->styleSheet()->item("stylebody");
+
+		styleBody->setFontFamily(fontTextBrowser.family());
+		styleBody->setFontSize(fontTextBrowser.pointSize());
+		styleBody->setFontWeight(fontTextBrowser.weight());
+		styleBody->setFontItalic(fontTextBrowser.italic());
+
+		/* Restore the text for refresh it with the new font */
+		TextBrowser->setText(strOldText);
+	}
 }

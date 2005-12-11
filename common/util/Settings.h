@@ -99,6 +99,13 @@
 /* Maximum value for rgb-colors encoded as integers */
 #define MAX_NUM_COL_MAIN_DISP		16777215
 
+/* Maximum for font weight (99 is written into the Qt reference manual) */
+#define MAX_FONT_WEIGHT				99
+
+/* Maximum for font point size (256 it is maybe not true but we assume that
+   this is a good value */
+#define MAX_FONT_POINT_SIZE			256
+
 
 /* Classes ********************************************************************/
 class CSettings

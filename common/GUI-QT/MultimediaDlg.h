@@ -43,6 +43,9 @@
 #include <qfileinfo.h>
 #include <qdir.h>
 #include <qmessagebox.h>
+#include <qfontdialog.h>
+#include <qfont.h>
+#include <qstylesheet.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/MultimediaDlgbase.h"
@@ -130,6 +133,8 @@ protected:
 	QString					strCurrentSavePath;
 	QString					strDirMOTCache;
 	QString					strBWSHomePage;
+	QFont					fontTextBrowser;
+	QFont					fontDefault;
 
 	void SetSlideShowPicture();
 	void SetJournalineText();
@@ -166,4 +171,5 @@ public slots:
 	void OnSaveAll();
 	void OnClearAll() {ClearAllSlideShow();}
 	void OnTextChanged();
+	void OnSetFont();
 };

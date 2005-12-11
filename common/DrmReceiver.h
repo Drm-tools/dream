@@ -116,7 +116,8 @@ public:
 		iMainDisplayColor(16711680), /* Red */
 		SortParamAnalog(0, TRUE), /* Sort list by station name  */
 		/* Sort list by transmit power (5th column), most powerful on top */
-		SortParamDRM(4, FALSE)
+		SortParamDRM(4, FALSE),
+		FontParamMMDlg("", 1, 0, FALSE)
 #endif
 		{}
 	virtual ~CDRMReceiver() {}
@@ -240,6 +241,23 @@ public:
 
 	/* DRM sort parameter in stations dialog */
 	CSortParam SortParamDRM;
+
+	/* Font parameters for Multimedia Dlg */
+	class CFontParam
+	{
+	public:
+		CFontParam(const string strFontFamily, const int intFontPointSize,
+			const int intFontWeight , const _BOOLEAN bFontItalic) :
+			strFamily(strFontFamily), intPointSize(intFontPointSize),
+			intWeight(intFontWeight), bItalic(bFontItalic) {}
+
+		string		strFamily;
+		int			intPointSize;
+		int			intWeight;
+		_BOOLEAN	bItalic;
+	};
+
+	CFontParam	FontParamMMDlg;
 
 	_BOOLEAN	bEnableSMeter;
 	int			iSysEvalDlgPlotType;

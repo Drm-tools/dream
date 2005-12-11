@@ -1,9 +1,10 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer, Tomi Manninen, Stephane Fillod, Robert Kesterson
+ *	Volker Fischer, Tomi Manninen, Stephane Fillod, Robert Kesterson,
+ *	Andrea Russo
  *
  * Description:
  *
@@ -11,7 +12,7 @@
  *  - Initial (basic) code for command line argument parsing (argv)
  * 04/15/2004 Tomi Manninen, Stephane Fillod
  *  - Hamlib
- * 07/27/4002
+ * 07/27/2004
  *  - included stlini routines written by Robert Kesterson
  *
  ******************************************************************************
@@ -124,6 +125,18 @@ void CSettings::ReadIniFile()
 
 	/* Storage path for files saved from Multimedia dialog */
 	pDRMRec->strStoragePathMMDlg = GetIniSetting(ini, "Multimedia dialog", "storagepath");
+
+	/* Store font saved from Multimedia dialog */
+	pDRMRec->FontParamMMDlg.strFamily = GetIniSetting(ini, "Multimedia dialog", "fontfamily");
+
+	if (GetNumericIniSet(ini, "Multimedia dialog", "fontpointsize", 1, MAX_FONT_POINT_SIZE, iValue) == TRUE)
+		pDRMRec->FontParamMMDlg.intPointSize = iValue;
+
+	if (GetNumericIniSet(ini, "Multimedia dialog", "fontweight", 0, MAX_FONT_WEIGHT, iValue) == TRUE)
+		pDRMRec->FontParamMMDlg.intWeight = iValue;
+
+	if (GetFlagIniSet(ini, "Multimedia dialog", "fontitalic", bValue) == TRUE)
+		pDRMRec->FontParamMMDlg.bItalic = bValue;
 
 	/* Seconds for preview into Stations Dialog if zero then inactive */
 	if (GetNumericIniSet(ini, "Stations dialog", "preview", 0, MAX_NUM_SEC_PREVIEW, iValue) == TRUE)
@@ -345,10 +358,22 @@ void CSettings::WriteIniFile()
 	PutIniSetting(ini, "Logfile", "longitude",
 		pDRMRec->GetParameters()->ReceptLog.GetLongitude().c_str());
 
-
 	/* Storage path for files saved from Multimedia dialog */
 	PutIniSetting(ini, "Multimedia dialog", "storagepath",
 		pDRMRec->strStoragePathMMDlg.c_str());
+
+	/* Store font saved from Multimedia dialog */
+	PutIniSetting(ini, "Multimedia dialog", "fontfamily",
+		pDRMRec->FontParamMMDlg.strFamily.c_str());
+
+	SetNumericIniSet(ini, "Multimedia dialog", "fontpointsize",
+		pDRMRec->FontParamMMDlg.intPointSize);
+
+	SetNumericIniSet(ini, "Multimedia dialog", "fontweight",
+		pDRMRec->FontParamMMDlg.intWeight);
+
+	SetFlagIniSet(ini, "Multimedia dialog", "fontitalic",
+		pDRMRec->FontParamMMDlg.bItalic);
 
 	/* Seconds for preview into Stations Dialog if zero then inactive */
 	SetNumericIniSet(ini, "Stations dialog", "preview",
