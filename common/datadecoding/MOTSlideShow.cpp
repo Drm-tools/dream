@@ -59,7 +59,7 @@ _BOOLEAN CMOTSlideShowEncoder::GetTransStat(string& strCurPict,
 
 void CMOTSlideShowEncoder::Init()
 {
-	/* Reset picutre counter for browsing in the vector of file names. Start
+	/* Reset picture counter for browsing in the vector of file names. Start
 	   with first picture */
 	iPictureCnt = 0;
 	strCurObjName = "";
