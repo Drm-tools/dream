@@ -388,6 +388,10 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	ListViewStations->addColumn(tr("Language"));
 	ListViewStations->addColumn(tr("Days"));
 
+	/* Set right alignment for numeric columns */
+	ListViewStations->setColumnAlignment(2, Qt::AlignRight);
+	ListViewStations->setColumnAlignment(4, Qt::AlignRight);
+
 	/* Load the current schedule from file and initialize list view */
 	LoadSchedule(CDRMSchedule::SM_DRM);
 
@@ -650,10 +654,6 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
 		this, SLOT(OnFreqCntNewValue(double)));
-
-	/* Set up timers */
-	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
-	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 }
 
 StationsDlg::~StationsDlg()
@@ -808,6 +808,13 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 	}
 }
 
+void StationsDlg::hideEvent(QHideEvent* pEvent)
+{
+	/* Deactivate real-time timers */
+	TimerList.stop();
+	TimerUTCLabel.stop();
+}
+
 void StationsDlg::showEvent(QShowEvent* pEvent)
 {
 	/* If number of stations is zero, we assume that the ini file is missing */
@@ -829,6 +836,14 @@ void StationsDlg::showEvent(QShowEvent* pEvent)
 				"stations can be displayed."), QMessageBox::Ok);
 		}
 	}
+
+	/* Update window */
+	OnTimerUTCLabel();
+	OnTimerList();
+
+	/* Activate real-time timer when window is shown */
+	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
+	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 }
 
 void StationsDlg::OnTimerList()

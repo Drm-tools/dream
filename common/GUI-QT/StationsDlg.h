@@ -205,6 +205,7 @@ public:
 protected:
 	void			SetStationsView();
 	virtual void	showEvent(QShowEvent* pEvent);
+	void			hideEvent(QHideEvent* pEvent);
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
 	void			EnableSMeter(const _BOOLEAN bStatus);
