@@ -666,6 +666,9 @@ void LiveScheduleDlg::OnSave()
 	QString strSchedule = "";
 	QString strValue = "";
 
+	const int iCurSelAudioServ = pDRMRec->GetParameters()->GetCurSelAudioService();
+	QString strStationName = pDRMRec->GetParameters()->Service[iCurSelAudioServ].strLabel.c_str();
+
 	/* Force the sort for all items */ 
  	ListViewStations->firstChild()
 		->sortChildItems(iCurrentSortColumn,bCurrentSortAscending);
@@ -693,9 +696,11 @@ void LiveScheduleDlg::OnSave()
 		/* Prepare HTML page for storing the content */
 		QString strText = "<html>\n<head>\n"
 			"<meta http-equiv=\"content-Type\" "
-			"content=\"text/html; charset=utf-8\">\n<title>" + strTitle +
+			"content=\"text/html; charset=utf-8\">\n<title>"
+			+ strStationName + " - " + strTitle +
 			"</title>\n</head>\n\n<body>\n"
-			"<h3>" + strTitle + "</h3>"
+			"<h4>" + strTitle + "</h4>"
+			"<h3>" + strStationName + "</h3>"
 			"\n<table border=\"1\"><tr>\n"
 			"<th>" + tr("Frequency [kHz]") + "</th>"
 			"<th>" + tr("Time [UTC]") + "</th>"
