@@ -70,13 +70,14 @@ class CLiveScheduleItem
 {
 public:
 	CLiveScheduleItem() : iFreq(0), strDaysFlags(""),
-		strTarget(""),  iStartTime(0), iDuration(0) {}
+		strTarget(""),  iStartTime(0), iDuration(0), strSystem("") {}
 
 	int		iFreq;
 	string	strTarget;
 	string	strDaysFlags;
 	int		iStartTime;
 	int		iDuration;
+	string	strSystem;
 };
 
 class CDRMLiveSchedule
@@ -89,7 +90,11 @@ public:
 	int GetStationNumber() {return StationsTable.Size();}
 	CLiveScheduleItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	StationState CheckState(const int iPos);
-	void LoadAFSInformations(CParameter::CAltFreqSign AltFreqSign);
+
+	void LoadAFSInformations(const CParameter::CAltFreqSign AltFreqSign
+			, const CParameter::CAltFreqOtherServicesSign AltFreqOtherServicesSign);
+
+	QString DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}

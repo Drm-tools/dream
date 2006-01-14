@@ -132,40 +132,23 @@ string strDaysShow = "";
 return QString(strDaysShow.c_str());
 }
 
-void CDRMLiveSchedule::LoadAFSInformations(CParameter::CAltFreqSign AltFreqSign)
+QString CDRMLiveSchedule::DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions)
 {
-int k;
-_BOOLEAN bFound;
-QString strRegions = "";
+int iCIRAF;
 
-/* Init table for stations */
-StationsTable.Init(0);
-
-const int iSize = AltFreqSign.vecAltFreq.Size();
-
-for (int z = 0; z < iSize; z++)
-{
-	/* TODO multiplex and restrictions */
-	//AltFreqSign.vecAltFreq[z].bIsSyncMultplx);
+	QString strRegions = "";
 	
-	//for ( k = 0; k < 4; k++)
-	//	AltFreqSign.vecAltFreq[z].veciServRestrict[k]);
-	
-	if (AltFreqSign.vecAltFreq[z].bRegionSchedFlag == TRUE)
+	if (iRegionID > 0)
 	{
-		k = 0;
-		strRegions = "";
-	
-		while (k < AltFreqSign.vecAltFreqRegions.Size())
+		int k = 0;
+		while (k < vecAltFreqRegions.Size())
 		{
-			if (AltFreqSign.vecAltFreqRegions[k].iRegionID == AltFreqSign.vecAltFreq[z].iRegionID)
+			if (vecAltFreqRegions[k].iRegionID == iRegionID)
 			{
-				/* Targets */				
-				int iCIRAF = 0;
-		
-				for (int kk = 0; kk < AltFreqSign.vecAltFreqRegions[k].veciCIRAFZones.Size(); kk++)
+				/* Targets */					
+				for (int kk = 0; kk < vecAltFreqRegions[k].veciCIRAFZones.Size(); kk++)
 				{
-					iCIRAF = AltFreqSign.vecAltFreqRegions[k].veciCIRAFZones[kk];
+					iCIRAF = vecAltFreqRegions[k].veciCIRAFZones[kk];
 
 					if (strRegions != "")
 						strRegions += ", ";
@@ -175,73 +158,213 @@ for (int z = 0; z < iSize; z++)
 			}
 			k++;
 		}
+	}
 
-		k = 0;
-		bFound = FALSE;
+	return strRegions;
+}
 
-		while (k < AltFreqSign.vecAltFreqSchedules.Size())
-		{
-			/* Schedules */
-			if (AltFreqSign.vecAltFreqSchedules[k].iScheduleID == AltFreqSign.vecAltFreq[z].iScheduleID)
-			{
-				bFound = TRUE;
-			
-				/* For all frequencies */
-				for ( int j = 0; j < AltFreqSign.vecAltFreq[z].veciFrequencies.Size(); j++)
-				{	
-					CLiveScheduleItem LiveScheduleItem;
+void CDRMLiveSchedule::LoadAFSInformations(const CParameter::CAltFreqSign AltFreqSign
+		, const CParameter::CAltFreqOtherServicesSign AltFreqOtherServicesSign)
+{
+int iSize;
+int z;
+int j;
+int k;
+
+_BOOLEAN bFound;
+QString strSystem;
+QString strRegions;
+
+/* Init table for stations */
+StationsTable.Init(0);
+
+/* Add AFS informations DRM service */
+
+iSize = AltFreqSign.vecAltFreq.Size();
+
+for (z = 0; z < iSize; z++)
+{
+	CParameter::CAltFreqSign::CAltFreq AltFreq = AltFreqSign.vecAltFreq[z];
+
+	/* TODO multiplex and restrictions */
+	//AltFreq.bIsSyncMultplx;
 	
-					/* Frequency */
-					LiveScheduleItem.iFreq = AltFreqSign.vecAltFreq[z].veciFrequencies[j];
+	//for ( k = 0; k < 4; k++)
+	//	AltFreq.veciServRestrict[k];
+	
+	strRegions = "";
+	bFound = FALSE;
 
-					/* Set start time and duration */
-					LiveScheduleItem.iStartTime = AltFreqSign.vecAltFreqSchedules[k].iStartTime;
-					LiveScheduleItem.iDuration = AltFreqSign.vecAltFreqSchedules[k].iDuration;
+	if (AltFreq.bRegionSchedFlag == TRUE)
+	{
+		strRegions = DecodeTargets(AltFreq.iRegionID, AltFreqSign.vecAltFreqRegions);
 
-					/* Days flags */
-					LiveScheduleItem.strDaysFlags = Binary2String(AltFreqSign.vecAltFreqSchedules[k].iDayCode);
-
-					/* Add the target */
-					LiveScheduleItem.strTarget = strRegions.latin1();
-
-					/* Add new item in table */
-					StationsTable.Add(LiveScheduleItem);
-				}
-			}
-			k++;
-		}
-
-		/* If not schedule found then add frequency and regions */
-		if (bFound == FALSE)
+		if (AltFreq.iScheduleID > 0)
 		{
-			/* For all frequencies */
-			for (int j = 0; j < AltFreqSign.vecAltFreq[z].veciFrequencies.Size(); j++)
-			{	
-				CLiveScheduleItem LiveScheduleItem;
+			k = 0;
 
-				/* Frequency */
-				LiveScheduleItem.iFreq = AltFreqSign.vecAltFreq[z].veciFrequencies[j];
+			while (k < AltFreqSign.vecAltFreqSchedules.Size())
+			{
+				/* Schedules */
+				if (AltFreqSign.vecAltFreqSchedules[k].iScheduleID == AltFreq.iScheduleID)
+				{
+					bFound = TRUE;
+					
+					string strDaysFlag = Binary2String(AltFreqSign.vecAltFreqSchedules[k].iDayCode);
 
-				/* Add the target */
-				LiveScheduleItem.strTarget = strRegions.latin1();
+					/* For all frequencies */
+					for (j = 0; j < AltFreq.veciFrequencies.Size(); j++)
+					{	
+						CLiveScheduleItem LiveScheduleItem;
+	
+						/* Frequency */
+						LiveScheduleItem.iFreq = AltFreq.veciFrequencies[j];
 
-				/* Add new item in table */
-				StationsTable.Add(LiveScheduleItem);
+						/* Set start time and duration */
+						LiveScheduleItem.iStartTime = AltFreqSign.vecAltFreqSchedules[k].iStartTime;
+						LiveScheduleItem.iDuration = AltFreqSign.vecAltFreqSchedules[k].iDuration;
+
+						/* Days flags */
+						LiveScheduleItem.strDaysFlags = strDaysFlag;
+
+						/* Add the target */
+						LiveScheduleItem.strTarget = strRegions.latin1();
+
+						/* Add the system (transmission mode) */
+						LiveScheduleItem.strSystem = "DRM";
+
+						/* Add new item in table */
+						StationsTable.Add(LiveScheduleItem);
+					}
+				}
+				k++;
 			}
 		}
 	}
-	else
+
+	if ((bFound == FALSE) || (AltFreq.bRegionSchedFlag == FALSE))
 	{
 		/* For all frequencies */
-		for ( int j = 0; j < AltFreqSign.vecAltFreq[z].veciFrequencies.Size(); j++)
+		for (j = 0; j < AltFreq.veciFrequencies.Size(); j++)
 		{	
 			CLiveScheduleItem LiveScheduleItem;
 	
 			/* Frequency */
-			LiveScheduleItem.iFreq = AltFreqSign.vecAltFreq[z].veciFrequencies[j];
+			LiveScheduleItem.iFreq = AltFreq.veciFrequencies[j];
+
+			/* Add the target */
+			LiveScheduleItem.strTarget = strRegions.latin1();
+
+			/* Add the system (transmission mode) */
+			LiveScheduleItem.strSystem = "DRM";
 
 			/* Add new item in table */
 			StationsTable.Add(LiveScheduleItem);
+		}
+	}
+}
+
+/* Other Services */
+
+iSize = AltFreqOtherServicesSign.vecAltFreqOtherServices.Size();
+
+for (z = 0; z < iSize; z++)
+{
+	CParameter::CAltFreqOtherServicesSign::CAltFreqOtherServices AltFreqOther = AltFreqOtherServicesSign.vecAltFreqOtherServices[z];
+
+	if (AltFreqOther.iSystemID < 3) /* Show only services in kHz on LW MW OC */
+	{
+		/* TODO add also FM and DAB frequencies */
+
+		/* TODO same service */
+		//AltFreqOther.bSameService;
+
+		switch (AltFreqOther.iSystemID)
+		{
+			case 0:
+				strSystem = "DRM";
+				break;
+
+			case 1:
+			case 2:
+				strSystem = "AM";
+				break;
+
+			default:
+				strSystem = "";
+				break;
+		}
+
+		strRegions = "";
+
+		bFound = FALSE;
+
+		if (AltFreqOther.bRegionSchedFlag == TRUE)
+		{
+			strRegions = DecodeTargets(AltFreqOther.iRegionID, AltFreqSign.vecAltFreqRegions);
+
+			if (AltFreqOther.iScheduleID > 0)
+			{
+				k = 0;
+	
+				while (k < AltFreqSign.vecAltFreqSchedules.Size())
+				{
+					/* Schedules */
+					if (AltFreqSign.vecAltFreqSchedules[k].iScheduleID == AltFreqOther.iScheduleID)
+					{
+						bFound = TRUE;
+			
+						string strDaysFlag = Binary2String(AltFreqSign.vecAltFreqSchedules[k].iDayCode);
+
+						/* For all frequencies */
+						for (j = 0; j < AltFreqOther.veciFrequencies.Size(); j++)
+						{	
+							CLiveScheduleItem LiveScheduleItem;
+	
+							/* Frequency */
+							LiveScheduleItem.iFreq = AltFreqOther.veciFrequencies[j];
+
+							/* Set start time and duration */
+							LiveScheduleItem.iStartTime = AltFreqSign.vecAltFreqSchedules[k].iStartTime;
+							LiveScheduleItem.iDuration = AltFreqSign.vecAltFreqSchedules[k].iDuration;
+
+							/* Days flags */
+							LiveScheduleItem.strDaysFlags = strDaysFlag;
+
+							/* Add the target */
+							LiveScheduleItem.strTarget = strRegions.latin1();
+
+							/* Add the system (transmission mode) */
+							LiveScheduleItem.strSystem = strSystem.latin1();
+
+							/* Add new item in table */
+							StationsTable.Add(LiveScheduleItem);
+						}
+					}
+					k++;
+				}
+			}
+		}
+
+		if ((bFound == FALSE) || (AltFreqOther.bRegionSchedFlag == FALSE))
+		{
+			/* For all frequencies */
+			for (j = 0; j < AltFreqOther.veciFrequencies.Size(); j++)
+			{	
+				CLiveScheduleItem LiveScheduleItem;
+	
+				/* Frequency */
+				LiveScheduleItem.iFreq = AltFreqOther.veciFrequencies[j];
+
+				/* Add the target */
+				LiveScheduleItem.strTarget = strRegions.latin1();
+
+				/* Add the system (transmission mode) */
+				LiveScheduleItem.strSystem = strSystem.latin1();
+
+				/* Add new item in table */
+				StationsTable.Add(LiveScheduleItem);
+			}
 		}
 	}
 }
@@ -294,6 +417,7 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	/* We assume that one column is already there */
 	ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz]"));
+	ListViewStations->addColumn(tr("System"));
 	ListViewStations->addColumn(tr("Time [UTC]"));
 	ListViewStations->addColumn(tr("Target"));
 	ListViewStations->addColumn(tr("Days"));
@@ -520,7 +644,7 @@ void LiveScheduleDlg::LoadSchedule()
 			delete vecpListItems[i];
 	}
 
-	DRMSchedule.LoadAFSInformations(pDRMRec->GetParameters()->AltFreqSign);
+	DRMSchedule.LoadAFSInformations(pDRMRec->GetParameters()->AltFreqSign, pDRMRec->GetParameters()->AltFreqOtherServicesSign);
 
 	/* Init vector for storing the pointer to the list view items */
 	const int intNumStations = DRMSchedule.GetStationNumber();
@@ -581,7 +705,7 @@ void LiveScheduleDlg::SetStationsView()
 				/* Generate new list item with all necessary column entries */
 				vecpListItems[i] = new MyListLiveViewItem(ListViewStations,
 					QString().setNum(DRMSchedule.GetItem(i).iFreq) /* freq. */,
-
+					QString(DRMSchedule.GetItem(i).strSystem.c_str())   /* system */,
 					ExtractTime(DRMSchedule.GetItem(i).iStartTime) + "-" +
 					ExtractTime(DRMSchedule.GetItem(i).iStartTime + DRMSchedule.GetItem(i).iDuration) /* time */,
 
@@ -679,10 +803,11 @@ void LiveScheduleDlg::OnSave()
     while( myItem )
 	{
 			strSchedule += "<tr>"
-				"<td>" + myItem->text(COL_FREQ) + "</td>" /* freq */
-				"<td>" + ColValue(myItem->text(1)) + "</td>" /* time */
-				"<td>" + ColValue(myItem->text(2)) + "</td>" /* target */
-				"<td>" + ColValue(myItem->text(3)) + "</td>" /* days */
+				"<td align=\"right\">" + myItem->text(COL_FREQ) + "</td>" /* freq */
+				"<td>" + ColValue(myItem->text(1)) + "</td>" /* system */
+				"<td>" + ColValue(myItem->text(2)) + "</td>" /* time */
+				"<td>" + ColValue(myItem->text(3)) + "</td>" /* target */
+				"<td>" + ColValue(myItem->text(4)) + "</td>" /* days */
 				"</tr>\n";
         myItem = myItem->nextSibling();
     }
@@ -703,6 +828,7 @@ void LiveScheduleDlg::OnSave()
 			"<h3>" + strStationName + "</h3>"
 			"\n<table border=\"1\"><tr>\n"
 			"<th>" + tr("Frequency [kHz]") + "</th>"
+			"<th>" + tr("System") + "</th>"
 			"<th>" + tr("Time [UTC]") + "</th>"
 			"<th>" + tr("Target") + "</th>"
 			"<th>" + tr("Days") + "</th>\n"
@@ -809,7 +935,7 @@ int iWeekDay;
 		iWeekDay = gmtCur->tm_wday - 1;
 
 	/* iTimeWeek minutes since last Monday 00:00 in UTC */
-	/* the value is in the range 0 <= iTimeWeek < 60 �24 �7)   */
+	/* the value is in the range 0 <= iTimeWeek < 60 * 24 * 7)   */
 	
 	const int iTimeWeek = (iWeekDay * 24 * 60) + (gmtCur->tm_hour * 60) + gmtCur->tm_min;
 	
@@ -819,7 +945,7 @@ int iWeekDay;
 		/* Check if day is active */
 		if (StationsTable[iPos].strDaysFlags[i] == CHR_ACTIVE_DAY_MARKER)
 		{
-			/* Tuesday -> 1 �24 �60 = 1 440 */
+			/* Tuesday -> 1 * 24 * 60 = 1440 */
 			iScheduleStart = (i * 24 * 60) + StationsTable[iPos].iStartTime;
 			iScheduleEnd = iScheduleStart + StationsTable[iPos].iDuration;
 
