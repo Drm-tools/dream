@@ -1063,8 +1063,8 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	int				iRegionID = 0;
 	int				iScheduleID = 0;
 	int				iFrequencyEntryLength;
-	unsigned long	iOtherServiceID;
-	
+	unsigned long	iOtherServiceID = 0;
+
 	/* Init number of frequency count */
 	int iNumFreqTmp = iLengthOfBody;
 

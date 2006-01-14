@@ -467,7 +467,7 @@ public:
 			CAltFreqOtherServices(const CAltFreqOtherServices& nAF) :
 				veciFrequencies(nAF.veciFrequencies),
 				bShortIDAnnounceFlag(nAF.bShortIDAnnounceFlag),
-				iShortIDAnnounce(nAF.bShortIDAnnounceFlag),
+				iShortIDAnnounce(nAF.iShortIDAnnounce),
 				bRegionSchedFlag(nAF.bRegionSchedFlag),
 				bSameService(nAF.bSameService),
 				iSystemID(nAF.iSystemID),
@@ -481,7 +481,7 @@ public:
 				veciFrequencies = nAF.veciFrequencies;
 
 				bShortIDAnnounceFlag = nAF.bShortIDAnnounceFlag;
-				iShortIDAnnounce = nAF.bShortIDAnnounceFlag;
+				iShortIDAnnounce = nAF.iShortIDAnnounce;
 				bRegionSchedFlag = nAF.bRegionSchedFlag;
 				bSameService = nAF.bSameService;
 				iSystemID = nAF.iSystemID;
