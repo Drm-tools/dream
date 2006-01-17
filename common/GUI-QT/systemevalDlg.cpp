@@ -1553,6 +1553,9 @@ void systemevalDlg::AddWhatsThisHelp()
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
 
+#ifdef _WIN32
+	/* Under Linux if QWhatsThis is added don't work the right click popup */
+
 	/* Chart Selector */
 	QWhatsThis::add(ListViewCharSel,
 		tr("<b>Chart Selector:</b> With the chart selector "
@@ -1565,6 +1568,7 @@ void systemevalDlg::AddWhatsThisHelp()
 		"groups by using the left / right arrow keys.<br>A separate chart "
 		"window for a selected item can be opened by right click on the item "
 		"and click on the context menu item."));
+#endif
 
 	/* Interferer Rejection */
 	const QString strInterfRej =
