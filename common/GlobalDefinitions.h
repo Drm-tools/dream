@@ -49,7 +49,7 @@ using namespace std; /* Because of the library: "complex" */
 #undef _DEBUG_
 
 #ifndef VERSION
-# define VERSION						"1.5.2cvs"
+# define VERSION						"1.6.0cvs"
 #endif
 
 
@@ -127,9 +127,11 @@ typedef unsigned char/*bool*/			_BINARY;
 #elif HAVE_INTTYPES_H
 # include <inttypes.h>
 #elif defined(_WIN32)
+typedef unsigned char uint8_t;
 typedef unsigned __int32 uint32_t;
 typedef unsigned __int16 uint16_t;
 #else
+typedef unsigned char uint8_t;
 typedef unsigned long uint32_t;
 typedef unsigned int uint16_t;
 #endif

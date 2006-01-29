@@ -3,7 +3,7 @@
  * Copyright (c) 2001-2005
  *
  * Author(s):
- *	Volker Fischer, Andrea Russo
+ *	Volker Fischer, Andrea Russo, Julian Cable
  *
  * 6/8/2005 Andrea Russo
  *	- save Journaline pages as HTML
@@ -278,7 +278,7 @@ void MultimediaDlg::OnTimer()
 			const QString strFileName =
 				QString(strDirMOTCache + "/" + strNewObjName);
 
-			SaveMOTObject(NewObj.vecbRawData, strFileName);
+			SaveMOTObject(NewObj.Body.vecData, strFileName);
 
 			/* Check if DABMOT could not unzip */
 			const _BOOLEAN bZipped =
@@ -498,7 +498,6 @@ void MultimediaDlg::OnButtonJumpEnd()
 void MultimediaDlg::SetSlideShowPicture()
 {
 	QPixmap		NewImage;
-	int			iPicSize;
 
 	/* Copy current image from image storage vector */
 	CMOTObject vecbyCurPict(vecRawImages[iCurImagePos]);
@@ -508,18 +507,19 @@ void MultimediaDlg::SetSlideShowPicture()
 	   png which can be displayed */
 	JpgToPng(vecbyCurPict);
 
-	/* Get picture size */
-	iPicSize = vecbyCurPict.vecbRawData.Size();
+	CVector<_BYTE>& imagedata = vecbyCurPict.Body.vecData;
+	const QString imagename(vecbyCurPict.strName.c_str());
 
 	/* Load picture in QT format */
-	if (NewImage.loadFromData(&vecbyCurPict.vecbRawData[0], iPicSize))
+	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
 	{
 		/* Set new picture in source factory and set it in text control */
 		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
 			NewImage.convertToImage());
 
-#ifndef _WIN32
-		/* Under Linux the slideshow pictures are not updated correctly */
+#ifndef _MSC_VER
+		/* Under gcc(MingW or Linux) the slideshow pictures are not 
+           updated correctly without this line: */
 		TextBrowser->setText("");
 #endif
 
@@ -538,11 +538,8 @@ void MultimediaDlg::SetSlideShowPicture()
 	}
 
 	/* Add tool tip showing the name of the picture */
-	if (vecRawImages[iCurImagePos].strName.length() != 0)
-	{
-		QToolTip::add(TextBrowser,
-			QString(vecRawImages[iCurImagePos].strName.c_str()));
-	}
+	if (imagename.length() != 0)
+		QToolTip::add(TextBrowser,imagename);
 
 	UpdateAccButtonsSlideShow();
 }
@@ -587,8 +584,15 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 		PushButtonJumpEnd->setEnabled(TRUE);
 	}
 
-	LabelCurPicNum->setText(QString().setNum(iCurImagePos + 1) + "/" +
-		QString().setNum(GetIDLastPicture() + 1));
+	QString strTotImages = QString().setNum(GetIDLastPicture() + 1);
+	QString strNumImage = QString().setNum(iCurImagePos + 1);
+
+	QString strSep("");
+
+	for (int i = 0; i < (strTotImages.length() - strNumImage.length()); i++)
+		strSep += " ";
+
+	LabelCurPicNum->setText(strSep + strNumImage + "/" + strTotImages);
 
 	/* If no picture was received, show the following text */
 	if (iCurImagePos < 0)
@@ -616,10 +620,20 @@ void MultimediaDlg::OnSave()
 {
 	QString strFileName;
 	QString strDefFileName;
+	QString strExt;
+	QString strFilter;
 
 	switch (eAppType)
 	{
 	case CDataDecoder::AT_MOTSLISHOW:
+
+		strExt = QString(vecRawImages[iCurImagePos].strFormat.c_str());
+
+		if (strExt.length() == 0)
+			strFilter = "*.*";
+		else
+			strFilter = "*." + strExt;
+
 		/* Show "save file" dialog */
 		/* Set file name */
 		strDefFileName = vecRawImages[iCurImagePos].strName.c_str();
@@ -628,16 +642,18 @@ void MultimediaDlg::OnSave()
 		if (strDefFileName.length() == 0)
 			strDefFileName = "RecPic";
 
+		if ((strDefFileName.contains(".") == 0) && (strExt.length() > 0))
+				strDefFileName += "." + strExt;
+
 		strFileName =
-			QFileDialog::getSaveFileName(strCurrentSavePath + strDefFileName +
-			"." + QString(vecRawImages[iCurImagePos].strFormat.c_str()),
-			"*." + QString(vecRawImages[iCurImagePos].strFormat.c_str()), this);
+			QFileDialog::getSaveFileName(strCurrentSavePath + strDefFileName,
+			strFilter, this);
 
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isNull())
 		{
 			SetCurrentSavePath(strFileName);
-			SaveMOTObject(vecRawImages[iCurImagePos].vecbRawData, strFileName);
+			SaveMOTObject(vecRawImages[iCurImagePos].Body.vecData, strFileName);
 		}
 		break;
 
@@ -691,10 +707,16 @@ void MultimediaDlg::OnSaveAll()
 
 	if (!strDirName.isNull())
 	{
+		/* add slashes if not present */
+		if (strDirName.right(1) != "/")
+			strDirName += "/";
+
 		/* Loop over all pictures received yet */
 		for (int j = 0; j < GetIDLastPicture() + 1; j++)
 		{
-			QString strFileName = vecRawImages[j].strName.c_str();
+			const CMOTObject& o = vecRawImages[j];
+			QString strFileName = o.strName.c_str();
+			QString strExt = QString(o.strFormat.c_str());
 
 			if (strFileName.length() == 0)
 			{
@@ -704,10 +726,12 @@ void MultimediaDlg::OnSaveAll()
 			}
 
 			/* Add directory and ending */
-			strFileName = strDirName + strFileName + "." +
-				QString(vecRawImages[j].strFormat.c_str());
+			strFileName = strDirName + strFileName;
 
-			SaveMOTObject(vecRawImages[j].vecbRawData, strFileName);
+			if ((strFileName.contains(".") == 0) && (strExt.length() > 0))
+				strFileName += "." + strExt;
+			
+			SaveMOTObject(o.Body.vecData, strFileName);
 		}
 	}
 }
@@ -854,11 +878,11 @@ void MultimediaDlg::CreateDirectories(const QString& filename)
 */
 	int i = 0;
 
-	while (i < filename.length())
+	while (uint(i) < filename.length())
 	{
 		_BOOLEAN bFound = FALSE;
 
-		while ((i < filename.length()) && (bFound == FALSE))
+		while ((uint(i) < filename.length()) && (bFound == FALSE))
 		{
 			if (filename[i] == '/')
 				bFound = TRUE;
@@ -882,7 +906,7 @@ void MultimediaDlg::CreateDirectories(const QString& filename)
 void MultimediaDlg::AddRefreshHeader(const QString& strFileName)
 {
 /*
-	Add a html header for refresh the page every n seconds.
+	Add a html header to refresh the page every n seconds.
 */
 	/* Open file for append (text mode) */
 	FILE* pFiBody = fopen(strFileName.latin1(), "at");
@@ -896,7 +920,7 @@ void MultimediaDlg::AddRefreshHeader(const QString& strFileName)
 	}
 }
 
-void MultimediaDlg::SaveMOTObject(CVector<_BYTE>& vecbRawData,
+void MultimediaDlg::SaveMOTObject(const CVector<_BYTE>& vecbRawData,
 								  const QString& strFileName)
 {
 	/* First, create directory for storing the file (if not exists) */
@@ -912,7 +936,10 @@ void MultimediaDlg::SaveMOTObject(CVector<_BYTE>& vecbRawData,
 	{
 		/* Write data byte-wise */
 		for (int i = 0; i < iSize; i++)
-			fwrite((void*) &vecbRawData[i], size_t(1), size_t(1), pFiBody);
+		{
+            	const _BYTE b = vecbRawData[i];
+				fwrite(&b, size_t(1), size_t(1), pFiBody);
+		}
 
 		/* Close the file afterwards */
 		fclose(pFiBody);
@@ -1044,7 +1071,7 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 	FreeImage_Initialise();
 
 	/* Put input data in a new IO object */
-	MemIO memIO(NewPic.vecbRawData);
+	MemIO memIO(NewPic.Body.vecData);
 
 	/* Load data from memory */
 	FIBITMAP* fbmp =
@@ -1057,9 +1084,9 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 	if (FreeImage_SaveToHandle(FIF_PNG, fbmp, &memIO, (fi_handle) &memIO))
 	{
 		/* Get converted data and set new format string */
-		NewPic.vecbRawData.Init(memIO.GetData().Size()); /* Size has certainly
+		NewPic.Body.vecData.Init(memIO.GetData().Size()); /* Size has certainly
 															changed */
-		NewPic.vecbRawData = memIO.GetData(); /* Actual copying */
+		NewPic.Body.vecData = memIO.GetData(); /* Actual copying */
 		NewPic.strFormat = "png"; /* New format string */
 	}
 #endif

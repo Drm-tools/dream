@@ -37,46 +37,38 @@
 /* Encoder ------------------------------------------------------------------ */
 class CMOTSlideShowEncoder
 {
-public:
-	CMOTSlideShowEncoder() : vecPicFileNames(0) {}
-	virtual ~CMOTSlideShowEncoder() {}
+  public:
+    CMOTSlideShowEncoder ():vecPicFileNames (0)
+    {
+    }
+    virtual ~ CMOTSlideShowEncoder ()
+    {
+    }
 
-	void Init();
+    void Init ();
 
-	void GetDataUnit(CVector<_BINARY>& vecbiNewData);
+    void GetDataUnit (CVector < _BINARY > &vecbiNewData);
 
-	void AddFileName(const string& strFileName, const string& strFormat);
-	void ClearAllFileNames() {vecPicFileNames.Init(0);}
-	_BOOLEAN GetTransStat(string& strCurPict, _REAL& rCurPerc) const;
+    void AddFileName (const string & strFileName, const string & strFormat);
+    void ClearAllFileNames ()
+    {
+	vecPicFileNames.Init (0);
+    }
+    _BOOLEAN GetTransStat (string & strCurPict, _REAL & rCurPerc) const;
 
-protected:
-	struct SPicDescr {string strName, strFormat;};
-	void AddNextPicture();
+  protected:
+    struct SPicDescr
+    {
+	string strName, strFormat;
+    };
+    void AddNextPicture ();
 
-	CMOTDABEnc			MOTDAB;
+    CMOTDABEnc MOTDAB;
 
-	CVector<SPicDescr>	vecPicFileNames;
-	int					iPictureCnt;
+    CVector < SPicDescr > vecPicFileNames;
+    int iPictureCnt;
 
-	string				strCurObjName;
+    string strCurObjName;
 };
-
-
-/* Decoder ------------------------------------------------------------------ */
-class CMOTDecoder
-{
-public:
-	CMOTDecoder() : bNewObject(FALSE) {}
-	virtual ~CMOTDecoder() {}
-
-	void AddDataUnit(CVector<_BINARY>& vecbiNewData);
-	_BOOLEAN GetObject(CMOTObject& NewObj);
-
-protected:
-	_BOOLEAN	bNewObject;
-	CMOTObject	MOTObject;
-	CMOTDABDec	MOTDAB;
-};
-
 
 #endif // !defined(MOTSLIDESHOW_H__3B0UBVE98732KJVEW363LIHGEW982__INCLUDED_)

@@ -34,6 +34,7 @@
 #include "../util/Modul.h"
 #include "../util/CRC.h"
 #include "../util/Vector.h"
+#include "DABMOT.h"
 #include "MOTSlideShow.h"
 #include "Journaline.h"
 
@@ -47,75 +48,92 @@
 /* Encoder ------------------------------------------------------------------ */
 class CDataEncoder
 {
-public:
-	CDataEncoder() {}
-	virtual ~CDataEncoder() {}
+  public:
+    CDataEncoder ()
+    {
+    }
+    virtual ~ CDataEncoder ()
+    {
+    }
 
-	int Init(CParameter& Param);
-	void GeneratePacket(CVector<_BINARY>& vecbiPacket);
+    int Init (CParameter & Param);
+    void GeneratePacket (CVector < _BINARY > &vecbiPacket);
 
-	CMOTSlideShowEncoder* GetSliShowEnc() {return &MOTSlideShowEncoder;}
+    CMOTSlideShowEncoder *GetSliShowEnc ()
+    {
+	return &MOTSlideShowEncoder;
+    }
 
-protected:
-	CMOTSlideShowEncoder	MOTSlideShowEncoder;
-	CVector<_BINARY>		vecbiCurDataUnit;
+  protected:
+    CMOTSlideShowEncoder MOTSlideShowEncoder;
+    CVector < _BINARY > vecbiCurDataUnit;
 
-	int						iPacketLen;
-	int						iTotalPacketSize;
-	int						iCurDataPointer;
-	int						iPacketID;
-	int						iContinInd;
+    int iPacketLen;
+    int iTotalPacketSize;
+    int iCurDataPointer;
+    int iPacketID;
+    int iContinInd;
 };
 
 
 /* Decoder ------------------------------------------------------------------ */
-class CDataDecoder : public CReceiverModul<_BINARY, _BINARY>
+class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
-public:
-	CDataDecoder() : iServPacketID(0), DoNotProcessData(TRUE),
-		eAppType(AT_NOT_SUP), iOldJournalineServiceID(0) {}
-	virtual ~CDataDecoder() {}
-	enum EAppType {AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE,
-		AT_MOTBROADCASTWEBSITE};
+  public:
+    CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
+	iOldJournalineServiceID (0), eAppType (AT_NOT_SUP)
+    {
+    }
+    virtual ~ CDataDecoder ()
+    {
+    }
+    enum EAppType
+    { AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE,
+	AT_MOTBROADCASTWEBSITE, AT_MOTTPEG, AT_DGPS, AT_TMC, AT_MOTEPG,
+	    AT_JAVA
+    };
 
-	_BOOLEAN GetMOTObject(CMOTObject& NewPic, const EAppType eAppTypeReq);
-	void GetNews(const int iObjID, CNews& News);
-	EAppType GetAppType() {return eAppType;}
+    _BOOLEAN GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
+    void GetNews (const int iObjID, CNews & News);
+    EAppType GetAppType ()
+    {
+	return eAppType;
+    }
 
-protected:
-	class CDataUnit
+  protected:
+    class CDataUnit
+    {
+      public:
+	CVector < _BINARY > vecbiData;
+	_BOOLEAN bOK;
+	_BOOLEAN bReady;
+
+	void Reset ()
 	{
-	public:
-		CVector<_BINARY>	vecbiData;
-		_BOOLEAN			bOK;
-		_BOOLEAN			bReady;
+	    vecbiData.Init (0);
+	    bOK = FALSE;
+	    bReady = FALSE;
+	}
+    };
 
-		void Reset()
-		{
-			vecbiData.Init(0);
-			bOK = FALSE;
-			bReady = FALSE;
-		}
-	};
+    int iTotalPacketSize;
+    int iNumDataPackets;
+    int iMaxPacketDataSize;
+    int iServPacketID;
+    CVector < int >veciCRCOk;
 
-	int				iTotalPacketSize;
-	int				iNumDataPackets;
-	int				iMaxPacketDataSize;
-	int				iServPacketID;
-	CVector<int>	veciCRCOk;
+    _BOOLEAN DoNotProcessData;
 
-	_BOOLEAN		DoNotProcessData;
+    int iContInd[MAX_NUM_PACK_PER_STREAM];
+    CDataUnit DataUnit[MAX_NUM_PACK_PER_STREAM];
+    CMOTDABDec MOTObject[MAX_NUM_PACK_PER_STREAM];
+    CJournaline Journaline;
+    uint32_t iOldJournalineServiceID;
 
-	int				iContInd[MAX_NUM_PACK_PER_STREAM];
-	CDataUnit		DataUnit[MAX_NUM_PACK_PER_STREAM];
-	CMOTDecoder		MOTObject[MAX_NUM_PACK_PER_STREAM];
-	CJournaline		Journaline;
-	uint32_t		iOldJournalineServiceID;
+    EAppType eAppType;
 
-	EAppType		eAppType;
-
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal (CParameter & ReceiverParam);
+    virtual void ProcessDataInternal (CParameter & ReceiverParam);
 };
 
 

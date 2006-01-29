@@ -116,6 +116,10 @@ SOURCE=.\moc\fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\LiveScheduleDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_AboutDlgbase.cpp
 # End Source File
 # Begin Source File
@@ -148,6 +152,14 @@ SOURCE=.\moc\moc_fdrmdialogbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_LiveScheduleDlg.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_LiveScheduleDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_MDI.cpp
 # End Source File
 # Begin Source File
@@ -172,14 +184,6 @@ SOURCE=.\moc\moc_StationsDlgbase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\moc\moc_LiveScheduleDlg.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\moc\moc_LiveScheduleDlgbase.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\moc\moc_systemevalDlg.cpp
 # End Source File
 # Begin Source File
@@ -201,10 +205,6 @@ SOURCE=.\moc\MultimediaDlgbase.cpp
 # Begin Source File
 
 SOURCE=.\moc\StationsDlgbase.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=.\moc\LiveScheduleDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -242,6 +242,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.cpp"
 # End Source File
 # Begin Source File
 
+SOURCE="..\common\GUI-QT\LiveScheduleDlg.cpp"
+# End Source File
+# Begin Source File
+
 SOURCE="..\common\GUI-QT\main.cpp"
 # End Source File
 # Begin Source File
@@ -259,10 +263,6 @@ SOURCE="..\common\GUI-QT\MultimediaDlg.cpp"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\StationsDlg.cpp"
-# End Source File
-# Begin Source File
-
-SOURCE="..\common\GUI-QT\LiveScheduleDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -426,6 +426,30 @@ SOURCE=..\common\ofdmcellmapping\OFDMCellMapping.cpp
 # Begin Group "Source datadecoding"
 
 # PROP Default_Filter ".c .cpp"
+# Begin Group "epg"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\EPG.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\epgdec.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\epgdecode.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\epgutil.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\mjd.cpp
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\common\datadecoding\DABMOT.cpp
@@ -565,6 +589,10 @@ SOURCE="..\common\GUI-QT\fdrmdialog.h"
 # End Source File
 # Begin Source File
 
+SOURCE="..\common\GUI-QT\LiveScheduleDlg.h"
+# End Source File
+# Begin Source File
+
 SOURCE="..\common\GUI-QT\MultColorLED.h"
 # End Source File
 # Begin Source File
@@ -574,10 +602,6 @@ SOURCE="..\common\GUI-QT\MultimediaDlg.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\StationsDlg.h"
-# End Source File
-# Begin Source File
-
-SOURCE="..\common\GUI-QT\LiveScheduleDlg.h"
 # End Source File
 # Begin Source File
 
@@ -747,6 +771,30 @@ SOURCE=..\common\ofdmcellmapping\OFDMCellMapping.h
 # Begin Group "Header datadecoding"
 
 # PROP Default_Filter ".h"
+# Begin Group "Header epg"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\EPG.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\epgdec.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\epgdecode.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\epgutil.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\datadecoding\epg\mjd.h
+# End Source File
+# End Group
 # Begin Source File
 
 SOURCE=..\common\datadecoding\DABMOT.h
