@@ -38,10 +38,9 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 	TextViewCredits->setText(
 		"<p>" /* General description of Dream software */
 		"<big><b>Dream</b> " + tr("is a software implementation of a Digital "
-		"Radio Mondiale (DRM) receiver. All what is needed to receive DRM "
-		"transmissions is a PC with a sound card and a modified analog "
-		"short-wave (MW, LW) receiver.") + "</big>"
-		"</p><br>"
+		"Radio Mondiale (DRM) receiver. With Dream, DRM broadcasts can be received "
+		"with a modified analog receiver (SW, MW, LW) and a PC with a sound card.")
+		 + "</big></p><br>"
 		"<p><font face=\"courier\">" /* GPL header text */
 		"This program is free software; you can redistribute it and/or modify "
 		"it under the terms of the GNU General Public License as published by "
