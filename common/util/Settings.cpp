@@ -839,6 +839,22 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+		/* enable/disable epg decoding ----------------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-e", "--decodeepg", 0,
+			1, rArgument) == TRUE)
+		{
+			switch ((int) rArgument)
+			{
+			case 0:
+				pDRMRec->GetDataDecoder()->SetDecodeEPG(FALSE);
+				break;
+
+			case 1:
+				pDRMRec->GetDataDecoder()->SetDecodeEPG(TRUE);
+				break;
+			}
+			continue;
+		}
 
 #ifdef USE_QT_GUI /* QThread needed for log file timing */
 		/* Start log file flag ---------------------------------------------- */
@@ -880,7 +896,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 
 
 		/* Color scheme main plot ------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-y", "--colorstyle", 0,
+		if (GetNumericArgument(argc, argv, i, "-y", "--colorscheme", 0,
 			MAX_COLOR_SCHEMES_VAL, rArgument) == TRUE)
 		{
 			pDRMRec->iMainPlotColorStyle = (int) rArgument;
@@ -1025,6 +1041,9 @@ string CSettings::UsageArguments(char** argv)
 		"                              2: L muted, R -> R\n"
 		"                              3: mix -> L, R muted\n"
 		"                              4: L muted, mix -> R\n"
+		"  -e <n>, --decodeepg <n>     enable/disable epg decoding\n"
+		"                              0: off\n"
+		"                              1: on\n"
 
 #ifdef USE_QT_GUI
 		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
