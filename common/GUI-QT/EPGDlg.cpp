@@ -208,7 +208,7 @@ void EPGDlg::select()
           name = "unknown " + p.mainGenre + " programme";
         else
           name = p.name;
-	    (void) new QListViewItem(Data, p.start, name, p.description, p.mainGenre);
+	    (void) new QListViewItem(Data, p.start, name, p.mainGenre, p.description);
     }
     QString xml;
     xml = epg.basic.doc.toString();

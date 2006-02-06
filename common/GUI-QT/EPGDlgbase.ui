@@ -11,7 +11,7 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>497</width>
+            <width>493</width>
             <height>422</height>
         </rect>
     </property>
@@ -114,7 +114,7 @@
                         <column>
                             <property>
                                 <name>text</name>
-                                <string>Description</string>
+                                <string>Genre</string>
                             </property>
                             <property>
                                 <name>clickable</name>
@@ -128,7 +128,7 @@
                         <column>
                             <property>
                                 <name>text</name>
-                                <string>Genre</string>
+                                <string>Description</string>
                             </property>
                             <property>
                                 <name>clickable</name>
