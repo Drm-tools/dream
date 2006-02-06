@@ -624,7 +624,7 @@ EPG::parseDoc (const QDomNode & n)
 					l3 = l3.nextSibling ();
 				    }
 			      }
-			    if (e.tagName () == "mediumName" && p.name == "")
+			    if ((e.tagName () == "mediumName") && (p.name == ""))
 				p.name = e.text ();
 			    if (e.tagName () == "longName")
 				p.name = e.text ();

@@ -55,9 +55,14 @@ class EPG
     class CProg
     {
       public:
-	QString start, duration;
-	QString name, description;
-	QString id, mainGenre, secondaryGenre, otherGenre;
+
+	  CProg(): start(""), duration(""), name(""), description("")
+			  , id(""), mainGenre(""), secondaryGenre(""), otherGenre("")
+		{}
+		  
+		QString start, duration;
+		QString name, description;
+		QString id, mainGenre, secondaryGenre, otherGenre;
     };
 
     QMap < uint32_t, CProg > progs;
