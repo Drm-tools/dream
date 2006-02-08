@@ -302,9 +302,50 @@ void FDRMDialog::OnTimer()
 
 			/* Text message of current selected audio service 
 			   (UTF-8 decoding) */
-			TextTextMessage->setText(QString().fromUtf8(QCString(
-				pDRMRec->GetParameters()->Service[iCurSelAudioServ].AudioParam.
-				strTextMessage.c_str())));
+            QCString utf8Message = 
+                   pDRMRec->GetParameters()->Service[iCurSelAudioServ]
+                   .AudioParam.strTextMessage.c_str();
+            QString textMessage = QString().fromUtf8(utf8Message);
+            QString formattedMessage = "<center>";
+			for (int i = 0; i < textMessage.length(); i++)
+			{
+				switch (textMessage.at(i).unicode())
+				{
+				case 0x0A:
+					/* Code 0x0A may be inserted to indicate a preferred
+					   line break */
+				case 0x1F:
+					/* Code 0x1F (hex) may be inserted to indicate a
+					   preferred word break. This code may be used to
+					   display long words comprehensibly */
+					formattedMessage += "<br>";
+					break;
+
+				case 0x0B:
+					/* End of a headline */
+					formattedMessage = "<b><u>" 
+                                     + formattedMessage 
+                                     + "</u></b></center><br><center>";
+					break;
+
+				case '<':
+					formattedMessage += "&lt;";
+					break;
+
+				case '>':
+					formattedMessage += "&gt;";
+					break;
+
+				case '&':
+					formattedMessage += "&amp;";
+					break;
+
+				default:
+                    formattedMessage += textMessage[i];
+				}
+			}
+            formattedMessage += "</center>";
+			TextTextMessage->setText(formattedMessage);
 		}
 		else
 		{

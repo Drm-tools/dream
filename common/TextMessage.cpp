@@ -473,14 +473,6 @@ void CTextMessageDecoder::SetText()
 			/* Clear text */
 			*pstrText = "";
 
-// We can run into problems with the rich text (in QT) if the text message
-// contains html tags as well: FIXME
-
-#ifdef USE_QT_GUI
-			/* Center text */
-			(*pstrText).append("<center>", 8);
-#endif
-
 			for (i = 0; i < MAX_NUM_SEG_TEXT_MESSAGE; i++)
 			{
 				if (Segment[i].bIsOK == TRUE)
@@ -490,6 +482,11 @@ void CTextMessageDecoder::SetText()
 						/* Get character */
 						char cNewChar = Segment[i].byData[j];
 
+#ifdef USE_QT_GUI
+						/* Append new character */
+						(*pstrText).append(&cNewChar, 1);
+#else
+						/* NOT USE_QT_GUI */
 						switch (cNewChar)
 						{
 						case 0x0A:
@@ -499,46 +496,27 @@ void CTextMessageDecoder::SetText()
 							/* Code 0x1F (hex) may be inserted to indicate a
 							   preferred word break. This code may be used to
 							   display long words comprehensibly */
-#ifdef USE_QT_GUI
-							(*pstrText).append("<br>", 4);
-#else
+
 							(*pstrText).append("\r\n", 2);
-#endif
 							break;
 
 						case 0x0B:
 							/* End of a headline */
-#ifdef USE_QT_GUI
-							/* Use rich text possibility offered by QT */
-							(*pstrText).insert(0, "<b><u>", 6);
-							(*pstrText).append("</center></u></b><br><center>", 29);
-#else
+
 							/* Two line-breaks */
 							(*pstrText).append("\r\n\r\n", 4);
 							cNewChar = 0x0A;
-#endif
 							break;
-
-#ifdef USE_QT_GUI
-						case '<':
-							/* This character is used for HTML tags in QT */
-							(*pstrText).append("&#60;", 5);
-							break;
-#endif
 
 						default:
 							/* Append new character */
 							(*pstrText).append(&cNewChar, 1);
 							break;
 						}
+#endif
 					}
 				}
 			}
-
-#ifdef USE_QT_GUI
-			/* End of centering text */
-			(*pstrText).append("</center>", 9);
-#endif
 		}
 	}
 }
