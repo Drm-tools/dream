@@ -372,11 +372,13 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 						MOTObject[iServPacketID].
 							  GetNextObject (NewObj);
 						string fileName;
+                        bool advanced = false;
 						if (NewObj.iContentType == 7)
 							{
 							int service =
 								ReceiverParam.
 								GetCurSelDataService ();
+                            advanced = NewObj.vecbProfileSubset.size()>0;
 							fileName =
 								epgFilename (NewObj.ScopeStart,
 									 ReceiverParam.
@@ -384,15 +386,16 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 									 iServiceID,
 									 NewObj.
 									 iContentSubType,
-									 NewObj.
-									 vecbProfileSubset.
-									 size () > 0);
+									 advanced);
 							}
 						else
 							{
 							fileName = NewObj.strName;
 							}
-
+#ifndef HAVE_LIBFREEIMAGE
+                        if(advanced)
+                            fileName += ".gz";
+#endif
 						string path =
 							  string (EPG_SAVE_PATH) + "/" + fileName;
 						mkdirs (path);
