@@ -412,9 +412,17 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	short*				psDecOutSampleBuf;
 #endif
 
+	CVector<_BINARY> vecbiAudioFrameStatus;
+	vecbiAudioFrameStatus.Init(0);
+	vecbiAudioFrameStatus.ResetBitAccess();
+
 	/* Check if something went wrong in the initialization routine */
 	if (DoNotProcessData == TRUE)
+	{
+		if (pMDI != NULL)
+			pMDI->SetAudioFrameStatus(FALSE, vecbiAudioFrameStatus);
 		return;
+	}
 
 
 	/* Text Message ***********************************************************/
@@ -432,7 +440,11 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 	/* Audio data header parsing **********************************************/
 	/* Check if audio shall not be decoded */
 	if (DoNotProcessAudDecoder == TRUE)
+	{
+		if (pMDI != NULL)
+			pMDI->SetAudioFrameStatus(FALSE, vecbiAudioFrameStatus);
 		return;
+	}
 	
 	/* Reset bit extraction access */
 	(*pvecInputData).ResetBitAccess();
@@ -593,7 +605,10 @@ fflush(pFile2);
 					&DecFrameInfo, &vecbyPrepAudioFrame[0],
 					veciFrameLength[j] + 1);
 
+				/* OPH: add frame status to vector for RSCI */
+				vecbiAudioFrameStatus.Add(DecFrameInfo.error==0 ? 0 : 1);
 				if (DecFrameInfo.error != 0)
+
 					bCurBlockOK = FALSE; /* Set error flag */
 				else
 				{
@@ -641,8 +656,10 @@ fflush(pFile2);
 			}
 			else
 			{
-				/* DRM AAC header was wrong, set flag to "bad block" */
+				/* DRM AAC header was wrong, set flag to "bad block" */ 
 				bCurBlockOK = FALSE;
+				/* OPH: update audio status vector for RSCI */	
+				vecbiAudioFrameStatus.Add(1);
 			}
 #endif
 	}
@@ -661,7 +678,9 @@ fflush(pFile2);
 		}
 		else
 			bCurBlockOK = TRUE;
-
+			
+		/* OPH: update audio status vector for RSCI */	
+        vecbiAudioFrameStatus.Add(bCurBlockOK == TRUE ? 0 : 1);
 
 #if 0
 // Store CELP-data in file
@@ -866,6 +885,9 @@ for (i = 0; i < iResOutBlockSize; i++)
 			vecTempResBufOutOldRight[i] = vecTempResBufOutCurRight[i];
 		}
 	}
+	if (pMDI != NULL)
+		pMDI->SetAudioFrameStatus(bGoodValues, vecbiAudioFrameStatus);
+
 }
 
 void CAudioSourceDecoder::InitInternal(CParameter& ReceiverParam)
@@ -1248,9 +1270,9 @@ int CAudioSourceDecoder::GetNumCorDecAudio()
 	return iRet;
 }
 
-CAudioSourceDecoder::CAudioSourceDecoder()
+CAudioSourceDecoder::CAudioSourceDecoder(CMDI *pNM) : pMDI(pNM)
 #ifdef USE_FAAD2_LIBRARY
-	: AudioRev((CReal) 1.0 /* seconds delay */), bUseReverbEffect(TRUE)
+	, AudioRev((CReal) 1.0 /* seconds delay */), bUseReverbEffect(TRUE)
 #endif
 {
 #ifdef USE_FAAD2_LIBRARY

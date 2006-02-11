@@ -28,6 +28,7 @@ drmwithoutqt_SOURCES = \
 	../common/util/CRC.cpp \
 	../common/util/Settings.cpp \
 	../common/util/Utilities.cpp \
+	../common/util/LogPrint.cpp \
 	../common/SDC/SDCReceive.cpp \
 	../common/SDC/SDCTransmit.cpp \
 	../common/chanest/ChannelEstimation.cpp \
@@ -48,6 +49,16 @@ drmwithoutqt_SOURCES = \
 	../common/mlc/TrellisUpdateSSE2.cpp \
 	../common/mlc/QAMMapping.cpp \
 	../common/mlc/ChannelCode.cpp \
+	../common/MDI/MDIConcrete.cpp \
+	../common/MDI/MDIInBuffer.cpp \
+	../common/MDI/MDITagItemDecoders.cpp \
+	../common/MDI/MDITagItems.cpp \
+	../common/MDI/MDITagPacketDecoder.cpp	 \
+	../common/MDI/PacketSocketNull.cpp \
+	../common/MDI/RSCITagItemDecoders.cpp \
+	../common/MDI/TagPacketDecoder.cpp \
+	../common/MDI/TagPacketDecoderRSCIControl.cpp \
+	../common/MDI/TagPacketGenerator.cpp \
 	../common/ofdmcellmapping/CellMappingTable.cpp \
 	../common/ofdmcellmapping/OFDMCellMapping.cpp \
 	../common/resample/Resample.cpp \
@@ -89,6 +100,7 @@ drmwithoutqt_SOURCES = \
 	../common/util/AudioFile.h \
 	../common/util/Settings.h \
 	../common/util/Utilities.h \
+	../common/util/LogPrint.h \
 	../common/SDC/SDC.h \
 	../common/IQInputFilter.h \
 	../common/chanest/ChanEstTime.h \
@@ -107,6 +119,20 @@ drmwithoutqt_SOURCES = \
 	../common/mlc/QAMMapping.h \
 	../common/mlc/ViterbiDecoder.h \
 	../common/mlc/ChannelCode.h \
+	../common/MDI/MDI.h \
+	../common/MDI/MDIConcrete.h \
+	../common/MDI/MDIDefinitions.h \
+	../common/MDI/MDIInBuffer.h \
+	../common/MDI/MDINull.h \
+	../common/MDI/MDITagItemDecoders.h \
+	../common/MDI/MDITagItems.h \
+	../common/MDI/MDITagPacketDecoder.h	 \
+	../common/MDI/PacketInOut.h \
+	../common/MDI/PacketSocketNull.h \
+	../common/MDI/RSCITagItemDecoders.h \
+	../common/MDI/TagPacketDecoder.h \
+	../common/MDI/TagPacketDecoderRSCIControl.h \
+	../common/MDI/TagPacketGenerator.h \
 	../common/ofdmcellmapping/CellMappingTable.h \
 	../common/ofdmcellmapping/OFDMCellMapping.h \
 	../common/resample/Resample.h \
@@ -139,7 +165,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/LiveScheduleDlg.cpp \
 	../common/GUI-QT/EPGDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
-	../common/MDI.cpp \
+	../common/MDI/PacketSocketQT.cpp \
 	../common/GUI-QT/fdrmdialogbase.ui \
 	../common/GUI-QT/TransmDlgbase.ui \
 	../common/GUI-QT/AboutDlgbase.ui \
@@ -161,7 +187,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/LiveScheduleDlg.h \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
-	../common/MDI.h \
+	../common/MDI/PacketSocketQT.h \
 	../common/datadecoding/epg/epgdecode.cpp \
 	../common/datadecoding/epg/epgdecode.h \
 	../common/datadecoding/epg/EPG.cpp \
@@ -186,7 +212,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
-	moc/moc_MDI.cpp
+	moc/moc_PacketSocketQT.cpp
 
 # and should be cleaned by make clean
 
@@ -205,9 +231,9 @@ moc/moc_DRMPlot.cpp: ../common/GUI-QT/DRMPlot.h
 moc/moc_DialogUtil.cpp: ../common/GUI-QT/DialogUtil.h
 	$(MOC) ../common/GUI-QT/DialogUtil.h -o moc/moc_DialogUtil.cpp
 
-moc/moc_MDI.cpp: ../common/MDI.h
-	$(MOC) ../common/MDI.h -o moc/moc_MDI.cpp
-	
+moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
+	$(MOC) ../common/MDI/PacketSocketQT.h -o moc/moc_PacketSocketQT.cpp
+
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp
@@ -358,5 +384,3 @@ endif
 
 
 drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT
-
-

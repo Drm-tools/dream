@@ -40,7 +40,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\LiveScheduleDlg.h -o moc\moc_LiveScheduleDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\AnalogDemDlg.h -o moc\moc_AnalogDemDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\EPGDlg.h -o moc\moc_EPGDlg.cpp
-%qtdir%\bin\moc.exe ..\common\MDI.h -o moc\moc_MDI.cpp
+%qtdir%\bin\moc.exe ..\common\MDI\PacketSocketQT.h -o moc\moc_PacketSocketQT.cpp
 
 
 rem .ui -------------

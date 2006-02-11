@@ -33,7 +33,7 @@
 #include "../util/Modul.h"
 #include "../matlib/Matlib.h"
 #include "../util/Utilities.h"
-
+#include "../MDI/MDI.h"
 
 /* Definitions ****************************************************************/
 /* Bound for peak detection between filtered signal (in frequency direction) 
@@ -73,7 +73,7 @@
 class CFreqSyncAcq : public CReceiverModul<_REAL, _COMPLEX>
 {
 public:
-	CFreqSyncAcq() : bSyncInput(FALSE), bAquisition(FALSE), 
+	CFreqSyncAcq(CMDI *pNM) : pMDI(pNM), bSyncInput(FALSE), bAquisition(FALSE), 
 		rWinSize((_REAL) SOUNDCRD_SAMPLE_RATE / 2),
 		veciTableFreqPilots(3), /* 3 freqency pilots */
 		rCenterFreq((_REAL) SOUNDCRD_SAMPLE_RATE / 4), bUseRecFilter(FALSE) {}
@@ -132,6 +132,11 @@ protected:
 
 	CDRMBandpassFilt			BPFilter;
 	_BOOLEAN					bUseRecFilter;
+
+	/* OPH: counter to count symbols within a frame in order to generate */
+	/* RSCI output even when unlocked */
+	int							iFreeSymbolCounter;
+	CMDI						*pMDI;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

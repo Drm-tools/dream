@@ -425,9 +425,12 @@ CHamlib::CHamlib() : pRig(NULL), bModRigSettings(FALSE) ,iHamlibModelID(0),
 
 #ifdef RIG_MODEL_AR7030
 	/* AOR 7030 */
+//	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
+//		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
+//		"l_AGC=3"));
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_AR7030,
-		"m_CW=9500,l_IF=-4200,l_AGC=3", 5 /* kHz frequency offset */,
-		"l_AGC=3"));
+		"m_AM=3,l_AGC=5", 0 /* kHz frequency offset */,
+		"m_AM=2,l_AGC=5"));
 #endif
 
 #ifdef RIG_MODEL_ELEKTOR304

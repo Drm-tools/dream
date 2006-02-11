@@ -172,10 +172,6 @@ SOURCE=.\moc\moc_LiveScheduleDlgbase.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\moc\moc_MDI.cpp
-# End Source File
-# Begin Source File
-
 SOURCE=.\moc\moc_MultColorLED.cpp
 # End Source File
 # Begin Source File
@@ -185,6 +181,10 @@ SOURCE=.\moc\moc_MultimediaDlg.cpp
 # Begin Source File
 
 SOURCE=.\moc\moc_MultimediaDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_PacketSocketQT.cpp
 # End Source File
 # Begin Source File
 
@@ -492,11 +492,63 @@ SOURCE=..\common\util\CRC.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\LogPrint.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\Settings.cpp
 # End Source File
 # Begin Source File
 
 SOURCE=..\common\util\Utilities.cpp
+# End Source File
+# End Group
+# Begin Group "Source MDI"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\MDI\MDIConcrete.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDIInBuffer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDITagItemDecoders.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDITagItems.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDITagPacketDecoder.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\PacketSocketNull.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\PacketSocketQT.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\RSCITagItemDecoders.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\TagPacketDecoder.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\TagPacketDecoderRSCIControl.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\TagPacketGenerator.cpp
 # End Source File
 # End Group
 # Begin Source File
@@ -542,10 +594,6 @@ SOURCE=..\common\DrmTransmitter.cpp
 # Begin Source File
 
 SOURCE=..\common\InputResample.cpp
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\MDI.cpp
 # End Source File
 # Begin Source File
 
@@ -849,6 +897,10 @@ SOURCE=..\common\util\CRC.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\LogPrint.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\util\Modul.h
 # End Source File
 # Begin Source File
@@ -862,6 +914,74 @@ SOURCE=..\common\util\Utilities.h
 # Begin Source File
 
 SOURCE=..\common\util\Vector.h
+# End Source File
+# End Group
+# Begin Group "Header MDI"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\MDI\MDI.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDIConcrete.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDIDefinitions.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDIInBuffer.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDINull.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDITagItemDecoders.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDITagItems.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\MDITagPacketDecoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\PacketInOut.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\PacketSocketNull.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\PacketSocketQT.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\RSCITagItemDecoders.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\TagItemDecoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\TagPacketDecoder.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\TagPacketDecoderRSCIControl.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\TagPacketGenerator.h
 # End Source File
 # End Group
 # Begin Source File
@@ -915,10 +1035,6 @@ SOURCE=..\common\InputResample.h
 # Begin Source File
 
 SOURCE=..\common\IQInputFilter.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\MDI.h
 # End Source File
 # Begin Source File
 

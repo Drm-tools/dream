@@ -31,7 +31,6 @@
 
 #include "FreqSyncAcq.h"
 
-
 /* Implementation *************************************************************/
 void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 {
@@ -44,8 +43,18 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 	_BOOLEAN	bNoPeaksLeft;
 	CRealVector	vecrPSDPilPoin(3);
 
+	/* OPH: update free-running symbol counter */
+	iFreeSymbolCounter++;
+	if (iFreeSymbolCounter >= ReceiverParam.iNumSymPerFrame)
+	{
+		iFreeSymbolCounter = 0;
+		/* Send message to MDI to indicate another frame's worth of data have been received */
+		pMDI->SendUnlockedFrame(ReceiverParam);
+	}
+
 	if (bAquisition == TRUE)
 	{
+
 		/* Do not transfer any data to the next block if no frequency
 		   acquisition was successfully done */
 		iOutputBlockSize = 0;
@@ -348,6 +357,7 @@ fclose(pFile1);
 		/* Bandpass filter -------------------------------------------------- */
 		if (bUseRecFilter == TRUE)
 			BPFilter.Process(*pvecOutputData);
+
 	}
 }
 
@@ -456,6 +466,9 @@ void CFreqSyncAcq::InitInternal(CParameter& ReceiverParam)
 	   the whole FFT buffer after finishing the frequency acquisition so that
 	   these samples can be reused for synchronization and do not get lost */
 	iMaxOutputBlockSize = 3 * ReceiverParam.iSymbolBlockSize + iHistBufSize;
+
+	/* OPH: init free-running symbol counter */
+	iFreeSymbolCounter = 0;
 }
 
 void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)

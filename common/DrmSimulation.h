@@ -47,6 +47,7 @@
 #include "sync/TimeSync.h"
 #include "sync/SyncUsingPil.h"
 #include "drmchannel/ChannelSimulation.h"
+#include "MDI/MDINull.h"
 
 
 
@@ -148,6 +149,9 @@ protected:
 	CIdealChanEst			IdealChanEst;
 
 	CDataConvChanResam		DataConvChanResam;
+
+	/* Dummy MDI */
+	CMDINull				MDI;
 };
 
 

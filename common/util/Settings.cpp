@@ -903,7 +903,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
-
+#endif
 		/* MDI out address -------------------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "--mdioutadr", "--mdioutadr",
 			strArgument) == TRUE)
@@ -913,6 +913,14 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		}
 
 
+		/* MDI out profile */
+		if (GetStringArgument(argc, argv, i, "--mdiprofile", "--mdiprofile",
+			strArgument) == TRUE)
+		{
+			pDRMRec->GetMDI()->SetProfile(strArgument[0]);
+			continue;
+		}
+
 		/* MDI in port number ----------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "--mdiinport", "--mdiinport", 0,
 			MAX_MDI_PORT_IN_NUM, rArgument) == TRUE)
@@ -921,6 +929,13 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+		/* OPH: RSCI control data input port number */
+		if (GetNumericArgument(argc, argv, i, "--rsciinport", "--rsciinport", 0,
+			MAX_MDI_PORT_IN_NUM, rArgument) == TRUE)
+		{
+			pDRMRec->GetMDI()->SetNetwInPortRSCI((int) rArgument);
+			continue;
+		}
 
 		/* MDI in multi cast params ------------------------------------------ */
 		if (GetStringArgument(argc, argv, i, "--mdiinmreq", "--mdiinmreq",
@@ -929,7 +944,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			pDRMRec->GetMDI()->SetNetwInMcast(strArgument);
 			continue;
 		}
-#endif
+
 
 #ifdef HAVE_LIBHAMLIB
 		/* Hamlib config string --------------------------------------------- */
@@ -1056,12 +1071,16 @@ string CSettings::UsageArguments(char** argv)
 		"                              0: blue-white (default)\n"
 		"                              1: green-black\n"
 		"                              2: black-grey\n"
+#endif
 		"  --mdioutadr <s>             MDI out network address\n"
 		"                              format [IP#]:[port]\n"
+		"  --mdiprofile <s>            MDI/RSCI output profile: A|B|C|D|Q|M\n"
 		"  --mdiinport <n>             set MDI in port number\n"
 		"  --mdiinmreq <s>             MDI in multicast group address and\n"
 		"                              interface format [IP#]:[IP#]\n"
-#endif
+		"  --rsciinport <n>            set RSCI control input port number\n"
+
+
 
 		"  -I <n>, --snddevin <n>      set sound in device\n"
 		"  -O <n>, --snddevout <n>     set sound out device\n"

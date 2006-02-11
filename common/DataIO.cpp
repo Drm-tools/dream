@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2006
  *
  * Author(s):
  *	Volker Fischer
@@ -556,11 +556,11 @@ void CGenSimData::SetNumErrors(int iNewNE, string strNewFileName)
 
 void CEvaSimData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	uint32_t		iTempShiftRegister1;
-	_BINARY			biPRBSbit;
-	uint32_t		iShiftRegister;
-	int				iNumBitErrors;
-	int				i;
+	uint32_t	iTempShiftRegister1;
+	_BINARY		biPRBSbit;
+	uint32_t	iShiftRegister;
+	int			iNumBitErrors;
+	int			i;
 
 	/* -------------------------------------------------------------------------
 	   Generate a pseudo-noise test-signal (PRBS) for comparison with
@@ -641,15 +641,10 @@ void CGenerateFACData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-#ifdef USE_QT_GUI
 	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
 	   in case of simulation because in this case there is no MDI) */
 	if (pMDI != NULL)
 	{
-		/* Only put data in MDI object if MDI is enabled */
-		if (pMDI->GetMDIOutEnabled() == TRUE)
-			pMDI->SetFACData(*pvecInputData, ReceiverParam);
-
 		/* Check if MDI in is enabled and query data if enabled */
 		if (pMDI->GetMDIInEnabled() == TRUE)
 		{
@@ -657,7 +652,6 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 			ReceiverParam.SetWaveMode(pMDI->GetFACData(*pvecInputData));
 		}
 	}
-#endif
 
 	/* Do not use received FAC data in case of simulation */
 	if (bSyncInput == FALSE)
@@ -680,6 +674,16 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& ReceiverParam)
 		}
 	}
 
+	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
+	   in case of simulation because in this case there is no MDI) */
+	if (pMDI != NULL)
+	{
+		/* Only put data in MDI object if MDI is enabled */
+		if (pMDI->GetMDIOutEnabled() == TRUE)
+			pMDI->SetFACData(bCRCOk, *pvecInputData, ReceiverParam);
+	}
+
+	
 	if ((bSyncInput == TRUE) || (bCRCOk == FALSE))
 	{
 		/* If FAC CRC check failed we should increase the frame-counter 
@@ -727,15 +731,10 @@ void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 {
-#ifdef USE_QT_GUI
 	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
 	   in case of simulation because in this case there is no MDI) */
 	if (pMDI != NULL)
 	{
-		/* Only put data in MDI object if MDI is enabled */
-		if (pMDI->GetMDIOutEnabled() == TRUE)
-			pMDI->SetSDCData(*pvecInputData);
-
 		/* Check if MDI in is enabled and query data if enabled */
 		if (pMDI->GetMDIInEnabled() == TRUE)
 		{
@@ -743,13 +742,15 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 			pMDI->GetSDCData(*pvecInputData);
 		}
 	}
-#endif
+
+	_BOOLEAN bSDCOK = FALSE;
 
 	/* Decode SDC block and return CRC status */
 	switch (SDCReceive.SDCParam(pvecInputData, ReceiverParam))
 	{
 	case CSDCReceive::SR_OK:
 		PostWinMessage(MS_SDC_CRC, 0); /* Green light */
+		bSDCOK = TRUE;
 		break;
 
 	case CSDCReceive::SR_BAD_CRC:
@@ -769,6 +770,15 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& ReceiverParam)
 		/* CRC was ok but data seems to be incorrect */
 		PostWinMessage(MS_SDC_CRC, 1); /* Yellow light */
 		break;
+	}
+
+	/* MDI (check that the pointer to the MDI object is not NULL. It can be NULL
+	   in case of simulation because in this case there is no MDI) */
+	if (pMDI != NULL)
+	{
+			/* Only put data in MDI object if MDI is enabled */
+		if (pMDI->GetMDIOutEnabled() == TRUE)
+			pMDI->SetSDCData(bSDCOK, *pvecInputData);
 	}
 
 	/* Reset "first block" flag */

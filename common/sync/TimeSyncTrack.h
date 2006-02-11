@@ -103,6 +103,12 @@ public:
 
 	void SetTiSyncTracType(ETypeTiSyncTrac eNewTy);
 	ETypeTiSyncTrac GetTiSyncTracType() {return TypeTiSyncTrac;}
+ 
+	/* OPH: calculation of delay and doppler using RSCI method */
+	CRealVector& CalculateRdel(CParameter& Parameter);
+	CRealVector& GetRdelThresholds() {return vecrRdelThresholds;}
+	_REAL CalculateRdop(CParameter& Parameter);
+
 
 protected:
 	CComplexVector			veccPilots;
@@ -150,6 +156,11 @@ protected:
 	int						iOldNonZeroDiff;
 
 	CReal GetSamOffHz(int iDiff, int iLen);
+
+	/* O.Haffenden variables for rdop and rdel calculation */
+	CComplexVector			veccOldImpulseResponse;
+	CRealVector vecrRdelThresholds;
+	CRealVector vecrRdelIntervals;
 };
 
 

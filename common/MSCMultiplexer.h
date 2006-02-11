@@ -35,7 +35,7 @@
 #include "util/Modul.h"
 #include "util/Vector.h"
 #ifdef USE_QT_GUI
-# include "MDI.h"
+# include "MDI/MDI.h"
 #endif
 
 

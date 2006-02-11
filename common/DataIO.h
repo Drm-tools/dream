@@ -40,7 +40,7 @@
 #include "util/AudioFile.h"
 #include "util/Utilities.h"
 #ifdef USE_QT_GUI
-# include "MDI.h"
+# include "MDI/MDI.h"
 #endif
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
@@ -48,7 +48,6 @@
 # include "source/sound.h"
 #endif
 #include <time.h>
-
 
 /* Definitions ****************************************************************/
 /* In case of random-noise, define number of blocks */

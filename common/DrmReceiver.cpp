@@ -34,7 +34,6 @@
 
 #include "DrmReceiver.h"
 
-
 /* Implementation *************************************************************/
 void CDRMReceiver::Run()
 {

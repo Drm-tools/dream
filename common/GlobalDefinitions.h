@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2006
  *
  * Author(s):
  *	Volker Fischer
@@ -49,7 +49,7 @@ using namespace std; /* Because of the library: "complex" */
 #undef _DEBUG_
 
 #ifndef VERSION
-# define VERSION						"1.6.1cvs"
+# define VERSION						"1.6.2cvs"
 #endif
 
 
@@ -185,6 +185,8 @@ enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
 /* Constants ---------------------------------------------------------------- */
 const _REAL crPi = ((_REAL) 3.14159265358979323846);
 
+
+#define S9_DBUV 34.0 /* S9 in dBuV for converting HamLib S-meter readings to RSCI format */
 
 /* Define a number for the case: log10(0), which would lead to #inf */
 #define RET_VAL_LOG_0					((_REAL) -200.0)

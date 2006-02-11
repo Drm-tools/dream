@@ -3,7 +3,7 @@
  * Copyright (c) 2001
  *
  * Author(s):
- *	Volker Fischer, Andrew Murphy, Andrea Russo
+ *	Volker Fischer, Andrew Murphy, Andrea Russo, Oliver Haffenden
  *
  * Description:
  *	See DrmReceiver.cpp
@@ -32,7 +32,9 @@
 #if !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
 #define DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
+#include "GlobalDefinitions.h"
 #include <iostream>
+#include "MDI/MDIConcrete.h" /* OPH: need this near the top so winsock2 is included before winsock */
 #include "Parameter.h"
 #include "util/Buffer.h"
 #include "util/Utilities.h"
@@ -52,9 +54,6 @@
 #include "sync/SyncUsingPil.h"
 #include "AMDemodulation.h"
 #include "AMSSDemodulation.h"
-#ifdef USE_QT_GUI
-# include "MDI.h"
-#endif
 #ifdef _WIN32
 # include "../../Windows/source/sound.h"
 #else
@@ -105,11 +104,9 @@ public:
 		vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
 		veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iAvCntParamHist(0),
 		rAvLenIRHist((_REAL) 0.0), rAvDopplerHist((_REAL) 0.0),
-		rAvSNRHist((_REAL) 0.0), iCurrentCDAud(0)
-
-#ifdef USE_QT_GUI
-		, UtilizeFACData(&MDI), UtilizeSDCData(&MDI), MSCDemultiplexer(&MDI)
-#endif
+		rAvSNRHist((_REAL) 0.0), iCurrentCDAud(0),
+		UtilizeFACData(&MDI), UtilizeSDCData(&MDI), MSCDemultiplexer(&MDI),
+		ChannelEstimation(&MDI), AudioSourceDecoder(&MDI), FreqSyncAcq(&MDI)
 #if defined(USE_QT_GUI) || defined(_WIN32)
 		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
 		iSecondsPreview(0), iSecondsPreviewLiveSched(0), bShowAllStations(TRUE),
@@ -123,7 +120,8 @@ public:
 		SortParamLiveSched(0, FALSE), /* sort by frequency */
 		FontParamMMDlg("", 1, 0, FALSE)
 #endif
-		{}
+	{MDI.SetDRMReceiver(this);}  /* OPH: ideally this would be done in the initialiser but passing 'this' is unsafe there */
+
 	virtual ~CDRMReceiver() {}
 
 	/* For GUI */
@@ -159,9 +157,7 @@ public:
 	CAMSSDecode*			GetAMSSDecode() {return &AMSSDecode;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
-#ifdef USE_QT_GUI
 	CMDI*					GetMDI() {return &MDI;}
-#endif
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 #endif
@@ -363,9 +359,7 @@ protected:
 
 	CSound					SoundInterface;
 
-#ifdef USE_QT_GUI
-	CMDI					MDI;
-#endif
+	CMDIConcrete			MDI; /* OPH: This can be instantiated even without QT */
 
 	_BOOLEAN				bDoInitRun;
 

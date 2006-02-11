@@ -1,6 +1,6 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2006
  *
  * Author(s):
  *	Volker Fischer
@@ -385,7 +385,7 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 	}
 
 
-	/* WMER on MSC cells estimation ----------------------------------------- */
+	/* OPH: WMER, WMM and WMF estimation ------------------------------------ */
 	for (i = 0; i < iNumCarrier; i++)
 	{
 		/* Use MSC cells for this SNR estimation method */
@@ -419,6 +419,70 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 			/* Calculate MER on MSC cells */
 			IIR1(rNoiseEstMSCMER, rCurErrPow, rLamSNREstFast);
+
+			/* OPH: Update accumulators for RSCI MERs */
+			rNoiseEstMERAcc += rCurErrPow;
+			rNoiseEstWMMAcc += rCurErrPow * vecrSqMagChanEst[i];
+			rSignalEstWMMAcc += vecrSqMagChanEst[i];
+			iCountMERAcc ++;
+		}
+		else if (_IsFAC(ReceiverParam.matiMapTab[iModSymNum][i]))
+		{
+			/* Update accumulators for RSCI WMF */
+			CReal rCurErrPow = SqMag(MinDist4QAM((*pvecOutputData)[i].cSig));
+			rNoiseEstWMFAcc += rCurErrPow * vecrSqMagChanEst[i];
+			rSignalEstWMFAcc += vecrSqMagChanEst[i];
+		}
+	}
+
+	/* After processing last symbol of the frame */
+	if (iModSymNum == iNumSymPerFrame - 1)
+	{
+		/* Calculate and generate RSCI tags */
+		/* rmer */
+		CReal rMER =
+			CalAndBoundSNR(AV_DATA_CELLS_POWER, rNoiseEstMERAcc / iCountMERAcc);
+
+		/* Bound MER at 0 dB */
+		rMER = (rMER > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rMER) : (_REAL) 0.0);
+
+		/* rwmm */
+		CReal rWMM = AV_DATA_CELLS_POWER *
+			CalAndBoundSNR(rSignalEstWMMAcc, rNoiseEstWMMAcc);
+
+		/* Bound the MER at 0 dB */
+		rWMM = (rWMM > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMM) : (_REAL) 0.0);
+
+		/* rwmf */
+		CReal rWMF = AV_DATA_CELLS_POWER *
+			CalAndBoundSNR(rSignalEstWMFAcc, rNoiseEstWMFAcc);
+
+		/* Bound the MER at 0 dB */
+		rWMF = (rWMF > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rWMF) : (_REAL) 0.0);
+
+		/* Reset all the accumulators and counters */
+		rNoiseEstMERAcc = (_REAL) 0.0;
+		iCountMERAcc = 0;
+		rSignalEstWMMAcc = (_REAL) 0.0;
+		rNoiseEstWMMAcc = (_REAL) 0.0;
+		rSignalEstWMFAcc = (_REAL) 0.0;
+		rNoiseEstWMFAcc = (_REAL) 0.0;
+
+		/* Save CPU by omitting calculations if MDI (RSCI) output not enabled */
+		if (pMDI != NULL && pMDI->GetMDIOutEnabled())
+		{
+			CReal rIntFreq=0, rINR=0, rICR=0;
+
+			pMDI->SetMERs(rMER, rWMM, rWMF);
+
+			pMDI->SetRDEL(TimeSyncTrack.GetRdelThresholds(),
+				TimeSyncTrack.CalculateRdel(ReceiverParam));
+
+			pMDI->SetRDOP(TimeSyncTrack.CalculateRdop(ReceiverParam));
+
+			/* Calculate interference tag */
+			CalculateRint(ReceiverParam, rIntFreq, rINR, rICR);
+			pMDI->SetInterference(rIntFreq, rINR, rICR);
 		}
 	}
 
@@ -435,6 +499,45 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				CalAndBoundSNR(vecrSigEstMSC[i], vecrNoiseEstMSC[i]);
 		}
 	}
+}
+
+/* OPH: Calculate the values for the rint RSCI tag */
+void CChannelEstimation::CalculateRint(CParameter& ReceiverParam,
+									   CReal &rIntFreq, CReal &rINR,
+									   CReal &rICR)
+{
+	CReal rMaxNoiseEst = (CReal) 0.0;
+	CReal rSumNoiseEst = (CReal) 0.0;
+	CReal rSumSigEst  = (CReal) 0.0;
+	int iMaxIntCarrier = 0;
+
+	/* Find peak noise and add up noise and signal estimates */
+	for (int i = 0; i < iNumCarrier; i++)
+	{
+		CReal rNoiseEstMSC = vecrNoiseEstMSC[i];
+		if (rNoiseEstMSC> rMaxNoiseEst) 
+		{
+			rMaxNoiseEst = rNoiseEstMSC;
+			iMaxIntCarrier = i;
+		}
+		rSumNoiseEst += rNoiseEstMSC;
+		rSumSigEst += vecrSigEstMSC[i];
+	}
+
+	/* Interference to noise ratio */
+	rINR = CalAndBoundSNR(rMaxNoiseEst, rSumNoiseEst / iNumCarrier);
+	rINR = (rINR > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rINR) : (_REAL) 0.0);
+
+	/* Interference to (single) carrier ratio */
+	rICR = CalAndBoundSNR(rMaxNoiseEst,
+		AV_DATA_CELLS_POWER * rSumSigEst/iNumCarrier);
+
+
+	rICR = (rICR > (_REAL) 1.0 ? (_REAL) 10.0 * log10(rICR) : (_REAL) 0.0);
+		
+	/* Interferer frequency */
+	rIntFreq = ((_REAL) iMaxIntCarrier + ReceiverParam.iCarrierKmin) /
+		ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
 }
 
 void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
