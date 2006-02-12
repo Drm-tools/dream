@@ -45,6 +45,7 @@ public:
 
 protected:
 	virtual string GetTagName(void) = 0; // Return the tag name
+	virtual string GetProfiles(void) = 0;
 
 	// Prepare vector and make the header
 	void PrepareTag(const int iLenDataBits);
@@ -61,7 +62,9 @@ class CTagItemGeneratorWithProfiles : public CTagItemGenerator
 public:
 	CTagItemGeneratorWithProfiles(void);
 	_BOOLEAN IsInProfile(char cProfile);
-private:
+protected:
+	virtual string GetTagName(void) {return "";}
+//private:
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
 };
 
@@ -156,7 +159,9 @@ class CTagItemGeneratorMERFormat : public CTagItemGeneratorWithProfiles
 {
 public:
 	void GenTag(const _BOOLEAN bIsValid, const _REAL rMER);
-	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
+protected:
+	virtual string GetTagName(void) {return "";}
+	virtual string GetProfiles(void) {return "";} // Return a string containing the set of profiles for this tag
 };
 
 class CTagItemGeneratorRWMF : public CTagItemGeneratorMERFormat /* RWMF tag */
