@@ -47,6 +47,8 @@
 #include <qwhatsthis.h>
 #include <qlabel.h>
 #include <qwt_thermo.h>
+#include <qfileinfo.h>
+#include <qdatetime.h>
 
 #ifdef _WIN32
 # include "../../Windows/moc/StationsDlgbase.h"
@@ -209,6 +211,7 @@ protected:
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
 	void			EnableSMeter(const _BOOLEAN bStatus);
+	void			AddUpdateDateTime();
 
 	CDRMReceiver*				pDRMRec;
 
@@ -224,6 +227,7 @@ protected:
 	QUrlOperator				UrlUpdateSchedule;
 	QPopupMenu*					pViewMenu;
 	QPopupMenu*					pPreviewMenu;
+	QPopupMenu*					pUpdateMenu;
 
 	CVector<MyListViewItem*>	vecpListItems;
 	CMutex						ListItemsMutex;

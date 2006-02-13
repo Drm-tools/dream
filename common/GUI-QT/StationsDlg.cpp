@@ -604,10 +604,9 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 
 	/* Update menu ---------------------------------------------------------- */
-	QPopupMenu* pUpdateMenu = new QPopupMenu(this);
+	pUpdateMenu = new QPopupMenu(this);
 	CHECK_PTR(pUpdateMenu);
-	pUpdateMenu->insertItem(tr("&Get Update..."), this, SLOT(OnGetUpdate()));
-
+	pUpdateMenu->insertItem(tr("&Get Update..."), this, SLOT(OnGetUpdate()), 0, 0);
 
 	/* Main menu bar -------------------------------------------------------- */
 	QMenuBar* pMenu = new QMenuBar(this);
@@ -616,7 +615,7 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 #ifdef HAVE_LIBHAMLIB
 	pMenu->insertItem(tr("&Remote"), pRemoteMenu);
 #endif
-	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Udate" used below */
+	pMenu->insertItem(tr("&Update"), pUpdateMenu); /* String "Update" used below */
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
@@ -747,6 +746,32 @@ void StationsDlg::OnShowPreviewMenu(int iID)
 	pPreviewMenu->setItemChecked(3, 3 == iID);
 }
 
+void StationsDlg::AddUpdateDateTime()
+{
+QString strFile;
+
+	switch (DRMSchedule.GetSchedMode())
+	{
+		case CDRMSchedule::SM_DRM:
+			strFile = DRMSCHEDULE_INI_FILE_NAME;
+			break;
+
+		case CDRMSchedule::SM_ANALOG:
+			strFile = AMSCHEDULE_INI_FILE_NAME;
+			break;
+	}
+
+	QString s = "";
+
+	QFileInfo f = QFileInfo(strFile);
+
+	if (f.exists())
+		s = " " + tr("last update ")
+			+ f.lastModified().date().toString();
+
+	pUpdateMenu->changeItem(tr("&Get Update...") + s, 0);
+}
+
 void StationsDlg::OnGetUpdate()
 {
 	if (QMessageBox::information(this, tr("Dream Schedule Update"),
@@ -844,6 +869,9 @@ void StationsDlg::showEvent(QShowEvent* pEvent)
 	/* Activate real-time timer when window is shown */
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
+
+	/* add last update information on menu item */
+	AddUpdateDateTime();
 }
 
 void StationsDlg::OnTimerList()
@@ -932,6 +960,10 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 
 	/* Update list view */
 	SetStationsView();
+
+	/* Add last update information on menu item if the dialog is visible */
+	if (this->isVisible())
+		AddUpdateDateTime();
 }
 
 void StationsDlg::SetStationsView()
