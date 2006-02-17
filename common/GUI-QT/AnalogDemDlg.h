@@ -60,7 +60,6 @@
 #include "../util/Vector.h"
 #include "../DrmReceiver.h"
 #include "../tables/TableAMSS.h"
-#include "GUIUtilities.h"
 
 
 /* Definitions ****************************************************************/

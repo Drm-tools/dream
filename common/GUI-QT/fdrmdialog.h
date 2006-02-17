@@ -55,7 +55,7 @@
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
-#include "GUIUtilities.h"
+
 
 /* Define for application type EPG */
 #define AT_MOTEPG 	7

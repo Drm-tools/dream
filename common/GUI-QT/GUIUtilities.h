@@ -27,22 +27,4 @@
  *
 \******************************************************************************/
 
-#ifndef _GUIUTILITIES_H
-#define _GUIUTILITIES_H
-
-#include <qwidget.h>
-
-inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
-{
-QString sTitle = "";
-
-#ifdef _MSC_VER
-	#if QT_VERSION == 230
-		sTitle.fill(' ', 10000);
-		sTitle += "Qt";
-	#endif
-#endif
-	pDlg->setCaption(sCap + sTitle);
-}
-
-#endif
+// to be removed

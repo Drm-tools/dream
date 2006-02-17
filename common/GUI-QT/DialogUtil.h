@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2005
+ * Copyright (c) 2001-2006
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrea Russo
  *
  * Description:
  *	
@@ -43,7 +43,7 @@
 #endif
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
-#include "GUIUtilities.h"
+
 
 /* Classes ********************************************************************/
 /* DRM events --------------------------------------------------------------- */
@@ -127,6 +127,24 @@ public:
 		return QColor((iValue >> 16) & 255, (iValue >> 8) & 255, iValue & 255);
 	}
 };
+
+
+inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
+{
+	/* Under Windows it does seem that QT only sets the caption if a "Qt" is
+	   present in the name. Make a little "trick" to display our desired
+	   name without seeing the "Qt" (by Andrea Russo) */
+	QString sTitle = "";
+
+#ifdef _MSC_VER
+# if QT_VERSION == 230
+	sTitle.fill(' ', 10000);
+	sTitle += "Qt";
+# endif
+#endif
+
+	pDlg->setCaption(sCap + sTitle);
+}
 
 
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
