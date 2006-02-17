@@ -657,10 +657,6 @@ SOURCE="..\common\GUI-QT\fdrmdialog.h"
 # End Source File
 # Begin Source File
 
-SOURCE="..\common\GUI-QT\GuiUtilities.h"
-# End Source File
-# Begin Source File
-
 SOURCE="..\common\GUI-QT\LiveScheduleDlg.h"
 # End Source File
 # Begin Source File
