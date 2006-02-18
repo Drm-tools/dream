@@ -166,13 +166,17 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
 		this, SLOT(OnTimerPLLPhaseDial()));
 
-	/* Activte real-time timers */
+	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 }
 
 void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 {
+	/* Activate real-time timers */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
+	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+
 	/* Open AMSS window */
 	AMSSDlg.show();
 	
@@ -181,6 +185,10 @@ void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 
 void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
 {
+	/* stop real-time timers */
+	Timer.stop();
+	TimerPLLPhaseDial.stop();
+
 	/* Close AMSS window */
 	AMSSDlg.hide();
 
@@ -714,7 +722,7 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerPLLPhaseDial, SIGNAL(timeout()),
 		this, SLOT(OnTimerPLLPhaseDial()));
 
-	/* Activte real-time timers */
+	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 
@@ -723,6 +731,10 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 void CAMSSDlg::hideEvent(QHideEvent* pEvent)
 {
+	/* stop real-time timers */
+	Timer.stop();
+	TimerPLLPhaseDial.stop();
+
 	/* Set window geometry data in DRMReceiver module */
 	QRect WinGeom = geometry();
 
@@ -730,6 +742,13 @@ void CAMSSDlg::hideEvent(QHideEvent* pEvent)
 	pDRMRec->GeomAMSSDlg.iYPos = WinGeom.y();
 	pDRMRec->GeomAMSSDlg.iHSize = WinGeom.height();
 	pDRMRec->GeomAMSSDlg.iWSize = WinGeom.width();
+}
+
+void CAMSSDlg::showEvent(QShowEvent* pEvent)
+{
+	/* Activate real-time timers */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
+	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 }
 
 void CAMSSDlg::OnTimer()

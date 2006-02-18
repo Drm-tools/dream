@@ -84,6 +84,7 @@ protected:
 	QTimer			TimerPLLPhaseDial;
 	void			AddWhatsThisHelp();
 	virtual void	hideEvent(QHideEvent* pEvent);
+    virtual void	showEvent(QShowEvent* pEvent);
 
 public slots:
 	void OnTimer();
