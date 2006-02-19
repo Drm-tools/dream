@@ -537,6 +537,9 @@ void MultimediaDlg::SetSlideShowPicture()
 			"save it to file and use an external viewer") + "</center>");
 	}
 
+	/* Remove previous tool tip */
+	QToolTip::remove(TextBrowser);
+
 	/* Add tool tip showing the name of the picture */
 	if (imagename.length() != 0)
 		QToolTip::add(TextBrowser,imagename);
