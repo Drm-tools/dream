@@ -320,7 +320,7 @@ void FDRMDialog::OnTimer()
                    pDRMRec->GetParameters()->Service[iCurSelAudioServ]
                    .AudioParam.strTextMessage.c_str();
             QString textMessage = QString().fromUtf8(utf8Message);
-            QString formattedMessage = "<center>";
+            QString formattedMessage = "";
 			for (int i = 0; i < textMessage.length(); i++)
 			{
 				switch (textMessage.at(i).unicode())
@@ -358,7 +358,7 @@ void FDRMDialog::OnTimer()
                     formattedMessage += textMessage[i];
 				}
 			}
-            formattedMessage += "</center>";
+            formattedMessage = "<center>" + formattedMessage + "</center>";
 			TextTextMessage->setText(formattedMessage);
 		}
 		else
