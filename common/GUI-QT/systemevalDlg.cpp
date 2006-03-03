@@ -1122,14 +1122,9 @@ void systemevalDlg::OnCheckWriteLog()
 		pDRMRec->GetParameters()->ReceptLog.SetLog(FALSE);
 	}
 
-	/* set the focus on frequency edit box and select the text */
-	if (EdtFrequency->isEnabled())
-	{
-		if (!EdtFrequency->hasFocus())
-			EdtFrequency->setFocus();
-
-		EdtFrequency->selectAll();
-	}
+	/* set the focus */
+	if (CheckBoxWriteLog->isEnabled() && !CheckBoxWriteLog->hasFocus())
+		CheckBoxWriteLog->setFocus();
 }
 
 void systemevalDlg::OnTimerLogFileShort()
