@@ -204,7 +204,10 @@ void AnalogDemDlg::showEvent(QShowEvent* pEvent)
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 
 	/* Open AMSS window */
-	AMSSDlg.show();
+	if (pDRMRec->GeomAMSSDlg.bVisible == TRUE)
+		AMSSDlg.show();
+	else
+		AMSSDlg.hide();
 	
 	UpdateControls();
 }
@@ -214,6 +217,8 @@ void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
 	/* stop real-time timers */
 	Timer.stop();
 	TimerPLLPhaseDial.stop();
+
+	pDRMRec->GeomAMSSDlg.bVisible = AMSSDlg.isVisible();
 
 	/* Close AMSS window */
 	AMSSDlg.hide();
@@ -229,6 +234,8 @@ void AnalogDemDlg::hideEvent(QHideEvent* pEvent)
 
 void AnalogDemDlg::closeEvent(QCloseEvent* pEvent)
 {
+	pDRMRec->GeomAMSSDlg.bVisible = AMSSDlg.isVisible();
+
 	/* Close AMSS window */
 	AMSSDlg.hide();
 
