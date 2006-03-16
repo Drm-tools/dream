@@ -116,12 +116,19 @@ const string strTableProgTypCod[LEN_TABLE_PROG_TYPE_CODE_TOT] = {
 
 
 // TODO: the following table can be used for country code decoding
-// FIXME: if the following code is activated, the compiling under Linux takes forever...?
 /* Country code table according to ISO 3166 */
-/*
-#define LEN_TABLE_CNTRY_CODE			240
 
-const string strTableCntryCod[LEN_TABLE_CNTRY_CODE][2] = {
+#define LEN_TABLE_COUNTRY_CODE			240
+
+#define LEN_COUNTRY_CODE				2
+#define MAX_LEN_DESC_COUNTRY_CODE		44
+
+struct elCountry {
+	char	strcode [LEN_COUNTRY_CODE+1];
+	char	strDesc [MAX_LEN_DESC_COUNTRY_CODE+1];
+	};
+ 
+const struct elCountry TableCountryCode[LEN_TABLE_COUNTRY_CODE] = {
 	{"af", "Afghanistan"},
 	{"ax", "Aland Islands"},
 	{"al", "Albania"},
@@ -363,21 +370,20 @@ const string strTableCntryCod[LEN_TABLE_CNTRY_CODE][2] = {
 	{"zm", "Zambia"},
 	{"zw", "Zimbabwe"}
 };
-*/
 
 /* Get country name from ISO 3166 A2 */
-/*
+
 static string GetName(const string strA2)
 {
-	for (int i = 0; i < LEN_TABLE_CNTRY_CODE; i++)
+	for (int i = 0; i < LEN_TABLE_COUNTRY_CODE; i++)
 	{
-		if (!strA2.compare(strTableCntryCod[i][0]))
-			return strTableCntryCod[i][1];
+		if (!strA2.compare(TableCountryCode[i].strcode))
+			return TableCountryCode[i].strDesc;
 	}
 
 	return "";
 }
-*/
+
 
 
 /* CIRAF zones */
