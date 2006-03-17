@@ -1251,6 +1251,7 @@ EPG::select (const QString & chan, const CDateAndTime & d)
 void
 EPG::getFile (CEPGDecoder & epg, const QString & fileName)
 {
+	epg.doc.setContent (QString (""));
     QFile file (fileName);
     if (!file.open (IO_ReadOnly))
       {
