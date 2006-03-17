@@ -198,10 +198,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	}
 
 	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, NULL, "",
+	pAnalogDemDlg = new AnalogDemDlg(pDRMRec, NULL, "Analog Demodulation",
 		FALSE, Qt::WStyle_MinMax);
-
-	SetDialogCaption(pAnalogDemDlg, tr("Analog Demodulation"));
 
 	if (pDRMRec->GeomAnalogDemDlg.bVisible == TRUE)
 		SetReceiverMode(CDRMReceiver::RM_AM);
@@ -456,7 +454,7 @@ void FDRMDialog::OnTimer()
 			if (!strCntryCode.empty())
 			{
 				LabelCountryCode->
-					setText(QString(strCntryCode.c_str()).upper());
+					setText(QString(GetName(strCntryCode).c_str()).stripWhiteSpace());
 			}
 		}
 		else

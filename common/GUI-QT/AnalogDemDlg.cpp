@@ -758,8 +758,6 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
-
-	SetDialogCaption(this, tr("AMSS - AM Signalling System"));
 }
 
 void CAMSSDlg::hideEvent(QHideEvent* pEvent)
