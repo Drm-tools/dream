@@ -61,6 +61,7 @@ void CParameter::ResetServicesStreams()
 		Service[i].DataParam.iPacketID = 0;
 		Service[i].DataParam.iPacketLen = 0;
 		Service[i].DataParam.eAppDomain = AD_DRM_SPEC_APP;
+		Service[i].DataParam.iUserAppIdent = 0;
 
 		Service[i].iServiceID = SERV_ID_NOT_USED;
 		Service[i].eCAIndication = CA_NOT_USED;
