@@ -32,8 +32,7 @@
 \******************************************************************************/
 
 #include "DABMOT.h"
-#include "./epg/mjd.h"
-
+#include "../util/Utilities.h"
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -908,7 +907,10 @@ void
 CDateAndTime::extract_absolute (CVector < _BINARY > &vecbiData)
 {
     vecbiData.Separate (1);	/* rfa */
-    uint32_t mjd = (int) vecbiData.Separate (17);
+   	CModJulDate ModJulDate(vecbiData.Separate (17));
+	day = ModJulDate.GetDay();
+	month = ModJulDate.GetMonth();
+	year = ModJulDate.GetYear();
     vecbiData.Separate (1);	/* rfa */
     lto_flag = (int) vecbiData.Separate (1);
     utc_flag = (int) vecbiData.Separate (1);
@@ -935,7 +937,6 @@ CDateAndTime::extract_absolute (CVector < _BINARY > &vecbiData)
       {
 	  half_hours = 0;
       }
-    MJDtoYMD (&year, &month, &day, mjd);
 }
 
 void

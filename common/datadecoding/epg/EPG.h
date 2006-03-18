@@ -57,12 +57,13 @@ class EPG
       public:
 
 	  CProg(): start(""), duration(""), name(""), description("")
-			  , id(""), mainGenre(""), secondaryGenre(""), otherGenre("")
+			  , id(""), mainGenre(), secondaryGenre(), otherGenre()
 		{}
 		  
 		QString start, duration;
 		QString name, description;
-		QString id, mainGenre, secondaryGenre, otherGenre;
+		QString id;
+		vector<QString> mainGenre, secondaryGenre, otherGenre;
     };
 
     QMap < uint32_t, CProg > progs;
@@ -70,4 +71,6 @@ class EPG
     QMap < QString, QString > genres;
     QString dir, servicesFilename;
     CEPGDecoder basic, advanced;
+private:
+    static const struct gl { char *genre; char* desc; } genre_list[];
 };

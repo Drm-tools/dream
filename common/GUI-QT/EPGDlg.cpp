@@ -130,16 +130,13 @@ void EPGDlg::showEvent(QShowEvent *e)
     // Use the currently receiving channel 
     CParameter* pP = pDRMRec->GetParameters();
     int sNo = pP->GetCurSelAudioService();
-
-	CParameter::CService& s = pDRMRec->GetParameters()->Service[sNo];
-	QString label = s.strLabel.c_str();
-	
-	if ((s.DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG)
+    CParameter::CService& s = pDRMRec->GetParameters()->Service[sNo];
+    QString label = s.strLabel.c_str();
+    if ((s.DataParam.iUserAppIdent == CDataDecoder::AT_MOTEPG)
 		&& (label!=""))
-	{
-		epg.addChannel(label, s.iServiceID);
-	}
-
+    {
+	epg.addChannel(label, s.iServiceID);
+    }
     // use the current date
     date = QDate::currentDate();
     // update the channels combobox from the epg
@@ -242,12 +239,24 @@ void EPGDlg::select()
 	 i != epg.progs.end(); i++)
 	{
 	    const EPG::CProg & p = i.data();
-	    QString name;
-	    if(p.name=="" && p.mainGenre !="")
-          name = "unknown " + p.mainGenre + " programme";
-        else
+	    QString name, genre;
+		if(p.mainGenre.size()==0)
+			genre = "";
+		else
+		{
+			QString sep="";
+			for(int i=0; i<p.mainGenre.size(); i++) {
+				if(p.mainGenre[i] != "Audio only") {
+					genre = genre+sep+p.mainGenre[i];
+					sep = ", ";
+				}
+			}
+		}
+	    if(p.name=="" && p.mainGenre.size()>0)
+		name = "unknown " + p.mainGenre[0] + " programme";
+		else
           name = p.name;
-	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, p.mainGenre, p.description, p.duration);
+	    QListViewItem* CurrItem = new QListViewItem(Data, p.start, name, genre, p.description, p.duration);
 
 		if (date == QDate::currentDate())
 		{
