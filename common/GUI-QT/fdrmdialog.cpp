@@ -454,7 +454,7 @@ void FDRMDialog::OnTimer()
 			if (!strCntryCode.empty())
 			{
 				LabelCountryCode->
-					setText(QString(GetName(strCntryCode).c_str()).stripWhiteSpace());
+					setText(QString(GetName(strCntryCode).c_str()));
 			}
 		}
 		else
