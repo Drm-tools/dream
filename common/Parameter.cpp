@@ -77,6 +77,17 @@ void CParameter::ResetServicesStreams()
 		Stream[i].iLenPartA = 0;
 		Stream[i].iLenPartB = 0;
 	}
+
+	/* Reset alternative frequencies */
+	AltFreqSign.Reset();
+	AltFreqOtherServicesSign.Reset();
+
+	/* Date, time */
+	iDay = 0;
+	iMonth = 0;
+	iYear = 0;
+	iUTCHour = 0;
+	iUTCMin = 0;
 }
 
 int CParameter::GetNumActiveServices()
@@ -570,6 +581,9 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 {
 	if (Service[iServID].iServiceID != iNewServID)
 	{
+		if (Service[iServID].iServiceID > 0)
+			ResetServicesStreams();
+
 		Service[iServID].iServiceID = iNewServID;
 
 		/* Set init flags */

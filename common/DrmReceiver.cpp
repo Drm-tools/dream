@@ -519,15 +519,11 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 	   know how many services are transmitted in the signal we want to
 	   decode */
 
-// TODO: if service 0 is not used but another service is the audio serivce we
+// TODO: if service 0 is not used but another service is the audio service we
 // have a problem. We should check as soon as we have information about services
 // if service 0 is really the audio service
 
 Param.ResetCurSelAudDatServ();
-
-	/* Reset alternative frequencys */
-	Param.AltFreqSign.Reset();
-	Param.AltFreqOtherServicesSign.Reset();
 
 
 	/* Set the following parameters to zero states (initial states) --------- */
@@ -541,13 +537,6 @@ Param.ResetCurSelAudDatServ();
 	/* Number of audio and data services */
 	Param.iNumAudioService = 0;
 	Param.iNumDataService = 0;
-
-	/* Date, time */
-	Param.iDay = 0;
-	Param.iMonth = 0;
-	Param.iYear = 0;
-	Param.iUTCHour = 0;
-	Param.iUTCMin = 0;
 
 	/* We start with FAC ID = 0 (arbitrary) */
 	Param.iFrameIDReceiv = 0;

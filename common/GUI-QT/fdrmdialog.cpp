@@ -456,6 +456,8 @@ void FDRMDialog::OnTimer()
 				LabelCountryCode->
 					setText(QString(GetName(strCntryCode).c_str()));
 			}
+			else
+				LabelCountryCode->setText("");
 		}
 		else
 		{

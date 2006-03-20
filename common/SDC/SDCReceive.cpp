@@ -466,7 +466,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 		return TRUE;
 
 	/* n frequencies: this field carries n 16 bit fields. n is in the
-	   range 1 to 16. The number of frequencies, n, is determined from the
+	   range 0 to 16. The number of frequencies, n, is determined from the
 	   length field of the header and the value of the Service Restriction flag
 	   and the Region/Schedule flag */
 	const int iNumFreq = iNumFreqTmp / 2; /* 16 bits are read */
@@ -1170,7 +1170,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	}
 
 	/* n frequencies: this field carries n, variable length bit fields. n is in
-	   the range 1 to 16. The number of frequencies, n, is determined from the
+	   the range 0 to 16. The number of frequencies, n, is determined from the
 	   length field of the header and the value of the Service Restriction flag
 	   and the Region/Schedule flag */
 	switch (iSystemID)
@@ -1192,7 +1192,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
 	   Restriction field and Region/Schedule field, also check that
 	   remaining number of bytes is devisible by iFrequencyEntryLength since
 	   we read iFrequencyEntryLength * 8 bits) */
-	if ( (iNumFreqTmp <= 0) || ((iNumFreqTmp % iFrequencyEntryLength) != 0) )
+	if ( (iNumFreqTmp < 0) || ((iNumFreqTmp % iFrequencyEntryLength) != 0) )
 		return TRUE;
 
 	/* 16 bits are read */

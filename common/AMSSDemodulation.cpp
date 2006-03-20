@@ -885,7 +885,6 @@ void CAMSSDecode::ResetStatus(CParameter& ReceiverParam)
 	blDataEntityGroupSegmentsReceived.Reset(0);
 
 	ReceiverParam.ResetServicesStreams();
-	ReceiverParam.AltFreqOtherServicesSign.Reset();
 }
 
 
