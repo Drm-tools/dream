@@ -106,6 +106,11 @@
    this is a good value */
 #define MAX_FONT_POINT_SIZE			256
 
+/* Minimum number of seconds for MOT BWS refresh */
+#define MIN_MOT_BWS_REFRESH_TIME	5
+
+/* Miximum number of seconds for MOT BWS refresh */
+#define MAX_MOT_BWS_REFRESH_TIME	1800
 
 /* Classes ********************************************************************/
 class CSettings

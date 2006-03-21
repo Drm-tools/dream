@@ -113,6 +113,7 @@ public:
 		GeomChartWindows(0), bEnableSMeter(TRUE),
 		iSysEvalDlgPlotType(0), strStoragePathMMDlg(""),
 		strStoragePathLiveScheduleDlg(""),
+		iMOTBWSRefreshTime(10),
 		iMainDisplayColor(16711680), /* Red */
 		SortParamAnalog(0, TRUE), /* Sort list by station name  */
 		/* Sort list by transmit power (5th column), most powerful on top */
@@ -274,6 +275,7 @@ public:
 
 	_BOOLEAN	bEnableSMeter;
 	int			iSysEvalDlgPlotType;
+	int			iMOTBWSRefreshTime;
 	string		strStoragePathMMDlg;
 	string		strStoragePathLiveScheduleDlg;
 	int			iMainDisplayColor;

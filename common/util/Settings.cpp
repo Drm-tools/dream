@@ -129,6 +129,10 @@ void CSettings::ReadIniFile()
 	/* Storage path for files saved from Multimedia dialog */
 	pDRMRec->strStoragePathMMDlg = GetIniSetting(ini, "Multimedia dialog", "storagepath");
 
+	/* MOT BWS refresh time for pages saved from Multimedia dialog */
+	if (GetNumericIniSet(ini, "Multimedia dialog", "motbwsrefresh", MIN_MOT_BWS_REFRESH_TIME, MAX_MOT_BWS_REFRESH_TIME, iValue) == TRUE)
+		pDRMRec->iMOTBWSRefreshTime = iValue;
+
 	/* Store font saved from Multimedia dialog */
 	pDRMRec->FontParamMMDlg.strFamily = GetIniSetting(ini, "Multimedia dialog", "fontfamily");
 
@@ -428,6 +432,10 @@ void CSettings::WriteIniFile()
 	/* Storage path for files saved from Multimedia dialog */
 	PutIniSetting(ini, "Multimedia dialog", "storagepath",
 		pDRMRec->strStoragePathMMDlg.c_str());
+
+	/* MOT BWS refresh time for pages saved from Multimedia dialog */
+	SetNumericIniSet(ini, "Multimedia dialog", "motbwsrefresh",
+		pDRMRec->iMOTBWSRefreshTime);
 
 	/* Store font saved from Multimedia dialog */
 	PutIniSetting(ini, "Multimedia dialog", "fontfamily",

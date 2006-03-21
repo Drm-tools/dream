@@ -916,7 +916,9 @@ void MultimediaDlg::AddRefreshHeader(const QString& strFileName)
 	
 	if (pFiBody != NULL)
 	{
-		fputs("<META http-equiv=\"REFRESH\" content=\"10\">", pFiBody);
+		fputs("<META http-equiv=\"REFRESH\" content=\""
+			+ QString::number(pDRMRec->iMOTBWSRefreshTime)
+			+ "\">", pFiBody);
 
 		/* Close the file afterwards */
 		fclose(pFiBody);
