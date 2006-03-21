@@ -581,7 +581,7 @@ void CParameter::SetServID(const int iServID, const uint32_t iNewServID)
 {
 	if (Service[iServID].iServiceID != iNewServID)
 	{
-		if (Service[iServID].iServiceID > 0)
+		if ((iServID == 0) && (Service[0].iServiceID > 0))
 			ResetServicesStreams();
 
 		Service[iServID].iServiceID = iNewServID;
