@@ -163,6 +163,40 @@ int iCIRAF;
 	return strRegions;
 }
 
+string CDRMLiveSchedule::DecodeFrequency(const int iSystemID, const int iFreq)
+{
+	switch (iSystemID)
+	{
+		case 0:
+		case 1:
+		case 2:
+			/* AM or DRM */
+			return QString().setNum(iFreq).latin1();
+
+			break;
+
+		case 3:
+		case 4:
+		case 5:
+			/* 'FM1 frequency' - 87.5 to 107.9 MHz (100 kHz steps) */
+			return QString().setNum((float) (87.5 + 0.1 * iFreq), 10, 1).latin1();
+
+			break;
+
+		case 6:
+		case 7:
+		case 8:
+			/* 'FM2 frequency'- 76.0 to 90.0 MHz (100 kHz steps) */
+			return QString().setNum((float) (76.0 + 0.1 * iFreq), 10, 1).latin1();
+
+			break;
+
+		default:
+			return "";
+			break;
+	}
+}
+
 void CDRMLiveSchedule::LoadAFSInformations(const CParameter::CAltFreqSign AltFreqSign
 		, const CParameter::CAltFreqOtherServicesSign AltFreqOtherServicesSign)
 {
@@ -218,7 +252,7 @@ for (z = 0; z < iSize; z++)
 						CLiveScheduleItem LiveScheduleItem;
 	
 						/* Frequency */
-						LiveScheduleItem.iFreq = AltFreq.veciFrequencies[j];
+						LiveScheduleItem.strFreq = DecodeFrequency(0, AltFreq.veciFrequencies[j]);
 
 						/* Set start time and duration */
 						LiveScheduleItem.iStartTime = AltFreqSign.vecAltFreqSchedules[k].iStartTime;
@@ -250,7 +284,7 @@ for (z = 0; z < iSize; z++)
 			CLiveScheduleItem LiveScheduleItem;
 	
 			/* Frequency */
-			LiveScheduleItem.iFreq = AltFreq.veciFrequencies[j];
+			LiveScheduleItem.strFreq = DecodeFrequency(0, AltFreq.veciFrequencies[j]);
 
 			/* Add the target */
 			LiveScheduleItem.strTarget = strRegions.latin1();
@@ -272,9 +306,9 @@ for (z = 0; z < iSize; z++)
 {
 	CParameter::CAltFreqOtherServicesSign::CAltFreqOtherServices AltFreqOther = AltFreqOtherServicesSign.vecAltFreqOtherServices[z];
 
-	if (AltFreqOther.iSystemID < 3) /* Show only services in kHz on LW MW OC */
+	if (AltFreqOther.iSystemID < 9) /* Don't show DAB services */
 	{
-		/* TODO add also FM and DAB frequencies */
+		/* TODO add DAB frequencies */
 
 		/* TODO same service */
 		//AltFreqOther.bSameService;
@@ -288,6 +322,15 @@ for (z = 0; z < iSize; z++)
 			case 1:
 			case 2:
 				strSystem = "AM";
+				break;
+
+			case 3:
+			case 4:
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+				strSystem = "FM";
 				break;
 
 			default:
@@ -322,7 +365,7 @@ for (z = 0; z < iSize; z++)
 							CLiveScheduleItem LiveScheduleItem;
 	
 							/* Frequency */
-							LiveScheduleItem.iFreq = AltFreqOther.veciFrequencies[j];
+							LiveScheduleItem.strFreq = DecodeFrequency(AltFreqOther.iSystemID, AltFreqOther.veciFrequencies[j]);
 
 							/* Set start time and duration */
 							LiveScheduleItem.iStartTime = AltFreqSign.vecAltFreqSchedules[k].iStartTime;
@@ -354,7 +397,7 @@ for (z = 0; z < iSize; z++)
 				CLiveScheduleItem LiveScheduleItem;
 	
 				/* Frequency */
-				LiveScheduleItem.iFreq = AltFreqOther.veciFrequencies[j];
+				LiveScheduleItem.strFreq = DecodeFrequency(AltFreqOther.iSystemID, AltFreqOther.veciFrequencies[j]);
 
 				/* Add the target */
 				LiveScheduleItem.strTarget = strRegions.latin1();
@@ -416,7 +459,7 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	ListViewStations->clear();
 
 	/* We assume that one column is already there */
-	ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz]"));
+	ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz/MHz]"));
 	ListViewStations->addColumn(tr("System"));
 	ListViewStations->addColumn(tr("Time [UTC]"));
 	ListViewStations->addColumn(tr("Target"));
@@ -725,7 +768,7 @@ void LiveScheduleDlg::SetStationsView()
 			{
 				/* Generate new list item with all necessary column entries */
 				vecpListItems[i] = new MyListLiveViewItem(ListViewStations,
-					QString().setNum(DRMSchedule.GetItem(i).iFreq) /* freq. */,
+					QString(DRMSchedule.GetItem(i).strFreq.c_str()) /* freq. */,
 					QString(DRMSchedule.GetItem(i).strSystem.c_str())   /* system */,
 					ExtractTime(DRMSchedule.GetItem(i).iStartTime) + "-" +
 					ExtractTime(DRMSchedule.GetItem(i).iStartTime + DRMSchedule.GetItem(i).iDuration) /* time */,
@@ -858,7 +901,7 @@ void LiveScheduleDlg::OnSave()
 			"<h4>" + strTitle + "</h4>"
 			"<h3>" + strStationName + "</h3>"
 			"\n<table border=\"1\"><tr>\n"
-			"<th>" + tr("Frequency [kHz]") + "</th>"
+			"<th>" + tr("Frequency [kHz/MHz]") + "</th>"
 			"<th>" + tr("System") + "</th>"
 			"<th>" + tr("Time [UTC]") + "</th>"
 			"<th>" + tr("Target") + "</th>"

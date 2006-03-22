@@ -70,10 +70,10 @@
 class CLiveScheduleItem
 {
 public:
-	CLiveScheduleItem() : iFreq(0), strDaysFlags(""),
+	CLiveScheduleItem() : strFreq(""), strDaysFlags(""),
 		strTarget(""),  iStartTime(0), iDuration(0), strSystem("") {}
 
-	int		iFreq;
+	string		strFreq;
 	string	strTarget;
 	string	strDaysFlags;
 	int		iStartTime;
@@ -96,6 +96,7 @@ public:
 			, const CParameter::CAltFreqOtherServicesSign AltFreqOtherServicesSign);
 
 	QString DecodeTargets(const int iRegionID, const CVector<CParameter::CAltFreqRegion> vecAltFreqRegions);
+	string DecodeFrequency(const int iSystemID, const int iFreq);
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
