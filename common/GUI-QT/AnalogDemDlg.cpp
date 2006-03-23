@@ -882,13 +882,13 @@ void CAMSSDlg::OnTimer()
 			case 3:
 			case 4:
 			case 5:
-				/* 'FM2 frequency' - 87.5 to 107.9 MHz (100 kHz steps) */
+				/* 'FM1 frequency' - 87.5 to 107.9 MHz (100 kHz steps) */
 				for (j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
 						QString().setNum((float) (87.5 + 0.1 * pDRMRec->
 						GetParameters()->AltFreqOtherServicesSign.
-						vecAltFreqOtherServices[i].veciFrequencies[j]), 10, 1);
+						vecAltFreqOtherServices[i].veciFrequencies[j]), 'f', 1);
 
 					if (j != iNumAltFreqs-1)
 						freqEntry += ",";
@@ -917,13 +917,13 @@ void CAMSSDlg::OnTimer()
 			case 6:
 			case 7:
 			case 8:
-				/* 'FM1 frequency'- 76.0 to 90.0 MHz (100 kHz steps) */
+				/* 'FM2 frequency'- 76.0 to 90.0 MHz (100 kHz steps) */
 				for (j = 0; j < iNumAltFreqs; j++)
 				{
 					freqEntry +=
 						QString().setNum((float) (76.0 + 0.1 * pDRMRec->
 						GetParameters()->AltFreqOtherServicesSign.
-						vecAltFreqOtherServices[i].veciFrequencies[j]), 10, 1);
+						vecAltFreqOtherServices[i].veciFrequencies[j]), 'f', 1);
 							
 					if (j != iNumAltFreqs-1)
 						freqEntry += ",";

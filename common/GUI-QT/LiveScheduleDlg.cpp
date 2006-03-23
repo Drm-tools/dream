@@ -179,7 +179,7 @@ string CDRMLiveSchedule::DecodeFrequency(const int iSystemID, const int iFreq)
 		case 4:
 		case 5:
 			/* 'FM1 frequency' - 87.5 to 107.9 MHz (100 kHz steps) */
-			return QString().setNum((float) (87.5 + 0.1 * iFreq), 10, 1).latin1();
+			return QString().setNum((float) (87.5 + 0.1 * iFreq), 'f', 1).latin1();
 
 			break;
 
@@ -187,7 +187,7 @@ string CDRMLiveSchedule::DecodeFrequency(const int iSystemID, const int iFreq)
 		case 7:
 		case 8:
 			/* 'FM2 frequency'- 76.0 to 90.0 MHz (100 kHz steps) */
-			return QString().setNum((float) (76.0 + 0.1 * iFreq), 10, 1).latin1();
+			return QString().setNum((float) (76.0 + 0.1 * iFreq), 'f', 1).latin1();
 
 			break;
 
