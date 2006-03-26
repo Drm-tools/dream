@@ -914,7 +914,9 @@ void LiveScheduleDlg::OnSave()
 			QDateTime().currentDateTime().toString() + "</i></font></p>"
 			"</body>\n</html>";
 
+		/* Do UTF-8 to string conversion with the station name strings */
 		strFileName = QFileDialog::getSaveFileName(strCurrentSavePath +
+			QString().fromUtf8(QCString(strStationName)) + "_" +
 			"LiveSchedule.html", "*.html", this);
 
 		if (!strFileName.isNull())
