@@ -64,7 +64,8 @@ CMDIConcrete::CMDIConcrete() : pReceiver(NULL), iLogFraCnt(0),
 
 	/* Reset all tags for initialization and reset flag for SDC tag */
 	ResetTags(TRUE);
-	bSDCWasSet = FALSE;
+	bSDCOutWasSet = FALSE;
+	bSDCInWasSet = FALSE;
 
 	/* Init constant tag */
 	TagItemGeneratorProTyMDI.GenTag();;
@@ -116,7 +117,7 @@ void CMDIConcrete::SetFACData(_BOOLEAN bFACOK, CVectorEx<_BINARY>& vecbiFACData,
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 
-	if (bSDCWasSet == TRUE)
+	if (bSDCOutWasSet == TRUE)
 	{
 		/* Do not send SDC packet with this AF packet, do not reset SDC tag
 		   since we need it for the next AF packet */
@@ -124,7 +125,7 @@ void CMDIConcrete::SetFACData(_BOOLEAN bFACOK, CVectorEx<_BINARY>& vecbiFACData,
 		ResetTags(FALSE);
 
 		/* Reset flag */
-		bSDCWasSet = FALSE;
+		bSDCOutWasSet = FALSE;
 	}
 	else
 	{
@@ -197,7 +198,7 @@ void CMDIConcrete::SendUnlockedFrame(CParameter& Parameter)
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 
-	if (bSDCWasSet == TRUE)
+	if (bSDCOutWasSet == TRUE)
 	{
 		/* It's unlikely that we received the SDC in this frame, but send dummy just in case */
 		SendPacket(GenMDIPacket(FALSE));
@@ -208,7 +209,7 @@ void CMDIConcrete::SendUnlockedFrame(CParameter& Parameter)
 		SendPacket(GenMDIPacket(TRUE));
 	}
 		/* Reset flag */
-	bSDCWasSet = FALSE;
+	bSDCOutWasSet = FALSE;
 
 	/* This call will generate empty versions of most tags for next time */
 	ResetTags(TRUE);
@@ -245,7 +246,7 @@ void CMDIConcrete::SetSDCData(_BOOLEAN bSDCOK, CVectorEx<_BINARY>& vecbiSDCData)
 	RSCIStatusFlags.SetSDCStatus(bSDCOK);
 
 	/* Set flag to identify special case */
-	bSDCWasSet = TRUE;
+	bSDCOutWasSet = TRUE;
 }
 
 void CMDIConcrete::SetStreamData(const int iStrNum, CVectorEx<_BINARY>& vecbiStrData)
@@ -459,10 +460,10 @@ ERobMode CMDIConcrete::GetFACData(CVectorEx<_BINARY>& vecbiFACData)
 
 	/* Get new MDI data from buffer if it was not get by the SDC routine. Reset
 	   the flag if it was set */
-	if (bSDCWasSet == FALSE)
+	if (bSDCInWasSet == FALSE)
 		MDIInBuffer.Get(CurMDIPkt);
 	else
-		bSDCWasSet = FALSE;
+		bSDCInWasSet = FALSE;
 
 	if (CurMDIPkt.vecbiFACData.Size() > 0)
 	{
@@ -498,7 +499,7 @@ void CMDIConcrete::GetSDCData(CVectorEx<_BINARY>& vecbiSDCData)
 
 	/* If this is a DRM frame with SDC, get new MDI data from buffer and set
 	   flag so that new data is not queried in FAC data routine */
-	bSDCWasSet = TRUE;
+	bSDCInWasSet = TRUE;
 	MDIInBuffer.Get(CurMDIPkt);
 
 	const int iLenBitsMDISDCdata = CurMDIPkt.vecbiSDCData.Size();

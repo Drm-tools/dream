@@ -98,7 +98,8 @@ public:
 	_BOOLEAN GetMDIInEnabled() {return bMDIInEnabled;}
 
 protected:
-	_BOOLEAN					bSDCWasSet;
+	_BOOLEAN					bSDCOutWasSet; // OPH - this flag was causing interaction between MDI in and out
+	_BOOLEAN					bSDCInWasSet;
 
 	
 	/* MDI transmit --------------------------------------------------------- */
