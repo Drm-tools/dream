@@ -742,7 +742,7 @@ CMOTDABDec::AddDataUnit (CVector < _BINARY > &vecbiNewData)
       {
 	  /* Segmentation header ---------------------------------------------- */
 	  /* Repetition count (not used) */
-	  vecbiNewData.Separate (3);
+	  int repetition_count = vecbiNewData.Separate (3);
 
 	  /* Segment size */
 	  iSegmentSize = (int) vecbiNewData.Separate (13);
@@ -1313,7 +1313,6 @@ CMOTObject::uncompress ()
 #else
 	#ifdef HAVE_ZLIB_LIBRARY
 		CVector < _BYTE > vecbRawDataOut;
-		CVector < _BYTE > &vecbRawDataIn = Body.vecData;
 		/* Extract the original file size */
 		unsigned long dest_len = gzGetOriginalSize ();
 
@@ -1321,19 +1320,33 @@ CMOTObject::uncompress ()
 		{
 			vecbRawDataOut.Init (dest_len);
 
-			/* Actual decompression call */
-			const int zerr = ::uncompress(&vecbRawDataOut[0],
-						 &dest_len, &vecbRawDataIn[0],
-						 vecbRawDataIn.Size ());
+			int zerr;
+			z_stream stream;
+			memset (&stream, 0, sizeof (stream));
+			if ((zerr = inflateInit2 (&stream, -MAX_WBITS)) != Z_OK)
+				return;
 
-			if (zerr == Z_OK)
-			{
-				/* Copy data */
-				Body.vecData.Init (dest_len);
-				Body.vecData = vecbRawDataOut;
-			}
-			else
-				Body.vecData.Init (0);
+			/* skip past minimal gzip header */
+			stream.next_in = &Body.vecData[10];
+			stream.avail_in = Body.vecData.Size () - 10;
+
+			stream.next_out = &vecbRawDataOut[0];
+			stream.avail_out = vecbRawDataOut.Size ();
+
+			zerr = inflate (&stream, Z_NO_FLUSH);
+			dest_len = vecbRawDataOut.Size () - stream.avail_out;
+
+			if (zerr != Z_OK && zerr != Z_STREAM_END)
+				return;
+
+			inflateEnd (&stream);
+
+			if (zerr != Z_OK && zerr != Z_STREAM_END)
+				return;
+
+
+			Body.vecData.Init (dest_len);
+			Body.vecData = vecbRawDataOut;
 		}
 		else
 			Body.vecData.Init (0);
@@ -1356,8 +1369,7 @@ CMOTObject::AddHeader (CVector < _BINARY > &vecbiHeader)
 {
 
     /* HeaderSize and BodySize */
-    size_t iBodySize = (size_t) vecbiHeader.Separate (28);
-    (void) iBodySize;		/* not used at the moment */
+    iBodySize = (int) vecbiHeader.Separate (28);
     size_t iHeaderSize = (size_t) vecbiHeader.Separate (13);
 
     /* Content type and content sub-type */

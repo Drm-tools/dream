@@ -369,6 +369,7 @@ class CMOTObject:public CMOTObjectBase
 	bInDirectory (nO.bInDirectory),
 	bInOldDirectory (nO.bInOldDirectory),
 	strName (nO.strName),
+	iBodySize(nO.iBodySize),
 	iCharacterSetForName (nO.iCharacterSetForName),
 	iCharacterSetForDescription (nO.iCharacterSetForDescription),
 	strFormat (nO.strFormat),
@@ -405,6 +406,7 @@ class CMOTObject:public CMOTObjectBase
 	bInOldDirectory = nO.bInOldDirectory;
 	strFormat = nO.strFormat;
 	strName = nO.strName;
+	iBodySize = nO.iBodySize;
 	iCharacterSetForName = nO.iCharacterSetForName;
 	iCharacterSetForDescription = nO.iCharacterSetForDescription;
 	strMimeType = nO.strMimeType;
@@ -439,6 +441,7 @@ class CMOTObject:public CMOTObjectBase
 	Body.Reset ();
 	strFormat = "";
 	strName = "";
+	iBodySize = 0;
 	iCharacterSetForName = 0;
 	iCharacterSetForDescription = 0;
 	strMimeType = "";
@@ -467,6 +470,7 @@ class CMOTObject:public CMOTObjectBase
     _BOOLEAN bComplete, bHasHeader, bInDirectory, bInOldDirectory;
     CByteReassembler Body;
     string strName;
+    int iBodySize;
     int iCharacterSetForName;
     int iCharacterSetForDescription;
     string strFormat;
