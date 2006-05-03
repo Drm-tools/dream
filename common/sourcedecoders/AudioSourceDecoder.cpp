@@ -406,11 +406,14 @@ void CAudioSourceDecoder::ProcessDataInternal(CParameter& ReceiverParam)
 {
 	int					i, j;
 	_BOOLEAN			bCurBlockOK;
+	_BOOLEAN			bGoodValues;
+
 #ifdef USE_FAAD2_LIBRARY
 	faacDecFrameInfo	DecFrameInfo;
-	_BOOLEAN			bGoodValues;
 	short*				psDecOutSampleBuf;
 #endif
+
+	bGoodValues = FALSE;
 
 	CVector<_BINARY> vecbiAudioFrameStatus;
 	vecbiAudioFrameStatus.Init(0);

@@ -99,6 +99,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	QToolTip::add(MainPlot,
 		tr("Click on the plot to set the demodulation frequency"));
 
+	/* Set current AM demodulation type */
+	pDRMRec->GetAMDemod()->SetDemodType(pDRMRec->AMDemodType);
+
 	/* Load user's saved filter bandwidth for the demodulation type. */
 	switch (pDRMRec->GetAMDemod()->GetDemodType())
 	{

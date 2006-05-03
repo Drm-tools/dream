@@ -839,7 +839,7 @@ void FDRMDialog::OnViewMultSettingsDlg()
 	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(pDRMRec, this, "", TRUE,
 		Qt::WStyle_Dialog);
 
-	//SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
+	SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
 
 	pMultSettingsDlg->show();
 }

@@ -519,8 +519,8 @@ void MultimediaDlg::SetSlideShowPicture()
 		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
 			NewImage.convertToImage());
 
-#ifndef _MSC_VER
-		/* Under gcc(MingW or Linux) the slideshow pictures are not 
+# if QT_VERSION > 230
+		/* The slideshow pictures are not 
            updated correctly without this line: */
 		TextBrowser->setText("");
 #endif

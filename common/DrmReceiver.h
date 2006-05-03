@@ -125,7 +125,8 @@ public:
 		iBwLSB(5000),
 		iBwUSB(5000),
 		iBwCW(150),
-		iBwFM(6000)
+		iBwFM(6000),
+		AMDemodType(CAMDemodulation::DT_AM)
 #endif
 	{MDI.SetDRMReceiver(this);}  /* OPH: ideally this would be done in the initialiser but passing 'this' is unsafe there */
 
@@ -278,21 +279,23 @@ public:
 		_BOOLEAN	bItalic;
 	};
 
-	CFontParam	FontParamMMDlg;
+	CFontParam		FontParamMMDlg;
 
-	_BOOLEAN	bEnableSMeter;
+	_BOOLEAN		bEnableSMeter;
 	int			iSysEvalDlgPlotType;
 	int			iMOTBWSRefreshTime;
-	_BOOLEAN	bAddRefreshHeader;
-	string		strStoragePathMMDlg;
-	string		strStoragePathLiveScheduleDlg;
+	_BOOLEAN		bAddRefreshHeader;
+	string			strStoragePathMMDlg;
+	string			strStoragePathLiveScheduleDlg;
 	int			iMainDisplayColor;
-	/* Analog demodulation filter bandwidth */
-	int			iBwAM;
-	int			iBwLSB;
-	int			iBwUSB;
-	int			iBwCW;
-	int			iBwFM;
+
+	/* Analog demodulation settings */
+	int				iBwAM;
+	int				iBwLSB;
+	int				iBwUSB;
+	int				iBwCW;
+	int				iBwFM;
+	CAMDemodulation::EDemodType	AMDemodType;
 #endif
 
 	/* Interfaces to internal parameters/vectors used for the plot */

@@ -288,7 +288,7 @@ void CSettings::ReadIniFile()
 	
 	/* demodulation */
 	if (GetNumericIniSet(ini, "Analog demodulation dialog", "demodulation", 0, CAMDemodulation::DT_FM , iValue) == TRUE)
-		pDRMRec->GetAMDemod()->SetDemodType((CAMDemodulation::EDemodType) iValue);
+		pDRMRec->AMDemodType = (CAMDemodulation::EDemodType) iValue;
 
 	/* AGC */
 	if (GetNumericIniSet(ini, "Analog demodulation dialog", "agc", 0, CAGC::AT_FAST, iValue) == TRUE)
@@ -1402,7 +1402,7 @@ bool CSettings::StlIniCompareStringNoCase::operator()(const string& x,
 													  const string& y) const
 {
 #ifdef WIN32
-	return (stricmp(x.c_str(), y.c_str()) < 0) ? true : false;
+	return (_stricmp(x.c_str(), y.c_str()) < 0) ? true : false;
 #else
 #ifdef strcasecmp
 	return (strcasecmp(x.c_str(), y.c_str()) < 0) ? true : false;
