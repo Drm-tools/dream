@@ -61,6 +61,8 @@
 #include "../DrmReceiver.h"
 #include "../tables/TableAMSS.h"
 
+/* this include is for set the progress bar style */
+#include <qmotifstyle.h>
 
 /* Definitions ****************************************************************/
 /* Update time of PLL phase dial control */

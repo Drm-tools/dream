@@ -754,6 +754,9 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
+
+	/* set the progress bar style */
+	ProgressBarAMSS->setStyle( new QMotifStyle() );
 }
 
 void CAMSSDlg::hideEvent(QHideEvent* pEvent)

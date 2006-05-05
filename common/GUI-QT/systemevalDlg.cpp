@@ -1558,8 +1558,9 @@ void systemevalDlg::AddWhatsThisHelp()
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
 
-#ifdef _WIN32
-	/* Under Linux if QWhatsThis is added don't work the right click popup */
+#if QT_VERSION == 230
+	/* If QWhatsThis is added don't work the right click popup 
+		under QT230 this work */
 
 	/* Chart Selector */
 	QWhatsThis::add(ListViewCharSel,
