@@ -515,15 +515,19 @@ void MultimediaDlg::SetSlideShowPicture()
 	/* Load picture in QT format */
 	if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
 	{
+		# if QT_VERSION > 230
+			/* The slideshow pictures are not 
+				updated correctly without this line */
+
+			/* If the text is empty there is segmentation fault
+				browsing the images */
+
+			TextBrowser->setText("<br>");
+		#endif
+
 		/* Set new picture in source factory and set it in text control */
 		QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
 			NewImage.convertToImage());
-
-# if QT_VERSION > 230
-		/* The slideshow pictures are not 
-           updated correctly without this line: */
-		TextBrowser->setText("");
-#endif
 
 		TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
 			"</center>");

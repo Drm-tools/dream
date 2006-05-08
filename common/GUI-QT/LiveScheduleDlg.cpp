@@ -46,6 +46,9 @@ while (iTempVal != 0)
 	
 	iTempVal = iTempVal / 2;
 }
+/* complete the string with zeros (length must be 7) */
+while (s.length() < 7)
+	s = "0" + s;
 
 return s;
 }
