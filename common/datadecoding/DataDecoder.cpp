@@ -359,59 +359,9 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 				AddDataUnit (DataUnit[iPacketID].vecbiData);
 			    break;
 			case AT_MOTEPG:	/* EPG */
-				if (GetDecodeEPG() == TRUE) /* if EPG decoding is active */
-				{
-					/* Packet unit decoding */
-					MOTObject[iPacketID].
-					AddDataUnit (DataUnit[iPacketID].vecbiData);
-					/* Application Decoding - must run all the time and in background */
-					if ((DoNotProcessData == FALSE)
-					&& MOTObject[iPacketID].NewObjectAvailable ())
-					{
-						CMOTObject NewObj;
-						MOTObject[iServPacketID].
-							  GetNextObject (NewObj);
-						string fileName;
-                        bool advanced = false;
-						if (NewObj.iContentType == 7)
-							{
-							int service =
-								ReceiverParam.
-								GetCurSelDataService ();
-                            advanced = NewObj.vecbProfileSubset.size()>0;
-							fileName =
-								epgFilename (NewObj.ScopeStart,
-									 ReceiverParam.
-									 Service[service].
-									 iServiceID,
-									 NewObj.
-									 iContentSubType,
-									 advanced);
-							}
-						else
-							{
-							fileName = NewObj.strName;
-							}
-#ifndef HAVE_ZLIB_LIBRARY
-	#ifndef HAVE_LIBFREEIMAGE
-                        if(advanced)
-                            fileName += ".gz";
-	#endif
-#endif
-						string path =
-							  string (EPG_SAVE_PATH) + "/" + fileName;
-						mkdirs (path);
-						FILE *f = fopen (path.c_str (), "wb");
-						if (f)
-						{
-							fwrite (&NewObj.Body.vecData.front (),
-								1,
-								NewObj.Body.vecData.size (),
-								f);
-							fclose (f);
-						}
-					}
-				}
+				/* Packet unit decoding */
+				MOTObject[iPacketID].
+				AddDataUnit (DataUnit[iPacketID].vecbiData);
 			    break;
 
 			case AT_MOTBROADCASTWEBSITE:	/* MOT Broadcast Web Site */
@@ -441,6 +391,55 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 		    (*pvecInputData).Separate (SIZEOF__BYTE);
 	    }
       }
+    if (GetDecodeEPG() == TRUE) /* if EPG decoding is active */
+         DecodeEPG(ReceiverParam);
+}
+
+void
+CDataDecoder::DecodeEPG(const CParameter& ReceiverParam)
+{
+	/* Application Decoding - must run all the time and in background */
+	if ((DoNotProcessData == FALSE)
+	&& MOTObject[iEPGPacketID].NewObjectAvailable())
+	{
+		CMOTObject NewObj;
+		MOTObject[iEPGPacketID].GetNextObject(NewObj);
+		string fileName;
+        bool advanced = false;
+		if (NewObj.iContentType == 7)
+		{
+            advanced = NewObj.vecbProfileSubset.size()>0;
+			fileName =
+				epgFilename (NewObj.ScopeStart,
+					 ReceiverParam.Service[iEPGService].iServiceID,
+					 NewObj.iContentSubType,
+					 advanced);
+
+#ifndef HAVE_ZLIB_LIBRARY
+	#ifndef HAVE_LIBFREEIMAGE
+				if(advanced)
+					fileName += ".gz";
+	#endif
+#endif
+		}
+		else
+		{
+			fileName = NewObj.strName;
+		}
+
+		string path =
+			  string (EPG_SAVE_PATH) + "/" + fileName;
+		mkdirs (path);
+		FILE *f = fopen (path.c_str (), "wb");
+		if (f)
+		{
+			fwrite (&NewObj.Body.vecData.front (),
+				1,
+				NewObj.Body.vecData.size (),
+				f);
+			fclose (f);
+		}
+	}
 }
 
 void
@@ -591,6 +590,22 @@ CDataDecoder::InitInternal (CParameter & ReceiverParam)
 
     /* Set input block size */
     iInputBlockSize = iTotalNumInputBits;
+
+	iEPGService = 0;
+	iEPGPacketID = 0;
+
+    /* look for EPG */
+    for(int i=0; i<3; i++)
+    {
+		if ((ReceiverParam.Service[i].DataParam.eAppDomain == CParameter::AD_DAB_SPEC_APP)
+		    &&
+              (ReceiverParam.Service[i].DataParam.iUserAppIdent == 7)
+            )
+        {
+            iEPGService = i;                                                               
+            iEPGPacketID = ReceiverParam.Service[i].DataParam.iPacketID;
+        }
+     }
 }
 
 _BOOLEAN

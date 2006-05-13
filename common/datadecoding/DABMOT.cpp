@@ -1352,7 +1352,7 @@ CMOTObject::uncompress ()
 			Body.vecData.Init (0);
 	#else
 		/* Can't unzip so change the filename */
-		strName = strName + ".gz";
+		strName = string(strName.c_str()) + ".gz";
 	#endif
 #endif
 }

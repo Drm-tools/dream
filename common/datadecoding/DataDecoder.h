@@ -140,6 +140,10 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     virtual void ProcessDataInternal (CParameter & ReceiverParam);
 
 	_BOOLEAN	bDecodeEPG; /* enable/disable epg decoding */
+    int iEPGService;                                                               
+    int iEPGPacketID;
+    void DecodeEPG(const CParameter& ReceiverParam);
+	
 };
 
 
