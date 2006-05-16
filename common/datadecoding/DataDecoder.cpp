@@ -391,7 +391,7 @@ CDataDecoder::ProcessDataInternal (CParameter & ReceiverParam)
 		    (*pvecInputData).Separate (SIZEOF__BYTE);
 	    }
       }
-    if (GetDecodeEPG() == TRUE) /* if EPG decoding is active */
+    if ((iEPGService >= 0) && (GetDecodeEPG() == TRUE)) /* if EPG decoding is active */
          DecodeEPG(ReceiverParam);
 }
 
@@ -591,7 +591,7 @@ CDataDecoder::InitInternal (CParameter & ReceiverParam)
     /* Set input block size */
     iInputBlockSize = iTotalNumInputBits;
 
-	iEPGService = 0;
+	iEPGService = -1; /* no service */
 	iEPGPacketID = 0;
 
     /* look for EPG */
