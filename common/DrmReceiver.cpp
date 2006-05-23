@@ -1030,9 +1030,11 @@ void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
 
 _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 {
- 	iFreqkHz = iNewFreqkHz;
+	iFreqkHz = iNewFreqkHz;
+ 	ReceiverParam.ReceptLog.SetFrequency(iNewFreqkHz);
 #ifdef HAVE_LIBHAMLIB
-	Hamlib.SetFrequency(iFreqkHz);
+	return Hamlib.SetFrequency(iNewFreqkHz);
+#else
+	return FALSE;
 #endif
- 	ReceiverParam.ReceptLog.SetFrequency(iFreqkHz);
 }

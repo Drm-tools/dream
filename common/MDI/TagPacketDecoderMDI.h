@@ -31,22 +31,12 @@
 
 #include "TagPacketDecoder.h"
 #include "MDITagItemDecoders.h"
-#include "MDIInBuffer.h"
 
 class CTagPacketDecoderMDI : public CTagPacketDecoder
 {
 public:
 	// constructor: adds all of the decoders in the vocabulary to the list
-	CTagPacketDecoderMDI(CMDIInBuffer *pMDIBuffer);
-
-	// Override tag packet decode routine to do extra things afterwards
-	virtual void DecodeTagPacket(CVector<_BINARY>& vecbiAFPkt, const int iPayloadLen); 
-
-private:
-	CMDIInBuffer *pMDIInBuffer;
-
-	// Packet which all of the tag decoders will write their data to.
-	CMDIInPkt MDIInPkt;
+	CTagPacketDecoderMDI();
 
 	// Decoders for each of the tag items in the vocabulary
 	CTagItemDecoderProTy		TagItemDecoderProTy;
@@ -54,10 +44,7 @@ private:
 	CTagItemDecoderFAC			TagItemDecoderFAC;
 	CTagItemDecoderSDC			TagItemDecoderSDC;
 	CTagItemDecoderRobMod		TagItemDecoderRobMod;
-	CTagItemDecoderStr			TagItemDecoderStr0;
-	CTagItemDecoderStr			TagItemDecoderStr1;
-	CTagItemDecoderStr			TagItemDecoderStr2;
-	CTagItemDecoderStr			TagItemDecoderStr3;
+	vector<CTagItemDecoderStr>	TagItemDecoderStr;
 	CTagItemDecoderSDCChanInf	TagItemDecoderSDCChanInf;
 	CTagItemDecoderInfo			TagItemDecoderInfo;
 };

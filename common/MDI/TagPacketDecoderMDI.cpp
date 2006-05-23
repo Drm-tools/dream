@@ -33,21 +33,17 @@
 \******************************************************************************/
 
 
-#include "MDITagPacketDecoder.h"
+#include "TagPacketDecoderMDI.h"
 
-CTagPacketDecoderMDI::CTagPacketDecoderMDI(CMDIInBuffer *pMDIBuffer)
-:	pMDIInBuffer(pMDIBuffer)
-,	TagItemDecoderProTy(&MDIInPkt)
-,	TagItemDecoderLoFrCnt(&MDIInPkt)
-,	TagItemDecoderFAC(&MDIInPkt)
-,	TagItemDecoderSDC(&MDIInPkt)
-,	TagItemDecoderRobMod(&MDIInPkt)
-,	TagItemDecoderStr0(&MDIInPkt, 0)
-,	TagItemDecoderStr1(&MDIInPkt, 1)
-,	TagItemDecoderStr2(&MDIInPkt, 2)
-,	TagItemDecoderStr3(&MDIInPkt, 3)
-,	TagItemDecoderSDCChanInf(&MDIInPkt)
-,	TagItemDecoderInfo(&MDIInPkt)
+CTagPacketDecoderMDI::CTagPacketDecoderMDI()
+:	TagItemDecoderProTy()
+,	TagItemDecoderLoFrCnt()
+,	TagItemDecoderFAC()
+,	TagItemDecoderSDC()
+,	TagItemDecoderRobMod()
+,	TagItemDecoderStr()
+,	TagItemDecoderSDCChanInf()
+,	TagItemDecoderInfo()
 {
 
 	// Add the tag item decoders to the base class list of decoders
@@ -57,20 +53,12 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI(CMDIInBuffer *pMDIBuffer)
 	AddTagItemDecoder(&TagItemDecoderFAC);
 	AddTagItemDecoder(&TagItemDecoderSDC);
 	AddTagItemDecoder(&TagItemDecoderRobMod);
-	AddTagItemDecoder(&TagItemDecoderStr0);
-	AddTagItemDecoder(&TagItemDecoderStr1);
-	AddTagItemDecoder(&TagItemDecoderStr2);
-	AddTagItemDecoder(&TagItemDecoderStr3);
+	TagItemDecoderStr.resize(4);
+	for(size_t i=0; i<4; i++)
+	{
+		TagItemDecoderStr[i].iStreamNumber = i;
+        AddTagItemDecoder(&TagItemDecoderStr[i]);
+	}
 	AddTagItemDecoder(&TagItemDecoderSDCChanInf);
 	AddTagItemDecoder(&TagItemDecoderInfo);
-}
-
-/* overridden decode function - calls the base class decoder and then puts the resulting 
- * packet into the input buffer */
-void CTagPacketDecoderMDI::DecodeTagPacket(CVector<_BINARY>& vecbiPkt, const int iPayloadLen)
-{
-
-	CTagPacketDecoder::DecodeTagPacket(vecbiPkt, iPayloadLen);
-
-	pMDIInBuffer->Put(MDIInPkt);
 }

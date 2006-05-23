@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="FDRM"
 	ProjectGUID="{B73ED40A-A20C-464D-936C-6E3879E8A980}"
 	>
@@ -2557,26 +2557,8 @@
 				Name="Source MDI"
 				>
 				<File
-					RelativePath="..\common\MDI\MDIConcrete.cpp"
+					RelativePath="..\common\MDI\MDIDecode.cpp"
 					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\common\MDI\MDIInBuffer.cpp"
@@ -2599,6 +2581,10 @@
 							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\MDI\MDIRSCI.cpp"
+					>
 				</File>
 				<File
 					RelativePath="..\common\MDI\MDITagItemDecoders.cpp"
@@ -2624,28 +2610,6 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\MDITagItems.cpp"
-					>
-					<FileConfiguration
-						Name="Release|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-					<FileConfiguration
-						Name="Debug|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							AdditionalIncludeDirectories=""
-							PreprocessorDefinitions=""
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath="..\common\MDI\MDITagPacketDecoder.cpp"
 					>
 					<FileConfiguration
 						Name="Release|Win32"
@@ -2753,6 +2717,10 @@
 							PreprocessorDefinitions=""
 						/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\common\MDI\TagPacketDecoderMDI.cpp"
+					>
 				</File>
 				<File
 					RelativePath="..\common\MDI\TagPacketDecoderRSCIControl.cpp"
@@ -3174,11 +3142,7 @@
 				Name="Header MDI"
 				>
 				<File
-					RelativePath="..\common\MDI\MDI.h"
-					>
-				</File>
-				<File
-					RelativePath="..\common\MDI\MDIConcrete.h"
+					RelativePath="..\common\MDI\MDIDecode.h"
 					>
 				</File>
 				<File
@@ -3190,7 +3154,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\common\MDI\MDINull.h"
+					RelativePath="..\common\MDI\MDIRSCI.h"
 					>
 				</File>
 				<File
@@ -3199,10 +3163,6 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\MDITagItems.h"
-					>
-				</File>
-				<File
-					RelativePath="..\common\MDI\MDITagPacketDecoder.h"
 					>
 				</File>
 				<File
@@ -3227,6 +3187,10 @@
 				</File>
 				<File
 					RelativePath="..\common\MDI\TagPacketDecoder.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\MDI\TagPacketDecoderMDI.h"
 					>
 				</File>
 				<File

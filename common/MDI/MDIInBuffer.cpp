@@ -33,7 +33,7 @@
  * it will be lost, but we need new data in preference to old and we should be
  * able to keep up, so that's OK
  */
-_BOOLEAN
+void
 CMDIInBuffer::Put(const vector<_BYTE>& data)
 {
 #ifdef USE_QT_GUI
@@ -50,7 +50,7 @@ CMDIInBuffer::Put(const vector<_BYTE>& data)
  * clear the buffer after reading it so we don't read the same buffer twice
  * Its possible signals could get lost :(
  */
-_BOOLEAN
+void
 CMDIInBuffer::Get(vector<_BYTE>& data)
 {
 #ifdef USE_QT_GUI

@@ -26,33 +26,27 @@
  *
 \******************************************************************************/
 
-#ifndef MDI_IN_BUFFER_H_INCLUDED
-#define MDI_IN_BUFFER_H_INCLUDED
+#ifndef MDIDECODE_H_INCLUDED
+#define MDIDECODE_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
-#ifdef USE_QT_GUI
-#include <qwaitcondition.h>
-#endif
-#include <vector>
+#include "../Parameter.h"
+#include "../util/Modul.h"
+#include "MDIDefinitions.h"
+#include "TagPacketDecoderMDI.h"
 
-class CMDIInBuffer
+class CDecodeRSIMDI : public CReceiverModul<_BINARY, _BINARY>
 {
 public:
-	CMDIInBuffer() : buffer()
-#ifdef USE_QT_GUI
-	,guard(),blocker()
-#endif
-	{}
-
-	void Put(const vector<_BYTE>& data);
-	void Get(vector<_BYTE>& data);
+	CDecodeRSIMDI():TagPacketDecoderMDI() {}
+	virtual ~CDecodeRSIMDI() {}
 
 protected:
-#ifdef USE_QT_GUI
-	QMutex guard;
-	QWaitCondition blocker;
-#endif
-	vector<_BYTE> buffer;
+
+	virtual void InitInternal(CParameter& ReceiverParam);
+	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+
+	CTagPacketDecoderMDI TagPacketDecoderMDI;
 };
 
 #endif
