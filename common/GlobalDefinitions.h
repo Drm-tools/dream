@@ -48,11 +48,6 @@ using namespace std; /* Because of the library: "complex" */
 #define _DEBUG_
 #undef _DEBUG_
 
-#ifndef VERSION
-# define VERSION						"1.6.4cvs"
-#endif
-
-
 #ifdef _WIN32 /* For Windows set flags here, otherwise it is set by configure */
 /* Define whether using GUI or non-GUI receiver */
 # define USE_QT_GUI

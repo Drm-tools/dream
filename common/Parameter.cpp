@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "Parameter.h"
+#include "Version.cpp"
 
 
 // To be replaced by something nicer!!! TODO
