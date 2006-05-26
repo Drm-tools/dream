@@ -3,7 +3,7 @@
  * Copyright (c) 2001-2006
  *
  * Author(s):
- *	Andrea Russo
+ *	Andrea Russo, Julian Cable
  *
  * Description:
  *	Dream program version number
@@ -25,8 +25,6 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#include "GlobalDefinitions.h"
+#include "Version.h"
 
-#ifndef VERSION
-# define VERSION						"1.6.5cvs"
-#endif
+char dream_version[] = "1.6.6cvs";

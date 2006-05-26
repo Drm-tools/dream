@@ -585,6 +585,10 @@ SOURCE=..\common\drmchannel\ChannelSimulation.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\Version.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\DataIO.cpp
 # End Source File
 # Begin Source File
@@ -1027,6 +1031,10 @@ SOURCE=..\common\DrmSimulation.h
 # Begin Source File
 
 SOURCE=..\common\DrmTransmitter.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\Version.h
 # End Source File
 # Begin Source File
 

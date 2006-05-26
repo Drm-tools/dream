@@ -119,10 +119,10 @@ try
 
 #ifdef _WIN32
 	/* Set priority class for this application */
-	//SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
 	/* Low priority for GUI thread */
-	//SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
 #endif
 
 	if (bIsReceiver == FALSE)

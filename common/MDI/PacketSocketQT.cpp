@@ -31,7 +31,6 @@
 #include "PacketSocketQT.h"
 #include <qstringlist.h>
 #include <errno.h>
-#include <iostream>
 
 CPacketSocketQT::CPacketSocketQT() : SocketDevice(QSocketDevice::Datagram /* UDP */)
 {
@@ -62,11 +61,18 @@ void CPacketSocketQT::SendPacket(const vector<_BYTE>& vecbydata)
 	/* Send packet to network */
 	char *p = new char[vecbydata.size()];
 	for(size_t i=0; i<vecbydata.size(); i++)
-	p[i]=vecbydata[i];
+		p[i]=vecbydata[i];
 	uint32_t bytes_written = SocketDevice.writeBlock(p, vecbydata.size(),
 		HostAddrOut, iHostPortOut);
+	/* should we throw an exception or silently accept? */
+	/* the most likely cause is that we are sending unicast and no-one
+	   is listening, or the interface is down, there is no route */
 	if(bytes_written==-1)
-	    cout << "error sending packet : " << SocketDevice.error() << endl;
+	{
+	 	QSocketDevice::Error x = SocketDevice.error();
+	 	if(x != QSocketDevice::NetworkFailure)
+			qDebug("error sending packet");	    
+	}
 }
 
 _BOOLEAN CPacketSocketQT::SetNetwOutAddr(const string& strNewAddr)
@@ -150,15 +156,16 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
 	else
 	{
 		struct ip_mreq mreq;
-		
+
 		/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
         bool ok = SocketDevice.bind(QHostAddress(UINT32(0)), iPort);
-        if(ok == false) {
-		QSocketDevice::Error x = SocketDevice.error();
-		cout << "bind failed" << endl;
-		                     return FALSE;
-                             }
-  
+        if(ok == false)
+		{
+		 	QSocketDevice::Error x = SocketDevice.error();
+			throw CGenErr("Can't bind to port to receive packets");
+			   return FALSE;
+		}
+
 #if QT_VERSION == 230
 		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.ip4Addr());
 		mreq.imr_interface.s_addr = htonl(AddrInterface.ip4Addr());
@@ -169,13 +176,14 @@ _BOOLEAN CPacketSocketQT::SetNetwInAddr(const string& strNewAddr)
         const SOCKET s = SocketDevice.socket();
         int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP, (char*) &mreq,
 				sizeof(mreq));
-		if(n==SOCKET_ERROR) {
-			cout << strerror(errno) << endl;
-			return FALSE;
+		if(n==SOCKET_ERROR)
+		{
+			throw CGenErr(
+			string("Can't join multicast group to receive packets: ")
+			 + strerror(errno));
 		}
 		return TRUE;
 	}
-
 	return TRUE;
 }
 
