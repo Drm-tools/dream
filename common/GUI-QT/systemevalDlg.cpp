@@ -1092,8 +1092,10 @@ void systemevalDlg::OnCheckWriteLog()
 		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
 		TimerLogFileLong.start(1000); /* Every second */
 
-		/* frequency should be already there? */
-		pDRMRec->GetParameters()->ReceptLog.SetFrequency(pDRMRec->GetFrequency());
+		/* Get frequency from front-end edit control */
+		QString strFreq = EdtFrequency->text();
+		iCurFrequency = strFreq.toUInt();
+		pDRMRec->GetParameters()->ReceptLog.SetFrequency(iCurFrequency);
 
 		/* Set some other information obout this receiption */
 		QString strAddText = "";
