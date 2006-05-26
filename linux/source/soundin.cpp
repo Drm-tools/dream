@@ -31,11 +31,6 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <sys/ioctl.h>
-#if 0
-#include <cstdlib>
-#include <cstdio>
-#include <cstring>
-#endif
 #include <iostream>
 #include <fstream>
 #include <sstream>
@@ -47,7 +42,56 @@
 #include <sys/soundcard.h>
 #include <errno.h>
 
-CSoundIn::CSoundIn():iCurrentDevice(0),fdSound(0),names()
+map<string,COSSDev::devdata> COSSDev::dev;
+
+void
+COSSDev::devdata::open(const string& name, int mode)
+{
+	if(fd == 0)
+	{
+		fd=::open(name.c_str(), mode);
+	}
+	else
+	{
+		::close(fd);
+		fd=::open(name.c_str(), O_RDWR);
+	}
+	if(fd>0)
+		count++;
+	else
+		fd = 0;
+}
+
+void
+COSSDev::devdata::close()
+{
+	if(fd && ((--count) == 0))
+	{
+		::close(fd);
+		fd=0;
+	}
+}
+
+int
+COSSDev::devdata::fildes()
+{
+	return fd;
+}
+
+void
+COSSDev::open(const string& devname, int mode)
+{
+	name = devname;
+	dev[name].open(name, mode);
+}
+
+void
+COSSDev::close()
+{
+	dev[name].close();
+}
+
+CSoundIn::CSoundIn():iCurrentDevice(0),dev(),names(),devices()
 {
 	RecThread.pSoundIn = this;
 	ifstream sndstat("/dev/sndstat");
@@ -68,6 +112,18 @@ CSoundIn::CSoundIn():iCurrentDevice(0),fdSound(0),names()
 		}
 		sndstat.close();
 	}
+	if(names.size()>0)
+	{
+		devices.resize(names.size());
+		devices[0] = "/dev/dsp";
+		for(size_t i=0; i<names.size(); i++)
+		{
+			devices[i] = "/dev/dsp";
+			devices[i] += '0'+i;
+		}
+		names.push_back("Default Capture Device");
+		devices.push_back("/dev/dsp");
+	}
 }
 
 void CSoundIn::SetDev(int iNewDevice)
@@ -85,22 +141,21 @@ void CSoundIn::Init_HW()
 	int arg;      /* argument for ioctl calls */
 	int status;   /* return status of system calls */
 	
-	if (fdSound >0) 
+#if 0
+	if (dev.fildes() >0) 
 	{
 #ifdef USE_QT_GUI
 //		qDebug("already open");
 #endif
 		return;	// already open
 	}
-
+#endif
 	/* Open sound device (Use O_RDWR only when writing a program which is
 	   going to both record and play back digital audio) */
-	string dev = "/dev/dsp";
-	if(iCurrentDevice>0)
-		dev += ('0'+iCurrentDevice);
-	fdSound = open(dev.c_str(), O_RDONLY );
-	if (fdSound < 0) 
-		throw CGenErr("open of "+dev+" failed");
+	string devname = devices[iCurrentDevice];
+	dev.open(devname, O_RDONLY );
+	if (dev.fildes() < 0) 
+		throw CGenErr("open of "+devname+" failed");
 	
 	/* Get ready for us.
 	   ioctl(audio_fd, SNDCTL_DSP_SYNC, 0) can be used when application wants 
@@ -109,13 +164,13 @@ void CSoundIn::Init_HW()
 	   and returns back to the calling program. Note that this call may take
 	   several seconds to execute depending on the amount of data in the 
 	   buffers. close() calls SNDCTL_DSP_SYNC automaticly */
-	ioctl(fdSound, SNDCTL_DSP_SYNC, 0);
+	ioctl(dev.fildes(), SNDCTL_DSP_SYNC, 0);
 
 	/* Set sampling parameters always so that number of channels (mono/stereo) 
 	   is set before selecting sampling rate! */
 	/* Set number of channels (0=mono, 1=stereo) */
 	arg = NUM_IN_CHANNELS - 1;
-	status = ioctl(fdSound, SNDCTL_DSP_STEREO, &arg);
+	status = ioctl(dev.fildes(), SNDCTL_DSP_STEREO, &arg);
 	if (status == -1) 
 		throw CGenErr("SNDCTL_DSP_CHANNELS ioctl failed");		
 
@@ -125,7 +180,7 @@ void CSoundIn::Init_HW()
 
 	/* Sampling rate */
 	arg = SOUNDCRD_SAMPLE_RATE;
-	status = ioctl(fdSound, SNDCTL_DSP_SPEED, &arg);
+	status = ioctl(dev.fildes(), SNDCTL_DSP_SPEED, &arg);
 	if (status == -1)
 		throw CGenErr("SNDCTL_DSP_SPEED ioctl failed");
 	if (arg != SOUNDCRD_SAMPLE_RATE)
@@ -134,7 +189,7 @@ void CSoundIn::Init_HW()
 
 	/* Sample size */
 	arg = (BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8;      
-	status = ioctl(fdSound, SNDCTL_DSP_SAMPLESIZE, &arg);
+	status = ioctl(dev.fildes(), SNDCTL_DSP_SAMPLESIZE, &arg);
 	if (status == -1)
 		throw CGenErr("SNDCTL_DSP_SAMPLESIZE ioctl failed");
 	if (arg != ((BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8))
@@ -144,7 +199,7 @@ void CSoundIn::Init_HW()
 
 int CSoundIn::read_HW( void * recbuf, int size) {
 	
-	int ret = read(fdSound, recbuf, size * NUM_IN_CHANNELS * BYTES_PER_SAMPLE );
+	int ret = read(dev.fildes(), recbuf, size * NUM_IN_CHANNELS * BYTES_PER_SAMPLE );
 
 	if (ret < 0) {
 		if ( (errno != EINTR) && (errno != EAGAIN))
@@ -156,11 +211,7 @@ int CSoundIn::read_HW( void * recbuf, int size) {
 }
 
 void CSoundIn::close_HW( void ) {
-
-	if (fdSound >0)
-		close(fdSound);
-	fdSound = 0;
-
+	dev.close();
 }
 #endif
 

@@ -70,12 +70,12 @@ protected:
 	int 	iBufferSize, iInBufferSize;
 	short int *tmprecbuf;
 	_BOOLEAN	bBlockingRec;
+	vector<string> devices;
 #ifdef USE_ALSA
 	snd_pcm_t *handle;
-	vector<string> devices;
 #endif
 #ifdef USE_DEVDSP
-	int fdSound;
+	COSSDev dev;
 #endif
 
 	class CRecThread : public CThread

@@ -43,7 +43,7 @@
 #include <sys/soundcard.h>
 #include <errno.h>
 
-CSoundOut::CSoundOut() : iCurrentDevice(-1),fdSound(0),names()
+CSoundOut::CSoundOut() : iCurrentDevice(-1),dev(),names(),devices()
 {
 	PlayThread.pSoundOut = this;
 	ifstream sndstat("/dev/sndstat");
@@ -69,6 +69,18 @@ CSoundOut::CSoundOut() : iCurrentDevice(-1),fdSound(0),names()
 			}
 		}
 		sndstat.close();
+		if(names.size()>0)
+		{
+			devices.resize(names.size());
+			devices[0] = "/dev/dsp";
+			for(size_t i=0; i<names.size(); i++)
+			{
+				devices[i] = "/dev/dsp";
+				devices[i] += '0'+i;
+			}
+			names.push_back("Default Playback Device");
+			devices.push_back("/dev/dsp");
+		}
 	}
 }
 
@@ -77,22 +89,22 @@ void CSoundOut::Init_HW()
 	int arg;      /* argument for ioctl calls */
 	int status;   /* return status of system calls */
 	
-	if (fdSound >0) 
+#if 0
+	if (dev.fildes() >0) 
 	{
 #ifdef USE_QT_GUI
 //		qDebug("already open");
 #endif
 		return;	// already open
 	}
+#endif
 
 	/* Open sound device (Use O_RDWR only when writing a program which is
 	   going to both record and play back digital audio) */
-	string dev = "/dev/dsp";
-	if(iCurrentDevice>0)
-		dev += ('0'+iCurrentDevice);
-	fdSound = open(dev.c_str(), O_WRONLY );
-	if (fdSound < 0) 
-		throw CGenErr("open of "+dev+" failed");
+	string devname = devices[iCurrentDevice];
+	dev.open(devname, O_WRONLY );
+	if (dev.fildes() < 0) 
+		throw CGenErr("open of "+devname+" failed");
 	/* Get ready for us.
 	   ioctl(audio_fd, SNDCTL_DSP_SYNC, 0) can be used when application wants 
 	   to wait until last byte written to the device has been played (it doesn't
@@ -100,13 +112,13 @@ void CSoundOut::Init_HW()
 	   and returns back to the calling program. Note that this call may take
 	   several seconds to execute depending on the amount of data in the 
 	   buffers. close() calls SNDCTL_DSP_SYNC automaticly */
-	ioctl(fdSound, SNDCTL_DSP_SYNC, 0);
+	ioctl(dev.fildes(), SNDCTL_DSP_SYNC, 0);
 
 	/* Set sampling parameters always so that number of channels (mono/stereo) 
 	   is set before selecting sampling rate! */
 	/* Set number of channels (0=mono, 1=stereo) */
 	arg = NUM_OUT_CHANNELS - 1;
-	status = ioctl(fdSound, SNDCTL_DSP_STEREO, &arg);
+	status = ioctl(dev.fildes(), SNDCTL_DSP_STEREO, &arg);
 	if (status == -1) 
 		throw CGenErr("SNDCTL_DSP_CHANNELS ioctl failed");		
 
@@ -116,7 +128,7 @@ void CSoundOut::Init_HW()
 
 	/* Sampling rate */
 	arg = SOUNDCRD_SAMPLE_RATE;
-	status = ioctl(fdSound, SNDCTL_DSP_SPEED, &arg);
+	status = ioctl(dev.fildes(), SNDCTL_DSP_SPEED, &arg);
 	if (status == -1)
 		throw CGenErr("SNDCTL_DSP_SPEED ioctl failed");
 	if (arg != SOUNDCRD_SAMPLE_RATE)
@@ -125,7 +137,7 @@ void CSoundOut::Init_HW()
 
 	/* Sample size */
 	arg = (BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8;      
-	status = ioctl(fdSound, SNDCTL_DSP_SAMPLESIZE, &arg);
+	status = ioctl(dev.fildes(), SNDCTL_DSP_SAMPLESIZE, &arg);
 	if (status == -1)
 		throw CGenErr("SNDCTL_DSP_SAMPLESIZE ioctl failed");
 	if (arg != ((BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8))
@@ -133,7 +145,7 @@ void CSoundOut::Init_HW()
 
 
 	/* Check capabilities of the sound card */
-	status = ioctl(fdSound, SNDCTL_DSP_GETCAPS, &arg);
+	status = ioctl(dev.fildes(), SNDCTL_DSP_GETCAPS, &arg);
 	if (status ==  -1)
 		throw CGenErr("SNDCTL_DSP_GETCAPS ioctl failed");
 	if ((arg & DSP_CAP_DUPLEX) == 0)
@@ -151,7 +163,7 @@ int CSoundOut::write_HW( _SAMPLE *playbuf, int size )
 	while (size)
 	{
 
-		ret = write(fdSound, &playbuf[start], size);
+		ret = write(dev.fildes(), &playbuf[start], size);
 		if (ret < 0) {
 			if (errno == EINTR || errno == EAGAIN) 
 			{
@@ -167,11 +179,7 @@ int CSoundOut::write_HW( _SAMPLE *playbuf, int size )
 
 void CSoundOut::close_HW( void )
 {
-
-	if (fdSound >0)
-		close(fdSound);
-	fdSound = 0;
-
+	dev.close();
 }
 #endif
 

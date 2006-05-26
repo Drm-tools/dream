@@ -71,13 +71,13 @@ protected:
 	int 	iBufferSize, iInBufferSize;
 	short int *tmpplaybuf;
 	_BOOLEAN	bBlockingPlay;
+	vector<string> devices;
 
 #ifdef USE_ALSA
 	snd_pcm_t *handle;
-	vector<string> devices;
 #endif
 #ifdef USE_DEVDSP
-    int fdSound;
+	COSSDev dev;
 #endif
 
 	class CPlayThread : public CThread

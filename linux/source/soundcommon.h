@@ -36,6 +36,32 @@
 #include <alsa/asoundlib.h>
 #endif
 
+#ifdef USE_DEVDSP
+#include <map>
+
+class COSSDev
+{
+public:
+	COSSDev():name(){}
+	void open(const string& devname, int mode);
+	int fildes(){ return dev[name].fildes();}
+	void close();
+protected:
+	class devdata
+	{
+	public:
+		devdata():count(0),fd(0){}
+		void open(const string&, int);
+		void close();
+		int fildes();
+	protected:
+		int count; int fd;
+	};
+	static map<string,devdata> dev;
+	string name;
+};
+#endif
+
 class CSoundBuf : public CCyclicBuffer<_SAMPLE> {
 
 public:

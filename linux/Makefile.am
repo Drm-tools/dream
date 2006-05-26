@@ -2,6 +2,7 @@ bin_PROGRAMS = drm
 
 
 drmwithoutqt_SOURCES = \
+	../common/Version.cpp \
 	../common/SimulationParameters.cpp \
 	../common/DRMSignalIO.cpp \
 	../common/DataIO.cpp \
