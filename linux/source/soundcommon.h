@@ -36,6 +36,13 @@
 #include <alsa/asoundlib.h>
 #endif
 
+/* Definitions ****************************************************************/
+#define	NUM_IN_CHANNELS			2		/* Stereo recording (but we only
+										   use one channel for recording) */
+#define	NUM_OUT_CHANNELS		2		/* Stereo Playback */
+#define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
+#define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
+
 #ifdef USE_DEVDSP
 #include <map>
 
@@ -91,5 +98,7 @@ public:
 	bool running() { return true; }
 };
 #endif
+
+void getdevices(vector<string>& names, vector<string>& devices, bool playback);
 
 #endif

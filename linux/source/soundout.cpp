@@ -46,42 +46,7 @@
 CSoundOut::CSoundOut() : iCurrentDevice(-1),dev(),names(),devices()
 {
 	PlayThread.pSoundOut = this;
-	ifstream sndstat("/dev/sndstat");
-	if(sndstat.is_open())
-	{
-		while(!sndstat.eof())
-		{
-			char s[80];
-			sndstat.getline(s,sizeof(s));
-			if(string(s)=="Audio devices:")
-			{
-				char sep[20];
-				while(true)
-				{
-					sndstat.getline(s,sizeof(s));
-					if(string(s) != "")
-					{
-						names.push_back(s);
-					}
-					else
-						break;
-				}
-			}
-		}
-		sndstat.close();
-		if(names.size()>0)
-		{
-			devices.resize(names.size());
-			devices[0] = "/dev/dsp";
-			for(size_t i=0; i<names.size(); i++)
-			{
-				devices[i] = "/dev/dsp";
-				devices[i] += '0'+i;
-			}
-			names.push_back("Default Playback Device");
-			devices.push_back("/dev/dsp");
-		}
-	}
+	getdevices(names, devices, true);
 }
 
 void CSoundOut::Init_HW()
@@ -101,8 +66,20 @@ void CSoundOut::Init_HW()
 
 	/* Open sound device (Use O_RDWR only when writing a program which is
 	   going to both record and play back digital audio) */
+	if(devices.size()==0)
+		throw CGenErr("no playback devices available");
+
+	/* Default ? */
+	if(iCurrentDevice < 0)
+		iCurrentDevice = devices.size()-1;
+
+	/* out of range ? (could happen from command line parameter or USB device unplugged */
+	if(iCurrentDevice >= devices.size())
+		iCurrentDevice = devices.size()-1;
+
 	string devname = devices[iCurrentDevice];
 	dev.open(devname, O_WRONLY );
+#if 0
 	if (dev.fildes() < 0) 
 		throw CGenErr("open of "+devname+" failed");
 	/* Get ready for us.
@@ -120,7 +97,7 @@ void CSoundOut::Init_HW()
 	arg = NUM_OUT_CHANNELS - 1;
 	status = ioctl(dev.fildes(), SNDCTL_DSP_STEREO, &arg);
 	if (status == -1) 
-		throw CGenErr("SNDCTL_DSP_CHANNELS ioctl failed");		
+		throw CGenErr(string("SNDCTL_DSP_CHANNELS ioctl failed: ")+strerror(errno));
 
 	if (arg != (NUM_OUT_CHANNELS - 1))
 		throw CGenErr("unable to set number of channels");		
@@ -142,14 +119,15 @@ void CSoundOut::Init_HW()
 		throw CGenErr("SNDCTL_DSP_SAMPLESIZE ioctl failed");
 	if (arg != ((BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8))
 		throw CGenErr("unable to set sample size");
-
-
+#if 0
 	/* Check capabilities of the sound card */
 	status = ioctl(dev.fildes(), SNDCTL_DSP_GETCAPS, &arg);
 	if (status ==  -1)
 		throw CGenErr("SNDCTL_DSP_GETCAPS ioctl failed");
 	if ((arg & DSP_CAP_DUPLEX) == 0)
 		throw CGenErr("Soundcard not full duplex capable!");
+#endif
+#endif
 }
 
 int CSoundOut::write_HW( _SAMPLE *playbuf, int size )
@@ -162,7 +140,6 @@ int CSoundOut::write_HW( _SAMPLE *playbuf, int size )
 
 	while (size)
 	{
-
 		ret = write(dev.fildes(), &playbuf[start], size);
 		if (ret < 0) {
 			if (errno == EINTR || errno == EAGAIN) 
@@ -195,40 +172,7 @@ void CSoundOut::close_HW( void )
 CSoundOut::CSoundOut() : iCurrentDevice(-1),devices(),handle(NULL),names()
 {
 	PlayThread.pSoundOut = this;
-	ifstream sndstat("/proc/asound/pcm");
-	if(sndstat.is_open())
-	{
-		vector<string> playback_devices;
-		while(!sndstat.eof())
-		{
-			char s[200];
-			sndstat.getline(s,sizeof(s));
-			if(strlen(s)==0)
-				break;
-			if(strstr(s, "playback")!=NULL)
-				playback_devices.push_back(s);
-		}
-		sndstat.close();
-		sort(playback_devices.begin(), playback_devices.end());
-		for(size_t i=0; i<playback_devices.size(); i++)
-		{
-			stringstream o(playback_devices[i]);
-			char p,n[200],d[200],cap[80];
-			int maj,min;
-			o >> maj >> p >> min;
-			o >> p;
-			o.getline(n, sizeof(n), ':');
-			o.getline(d, sizeof(d), ':');
-			o.getline(cap, sizeof(cap));
-			char dd[20];
-			stringstream dev;
-			dev << "plughw:" << maj << "," << min;
-			devices.push_back(dev.str());
-			names.push_back(n);
-		}
-		names.push_back("Default Playback Device");
-		devices.push_back("dmix");
-	}
+	getdevices(names, devices, true);
 }
 
 void CSoundOut::Init_HW()
@@ -579,7 +523,7 @@ void CSoundOut::Close()
 }
 
 #else
-CSoundOut::CSoundOut():names(),iCurrentDevice(0){}
+CSoundOut::CSoundOut():names(),iCurrentDevice(-1){}
 #endif
 
 void CSoundOut::SetDev(int iNewDevice)

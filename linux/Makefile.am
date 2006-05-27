@@ -68,6 +68,7 @@ drmwithoutqt_SOURCES = \
 	../common/sync/SyncUsingPil.cpp \
 	../common/sync/TimeSyncTrack.cpp \
 	../common/GUI-QT/main.cpp \
+	source/soundcommon.cpp \
 	source/soundin.cpp \
 	source/soundout.cpp \
 	../common/DRMSignalIO.h \

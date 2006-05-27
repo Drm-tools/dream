@@ -42,98 +42,10 @@
 #include <sys/soundcard.h>
 #include <errno.h>
 
-map<string,COSSDev::devdata> COSSDev::dev;
-
-void
-COSSDev::devdata::open(const string& name, int mode)
-{
-	if(fd == 0)
-	{
-		fd=::open(name.c_str(), mode);
-	}
-	else
-	{
-		::close(fd);
-		fd=::open(name.c_str(), O_RDWR);
-	}
-	if(fd>0)
-		count++;
-	else
-		fd = 0;
-}
-
-void
-COSSDev::devdata::close()
-{
-	if(fd && ((--count) == 0))
-	{
-		::close(fd);
-		fd=0;
-	}
-}
-
-int
-COSSDev::devdata::fildes()
-{
-	return fd;
-}
-
-void
-COSSDev::open(const string& devname, int mode)
-{
-	name = devname;
-	dev[name].open(name, mode);
-}
-
-void
-COSSDev::close()
-{
-	dev[name].close();
-}
-
-CSoundIn::CSoundIn():iCurrentDevice(0),dev(),names(),devices()
+CSoundIn::CSoundIn():iCurrentDevice(-1),dev(),names(),devices()
 {
 	RecThread.pSoundIn = this;
-	ifstream sndstat("/dev/sndstat");
-	if(sndstat.is_open()){
-		while(!sndstat.eof()){
-			char s[80];
-			sndstat.getline(s,sizeof(s));
-			if(string(s)=="Audio devices:") {
-				char sep[20];
-				while(true){
-					sndstat.getline(s,sizeof(s));
-					if(string(s) != "")
-						names.push_back(s);
-					else
-						break;
-				}
-			}
-		}
-		sndstat.close();
-	}
-	if(names.size()>0)
-	{
-		devices.resize(names.size());
-		devices[0] = "/dev/dsp";
-		for(size_t i=0; i<names.size(); i++)
-		{
-			devices[i] = "/dev/dsp";
-			devices[i] += '0'+i;
-		}
-		names.push_back("Default Capture Device");
-		devices.push_back("/dev/dsp");
-	}
-}
-
-void CSoundIn::SetDev(int iNewDevice)
-{
-	iCurrentDevice = iNewDevice;
-}
-
-int CSoundIn::GetDev()
-{
-	return iCurrentDevice;
+	getdevices(names, devices, false);
 }
 
 void CSoundIn::Init_HW()
@@ -152,11 +64,23 @@ void CSoundIn::Init_HW()
 #endif
 	/* Open sound device (Use O_RDWR only when writing a program which is
 	   going to both record and play back digital audio) */
+	if(devices.size()==0)
+		throw CGenErr("no capture devices available");
+
+	/* Default ? */
+	if(iCurrentDevice < 0)
+		iCurrentDevice = devices.size()-1;
+
+	/* out of range ? (could happen from command line parameter or USB device unplugged */
+	if(iCurrentDevice >= devices.size())
+		iCurrentDevice = devices.size()-1;
+
 	string devname = devices[iCurrentDevice];
 	dev.open(devname, O_RDONLY );
 	if (dev.fildes() < 0) 
 		throw CGenErr("open of "+devname+" failed");
 	
+#if 0
 	/* Get ready for us.
 	   ioctl(audio_fd, SNDCTL_DSP_SYNC, 0) can be used when application wants 
 	   to wait until last byte written to the device has been played (it doesn't
@@ -194,18 +118,32 @@ void CSoundIn::Init_HW()
 		throw CGenErr("SNDCTL_DSP_SAMPLESIZE ioctl failed");
 	if (arg != ((BITS_PER_SAMPLE == 16) ? AFMT_S16_LE : AFMT_U8))
 		throw CGenErr("unable to set sample size");
+#endif
 }
 
 
 int CSoundIn::read_HW( void * recbuf, int size) {
 	
 	int ret = read(dev.fildes(), recbuf, size * NUM_IN_CHANNELS * BYTES_PER_SAMPLE );
-
 	if (ret < 0) {
-		if ( (errno != EINTR) && (errno != EAGAIN))
-			throw CGenErr("CSound:Read");
-		else
+		switch(errno)
+		{
+		case 0:
+cout <<"no error" <<endl;
 			return 0;
+			break;
+		case EINTR:
+cout <<"interrupted" <<endl;
+			return 0;
+			break;
+		case EAGAIN:
+cout <<"recoverable error" <<endl;
+			return 0;
+			break;
+		default:
+cout <<"error " << strerror(errno) <<endl;
+			//throw CGenErr("CSound:Read");
+		}
 	} else
 		return ret / (NUM_IN_CHANNELS * BYTES_PER_SAMPLE);
 }
@@ -222,51 +160,10 @@ void CSoundIn::close_HW( void ) {
 #define ALSA_PCM_NEW_HW_PARAMS_API
 #define ALSA_PCM_NEW_SW_PARAMS_API
 
-CSoundIn::CSoundIn():iCurrentDevice(0),handle(NULL),devices(),names()
+CSoundIn::CSoundIn():iCurrentDevice(-1),handle(NULL),devices(),names()
 {
 	RecThread.pSoundIn = this;
-	ifstream sndstat("/proc/asound/pcm");
-	if(sndstat.is_open()){
-		vector<string> capture_devices;
-		while(!sndstat.eof()){
-			char s[200];
-			sndstat.getline(s,sizeof(s));
-			if(strlen(s)==0)
-				break;
-			if(strstr(s, "capture")!=NULL)
-				capture_devices.push_back(s);
-		}
-		sndstat.close();
-		sort(capture_devices.begin(), capture_devices.end());
-		for(size_t i=0; i<capture_devices.size(); i++)
-		{
-			stringstream o(capture_devices[i]);
-			char p,n[200],d[200],cap[80];
-			int maj,min;
-			o >> maj >> p >> min;
-			o >> p;
-			o.getline(n, sizeof(n), ':');
-			o.getline(d, sizeof(d), ':');
-			o.getline(cap, sizeof(cap));
-			char dd[20];
-			stringstream dev;
-			dev << "plughw:" << maj << "," << min;
-			devices.push_back(dev.str());
-			names.push_back(n);
-		}
-		names.push_back("Default Capture Device");
-		devices.push_back("dsnoop");
-	}
-}
-
-void CSoundIn::SetDev(int iNewDevice)
-{
-	iCurrentDevice = iNewDevice;
-}
-
-int CSoundIn::GetDev()
-{
-	return iCurrentDevice;
+	getdevices(names, devices, false);
 }
 
 void CSoundIn::Init_HW(){
@@ -278,8 +175,15 @@ void CSoundIn::Init_HW(){
 	snd_pcm_uframes_t period_size = FRAGSIZE * NUM_IN_CHANNELS/2;
 	snd_pcm_uframes_t buffer_size;
 	
-	
-	/* playback/record device */
+	/* Default ? */
+	if(iCurrentDevice < 0)
+		iCurrentDevice = devices.size()-1;
+
+	/* out of range ? (could happen from command line parameter or USB device unplugged */
+	if(iCurrentDevice >= devices.size())
+		iCurrentDevice = devices.size()-1;
+
+	/* record device */
 	string recdevice = devices[iCurrentDevice];
 	
 	if (handle != NULL)
@@ -598,7 +502,9 @@ _BOOLEAN CSoundIn::Read(CVector< _SAMPLE >& psData)
 
 	RecThread.SoundBuf.lock();	// we need exclusive access
 	
-	
+	if(iCurrentDevice == -1)
+		iCurrentDevice = names.size()-1;
+
 	while ( RecThread.SoundBuf.GetFillLevel() < iInBufferSize ) {
 	
 		
@@ -636,5 +542,15 @@ void CSoundIn::Close()
 	close_HW();
 }
 
-
 #endif
+
+void CSoundIn::SetDev(int iNewDevice)
+{
+	iCurrentDevice = iNewDevice;
+}
+
+int CSoundIn::GetDev()
+{
+	return iCurrentDevice;
+}
+
