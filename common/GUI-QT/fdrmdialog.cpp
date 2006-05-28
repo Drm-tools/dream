@@ -380,10 +380,6 @@ void FDRMDialog::OnTimer()
 					formattedMessage += "&gt;";
 					break;
 
-				case '&':
-					formattedMessage += "&amp;";
-					break;
-
 				default:
                     formattedMessage += textMessage[i];
 				}
