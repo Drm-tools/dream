@@ -328,7 +328,6 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) : vecpListItems(0),
 	CStationsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
-	,eLastReceiverMode(RM_DRM)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
