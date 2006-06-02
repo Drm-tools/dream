@@ -114,6 +114,12 @@ void CSettings::ReadIniFile()
 	if (GetNumericIniSet(ini, "Receiver", "frequency", 0, MAX_RF_FREQ, iValue) == TRUE)
 		pDRMRec->SetFrequency(iValue);
 
+#ifdef WIN32
+	/* Enable/Disable process priority flag */
+	if (GetFlagIniSet(ini, "Receiver", "processpriority", bValue) == TRUE)
+		pDRMRec->SetEnableProcessPriority(bValue);
+#endif
+
 	/* Activate/Deactivate EPG decoding */
 	if (GetFlagIniSet(ini, "EPG", "decodeepg", bValue) == TRUE)
 		pDRMRec->GetDataDecoder()->SetDecodeEPG(bValue);
@@ -121,7 +127,11 @@ void CSettings::ReadIniFile()
 #ifdef USE_QT_GUI
 	/* Logfile -------------------------------------------------------------- */
 	/* Start log file flag */
-	if (GetNumericIniSet(ini, "Logfile", "startlog", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
+	if (GetFlagIniSet(ini, "Logfile", "enablelog", bValue) == TRUE)
+		pDRMRec->GetParameters()->ReceptLog.SetLoggingEnabled(bValue);
+
+	/* logging delay value */
+	if (GetNumericIniSet(ini, "Logfile", "logdelay", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
 		pDRMRec->GetParameters()->ReceptLog.SetDelLogStart(iValue);
 
 	/* Latitude string for log file */
@@ -441,18 +451,28 @@ void CSettings::WriteIniFile()
 		pDRMRec->GetMSCMLC()->GetInitNumIterations());
 
 	/* Active/Deactivate EPG decoding */
-	SetFlagIniSet(ini, "EPG", "decodeepg"
-		, pDRMRec->GetDataDecoder()->GetDecodeEPG());
+	SetFlagIniSet(ini, "EPG", "decodeepg",
+		pDRMRec->GetDataDecoder()->GetDecodeEPG());
 
 #ifdef USE_QT_GUI
 	/* Logfile -------------------------------------------------------------- */
+	/* log or nolog? */
+	SetFlagIniSet(ini, "Logfile", "enablelog",
+		pDRMRec->GetParameters()->ReceptLog.GetLoggingEnabled());
+
 	/* Start log file delayed */
-	SetNumericIniSet(ini, "Logfile", "startlog",
+	SetNumericIniSet(ini, "Logfile", "logdelay",
 		pDRMRec->GetParameters()->ReceptLog.GetDelLogStart());
 
 	/* Frequency for log file */
 	SetNumericIniSet(ini, "Logfile", "frequency",
 		pDRMRec->GetParameters()->ReceptLog.GetFrequency());
+
+#ifdef WIN32
+	/* Enable/Disable process priority flag */
+	SetFlagIniSet(ini, "Receiver", "processpriority",
+		pDRMRec->GetEnableProcessPriority());
+#endif
 
 	/* Latitude string for log file */
 	PutIniSetting(ini, "Logfile", "latitude",
@@ -951,6 +971,25 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+#ifdef WIN32
+		/* Enable/Disable process priority flag */
+		if (GetNumericArgument(argc, argv, i, "-P", "--processpriority", 0,
+			1, rArgument) == TRUE)
+		{
+			switch ((int) rArgument)
+			{
+			case 0:
+				pDRMRec->SetEnableProcessPriority(FALSE);
+				break;
+
+			case 1:
+				pDRMRec->SetEnableProcessPriority(TRUE);
+				break;
+			}
+			continue;
+		}
+#endif
+
 		/* enable/disable epg decoding ----------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-e", "--decodeepg", 0,
 			1, rArgument) == TRUE)
@@ -969,8 +1008,26 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 		}
 
 #ifdef USE_QT_GUI /* QThread needed for log file timing */
-		/* Start log file flag ---------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-l", "--startlog", 1,
+
+		/* log enable flag  ---------------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-g", "--enablelog", 0, 1,
+			rArgument) == TRUE)
+		{
+			switch ((int) rArgument)
+			{
+			case 0:
+				pDRMRec->GetParameters()->ReceptLog.SetLoggingEnabled(FALSE);
+				break;
+
+			case 1:
+				pDRMRec->GetParameters()->ReceptLog.SetLoggingEnabled(TRUE);
+				break;
+			}
+			continue;
+		}
+
+		/* log file delay value  ---------------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-l", "--logdelay", 0,
 			MAX_SEC_LOG_FI_START, rArgument) == TRUE)
 		{
 			pDRMRec->GetParameters()->ReceptLog.
@@ -1172,10 +1229,11 @@ string CSettings::UsageArguments(char** argv)
 		"  -e <n>, --decodeepg <n>     enable/disable epg decoding (0: off; 1: on)\n"
 
 #ifdef USE_QT_GUI
+		"  -g <n>, --enablelog <n>     enable/disable logging (0: no logging; 1: logging\n"
 		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
 		"  -a <s>, --latitude <s>      set latitude string for log file\n"
 		"  -o <s>, --longitude <s>     set longitude string for log file\n"
-		"  -l <n>, --startlog <n>      start log file (delayed by <n> seconds, allowed range: 1...3600)\n"
+		"  -l <n>, --logdelay <n>      delay start of logging by <n> seconds, allowed range: 0...3600)\n"
 		"  -y <n>, --colorscheme <n>   set color scheme for main plot\n"
 		"                              0: blue-white (default)\n"
 		"                              1: green-black\n"
@@ -1197,6 +1255,9 @@ string CSettings::UsageArguments(char** argv)
 		"  -C <s>, --hamlib-config <s> set Hamlib config parameter\n"
 #endif
 		"  -T, --ensmeter              enable S-Meter\n"
+#ifdef WIN32
+		"  -P, --processpriority <n>   enable/disable high priority for working thread\n"
+#endif
 
 		"\n  -h, -?, --help             this help text\n"
 		"Example: " + string(argv[0]) +

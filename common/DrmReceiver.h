@@ -151,6 +151,9 @@ public:
 		iBwFM(6000),
 		AMDemodType(CAMDemodulation::DT_AM)
 #endif
+#ifdef _WIN32
+		, bProcessPriorityEnabled(TRUE)
+#endif
 	{}
 
 	virtual ~CDRMReceiver() {}
@@ -204,6 +207,11 @@ public:
 					 rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);}
 	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
     	{ChannelEstimation.GetSNRProfile(vecrData, vecrScale);}
+#ifdef _WIN32
+	void SetEnableProcessPriority(_BOOLEAN bValue)
+	{ bProcessPriorityEnabled = bValue; }
+	_BOOLEAN GetEnableProcessPriority() { return bProcessPriorityEnabled; }
+#endif
 
 	/* Get pointer to internal modules */
 	CUtilizeFACData*		GetFAC() {return &UtilizeFACData;}
@@ -490,6 +498,10 @@ protected:
 	static const int MAX_UNLOCKED_COUNT;
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
 	int iUnlockedCount;
+
+#ifdef _WIN32
+	_BOOLEAN bProcessPriorityEnabled;
+#endif
 
 };
 

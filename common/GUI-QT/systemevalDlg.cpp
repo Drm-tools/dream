@@ -392,12 +392,14 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerLogFileStart, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFileStart()));
 
-	/* Activte real-time timer */
+	/* Activate real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 
-	/* Activate delayed log file start if necessary (timer is set to shot
-	   only once) */
-	if (pDRMRec->GetParameters()->ReceptLog.IsDelLogStart() == TRUE)
+	/* Activate log file start if necessary.
+	   Timer is set to fire only once.
+	   Relies on timer firing immediately if delay is zero.
+	 */
+	if (pDRMRec->GetParameters()->ReceptLog.GetLoggingEnabled() == TRUE)
 	{
 		/* One shot timer */
 		TimerLogFileStart.start(pDRMRec->GetParameters()->
@@ -1076,8 +1078,10 @@ void systemevalDlg::OnCheckSaveAudioWAV()
 
 void systemevalDlg::OnTimerLogFileStart()
 {
+ 	CParameter::CReceptLog& ReceptLog = pDRMRec->GetParameters()->ReceptLog;
+
 	/* Start logging (if not already done) */
-	if (!CheckBoxWriteLog->isChecked())
+	if ( ReceptLog.GetLoggingEnabled() && !ReceptLog.GetLoggingActivated())
 	{
 		CheckBoxWriteLog->setChecked(TRUE);
 		OnCheckWriteLog();
@@ -1141,8 +1145,8 @@ void systemevalDlg::OnCheckWriteLog()
 		pDRMRec->GetParameters()->ReceptLog.
 			SetProtLev(pDRMRec->GetParameters()->MSCPrLe);
 
-		/* Activate log file */
-		pDRMRec->GetParameters()->ReceptLog.SetLog(TRUE);
+		/* Open log file */
+		pDRMRec->GetParameters()->ReceptLog.StartLogging();
 	}
 	else
 	{
@@ -1150,7 +1154,7 @@ void systemevalDlg::OnCheckWriteLog()
 		TimerLogFileShort.stop();
 		TimerLogFileLong.stop();
 
-		pDRMRec->GetParameters()->ReceptLog.SetLog(FALSE);
+		pDRMRec->GetParameters()->ReceptLog.StopLogging();
 	}
 
 	/* set the focus */

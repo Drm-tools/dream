@@ -129,6 +129,8 @@ public:
 							 CBuffer<TOutput>& OutputBuffer,
 							 CBuffer<TOutput>& OutputBuffer2,
 							 vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
+	virtual void		Init(CParameter& Parameter, 
+							 vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
 	virtual void		ReadData(CParameter& Parameter, 
 								 CBuffer<TOutput>& OutputBuffer);
 	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
@@ -147,6 +149,9 @@ public:
 									CBuffer<TInput>& InputBuffer,
 									CBuffer<TOutput>& OutputBuffer, 
 									CBuffer<TOutput>& OutputBuffer2, 
+									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
+	virtual _BOOLEAN	ProcessData(CParameter& Parameter, 
+									CBuffer<TInput>& InputBuffer,
 									vector< CSingleBuffer<TOutput> >& vecOutputBuffer);
 	virtual _BOOLEAN	WriteData(CParameter& Parameter, 
 								  CBuffer<TInput>& InputBuffer);
@@ -640,6 +645,38 @@ CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
     }
 }
 
+template<class TInput, class TOutput> void
+CReceiverModul<TInput, TOutput>::Init(CParameter& Parameter,
+					vector< CSingleBuffer<TOutput> >& vecOutputBuffer)
+{
+	size_t i;
+	/* Init some internal variables */
+	veciMaxOutputBlockSize.resize(vecOutputBuffer.size());
+    for(i=0; i<veciMaxOutputBlockSize.size(); i++)
+		veciMaxOutputBlockSize[i]=0;
+	veciOutputBlockSize.resize(vecOutputBuffer.size());
+    for(i=0; i<veciOutputBlockSize.size(); i++)
+		veciOutputBlockSize[i]=0;
+	vecbResetBuf.resize(vecOutputBuffer.size());
+    for(i=0; i<vecbResetBuf.size(); i++)
+		vecbResetBuf[i]=FALSE;
+
+	/* Init base-class */
+	CModul<TInput, TOutput>::Init(Parameter);
+
+	/* Init output transfer buffers */
+    for(i=0; i<veciMaxOutputBlockSize.size(); i++)
+    {
+		if (veciMaxOutputBlockSize[i] != 0)
+			vecOutputBuffer[i].Init(veciMaxOutputBlockSize[i]);
+		else
+		{
+			if (veciOutputBlockSize[i] != 0)
+				vecOutputBuffer[i].Init(veciOutputBlockSize[i]);
+		}
+    }
+}
+
 template<class TInput, class TOutput>
 _BOOLEAN CReceiverModul<TInput, TOutput>::
 	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
@@ -923,6 +960,67 @@ _BOOLEAN CReceiverModul<TInput, TOutput>::
 			OutputBuffer2.Put(iOutputBlockSize2);
 		}
 
+		for(i=0; i<vecOutputBuffer.size(); i++)
+		{
+			if (vecbResetBuf[i] == TRUE)
+			{
+				/* Reset flag and clear buffer */
+				vecbResetBuf[i] = FALSE;
+				vecOutputBuffer[i].Clear();
+			}
+			else
+			{
+				/* Write processed data from internal memory in transfer-buffer */
+				vecOutputBuffer[i].Put(veciOutputBlockSize[i]);
+			}
+		}
+	}
+
+	return bEnoughData;
+}
+
+template<class TInput, class TOutput>
+_BOOLEAN CReceiverModul<TInput, TOutput>::
+	ProcessData(CParameter& Parameter, CBuffer<TInput>& InputBuffer,
+				vector< CSingleBuffer<TOutput> >& vecOutputBuffer)
+{
+	/* Check initialization flag. The initialization must be done OUTSIDE
+	   the processing routine. This is ensured by doing it here, where we
+	   have control of calling the processing routine. Therefore we
+	   introduced the flag */
+	if (bDoInit == TRUE)
+	{
+		/* Call init routine */
+		Init(Parameter, vecOutputBuffer);
+
+		/* Reset init flag */
+		bDoInit = FALSE;
+	}
+
+	/* This flag shows, if enough data was in the input buffer for processing */
+	_BOOLEAN bEnoughData = FALSE;
+
+	/* INPUT-DRIVEN modul implementation in the receiver -------------------- */
+	/* Check if enough data is available in the input buffer for processing */
+	if (InputBuffer.GetFillLevel() >= this->iInputBlockSize)
+	{
+		size_t i;
+		bEnoughData = TRUE;
+
+		/* Get vector from transfer-buffer */
+		this->pvecInputData = InputBuffer.Get(this->iInputBlockSize);
+	
+		/* Query vector from output transfer-buffer for writing */
+		vecpvecOutputData.resize(vecOutputBuffer.size());
+		for(i=0; i<vecOutputBuffer.size(); i++)
+		{
+			vecpvecOutputData[i] = vecOutputBuffer[i].QueryWriteBuffer();
+		}
+		
+		/* Call the underlying processing-routine */
+		this->ProcessDataThreadSave(Parameter);
+	
+		/* Reset output-buffers if flag was set by processing routine */
 		for(i=0; i<vecOutputBuffer.size(); i++)
 		{
 			if (vecbResetBuf[i] == TRUE)

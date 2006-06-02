@@ -81,6 +81,8 @@ void CDRMReceiver::Run()
 			else
 			{
 				ReceiverParam.ReceiveStatus.SetInterfaceStatus(NOT_PRESENT);
+				ReceiverParam.ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
+				ReceiverParam.ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
 				ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
 				ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
 				ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
@@ -253,11 +255,12 @@ void CDRMReceiver::Run()
 
 					/* MSC demultiplexer (will leave FAC & SDC alone! */
 					if (MSCDemultiplexer.ProcessData(ReceiverParam,
-						MSCMLCDecBuf, FACDecBuf, SDCDecBuf, MSCDecBuf))
+												MSCMLCDecBuf, MSCDecBuf))
 					{
 						for(size_t i=0; i<MSCDecBuf.size(); i++)
 						{
-							SplitMSC[i].ProcessData(ReceiverParam, MSCDecBuf[i], MSCUseBuf[i], MSCSendBuf[i]);
+							SplitMSC[i].ProcessData(ReceiverParam, MSCDecBuf[i],
+								MSCUseBuf[i], MSCSendBuf[i]);
 						}
 						bEnoughData = TRUE;
 					}
@@ -524,6 +527,8 @@ void CDRMReceiver::SetInStartMode()
 
 	/* Reset GUI lights */
 	ReceiverParam.ReceiveStatus.SetInterfaceStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
+	ReceiverParam.ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
 	ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
 	ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
 	ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);

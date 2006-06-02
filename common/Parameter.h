@@ -677,12 +677,16 @@ public:
 		virtual ~CReceptLog() {CloseFile(pFileLong, TRUE);
 			CloseFile(pFileShort, FALSE);}
 
+		void StartLogging();
+		void StopLogging();
 		void SetFAC(const _BOOLEAN bCRCOk);
 		void SetMSC(const _BOOLEAN bCRCOk);
 		void SetSync(const _BOOLEAN bCRCOk);
 		void SetSNR(const _REAL rNewCurSNR);
 		void SetNumAAC(const int iNewNum);
-		void SetLog(const _BOOLEAN bLog);
+		void SetLoggingEnabled(const _BOOLEAN bLog) { bLogEnabled = bLog; }
+		_BOOLEAN GetLoggingEnabled() {return bLogEnabled;}
+		_BOOLEAN GetLoggingActivated() {return bLogActivated;}
 		void SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong);
 		void SetFrequency(const int iNewFreq) {iFrequency = iNewFreq;}
 		int GetFrequency() {return iFrequency;}
@@ -692,8 +696,7 @@ public:
 		string GetLongitude() {return strLongitude;}
 		void SetAdditText(const string strNewTxt) {strAdditText = strNewTxt;}
 		void WriteParameters(const _BOOLEAN bIsLong);
-		void SetDelLogStart(const int iSecDel);
-		_BOOLEAN IsDelLogStart() {return bDelayedLogStart;}
+		void SetDelLogStart(const int iSecDel) { iSecDelLogStart = iSecDel; }
 		int GetDelLogStart() {return iSecDelLogStart;}
 
 		void ResetTransParams();
@@ -715,12 +718,12 @@ public:
 		_REAL			rAvSNR, rCurSNR;
 		_REAL			rMaxSNR, rMinSNR;
 		_BOOLEAN		bLogActivated;
+		_BOOLEAN		bLogEnabled;
 		FILE*			pFileLong;
 		FILE*			pFileShort;
 		string			strAdditText;
 		string			strLatitude;
 		string			strLongitude;
-		_BOOLEAN		bDelayedLogStart;
 		int				iSecDelLogStart;
 
 		ERobMode		eCurRobMode;

@@ -81,7 +81,8 @@ public:
 		/* Set thread priority (The working thread should have a higher priority
 		   than the GUI) */
 #ifdef _WIN32
-		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+		if(DRMReceiver.GetEnableProcessPriority())
+			SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 #endif
 
 		try
@@ -118,11 +119,14 @@ try
 		app.installTranslator(&translator);
 
 #ifdef _WIN32
-	/* Set priority class for this application */
-	SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
+	if(DRMReceiver.GetEnableProcessPriority())
+	{
+		/* Set priority class for this application */
+		SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
 
-	/* Low priority for GUI thread */
-	SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+		/* Low priority for GUI thread */
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
+	}
 #endif
 
 	if (bIsReceiver == FALSE)

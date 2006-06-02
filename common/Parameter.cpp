@@ -668,21 +668,12 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 
 /* Reception log implementation --------------------------------------------- */
 CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFileLong(NULL),
-	pFileShort(NULL), iFrequency(0), strAdditText(""), strLatitude(""),
-	strLongitude(""), bDelayedLogStart(FALSE), iSecDelLogStart(0)
+	pFileShort(NULL), iFrequency(0), strAdditText(""),
+	strLatitude(""), strLongitude(""), 
+	bLogEnabled(FALSE), bLogActivated(FALSE), iSecDelLogStart(0)
 {
 	ResetLog(TRUE);
 	ResetLog(FALSE);
-}
-
-void CParameter::CReceptLog::SetDelLogStart(const int iSecDel)
-{
-	/* If the parameter is 0, no delayed log file shall be used */
-	if (iSecDel > 0)
-	{
-		bDelayedLogStart = TRUE;
-		iSecDelLogStart = iSecDel;
-	}
 }
 
 void CParameter::CReceptLog::ResetLog(const _BOOLEAN bIsLong)
@@ -818,46 +809,47 @@ void CParameter::CReceptLog::SetNumAAC(const int iNewNum)
 	}
 }
 
-void CParameter::CReceptLog::SetLog(const _BOOLEAN bLog)
+void CParameter::CReceptLog::StartLogging()
 {
-	bLogActivated = bLog;
+	bLogActivated = TRUE;
+	bLogEnabled = TRUE;
 
-	/* Open or close the file */
-	if (bLogActivated == TRUE)
-	{
-		Mutex.Lock();
+	Mutex.Lock();
 
-		/* Init long and short version of log file. Open output file, write
-		   header and reset log file parameters */
-		/* Short */
-		pFileShort = fopen("DreamLog.txt", "a");
-		SetLogHeader(pFileShort, FALSE);
-		ResetLog(FALSE);
-		iTimeCntShort = 0;
+	/* Init long and short version of log file. Open output file, write
+	   header and reset log file parameters */
+	/* Short */
+	pFileShort = fopen("DreamLog.txt", "a");
+	SetLogHeader(pFileShort, FALSE);
+	ResetLog(FALSE);
+	iTimeCntShort = 0;
 
-		/* Long */
-		pFileLong = fopen("DreamLogLong.csv", "a");
-		SetLogHeader(pFileLong, TRUE);
-		ResetLog(TRUE);
+	/* Long */
+	pFileLong = fopen("DreamLogLong.csv", "a");
+	SetLogHeader(pFileLong, TRUE);
+	ResetLog(TRUE);
 
-		/* Init time with current time. The time function returns the number of
-		   seconds elapsed since midnight (00:00:00), January 1, 1970,
-		   coordinated universal time, according to the system clock */
-		time(&TimeCntLong);
+	/* Init time with current time. The time function returns the number of
+	   seconds elapsed since midnight (00:00:00), January 1, 1970,
+	   coordinated universal time, according to the system clock */
+	time(&TimeCntLong);
 
-		/* Init maximum and mininum value of SNR */
-		rMaxSNR = 0;
-		rMinSNR = 1000; /* Init with high value */
+	/* Init maximum and mininum value of SNR */
+	rMaxSNR = 0;
+	rMinSNR = 1000; /* Init with high value */
 
-		Mutex.Unlock();
-	}
-	else
-	{
-		/* Close both types of log files */
-		CloseFile(pFileLong, TRUE);
-		CloseFile(pFileShort, FALSE);
-	}
+	Mutex.Unlock();
 }
+
+void CParameter::CReceptLog::StopLogging()
+{
+	bLogActivated = FALSE;
+	bLogEnabled = FALSE;
+	/* Close both types of log files */
+	CloseFile(pFileLong, TRUE);
+	CloseFile(pFileShort, FALSE);
+}
+
 
 void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 {
