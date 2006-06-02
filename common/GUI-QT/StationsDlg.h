@@ -147,7 +147,8 @@ public:
 class CDRMSchedule
 {
 public:
-	CDRMSchedule() {}
+	CDRMSchedule(): StationsTable(),eSchedMode(SM_DRM),iSecondsPreview(0) {}
+
 	virtual ~CDRMSchedule() {}
 
 	enum ESchedMode {SM_DRM, SM_ANALOG};

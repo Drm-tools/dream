@@ -709,23 +709,26 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	/* Set stations preview */
 	/* Retrive the setting saved into the .ini file */
-	DRMSchedule.SetSecondsPreview(pDRMRec->iSecondsPreviewLiveSched);
-	switch (DRMSchedule.GetSecondsPreview())
+	switch (pDRMRec->iSecondsPreviewLiveSched)
 	{
 	case NUM_SECONDS_PREV_5MIN:
 		pPreviewMenu->setItemChecked(1, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
 		break;
 
 	case NUM_SECONDS_PREV_15MIN:
 		pPreviewMenu->setItemChecked(2, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
 		break;
 
 	case NUM_SECONDS_PREV_30MIN:
 		pPreviewMenu->setItemChecked(3, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
 		break;
 
-	default: /* case 0: */
+	default: /* case 0, also takes care of out of value parameters */
 		pPreviewMenu->setItemChecked(0, TRUE);
+		DRMSchedule.SetSecondsPreview(0);
 		break;
 	}
 

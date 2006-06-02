@@ -301,6 +301,7 @@ void CRSIMDIOutRCIIn::TransmitPacket(CVector<_BINARY> vecbidata)
 	vecbidata.ResetBitAccess();
 	int bits = vecbidata.Size();
 	int bytes = bits / SIZEOF__BYTE;
+	packet.reserve(bytes);
 	for(size_t i=0; i<bytes; i++)
 	{
 	 	_BYTE byte = (_BYTE)vecbidata.Separate(SIZEOF__BYTE);

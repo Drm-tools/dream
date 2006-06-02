@@ -65,8 +65,8 @@
 /* Maximum minutes for delayed log file start */
 # define MAX_SEC_LOG_FI_START		3600 /* seconds */
 
-/* Maximum carrier frequency for log file */
-# define MAX_FREQ_LOG_FILE			30000 /* kHz */
+/* Maximum carrier frequency  */
+# define MAX_RF_FREQ				30000 /* kHz */
 
 /* Maximum value for window position and size */
 # define MAX_WIN_GEOM_VAL			10000 /* Pixel */

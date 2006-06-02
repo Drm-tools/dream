@@ -328,6 +328,7 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) : vecpListItems(0),
 	CStationsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+	,eLastReceiverMode(RM_DRM)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -438,24 +439,27 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 		SLOT(OnShowPreviewMenu(int)), 0, 3);
 
 	/* Set stations preview */
-	/* Retrive the setting saved into the .ini file */
-	DRMSchedule.SetSecondsPreview(pDRMRec->iSecondsPreview);
-	switch (DRMSchedule.GetSecondsPreview())
+	/* Retrieve the setting saved into the .ini file */
+	switch (pDRMRec->iSecondsPreview)
 	{
 	case NUM_SECONDS_PREV_5MIN:
 		pPreviewMenu->setItemChecked(1, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
 		break;
 
 	case NUM_SECONDS_PREV_15MIN:
 		pPreviewMenu->setItemChecked(2, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_15MIN);
 		break;
 
 	case NUM_SECONDS_PREV_30MIN:
 		pPreviewMenu->setItemChecked(3, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_30MIN);
 		break;
 
-	default: /* case 0: */
+	default: /* case 0, also takes care of out of value parameters */
 		pPreviewMenu->setItemChecked(0, TRUE);
+		DRMSchedule.SetSecondsPreview(0);
 		break;
 	}
 
@@ -1104,15 +1108,18 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		   "ReceptLog.SetFrequency()" needed, too */
 		QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
 
-		/* Now tell the receiver that the frequency has changed */
+		/* If the mode has changed re-initialise the receiver */
+		ERecMode eCurrentMode = pDRMRec->GetReceiverMode();
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
-			pDRMRec->SetReceiverMode(RM_DRM);
+			if(eCurrentMode!=RM_DRM)
+				pDRMRec->SetReceiverMode(RM_DRM);
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
-			pDRMRec->SetReceiverMode(RM_AM);
+			if(eCurrentMode!=RM_AM)
+				pDRMRec->SetReceiverMode(RM_AM);
 			break;
 		}
 	}

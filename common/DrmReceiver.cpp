@@ -857,7 +857,8 @@ void CDRMReceiver::InitsForAudParam()
 	MSCDemultiplexer.SetInitFlag();
 	int a = ReceiverParam.GetCurSelAudioService();
 	iAudioStreamID = ReceiverParam.GetAudioParam(a).iStreamID;
-	ReceiverParam.SetNumAudioDecoderBits(ReceiverParam.GetStreamLen(iAudioStreamID)*SIZEOF__BYTE);
+	ReceiverParam.SetNumAudioDecoderBits(
+		ReceiverParam.GetStreamLen(iAudioStreamID)*SIZEOF__BYTE);
 	AudioSourceDecoder.SetInitFlag();
 }
 
@@ -868,7 +869,8 @@ void CDRMReceiver::InitsForDataParam()
 	MSCDemultiplexer.SetInitFlag();
 	int d = ReceiverParam.GetCurSelDataService();
 	iDataStreamID = ReceiverParam.GetDataParam(d).iStreamID;
-	ReceiverParam.SetNumAudioDecoderBits(ReceiverParam.GetStreamLen(iDataStreamID)*SIZEOF__BYTE);
+	ReceiverParam.SetNumDataDecoderBits(
+		ReceiverParam.GetStreamLen(iDataStreamID)*SIZEOF__BYTE);
 	DataDecoder.SetInitFlag();
 }
 
@@ -1051,6 +1053,8 @@ void CDRMReceiver::GetSNRHist(CVector<_REAL>& vecrSNR,
 
 _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 {
+	if(iFreqkHz == iNewFreqkHz)
+		return TRUE;
 	iFreqkHz = iNewFreqkHz;
  	ReceiverParam.ReceptLog.SetFrequency(iNewFreqkHz);
 #ifdef HAVE_LIBHAMLIB

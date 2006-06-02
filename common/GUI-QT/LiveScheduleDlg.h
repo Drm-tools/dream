@@ -88,7 +88,10 @@ public:
 class CDRMLiveSchedule
 {
 public:
-	CDRMLiveSchedule() {}
+	CDRMLiveSchedule():StationsTable(),iSecondsPreview(0),
+	iReceiverLatitude(0),iReceiverLongitude(0),bCheckCoordinates(FALSE)
+	{}
+
 	virtual ~CDRMLiveSchedule() {}
 
 	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW};

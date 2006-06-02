@@ -61,6 +61,14 @@ void CSettings::ReadIniFile()
 
 	/* Load data from init-file */
 	INIFile ini = LoadIni(DREAM_INIT_FILE_NAME);
+#if 0
+	for(INIFile::iterator i=ini.begin(); i!=ini.end(); i++)
+	{
+      cout << "[" << i->first << "]" << endl;
+      for(INISection::iterator j=i->second.begin(); j!=i->second.end(); j++)
+			   cout << j->first << "=" << j->second << endl;
+    }
+#endif	
 
 
 	/* Receiver ------------------------------------------------------------- */
@@ -98,10 +106,13 @@ void CSettings::ReadIniFile()
 	if (GetNumericIniSet(ini, "Receiver", "snddevout", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
 		pDRMRec->GetSoundOutInterface()->SetDev(iValue);
 
-
 	/* Number of iterations for MLC setting */
 	if (GetNumericIniSet(ini, "Receiver", "mlciter", 0, MAX_NUM_MLC_IT, iValue) == TRUE)
 		pDRMRec->GetMSCMLC()->SetNumIterations(iValue);
+
+	/* Wanted RF Frequency file */
+	if (GetNumericIniSet(ini, "Receiver", "frequency", 0, MAX_RF_FREQ, iValue) == TRUE)
+		pDRMRec->SetFrequency(iValue);
 
 	/* Activate/Deactivate EPG decoding */
 	if (GetFlagIniSet(ini, "EPG", "decodeepg", bValue) == TRUE)
@@ -112,10 +123,6 @@ void CSettings::ReadIniFile()
 	/* Start log file flag */
 	if (GetNumericIniSet(ini, "Logfile", "startlog", 0, MAX_SEC_LOG_FI_START, iValue) == TRUE)
 		pDRMRec->GetParameters()->ReceptLog.SetDelLogStart(iValue);
-
-	/* Frequency for log file */
-	if (GetNumericIniSet(ini, "Logfile", "frequency", 0, MAX_FREQ_LOG_FILE, iValue) == TRUE)
-		pDRMRec->SetFrequency(iValue);
 
 	/* Latitude string for log file */
 	pDRMRec->GetParameters()->ReceptLog.SetLatitude(
@@ -936,6 +943,14 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+		/* Wanted RF Frequency   ------------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0,
+			MAX_RF_FREQ, rArgument) == TRUE)
+		{
+			pDRMRec->SetFrequency((int) rArgument);
+			continue;
+		}
+
 		/* enable/disable epg decoding ----------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-e", "--decodeepg", 0,
 			1, rArgument) == TRUE)
@@ -962,16 +977,6 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 				SetDelLogStart((int) rArgument);
 			continue;
 		}
-
-
-		/* Frequency for log file ------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-r", "--frequency", 0,
-			MAX_FREQ_LOG_FILE, rArgument) == TRUE)
-		{
-			pDRMRec->SetFrequency((int) rArgument);
-			continue;
-		}
-
 
 		/* Latitude string for log file ------------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-a", "--latitude",
@@ -1335,7 +1340,7 @@ CSettings::INIFile CSettings::LoadIni(const char* filename)
 	string			section;
 	char			buffer[MAX_INI_LINE];
 	std::fstream	file(filename, std::ios::in);
-	
+
 	while (file.good())
 	{
 		memset(buffer, 0, sizeof(buffer));
