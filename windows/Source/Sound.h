@@ -37,12 +37,13 @@
 class CSoundInterface
 {
 public:
-    CSoundInterface():iCurDev(0),vecstrDevices(),m_WaveEvent(NULL){}
+    CSoundInterface():  vecstrDevices(),iCurDev(0),m_WaveEvent(NULL){}
 	virtual void		Enumerate(vector<string>& names){ names = vecstrDevices; }
 	virtual void		SetDev(int iNewDev) { iCurDev = iNewDev; }
 	int			GetDev() {return iCurDev;}
 
 	void		Close();
+	virtual ~CSoundInterface() {}
 
 protected:
 	vector<string>	vecstrDevices;

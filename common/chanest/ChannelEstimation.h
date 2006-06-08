@@ -77,10 +77,10 @@
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
 {
 public:
-	CChannelEstimation() :
-	    iLenHistBuff(0), TypeIntFreq(FWIENER), 
-		TypeIntTime(TWIENER), eDFTWindowingMethod(DFT_WIN_HAMM),
-		TypeSNREst(SNR_FAC), bInterfConsid(FALSE) {}
+	CChannelEstimation() : eDFTWindowingMethod(DFT_WIN_HAMM),
+	    TypeIntFreq(FWIENER), TypeIntTime(TWIENER),
+		TypeSNREst(SNR_FAC), iLenHistBuff(0), 
+		bInterfConsid(FALSE) {}
 	virtual ~CChannelEstimation() {}
 
 	enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};

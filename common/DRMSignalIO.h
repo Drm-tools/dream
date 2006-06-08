@@ -68,9 +68,9 @@ public:
 	enum EOutFormat {OF_REAL_VAL /* real valued */, OF_IQ_POS,
 		OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */};
 
-	CTransmitData(CSoundOut* pNS) : pSound(pNS), eOutputFormat(OF_REAL_VAL),
-		rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ), bUseSoundcard(TRUE),
-		strOutFileName("test/TransmittedData.txt"), pFileTransmitter(NULL) {}
+	CTransmitData(CSoundOut* pNS) : pFileTransmitter(NULL), pSound(pNS), 
+		eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
+		strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
 	virtual ~CTransmitData();
 
 	void SetIQOutput(const EOutFormat eFormat) {eOutputFormat = eFormat;}
@@ -113,11 +113,11 @@ public:
 	enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
 		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
 
-	CReceiveData(CSoundIn* pNS) : strInFileName("test/TransmittedData.txt"),
-		bUseSoundcard(TRUE), bNewUseSoundcard(TRUE), pSound(pNS),
-		pFileReceiver(NULL), bFippedSpectrum(FALSE),
-		vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
-		eInChanSelection(CS_MIX_CHAN) {}
+	CReceiveData(CSoundIn* pNS) : pFileReceiver(NULL), pSound(pNS),
+	vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
+	bFippedSpectrum(FALSE), bUseSoundcard(TRUE), bNewUseSoundcard(TRUE),
+	strInFileName("test/TransmittedData.txt"), eInChanSelection(CS_MIX_CHAN)
+		 {}
 	virtual ~CReceiveData();
 
 	_REAL GetLevelMeter() {return SignalLevelMeter.Level();}
@@ -155,6 +155,7 @@ protected:
 	CVector<_REAL>			vecrImHist;
 	_COMPLEX				cCurExp;
 	_COMPLEX				cExpStep;
+
 	_REAL HilbertFilt(const _REAL rRe, const _REAL rIm);
 
 	virtual void InitInternal(CParameter& ReceiverParam);

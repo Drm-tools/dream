@@ -116,8 +116,8 @@ void CDRMTransmitter::Init()
 	TransmitData.Init(TransmParam);
 }
 
-CDRMTransmitter::CDRMTransmitter() : TransmitData(&SoundOutInterface),
-	ReadData(&SoundInInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
+CDRMTransmitter::CDRMTransmitter() : ReadData(&SoundInInterface), 
+TransmitData(&SoundOutInterface), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ)
 {
 	/* Init streams */
 	TransmParam.ResetServicesStreams();

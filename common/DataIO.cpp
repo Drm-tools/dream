@@ -202,8 +202,8 @@ CWriteData::CWriteData(CSoundOut* pNS) : pSound(pNS), /* Sound interface */
 	FftPlan(NUM_SMPLS_4_AUDIO_SPECTRUM),
 	veccFFTInput(NUM_SMPLS_4_AUDIO_SPECTRUM),
 	veccFFTOutput(NUM_SMPLS_4_AUDIO_SPECTRUM),
-	vecrHammingWindow(NUM_SMPLS_4_AUDIO_SPECTRUM),
-	eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST)
+	eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
+	vecrHammingWindow(NUM_SMPLS_4_AUDIO_SPECTRUM)
 {
 	/* Constructor */
 }

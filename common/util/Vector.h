@@ -50,7 +50,7 @@ public:
 	   default, reset */
 	CVector(const CVector<TData>& vecI) :
 		vector<TData>(static_cast<const vector<TData>&>(vecI)),
-		iVectorSize(vecI.Size()), iBitArrayCounter(0) {pData = this->begin();}
+		iBitArrayCounter(0), iVectorSize(vecI.Size()) {pData = this->begin();}
 
 	virtual void Init(const int iNewSize);
 

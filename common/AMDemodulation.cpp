@@ -762,7 +762,7 @@ void CNoiseReduction::UpdateNoiseEst(CRealVector& vecrNoisePSD,
 /*
 	Implements a mimium statistic proposed by R. Martin
 */
-	/* Set weightning factor for minimum statistic */
+	/* Set weighting factor for minimum statistic */
 	CReal rWeiFact;
 	switch (eNoiRedDegree)
 	{

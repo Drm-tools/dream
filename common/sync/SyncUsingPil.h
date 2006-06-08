@@ -52,12 +52,16 @@ class CSyncUsingPil : public CReceiverModul<_COMPLEX, _COMPLEX>,
 {
 public:
 	CSyncUsingPil() :
+		iPosFreqPil(NUM_FREQ_PILOTS),
+		cOldFreqPil(NUM_FREQ_PILOTS),
+		iSymbCntFraSy(0),
+		iNumSymPerFrame(0),
+		bSyncInput(FALSE), bAquisition(FALSE),
+		bTrackPil(FALSE)
 #ifdef USE_SAMOFFS_TRACK_FRE_PIL
-		cFreqPilotPhDiff(NUM_FREQ_PILOTS),
+		, cFreqPilotPhDiff(NUM_FREQ_PILOTS)
 #endif
-		bSyncInput(FALSE), bAquisition(FALSE), bTrackPil(FALSE),
-		iSymbCntFraSy(0), iNumSymPerFrame(0),
-		iPosFreqPil(NUM_FREQ_PILOTS), cOldFreqPil(NUM_FREQ_PILOTS) {}
+	  {}
 	virtual ~CSyncUsingPil() {}
 
 	/* To set the module up for synchronized DRM input data stream */

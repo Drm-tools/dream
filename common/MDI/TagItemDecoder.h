@@ -48,6 +48,7 @@ public:
 
 	// This function must return the name of the tag item that this decoder decodes.
 	virtual string GetTagName(void) = 0;
+	virtual ~CTagItemDecoder() {}
 
 };
 

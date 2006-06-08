@@ -231,15 +231,15 @@ protected:
 	CRealVector		rvecB;
 };
 
-
 /* AM demodulation module --------------------------------------------------- */
 class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
 {
 public:
-	CAMDemodulation() : eDemodType(DT_AM), NoiRedType(NR_OFF),
+	CAMDemodulation() : 
 		rBPNormBW((CReal) 10000.0 / SOUNDCRD_SAMPLE_RATE),
-		rNormCurMixFreqOffs((CReal) 0.0), bPLLIsEnabled(FALSE),
-		bAutoFreqAcquIsEnabled(TRUE) {}
+		rNormCurMixFreqOffs((CReal) 0.0),
+		bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(TRUE),
+		eDemodType(DT_AM), NoiRedType(NR_OFF) {}
 	virtual ~CAMDemodulation() {}
 
 	enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_FM};

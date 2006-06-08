@@ -36,11 +36,11 @@
 #include <map>
 #include <queue>
 
-#ifdef HAVE_LIBFREEIMAGE
-# include <FreeImage.h>
-#else
-	#ifdef HAVE_ZLIB_LIBRARY
+#ifdef HAVE_ZLIB_LIBRARY
 	#include <zlib.h>
+#else
+    #ifdef HAVE_LIBFREEIMAGE
+        # include <FreeImage.h>
 	#endif
 #endif
 

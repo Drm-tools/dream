@@ -106,9 +106,10 @@
 class CStationsItem
 {
 public:
-	CStationsItem() : iStartHour(0), iStartMinute(0), iStopHour(0), strName(""),
-		iStopMinute(0), iFreq(0), strDaysFlags(""), strDaysShow(""),
-		strTarget(""), strLanguage(""), strSite(""), strCountry(""),
+	CStationsItem() : iStartHour(0), iStartMinute(0), iStopHour(0),
+		iStopMinute(0), iFreq(0), strName(""),
+		strTarget(""), strLanguage(""), strSite(""),
+		strCountry(""), strDaysFlags(""), strDaysShow(""),
 		rPower((_REAL) 0.0) { }
 
 	int GetStartTimeNum() {return iStartHour * 100 + iStartMinute;}

@@ -78,8 +78,8 @@
 class CTimeSyncTrack
 {
 public:
-	CTimeSyncTrack() : bTiSyncTracking(FALSE), TypeTiSyncTrac(TSENERGY),
-		bSamRaOffsAcqu(TRUE) {}
+	CTimeSyncTrack() : bTiSyncTracking(FALSE), 
+		bSamRaOffsAcqu(TRUE), TypeTiSyncTrac(TSENERGY) {}
 	virtual ~CTimeSyncTrack() {}
 
 	enum ETypeTiSyncTrac {TSENERGY, TSFIRSTPEAK};

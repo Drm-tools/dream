@@ -135,8 +135,8 @@ protected:
 class CGenSimData : public CTransmitterModul<_BINARY, _BINARY>
 {
 public:
-	CGenSimData() : iNumSimBlocks(DEFAULT_NUM_SIM_BLOCKS), eCntType(CT_TIME),
-		iCounter(0), iNumErrors(0), strFileName("SimTime.dat"), tiStartTime(0) {}
+	CGenSimData() : eCntType(CT_TIME), iNumSimBlocks(DEFAULT_NUM_SIM_BLOCKS),
+		iNumErrors(0), iCounter(0), strFileName("SimTime.dat"), tiStartTime(0) {}
 	virtual ~CGenSimData() {}
 
 	void SetSimTime(int iNewTi, string strNewFileName);
@@ -200,8 +200,8 @@ public:
 
 protected:
 	CFACReceive FACReceive;
-	_BOOLEAN	bCRCOk;
 	_BOOLEAN	bSyncInput;
+	_BOOLEAN	bCRCOk;
 
 	virtual void InitInternal(CParameter& ReceiverParam);
 	virtual void ProcessDataInternal(CParameter& ReceiverParam);

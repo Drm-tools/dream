@@ -72,9 +72,8 @@
 class CLiveScheduleItem
 {
 public:
-	CLiveScheduleItem() : strFreq(""), strDaysFlags("0000000"),
-		strTarget(""),  iStartTime(0), iDuration(0)
-		, strSystem(""), bInsideTargetArea(FALSE) {}
+	CLiveScheduleItem() : strFreq(""), strTarget(""),  strDaysFlags("0000000"),
+	iStartTime(0), iDuration(0), strSystem(""), bInsideTargetArea(FALSE) {}
 
 	string		strFreq;
 	string		strTarget;

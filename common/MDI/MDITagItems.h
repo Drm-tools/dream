@@ -42,6 +42,7 @@ public:
 	int GetTotalLength(void) { return vecbiTagData.Size();}; // returns the length in bits
 	void Reset(void); // Resets bit vector to zero length (i.e. no header)
 	void GenEmptyTag(void); // Generates valid tag item with zero payload length
+	virtual ~CTagItemGenerator() {}
 
 protected:
 	virtual string GetTagName(void) = 0; // Return the tag name

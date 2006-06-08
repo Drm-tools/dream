@@ -68,7 +68,7 @@ protected:
 class CTextMessageEncoder
 {
 public:
-	CTextMessageEncoder() : iNumMess(0), vecstrText(0) {}
+	CTextMessageEncoder() : vecstrText(0), iNumMess(0) {}
 	virtual ~CTextMessageEncoder() {}
 
 	void Encode(CVector<_BINARY>& pData);

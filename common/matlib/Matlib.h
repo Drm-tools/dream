@@ -86,12 +86,21 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 
 // On Visual c++ 2005 Express Edition there is a segmentation fault if these macros are empty
 // TODO: FIX this with a better solution
+#ifdef _MSC_VER
 #define _TESTRNGR(POS) if (POS != POS) int idummy=0
 #define _TESTRNGW(POS) if (POS != POS) int idummy=0
 #define _TESTSIZE(INP) if (INP != INP) int idummy=0
 #define _TESTRNGRM(POS) if (POS != POS) int idummy=0
 #define _TESTRNGWM(POS) if (POS != POS) int idummy=0
 #define _TESTSIZEM(INP) if (INP != INP) int idummy=0
+#else
+#define _TESTRNGR(POS)
+#define _TESTRNGW(POS)
+#define _TESTSIZE(INP)
+#define _TESTRNGRM(POS)
+#define _TESTRNGWM(POS)
+#define _TESTSIZEM(INP)
+#endif
 #endif
 
 
@@ -117,17 +126,17 @@ class CMatlibVector
 {
 public:
 	/* Construction, Destruction -------------------------------------------- */
-	CMatlibVector() : iVectorLength(0), pData(NULL), eVType(VTY_CONST) {}
+	CMatlibVector() : eVType(VTY_CONST), iVectorLength(0), pData(NULL) {}
 	CMatlibVector(const int iNLen, const EVecTy eNTy = VTY_CONST) :
-		iVectorLength(0), pData(NULL), eVType(eNTy) {Init(iNLen);}
+		eVType(eNTy), iVectorLength(0), pData(NULL) {Init(iNLen);}
 	CMatlibVector(const int iNLen, const T tIniVal) :
-		iVectorLength(0), pData(NULL), eVType(VTY_CONST) {Init(iNLen, tIniVal);}
+		eVType(VTY_CONST), iVectorLength(0), pData(NULL) {Init(iNLen, tIniVal);}
 	CMatlibVector(CMatlibVector<T>& vecI);
 	CMatlibVector(const CMatlibVector<T>& vecI);
 	virtual ~CMatlibVector() {if (pData != NULL) delete[] pData;}
 
 	CMatlibVector(const CMatlibVector<CReal>& fvReal, const CMatlibVector<CReal>& fvImag) :
-		iVectorLength(fvReal.GetSize()), pData(NULL), eVType(VTY_CONST/*VTY_TEMP*/)
+		eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(fvReal.GetSize()), pData(NULL)
 	{
 		/* Allocate data block for vector */
 		pData = new CComplex[iVectorLength];
@@ -362,7 +371,7 @@ CMatlibVector<CComplex> // c, Tv
    (the implementation of template classes must be in the header file!) */
 template<class T>
 CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) :
-	iVectorLength(vecI.GetSize()), pData(NULL), eVType(VTY_CONST/*VTY_TEMP*/)
+	 eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(vecI.GetSize()), pData(NULL)
 {
 	/* The copy constructor for the constant vector is a real copying
 	   task. But in the case of a temporary buffer only the pointer
@@ -399,7 +408,7 @@ CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) :
 /* Copy constructor for constant Matlib vectors */
 template<class T>
 CMatlibVector<T>::CMatlibVector(const CMatlibVector<T>& vecI) :
-	iVectorLength(vecI.GetSize()), pData(NULL), eVType(VTY_CONST)
+	eVType(VTY_CONST), iVectorLength(vecI.GetSize()), pData(NULL)
 {
 	if (iVectorLength > 0)
 	{
@@ -581,12 +590,12 @@ class CMatlibMatrix
 {
 public:
 	/* Construction, Destruction -------------------------------------------- */
-	CMatlibMatrix() : iRowSize(0), ppData(NULL), eVType(VTY_CONST) {}
+	CMatlibMatrix() : eVType(VTY_CONST), iRowSize(0), ppData(NULL) {}
 	CMatlibMatrix(const int iNRowLen, const int iNColLen,
-		const EVecTy eNTy = VTY_CONST) :
-		iRowSize(0), ppData(NULL), eVType(eNTy) {Init(iNRowLen, iNColLen);}
+		const EVecTy eNTy = VTY_CONST) :  eVType(eNTy),
+		iRowSize(0), ppData(NULL) {Init(iNRowLen, iNColLen);}
 	CMatlibMatrix(const int iNRowLen, const int iNColLen, const T tIniVal) :
-		iRowSize(0), ppData(NULL), eVType(VTY_CONST)
+		eVType(VTY_CONST), iRowSize(0), ppData(NULL)
 		{Init(iNRowLen, iNColLen, tIniVal);}
 	CMatlibMatrix(const CMatlibMatrix<T>& matI);
 
@@ -784,7 +793,7 @@ operator*(const CReal& rA, const CMatlibMatrix<CReal>& rmB)
    (the implementation of template classes must be in the header file!) */
 template<class T>
 CMatlibMatrix<T>::CMatlibMatrix(const CMatlibMatrix<T>& matI) :
-	iRowSize(matI.GetRowSize()), ppData(NULL), eVType(VTY_CONST)
+	eVType(VTY_CONST), iRowSize(matI.GetRowSize()), ppData(NULL)
 {
 	if (iRowSize > 0)
 	{

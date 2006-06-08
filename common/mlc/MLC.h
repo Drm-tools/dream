@@ -46,7 +46,7 @@
 class CMLC
 {
 public:
-	CMLC() : eChannelType(CParameter::CT_MSC), iN_mux(0) {}
+	CMLC() : iN_mux(0), eChannelType(CParameter::CT_MSC) {}
 	virtual ~CMLC() {}
 
 	void CalculateParam(CParameter& Parameter, int iNewChannelType);

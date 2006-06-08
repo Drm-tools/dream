@@ -163,8 +163,8 @@ public:
 			eRigStatus(RIG_STATUS_ALPHA), bIsSpecRig(FALSE) {}
 		SDrRigCaps(rig_model_t tNID, QString strNMan, QString strNModN,
 			rig_status_e eNSt, _BOOLEAN bNSRI) : iModelID(tNID),
-			eRigStatus(eNSt), strManufacturer(strNMan), strModelName(strNModN),
-			bIsSpecRig(bNSRI) {}
+			strManufacturer(strNMan), strModelName(strNModN),
+			eRigStatus(eNSt), bIsSpecRig(bNSRI) {}
 		SDrRigCaps(const SDrRigCaps& nSDRC) : iModelID(nSDRC.iModelID),
 			strManufacturer(nSDRC.strManufacturer),
 			strModelName(nSDRC.strModelName),
@@ -213,8 +213,8 @@ protected:
 			iModelID(nSpec.iModelID), strDRMSetMod(nSpec.strDRMSetMod),
 			strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
 		CSpecDRMRig(rig_model_t newID, string sSet, int iNFrOff,
-			string sModSet) : iModelID(newID), strDRMSetNoMod(sSet),
-			iFreqOffs(iNFrOff), strDRMSetMod(sModSet) {}
+			string sModSet) : iModelID(newID), strDRMSetMod(sModSet),
+			strDRMSetNoMod(sSet), iFreqOffs(iNFrOff) {}
 
 		rig_model_t	iModelID; /* Model ID for hamlib */
 		string		strDRMSetMod; /* Special DRM settings (modified) */

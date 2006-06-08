@@ -244,11 +244,11 @@ void CSoundIn::OpenDevice()
 		iCurDev = vecstrDevices.size()-1;
 
 	/* out of range ? */
-	if(iCurDev >= vecstrDevices.size())
+	if(size_t(iCurDev) >= vecstrDevices.size())
 		iCurDev = vecstrDevices.size()-1;
 
 	int mmdev = iCurDev;
-	if(iCurDev == (vecstrDevices.size()-1))
+	if(size_t(iCurDev) == (vecstrDevices.size()-1))
 	    mmdev = WAVE_MAPPER;
 
 	MMRESULT result = waveInOpen(&m_WaveIn, mmdev, &sWaveFormatEx,
@@ -381,7 +381,7 @@ _BOOLEAN CSoundOut::Write(CVector<short>& psData)
 	int			i, j;
 	int			iCntPrepBuf;
 	int			iIndexDoneBuf;
-	_BOOLEAN	bError;
+	_BOOLEAN	bError=FALSE;
 
 	/* Check if device must be opened or reinitialized */
 	if (bChangDev == TRUE)
@@ -552,11 +552,11 @@ void CSoundOut::OpenDevice()
 		iCurDev = vecstrDevices.size()-1;
 
 	/* out of range ? */
-	if(iCurDev >= vecstrDevices.size())
+	if(size_t(iCurDev) >= vecstrDevices.size())
 		iCurDev = vecstrDevices.size()-1;
 
 	int mmdev = iCurDev;
-	if(iCurDev == (vecstrDevices.size()-1))
+	if(size_t(iCurDev) == (vecstrDevices.size()-1))
 	    mmdev = WAVE_MAPPER;
 
 	MMRESULT result = waveOutOpen(&m_WaveOut, mmdev, &sWaveFormatEx,

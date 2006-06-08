@@ -51,9 +51,9 @@ enum ERecMode {RM_DRM, RM_AM, RM_NONE};
 class CParameter : public CCellMappingTable
 {
 public:
-	CParameter() : bRunThread(FALSE), Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
-		bUsingMultimedia(TRUE),	iCurSelAudioService(0), iCurSelDataService(0),
-		vecbiAudioFrameStatus()
+	CParameter() : Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
+		bRunThread(FALSE), bUsingMultimedia(TRUE),	iCurSelAudioService(0), 
+		iCurSelDataService(0), vecbiAudioFrameStatus()
 		{}
 	virtual ~CParameter() {}
 
@@ -187,6 +187,16 @@ public:
 		int			iUserAppIdent; /* User application identifier, only DAB */
 
 /* TODO: Copy operator. Now, default copy operator is used! */
+		CDataParam& operator=(const CDataParam DataParam)
+		{
+			iStreamID = DataParam.iStreamID;
+		 	eDataUnitInd = DataParam.eDataUnitInd;
+			iPacketID = DataParam.iPacketID;
+			iPacketLen = DataParam.iPacketLen;
+			eAppDomain = DataParam.eAppDomain;
+			iUserAppIdent = DataParam.iUserAppIdent;
+			return *this;
+		}
 
 		/* This function is needed for detection changes in the class */
 		_BOOLEAN operator!=(const CDataParam DataParam)
@@ -317,11 +327,11 @@ public:
 		CAltFreqRegion() {Reset();}
 		CAltFreqRegion(const CAltFreqRegion& nAFR) :
 			iRegionID(nAFR.iRegionID),
+			veciCIRAFZones(nAFR.veciCIRAFZones),
 			iLatitude(nAFR.iLatitude),
 			iLongitude(nAFR.iLongitude),
 			iLatitudeEx(nAFR.iLatitudeEx),
-			iLongitudeEx(nAFR.iLongitudeEx),
-			veciCIRAFZones(nAFR.veciCIRAFZones) {}
+			iLongitudeEx(nAFR.iLongitudeEx) {}
 
 		CAltFreqRegion& operator=(const CAltFreqRegion& nAFR)
 		{
@@ -389,8 +399,9 @@ public:
 				veciFrequencies(nAF.veciFrequencies),
 				veciServRestrict(nAF.veciServRestrict),
 				bIsSyncMultplx(nAF.bIsSyncMultplx),
-				iRegionID(nAF.iRegionID), iScheduleID(nAF.iScheduleID),
-				bRegionSchedFlag(nAF.bRegionSchedFlag) {}
+				bRegionSchedFlag(nAF.bRegionSchedFlag),
+				iRegionID(nAF.iRegionID),
+				iScheduleID(nAF.iScheduleID) {}
 
 			CAltFreq& operator=(const CAltFreq& nAF)
 			{
@@ -757,7 +768,7 @@ public:
 
 		/* store only fac parameters */
 		int	iService;
-		int	iServiceID;
+		uint32_t iServiceID;
 	};
 
 	/* Class for keeping track of status flags for RSCI rsta tag */
