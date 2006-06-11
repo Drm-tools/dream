@@ -52,9 +52,9 @@ CMOTDABEnc::SetMOTObject (CMOTObject & NewMOTObject)
     /* File name size is restricted (in this implementation) to 128 (2^7) bytes.
        If file name is longer, cut it. TODO: better solution: set Ext flag in
        "ContentName" header extension to allow larger file names */
-    int iFileNameSize = strFileName.size ();
-    if (iFileNameSize > 128)
-	iFileNameSize = 128;
+	size_t iFileNameSize = strFileName.size ();
+if (iFileNameSize > 128)
+		iFileNameSize = 128;
 
     /* Copy actual raw data of object */
     MOTObjectRaw.Body.Init (iPicSizeBits);
@@ -1284,7 +1284,46 @@ CMOTObject::gzGetOriginalSize () const
 void
 CMOTObject::uncompress ()
 {
-#ifdef HAVE_LIBFREEIMAGE
+#ifdef HAVE_ZLIB_LIBRARY
+	CVector < _BYTE > vecbRawDataOut;
+	/* Extract the original file size */
+	unsigned long dest_len = gzGetOriginalSize ();
+
+	if (dest_len < MAX_DEC_NUM_BYTES_ZIP_DATA)
+	{
+		vecbRawDataOut.Init (dest_len);
+
+		int zerr;
+		z_stream stream;
+		memset (&stream, 0, sizeof (stream));
+		if ((zerr = inflateInit2 (&stream, -MAX_WBITS)) != Z_OK)
+			return;
+
+		/* skip past minimal gzip header */
+		stream.next_in = &Body.vecData[10];
+		stream.avail_in = Body.vecData.Size () - 10;
+
+		stream.next_out = &vecbRawDataOut[0];
+		stream.avail_out = vecbRawDataOut.Size ();
+
+		zerr = inflate (&stream, Z_NO_FLUSH);
+		dest_len = vecbRawDataOut.Size () - stream.avail_out;
+
+		if (zerr != Z_OK && zerr != Z_STREAM_END)
+			return;
+
+		inflateEnd (&stream);
+
+		if (zerr != Z_OK && zerr != Z_STREAM_END)
+			return;
+
+		Body.vecData.Init (dest_len);
+		Body.vecData = vecbRawDataOut;
+	}
+	else
+		Body.vecData.Init (0);
+#else
+#	ifdef HAVE_LIBFREEIMAGE
     CVector < _BYTE > vecbRawDataOut;
     CVector < _BYTE > &vecbRawDataIn = Body.vecData;
     /* Extract the original file size */
@@ -1310,50 +1349,10 @@ CMOTObject::uncompress ()
       }
     else
 	Body.vecData.Init (0);
-#else
-	#ifdef HAVE_ZLIB_LIBRARY
-		CVector < _BYTE > vecbRawDataOut;
-		/* Extract the original file size */
-		unsigned long dest_len = gzGetOriginalSize ();
-
-		if (dest_len < MAX_DEC_NUM_BYTES_ZIP_DATA)
-		{
-			vecbRawDataOut.Init (dest_len);
-
-			int zerr;
-			z_stream stream;
-			memset (&stream, 0, sizeof (stream));
-			if ((zerr = inflateInit2 (&stream, -MAX_WBITS)) != Z_OK)
-				return;
-
-			/* skip past minimal gzip header */
-			stream.next_in = &Body.vecData[10];
-			stream.avail_in = Body.vecData.Size () - 10;
-
-			stream.next_out = &vecbRawDataOut[0];
-			stream.avail_out = vecbRawDataOut.Size ();
-
-			zerr = inflate (&stream, Z_NO_FLUSH);
-			dest_len = vecbRawDataOut.Size () - stream.avail_out;
-
-			if (zerr != Z_OK && zerr != Z_STREAM_END)
-				return;
-
-			inflateEnd (&stream);
-
-			if (zerr != Z_OK && zerr != Z_STREAM_END)
-				return;
-
-
-			Body.vecData.Init (dest_len);
-			Body.vecData = vecbRawDataOut;
-		}
-		else
-			Body.vecData.Init (0);
-	#else
-		/* Can't unzip so change the filename */
-		strName = string(strName.c_str()) + ".gz";
-	#endif
+#	else
+	/* Can't unzip so change the filename */
+	strName = string(strName.c_str()) + ".gz";
+#	endif
 #endif
 }
 
