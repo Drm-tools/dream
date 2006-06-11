@@ -53,8 +53,8 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 	AddTagItemDecoder(&TagItemDecoderFAC);
 	AddTagItemDecoder(&TagItemDecoderSDC);
 	AddTagItemDecoder(&TagItemDecoderRobMod);
-	TagItemDecoderStr.resize(4);
-	for(size_t i=0; i<4; i++)
+	TagItemDecoderStr.resize(MAX_NUM_STREAMS);
+	for(int i=0; i<MAX_NUM_STREAMS; i++)
 	{
 		TagItemDecoderStr[i].iStreamNumber = i;
         AddTagItemDecoder(&TagItemDecoderStr[i]);
