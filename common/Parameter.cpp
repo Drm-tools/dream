@@ -29,6 +29,7 @@
 #include "Parameter.h"
 #include "Version.h"
 
+void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam);
 
 // To be replaced by something nicer!!! TODO
 #include "DrmReceiver.h"
@@ -1168,3 +1169,109 @@ ERecMode CParameter::GetReceiverMode()
  return DRMReceiver.GetReceiverMode();		 
 }
 
+void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
+{ 
+	FSyncOK = OK;
+	int colour=2;
+	switch(OK) {
+	case CRC_ERROR: colour=2; break;
+	case DATA_ERROR: colour=1; break;
+	case RX_OK: colour=0; break;
+	}
+	PostWinMessage(MS_FRAME_SYNC,colour);
+}
+void CParameter::CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
+{ 
+	TSyncOK = OK;
+	int colour=2;
+	switch(OK) {
+	case CRC_ERROR: colour=2; break;
+	case DATA_ERROR: colour=1; break;
+	case RX_OK: colour=0; break;
+	}
+	PostWinMessage(MS_TIME_SYNC,colour);
+}
+void CParameter::CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
+{ 
+	InterfaceOK = OK;
+	int colour=2;
+	switch(OK) {
+	case CRC_ERROR: colour=2; break;
+	case DATA_ERROR: colour=1; break;
+	case RX_OK: colour=0; break;
+	}
+	PostWinMessage(MS_IOINTERFACE,colour);
+}
+void CParameter::CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
+{ 
+	FACOK = OK;
+	int colour=2;
+	switch(OK) {
+	case CRC_ERROR: colour=2; break;
+	case DATA_ERROR: colour=1; break;
+	case RX_OK: colour=0; break;
+	}
+	PostWinMessage(MS_FAC_CRC,colour);
+}
+void CParameter::CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
+{ 
+	SDCOK = OK;
+	int colour=2;
+	switch(OK) {
+	case CRC_ERROR: colour=2; break;
+	case DATA_ERROR: colour=1; break;
+	case RX_OK: colour=0; break;
+	}
+	PostWinMessage(MS_SDC_CRC,colour);
+}
+void CParameter::CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
+{ 
+	AudioOK = OK;
+	int colour=2;
+	switch(OK) {
+	case CRC_ERROR: colour=2; break;
+	case DATA_ERROR: colour=1; break;
+	case RX_OK: colour=0; break;
+	}
+	PostWinMessage(MS_MSC_CRC,colour);
+}
+void CParameter::CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
+{
+	MOTOK = OK;
+	int colour=2;
+	switch(OK) {
+	case CRC_ERROR: colour=2; break;
+	case DATA_ERROR: colour=1; break;
+	case RX_OK: colour=0; break;
+	}
+	PostWinMessage(MS_MOT_OBJ_STAT,colour);
+}
+
+ETypeRxStatus CParameter::CReceiveStatus::GetFrameSyncStatus()
+{
+	return FSyncOK;
+}
+ETypeRxStatus CParameter::CReceiveStatus::GetTimeSyncStatus()
+{
+	return TSyncOK;
+}
+ETypeRxStatus CParameter::CReceiveStatus::GetInterfaceStatus()
+{
+	return InterfaceOK;
+}
+ETypeRxStatus CParameter::CReceiveStatus::GetFACStatus()
+{
+	return FACOK;
+}
+ETypeRxStatus CParameter::CReceiveStatus::GetSDCStatus()
+{
+	return SDCOK;
+}
+ETypeRxStatus CParameter::CReceiveStatus::GetAudioStatus()
+{
+	return AudioOK;
+}
+ETypeRxStatus CParameter::CReceiveStatus::GetMOTStatus()
+{
+	return MOTOK;
+}

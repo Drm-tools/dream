@@ -778,22 +778,21 @@ public:
 		CReceiveStatus(): FSyncOK(NOT_PRESENT), TSyncOK(NOT_PRESENT), 
 		FACOK(NOT_PRESENT), SDCOK(NOT_PRESENT), AudioOK(NOT_PRESENT) {}
 	
-		void SetFrameSyncStatus(const ETypeRxStatus OK) { FSyncOK = OK;}
-		void SetTimeSyncStatus(const ETypeRxStatus OK) { TSyncOK = OK;}
-		void SetInterfaceStatus(const ETypeRxStatus OK) { InterfaceOK = OK;}
-		void SetFACStatus(const ETypeRxStatus OK) { FACOK = OK;}
-		void SetSDCStatus(const ETypeRxStatus OK) { SDCOK = OK;}
-		void SetAudioStatus(const ETypeRxStatus OK) { AudioOK = OK;}
-		void SetMOTStatus(const ETypeRxStatus OK) { MOTOK = OK;}
+		void SetFrameSyncStatus(const ETypeRxStatus OK);
+		void SetTimeSyncStatus(const ETypeRxStatus OK);
+		void SetInterfaceStatus(const ETypeRxStatus OK);
+		void SetFACStatus(const ETypeRxStatus OK);
+		void SetSDCStatus(const ETypeRxStatus OK);
+		void SetAudioStatus(const ETypeRxStatus OK);
+		void SetMOTStatus(const ETypeRxStatus OK);
 
-		ETypeRxStatus GetFrameSyncStatus() const {return FSyncOK;}
-		ETypeRxStatus GetTimeSyncStatus() const {return TSyncOK;}
-		ETypeRxStatus GetInterfaceStatus() const {return InterfaceOK;}
-		ETypeRxStatus GetFACStatus() const {return FACOK;}
-		ETypeRxStatus GetSDCStatus() const {return SDCOK;}
-		ETypeRxStatus GetAudioStatus() const {return AudioOK;}
-		ETypeRxStatus GetMOTStatus() const {return MOTOK;}
-
+		ETypeRxStatus GetFrameSyncStatus();
+		ETypeRxStatus GetTimeSyncStatus();
+		ETypeRxStatus GetInterfaceStatus();
+		ETypeRxStatus GetFACStatus();
+		ETypeRxStatus GetSDCStatus();
+		ETypeRxStatus GetAudioStatus();
+		ETypeRxStatus GetMOTStatus();
 	private:
 		ETypeRxStatus FSyncOK;
 		ETypeRxStatus TSyncOK;

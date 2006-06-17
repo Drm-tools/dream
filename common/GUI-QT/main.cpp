@@ -69,10 +69,6 @@ public:
 		/* Stop working thread and wait until it is ready for terminating. We
 		   set a time-out of 5 seconds */
 		DRMReceiver.Stop();
-//#ifdef __MINGW32__
-#if defined(_WIN32) && (QT_VERSION > 230)
-		msleep(2000); /* wait does not seem to wait on win qt3 */
-#endif
 		if (this->wait(5000) == FALSE)
 			ErrorMessage("Termination of working thread failed.");
 	}
