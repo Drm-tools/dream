@@ -1019,7 +1019,7 @@ _BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
 
 void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 {
-#ifdef HAVE_LIBFREEIMAGE
+#if defined(HAVE_LIBFREEIMAGE) && (QT_VERSION < 0x030000)
 	/* This class is needed for FreeImage load and save from memory. This code
 	   is based on an example code shipped with FreeImage library */
 	class MemIO : public FreeImageIO
