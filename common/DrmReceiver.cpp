@@ -890,8 +890,8 @@ void CDRMReceiver::InitsForMSCDemux()
 		SplitMSC[i].SetStream(i);
 		SplitMSC[i].SetInitFlag();
 	}
-	AudioSourceDecoder.SetInitFlag();
-	DataDecoder.SetInitFlag();
+	InitsForAudParam();
+	InitsForDataParam();
 
 	/* Reset value used for the history because if an audio service was selected
 	   but then only a data service is selected, the value would remain with the

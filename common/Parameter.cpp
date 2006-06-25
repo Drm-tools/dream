@@ -382,9 +382,6 @@ void CParameter::SetNumAudioDecoderBits(const int iNewNumAudioDecoderBits)
 	if (iNewNumAudioDecoderBits != iNumAudioDecoderBits)
 	{
 		iNumAudioDecoderBits = iNewNumAudioDecoderBits;
-
-		/* Set init flags */
-		DRMReceiver.InitsForAudParam();
 	}
 }
 
@@ -394,9 +391,6 @@ void CParameter::SetNumDataDecoderBits(const int iNewNumDataDecoderBits)
 	if (iNewNumDataDecoderBits != iNumDataDecoderBits)
 	{
 		iNumDataDecoderBits = iNewNumDataDecoderBits;
-
-		/* Set init flags */
-		DRMReceiver.InitsForDataParam();
 	}
 }
 
