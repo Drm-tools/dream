@@ -251,27 +251,14 @@ void CSoundOut::Init_HW()
 		throw CGenErr("alsa CSoundOut::Init_HW ");
 	}
 	/* Set the stream rate */
-	rrate = SOUNDCRD_SAMPLE_RATE;
-	err = snd_pcm_hw_params_set_rate_near(handle, hwparams, &rrate, &dir);
+	dir=0;
+	err = snd_pcm_hw_params_set_rate(handle, hwparams, SOUNDCRD_SAMPLE_RATE, dir);
 	if (err < 0) {
 #ifdef USE_QT_GUI
-		qDebug("Rate %iHz not available : %s dir %d", rrate, snd_strerror(err), dir);
-#endif
-		throw CGenErr("alsa CSoundOut::Init_HW ");
-		
-	}
-	unsigned int deltarate;
-	if (rrate > SOUNDCRD_SAMPLE_RATE)
-		deltarate = rrate - SOUNDCRD_SAMPLE_RATE;
-	else
-		deltarate = SOUNDCRD_SAMPLE_RATE - rrate;
-	if(deltarate>2) {
-#ifdef USE_QT_GUI
-		qDebug("Rate doesn't match (requested %iHz, get %iHz)", SOUNDCRD_SAMPLE_RATE, rrate);
+		qDebug("Rate %iHz not available : %s", SOUNDCRD_SAMPLE_RATE, snd_strerror(err));
 #endif
 		throw CGenErr("alsa CSoundOut::Init_HW ");
 	}
-	
 	dir=0;
 	unsigned int buffer_time = 500000;              /* ring buffer length in us */
         /* set the buffer time */

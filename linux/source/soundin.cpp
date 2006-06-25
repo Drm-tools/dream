@@ -129,20 +129,21 @@ int CSoundIn::read_HW( void * recbuf, int size) {
 		switch(errno)
 		{
 		case 0:
-cout <<"no error" <<endl;
 			return 0;
 			break;
 		case EINTR:
-cout <<"interrupted" <<endl;
 			return 0;
 			break;
 		case EAGAIN:
-cout <<"recoverable error" <<endl;
 			return 0;
 			break;
 		default:
-cout <<"error " << strerror(errno) <<endl;
-			//throw CGenErr("CSound:Read");
+#ifdef USE_QT_GUI
+			qDebug("read error: %s", strerror(errno));
+#else
+			cout <<"read error " << strerror(errno) <<endl;
+#endif
+			throw CGenErr("CSound:Read");
 		}
 	} else
 		return ret / (NUM_IN_CHANNELS * BYTES_PER_SAMPLE);
@@ -171,7 +172,6 @@ void CSoundIn::Init_HW(){
 	int err, dir=0;
 	snd_pcm_hw_params_t *hwparams;
 	snd_pcm_sw_params_t *swparams;
-	unsigned int rrate;
 	snd_pcm_uframes_t period_size = FRAGSIZE * NUM_IN_CHANNELS/2;
 	snd_pcm_uframes_t buffer_size;
 	
@@ -236,27 +236,15 @@ void CSoundIn::Init_HW(){
 		throw CGenErr("alsa CSoundIn::Init_HW ");
 	}
 	/* Set the stream rate */
-	rrate = SOUNDCRD_SAMPLE_RATE;
-	err = snd_pcm_hw_params_set_rate(handle, hwparams, rrate, dir);
+	dir=0;
+	err = snd_pcm_hw_params_set_rate(handle, hwparams, SOUNDCRD_SAMPLE_RATE, dir);
 	if (err < 0) {
 #ifdef USE_QT_GUI
-		qDebug("Rate %iHz not available : %s dir %d", rrate, snd_strerror(err), dir);
+		qDebug("Rate %iHz not available : %s", SOUNDCRD_SAMPLE_RATE, snd_strerror(err));
 #endif
 		throw CGenErr("alsa CSoundIn::Init_HW ");
 		
 	}
-	unsigned int deltarate;
-	if (rrate > SOUNDCRD_SAMPLE_RATE)
-		deltarate = rrate - SOUNDCRD_SAMPLE_RATE;
-	else
-		deltarate = SOUNDCRD_SAMPLE_RATE - rrate;
-	if(deltarate>2) {
-#ifdef USE_QT_GUI
-		qDebug("Rate doesn't match (requested %iHz, get %iHz)", SOUNDCRD_SAMPLE_RATE, rrate);
-#endif
-		throw CGenErr("alsa CSoundIn::Init_HW ");
-	}
-	
 	dir=0;
 	unsigned int buffer_time = 500000;              /* ring buffer length in us */
         /* set the buffer time */
