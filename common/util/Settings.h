@@ -61,12 +61,12 @@
 #define MAX_FREQ_AQC_SE_WIN_SI		(SOUNDCRD_SAMPLE_RATE / 2)
 #define MAX_FREQ_AQC_SE_WIN_CEN		(SOUNDCRD_SAMPLE_RATE / 2)
 
+/* Maximum carrier frequency  */
+# define MAX_RF_FREQ				30000 /* kHz */
+
 #ifdef USE_QT_GUI
 /* Maximum minutes for delayed log file start */
 # define MAX_SEC_LOG_FI_START		3600 /* seconds */
-
-/* Maximum carrier frequency  */
-# define MAX_RF_FREQ				30000 /* kHz */
 
 /* Maximum value for window position and size */
 # define MAX_WIN_GEOM_VAL			10000 /* Pixel */

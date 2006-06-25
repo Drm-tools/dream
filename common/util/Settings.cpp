@@ -98,14 +98,14 @@ void CSettings::ReadIniFile()
 
 
 	/* Sound In device */
-	if (GetNumericIniSet(ini, "Receiver", "snddevin", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
+	if (GetNumericIniSet(ini, "Receiver", "snddevin", -1, MAX_NUM_SND_DEV, iValue) == TRUE)
 		pDRMRec->GetSoundInInterface()->SetDev(iValue);
 	else
 		pDRMRec->GetSoundInInterface()->SetDev(0);
 
 
 	/* Sound Out device */
-	if (GetNumericIniSet(ini, "Receiver", "snddevout", 0, MAX_NUM_SND_DEV, iValue) == TRUE)
+	if (GetNumericIniSet(ini, "Receiver", "snddevout", -1, MAX_NUM_SND_DEV, iValue) == TRUE)
 		pDRMRec->GetSoundOutInterface()->SetDev(iValue);
 	else
 		pDRMRec->GetSoundOutInterface()->SetDev(0);
@@ -817,7 +817,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 
 
 		/* Sound In device -------------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", 0,
+		if (GetNumericArgument(argc, argv, i, "-I", "--snddevin", -1,
 			MAX_NUM_SND_DEV, rArgument) == TRUE)
 		{
 			pDRMRec->GetSoundInInterface()->SetDev((int) rArgument);
@@ -826,7 +826,7 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 
 
 		/* Sound Out device ------------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", 0,
+		if (GetNumericArgument(argc, argv, i, "-O", "--snddevout", -1,
 			MAX_NUM_SND_DEV, rArgument) == TRUE)
 		{
 			pDRMRec->GetSoundOutInterface()->SetDev((int) rArgument);
