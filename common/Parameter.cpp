@@ -1180,6 +1180,7 @@ _BOOLEAN CParameter::GetSignalStrength(_REAL rSigStr)
 		rSigStr = r;
 	}
 	/* otherwise leave the present values untouched */
+	return bValidSignalStrength;
 }
 
 void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
