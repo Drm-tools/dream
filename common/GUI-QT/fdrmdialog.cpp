@@ -435,6 +435,8 @@ void FDRMDialog::OnTimer()
 				LabelServiceID->setText("ID:" +
 					QString().setNum(iServiceID, 16).upper());
 			}
+			else
+				LabelServiceID->setText("");
 
 			/* Codec label */
 			LabelCodec->setText(GetCodecString(iCurSelAudioServ));
