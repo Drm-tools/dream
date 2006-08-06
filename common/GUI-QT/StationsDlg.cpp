@@ -327,7 +327,8 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 
 StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) : vecpListItems(0),
-	CStationsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR)
+	CStationsDlgBase(parent, name, modal, f), pDRMRec(pNDRMR),
+	bReInitOnFrequencyChange(FALSE)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -1109,15 +1110,18 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 
 		/* If the mode has changed re-initialise the receiver */
 		ERecMode eCurrentMode = pDRMRec->GetReceiverMode();
+
+		// if "bReInitOnFrequencyChange" is not true, initiate a reinit when
+		// schedule mode is different from receiver mode
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
-			if(eCurrentMode!=RM_DRM)
+			if ((eCurrentMode != RM_DRM) || bReInitOnFrequencyChange)
 				pDRMRec->SetReceiverMode(RM_DRM);
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
-			if(eCurrentMode!=RM_AM)
+			if ((eCurrentMode != RM_AM) || bReInitOnFrequencyChange)
 				pDRMRec->SetReceiverMode(RM_AM);
 			break;
 		}

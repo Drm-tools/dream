@@ -227,6 +227,7 @@ protected:
 	QTimer						TimerUTCLabel;
 	QTimer						TimerSMeter;
 	_BOOLEAN					bShowAll;
+	_BOOLEAN					bReInitOnFrequencyChange;
 	QUrlOperator				UrlUpdateSchedule;
 	QPopupMenu*					pViewMenu;
 	QPopupMenu*					pPreviewMenu;
