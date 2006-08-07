@@ -43,8 +43,9 @@
 enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
 enum ETypeIntTime {TLINEAR, TWIENER};
 enum ETypeSNREst {SNR_FAC, SNR_PIL};
-enum ETypeRxStatus { NOT_PRESENT, CRC_ERROR, DATA_ERROR, RX_OK };
+enum ETypeRxStatus {NOT_PRESENT, CRC_ERROR, DATA_ERROR, RX_OK};
 	/* RM: Receiver mode (analog or digital demodulation) */
+
 enum ERecMode {RM_DRM, RM_AM, RM_NONE};
 
 /* Classes ********************************************************************/

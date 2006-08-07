@@ -73,7 +73,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
-		new CSoundCardSelMenu(pDRMRec->GetSoundInInterface(), pDRMRec->GetSoundOutInterface(), this));
+		new CSoundCardSelMenu(pDRMRec->GetSoundInInterface(), 
+		pDRMRec->GetSoundOutInterface(), this));
+
 	pSettingsMenu->insertItem(tr("&AM (analog)"), this,
 		SLOT(OnSwitchToAM()), CTRL+Key_A);
 	pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,

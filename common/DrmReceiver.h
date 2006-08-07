@@ -80,26 +80,27 @@
 
 
 /* Classes ********************************************************************/
-
 class CSplitFAC : public CSplitModul<_BINARY>
 {
 	void SetInputBlockSize(CParameter& p)
-	{ this->iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;}
+		{this->iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;}
 };
 
 class CSplitSDC : public CSplitModul<_BINARY>
 {
 	void SetInputBlockSize(CParameter& p)
-	{ this->iInputBlockSize = p.iNumSDCBitsPerSFrame;}
+		{this->iInputBlockSize = p.iNumSDCBitsPerSFrame;}
 };
 
 class CSplitMSC : public CSplitModul<_BINARY>
 {
 public:
-	void SetStream(int iID) { iStreamID = iID; }
+	void SetStream(int iID) {iStreamID = iID;}
+
 protected:
 	void SetInputBlockSize(CParameter& p)
-	{ this->iInputBlockSize = p.GetStreamLen(iStreamID)*SIZEOF__BYTE;}
+		{this->iInputBlockSize = p.GetStreamLen(iStreamID) * SIZEOF__BYTE;}
+
 	int iStreamID;
 };
 
@@ -133,41 +134,55 @@ public:
 
 	/* Channel Estimation */
 	void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy) 
-    {ChannelEstimation.SetFreqInt(eNewTy);}
-	CChannelEstimation::ETypeIntFreq GetFreqInt(
-    ) {return ChannelEstimation.GetFreqInt();}
+		{ChannelEstimation.SetFreqInt(eNewTy);}
+
+	CChannelEstimation::ETypeIntFreq GetFreqInt()
+		{return ChannelEstimation.GetFreqInt();}
+
 	void SetTimeInt(CChannelEstimation::ETypeIntTime eNewTy) 
-    { ChannelEstimation.SetTimeInt(eNewTy);}
+		{ChannelEstimation.SetTimeInt(eNewTy);}
+
 	CChannelEstimation::ETypeIntTime GetTimeInt() const 
-    {return ChannelEstimation.GetTimeInt();}
+		{return ChannelEstimation.GetTimeInt();}
+
 	void SetIntCons(const _BOOLEAN bNewIntCons) 
-    { ChannelEstimation.SetIntCons(bNewIntCons); }
-	_BOOLEAN GetIntCons() {return ChannelEstimation.GetIntCons(); }
+		{ChannelEstimation.SetIntCons(bNewIntCons);}
+
+	_BOOLEAN GetIntCons()
+		{return ChannelEstimation.GetIntCons();}
+
 	void SetSNREst(CChannelEstimation::ETypeSNREst eNewTy)
-     { ChannelEstimation.SetSNREst(eNewTy); }
+		{ChannelEstimation.SetSNREst(eNewTy);}
+
 	CChannelEstimation::ETypeSNREst GetSNREst() 
-    {return ChannelEstimation.GetSNREst(); }
+		{return ChannelEstimation.GetSNREst();}
+
 	void SetTiSyncTracType(CTimeSyncTrack::ETypeTiSyncTrac eNewTy)
      {ChannelEstimation.GetTimeSyncTrack()->SetTiSyncTracType(eNewTy);}
+
 	CTimeSyncTrack::ETypeTiSyncTrac GetTiSyncTracType()
-     { return ChannelEstimation.GetTimeSyncTrack()->GetTiSyncTracType();}
+		{return ChannelEstimation.GetTimeSyncTrack()->GetTiSyncTracType();}
+
 	void GetTransferFunction(CVector<_REAL>& vecrData,
 		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale)
-		{ChannelEstimation.GetTransferFunction(
-                vecrData, vecrGrpDly,	vecrScale);}
+		{ChannelEstimation.GetTransferFunction(vecrData, vecrGrpDly, vecrScale);}
+
 	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
 					 _REAL& rLowerBound, _REAL& rHigherBound,
 					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
 					 _REAL& rPDSEnd)
-           {ChannelEstimation.GetAvPoDeSp(vecrData, vecrScale, 
-					 rLowerBound, rHigherBound,
-					 rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);}
+		{ChannelEstimation.GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
+		rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);}
+
 	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
-    	{ChannelEstimation.GetSNRProfile(vecrData, vecrScale);}
+		{ChannelEstimation.GetSNRProfile(vecrData, vecrScale);}
+
 #ifdef _WIN32
 	void SetEnableProcessPriority(_BOOLEAN bValue)
-	{ bProcessPriorityEnabled = bValue; }
-	_BOOLEAN GetEnableProcessPriority() { return bProcessPriorityEnabled; }
+		{bProcessPriorityEnabled = bValue;}
+
+	_BOOLEAN GetEnableProcessPriority()
+		{return bProcessPriorityEnabled;}
 #endif
 
 	/* Get pointer to internal modules */
@@ -331,8 +346,10 @@ public:
 	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
 		CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
 		_REAL& rFreqAquVal);
+
 	void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
 		CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
+
 	void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
 		CVector<_REAL>& vecrScale);
 
@@ -375,35 +392,35 @@ protected:
 	CParameter				ReceiverParam;
 
 	/* Buffers */
-	CSingleBuffer<_REAL>	AMDataBuf;
-	CSingleBuffer<_REAL>	AMSSDataBuf;
-	CSingleBuffer<_REAL>	AMSSPhaseBuf;
-	CCyclicBuffer<_REAL>	AMSSResPhaseBuf;
-	CCyclicBuffer<_BINARY>	AMSSBitsBuf;
-	
-	CSingleBuffer<_REAL>	RecDataBuf;
-	CCyclicBuffer<_REAL>	InpResBuf;
-	CCyclicBuffer<_COMPLEX>	FreqSyncAcqBuf;
-	CSingleBuffer<_COMPLEX>	TimeSyncBuf;
-	CSingleBuffer<_COMPLEX>	OFDMDemodBuf;
-	CSingleBuffer<_COMPLEX>	SyncUsingPilBuf;
-	CSingleBuffer<CEquSig>	ChanEstBuf;
-	CCyclicBuffer<CEquSig>	MSCCarDemapBuf;
-	CCyclicBuffer<CEquSig>	FACCarDemapBuf;
-	CCyclicBuffer<CEquSig>	SDCCarDemapBuf;
-	CSingleBuffer<CEquSig>	DeintlBuf;
-	CSingleBuffer<_BINARY>	FACDecBuf;
-	CSingleBuffer<_BINARY>	FACUseBuf;
-	CSingleBuffer<_BINARY>	FACSendBuf;
-	CSingleBuffer<_BINARY>	SDCDecBuf;
-	CSingleBuffer<_BINARY>	SDCUseBuf;
-	CSingleBuffer<_BINARY>	SDCSendBuf;
-	CSingleBuffer<_BINARY>	MSCMLCDecBuf;
-	CSingleBuffer<_BINARY> RSIPacketBuf;
+	CSingleBuffer<_REAL>			AMDataBuf;
+	CSingleBuffer<_REAL>			AMSSDataBuf;
+	CSingleBuffer<_REAL>			AMSSPhaseBuf;
+	CCyclicBuffer<_REAL>			AMSSResPhaseBuf;
+	CCyclicBuffer<_BINARY>			AMSSBitsBuf;
+
+	CSingleBuffer<_REAL>			RecDataBuf;
+	CCyclicBuffer<_REAL>			InpResBuf;
+	CCyclicBuffer<_COMPLEX>			FreqSyncAcqBuf;
+	CSingleBuffer<_COMPLEX>			TimeSyncBuf;
+	CSingleBuffer<_COMPLEX>			OFDMDemodBuf;
+	CSingleBuffer<_COMPLEX>			SyncUsingPilBuf;
+	CSingleBuffer<CEquSig>			ChanEstBuf;
+	CCyclicBuffer<CEquSig>			MSCCarDemapBuf;
+	CCyclicBuffer<CEquSig>			FACCarDemapBuf;
+	CCyclicBuffer<CEquSig>			SDCCarDemapBuf;
+	CSingleBuffer<CEquSig>			DeintlBuf;
+	CSingleBuffer<_BINARY>			FACDecBuf;
+	CSingleBuffer<_BINARY>			FACUseBuf;
+	CSingleBuffer<_BINARY>			FACSendBuf;
+	CSingleBuffer<_BINARY>			SDCDecBuf;
+	CSingleBuffer<_BINARY>			SDCUseBuf;
+	CSingleBuffer<_BINARY>			SDCSendBuf;
+	CSingleBuffer<_BINARY>			MSCMLCDecBuf;
+	CSingleBuffer<_BINARY>			RSIPacketBuf;
 	vector<CSingleBuffer<_BINARY> >	MSCDecBuf;
 	vector<CSingleBuffer<_BINARY> >	MSCUseBuf;
 	vector<CSingleBuffer<_BINARY> >	MSCSendBuf;
-	CCyclicBuffer<_SAMPLE>	AudSoDecBuf;
+	CCyclicBuffer<_SAMPLE>			AudSoDecBuf;
 
 	EAcqStat				eAcquiState;
 	int						iAcquRestartCnt;
@@ -453,12 +470,13 @@ protected:
 	int						iFreqkHz;
 
 	/* number of frames without FAC data before generating free-running RSCI */
-	static const int MAX_UNLOCKED_COUNT;
+	static const int		MAX_UNLOCKED_COUNT;
+
 	/* Counter for unlocked frames, to keep generating RSCI even when unlocked */
-	int iUnlockedCount;
+	int						iUnlockedCount;
 
 #ifdef _WIN32
-	_BOOLEAN bProcessPriorityEnabled;
+	_BOOLEAN				bProcessPriorityEnabled;
 #endif
 
 };
