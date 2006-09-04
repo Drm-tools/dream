@@ -71,6 +71,7 @@ drmwithoutqt_SOURCES = \
 	source/soundcommon.cpp \
 	source/soundin.cpp \
 	source/soundout.cpp \
+	../common/Version.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
 	../common/DrmReceiver.h \
