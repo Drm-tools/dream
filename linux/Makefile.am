@@ -53,10 +53,10 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/MDIInBuffer.cpp \
 	../common/MDI/MDITagItemDecoders.cpp \
 	../common/MDI/MDITagItems.cpp \
-	../common/MDI/TagPacketDecoderMDI.cpp	 \
 	../common/MDI/PacketSocketNull.cpp \
 	../common/MDI/RSCITagItemDecoders.cpp \
 	../common/MDI/TagPacketDecoder.cpp \
+	../common/MDI/TagPacketDecoderMDI.cpp \
 	../common/MDI/TagPacketDecoderRSCIControl.cpp \
 	../common/MDI/TagPacketGenerator.cpp \
 	../common/ofdmcellmapping/CellMappingTable.cpp \
@@ -130,6 +130,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/PacketInOut.h \
 	../common/MDI/PacketSocketNull.h \
 	../common/MDI/RSCITagItemDecoders.h \
+	../common/MDI/TagItemDecoder.h \
 	../common/MDI/TagPacketDecoder.h \
 	../common/MDI/TagPacketDecoderRSCIControl.h \
 	../common/MDI/TagPacketGenerator.h \
@@ -149,7 +150,10 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableFAC.h \
 	../common/tables/TableMLC.h \
 	../common/tables/TableQAMMapping.h \
-	source/sound.h
+	source/sound.h \
+	source/soundcommon.h \
+	source/soundin.h \
+	source/soundout.h
 
 if USE_QT
 
