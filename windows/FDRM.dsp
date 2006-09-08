@@ -128,6 +128,10 @@ SOURCE=.\moc\MultSettingsDlgbase.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\GeneralSettingsDlgbase.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_AboutDlgbase.cpp
 # End Source File
 # Begin Source File
@@ -180,7 +184,15 @@ SOURCE=.\moc\moc_MultSettingsDlg.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_GeneralSettingsDlg.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_MultSettingsDlgbase.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_GeneralSettingsDlgbase.cpp
 # End Source File
 # Begin Source File
 
@@ -275,6 +287,10 @@ SOURCE="..\common\GUI-QT\LiveScheduleDlg.cpp"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\MultSettingsDlg.cpp"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\GeneralSettingsDlg.cpp"
 # End Source File
 # Begin Source File
 
@@ -678,6 +694,10 @@ SOURCE="..\common\GUI-QT\LiveScheduleDlg.h"
 # Begin Source File
 
 SOURCE="..\common\GUI-QT\MultSettingsDlg.h"
+# End Source File
+# Begin Source File
+
+SOURCE="..\common\GUI-QT\GeneralSettingsDlg.h"
 # End Source File
 # Begin Source File
 

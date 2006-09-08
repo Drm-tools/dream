@@ -25,48 +25,48 @@
  *
 \******************************************************************************/
 
-#include <qcheckbox.h>
 #include <qlineedit.h>
-#include <qdir.h>
 #include <qpushbutton.h>
-#include <qvalidator.h>
 #include <qwhatsthis.h>
+#include <qvalidator.h>
+#include <qmessagebox.h>
 
 #include "../DrmReceiver.h"
-#include "../datadecoding/epg/epgutil.h"
 #include "../util/Settings.h"
-#include "MultimediaDlg.h"
 
 #ifdef _WIN32
-# include "../../Windows/moc/MultSettingsDlgbase.h"
+# include "../../Windows/moc/GeneralSettingsDlgbase.h"
 #else
-# include "moc/MultSettingsDlgbase.h"
+# include "moc/GeneralSettingsDlgbase.h"
 #endif
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class MultSettingsDlg : public CMultSettingsDlgBase
+class GeneralSettingsDlg : public CGeneralSettingsDlgBase
 {
 	Q_OBJECT
 
 public:
 
-	MultSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
+	GeneralSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
-	virtual ~MultSettingsDlg();
+	virtual ~GeneralSettingsDlg();
 
 protected:
-	void ClearCache(QString sPath, QString sFilter, _BOOLEAN bDeleteDirs);
-
 	virtual void	showEvent(QShowEvent* pEvent);
 	virtual void	hideEvent(QHideEvent* pEvent);
+
+	_BOOLEAN 	ValidInput(const QLineEdit* le);
+	QString 	ExtractDigits(const QString strS, const int iStart, const int iDigits);
+	void		ExtractReceiverCoordinates();
 
 	void			AddWhatsThisHelp();
 
 	CDRMReceiver*	pDRMRec;
 
 public slots:
-	void OnbuttonClearCacheMOT();
-	void OnbuttonClearCacheEPG();
+	void CheckSN(const QString& NewText);
+	void CheckEW(const QString& NewText);
+	void ButtonOkClicked();
 };

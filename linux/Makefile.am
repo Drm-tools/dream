@@ -168,6 +168,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/StationsDlg.cpp \
 	../common/GUI-QT/LiveScheduleDlg.cpp \
 	../common/GUI-QT/MultSettingsDlg.cpp \
+	../common/GUI-QT/GeneralSettingsDlg.cpp \
 	../common/GUI-QT/EPGDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
 	../common/MDI/PacketSocketQT.cpp \
@@ -179,6 +180,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/StationsDlgbase.ui \
 	../common/GUI-QT/LiveScheduleDlgbase.ui \
 	../common/GUI-QT/MultSettingsDlgbase.ui \
+	../common/GUI-QT/GeneralSettingsDlgbase.ui \
 	../common/GUI-QT/EPGDlgbase.ui \
 	../common/GUI-QT/AnalogDemDlgbase.ui \
 	../common/GUI-QT/AMSSDlgbase.ui \
@@ -192,6 +194,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/StationsDlg.h \
 	../common/GUI-QT/LiveScheduleDlg.h \
 	../common/GUI-QT/MultSettingsDlg.h \
+	../common/GUI-QT/GeneralSettingsDlg.h \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
 	../common/MDI/PacketSocketQT.h \
@@ -216,6 +219,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_StationsDlg.cpp moc/moc_StationsDlgbase.cpp moc/StationsDlgbase.h moc/StationsDlgbase.cpp \
 	moc/moc_LiveScheduleDlg.cpp moc/moc_LiveScheduleDlgbase.cpp moc/LiveScheduleDlgbase.h moc/LiveScheduleDlgbase.cpp \
 	moc/moc_MultSettingsDlg.cpp moc/moc_MultSettingsDlgbase.cpp moc/MultSettingsDlgbase.h moc/MultSettingsDlgbase.cpp \
+	moc/moc_GeneralSettingsDlg.cpp moc/moc_GeneralSettingsDlgbase.cpp moc/GeneralSettingsDlgbase.h moc/GeneralSettingsDlgbase.cpp \
 	moc/moc_EPGDlg.cpp moc/moc_EPGDlgbase.cpp moc/EPGDlgbase.h moc/EPGDlgbase.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
@@ -342,6 +346,19 @@ moc/MultSettingsDlgbase.h: ../common/GUI-QT/MultSettingsDlgbase.ui
 
 moc/MultSettingsDlgbase.cpp: ../common/GUI-QT/MultSettingsDlgbase.ui moc/MultSettingsDlgbase.h
 	$(UIC) ../common/GUI-QT/MultSettingsDlgbase.ui -i moc/MultSettingsDlgbase.h -o moc/MultSettingsDlgbase.cpp
+
+
+moc/moc_GeneralSettingsDlg.cpp: ../common/GUI-QT/GeneralSettingsDlg.h
+	$(MOC) ../common/GUI-QT/GeneralSettingsDlg.h -o moc/moc_GeneralSettingsDlg.cpp
+		
+moc/moc_GeneralSettingsDlgbase.cpp: moc/GeneralSettingsDlgbase.h
+	$(MOC) moc/GeneralSettingsDlgbase.h -o moc/moc_GeneralSettingsDlgbase.cpp
+	
+moc/GeneralSettingsDlgbase.h: ../common/GUI-QT/GeneralSettingsDlgbase.ui
+	$(UIC) ../common/GUI-QT/GeneralSettingsDlgbase.ui -o moc/GeneralSettingsDlgbase.h
+
+moc/GeneralSettingsDlgbase.cpp: ../common/GUI-QT/GeneralSettingsDlgbase.ui moc/GeneralSettingsDlgbase.h
+	$(UIC) ../common/GUI-QT/GeneralSettingsDlgbase.ui -i moc/GeneralSettingsDlgbase.h -o moc/GeneralSettingsDlgbase.cpp
 
 
 moc/moc_EPGDlg.cpp: ../common/GUI-QT/EPGDlg.h

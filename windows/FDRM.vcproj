@@ -880,6 +880,28 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath="..\common\GUI-QT\GeneralSettingsDlg.cpp"
+					>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							AdditionalIncludeDirectories=""
+							PreprocessorDefinitions=""
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath="..\common\GUI-QT\StationsDlg.cpp"
 					>
 					<FileConfiguration
@@ -1455,6 +1477,50 @@
 						</FileConfiguration>
 					</File>
 					<File
+						RelativePath="moc\moc_GeneralSettingsDlg.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="moc\moc_GeneralSettingsDlgbase.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
 						RelativePath="moc\moc_PacketSocketQT.cpp"
 						>
 						<FileConfiguration
@@ -1632,6 +1698,28 @@
 					</File>
 					<File
 						RelativePath="moc\MultSettingsDlgbase.cpp"
+						>
+						<FileConfiguration
+							Name="Release|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+						<FileConfiguration
+							Name="Debug|Win32"
+							>
+							<Tool
+								Name="VCCLCompilerTool"
+								AdditionalIncludeDirectories=""
+								PreprocessorDefinitions=""
+							/>
+						</FileConfiguration>
+					</File>
+					<File
+						RelativePath="moc\GeneralSettingsDlgbase.cpp"
 						>
 						<FileConfiguration
 							Name="Release|Win32"
@@ -2920,6 +3008,10 @@
 				</File>
 				<File
 					RelativePath="..\common\GUI-QT\MultSettingsDlg.h"
+					>
+				</File>
+				<File
+					RelativePath="..\common\GUI-QT\GeneralSettingsDlg.h"
 					>
 				</File>
 				<File

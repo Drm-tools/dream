@@ -1,6 +1,6 @@
 Rem/******************************************************************************\
 rem * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
-rem * Copyright (c) 2001-2005
+rem * Copyright (c) 2001-2006
 rem *
 rem * Author(s):
 rem *	Volker Fischer
@@ -42,6 +42,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\EPGDlg.h -o moc\moc_EPGDlg.cpp
 %qtdir%\bin\moc.exe ..\common\MDI\PacketSocketQT.h -o moc\moc_PacketSocketQT.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultSettingsDlg.h -o moc\moc_MultSettingsDlg.cpp
+%qtdir%\bin\moc.exe ..\common\GUI-QT\GeneralSettingsDlg.h -o moc\moc_GeneralSettingsDlg.cpp
 
 rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h  
@@ -87,5 +88,9 @@ rem .ui -------------
 %qtdir%\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -o moc\MultSettingsDlgbase.h  
 %qtdir%\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp  
 %qtdir%\bin\moc.exe moc\MultSettingsDlgbase.h -o moc\moc_MultSettingsDlgbase.cpp
+
+%qtdir%\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -o moc\GeneralSettingsDlgbase.h  
+%qtdir%\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp
+%qtdir%\bin\moc.exe moc\GeneralSettingsDlgbase.h -o moc\moc_GeneralSettingsDlgbase.cpp
 
 pause

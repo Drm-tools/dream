@@ -42,6 +42,8 @@ MultSettingsDlg::MultSettingsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	connect(buttonClearCacheEPG, SIGNAL(clicked()),
 		this, SLOT(OnbuttonClearCacheEPG()));
+
+	EdtSecRefresh->setValidator(new QIntValidator(MIN_MOT_BWS_REFRESH_TIME, MAX_MOT_BWS_REFRESH_TIME, EdtSecRefresh));
 }
 
 MultSettingsDlg::~MultSettingsDlg()

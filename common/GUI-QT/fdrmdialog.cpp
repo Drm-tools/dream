@@ -102,6 +102,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	pSettingsMenu->insertItem(tr("&Multimedia settings..."), this,
 		SLOT(OnViewMultSettingsDlg()));
 
+	pSettingsMenu->insertItem(tr("&General settings..."), this,
+		SLOT(OnViewGeneralSettingsDlg()));
+
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
@@ -868,6 +871,17 @@ void FDRMDialog::OnViewMultSettingsDlg()
 	SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
 
 	pMultSettingsDlg->show();
+}
+
+void FDRMDialog::OnViewGeneralSettingsDlg()
+{
+	/* Show general settings window */
+	GeneralSettingsDlg* pGeneralSettingsDlg = new GeneralSettingsDlg(pDRMRec, this, "", TRUE,
+		Qt::WStyle_Dialog);
+
+	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
+
+	pGeneralSettingsDlg->show();
 }
 
 void FDRMDialog::OnViewEPGDlg()
