@@ -756,27 +756,29 @@ void StationsDlg::AddUpdateDateTime()
 	querying a new schedule (online schedule update).
 	If no schedule file exists, do not show any time and date.
 */
-	// make sure we check the correct file (DRM or AM schedule)
+	/* make sure we check the correct file (DRM or AM schedule) */
 	QString strFile;
 	switch (DRMSchedule.GetSchedMode())
 	{
 		case CDRMSchedule::SM_DRM:
 			strFile = DRMSCHEDULE_INI_FILE_NAME;
+			pUpdateMenu->setItemEnabled(0, TRUE);
 			break;
 
 		case CDRMSchedule::SM_ANALOG:
 			strFile = AMSCHEDULE_INI_FILE_NAME;
+			pUpdateMenu->setItemEnabled(0, FALSE);
 			break;
 	}
 
-	// init with empty string in case there is no schedule file
+	/* init with empty string in case there is no schedule file */
 	QString s = "";
 
-	// get time and date information
+	/* get time and date information */
 	QFileInfo f = QFileInfo(strFile);
-	if (f.exists()) // make sure the DRM schedule file exists
+	if (f.exists()) /* make sure the DRM schedule file exists */
 	{
-		// use QT-type of data string for displaying
+		/* use QT-type of data string for displaying */
 		s = tr(" (last update: ")
 			+ f.lastModified().date().toString() + ")";
 	}
@@ -1111,8 +1113,8 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 		/* If the mode has changed re-initialise the receiver */
 		ERecMode eCurrentMode = pDRMRec->GetReceiverMode();
 
-		// if "bReInitOnFrequencyChange" is not true, initiate a reinit when
-		// schedule mode is different from receiver mode
+		/* if "bReInitOnFrequencyChange" is not true, initiate a reinit when
+		 schedule mode is different from receiver mode */
 		switch (DRMSchedule.GetSchedMode())
 		{
 		case CDRMSchedule::SM_DRM:
