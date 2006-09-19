@@ -111,6 +111,7 @@ public:
 	string Binary2String(const int iVal);
 
 	void SetReceiverCoordinates(const string strLatitude, const string strLongitude);
+	QString ExtractFirstDigits(const QString s, const int iDigits);
 
 protected:
 	_BOOLEAN IsActive(const int iPos, const time_t ltime);

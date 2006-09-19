@@ -170,15 +170,36 @@ string strDaysShow = "";
 return QString(strDaysShow.c_str());
 }
 
+QString CDRMLiveSchedule::ExtractFirstDigits(const QString s, const int iDigits)
+{
+QString sVal;
+QChar ch;
+_BOOLEAN bStop;
+
+	sVal = "";
+	bStop = FALSE;
+
+	/* scan the string for extract the first n digits */
+	for (int i = 0; i <= iDigits - 1; i++)
+	{
+		if (bStop == FALSE)
+		{
+			ch = s.at(i);
+			if (ch.isDigit() == TRUE)
+				sVal = sVal + ch;
+			else
+				bStop = TRUE;
+		}
+	}
+	return sVal;
+}
+
 void CDRMLiveSchedule::SetReceiverCoordinates(const string strLatitude, const string strLongitude)
 {
 int iLatitude;
 int iLongitude;
 
-int i;
 QString sVal;
-QChar ch;
-_BOOLEAN bStop;
 
 	/* parse the latitude and longitude string stored into Dream settings for
 		extract local latitude degrees and longitude degrees */
@@ -190,22 +211,8 @@ _BOOLEAN bStop;
 
 	if ((strCurLat != "") && (strCurLong != "")) 
 	{
-		sVal = "";
-		bStop = FALSE;
-
-		/* scan the string for extract the first n digits */
 		/* latitude max 2 digits */
-		for (i = 0; i <= 1; i++)
-		{
-			if (bStop == FALSE)
-			{
-				ch = strCurLat.at(i);
-				if (ch.isDigit() == TRUE)
-					sVal = sVal + ch;
-				else
-					bStop = TRUE;
-			}
-		}
+		sVal = ExtractFirstDigits(strCurLat, 2);
 
 		if (sVal != "")
 		{
@@ -216,24 +223,9 @@ _BOOLEAN bStop;
 
 			if ((iLatitude <= 90) && (iLatitude >= -90))
 			{
-				sVal = "";
-				bStop = FALSE;
-
-				/* scan the string for extract the first n digits */
 				/* longitude max 3 digits */
 
-				for (i = 0; i <= 2; i++) 
-				{
-					if (bStop == FALSE)
-					{
-						ch = strCurLong.at(i);
-					
-						if (ch.isDigit() == TRUE)
-							sVal = sVal + ch;
-						else
-							bStop = TRUE;
-					}
-				}
+				sVal = ExtractFirstDigits(strCurLong, 3);
 
 				if (sVal != "")
 				{

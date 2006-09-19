@@ -263,6 +263,10 @@ Phase Offset</source>
         <source>AMSS Offset</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>AMSSContryCode</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>CAboutDlg</name>
@@ -645,6 +649,45 @@ Institute for Communication Technology</source>
     </message>
 </context>
 <context>
+    <name>CGeneralSettingsDlgBase</name>
+    <message>
+        <source>General settings</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&amp;OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Receiver coordinates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Latitude   </source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>°</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&apos;</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>N/S</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Longitude</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>E/W</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>CLiveScheduleDlgBase</name>
     <message>
         <source>Live Schedule</source>
@@ -700,14 +743,6 @@ Institute for Communication Technology</source>
 </context>
 <context>
     <name>CSoundCardSelMenu</name>
-    <message>
-        <source>Primary Audio &amp;Device (Recording)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Primary Audio &amp;Device (Playback)</source>
-        <translation type="unfinished"></translation>
-    </message>
     <message>
         <source>Sound &amp;In</source>
         <translation type="unfinished"></translation>
@@ -906,6 +941,14 @@ Institute for Communication Technology</source>
         <source>Multimedia settings</source>
         <translation type="unfinished"></translation>
     </message>
+    <message>
+        <source>&amp;General settings...</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>General settings</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>FDRMDialogBase</name>
@@ -987,6 +1030,29 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>TextMiniService4</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
+    <name>GeneralSettingsDlg</name>
+    <message>
+        <source>Latitude value must be in the range 0 to 90</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Longitude value must be in the range 0 to 180</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Minutes value must be in the range 0 to 59</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Compile all fields on receiver coordinates</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Receiver coordinates:&lt;/b&gt; Are used on Live Schedule Dialog for show a little green cube on the left of the target column if the receiver coordinates (latitude and longitude) are inside the target area of this transmission.&lt;br&gt;Receiver coordinates are also saved into the Log file.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>

@@ -1039,23 +1039,6 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
-		/* Latitude string for log file ------------------------------------- */
-		if (GetStringArgument(argc, argv, i, "-a", "--latitude",
-			strArgument) == TRUE)
-		{
-			pDRMRec->GetParameters()->ReceptLog.SetLatitude(strArgument);
-			continue;
-		}
-
-
-		/* Longitude string for log file ------------------------------------ */
-		if (GetStringArgument(argc, argv, i, "-o", "--longitude",
-			strArgument) == TRUE)
-		{
-			pDRMRec->GetParameters()->ReceptLog.SetLongitude(strArgument);
-			continue;
-		}
-
 
 		/* Color scheme main plot ------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-y", "--colorscheme", 0,
@@ -1228,8 +1211,6 @@ string CSettings::UsageArguments(char** argv)
 #ifdef USE_QT_GUI
 		"  -g <n>, --enablelog <n>     enable/disable logging (0: no logging; 1: logging\n"
 		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
-		"  -a <s>, --latitude <s>      set latitude string for log file\n"
-		"  -o <s>, --longitude <s>     set longitude string for log file\n"
 		"  -l <n>, --logdelay <n>      delay start of logging by <n> seconds, allowed range: 0...3600)\n"
 		"  -y <n>, --colorscheme <n>   set color scheme for main plot\n"
 		"                              0: blue-white (default);   1: green-black;   2: black-grey\n"
@@ -1258,7 +1239,7 @@ string CSettings::UsageArguments(char** argv)
 		"Example: " + string(argv[0]) +
 		" -p --sampleoff -0.23 -i 2 "
 #ifdef USE_QT_GUI
-		"-r 6140 -a 50°13\\'N -o 8°34\\'E --rsiout 127.0.0.1:3002"
+		"-r 6140 --rsiout 127.0.0.1:3002"
 #endif
 		"\n";
 }
