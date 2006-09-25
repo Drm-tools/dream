@@ -33,7 +33,6 @@
 #include <qtimer.h>
 #include <iostream>
 #include <errno.h>
-#include <sys/time.h>
 
 CPacketSocketQT::CPacketSocketQT ():SocketDevice (QSocketDevice::
 			  Datagram /* UDP */ )
