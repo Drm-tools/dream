@@ -71,7 +71,7 @@ CPacketSocketQT::SendPacket (const vector < _BYTE > &vecbydata)
 	char *p = new char[vecbydata.size ()];
 	for (size_t i = 0; i < vecbydata.size (); i++)
 		p[i] = vecbydata[i];
-	Q_LONG bytes_written = SocketDevice.writeBlock (p, vecbydata.size (),
+	int bytes_written = SocketDevice.writeBlock (p, vecbydata.size (),
 													  HostAddrOut,
 													  iHostPortOut);
 	/* should we throw an exception or silently accept? */
