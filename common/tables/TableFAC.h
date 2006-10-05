@@ -118,7 +118,7 @@ const string strTableProgTypCod[LEN_TABLE_PROG_TYPE_CODE_TOT] = {
 // TODO: the following table can be used for country code decoding
 /* Country code table according to ISO 3166 */
 
-#define LEN_TABLE_COUNTRY_CODE			240
+#define LEN_TABLE_COUNTRY_CODE			244
 
 #define LEN_COUNTRY_CODE				2
 #define MAX_LEN_DESC_COUNTRY_CODE		44
