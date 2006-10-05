@@ -72,6 +72,8 @@
    estimate of the true delay */
 #define LEN_HIST_DELAY_LOG_FILE_S		((CReal) 1.0) /* sec */
 
+/* max frame len for FAC SNR estimates for each symbol of frame */
+#define MAX_NUM_SYM_PER_FRAME			RMD_NUM_SYM_PER_FRAME
 
 /* Classes ********************************************************************/
 class CChannelEstimation : public CReceiverModul<_COMPLEX, CEquSig>
@@ -175,6 +177,10 @@ protected:
 	CVector<_REAL>			vecrNoiseEstMSC;
 	CVector<_REAL>			vecrSigEstMSC;
 	_REAL					rSNREstimate;
+	_REAL					rNoiseEstSum;
+	_REAL					rSignalEstSum;
+	CRealVector				vecrNoiseEstFACSym;
+	CRealVector				vecrSignalEstFACSym;
 	_REAL					rSNRChanEstCorrFact;
 	_REAL					rSNRFACSigCorrFact;
 	_REAL					rSNRTotToPilCorrFact;

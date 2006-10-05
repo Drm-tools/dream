@@ -353,6 +353,13 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 				bSNRInitPhase = FALSE;
 			}
 
+			/* replace SNR estimate of current symbol */
+			rNoiseEstSum -= vecrNoiseEstFACSym[iModSymNum];
+			rSignalEstSum -= vecrSignalEstFACSym[iModSymNum];
+			
+			vecrNoiseEstFACSym[iModSymNum] = 0.0;
+			vecrSignalEstFACSym[iModSymNum] = 0.0;
+			
 			for (i = 0; i < iNumCarrier; i++)
 			{
 				/* Only use FAC cells for this SNR estimation method */
@@ -367,13 +374,17 @@ void CChannelEstimation::ProcessDataInternal(CParameter& ReceiverParam)
 
 					/* Use decision together with channel estimate to get
 					   estimates for signal and noise */
-					IIR1(rNoiseEst, rCurErrPow * vecrSqMagChanEst[i],
-						rLamSNREstFast);
-
-					IIR1(rSignalEst, vecrSqMagChanEst[i],
-						rLamSNREstFast);
+					vecrNoiseEstFACSym[iModSymNum] += rCurErrPow * vecrSqMagChanEst[i];
+					vecrSignalEstFACSym[iModSymNum] += vecrSqMagChanEst[i];
 				}
 			}
+
+			rNoiseEstSum += vecrNoiseEstFACSym[iModSymNum];
+			rSignalEstSum += vecrSignalEstFACSym[iModSymNum];
+			
+			/* Average SNR estimation from whole frame by exponentially forgetting IIR */
+			IIR1(rNoiseEst, rNoiseEstSum, rLamSNREstFast);
+			IIR1(rSignalEst, rSignalEstSum, rLamSNREstFast);
 
 			/* Calculate final result (signal to noise ratio) */
 			rCurSNREst = CalAndBoundSNR(rSignalEst, rNoiseEst);
@@ -697,6 +708,12 @@ void CChannelEstimation::InitInternal(CParameter& ReceiverParam)
 	/* For SNR estimation initialization */
 	iSNREstIniSigAvCnt = 0;
 	iSNREstIniNoiseAvCnt = 0;
+	
+	/* for FAC SNR estimation */
+	vecrNoiseEstFACSym.Init(iNumSymPerFrame, (_REAL) 0.0);
+	vecrSignalEstFACSym.Init(iNumSymPerFrame, (_REAL) 0.0);
+	rNoiseEstSum = 0.0;
+	rSignalEstSum = 0.0;
 
 	/* We only have an initialization phase for SNR estimation method based on
 	   the tentative decisions of FAC cells */
