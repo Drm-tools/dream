@@ -60,8 +60,7 @@ CMDIInBuffer::Get(vector<_BYTE>& data)
 {
 #ifdef USE_QT_GUI
 	guard.lock();
-	while(buffer.empty())
-		blocker.wait(&guard, 1000);
+	blocker.wait(&guard, 1000);
 	data = buffer.front();
 	buffer.pop();
 	guard.unlock();

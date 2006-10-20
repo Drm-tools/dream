@@ -47,6 +47,9 @@ CPacketSocketQT::CPacketSocketQT ():SocketDevice (QSocketDevice::
 	/* Connect the "activated" signal */
 	QObject::connect (pSocketNotivRead, SIGNAL (activated (int)),
 					  this, SLOT (OnDataReceived ()));
+					  
+	/* allow connection when others are listening */
+	SocketDevice.setAddressReusable(true);
 }
 
 // Set the sink which will receive the packets
