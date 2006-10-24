@@ -626,6 +626,26 @@ CDataDecoder::GetMOTObject (CMOTObject & NewObj, const EAppType eAppTypeReq)
     return bReturn;
 }
 
+_BOOLEAN
+CDataDecoder::GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq)
+{
+    _BOOLEAN bReturn = FALSE;
+
+    /* Lock resources */
+    Lock ();
+
+    /* Check if data service is current MOT application */
+    if ((DoNotProcessData == FALSE) && (eAppType == eAppTypeReq))
+      {
+	  MOTObject[iServPacketID].GetDirectory (MOTDirectoryOut);
+	  bReturn = TRUE;
+      }
+    /* Release resources */
+    Unlock ();
+
+    return bReturn;
+}
+
 void
 CDataDecoder::GetNews (const int iObjID, CNews & News)
 {

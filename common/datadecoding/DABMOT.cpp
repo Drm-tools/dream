@@ -622,8 +622,12 @@ CMOTDABDec::DeliverIfReady (TTransportID TransportID)
     if ((!o.bComplete) && o.bHasHeader && o.Body.Ready ())
       {
 	  o.bComplete = TRUE;
-	  if (o.IsZipped ())
-	      o.uncompress ();
+	  if (o.Body.IsZipped ())
+	  {
+	    if (o.Body.uncompress() == FALSE)
+			/* Can't unzip so change the filename */
+			o.strName = string(o.strName.c_str()) + ".gz";
+	  }
 	  qiNewObjects.push (TransportID);
       }
 }
@@ -807,7 +811,7 @@ CMOTDABDec::AddDataUnit (CVector < _BINARY > &vecbiNewData)
 			{
 			    MOTCarousel[TransportID].Body.
 				AddSegment (vecbiNewData, iSegmentSize,
-					    iSegmentNum, biLastFlag);
+    					iSegmentNum, biLastFlag);
 			}
 		      else
 			{
@@ -837,6 +841,7 @@ CMOTDABDec::AddDataUnit (CVector < _BINARY > &vecbiNewData)
 				  MOTDirectory.Reset ();
 				  MOTDirectory.TransportID = TransportID;
 				  MOTDirectoryEntity.Reset ();
+				  MOTDirComprEntity.Reset ();
 			      }
 
 			    /* Handle the new segment */
@@ -848,46 +853,10 @@ CMOTDABDec::AddDataUnit (CVector < _BINARY > &vecbiNewData)
 							   biLastFlag);
 			    /* have we got the full directory ? */
 			    if (MOTDirectoryEntity.Ready ())
-			      {
-				  MOTDirectory.AddHeader (MOTDirectoryEntity.
-							  vecData);
-
-				  /* first reset the "I'm in the carousel" flag for all objects
-				     and set the "I was in the carousel for the relevant objects
-				     then set the "I'm in the carousel" flag for all objects in the
-				     new directory.
-				     Then delete the objects from the carousel that need deleting
-				     leave objects alone that were never in a carousel, they might
-				     become valid later. */
-				  for (map < TTransportID,
-				       CMOTObject >::iterator m =
-				       MOTCarousel.begin ();
-				       m != MOTCarousel.end (); m++)
-				    {
-					CMOTObject & o = m->second;
-					if (o.bInDirectory)
-					    o.bInOldDirectory = TRUE;
-					o.bInDirectory = FALSE;
-				    }
-				  MOTDirectory.vecObjects.clear ();
-				  for (size_t i = 0;
-				       i <
-				       size_t (MOTDirectory.iNumberOfObjects);
-				       i++)
-				    {
-					/* add each header to the carousel */
-					TTransportID tid = (TTransportID)
-					    MOTDirectoryEntity.vecData.
-					    Separate (16);
-					MOTCarousel[tid].
-					    AddHeader (MOTDirectoryEntity.
-						       vecData);
-					MOTDirectory.vecObjects.
-					    push_back (tid);
-					DeliverIfReady (tid);
-				    }
+			    {
+				  ProcessDirectory (MOTDirectoryEntity);
 				  DirectoryTransportID = TransportID;
-			      }	/* END IF HAVE ALL OF THE NEW DIRECTORY */
+			    }	/* END IF HAVE ALL OF THE NEW DIRECTORY */
 			}
 		      else
 			{
@@ -895,12 +864,148 @@ CMOTDABDec::AddDataUnit (CVector < _BINARY > &vecbiNewData)
 						   SIZEOF__BYTE);
 			}
 		  }		/* of DG type 6 */
+#if 0 //Commented until we can test it with a real compressed directory
+		else if (iDataGroupType == 7)	/* MOT directory compressed */
+		  {
+		      if (MOTmode != directoryMode)
+			{
+			    /* mode change, throw away any headers */
+			    MOTHeaders.clear ();
+			    DirectoryTransportID = -1;	/* forced reset */
+			    MOTmode = directoryMode;
+			}
+		      if (DirectoryTransportID != TransportID)
+			{
+			    /* The carousel is changing */
+			    if (MOTDirectory.TransportID != TransportID)
+			      {
+				  /* we never got all the previous directory */
+				  MOTDirectory.Reset ();
+				  MOTDirectory.TransportID = TransportID;
+				  MOTDirectoryEntity.Reset ();
+				  MOTDirComprEntity.Reset ();
+			      }
+
+			    /* Handle the new segment */
+
+			    /* rely on the Add routine to check duplicates, set ready, etc. */
+			    MOTDirComprEntity.AddSegment (vecbiNewData,
+							   iSegmentSize,
+							   iSegmentNum,
+							   biLastFlag);
+			    /* have we got the full directory ? */
+			    if (MOTDirComprEntity.Ready ())
+			    {
+				  /* uncompress data and extract directory */
+
+				  /* Compression Flag - must be 1 */
+
+				  const _BOOLEAN bCompressionFlag =
+					MOTDirComprEntity.vecData.Separate (1) ? TRUE : FALSE;
+
+				  /* rfu */
+				  MOTDirComprEntity.vecData.Separate (1);
+
+				  /* EntitySize */
+				  MOTDirComprEntity.vecData.Separate (30);
+
+				  /* CompressionID */
+				  MOTDirComprEntity.vecData.Separate (8);
+
+				  /* rfu */
+				  MOTDirComprEntity.vecData.Separate (2);
+
+				  /* Uncompressed DataLength */
+				  MOTDirComprEntity.vecData.Separate (30);
+
+				  CBitReassembler MOTDirectoryData;
+
+				  MOTDirectoryData.vecData =
+					 MOTDirComprEntity.vecData
+						.Separate(MOTDirComprEntity.vecData.Size() - (9 * SIZEOF__BYTE));
+
+				  if (bCompressionFlag 
+					  && MOTDirectoryData.IsZipped()
+					  && MOTDirectoryData.uncompress())
+				  {
+					ProcessDirectory (MOTDirectoryData);
+
+					DirectoryTransportID = TransportID;
+				  }
+				  else
+				  {
+					/* reset */
+					MOTDirComprEntity.Reset ();
+				  }
+
+			    }	/* END IF HAVE ALL OF THE NEW DIRECTORY */
+			}
+		      else
+			{
+			    vecbiNewData.Separate (iSegmentSize *
+						   SIZEOF__BYTE);
+			}
+		  }		/* of DG type 7 */
+#endif
 		else
 		  {
 		      vecbiNewData.Separate (iSegmentSize * SIZEOF__BYTE);
 		  }
 	    }
       }
+}
+
+void
+CMOTDABDec::ProcessDirectory (CBitReassembler &MOTDir)
+{
+	MOTDirectory.AddHeader (MOTDir.vecData);
+	
+	/* first reset the "I'm in the carousel" flag for all objects
+	   and set the "I was in the carousel for the relevant objects
+	   then set the "I'm in the carousel" flag for all objects in the
+	   new directory.
+	   Then delete the objects from the carousel that need deleting
+	   leave objects alone that were never in a carousel, they might
+	   become valid later. */
+				     
+        /* mark objects which are in the old directory */
+	for (map < TTransportID,
+	     CMOTObject >::iterator m =
+	     MOTCarousel.begin ();
+	     m != MOTCarousel.end (); m++)
+	{
+		CMOTObject & o = m->second;
+		if (o.bInDirectory)
+		    o.bInOldDirectory = TRUE;
+		o.bInDirectory = FALSE;
+	}
+
+	MOTDirectory.vecObjects.clear();
+
+	for (size_t i = 0;i < size_t (MOTDirectory.iNumberOfObjects);i++)
+	{
+		/* add each header to the carousel */
+		TTransportID tid = (TTransportID)
+		MOTDir.vecData.Separate (16);
+		MOTCarousel[tid].AddHeader (MOTDir.vecData);
+	        /* mark objects which are in the new directory */
+		MOTCarousel[tid].bInDirectory = TRUE;
+		MOTDirectory.vecObjects.push_back (tid);
+		DeliverIfReady (tid);
+	}
+	
+	/* delete objects that were in the old and are not in the new*/
+	for (map < TTransportID,
+	     CMOTObject >::iterator m2 =
+	     MOTCarousel.begin ();
+	     m2 != MOTCarousel.end (); m2++)
+	{
+		CMOTObject & o = m2->second;
+		if ( ( o.bInDirectory == FALSE)
+		     && (o.bInOldDirectory = TRUE)
+                   )
+			MOTCarousel.erase(m2);  
+	}
 }
 
 void
@@ -1242,7 +1347,7 @@ CMOTDirectory::AddHeader (CVector < _BINARY > &vecbiHeader)
 }
 
 _BOOLEAN
-CMOTObject::IsZipped () const
+CReassembler::IsZipped () const
 {
 /*
 	Check if the header file is a gzip header
@@ -1251,15 +1356,15 @@ CMOTObject::IsZipped () const
 	http://www.ietf.org/rfc/rfc1952.txt
 */
     /* Check for gzip header [31, 139, 8] */
-    if ((Body.vecData[0] == 31)
-	&& (Body.vecData[1] == 139) && (Body.vecData[2] == 8))
+    if ((vecData[0] == 31)
+	&& (vecData[1] == 139) && (vecData[2] == 8))
 	return TRUE;
     else
 	return FALSE;
 }
 
 unsigned int
-CMOTObject::gzGetOriginalSize () const
+CReassembler::gzGetOriginalSize () const
 {
 /*
 	Get the original size from a gzip file
@@ -1270,19 +1375,19 @@ CMOTObject::gzGetOriginalSize () const
 */
     CVector < _BYTE > byHeader (4);
 
-    const int iLastByte = Body.vecData.Size () - 1;
+    const int iLastByte = vecData.Size () - 1;
 
-    byHeader[0] = Body.vecData[iLastByte - 3];
-    byHeader[1] = Body.vecData[iLastByte - 2];
-    byHeader[2] = Body.vecData[iLastByte - 1];
-    byHeader[3] = Body.vecData[iLastByte];
+    byHeader[0] = vecData[iLastByte - 3];
+    byHeader[1] = vecData[iLastByte - 2];
+    byHeader[2] = vecData[iLastByte - 1];
+    byHeader[3] = vecData[iLastByte];
 
     return byHeader[0] + (byHeader[1] << 8) + (byHeader[2] << 16) +
 	(byHeader[3] << 24);
 }
 
-void
-CMOTObject::uncompress ()
+_BOOLEAN
+CReassembler::uncompress()
 {
 #ifdef HAVE_ZLIB_LIBRARY
 	CVector < _BYTE > vecbRawDataOut;
@@ -1297,11 +1402,11 @@ CMOTObject::uncompress ()
 		z_stream stream;
 		memset (&stream, 0, sizeof (stream));
 		if ((zerr = inflateInit2 (&stream, -MAX_WBITS)) != Z_OK)
-			return;
+			return FALSE;
 
 		/* skip past minimal gzip header */
-		stream.next_in = &Body.vecData[10];
-		stream.avail_in = Body.vecData.Size () - 10;
+		stream.next_in = &vecData[10];
+		stream.avail_in = vecData.Size () - 10;
 
 		stream.next_out = &vecbRawDataOut[0];
 		stream.avail_out = vecbRawDataOut.Size ();
@@ -1310,22 +1415,26 @@ CMOTObject::uncompress ()
 		dest_len = vecbRawDataOut.Size () - stream.avail_out;
 
 		if (zerr != Z_OK && zerr != Z_STREAM_END)
-			return;
+			return FALSE;
 
 		inflateEnd (&stream);
 
 		if (zerr != Z_OK && zerr != Z_STREAM_END)
-			return;
+			return FALSE;
 
-		Body.vecData.Init (dest_len);
-		Body.vecData = vecbRawDataOut;
+		vecData.Init (dest_len);
+		vecData = vecbRawDataOut;
+		return TRUE;
 	}
 	else
-		Body.vecData.Init (0);
+	{
+		vecData.Init (0);
+		return FALSE;
+	}
 #else
 #	ifdef HAVE_LIBFREEIMAGE
     CVector < _BYTE > vecbRawDataOut;
-    CVector < _BYTE > &vecbRawDataIn = Body.vecData;
+    CVector < _BYTE > &vecbRawDataIn = vecData;
     /* Extract the original file size */
     const unsigned long dest_len = gzGetOriginalSize ();
 
@@ -1341,17 +1450,23 @@ CMOTObject::uncompress ()
 	  if (zerr > 0)
 	    {
 		/* Copy data */
-		Body.vecData.Init (zerr);
-		Body.vecData = vecbRawDataOut;
+		vecData.Init (zerr);
+		vecData = vecbRawDataOut;
+		return TRUE;
 	    }
 	  else
-	      Body.vecData.Init (0);
+		{
+	      vecData.Init (0);
+		  return FALSE;
+		}
       }
     else
-	Body.vecData.Init (0);
+    {
+		vecData.Init (0);
+		return FALSE;
+	}
 #	else
-	/* Can't unzip so change the filename */
-	strName = string(strName.c_str()) + ".gz";
+	return FALSE;
 #	endif
 #endif
 }
@@ -1506,4 +1621,3 @@ CMOTObject::AddHeader (CVector < _BINARY > &vecbiHeader)
       }
     bHasHeader = TRUE;
 }
-

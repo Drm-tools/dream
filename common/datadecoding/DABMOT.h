@@ -55,7 +55,11 @@
    number of bytes */
 #define MAX_DEC_NUM_BYTES_ZIP_DATA		1000000	/* 1 MB */
 
-
+/* Registrered BWS profiles (ETSI TS 101 498-1) */
+#define RESERVED_PROFILE	0x00
+#define BASIC_PROFILE		0x01
+#define TOP_NEWS_PROFILE	0x02
+#define UNRESTRICTED_PC_PROFILE 0xFF
 /* Classes ********************************************************************/
 
 
@@ -227,6 +231,9 @@ class CReassembler
     void AddSegment (CVector < _BYTE > &vecDataIn,
 		     int iSegSize, int iSegNum, _BOOLEAN bLast = FALSE);
 
+    _BOOLEAN IsZipped () const;
+    _BOOLEAN uncompress();
+
     CVector < _BYTE > vecData;
 
   protected:
@@ -235,6 +242,8 @@ class CReassembler
 			 size_t bytes);
     virtual void cachelast (CVector < _BYTE > &vecDataIn, size_t iSegSize);
     virtual void copylast ();
+
+    unsigned int gzGetOriginalSize () const;
 
     CVector < _BYTE > vecLastSegment;
     int iLastSegmentNum;
@@ -460,9 +469,6 @@ class CMOTObject:public CMOTObjectBase
     }
 
     void AddHeader (CVector < _BINARY > &header);
-    void uncompress ();
-    _BOOLEAN IsZipped () const;
-    unsigned int gzGetOriginalSize () const;
 
     /* for encoding */
     CVector < _BYTE > vecbRawData;
@@ -572,6 +578,8 @@ class CMOTDABDec
 
   protected:
 
+	void ProcessDirectory (CBitReassembler &MOTDir);
+
     void DeliverIfReady (TTransportID TransportID);
 
     /* These fields are the in-progress carousel objects */
@@ -580,6 +588,7 @@ class CMOTDABDec
     /* strictly, there should be only one of these! */
     map < TTransportID, CBitReassembler > MOTHeaders;
     CBitReassembler MOTDirectoryEntity;
+    CBitReassembler MOTDirComprEntity;
 
     /* These fields are the cached complete carousel */
     CMOTDirectory MOTDirectory;

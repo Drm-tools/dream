@@ -328,8 +328,8 @@ void FDRMDialog::OnTimer()
 	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
 	SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
-    SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
-    SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
+	SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
+	SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
 
 	/* Check if receiver does receive a DRM signal */
 	if ((pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
@@ -337,7 +337,32 @@ void FDRMDialog::OnTimer()
 	{
 		/* Receiver does receive a DRM signal ------------------------------- */
 		/* First get current selected services */
-		const int iCurSelAudioServ = ReceiverParam.GetCurSelAudioService();
+		int iCurSelAudioServ = ReceiverParam.GetCurSelAudioService();
+
+		/* If the current audio service is not active or is an only data service
+		   select the first audio service available */
+
+		if (!ReceiverParam.Service[iCurSelAudioServ].IsActive() ||
+		    ReceiverParam.Service[iCurSelAudioServ].AudioParam.iStreamID == STREAM_ID_NOT_USED ||
+		    ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag == CParameter::SF_DATA)
+		{
+			int i = 0;
+			_BOOLEAN bStop = FALSE;
+
+			while ((bStop == FALSE) && (i < MAX_NUM_SERVICES))
+			{
+				if (ReceiverParam.Service[i].IsActive() &&
+				    ReceiverParam.Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED &&
+				    ReceiverParam.Service[i].eAudDataFlag == CParameter::SF_AUDIO)
+				{
+					iCurSelAudioServ = i;
+					bStop = TRUE;
+				}
+				else
+					i++;
+			}
+		}
+
 		const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
 
 		/* If selected service is audio and text message is true */
@@ -351,11 +376,11 @@ void FDRMDialog::OnTimer()
 
 			/* Text message of current selected audio service 
 			   (UTF-8 decoding) */
-            QCString utf8Message = 
-                   ReceiverParam.Service[iCurSelAudioServ]
-                   .AudioParam.strTextMessage.c_str();
-            QString textMessage = QString().fromUtf8(utf8Message);
-            QString formattedMessage = "";
+			QCString utf8Message = 
+				ReceiverParam.Service[iCurSelAudioServ]
+					.AudioParam.strTextMessage.c_str();
+			QString textMessage = QString().fromUtf8(utf8Message);
+			QString formattedMessage = "";
 			for (int i = 0; i < textMessage.length(); i++)
 			{
 				switch (textMessage.at(i).unicode())
@@ -386,10 +411,10 @@ void FDRMDialog::OnTimer()
 					break;
 
 				default:
-                    formattedMessage += textMessage[i];
+				formattedMessage += textMessage[i];
 				}
 			}
-            formattedMessage = "<center>" + formattedMessage + "</center>";
+			formattedMessage = "<center>" + formattedMessage + "</center>";
 			TextTextMessage->setText(formattedMessage);
 		}
 		else
@@ -514,7 +539,7 @@ void FDRMDialog::OnTimer()
 			(iCurSelServiceGUI != iCurSelAudioServ) &&
 			ReceiverParam.Service[iCurSelAudioServ].IsActive()) &&
 			/* Make sure current selected audio service is not a data only
-			   serivce */
+			   service */
 			(ReceiverParam.Service[iCurSelAudioServ].IsActive() &&
 			(ReceiverParam.Service[iCurSelAudioServ].eAudDataFlag !=
 			CParameter::SF_DATA)))
@@ -887,7 +912,7 @@ void FDRMDialog::OnViewGeneralSettingsDlg()
 void FDRMDialog::OnViewEPGDlg()
 {
 	/* Show programme guide window */
-    pEPGDlg->show();
+	pEPGDlg->show();
 }
 
 void FDRMDialog::OnMenuSetDisplayColor()

@@ -93,7 +93,8 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 	    AT_JAVA
     };
 
-    _BOOLEAN GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
+    _BOOLEAN GetMOTObject (CMOTObject & NewObj, const EAppType eAppTypeReq);
+    _BOOLEAN GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
     void GetNews (const int iObjID, CNews & News);
     EAppType GetAppType ()
     {

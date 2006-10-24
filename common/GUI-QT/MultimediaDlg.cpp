@@ -239,6 +239,7 @@ void MultimediaDlg::OnTimer()
 	QPixmap	NewImage;
 	FILE*		pFiBody;
 	int		iCurNumPict;
+	_BOOLEAN	bMainPage;
 
 	switch(pDRMRec->GetParameters()->ReceiveStatus.GetMOTStatus())
 	{
@@ -301,7 +302,7 @@ void MultimediaDlg::OnTimer()
 
 			/* Check if DABMOT could not unzip */
 			const _BOOLEAN bZipped =
-				(strNewObjName.right(3).upper() == ".GZ");
+				(strNewObjName.right(3) == ".gz");
 
 			/* Add an html header for refresh the page every n seconds */
 			if ((pDRMRec->bAddRefreshHeader) 
@@ -309,7 +310,43 @@ void MultimediaDlg::OnTimer()
 					&& (bZipped == FALSE))
 				AddRefreshHeader(strFileName);
 
-			if (strNewObjName.left(9).upper() == "INDEX.HTM")
+			/* Check if is the main page */
+			bMainPage = FALSE;
+
+			if (strNewObjName.contains('/') == 0) /* if has a path is not the main page */
+			{
+				/* Get the current directory */
+				CMOTDirectory MOTDir;
+
+				if (pDRMRec->GetDataDecoder()->GetMOTDirectory(MOTDir, eAppType) == TRUE)
+				{
+					/* Checks if the DirectoryIndex has values */
+					if (MOTDir.DirectoryIndex.size() > 0)
+					{
+						/* Check if is the main page */
+
+						QString strIndexPage("");
+
+						if(MOTDir.DirectoryIndex.find(UNRESTRICTED_PC_PROFILE) != MOTDir.DirectoryIndex.end())
+							strIndexPage =
+								MOTDir.DirectoryIndex[UNRESTRICTED_PC_PROFILE].c_str();
+						else if(MOTDir.DirectoryIndex.find(BASIC_PROFILE) != MOTDir.DirectoryIndex.end())
+							strIndexPage =
+								MOTDir.DirectoryIndex[BASIC_PROFILE].c_str();
+
+						if ((strIndexPage == strNewObjName) ||
+						    (strIndexPage + ".gz" == strNewObjName))
+							bMainPage = TRUE;
+					}
+					else
+					{
+						/* we have the directory but there is nothing in the directory */
+						bMainPage = (strNewObjName.left(9).upper() == "INDEX.HTM");
+					}
+				}
+			}
+
+			if (bMainPage == TRUE)
 			{
 				/* The home page is available */
 				if (bZipped == FALSE)
