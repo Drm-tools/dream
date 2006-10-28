@@ -272,18 +272,15 @@ getdevices(vector < string > &names, vector < string > &devices,
 			names.push_back(n);
 		}
 	}
+	if (playback)
+	{
+		names.push_back("Default Playback Device");
+		devices.push_back("dmix");
+	}
 	else
 	{
-		if (playback)
-		{
-			names.push_back("Default Playback Device");
-			devices.push_back("dmix");
-		}
-		else
-		{
-			names.push_back("Default Capture Device");
-			devices.push_back("dsnoop");
-		}
+		names.push_back("Default Capture Device");
+		devices.push_back("dsnoop");
 	}
 }
 
