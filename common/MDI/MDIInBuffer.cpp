@@ -60,7 +60,6 @@ CMDIInBuffer::Get(vector<_BYTE>& data)
 	{
 		if(blocker.wait(&guard, 1000))
 		{
-			cout << "signalled data avail" << endl;
 			if(buffer.empty())
 				data.clear();
 			else
@@ -71,13 +70,11 @@ CMDIInBuffer::Get(vector<_BYTE>& data)
 		}
 		else
 		{
-			cout << "RSI timeout" << endl;
 			data.clear();
 		}
 	}
 	else
 	{
-		cout << "queued data avail" << endl;
 		data = buffer.front();
 		buffer.pop();
 	}

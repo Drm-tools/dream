@@ -79,6 +79,7 @@ CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 #ifdef _WIN32
 		, bProcessPriorityEnabled(TRUE)
 #endif
+		, bReadFromFile(FALSE)
 {
 }
 
@@ -543,7 +544,8 @@ void CDRMReceiver::Start()
 
 	} while (ReceiverParam.bRunThread);
 
-	SoundInInterface.Close();
+	if( (RSIIn.GetInEnabled() == FALSE) && (bReadFromFile == FALSE) )
+		SoundInInterface.Close();
 	SoundOutInterface.Close();
 }
 
@@ -661,6 +663,7 @@ void CDRMReceiver::SetReadDRMFromFile(const string strNFN)
 	   synchronized stream */
 	ReceiveData.SetReadFromFile(strNFN);
 	WriteData.SetSoundBlocking(TRUE);
+	bReadFromFile = TRUE;
 }
 
 void CDRMReceiver::StartParameters(CParameter& Param)

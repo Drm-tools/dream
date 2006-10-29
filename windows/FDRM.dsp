@@ -529,6 +529,11 @@ SOURCE=..\common\util\Utilities.cpp
 # End Group
 # Begin Group "Source MDI"
 
+SOURCE=..\common\util\Reassemble.cpp
+# End Source File
+# End Group
+# Begin Group "Source MDI"
+
 # PROP Default_Filter ""
 # Begin Source File
 
@@ -577,6 +582,10 @@ SOURCE=..\common\MDI\TagPacketDecoderRSCIControl.cpp
 # Begin Source File
 
 SOURCE=..\common\MDI\TagPacketGenerator.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\Pft.cpp
 # End Source File
 # End Group
 # Begin Source File
@@ -945,6 +954,9 @@ SOURCE=..\common\util\Utilities.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\Reassemble.cpp
+# End Source File
+
 SOURCE=..\common\util\Vector.h
 # End Source File
 # End Group
@@ -1010,6 +1022,10 @@ SOURCE=..\common\MDI\TagPacketDecoderRSCIControl.h
 # Begin Source File
 
 SOURCE=..\common\MDI\TagPacketGenerator.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\Pft.h
 # End Source File
 # End Group
 # Begin Source File

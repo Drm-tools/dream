@@ -28,6 +28,7 @@ drmwithoutqt_SOURCES = \
 	../common/util/Settings.cpp \
 	../common/util/Utilities.cpp \
 	../common/util/LogPrint.cpp \
+	../common/util/Reassemble.cpp \
 	../common/SDC/SDCReceive.cpp \
 	../common/SDC/SDCTransmit.cpp \
 	../common/chanest/ChannelEstimation.cpp \
@@ -59,6 +60,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/TagPacketDecoderMDI.cpp \
 	../common/MDI/TagPacketDecoderRSCIControl.cpp \
 	../common/MDI/TagPacketGenerator.cpp \
+	../common/MDI/Pft.cpp \
 	../common/ofdmcellmapping/CellMappingTable.cpp \
 	../common/ofdmcellmapping/OFDMCellMapping.cpp \
 	../common/resample/Resample.cpp \
@@ -102,6 +104,7 @@ drmwithoutqt_SOURCES = \
 	../common/util/Settings.h \
 	../common/util/Utilities.h \
 	../common/util/LogPrint.h \
+	../common/util/Reassemble.h \
 	../common/SDC/SDC.h \
 	../common/IQInputFilter.h \
 	../common/chanest/ChanEstTime.h \
@@ -134,6 +137,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/TagPacketDecoder.h \
 	../common/MDI/TagPacketDecoderRSCIControl.h \
 	../common/MDI/TagPacketGenerator.h \
+	../common/MDI/Pft.h \
 	../common/ofdmcellmapping/CellMappingTable.h \
 	../common/ofdmcellmapping/OFDMCellMapping.h \
 	../common/resample/Resample.h \

@@ -363,14 +363,13 @@ void CRSIMDIInRCIOut::TransmitPacket(CVector<_BINARY>& vecbidata)
 #ifdef USE_QT_GUI
 void CRSIMDIInRCIOut::SendPacket(const vector<_BYTE>& vecbydata)
 {
-cout << "RSI in Put " << vecbydata.size() << " bytes" << endl;
 	if(vecbydata[0]=='P')
 	{
-	/* -- soon there will be PFT !
 		vector<_BYTE> vecOut;
 		if(Pft.DecodePFTPacket(vecbydata, vecOut))
+		{
 			queue.Put(vecOut);
-	*/
+		}
 	}
 	else
 		queue.Put(vecbydata);
@@ -391,7 +390,6 @@ void CRSIMDIInRCIOut::ProcessDataInternal(CParameter& ReceiverParam)
 #else
 	// use a select here
 #endif
-cout << "RSI in Get " << vecbydata.size() << " bytes" << endl;
 	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
 	pvecOutputData->Init(iOutputBlockSize);
 	pvecOutputData->ResetBitAccess();

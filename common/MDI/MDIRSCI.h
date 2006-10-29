@@ -3,10 +3,10 @@
  * Copyright (c) 2004
  *
  * Author(s):
- *	Volker Fischer, Oliver Haffenden
+ *	Volker Fischer, Oliver Haffenden, Julian Cable
  *
  * Description:
- *	see MDIConcrete.cpp
+ *	see MDIRSCI.cpp
  *
  ******************************************************************************
  *
@@ -40,6 +40,7 @@
 
 #include "../util/Modul.h"
 #include "../util/CRC.h"
+#include "Pft.h"
 
 #include "MDIDefinitions.h"
 #include "MDITagItems.h"
@@ -79,9 +80,10 @@ public:
 protected:
 
 #ifdef USE_QT_GUI
-	CMDIInBuffer	  queue;
+	CMDIInBuffer	  			queue;
 	CPacketSocketQT				PacketSocket;
 #endif
+	CPft						Pft;
 
 	_BOOLEAN					bUseAFCRC;
 

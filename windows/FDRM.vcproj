@@ -2663,6 +2663,9 @@
 						/>
 					</FileConfiguration>
 				</File>
+				<File
+					RelativePath="..\common\util\Reassemble.cpp" >
+				</File>
 			</Filter>
 			<Filter
 				Name="Source MDI"
@@ -2832,6 +2835,9 @@
 				<File
 					RelativePath="..\common\MDI\TagPacketDecoderMDI.cpp"
 					>
+				</File>
+				<File
+					RelativePath="..\common\MDI\Pft.cpp" >
 				</File>
 				<File
 					RelativePath="..\common\MDI\TagPacketDecoderRSCIControl.cpp"
@@ -3256,6 +3262,9 @@
 					RelativePath="..\common\util\Vector.h"
 					>
 				</File>
+				<File
+					RelativePath="..\common\util\Reassemble.h" >
+				</File>
 			</Filter>
 			<Filter
 				Name="Header MDI"
@@ -3319,6 +3328,9 @@
 				<File
 					RelativePath="..\common\MDI\TagPacketGenerator.h"
 					>
+				</File>
+				<File
+					RelativePath="..\common\MDI\Pft.h" >
 				</File>
 			</Filter>
 		</Filter>

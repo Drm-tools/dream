@@ -484,6 +484,7 @@ protected:
 #ifdef _WIN32
 	_BOOLEAN				bProcessPriorityEnabled;
 #endif
+	_BOOLEAN				bReadFromFile;
 
 };
 
