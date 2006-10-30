@@ -526,8 +526,7 @@ SOURCE=..\common\util\Settings.cpp
 
 SOURCE=..\common\util\Utilities.cpp
 # End Source File
-# End Group
-# Begin Group "Source MDI"
+# Begin Source File
 
 SOURCE=..\common\util\Reassemble.cpp
 # End Source File
@@ -954,8 +953,9 @@ SOURCE=..\common\util\Utilities.h
 # End Source File
 # Begin Source File
 
-SOURCE=..\common\util\Reassemble.cpp
+SOURCE=..\common\util\Reassemble.h
 # End Source File
+# Begin Source File
 
 SOURCE=..\common\util\Vector.h
 # End Source File
