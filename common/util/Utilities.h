@@ -41,6 +41,7 @@
 
 #ifdef HAVE_LIBHAMLIB
 # include <hamlib/rig.h>
+# include <qstring.h>
 #endif
 
 

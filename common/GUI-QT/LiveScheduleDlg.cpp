@@ -31,7 +31,6 @@
 
 string CDRMLiveSchedule::Binary2String(const int iVal)
 {
-	int p;
 	string s = "0000000";
 	for(int i=0; i<7; i++)
 	{

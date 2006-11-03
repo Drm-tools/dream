@@ -974,12 +974,14 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	}
 #else
 	pDRMRec->Stop();
-	(void)pDRMRec->wait(5000);
-	if(!pDRMRec->finished())
-	{
-		QMessageBox::critical(this, "Dream", "Exit\n",
-			"Termination of working thread failed");
-	}
+	#ifdef USE_QT_GUI
+		(void)pDRMRec->wait(5000);
+		if(!pDRMRec->finished())
+		{
+			QMessageBox::critical(this, "Dream", "Exit\n",
+				"Termination of working thread failed");
+		}
+	#endif
 	ce->accept();
 #endif
 }
