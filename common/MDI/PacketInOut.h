@@ -47,6 +47,7 @@ class CPacketSink
 {
 public:
 	virtual void SendPacket(const vector<_BYTE>& vecbydata) = 0;
+	virtual ~CPacketSink() {}
 };
 
 
@@ -59,6 +60,7 @@ public:
 	virtual void SetPacketSink(CPacketSink *pSink) = 0;
 	// Stop sending packets to the sink
 	virtual void ResetPacketSink(void) = 0;
+	virtual ~CPacketSource() {}
 };
 
 

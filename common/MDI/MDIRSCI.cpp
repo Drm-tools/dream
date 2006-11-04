@@ -293,7 +293,10 @@ void CRSIMDIOutRCIIn::SendPacket(const vector<_BYTE>& vecbydata)
 	vecbidata.ResetBitAccess();
 	for(size_t i=0; i<vecbydata.size(); i++)
 		vecbidata.Enqueue(vecbydata[i], SIZEOF__BYTE);
-	TagPacketDecoderRSCIControl.DecodeAFPacket(vecbidata);
+	CTagPacketDecoder::Error err = 
+		TagPacketDecoderRSCIControl.DecodeAFPacket(vecbidata);
+	if(err != CTagPacketDecoder::E_OK)
+		cerr << "bad RSCI Control Packet Received" << endl;
 }
 #endif
 

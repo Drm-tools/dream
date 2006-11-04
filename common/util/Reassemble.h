@@ -177,6 +177,7 @@ public:
 	{
 		CReassemblerN(*this) = r;
 		bPack = r.bPack;
+		return *this;
 	}
 
 protected:

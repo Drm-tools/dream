@@ -51,7 +51,8 @@ CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0)
 }
 
 // This should be in its own class
-void CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
+CTagPacketDecoder::Error 
+CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 {
 	int i;
 
@@ -92,7 +93,7 @@ void CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	if (strSyncASCII.compare("AF") != 0)
 	{
 		cerr << "not an AF packet" << endl;
-		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
+		return E_SYNC;
 	}
 
 	/* LEN: length of the payload, in bytes (4 bytes long -> 32 bits) */
@@ -121,9 +122,7 @@ void CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	{
 		/* Use CRC check which was already done */
 		if (!bCRCOk)
-		{
-			return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
-		}
+			return E_CRC;
 	}
 
 	/* MAJ: major revision of the AF protocol in use (3 bits long) */
@@ -140,14 +139,14 @@ void CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	   representation of "T" */
 	if ((_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE) != 'T')
 	{
-		return; // TODO: error handling!!!!!!!!!!!!!!!!!!!!!!
+		return E_PROTO;
 	}
 
 
 	/* Payload -------------------------------------------------------------- */
 	DecodeTagPacket(vecbiAFPkt, iPayLLen);
 
-
+	return E_OK;
 }
 
 	// Decode all the tags in the tag packet. To do things before or after the decoding,

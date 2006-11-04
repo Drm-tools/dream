@@ -368,6 +368,7 @@ protected:
 
 	/* Modules */
 	CReceiveData			ReceiveData;
+	CWriteData				WriteData;
 	CInputResample			InputResample;
 	CFreqSyncAcq			FreqSyncAcq;
 	CTimeSync				TimeSync;
@@ -384,7 +385,6 @@ protected:
 	CMSCDemultiplexer		MSCDemultiplexer;
 	CAudioSourceDecoder		AudioSourceDecoder;
 	CDataDecoder			DataDecoder;
-	CWriteData				WriteData;
 	CSplit					Split;
 	CSplitFAC				SplitFAC;
 	CSplitSDC				SplitSDC;
@@ -485,6 +485,7 @@ protected:
 	_BOOLEAN				bProcessPriorityEnabled;
 #endif
 	_BOOLEAN				bReadFromFile;
+	time_t					time_keeper;
 
 };
 

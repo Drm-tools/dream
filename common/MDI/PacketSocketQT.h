@@ -94,14 +94,14 @@ private:
 	QSocketDevice				SocketDevice;
 	QSocketNotifier*			pSocketNotivRead;
 
-#if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
 #ifdef HAVE_LIBPCAP
     pcap_t						*pf;
-#endif
+	QTime						timeKeeper;
+#else
 #ifdef HAVE_LIBWTAP
     wtap						*pf;
-#endif
 	QTime						timeKeeper;
+#endif
 #endif
 
 public slots:

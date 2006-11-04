@@ -34,8 +34,10 @@
 #include <iostream>
 #include <errno.h>
 
-CPacketSocketQT::CPacketSocketQT ():SocketDevice (QSocketDevice::
-			  Datagram /* UDP */ )
+CPacketSocketQT::CPacketSocketQT ():
+	pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
+	SocketDevice (QSocketDevice:: Datagram /* UDP */ ),
+	pSocketNotivRead(NULL)
 #if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
 			  , pf(NULL)
 #endif
@@ -135,50 +137,56 @@ CPacketSocketQT::SetNetwInAddr (const string & strNewAddr)
 	   4:  <interface ip>::<port>
 	   5:  :<group ip>:<port>
 	 */
-	int iPort;
+	int iPort=-1;
 	QHostAddress AddrGroup, AddrInterface;
 	QStringList parts = QStringList::split (":", strNewAddr.c_str (), TRUE);
+	bool ok;
 	switch (parts.count ())
 	{
 	case 1:
-		bool ok;
-		iPort = parts[0].toInt (&ok);
-		if(!ok)
-		{
-#if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
-			/* it might be a file */
-#ifdef HAVE_LIBPCAP
-			char errbuf[PCAP_ERRBUF_SIZE];
-			pf = pcap_open_offline(parts[0].latin1(), errbuf);
-#endif
-#ifdef HAVE_LIBWTAP
-			int err;
-			gchar *err_info;
-			pf = wtap_open_offline(parts[0].latin1(), &err, &err_info, FALSE);
-#endif
-			if ( pf != NULL)
-			{
-				timeKeeper = QTime::currentTime();
-				QTimer::singleShot(400, this, SLOT(OnDataReceived()));
-				return TRUE;
-    		}
-#endif
-			throw CGenErr ("Can't parse rsiin arg");
-		}
+		iPort = parts[0].toUInt(&ok);
 		break;
 	case 2:
-		AddrGroup.setAddress (parts[0]);
-		iPort = parts[1].toInt ();
+		iPort = parts[1].toUInt(&ok);
+		ok &= AddrGroup.setAddress(parts[0]);
 		break;
 	case 3:
+		iPort = parts[2].toUInt(&ok);
 		if (parts[0].length () > 0)
-			AddrInterface.setAddress (parts[0]);
+			ok &= AddrInterface.setAddress(parts[0]);
 		if (parts[1].length () > 0)
-			AddrGroup.setAddress (parts[1]);
-		iPort = parts[2].toUInt ();
+			ok &= AddrGroup.setAddress(parts[1]);
 		break;
 	default:
-		throw CGenErr ("Can't parse rsiin arg");
+		ok = false;
+	}
+	if(ok)
+	{
+#if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
+		pf = NULL;
+#endif
+	}
+	else
+	{
+	/* it might be a file */
+#ifdef HAVE_LIBPCAP
+		char errbuf[PCAP_ERRBUF_SIZE];
+		pf = pcap_open_offline(strNewAddr.c_str(), errbuf);
+#endif
+#ifdef HAVE_LIBWTAP
+		int err;
+		gchar *err_info;
+		pf = wtap_open_offline(strNewAddr.c_str(), &err, &err_info, FALSE);
+#endif
+#if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
+		if ( pf != NULL)
+		{
+			timeKeeper = QTime::currentTime();
+			QTimer::singleShot(400, this, SLOT(OnDataReceived()));
+			return TRUE;
+    	}
+#endif
+		throw CGenErr (string("Can't parse rsiin arg ")+strNewAddr);
 	}
 
 	/* Multicast ? */
@@ -201,7 +209,7 @@ CPacketSocketQT::SetNetwInAddr (const string & strNewAddr)
 		bool ok = SocketDevice.bind (QHostAddress (UINT32 (0)), iPort);
 		if (ok == false)
 		{
-			QSocketDevice::Error x = SocketDevice.error ();
+			//QSocketDevice::Error x = SocketDevice.error ();
 			throw CGenErr ("Can't bind to port to receive packets");
 			return FALSE;
 		}
@@ -237,7 +245,6 @@ void
 CPacketSocketQT::OnDataReceived ()
 {
 	vector < _BYTE > vecsRecBuf (MAX_SIZE_BYTES_NETW_BUF);
-
 #if defined(HAVE_LIBWTAP) || defined(HAVE_LIBPCAP)
 	if(pf)
 	{ 
@@ -250,7 +257,6 @@ CPacketSocketQT::OnDataReceived ()
 		/* Retrieve the packet from the file */
 		if((res = pcap_next_ex( pf, &header, &data)) != 1)
 		{
-			cout << "pcap read result: " << res << endl;
 			pcap_close(pf);
 			pf = NULL;
 			return;

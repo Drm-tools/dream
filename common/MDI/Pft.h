@@ -32,22 +32,20 @@
 #include "../util/Reassemble.h"
 #include <map>
 
-
 class CPft
 {
 public:
 	CPft(int isrc=-1, int idst=-1);
 
-	virtual bool DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut);
+	bool DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut);
 
 protected:
 
-	virtual bool DecodeSimplePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut);
-	virtual bool DecodePFTPacketWithFEC(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut);
+	bool DecodeSimplePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut);
+	bool DecodePFTPacketWithFEC(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut);
+
 	int iSource, iDest;
-
 	map<int,CReassemblerN> mapFragments;
-
 	int iHeaderLen;
 	int iPseq;
 	int iFindex;

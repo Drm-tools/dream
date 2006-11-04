@@ -67,7 +67,7 @@ CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 		/* Sort list by transmit power (5th column), most powerful on top */
 		SortParamDRM(4, FALSE),
 		SortParamLiveSched(0, FALSE), /* sort by frequency */
-		iMainDisplayColor(16711680), /* Red */
+		iMainDisplayColor(0xff0000), /* Red */
 		FontParamMMDlg("", 1, 0, FALSE),
 		iBwAM(10000),
 		iBwLSB(5000),
@@ -79,7 +79,8 @@ CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 #ifdef _WIN32
 		, bProcessPriorityEnabled(TRUE)
 #endif
-		, bReadFromFile(FALSE)
+		, bReadFromFile(FALSE), time_keeper(0)
+
 {
 }
 
@@ -87,8 +88,6 @@ void CDRMReceiver::Run()
 {
 	_BOOLEAN bEnoughData = TRUE;
 	_BOOLEAN bFrameToSend=FALSE;
-	int iStep=0;
-	int iFrameNo = ReceiverParam.iFrameIDReceiv;
 
 		/* Check for parameter changes from GUI thread ---------------------- */
 		/* The parameter changes are done through flags, the actual
@@ -105,6 +104,7 @@ void CDRMReceiver::Run()
 			RSIIn.ReadData(ReceiverParam, RSIPacketBuf);
 			if(RSIPacketBuf.GetFillLevel()>0)
 			{
+				time_keeper = time(NULL);
 				DecodeRSIMDI.ProcessData(ReceiverParam, RSIPacketBuf, FACDecBuf, SDCDecBuf, MSCDecBuf);
 				SplitFAC.ProcessData(ReceiverParam, FACDecBuf, FACUseBuf, FACSendBuf);
 				/* if we have an SDC block, make a copy and keep it until the next frame is to be sent */
@@ -126,13 +126,17 @@ void CDRMReceiver::Run()
 			}
 			else
 			{
-				ReceiverParam.ReceiveStatus.SetInterfaceStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
-				ReceiverParam.ReceiveStatus.SetMOTStatus(NOT_PRESENT);
+			 	time_t now = time(NULL);
+			 	if((now - time_keeper)>2)
+			 	{
+					ReceiverParam.ReceiveStatus.SetInterfaceStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetTimeSyncStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetFrameSyncStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetFACStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
+					ReceiverParam.ReceiveStatus.SetMOTStatus(NOT_PRESENT);
+				}
 			}
 		}
 

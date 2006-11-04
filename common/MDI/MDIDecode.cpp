@@ -41,7 +41,17 @@
 
 void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
+	CTagPacketDecoder::Error err = 
+							TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
+	if(err == CTagPacketDecoder::E_OK)
+	{
+		ReceiverParam.ReceiveStatus.SetInterfaceStatus(RX_OK);
+	}
+	else
+	{
+		ReceiverParam.ReceiveStatus.SetInterfaceStatus(CRC_ERROR);
+		return;
+	}
 	ReceiverParam.SetWaveMode(TagPacketDecoderMDI.TagItemDecoderRobMod.eRobMode);
 	CVector<_BINARY>& vecbiFACData = TagPacketDecoderMDI.TagItemDecoderFAC.vecbidata;
 	CVector<_BINARY>& vecbiSDCData = TagPacketDecoderMDI.TagItemDecoderSDC.vecbidata;
