@@ -89,6 +89,11 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"image library. See http://freeimage.sourceforge.net for details. "
 		"FreeImage is used under the GNU GPL.</i></li>"
 #endif
+#ifdef HAVE_LIBPCAP
+		"<li><b>LIBPCAP</b> <i>http://www.tcpdump.org/ "
+		"This product includes software developed by the Computer Systems "
+		"Engineering Group at Lawrence Berkeley Laboratory.</i></li>"
+#endif
 		"</ul><br><br><hr/><br><br>"
 		"<center><b>CREDITS</b></center><br>"
 		"We want to thank all the contributors to the Dream software (in "
