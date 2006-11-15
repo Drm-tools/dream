@@ -392,19 +392,25 @@ void MultimediaDlg::OnTimer()
 			QString strLabel = QString().fromUtf8(QCString(ReceiverParam
 				.Service[iCurSelDataServ].strLabel.c_str())).stripWhiteSpace();
 
+			const int iCurSelAudioServ = ReceiverParam.GetCurSelAudioService();
+
 			/* Service ID (plot number in hexadecimal format) */
-			const long iServiceID = (long) ReceiverParam.
+			const long iDataServiceID = (long) ReceiverParam.
 				Service[iCurSelDataServ].iServiceID;
+
+			const long iAudioServiceID = (long) ReceiverParam.
+				Service[iCurSelAudioServ].iServiceID;
 
 			QString strServiceID = "";
 
-			if (iServiceID != 0)
+			/* show the ID only if differ from the audio service */
+			if ((iDataServiceID != 0) && (iDataServiceID != iAudioServiceID))
 			{
 				if (strLabel != "")
 					strLabel += " ";
 
-				strServiceID = "ID:" +
-					QString().setNum(iServiceID, 16).upper();
+				strServiceID = "- ID:" +
+					QString().setNum(iDataServiceID, 16).upper();
 			}
 
 			/* add the description on the title of the dialog */
