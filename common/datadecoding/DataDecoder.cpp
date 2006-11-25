@@ -252,12 +252,8 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			/* Continuity index: this 3-bit field shall increment by one
 			   modulo-8 for each packet with this packet Id */
 			if ((iContInd[iPacketID] + 1) % 8 != iNewContInd)
-			{
 				DataUnit[iPacketID].bOK = FALSE;
-				cout << "out of sequence CI on packet id " << iPacketID <<
-					endl;
-			}
-			static int packets_in_du;
+
 			/* Store continuity index */
 			iContInd[iPacketID] = iNewContInd;
 
@@ -266,19 +262,14 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			if (biFirstFlag == TRUE)
 			{
 				DataUnit[iPacketID].Reset();
-
 				DataUnit[iPacketID].bOK = TRUE;
-				packets_in_du = 1;
 			}
-			else
-				packets_in_du++;
 
 			/* If all packets are received correctely, data unit is ready */
 			if (biLastFlag == TRUE)
 			{
 				if (DataUnit[iPacketID].bOK == TRUE)
 					DataUnit[iPacketID].bReady = TRUE;
-//cout << "DU with " << packets_in_du << " packets" << endl;
 			}
 
 			/* Data field --------------------------------------------------- */
@@ -361,7 +352,6 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 					break;
 				case AT_MOTEPG:	/* EPG */
 					/* Packet unit decoding */
-					//cout << "data unit for EPG len " << (DataUnit[iPacketID].vecbiData.Size()/8) << " bytes on packet id " << iPacketID << endl;
 					MOTObject[iEPGPacketID].AddDataUnit(DataUnit[iPacketID].
 														vecbiData);
 					break;
