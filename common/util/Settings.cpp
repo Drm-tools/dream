@@ -1039,6 +1039,23 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			continue;
 		}
 
+		/* Latitude string for log file ------------------------------------- */
+		if (GetStringArgument(argc, argv, i, "-a", "--latitude",
+			strArgument) == TRUE)
+		{
+			pDRMRec->GetParameters()->ReceptLog.SetLatitude(strArgument);
+			continue;
+		}
+
+
+		/* Longitude string for log file ------------------------------------ */
+		if (GetStringArgument(argc, argv, i, "-o", "--longitude",
+			strArgument) == TRUE)
+		{
+			pDRMRec->GetParameters()->ReceptLog.SetLongitude(strArgument);
+			continue;
+		}
+
 
 		/* Color scheme main plot ------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-y", "--colorscheme", 0,
