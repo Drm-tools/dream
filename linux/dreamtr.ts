@@ -1131,11 +1131,11 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Live Schedule List:&lt;/b&gt; In the live schedule list it&apos;s possible to view AFS (Alternative Frequency Signalling) informations trasmitted with the current DRM or AMSS signal.&lt;/b&gt;It is possible to show only active stations by changing a setting in the &apos;view&apos; menu.&lt;br&gt;The color of the cube on the left of the frequency shows the current status of the transmission.&lt;br&gt;A green box shows that the transmission takes place right now a red cube it is shown that the transmission is offline.&lt;br&gt;If the stations preview is active an orange box shows the stations that will be active.&lt;br&gt;A little green cube on the left of the target column show that the receiver coordinates (latitude and longitude) stored into Dream settings are into the target area of this transmission.&lt;br&gt;The list can be sorted by clicking on the headline of the column.</source>
+        <source>&lt;b&gt;Freeze:&lt;/b&gt; If this check box is selectd the live schedule is freezed.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Freeze:&lt;/b&gt; If this check box is selectd the live schedule is freezed.</source>
+        <source>&lt;b&gt;Live Schedule List:&lt;/b&gt; In the live schedule list it&apos;s possible to view AFS (Alternative Frequency Signalling) informations trasmitted with the current DRM or AMSS signal.&lt;/b&gt;It is possible to show only active stations by changing a setting in the &apos;view&apos; menu.&lt;br&gt;The color of the cube on the left of the frequency shows the current status of the transmission.&lt;br&gt;A green box shows that the transmission takes place right now a red cube it is shown that the transmission is offline, a pink cube shown that the transmission soon will be offline.&lt;br&gt;If the stations preview is active an orange box shows the stations that will be active.&lt;br&gt;A little green cube on the left of the target column show that the receiver coordinates (latitude and longitude) stored into Dream settings are into the target area of this transmission.&lt;br&gt;The list can be sorted by clicking on the headline of the column.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1203,6 +1203,10 @@ Institute for Communication Technology</source>
     </message>
     <message>
         <source>Press the button to open it in the default browser.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Multimedia</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1413,10 +1417,6 @@ Please exit Dream now.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Stations List:&lt;/b&gt; In the stations list view all DRM stations which are stored in the DRMSchedule.ini file are shown. It is possible to show only active stations by changing a setting in the &apos;view&apos; menu. The color of the cube on the left of a menu item shows the current status of the DRM transmission. A green box shows that the transmission takes place right now, a yellow cube shows that this is a test transmission and with a red cube it is shown that the transmission is offline.&lt;br&gt;If the stations preview is active an orange box shows the stations that will be active.&lt;br&gt;The list can be sorted by clicking on the headline of the column.&lt;br&gt;By clicking on a menu item, a remote front-end can be automatically switched to the current frequency and the Dream software is reset to a new acquisition (to speed up the synchronization process). Also, the log-file frequency edit is automatically updated.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>&lt;b&gt;Frequency Counter:&lt;/b&gt; The current frequency value can be changed by using this counter. The tuning steps are 100 kHz for the  buttons with three arrows, 10 kHz for the buttons with two arrows and 1 kHz for the buttons having only one arrow. By keeping the button pressed, the values are increased / decreased automatically.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -1434,6 +1434,10 @@ Please exit Dream now.</source>
     </message>
     <message>
         <source>&amp;Get Update</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>&lt;b&gt;Stations List:&lt;/b&gt; In the stations list view all DRM stations which are stored in the DRMSchedule.ini file are shown. It is possible to show only active stations by changing a setting in the &apos;view&apos; menu. The color of the cube on the left of a menu item shows the current status of the DRM transmission. A green box shows that the transmission takes place right now, a yellow cube shows that this is a test transmission and with a red cube it is shown that the transmission is offline, a pink cube shown that the transmission soon will be offline.&lt;br&gt;If the stations preview is active an orange box shows the stations that will be active.&lt;br&gt;The list can be sorted by clicking on the headline of the column.&lt;br&gt;By clicking on a menu item, a remote front-end can be automatically switched to the current frequency and the Dream software is reset to a new acquisition (to speed up the synchronization process). Also, the log-file frequency edit is automatically updated.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
