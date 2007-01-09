@@ -52,7 +52,7 @@ CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 		rAvSNRHist((_REAL) 0.0), iCurrentCDAud(0),
 		UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
 		iAudioStreamID(STREAM_ID_NOT_USED), iDataStreamID(STREAM_ID_NOT_USED),
-		RSIIn(), DecodeRSIMDI(), RSIOut(), RSIPacketBuf(),
+		upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(), RSIPacketBuf(),
 		MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS), MSCSendBuf(MAX_NUM_STREAMS),
 		ChannelEstimation(), AudioSourceDecoder(), FreqSyncAcq()
 #if defined(USE_QT_GUI) || defined(_WIN32)
@@ -82,6 +82,7 @@ CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 		, bReadFromFile(FALSE), time_keeper(0)
 
 {
+	downstreamRSCI.SetReceiver(this);
 }
 
 void CDRMReceiver::Run()
@@ -98,10 +99,10 @@ void CDRMReceiver::Run()
 
 		/* Receive data ----------------------------------------------------- */
 
-		if ((RSIIn.GetInEnabled() == TRUE) && (bDoInitRun == FALSE)) /* don't wait for a packet in Init mode */
+		if ((upstreamRSCI.GetInEnabled() == TRUE) && (bDoInitRun == FALSE)) /* don't wait for a packet in Init mode */
 		{
 			RSIPacketBuf.Clear();
-			RSIIn.ReadData(ReceiverParam, RSIPacketBuf);
+			upstreamRSCI.ReadData(ReceiverParam, RSIPacketBuf);
 			if(RSIPacketBuf.GetFillLevel()>0)
 			{
 				time_keeper = time(NULL);
@@ -140,7 +141,7 @@ void CDRMReceiver::Run()
 			}
 		}
 
-		if (RSIIn.GetInEnabled() == FALSE)
+		if (upstreamRSCI.GetInEnabled() == FALSE)
 			ReceiveData.ReadData(ReceiverParam, RecDataBuf);
 
 		while (bEnoughData && ReceiverParam.bRunThread)
@@ -210,7 +211,7 @@ void CDRMReceiver::Run()
 
 				/* Demodulator */
 
-				if (RSIIn.GetInEnabled() == FALSE)
+				if (upstreamRSCI.GetInEnabled() == FALSE)
 				{
 
 					/* Resample input DRM-stream -------------------------------- */
@@ -381,26 +382,33 @@ fflush(pFile);
 				}
 			}
 		}
-		if(RSIOut.GetOutEnabled())
+		if(downstreamRSCI.GetOutEnabled())
 		{
-			if (eAcquiState == AS_NO_SIGNAL)
+			if (eReceiverMode == RM_DRM)
 			{
-				/* we will get one of these between each FAC block, and occasionally we */
-				/* might get two, so don't start generating free-wheeling RSCI until we've. */
-				/* had three in a row */
-				if(FreqSyncAcq.GetUnlockedFrameBoundary())
-					if (iUnlockedCount < MAX_UNLOCKED_COUNT)
-						iUnlockedCount++;
-					else
-					{
-						RSIOut.SendUnlockedFrame(ReceiverParam);
-	 				 }
+				if (eAcquiState == AS_NO_SIGNAL)
+				{
+						/* we will get one of these between each FAC block, and occasionally we */
+						/* might get two, so don't start generating free-wheeling RSCI until we've. */
+						/* had three in a row */
+						if(FreqSyncAcq.GetUnlockedFrameBoundary())
+							if (iUnlockedCount < MAX_UNLOCKED_COUNT)
+								iUnlockedCount++;
+							else
+							{
+								downstreamRSCI.SendUnlockedFrame(ReceiverParam);
+							 }
+				}
+				else if(bFrameToSend)
+				{
+					downstreamRSCI.SendLockedFrame(ReceiverParam, FACSendBuf, SDCSendBuf, MSCSendBuf);
+					iUnlockedCount=0;
+					bFrameToSend = FALSE;
+				}
 			}
-			else if(bFrameToSend)
+			else
 			{
-				RSIOut.SendLockedFrame(ReceiverParam, FACSendBuf, SDCSendBuf, MSCSendBuf);
-				iUnlockedCount=0;
-				bFrameToSend = FALSE;
+				downstreamRSCI.SendAMFrame(ReceiverParam);
 			}
 		}
 }
@@ -420,9 +428,9 @@ void CDRMReceiver::DetectAcquiSymbol()
 
 void CDRMReceiver::DetectAcquiFAC()
 {
-	/* If RSIIn in is enabled, do not check for acquisition state because we want
+	/* If upstreamRSCI in is enabled, do not check for acquisition state because we want
 	   to stay in tracking mode all the time */
-	if (RSIIn.GetInEnabled() == TRUE)
+	if (upstreamRSCI.GetInEnabled() == TRUE)
 		return;
 
 	/* Acquisition switch */
@@ -548,7 +556,7 @@ void CDRMReceiver::Start()
 
 	} while (ReceiverParam.bRunThread);
 
-	if( (RSIIn.GetInEnabled() == FALSE) && (bReadFromFile == FALSE) )
+	if( (upstreamRSCI.GetInEnabled() == FALSE) && (bReadFromFile == FALSE) )
 		SoundInInterface.Close();
 	SoundOutInterface.Close();
 }
@@ -606,9 +614,9 @@ void CDRMReceiver::SetInStartMode()
 	ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
 	ReceiverParam.ReceiveStatus.SetMOTStatus(NOT_PRESENT);
 
-	/* In case RSIIn is enabled, go directly to tracking mode, do not activate the
+	/* In case upstreamRSCI is enabled, go directly to tracking mode, do not activate the
 	   synchronization units */
-	if (RSIIn.GetInEnabled() == TRUE)
+	if (upstreamRSCI.GetInEnabled() == TRUE)
 	{
 		/* We want to have as low CPU usage as possible, therefore set the
 		   synchronization units in a state where they do only a minimum
@@ -623,7 +631,7 @@ void CDRMReceiver::SetInStartMode()
 		   set to zero and the receiver gets into an infinite loop */
 		TimeSync.SetSyncInput(TRUE);
 
-		/* Always tracking mode for RSIIn */
+		/* Always tracking mode for upstreamRSCI */
 		eAcquiState = AS_WITH_SIGNAL;
 
 		SetInTrackingMode();
@@ -729,7 +737,7 @@ void CDRMReceiver::StartParameters(CParameter& Param)
 
 void CDRMReceiver::InitsForAllModules()
 {
-	if(RSIOut.GetOutEnabled())
+	if(downstreamRSCI.GetOutEnabled())
 	{
 		ReceiverParam.bMeasureDelay = TRUE;
 		ReceiverParam.bMeasureDoppler = TRUE;
@@ -780,8 +788,8 @@ void CDRMReceiver::InitsForAllModules()
 	AMSSExtractBits.SetInitFlag();
 	AMSSDecode.SetInitFlag();	
 
-	RSIIn.SetInitFlag();
-	//RSIOut.SetInitFlag();
+	upstreamRSCI.SetInitFlag();
+	//downstreamRSCI.SetInitFlag();
 
 	/* Clear all buffers (this is especially important for the "AudSoDecBuf"
 	   buffer since AM mode and DRM mode use the same buffer. When init is
@@ -960,9 +968,9 @@ void CDRMReceiver::UpdateParamHistories()
      direct calls to the channelestimation class in the evaluation dialog
      negative dB values are used to indicate invalid values
       */
-   	/* TODO: make this work with RSIIn */
+   	/* TODO: make this work with upstreamRSCI */
 
-	if(RSIIn.GetInEnabled())
+	if(upstreamRSCI.GetInEnabled())
 	{
  	}
  	else
@@ -1134,19 +1142,32 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 	if(iFreqkHz == iNewFreqkHz)
 		return TRUE;
 	iFreqkHz = iNewFreqkHz;
- 	ReceiverParam.ReceptLog.SetFrequency(iNewFreqkHz);
+	if (upstreamRSCI.GetOutEnabled() == TRUE)
+	{
+		return upstreamRSCI.SetFrequency(iNewFreqkHz);
+	}
+	else
+	{
+ 		ReceiverParam.ReceptLog.SetFrequency(iNewFreqkHz);
 #ifdef HAVE_LIBHAMLIB
-	return Hamlib.SetFrequency(iNewFreqkHz);
+		return Hamlib.SetFrequency(iNewFreqkHz);
 #else
-	return FALSE;
+		return FALSE;
 #endif
+	}
 }
 
 _BOOLEAN CDRMReceiver::GetSignalStrength(_REAL& rSigStr)
 {
+	if (upstreamRSCI.GetInEnabled() == TRUE)
+	{
+	}
+	else
+	{
 #ifdef HAVE_LIBHAMLIB
-	return Hamlib.GetSMeter(rSigStr)==CHamlib::SS_VALID;
+		return Hamlib.GetSMeter(rSigStr)==CHamlib::SS_VALID;
 #else
-	return FALSE;
+		return FALSE;
 #endif
+	}
 }

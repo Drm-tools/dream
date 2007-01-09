@@ -143,6 +143,15 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	TransmitPacket(GenMDIPacket());
 }
 
+void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
+{
+}
+
+void CRSIMDIOutRCIIn::SetReceiver(CDRMReceiver *pReceiver)
+{
+	TagPacketDecoderRSCIControl.SetReceiver(pReceiver);
+}
+
 /* Actual MDI protocol implementation *****************************************/
 CVector<_BINARY> CRSIMDIOutRCIIn::GenMDIPacket()
 {
@@ -352,6 +361,15 @@ void CRSIMDIInRCIOut::SetOutAddr(const string& strArgument)
 #endif
 	if(bAddressOK)
 		bMDIOutEnabled = TRUE;
+}
+
+_BOOLEAN CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
+{
+	TagPacketGenerator.Reset();
+	TagItemGeneratorCfre.GenTag(iNewFreqkHz);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorCfre);
+	CVector<_BINARY> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
+   	TransmitPacket(packet);
 }
 
 /* bits to bytes and send */

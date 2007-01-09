@@ -35,14 +35,7 @@
 #include <time.h>
 #include <map>
 #include <queue>
-
-#ifdef HAVE_ZLIB_LIBRARY
-	#include <zlib.h>
-#else
-    #ifdef HAVE_LIBFREEIMAGE
-        # include <FreeImage.h>
-	#endif
-#endif
+#include <iostream>
 
 
 /* Definitions ****************************************************************/
@@ -112,6 +105,8 @@ class CDateAndTime
 	minutes = 0;
 	seconds = 0;
     }
+
+	void dump(ostream& out);
 
     int utc_flag, lto_flag, half_hours;
     uint16_t year;
@@ -287,6 +282,8 @@ class CMOTObjectBase
 	ExpireTime.Reset ();
 	bPermitOutdatedVersions = FALSE;
     }
+
+	string toString();
 
     void decodeExtHeader (_BYTE & bParamId,
 			  int &iHeaderFieldLen, int &iDataFieldLen,
@@ -467,6 +464,8 @@ class CMOTObject:public CMOTObjectBase
 	ScopeEnd.Reset ();
 	iScopeId = 0;
     }
+
+	void dump(ostream&);
 
     void AddHeader (CVector < _BINARY > &header);
 

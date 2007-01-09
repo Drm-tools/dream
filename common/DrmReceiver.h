@@ -213,8 +213,8 @@ public:
 	CAMSSDecode*			GetAMSSDecode() {return &AMSSDecode;}
 	CFreqSyncAcq*			GetFreqSyncAcq() {return &FreqSyncAcq;}
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
-	CRSIMDIInRCIOut*		GetRSIIn() {return &RSIIn;}
-	CRSIMDIOutRCIIn*		GetRSIOut() {return &RSIOut;}
+	CRSIMDIInRCIOut*		GetRSIIn() {return &upstreamRSCI;}
+	CRSIMDIOutRCIIn*		GetRSIOut() {return &downstreamRSCI;}
 #ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
 	_BOOLEAN				SignalStrengthAvailable() { return TRUE; }
@@ -446,9 +446,9 @@ protected:
 	int						iAudioStreamID;
 	int						iDataStreamID;
 
-	CRSIMDIInRCIOut			RSIIn;
+	CRSIMDIInRCIOut			upstreamRSCI;
 	CDecodeRSIMDI			DecodeRSIMDI;
-	CRSIMDIOutRCIIn			RSIOut;
+	CRSIMDIOutRCIIn			downstreamRSCI;
 
 	_BOOLEAN				bDoInitRun;
 

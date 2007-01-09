@@ -556,6 +556,10 @@ SOURCE=..\common\MDI\MDITagItems.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\MDI\RCITagItems.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\MDI\TagPacketDecoderMDI.cpp
 # End Source File
 # Begin Source File
@@ -986,6 +990,10 @@ SOURCE=..\common\MDI\MDITagItemDecoders.h
 # Begin Source File
 
 SOURCE=..\common\MDI\MDITagItems.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\MDI\RCITagItems.h
 # End Source File
 # Begin Source File
 

@@ -2366,3 +2366,23 @@ Priority=1000
 OverrideBuildCmd=0
 BuildCmd=
 
+[Unit233]
+FileName=..\common\MDI\RCITagItems.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit234]
+FileName=..\common\MDI\RCITagItems.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+

@@ -54,6 +54,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/MDIInBuffer.cpp \
 	../common/MDI/MDITagItemDecoders.cpp \
 	../common/MDI/MDITagItems.cpp \
+	../common/MDI/RCITagItems.cpp \
 	../common/MDI/PacketSocketNull.cpp \
 	../common/MDI/RSCITagItemDecoders.cpp \
 	../common/MDI/TagPacketDecoder.cpp \
@@ -129,6 +130,7 @@ drmwithoutqt_SOURCES = \
 	../common/MDI/MDIInBuffer.h \
 	../common/MDI/MDITagItemDecoders.h \
 	../common/MDI/MDITagItems.h \
+	../common/MDI/RCITagItems.h \
 	../common/MDI/TagPacketDecoderMDI.h \
 	../common/MDI/PacketInOut.h \
 	../common/MDI/PacketSocketNull.h \

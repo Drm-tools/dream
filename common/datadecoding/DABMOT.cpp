@@ -35,8 +35,18 @@
 #include "../util/Utilities.h"
 #include <algorithm>
 #include <cctype>
+#ifdef HAVE_ZLIB_LIBRARY
+	#include <zlib.h>
+#else
+    #ifdef HAVE_LIBFREEIMAGE
+        # include <FreeImage.h>
+	#endif
+#endif
+
 
 /* Implementation *************************************************************/
+ostream& operator<< (ostream& out, CDateAndTime& d) { d.dump(out); }
+ostream& operator<< (ostream& out, CMOTObject& o) { o.dump(out); }
 /******************************************************************************\
 * Encoder                                                                      *
 \******************************************************************************/
@@ -611,6 +621,7 @@ CMOTDABDec::DeliverIfReady(TTransportID TransportID)
 				/* Can't unzip so change the filename */
 				o.strName = string(o.strName.c_str()) + ".gz";
 		}
+		//cout << o << endl;;
 		qiNewObjects.push(TransportID);
 	}
 }
@@ -1043,6 +1054,14 @@ CDateAndTime::extract_relative(CVector < _BINARY > &vecbiData)
 	hours = tmp->tm_hour;
 	minutes = tmp->tm_min;
 	seconds = tmp->tm_sec;
+}
+
+void
+CDateAndTime::dump(ostream& out)
+{
+    out << year << '/' << uint16_t(month) << '/' << uint16_t(day);
+    out << " " << hours << ':' << minutes << ':' << seconds;
+    out << "flags: " << utc_flag << ':' << lto_flag << ':' << half_hours;
 }
 
 void
@@ -1591,4 +1610,26 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 		break;
 	}
 	bHasHeader = TRUE;
+}
+
+void
+CMOTObject::dump(ostream& out)
+{
+	out << "MOT(" << TransportID << "):";
+	out << " Name: " << strName;
+	out << ':' << iCharacterSetForName;
+	out << " Description: " << strContentDescription;
+	out << ':' << iCharacterSetForDescription;
+	out << " mime: " << strMimeType;
+	out << " content: " << iContentType << '/' << iContentSubType;
+	out << " UniqueBodyVersion: " << iUniqueBodyVersion;
+	out << " Expires: " << ExpireTime;
+	out << " PermitOutdatedVersions: " << bPermitOutdatedVersions;
+	out << " Scope: " << hex << iScopeId << dec << "from " << ScopeStart << " to " << ScopeEnd;
+	out << " CompressionType: " << iCompressionType;
+	out << " Version: " << iVersion;
+	out << " Priority: " << iPriority;
+	out << " RetransmissionDistance: " << iRetransmissionDistance;
+	out << " format: " << strFormat;
+	out << " length: " << iBodySize;
 }
