@@ -1,19 +1,21 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2005
+ * Copyright (c) 2001-2007
  *
  * Author(s):
  *	Volker Fischer, Tomi Manninen, Stephane Fillod, Robert Kesterson,
- *	Andrea Russo
+ *	Andrea Russo, Andrew Murphy
  *
  * Description:
  *
- * 10/03/2003 Tomi Manninen / OH2BNS
- *  - Initial (basic) code for command line argument parsing (argv)
- * 04/15/2004 Tomi Manninen, Stephane Fillod
- *  - Hamlib
+ * 10/01/2007
+ *  - parameters for rsci by Andrew Murphy
  * 07/27/2004
  *  - included stlini routines written by Robert Kesterson
+ * 04/15/2004 Tomi Manninen, Stephane Fillod
+ *  - Hamlib
+ * 10/03/2003 Tomi Manninen / OH2BNS
+ *  - Initial (basic) code for command line argument parsing (argv)
  *
  ******************************************************************************
  *
@@ -34,7 +36,10 @@
 \******************************************************************************/
 
 #include "Settings.h"
+#include <iomanip>
+using namespace std;
 
+extern char dream_version[];
 
 /* Implementation *************************************************************/
 _BOOLEAN CSettings::Load(int argc, char** argv)
@@ -145,6 +150,12 @@ void CSettings::ReadIniFile()
 	/* Longitude string for log file */
 	pDRMRec->GetParameters()->ReceptLog.SetLongitude(
 		GetIniSetting(ini, "Logfile", "longitude"));
+
+//update info
+	if (pDRMRec->GetParameters()->GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
+	{
+		pDRMRec->GetParameters()->GPSInformation.SetPositionAvailable(pDRMRec->GetParameters()->GPSInformation.SetLatLongDegreesMinutes(pDRMRec->GetParameters()->ReceptLog.GetLatitude(), pDRMRec->GetParameters()->ReceptLog.GetLongitude()));
+	}
 
 
 	/* Storage path for files saved from Multimedia dialog */
@@ -408,6 +419,17 @@ void CSettings::ReadIniFile()
 	if (GetFlagIniSet(ini, "Hamlib", "enmodrig", bValue) == TRUE)
 		pDRMRec->GetHamlib()->SetEnableModRigSettings(bValue);
 #endif
+
+	/* GPS */
+	if (GetFlagIniSet(ini, "GPS", "use", bValue) == TRUE)
+		pDRMRec->GetParameters()->GPSInformation.SetUse(bValue);
+
+	if (GetFlagIniSet(ini, "GPS", "staticlocation", bValue) == TRUE)
+		pDRMRec->GetParameters()->GPSInformation.SetGPSSource(CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY);
+
+	/* Serial Number */
+	pDRMRec->GetParameters()->sSerialNumber = GetIniSetting(ini, "Receiver", "serialnumber");
+	GenerateReceiverID();
 }
 
 void CSettings::WriteIniFile()
@@ -693,6 +715,17 @@ void CSettings::WriteIniFile()
 	SetFlagIniSet(ini, "Hamlib", "enmodrig", pDRMRec->GetHamlib()->GetEnableModRigSettings());
 #endif
 
+	/* GPS */
+	SetFlagIniSet(ini, "GPS", "use", pDRMRec->GetParameters()->GPSInformation.GetUse());
+
+	if (pDRMRec->GetParameters()->GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
+		SetFlagIniSet(ini, "GPS", "staticlocation", TRUE);
+	else
+		SetFlagIniSet(ini, "GPS", "staticlocation", FALSE);
+
+	/* Serial Number */
+	PutIniSetting(ini, "Receiver", "serialnumber",
+		pDRMRec->GetParameters()->sSerialNumber.c_str());
 
 	/* Save settings in init-file */
 	SaveIni(ini, DREAM_INIT_FILE_NAME);
@@ -1055,6 +1088,9 @@ _BOOLEAN CSettings::ParseArguments(int argc, char** argv)
 			pDRMRec->GetParameters()->ReceptLog.SetLongitude(strArgument);
 			continue;
 		}
+
+
+
 
 
 		/* Color scheme main plot ------------------------------------------- */
@@ -1512,3 +1548,37 @@ bool CSettings::StlIniCompareStringNoCase::operator()(const string& x,
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
+
+void CSettings::GenerateReceiverID()
+{
+	//Set receiver ID
+	string sVer;
+	unsigned int iImplementation = 0;;
+	unsigned int iMajor = 0;
+	unsigned int iMinor = 0;
+
+	pDRMRec->GetParameters()->sReceiverID = "drem";
+
+	sVer = dream_version;
+
+	int pos;
+
+	while((pos = sVer.find('.')) != string::npos)
+		sVer.replace(pos, 1, " ");
+	
+	if ((pos = sVer.find("cvs")) != string::npos)
+		sVer.replace(pos, 3, "   ");
+
+	stringstream ssVer(sVer);
+	ssVer >> iImplementation >> iMajor >> iMinor;
+
+	stringstream ssInfoVer;
+	ssInfoVer << setw(2) << setfill('0') << iImplementation << setw(2) << setfill('0') << iMajor << setw(2) << setfill('0') << iMinor;
+
+	pDRMRec->GetParameters()->sReceiverID += ssInfoVer.str();
+
+	if (pDRMRec->GetParameters()->sSerialNumber.length() > 6)
+		pDRMRec->GetParameters()->sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
+
+	pDRMRec->GetParameters()->sReceiverID += pDRMRec->GetParameters()->sSerialNumber;
+}

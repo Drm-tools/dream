@@ -1,12 +1,15 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2005
+ * Copyright (c) 2001-2007
  *
  * Author(s):
  *	Volker Fischer, Andrew Murphy, Andrea Russo
  *
  * Description:
  *	See Parameter.cpp
+ *
+ * 10/01/2007 Andrew Murphy, BBC Research & Development, 2005
+ *	- Additions to include additional RSCI related fields
  *
  * 11/21/2005 Andrew Murphy, BBC Research & Development, 2005
  *	- Additions to include AMSS demodulation (Added class
@@ -54,7 +57,8 @@ class CParameter : public CCellMappingTable
 public:
 	CParameter() : Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
 		bRunThread(FALSE), bUsingMultimedia(TRUE),	iCurSelAudioService(0), 
-		iCurSelDataService(0), vecbiAudioFrameStatus()
+		iCurSelDataService(0), vecbiAudioFrameStatus(),
+		sReceiverID("                "), sSerialNumber("000000")
 		{}
 	virtual ~CParameter() {}
 
@@ -630,6 +634,10 @@ public:
 	int				iAMSSCarrierMode;
 
 
+	/* Serial number and received ID */
+	string			sSerialNumber;
+	string			sReceiverID;
+
 	/* Parameters controlled by SDC ----------------------------------------- */
 	void SetAudioParam(const int iShortID, const CAudioParam NewAudParam);
 	CAudioParam GetAudioParam(const int iShortID)
@@ -859,6 +867,113 @@ public:
 	_REAL				GetSysToNomBWCorrFact();
 	_BOOLEAN			bRunThread;
 	_BOOLEAN			bUsingMultimedia;
+
+	//andrewm - GPS location
+	class CGPSInformation
+	{
+	public:
+		CGPSInformation() :
+		  eGPSSource(GPS_SOURCE_INVALID),
+		  bUse(FALSE),
+		  bSatellitesVisibleAvailable(FALSE),
+		  bPositionAvailable(FALSE),
+		  bAltitudeAvailable(FALSE),
+		  bTimeAvailable(FALSE),
+		  bDateAvailable(FALSE),
+		  bSpeedAvailable(FALSE),
+		  bHeadingAvailable(FALSE)
+		  {}
+
+		void SetUse(_BOOLEAN bNewuse) { bUse = TRUE; }
+		_BOOLEAN GetUse() { return bUse; }
+
+		enum EGPSSource { GPS_SOURCE_INVALID, GPS_SOURCE_GPS_RECEIVER, GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER, GPS_SOURCE_MANUAL_ENTRY, GPS_SOURCE_NOT_AVAILABLE };
+
+		EGPSSource GetGPSSource() { return eGPSSource; }
+		void SetGPSSource(EGPSSource eNewSource) { eGPSSource = eNewSource; }
+
+		void SetSatellitesVisibleAvailable(_BOOLEAN bNewSatVisAv) { bSatellitesVisibleAvailable = bNewSatVisAv; }
+		_BOOLEAN GetSatellitesVisibleAvailable() { return bSatellitesVisibleAvailable; }
+		
+		void SetSatellitesVisible(uint8_t uiNewSatVis) { uiSatellitesVisible = uiNewSatVis; }
+		uint8_t GetSatellitesVisible() { return uiSatellitesVisible; }
+
+		void SetPositionAvailable(_BOOLEAN bNewPosAv) { bPositionAvailable = bNewPosAv; }
+		_BOOLEAN GetPositionAvailable() { return bPositionAvailable; }
+
+		void SetLatLongDegrees(_REAL rNewLatDeg, _REAL rNewLongDeg) { rLatitudeDegrees = rNewLatDeg; rLongitudeDegrees = rNewLongDeg; }
+		_REAL GetLatitudeDegrees() { return rLatitudeDegrees; }
+		_REAL GetLongitudeDegrees() { return rLongitudeDegrees; }
+
+		_BOOLEAN SetLatLongDegreesMinutes(const string& sNewLat, const string& sNewLong);
+		
+		void SetAltitudeAvailable(_BOOLEAN bNewAltAv) { bAltitudeAvailable = bNewAltAv; }
+		_BOOLEAN GetAltitudeAvailable() { return bAltitudeAvailable; }
+
+		void SetAltitudeMetres(_REAL rNewAlt) { rAltitudeMetres = rNewAlt; }
+		_REAL GetAltitudeMetres() { return rAltitudeMetres; }
+
+		void SetTimeAvailable(_BOOLEAN bNewTimeAv) { bTimeAvailable = bNewTimeAv; }
+		_BOOLEAN GetTimeAvailable() { return bTimeAvailable; }
+
+		void SetTime(uint8_t uiNewHours, uint8_t uiNewMinutes, uint8_t uiNewSeconds) { uiTimeHours = uiNewHours; uiTimeMinutes = uiNewMinutes; uiTimeSeconds = uiNewSeconds; }
+		uint8_t GetTimeHours() { return uiTimeHours; }
+		uint8_t GetTimeMinutes() { return uiTimeMinutes; }
+		uint8_t GetTimeSeconds() { return uiTimeSeconds; }
+
+		void SetDateAvailable(_BOOLEAN bNewDateAv) { bDateAvailable = bNewDateAv; }
+		_BOOLEAN GetDateAvailable() { return bDateAvailable; }
+
+		void SetDate(uint8_t uiNewDay, uint8_t uiNewMonth, uint16_t uiNewYear) { uiDateDay = uiNewDay; uiDateMonth = uiNewMonth; uiDateYear = uiNewYear; }
+		uint8_t GetDateDay() { return uiDateDay; }
+		uint8_t GetDateMonth() { return uiDateMonth; }
+		uint16_t GetDateYear() { return uiDateYear; }
+
+		void SetSpeedAvailable(_BOOLEAN bNewSpeedAv) { bSpeedAvailable = bNewSpeedAv; }
+		_BOOLEAN GetSpeedAvailable() { return bSpeedAvailable; }
+
+		void SetSpeedMetresPerSecond(_REAL rNewSpeed) { rSpeedMetresPerSecond = rNewSpeed; }
+		_REAL GetSpeedMetresPerSecond() { return rSpeedMetresPerSecond; }
+
+		void SetHeadingAvailable(_BOOLEAN bNewHeadAv) { bHeadingAvailable = bNewHeadAv; }
+		_BOOLEAN GetHeadingAvailable() { return bHeadingAvailable; }
+
+		void SetHeadingDegreesFromNorth(uint8_t uiNewHeading) { uiHeadingDegreesFromNorth = uiNewHeading; }
+		uint8_t GetHeadingDegreesFromNorth() { return uiHeadingDegreesFromNorth; }
+
+
+	private:
+		_BOOLEAN	bUse;
+
+		EGPSSource	eGPSSource;
+
+		_BOOLEAN	bSatellitesVisibleAvailable;
+		uint8_t		uiSatellitesVisible;
+		
+		_BOOLEAN	bPositionAvailable;
+		_REAL		rLatitudeDegrees;	// +ve for North
+		_REAL		rLongitudeDegrees;	// +ve for East
+		
+		_BOOLEAN	bAltitudeAvailable;
+		_REAL		rAltitudeMetres;
+
+		_BOOLEAN	bTimeAvailable;
+		uint8_t		uiTimeHours;
+		uint8_t		uiTimeMinutes;
+		uint8_t		uiTimeSeconds;
+
+		_BOOLEAN	bDateAvailable;
+		uint8_t		uiDateDay;
+		uint8_t		uiDateMonth;
+		uint16_t	uiDateYear;
+
+		_BOOLEAN	bSpeedAvailable;
+		_REAL		rSpeedMetresPerSecond;
+
+		_BOOLEAN	bHeadingAvailable;
+		uint8_t		uiHeadingDegreesFromNorth;
+
+	} GPSInformation;
 
 protected:
 	_REAL				rSysSimSNRdB;

@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer, Robert Kesterson
+ *	Volker Fischer, Robert Kesterson, Andrew Murphy
  *
  * Description:
  *	
@@ -136,6 +136,8 @@ protected:
 	_BOOLEAN GetStringArgument(int argc, char** argv, int& i,
 							   string strShortOpt, string strLongOpt,
 							   string& strArg);
+
+	void GenerateReceiverID();
 
 	/* Function declarations for stlini code written by Robert Kesterson */
 	struct StlIniCompareStringNoCase 

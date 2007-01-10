@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2004
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer, Julian Cable, Oliver Haffenden
+ *	Volker Fischer, Julian Cable, Oliver Haffenden, Andrew Murphy
  *
  * Description:
   *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
@@ -98,6 +98,8 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	   with each AF packet */
 	TagItemGeneratorSDCChanInf.GenTag(Parameter);
 
+	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
+
 	/* RSCI tags ------------------------------------------------------------ */
 	TagItemGeneratorRAFS.GenTag(Parameter);
 	TagItemGeneratorRWMF.GenTag(TRUE, Parameter.rWMERFAC); /* WMER for FAC */
@@ -110,6 +112,18 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
+
+
+	/* Generate some other tags */
+	_REAL rSigStr = 0.0;
+	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
+	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+
+	if (Parameter.GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
+		Parameter.GPSInformation.SetPositionAvailable(Parameter.GPSInformation.SetLatLongDegreesMinutes(Parameter.ReceptLog.GetLatitude(), Parameter.ReceptLog.GetLongitude()));
+	
+	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
+	
 	CVector<_BINARY> packet = GenMDIPacket();
    	TransmitPacket(packet);
 }
@@ -134,11 +148,17 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 
 	/* Generate some other tags */
+	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 	_REAL rSigStr = 0.0;
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
+
+	if (Parameter.GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
+		Parameter.GPSInformation.SetPositionAvailable(Parameter.GPSInformation.SetLatLongDegreesMinutes(Parameter.ReceptLog.GetLatitude(), Parameter.ReceptLog.GetLongitude()));
+	
+	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
 
 	TransmitPacket(GenMDIPacket());
 }
@@ -173,6 +193,12 @@ CVector<_BINARY> CRSIMDIOutRCIIn::GenMDIPacket()
 	/* *ptr tag */
 	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProTyMDI);
 	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProTyRSCI);
+
+	/* rinf taf */
+	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorInfo);
+
+	/* rgps tag */
+	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorGPSInformation);
 
 	/* rpro tag */
 	TagPacketGenerator.AddTagItemIfInProfile(&TagItemGeneratorProfile);
@@ -235,6 +261,7 @@ void CRSIMDIOutRCIIn::ResetTags()
 	TagItemGeneratorReceiverStatus.Reset(); /* rsta */
 
 	TagItemGeneratorProfile.Reset(); /* rpro */
+	TagItemGeneratorGPSInformation.Reset();	/* rgps */
 
 	/* This group of tags might not be generated, so make an empty version in case */
 	

@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2007
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, Andrew Murphy
  *
  * Description:
  *	DRM Parameters
@@ -1288,4 +1288,55 @@ ETypeRxStatus CParameter::CReceiveStatus::GetAudioStatus()
 ETypeRxStatus CParameter::CReceiveStatus::GetMOTStatus()
 {
 	return MOTOK;
+}
+
+_BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNewLat, const string& sNewLong) 
+{ 
+	if (sNewLat.empty() || sNewLong.empty())
+		return FALSE;
+
+	char chrDegrees = 0xb0; // degrees char based on Latin-1
+
+	string sLat, sLong;
+	
+	sLat = sNewLat;		// take a local copy we can alter
+	sLong = sNewLong;
+	
+	int Degrees, Minutes;
+
+	int pos;
+
+	//lat
+	pos = sLat.find(chrDegrees);
+	if (pos != string::npos)
+		sLat.replace(pos, 1, " ");
+
+	pos = sLat.find("\'");
+	if (pos != string::npos)
+		sLat.replace(pos, 1, " ");
+
+	stringstream ssLat(sLat);
+	ssLat >> Degrees >> Minutes;
+	rLatitudeDegrees = Degrees + (Minutes/60.0);
+
+	if (sLat.find("N") == string::npos)	// N not found, so must be south
+		rLatitudeDegrees *= -1;
+
+	//long
+	pos = sLong.find(chrDegrees);
+	if (pos != string::npos)
+		sLong.replace(pos, 1, " ");
+
+	pos = sLong.find("\'");
+	if (pos != string::npos)
+		sLong.replace(pos, 1, " ");
+
+	stringstream ssLong(sLong);
+	ssLong >> Degrees >> Minutes;
+	rLongitudeDegrees = Degrees + (Minutes/60.0);
+
+	if (sNewLat.find("E") == string::npos)	// E not found, so must be west
+		rLongitudeDegrees *= -1;
+
+	return TRUE;
 }
