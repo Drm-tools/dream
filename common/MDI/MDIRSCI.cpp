@@ -336,6 +336,8 @@ void CRSIMDIOutRCIIn::TransmitPacket(CVector<_BINARY> vecbidata)
 CRSIMDIInRCIOut::CRSIMDIInRCIOut() :
 	bMDIInEnabled(FALSE), bMDIOutEnabled(FALSE), bUseAFCRC(TRUE)
 {
+	/* Init constant tag */
+	TagItemGeneratorProTyRSCI.GenTag();
 }
 
 void CRSIMDIInRCIOut::SetInAddr(const string& strAddr)
@@ -367,6 +369,7 @@ _BOOLEAN CRSIMDIInRCIOut::SetFrequency(int iNewFreqkHz)
 {
 	TagPacketGenerator.Reset();
 	TagItemGeneratorCfre.GenTag(iNewFreqkHz);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorCfre);
 	CVector<_BINARY> packet = TagPacketGenerator.GenAFPacket(bUseAFCRC);
    	TransmitPacket(packet);

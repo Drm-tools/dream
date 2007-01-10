@@ -95,6 +95,7 @@ protected:
 
 	/* Tag Item Generators */
 
+	CTagItemGeneratorProTyRSCI TagItemGeneratorProTyRSCI; /* *ptr tag */
 	CTagItemGeneratorCfre TagItemGeneratorCfre;
 
 	/* TAG Packet generator */
