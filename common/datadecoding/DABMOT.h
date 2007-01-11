@@ -273,21 +273,20 @@ class CMOTObjectBase
 
     CMOTObjectBase ()
     {
-	Reset ();
+		Reset ();
     }
 
     virtual void Reset ()
     {
-	TransportID = -1;
-	ExpireTime.Reset ();
-	bPermitOutdatedVersions = FALSE;
+		TransportID = -1;
+		ExpireTime.Reset ();
+		bPermitOutdatedVersions = FALSE;
     }
-
-	string toString();
 
     void decodeExtHeader (_BYTE & bParamId,
 			  int &iHeaderFieldLen, int &iDataFieldLen,
 			  CVector < _BINARY > &vecbiHeader) const;
+
     string extractString (CVector < _BINARY > &vecbiData, int iLen) const;
 
     TTransportID TransportID;
@@ -302,53 +301,55 @@ class CMOTDirectory:public CMOTObjectBase
 
     CMOTDirectory ()
     {
-	Reset ();
+		Reset ();
     }
 
     CMOTDirectory (const CMOTDirectory & nD):CMOTObjectBase (nD),
-	iCarouselPeriod (nD.iCarouselPeriod),
-	iNumberOfObjects (nD.iNumberOfObjects),
-	iSegmentSize (nD.iSegmentSize),
-	bCompressionFlag (nD.bCompressionFlag),
-	bSortedHeaderInformation (nD.bSortedHeaderInformation),
-	DirectoryIndex (nD.DirectoryIndex)
+		iCarouselPeriod (nD.iCarouselPeriod),
+		iNumberOfObjects (nD.iNumberOfObjects),
+		iSegmentSize (nD.iSegmentSize),
+		bCompressionFlag (nD.bCompressionFlag),
+		bSortedHeaderInformation (nD.bSortedHeaderInformation),
+		DirectoryIndex (nD.DirectoryIndex)
     {
     }
 
 
-    virtual ~ CMOTDirectory ()
+    virtual ~CMOTDirectory ()
     {
     }
 
     inline CMOTDirectory & operator= (const CMOTDirectory & nD)
     {
-	TransportID = nD.TransportID;
-	ExpireTime = nD.ExpireTime;
-	bPermitOutdatedVersions = nD.bPermitOutdatedVersions;
-	bSortedHeaderInformation = nD.bSortedHeaderInformation;
-	bCompressionFlag = nD.bCompressionFlag;
-	iCarouselPeriod = nD.iCarouselPeriod;
-	DirectoryIndex = nD.DirectoryIndex;
-	iNumberOfObjects = nD.iNumberOfObjects;
-	iSegmentSize = nD.iSegmentSize;
+		TransportID = nD.TransportID;
+		ExpireTime = nD.ExpireTime;
+		bPermitOutdatedVersions = nD.bPermitOutdatedVersions;
+		bSortedHeaderInformation = nD.bSortedHeaderInformation;
+		bCompressionFlag = nD.bCompressionFlag;
+		iCarouselPeriod = nD.iCarouselPeriod;
+		DirectoryIndex = nD.DirectoryIndex;
+		iNumberOfObjects = nD.iNumberOfObjects;
+		iSegmentSize = nD.iSegmentSize;
 
-	return *this;
+		return *this;
     }
 
     virtual void Reset ()
     {
-	CMOTObjectBase::Reset ();
-	bSortedHeaderInformation = FALSE;
-	DirectoryIndex.clear ();
-	bCompressionFlag = FALSE;
-	iCarouselPeriod = -1;
-	iNumberOfObjects = 0;
-	iSegmentSize = 0;
+		CMOTObjectBase::Reset ();
+		bSortedHeaderInformation = FALSE;
+		DirectoryIndex.clear ();
+		bCompressionFlag = FALSE;
+		iCarouselPeriod = -1;
+		iNumberOfObjects = 0;
+		iSegmentSize = 0;
     }
 
 
     virtual void AddHeader (CVector < _BINARY > &vecbiHeader);
 
+	void dump(ostream&);
+  
     int iCarouselPeriod, iNumberOfObjects, iSegmentSize;
     _BOOLEAN bCompressionFlag, bSortedHeaderInformation;
     map < _BYTE, string > DirectoryIndex;
@@ -372,8 +373,6 @@ class CMOTObject:public CMOTObjectBase
     CMOTObject (const CMOTObject & nO):CMOTObjectBase (nO),
 	bComplete (nO.bComplete),
 	bHasHeader (nO.bHasHeader),
-	bInDirectory (nO.bInDirectory),
-	bInOldDirectory (nO.bInOldDirectory),
 	strName (nO.strName),
 	iBodySize(nO.iBodySize),
 	iCharacterSetForName (nO.iCharacterSetForName),
@@ -408,8 +407,6 @@ class CMOTObject:public CMOTObjectBase
 	bPermitOutdatedVersions = nO.bPermitOutdatedVersions;
 	bComplete = nO.bComplete;
 	bHasHeader = nO.bHasHeader;
-	bInDirectory = nO.bInDirectory;
-	bInOldDirectory = nO.bInOldDirectory;
 	strFormat = nO.strFormat;
 	strName = nO.strName;
 	iBodySize = nO.iBodySize;
@@ -442,8 +439,6 @@ class CMOTObject:public CMOTObjectBase
 	vecbRawData.Init (0);
 	bComplete = FALSE;
 	bHasHeader = FALSE;
-	bInDirectory = FALSE;
-	bInOldDirectory = FALSE;
 	Body.Reset ();
 	strFormat = "";
 	strName = "";
@@ -472,7 +467,7 @@ class CMOTObject:public CMOTObjectBase
     /* for encoding */
     CVector < _BYTE > vecbRawData;
 
-    _BOOLEAN bComplete, bHasHeader, bInDirectory, bInOldDirectory;
+    _BOOLEAN bComplete, bHasHeader;
     CByteReassembler Body;
     string strName;
     int iBodySize;
@@ -550,7 +545,7 @@ class CMOTDABDec
 {
   public:
 
-    CMOTDABDec ():MOTmode (unknown), DirectoryTransportID (-1)
+    CMOTDABDec ():MOTmode (unknown)
     {
     }
     virtual ~ CMOTDABDec ()
@@ -592,7 +587,6 @@ class CMOTDABDec
     /* These fields are the cached complete carousel */
     CMOTDirectory MOTDirectory;
     map < TTransportID, CMOTObject > MOTCarousel;
-    TTransportID DirectoryTransportID;
     queue < TTransportID > qiNewObjects;
 };
 

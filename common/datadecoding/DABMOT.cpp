@@ -36,17 +36,32 @@
 #include <algorithm>
 #include <cctype>
 #ifdef HAVE_ZLIB_LIBRARY
-	#include <zlib.h>
+#include <zlib.h>
 #else
-    #ifdef HAVE_LIBFREEIMAGE
-        # include <FreeImage.h>
-	#endif
+#ifdef HAVE_LIBFREEIMAGE
+# include <FreeImage.h>
+#endif
 #endif
 
-
 /* Implementation *************************************************************/
-ostream& operator<< (ostream& out, CDateAndTime& d) { d.dump(out); return out;}
-ostream& operator<< (ostream& out, CMOTObject& o) { o.dump(out); return out;}
+ostream & operator<<(ostream & out, CDateAndTime & d)
+{
+	d.dump(out);
+	return out;
+}
+
+ostream & operator<<(ostream & out, CMOTObject & o)
+{
+	o.dump(out);
+	return out;
+}
+
+ostream & operator<<(ostream & out, CMOTDirectory & o)
+{
+	o.dump(out);
+	return out;
+}
+
 /******************************************************************************\
 * Encoder                                                                      *
 \******************************************************************************/
@@ -471,14 +486,13 @@ CMOTDABEnc::GenMOTObj(CVector < _BINARY > &vecbiData,
 	}
 }
 
-_BOOLEAN CMOTDABEnc::GetDataGroup(CVector < _BINARY > &vecbiNewData)
+_BOOLEAN
+CMOTDABEnc::GetDataGroup(CVector < _BINARY > &vecbiNewData)
 {
-	_BOOLEAN
-		bLastSegment;
+	_BOOLEAN bLastSegment;
 
 	/* Init return value. Is overwritten in case the object is ready */
-	_BOOLEAN
-		bObjectDone = FALSE;
+	_BOOLEAN bObjectDone = FALSE;
 
 	if (bCurSegHeader == TRUE)
 	{
@@ -539,7 +553,8 @@ _BOOLEAN CMOTDABEnc::GetDataGroup(CVector < _BINARY > &vecbiNewData)
 	return bObjectDone;
 }
 
-_REAL CMOTDABEnc::GetProgPerc() const
+_REAL
+CMOTDABEnc::GetProgPerc() const
 {
 /*
 	Get percentage of processed data of current object.
@@ -574,7 +589,8 @@ CMOTDABEnc::Reset()
 /******************************************************************************\
 * Decoder                                                                      *
 \******************************************************************************/
-_BOOLEAN CMOTDABDec::NewObjectAvailable()
+_BOOLEAN
+CMOTDABDec::NewObjectAvailable()
 {
 	return qiNewObjects.empty() == FALSE;
 }
@@ -760,6 +776,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				{
 					/* mode change, throw away any directory */
 					MOTDirectory.Reset();
+					//cout << "Reset " << MOTDirectory << endl;
 				}
 				MOTmode = headerMode;
 
@@ -789,19 +806,20 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				   defer decisions until the object and either header or directory
 				   are complete
 				 */
-				if (MOTCarousel.count(TransportID) == 0)
+				map < TTransportID, CMOTObject >::iterator o =
+					MOTCarousel.find(TransportID);
+
+				if (o == MOTCarousel.end())
 				{
 					/* we never saw this before */
-					CMOTObject o;
-					o.TransportID = TransportID;
-					MOTCarousel[TransportID] = o;
+					MOTCarousel[TransportID].TransportID = TransportID;
+					o = MOTCarousel.find(TransportID);
 				}
 				/* is this an old object we have completed? */
-				if (MOTCarousel[TransportID].bComplete == FALSE)
+				if (o->second.bComplete == FALSE)
 				{
-					MOTCarousel[TransportID].Body.
-						AddSegment(vecbiNewData, iSegmentSize,
-								   iSegmentNum, biLastFlag);
+					o->second.Body.AddSegment(vecbiNewData, iSegmentSize,
+											  iSegmentNum, biLastFlag);
 				}
 				else
 				{
@@ -818,15 +836,17 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				{
 					/* mode change, throw away any headers */
 					MOTHeaders.clear();
-					DirectoryTransportID = -1;	/* forced reset */
+					MOTDirectory.TransportID = -1;	/* forced reset */
 					MOTmode = directoryMode;
+					//cout << "Reset " << MOTDirectory << endl;
 				}
-				if (DirectoryTransportID != TransportID)
+				if (MOTDirectory.TransportID != TransportID)
 				{
 					/* The carousel is changing */
 					if (MOTDirectory.TransportID != TransportID)
 					{
 						/* we never got all the previous directory */
+						//cout << " we never got all the previous directory " << TransportID << ", " << MOTDirectory.  TransportID << endl;
 						MOTDirectory.Reset();
 						MOTDirectory.TransportID = TransportID;
 						MOTDirectoryEntity.Reset();
@@ -842,8 +862,9 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 					/* have we got the full directory ? */
 					if (MOTDirectoryEntity.Ready())
 					{
+						//cout << "Ready " << MOTDirectory << endl;
 						ProcessDirectory(MOTDirectoryEntity);
-						DirectoryTransportID = TransportID;
+						MOTDirectory.TransportID = TransportID;
 					}			/* END IF HAVE ALL OF THE NEW DIRECTORY */
 				}
 				else
@@ -858,10 +879,10 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 				{
 					/* mode change, throw away any headers */
 					MOTHeaders.clear();
-					DirectoryTransportID = -1;	/* forced reset */
+					MOTDirectory.TransportID = -1;	/* forced reset */
 					MOTmode = directoryMode;
 				}
-				if (DirectoryTransportID != TransportID)
+				if (MOTDirectory.TransportID != TransportID)
 				{
 					/* The carousel is changing */
 					if (MOTDirectory.TransportID != TransportID)
@@ -918,7 +939,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 						{
 							ProcessDirectory(MOTDirectoryData);
 
-							DirectoryTransportID = TransportID;
+							MOTDirectory.TransportID = TransportID;
 						}
 						else
 						{
@@ -955,16 +976,17 @@ CMOTDABDec::ProcessDirectory(CBitReassembler & MOTDir)
 	   leave objects alone that were never in a carousel, they might
 	   become valid later. */
 
-	/* mark objects which are in the old directory */
+	/* save bodies of old carousel */
+	map < TTransportID, CByteReassembler > Body;
 	for (map < TTransportID,
 		 CMOTObject >::iterator m =
 		 MOTCarousel.begin(); m != MOTCarousel.end(); m++)
 	{
-		CMOTObject & o = m->second;
-		if (o.bInDirectory)
-			o.bInOldDirectory = TRUE;
-		o.bInDirectory = FALSE;
+		Body[m->first] = m->second.Body;
 	}
+	MOTCarousel.erase(MOTCarousel.begin(), MOTCarousel.end());
+
+	//cout << "decode directory " << MOTDirectory.  iNumberOfObjects << " === " << MOTDirectory.vecObjects.size() << " {";
 
 	MOTDirectory.vecObjects.clear();
 
@@ -973,21 +995,17 @@ CMOTDABDec::ProcessDirectory(CBitReassembler & MOTDir)
 		/* add each header to the carousel */
 		TTransportID tid = (TTransportID) MOTDir.vecData.Separate(16);
 		MOTCarousel[tid].AddHeader(MOTDir.vecData);
+		/* keep any bodies or body fragments previously received */
+		map < TTransportID, CByteReassembler >::iterator b = Body.find(tid);
+		if (b != Body.end())
+			MOTCarousel[tid].Body = b->second;
 		/* mark objects which are in the new directory */
-		MOTCarousel[tid].bInDirectory = TRUE;
 		MOTDirectory.vecObjects.push_back(tid);
+		//cout << tid << " ";
 		DeliverIfReady(tid);
 	}
+	//cout << "}" << endl;
 
-	/* delete objects that were in the old and are not in the new */
-	for (map < TTransportID,
-		 CMOTObject >::iterator m2 =
-		 MOTCarousel.begin(); m2 != MOTCarousel.end(); m2++)
-	{
-		CMOTObject & o = m2->second;
-		if ((o.bInDirectory == FALSE) && (o.bInOldDirectory = TRUE))
-			MOTCarousel.erase(m2);
-	}
 }
 
 void
@@ -1057,11 +1075,11 @@ CDateAndTime::extract_relative(CVector < _BINARY > &vecbiData)
 }
 
 void
-CDateAndTime::dump(ostream& out)
+CDateAndTime::dump(ostream & out)
 {
-    out << year << '/' << uint16_t(month) << '/' << uint16_t(day);
-    out << " " << hours << ':' << minutes << ':' << seconds;
-    out << "flags: " << utc_flag << ':' << lto_flag << ':' << half_hours;
+	out << year << '/' << uint16_t(month) << '/' << uint16_t(day);
+	out << " " << hours << ':' << minutes << ':' << seconds;
+	out << " flags: " << utc_flag << ':' << lto_flag << ':' << half_hours;
 }
 
 void
@@ -1239,10 +1257,10 @@ CBitReassembler::copylast()
 	vecLastSegment.ResetBitAccess();
 }
 
-string CMOTObjectBase::extractString(CVector < _BINARY > &vecbiData, int iLen) const
+string
+CMOTObjectBase::extractString(CVector < _BINARY > &vecbiData, int iLen) const
 {
-	string
-		strVar;
+	string strVar;
 	for (size_t i = 0; i < size_t(iLen); i++)
 	{
 		strVar += (char) vecbiData.Separate(SIZEOF__BYTE);
@@ -1333,7 +1351,8 @@ CMOTDirectory::AddHeader(CVector < _BINARY > &vecbiHeader)
 	}
 }
 
-_BOOLEAN CReassembler::IsZipped() const
+_BOOLEAN
+CReassembler::IsZipped() const
 {
 /*
 	Check if the header file is a gzip header
@@ -1371,22 +1390,20 @@ CReassembler::gzGetOriginalSize() const
 		(byHeader[3] << 24);
 }
 
-_BOOLEAN CReassembler::uncompress()
+_BOOLEAN
+CReassembler::uncompress()
 {
 #ifdef HAVE_ZLIB_LIBRARY
 	CVector < _BYTE > vecbRawDataOut;
 	/* Extract the original file size */
-	unsigned long
-		dest_len = gzGetOriginalSize();
+	unsigned long dest_len = gzGetOriginalSize();
 
 	if (dest_len < MAX_DEC_NUM_BYTES_ZIP_DATA)
 	{
 		vecbRawDataOut.Init(dest_len);
 
-		int
-			zerr;
-		z_stream
-			stream;
+		int zerr;
+		z_stream stream;
 		memset(&stream, 0, sizeof(stream));
 		if ((zerr = inflateInit2(&stream, -MAX_WBITS)) != Z_OK)
 			return FALSE;
@@ -1423,18 +1440,16 @@ _BOOLEAN CReassembler::uncompress()
 	CVector < _BYTE > vecbRawDataOut;
 	CVector < _BYTE > &vecbRawDataIn = vecData;
 	/* Extract the original file size */
-	const unsigned long
-		dest_len = gzGetOriginalSize();
+	const unsigned long dest_len = gzGetOriginalSize();
 
 	if (dest_len < MAX_DEC_NUM_BYTES_ZIP_DATA)
 	{
 		vecbRawDataOut.Init(dest_len);
 
 		/* Actual decompression call */
-		const int
-			zerr = FreeImage_ZLibGUnzip(&vecbRawDataOut[0],
-										dest_len, &vecbRawDataIn[0],
-										vecbRawDataIn.Size());
+		const int zerr = FreeImage_ZLibGUnzip(&vecbRawDataOut[0],
+											  dest_len, &vecbRawDataIn[0],
+											  vecbRawDataIn.Size());
 
 		if (zerr > 0)
 		{
@@ -1460,16 +1475,12 @@ _BOOLEAN CReassembler::uncompress()
 #endif
 }
 
-static char *
-txt[] = { "txt", "txt", "html", 0 };
-static char *
-img[] = { "gif", "jpeg", "bmp", "png", 0 };
-static char *
-	audio[] = { "mpg", "mp2", "mp3", "mpg", "mp2", "mp3",
+static char *txt[] = { "txt", "txt", "html", 0 };
+static char *img[] = { "gif", "jpeg", "bmp", "png", 0 };
+static char *audio[] = { "mpg", "mp2", "mp3", "mpg", "mp2", "mp3",
 	"pcm", "aiff", "atrac", "atrac2", "mp4", 0
 };
-static char *
-video[] = { "mpg", "mp2", "mp4", "h263", 0 };
+static char *video[] = { "mpg", "mp2", "mp4", "h263", 0 };
 
 void
 CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
@@ -1613,7 +1624,7 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 }
 
 void
-CMOTObject::dump(ostream& out)
+CMOTObject::dump(ostream & out)
 {
 	out << "MOT(" << TransportID << "):";
 	out << " Name: " << strName;
@@ -1625,11 +1636,33 @@ CMOTObject::dump(ostream& out)
 	out << " UniqueBodyVersion: " << iUniqueBodyVersion;
 	out << " Expires: " << ExpireTime;
 	out << " PermitOutdatedVersions: " << bPermitOutdatedVersions;
-	out << " Scope: " << hex << iScopeId << dec << "from " << ScopeStart << " to " << ScopeEnd;
+	out << " Scope: " << hex << iScopeId << dec << " from " << ScopeStart <<
+		" to " << ScopeEnd;
 	out << " CompressionType: " << iCompressionType;
 	out << " Version: " << iVersion;
 	out << " Priority: " << iPriority;
 	out << " RetransmissionDistance: " << iRetransmissionDistance;
 	out << " format: " << strFormat;
 	out << " length: " << iBodySize;
+}
+
+void
+CMOTDirectory::dump(ostream & out)
+{
+	out << "MOTDIR(" << TransportID << "):";
+	out << " Expires: " << ExpireTime;
+	out << " PermitOutdatedVersions: " << bPermitOutdatedVersions;
+	out << " CarouselPeriod: " << iCarouselPeriod;
+	out << " SegmentSize: " << iSegmentSize;
+	out << " CompressionFlag: " << bCompressionFlag;
+	out << " SortedHeaderInformation: " << bSortedHeaderInformation;
+	out << " indices { ";
+	for (map < _BYTE, string >::iterator di = DirectoryIndex.begin();
+		 di != DirectoryIndex.end(); di++)
+		out << hex << di->first << dec << " => " << di->second;
+	out << " }";
+	out << " there are " << iNumberOfObjects << " objects {";
+	for (size_t i = 0; i < vecObjects.size(); i++)
+		out << " " << vecObjects[i];
+	out << " }";
 }
