@@ -432,5 +432,5 @@ drm_SOURCES = $(drmwithoutqt_SOURCES)
 endif
 
 
-#drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -ansi -Wshadow -Werror -Weffc++ -Wsign-promo -Wcomment -Wextra
-drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -Wextra -fno-for-scope -Wsign-promo -Wcomment
+#drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -ansi -Wshadow -Werror -Weffc++ -Wsign-promo -Wcomment 
+drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -Wsign-promo -Wcomment

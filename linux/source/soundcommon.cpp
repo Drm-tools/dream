@@ -199,7 +199,8 @@ getdevices(vector < string > &names, vector < string > &devices,
 	{
 		names.resize(tmp.size());
 		devices.resize(tmp.size());
-		for (size_t i = 0; i < tmp.size(); i++)
+		size_t i;
+		for (i = 0; i < tmp.size(); i++)
 		{
 			stringstream o(tmp[i]);
 			char p, name[200];
@@ -209,7 +210,7 @@ getdevices(vector < string > &names, vector < string > &devices,
 			names[n] = name;
 		}
 		devices[0] = "/dev/dsp";
-		for (size_t i = 1; i < names.size(); i++)
+		for (i = 1; i < names.size(); i++)
 		{
 			devices[i] = "/dev/dsp";
 			devices[i] += '0' + i;
