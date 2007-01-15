@@ -134,7 +134,7 @@ void EPGDlg::OnTimer()
 	}
 }
 
-void EPGDlg::showEvent(QShowEvent *e) 
+void EPGDlg::showEvent(QShowEvent *) 
 {    
     // Use the currently receiving channel 
     CParameter* pP = pDRMRec->GetParameters();
@@ -170,7 +170,7 @@ void EPGDlg::showEvent(QShowEvent *e)
 	Timer.start(GUI_TIMER_EPG_UPDATE);
 }
 
-void EPGDlg::hideEvent(QHideEvent* pEvent)
+void EPGDlg::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timer */
 	Timer.stop();
@@ -223,8 +223,7 @@ void EPGDlg::setYear(int n)
 
 void EPGDlg::select()
 {
-QListViewItem* CurrActiveItem;
-_BOOLEAN bIsOnLine = FALSE;
+	QListViewItem* CurrActiveItem = NULL;
 
     if (!do_updates)
 	    return;
@@ -257,7 +256,7 @@ _BOOLEAN bIsOnLine = FALSE;
 		else
 		{
 			QString sep="";
-			for(int i=0; i<p.mainGenre.size(); i++) {
+			for(size_t i=0; i<p.mainGenre.size(); i++) {
 				if(p.mainGenre[i] != "Audio only") {
 					genre = genre+sep+p.mainGenre[i];
 					sep = ", ";
@@ -286,7 +285,6 @@ _BOOLEAN bIsOnLine = FALSE;
 			{
 				CurrItem->setPixmap(COL_START, BitmCubeGreen);
 				CurrActiveItem = CurrItem;
-				bIsOnLine = TRUE;
 			}
 		}
 	}
@@ -300,7 +298,7 @@ _BOOLEAN bIsOnLine = FALSE;
     if(xml.length() > 0)
         advanced->setText(xml);
 
-	if (bIsOnLine == TRUE)
+	if (CurrActiveItem) /* programme is now on line */
 		Data->ensureItemVisible(CurrActiveItem);
 }
 

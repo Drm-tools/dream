@@ -1,7 +1,7 @@
 [Project]
 FileName=FDRM.dev
 Name=FDRM
-UnitCount=232
+UnitCount=239
 Type=0
 Ver=1
 ObjFiles=
@@ -10,13 +10,13 @@ Libs=..\libs;C:\qt-3-mingw\lib
 PrivateResource=FDRM_private.rc
 ResourceIncludes=
 MakeIncludes=
-Compiler=-Wall_@@_-mthreads_@@_-fexceptions -frtti_@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@_
-CppCompiler=-Wall_@@_-mthreads_@@_-fexceptions -frtti _@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@__@@_
-Linker=-lqwt_@@_-lfaac_@@_-lfaad2_@@_-lhamlib_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lwtap_@@_-lqtmain_@@_-lqt-mt_@@_-lws2_32_@@_-lwinmm_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl, -Wl,-subsystem,windows_@@_
+Compiler=-Wall -Wextra_@@_-mthreads_@@_-fexceptions -frtti_@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@_
+CppCompiler=-Wall -Wextra_@@_-mthreads_@@_-fexceptions -fno-for-scope -frtti _@@_-DQT_DLL_@@_-DQT_THREAD_SUPPORT_@@_-DQT_ACCESSIBILITY_SUPPORT_@@_-DQT_TABLET_SUPPORT_@@_-DQT_NO_DEBUG_@@_-DHAVE_STDINT_H_@@_-D_WINDOWS_@@_-DNDEBUG_@@_-DWIN32_@@__@@_
+Linker=-lqwt_@@_-lfaac_@@_-lfaad_@@_-lhamlib_@@_-lFhGJournalLine_@@_-lrfftw_@@_-lfftw_@@_-lz_@@_-lqt-mt_@@_-lws2_32_@@_-lwinmm_@@_-Wl,-enable-stdcall-fixup_@@_-Wl,-enable-auto-import -Wl,-enable-runtime-pseudo-reloc -mthreads -Wl, -Wl,-subsystem,windows_@@_
 IsCpp=1
 Icon=
-ExeOutput=
-ObjectOutput=
+ExeOutput=.
+ObjectOutput=.
 OverrideOutput=1
 OverrideOutputName=Dream.exe
 HostApplication=
@@ -2367,9 +2367,9 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit233]
-FileName=..\common\MDI\RCITagItems.h
+FileName=..\common\IQInputFilter.cpp
 CompileCpp=1
-Folder=Headers
+Folder=Sources
 Compile=1
 Link=1
 Priority=1000
@@ -2377,9 +2377,59 @@ OverrideBuildCmd=0
 BuildCmd=
 
 [Unit234]
+FileName=..\common\resample\ResampleFilter.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit235]
+FileName=..\common\sync\TimeSyncFilter.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit236]
+FileName=..\common\tables\TableCarMap.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit237]
+FileName=..\common\tables\TableFAC.cpp
+CompileCpp=1
+Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit238]
 FileName=..\common\MDI\RCITagItems.cpp
 CompileCpp=1
 Folder=Sources
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit239]
+FileName=..\common\MDI\RCITagItems.h
+CompileCpp=1
+Folder=Headers
 Compile=1
 Link=1
 Priority=1000

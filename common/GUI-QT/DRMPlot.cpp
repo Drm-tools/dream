@@ -238,6 +238,9 @@ void CDRMPlot::OnTimerChart()
 		/* Prepare graph and set data */
 		SetAllConst(veccData1, veccData2, veccData3);
 		break;
+
+	case NONE_OLD:
+		break;
 	}
 
 	/* "Unlock" mutex flag */
@@ -287,11 +290,14 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
 			/* Slow update of plot */
 			TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME);
 			break;
+
+		case NONE_OLD:
+			break;
 		}
 	}
 }
 
-void CDRMPlot::showEvent(QShowEvent* pEvent)
+void CDRMPlot::showEvent(QShowEvent*)
 {
 	/* Activte real-time timers when window is shown */
 	SetupChart(CurCharType);
@@ -300,7 +306,7 @@ void CDRMPlot::showEvent(QShowEvent* pEvent)
 	OnTimerChart();
 }
 
-void CDRMPlot::hideEvent(QHideEvent* pEvent)
+void CDRMPlot::hideEvent(QHideEvent*)
 {
 	/* Deactivate real-time timers when window is hide to save CPU power */
 	TimerChart.stop();
@@ -1191,8 +1197,7 @@ void CDRMPlot::SetupInpSpecWaterf()
 	canvas()->setBackgroundPixmap(Canvas);
 }
 
-void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData,
-								CVector<_REAL>& vecrScale)
+void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 {
 	int i, iStartScale, iEndScale;
 
@@ -1817,6 +1822,9 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 			tr("<b>Waterfall Display of Input Spectrum:</b> "
 			"The input spectrum is displayed as a waterfall type. The "
 			"different colors represent different levels.");
+		break;
+
+	case NONE_OLD:
 		break;
 	}
 

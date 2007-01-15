@@ -52,7 +52,7 @@
 
 
 /* Implementation *************************************************************/
-void CMSCDemultiplexer::ProcessDataInternal(CParameter& ReceiverParam)
+void CMSCDemultiplexer::ProcessDataInternal(CParameter&)
 {
  	for(size_t i=0; i<MAX_NUM_STREAMS; i++)
 		ExtractData(*pvecInputData, *vecpvecOutputData[i], StreamPos[i]);

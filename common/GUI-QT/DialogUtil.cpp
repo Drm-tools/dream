@@ -164,7 +164,7 @@ CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
 
 /* Sound card selection menu ------------------------------------------------ */
 CSoundCardSelMenu::CSoundCardSelMenu(CSoundIn* pNSIn, CSoundOut* pNSOut, QWidget* parent) :
-	pSoundInIF(pNSIn), pSoundOutIF(pNSOut), QPopupMenu(parent)
+	QPopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
 {
 	pSoundInMenu = new QPopupMenu(parent);
 	CHECK_PTR(pSoundInMenu);

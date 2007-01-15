@@ -37,11 +37,24 @@
 const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 
 /* Implementation *************************************************************/
-CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
-		iGoodSignCnt(0), bDoInitRun(FALSE),
-		eReceiverMode(RM_DRM),	eNewReceiverMode(RM_NONE),
+CDRMReceiver::CDRMReceiver() :
+		SoundInInterface(), SoundOutInterface(),
 		ReceiveData(&SoundInInterface), WriteData(&SoundOutInterface),
-		rInitResampleOffset((_REAL) 0.0), iAcquDetecCnt(0),
+		FreqSyncAcq(),
+		ChannelEstimation(),
+		UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
+		AudioSourceDecoder(),
+		upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(),
+		RSIPacketBuf(),
+		MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS), MSCSendBuf(MAX_NUM_STREAMS),
+		eAcquiState(AS_NO_SIGNAL),
+		iAcquRestartCnt(0),
+		iAcquDetecCnt(0),
+		iGoodSignCnt(0),
+		eReceiverMode(RM_DRM),	eNewReceiverMode(RM_NONE),
+		iAudioStreamID(STREAM_ID_NOT_USED), iDataStreamID(STREAM_ID_NOT_USED),
+		bDoInitRun(FALSE),
+		rInitResampleOffset((_REAL) 0.0),
 		vecrFreqSyncValHist(LEN_HIST_PLOT_SYNC_PARMS),
 		vecrSamOffsValHist(LEN_HIST_PLOT_SYNC_PARMS),
 		vecrLenIRHist(LEN_HIST_PLOT_SYNC_PARMS),
@@ -49,38 +62,35 @@ CDRMReceiver::CDRMReceiver() : eAcquiState(AS_NO_SIGNAL), iAcquRestartCnt(0),
 		vecrSNRHist(LEN_HIST_PLOT_SYNC_PARMS),
 		veciCDAudHist(LEN_HIST_PLOT_SYNC_PARMS), iAvCntParamHist(0),
 		rAvLenIRHist((_REAL) 0.0), rAvDopplerHist((_REAL) 0.0),
-		rAvSNRHist((_REAL) 0.0), iCurrentCDAud(0),
-		UtilizeFACData(), UtilizeSDCData(), MSCDemultiplexer(),
-		iAudioStreamID(STREAM_ID_NOT_USED), iDataStreamID(STREAM_ID_NOT_USED),
-		upstreamRSCI(), DecodeRSIMDI(), downstreamRSCI(), RSIPacketBuf(),
-		MSCDecBuf(MAX_NUM_STREAMS), MSCUseBuf(MAX_NUM_STREAMS), MSCSendBuf(MAX_NUM_STREAMS),
-		ChannelEstimation(), AudioSourceDecoder(), FreqSyncAcq()
-#if defined(USE_QT_GUI) || defined(_WIN32)
-		, iMainPlotColorStyle(0), /* default color scheme: blue-white */
-		iSecondsPreview(0), iSecondsPreviewLiveSched(0), bShowAllStations(TRUE),
-		GeomChartWindows(0), bEnableSMeter(TRUE),
-		iSysEvalDlgPlotType(0), strStoragePathMMDlg(""),
-		strStoragePathLiveScheduleDlg(""),
-		bAddRefreshHeader(TRUE),
-		iMOTBWSRefreshTime(10),
-		SortParamAnalog(0, TRUE), /* Sort list by station name  */
-		/* Sort list by transmit power (5th column), most powerful on top */
-		SortParamDRM(4, FALSE),
-		SortParamLiveSched(0, FALSE), /* sort by frequency */
-		iMainDisplayColor(0xff0000), /* Red */
-		FontParamMMDlg("", 1, 0, FALSE),
+		rAvSNRHist((_REAL) 0.0),
+		iCurrentCDAud(0),
+		bEnableSMeter(TRUE),
 		iBwAM(10000),
 		iBwLSB(5000),
 		iBwUSB(5000),
 		iBwCW(150),
 		iBwFM(6000),
-		AMDemodType(CAMDemodulation::DT_AM)
-#endif
+		AMDemodType(CAMDemodulation::DT_AM),
 #ifdef _WIN32
-		, bProcessPriorityEnabled(TRUE)
+		bProcessPriorityEnabled(TRUE),
 #endif
-		, bReadFromFile(FALSE), time_keeper(0)
-
+		bReadFromFile(FALSE), time_keeper(0)
+#if defined(USE_QT_GUI) || defined(_WIN32)
+		, GeomChartWindows(0),
+		iMainPlotColorStyle(0), /* default color scheme: blue-white */
+		iSecondsPreview(0), iSecondsPreviewLiveSched(0), bShowAllStations(TRUE),
+		SortParamAnalog(0, TRUE), /* Sort list by station name  */
+		/* Sort list by transmit power (5th column), most powerful on top */
+		SortParamDRM(4, FALSE),
+		SortParamLiveSched(0, FALSE), /* sort by frequency */
+		iSysEvalDlgPlotType(0),
+		iMOTBWSRefreshTime(10),
+		bAddRefreshHeader(TRUE),
+		strStoragePathMMDlg(""),
+		strStoragePathLiveScheduleDlg(""),
+		iMainDisplayColor(0xff0000), /* Red */
+		FontParamMMDlg("", 1, 0, FALSE)
+#endif
 {
 	downstreamRSCI.SetReceiver(this);
 }

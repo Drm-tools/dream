@@ -1297,7 +1297,7 @@ string CSettings::UsageArguments(char** argv)
 		"\n";
 }
 
-_BOOLEAN CSettings::GetFlagArgument(int argc, char** argv, int& i,
+_BOOLEAN CSettings::GetFlagArgument(int, char** argv, int& i,
 									string strShortOpt, string strLongOpt)
 {
 	if ((!strShortOpt.compare(argv[i])) || (!strLongOpt.compare(argv[i])))
@@ -1561,7 +1561,7 @@ void CSettings::GenerateReceiverID()
 
 	sVer = dream_version;
 
-	int pos;
+	size_t pos;
 
 	while((pos = sVer.find('.')) != string::npos)
 		sVer.replace(pos, 1, " ");

@@ -251,7 +251,7 @@ protected:
 		iInputBlockSize = ReceiverParam.iSymbolBlockSize;
 		iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
 	}
-	virtual void ProcessDataInternal(CParameter& ReceiverParam)
+	virtual void ProcessDataInternal(CParameter&)
 	{
 		for (int i = 0; i < iOutputBlockSize; i++)
 			(*pvecOutputData)[i] = (*pvecInputData)[i].tOut;
@@ -268,7 +268,7 @@ protected:
 		iOutputBlockSize = ReceiverParam.iSymbolBlockSize;
 		iOutputBlockSize2 = ReceiverParam.iSymbolBlockSize;
 	}
-	virtual void ProcessDataInternal(CParameter& ReceiverParam)
+	virtual void ProcessDataInternal(CParameter&)
 	{
 		for (int i = 0; i < iInputBlockSize; i++)
 		{

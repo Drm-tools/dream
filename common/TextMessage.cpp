@@ -437,8 +437,6 @@ void CTextMessageDecoder::ReadHeader()
 
 void CTextMessageDecoder::Init(string* pstrNewPText)
 {
-	int i;
-
 	pstrText = pstrNewPText;
 	biOldToggleBit = 0;
 	iBitCount = 0;

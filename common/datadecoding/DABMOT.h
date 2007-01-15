@@ -171,9 +171,10 @@ class CReassembler
 {
   public:
 
-    CReassembler ()
+	CReassembler(): vecData(), vecLastSegment(),
+		iLastSegmentNum(-1), iLastSegmentSize(-1), iSegmentSize(0),
+		Tracker(), bReady(false)
     {
-	Reset ();
     }
 
     CReassembler (const CReassembler & r):iLastSegmentNum (r.iLastSegmentNum),
@@ -275,6 +276,8 @@ class CMOTObjectBase
     {
 		Reset ();
     }
+
+    virtual ~CMOTObjectBase () { }
 
     virtual void Reset ()
     {

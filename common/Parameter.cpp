@@ -703,12 +703,12 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 	return rSysBW / rNomBW;
 }
 
-
 /* Reception log implementation --------------------------------------------- */
-CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), pFileLong(NULL),
-	pFileShort(NULL), iFrequency(0), strAdditText(""),
-	strLatitude(""), strLongitude(""), 
-	bLogEnabled(FALSE), bLogActivated(FALSE), iSecDelLogStart(0)
+CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), iFrequency(0),
+	bLogActivated(FALSE), bLogEnabled(FALSE),
+	pFileLong(NULL), pFileShort(NULL),
+	strAdditText(""), strLatitude(""), strLongitude(""), 
+	iSecDelLogStart(0)
 {
 	ResetLog(TRUE);
 	ResetLog(FALSE);
@@ -1017,7 +1017,7 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 				}
 
 				/* Get robustness mode string */
-				char chRobMode;
+				char chRobMode='X';
 				switch (eCurRobMode)
 				{
 				case RM_ROBUSTNESS_MODE_A:
@@ -1042,7 +1042,7 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 				}
 
 				/* Get MSC scheme */
-				int iCurMSCSc;
+				int iCurMSCSc=-1;
 				switch (eCurMSCScheme)
 				{
 				case CParameter::CS_3_SM:
@@ -1059,6 +1059,9 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 
 				case CParameter::CS_2_SM:
 					iCurMSCSc = 3;
+					break;
+
+				case CParameter::CS_1_SM:/* TODO */
 					break;
 				}
 
@@ -1191,6 +1194,7 @@ void CParameter::CReceiveStatus::SetFrameSyncStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_FRAME_SYNC,colour);
 }
@@ -1202,6 +1206,7 @@ void CParameter::CReceiveStatus::SetTimeSyncStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_TIME_SYNC,colour);
 }
@@ -1213,6 +1218,7 @@ void CParameter::CReceiveStatus::SetInterfaceStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_IOINTERFACE,colour);
 }
@@ -1224,6 +1230,7 @@ void CParameter::CReceiveStatus::SetFACStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_FAC_CRC,colour);
 }
@@ -1235,6 +1242,7 @@ void CParameter::CReceiveStatus::SetSDCStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_SDC_CRC,colour);
 }
@@ -1246,6 +1254,7 @@ void CParameter::CReceiveStatus::SetAudioStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_MSC_CRC,colour);
 }
@@ -1257,6 +1266,7 @@ void CParameter::CReceiveStatus::SetMOTStatus(const ETypeRxStatus OK)
 	case CRC_ERROR: colour=2; break;
 	case DATA_ERROR: colour=1; break;
 	case RX_OK: colour=0; break;
+	case NOT_PRESENT:  break;
 	}
 	PostWinMessage(MS_MOT_OBJ_STAT,colour);
 }
@@ -1304,7 +1314,7 @@ _BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNe
 	
 	int Degrees, Minutes;
 
-	int pos;
+	size_t pos;
 
 	//lat
 	pos = sLat.find(chrDegrees);

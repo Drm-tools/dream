@@ -34,7 +34,7 @@
 * MSC data																	   *
 \******************************************************************************/
 /* Transmitter -------------------------------------------------------------- */
-void CReadData::ProcessDataInternal(CParameter& TransmParam)
+void CReadData::ProcessDataInternal(CParameter&)
 {
 	/* Get data from sound interface */
 	pSound->Read(vecsSoundBuffer);
@@ -47,7 +47,7 @@ void CReadData::ProcessDataInternal(CParameter& TransmParam)
 	SignalLevelMeter.Update((*pvecOutputData));
 }
 
-void CReadData::InitInternal(CParameter& TransmParam)
+void CReadData::InitInternal(CParameter&)
 {
 	/* Define block-size for output, an audio frame always corresponds
 	   to 400 ms. We use always stereo blocks */
@@ -168,7 +168,7 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
 	vecsOutputData.AddEnd((*pvecInputData), iInputBlockSize);
 }
 
-void CWriteData::InitInternal(CParameter& ReceiverParam)
+void CWriteData::InitInternal(CParameter&)
 {
 	/* An audio frame always corresponds to 400 ms.
 	   We use always stereo blocks */
@@ -196,13 +196,13 @@ void CWriteData::InitInternal(CParameter& ReceiverParam)
 CWriteData::CWriteData(CSoundOut* pNS) : pSound(pNS), /* Sound interface */
 	bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
 	bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
+	eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
 	/* Inits for audio spectrum plotting */
 	vecsOutputData((int) NUM_BLOCKS_AV_AUDIO_SPEC * NUM_SMPLS_4_AUDIO_SPECTRUM *
 	2 /* stereo */, 0), /* Init with zeros */
 	FftPlan(NUM_SMPLS_4_AUDIO_SPECTRUM),
 	veccFFTInput(NUM_SMPLS_4_AUDIO_SPECTRUM),
 	veccFFTOutput(NUM_SMPLS_4_AUDIO_SPECTRUM),
-	eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
 	vecrHammingWindow(NUM_SMPLS_4_AUDIO_SPECTRUM)
 {
 	/* Constructor */
@@ -330,8 +330,9 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 			pFileCurPos = fopen(strFileName.c_str(), "w");
 			if (pFileCurPos != NULL)
 			{
-				fprintf(pFileCurPos, "%d / %d (%d min elapsed, estimated "
-					"time remaining: %d min)", iCounter, iNumSimBlocks,
+				fprintf(pFileCurPos,
+					"%d / %d (%ld min elapsed, estimated time remaining: %ld min)",
+					iCounter, iNumSimBlocks,
 					tiElTi / 60, lReTi / 60);
 
 				/* Write current paramter value */
@@ -386,8 +387,8 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				pFileCurPos = fopen(strFileName.c_str(), "w");
 				if (pFileCurPos != NULL)
 				{
-					fprintf(pFileCurPos, "%d / %d (%d min elapsed, estimated "
-						"time remaining: %d min [%.1f days])",
+					fprintf(pFileCurPos,
+						"%d / %d (%ld min elapsed, estimated time remaining: %ld min [%.1f days])",
 						TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
 						lReTi / 60, rReDays);
 
@@ -408,16 +409,15 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 				if (pFileCurPos != NULL)
 				{
 					fprintf(pFileCurPos,
-						"%d / %d (%d min elapsed, estimated minimum"
-						" time remaining: %d min)\n",
+						"%d / %d (%ld min elapsed, estimated minimum"
+						" time remaining: %ld min)\n",
 						iCounter, iMinNumBlocks, tiElTi / 60, lReTi / 60);
 
 					lReTi = (long int)
 						(((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
 						TransmParam.iNumBitErrors * tiElTi);
 					fprintf(pFileCurPos,
-						"%d / %d (%d min elapsed, estimated"
-						" time remaining: %d min)",
+						"%d / %d (%ld min elapsed, estimated time remaining: %ld min)",
 						TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
 						lReTi / 60);
 

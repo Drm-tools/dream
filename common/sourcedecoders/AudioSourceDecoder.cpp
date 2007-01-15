@@ -33,7 +33,7 @@
 /******************************************************************************\
 * Encoder                                                                      *
 \******************************************************************************/
-void CAudioSourceEncoder::ProcessDataInternal(CParameter& TransmParam)
+void CAudioSourceEncoder::ProcessDataInternal(CParameter&)
 {
 	int i, j;
 
@@ -59,10 +59,10 @@ void CAudioSourceEncoder::ProcessDataInternal(CParameter& TransmParam)
 		for (j = 0; j < iNumAACFrames; j++)
 		{
 			/* Convert _REAL type to _SAMPLE type, copy in smaller buffer */
-			for (i = 0; i < lNumSampEncIn; i++)
+			for (unsigned long k = 0; k < lNumSampEncIn; k++)
 			{
-				vecsEncInData[i] =
-					Real2Sample(vecTempResBufOut[j * lNumSampEncIn + i]);
+				vecsEncInData[k] =
+					Real2Sample(vecTempResBufOut[j * lNumSampEncIn + k]);
 			}
 
 			/* Actual AAC encoding */
@@ -1270,7 +1270,7 @@ int CAudioSourceDecoder::GetNumCorDecAudio()
 
 CAudioSourceDecoder::CAudioSourceDecoder()
 #ifdef USE_FAAD2_LIBRARY
-	: AudioRev((CReal) 1.0 /* seconds delay */), bUseReverbEffect(TRUE)
+	: bUseReverbEffect(TRUE), AudioRev((CReal) 1.0 /* seconds delay */)
 #endif
 {
 #ifdef USE_FAAD2_LIBRARY

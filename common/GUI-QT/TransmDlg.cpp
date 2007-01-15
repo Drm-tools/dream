@@ -100,6 +100,9 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 	case RM_ROBUSTNESS_MODE_D:
 		RadioButtonRMD->setChecked(TRUE);
 		break;
+
+	case RM_NO_MODE_DETECTED:
+		break;
 	}
 
 	/* Bandwidth */
@@ -163,6 +166,9 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 
 	switch (TransThread.DRMTransmitter.GetParameters()->eMSCCodingScheme)
 	{
+	case CParameter::CS_1_SM:
+		break;
+
 	case CParameter::CS_2_SM:
 		ComboBoxMSCConstellation->setCurrentItem(0);
 		break;
@@ -171,13 +177,13 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 		ComboBoxMSCConstellation->setCurrentItem(1);
 		break;
 
-//	case CParameter::CS_3_HMSYM:
+	case CParameter::CS_3_HMSYM:
 //		ComboBoxMSCConstellation->setCurrentItem(2);
-//		break;
-//
-//	case CParameter::CS_3_HMMIX:
-//		ComboBoxMSCConstellation->setCurrentItem(3);
-//		break;
+		break;
+
+	case CParameter::CS_3_HMMIX:
+		ComboBoxMSCConstellation->setCurrentItem(3);
+		break;
 	}
 
 	/* SDC Constellation Scheme */
@@ -192,6 +198,11 @@ TransmDialog::TransmDialog(QWidget* parent, const char* name, bool modal,
 
 	case CParameter::CS_2_SM:
 		ComboBoxSDCConstellation->setCurrentItem(1);
+		break;
+
+	case CParameter::CS_3_SM:
+	case CParameter::CS_3_HMSYM:
+	case CParameter::CS_3_HMMIX:
 		break;
 	}
 
@@ -923,7 +934,7 @@ void TransmDialog::OnRadioRobustnessMode(int iID)
 
 
 	/* Set new parameters */
-	ERobMode eNewRobMode;
+	ERobMode eNewRobMode = RM_NO_MODE_DETECTED;
 
 	switch (iID)
 	{
@@ -951,7 +962,7 @@ void TransmDialog::OnRadioRobustnessMode(int iID)
 
 void TransmDialog::OnRadioBandwidth(int iID)
 {
-	ESpecOcc eNewSpecOcc;
+	ESpecOcc eNewSpecOcc = SO_0;
 
 	switch (iID)
 	{

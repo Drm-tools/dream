@@ -265,7 +265,6 @@ getdevices(vector < string > &names, vector < string > &devices,
 			o.getline(n, sizeof(n), ':');
 			o.getline(d, sizeof(d), ':');
 			o.getline(cap, sizeof(cap));
-			char dd[20];
 			stringstream dev;
 			dev << "plughw:" << maj << "," << min;
 			devices.push_back(dev.str());

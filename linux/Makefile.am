@@ -31,6 +31,7 @@ drmwithoutqt_SOURCES = \
 	../common/util/Reassemble.cpp \
 	../common/SDC/SDCReceive.cpp \
 	../common/SDC/SDCTransmit.cpp \
+	../common/IQInputFilter.cpp \
 	../common/chanest/ChannelEstimation.cpp \
 	../common/chanest/TimeLinear.cpp \
 	../common/chanest/TimeWiener.cpp \
@@ -65,11 +66,15 @@ drmwithoutqt_SOURCES = \
 	../common/ofdmcellmapping/CellMappingTable.cpp \
 	../common/ofdmcellmapping/OFDMCellMapping.cpp \
 	../common/resample/Resample.cpp \
+	../common/resample/ResampleFilter.cpp \
 	../common/sourcedecoders/AudioSourceDecoder.cpp \
 	../common/sync/FreqSyncAcq.cpp \
 	../common/sync/TimeSync.cpp \
 	../common/sync/SyncUsingPil.cpp \
 	../common/sync/TimeSyncTrack.cpp \
+	../common/sync/TimeSyncFilter.cpp \
+	../common/tables/TableFAC.cpp \
+	../common/tables/TableCarMap.cpp \
 	../common/GUI-QT/main.cpp \
 	source/soundcommon.cpp \
 	source/soundin.cpp \
@@ -427,4 +432,5 @@ drm_SOURCES = $(drmwithoutqt_SOURCES)
 endif
 
 
-drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT
+#drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -ansi -Wshadow -Werror -Weffc++ -Wsign-promo -Wcomment -Wextra
+drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -Wextra -fno-for-scope -Wsign-promo -Wcomment

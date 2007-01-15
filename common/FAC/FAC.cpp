@@ -126,6 +126,9 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 	case CParameter::CS_2_SM:
 		(*pbiFACData).Enqueue(3 /* 11 */, 2);
 		break;
+
+	default:
+		break;
 	}
 
 	/* SDC mode */
@@ -137,6 +140,9 @@ void CFACTransmit::FACParam(CVector<_BINARY>* pbiFACData, CParameter& Parameter)
 
 	case CParameter::CS_1_SM:
 		(*pbiFACData).Enqueue(1 /* 1 */, 1);
+		break;
+
+	default:
 		break;
 	}
 

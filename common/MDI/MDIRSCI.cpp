@@ -47,8 +47,8 @@
 
 /* Implementation *************************************************************/
 CRSIMDIOutRCIIn::CRSIMDIOutRCIIn() : iLogFraCnt(0),
-	bMDIInEnabled(FALSE), bMDIOutEnabled(FALSE),
-	vecTagItemGeneratorRBP(MAX_NUM_STREAMS), vecTagItemGeneratorStr(MAX_NUM_STREAMS)
+	bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE),
+	vecTagItemGeneratorStr(MAX_NUM_STREAMS), vecTagItemGeneratorRBP(MAX_NUM_STREAMS)
 {
 	/* Initialise all the generators for strx and rbpx tags */
 	for (int i=0; i<MAX_NUM_STREAMS; i++)
@@ -163,7 +163,7 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	TransmitPacket(GenMDIPacket());
 }
 
-void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
+void CRSIMDIOutRCIIn::SendAMFrame(CParameter&)
 {
 }
 
@@ -289,7 +289,8 @@ void CRSIMDIOutRCIIn::ResetTags()
 
 void CRSIMDIOutRCIIn::GetNextPacket(CSingleBuffer<_BINARY>& buf)
 {
-	// TODO MDIInBuffer.Get(buf);
+	// TODO 
+	(void)buf;
 }
 
 void CRSIMDIOutRCIIn::SetInAddr(const string& strAddr)
@@ -344,8 +345,8 @@ void CRSIMDIOutRCIIn::TransmitPacket(CVector<_BINARY> vecbidata)
 {
 	vector<_BYTE> packet;
 	vecbidata.ResetBitAccess();
-	int bits = vecbidata.Size();
-	int bytes = bits / SIZEOF__BYTE;
+	size_t bits = vecbidata.Size();
+	size_t bytes = bits / SIZEOF__BYTE;
 	packet.reserve(bytes);
 	for(size_t i=0; i<bytes; i++)
 	{
@@ -361,7 +362,7 @@ void CRSIMDIOutRCIIn::TransmitPacket(CVector<_BINARY> vecbidata)
 * MDI receive                                                                  *
 \******************************************************************************/
 CRSIMDIInRCIOut::CRSIMDIInRCIOut() :
-	bMDIInEnabled(FALSE), bMDIOutEnabled(FALSE), bUseAFCRC(TRUE)
+	bUseAFCRC(TRUE), bMDIOutEnabled(FALSE), bMDIInEnabled(FALSE)
 {
 	/* Init constant tag */
 	TagItemGeneratorProTyRSCI.GenTag();
@@ -409,7 +410,7 @@ void CRSIMDIInRCIOut::TransmitPacket(CVector<_BINARY>& vecbidata)
 {
 	vector<_BYTE> packet;
 	vecbidata.ResetBitAccess();
-	for(size_t i=0; i<vecbidata.Size()/SIZEOF__BYTE; i++)
+	for(size_t i=0; i<size_t(vecbidata.Size()/SIZEOF__BYTE); i++)
 		packet.push_back(vecbidata.Separate(SIZEOF__BYTE));
 #ifdef USE_QT_GUI
 	PacketSocket.SendPacket(packet);
@@ -432,13 +433,13 @@ void CRSIMDIInRCIOut::SendPacket(const vector<_BYTE>& vecbydata)
 }
 #endif
 
-void CRSIMDIInRCIOut::InitInternal(CParameter& ReceiverParam)
+void CRSIMDIInRCIOut::InitInternal(CParameter&)
 {
 	iInputBlockSize = 1; /* anything is enough but not zero */
 	iMaxOutputBlockSize = 2048*SIZEOF__BYTE; /* bigger than an ethernet packet */
 }
 
-void CRSIMDIInRCIOut::ProcessDataInternal(CParameter& ReceiverParam)
+void CRSIMDIInRCIOut::ProcessDataInternal(CParameter&)
 {
 	vector<_BYTE> vecbydata;
 #ifdef USE_QT_GUI
@@ -449,6 +450,6 @@ void CRSIMDIInRCIOut::ProcessDataInternal(CParameter& ReceiverParam)
 	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
 	pvecOutputData->Init(iOutputBlockSize);
 	pvecOutputData->ResetBitAccess();
-	for(size_t i=0; i<iOutputBlockSize/SIZEOF__BYTE; i++)
+	for(size_t i=0; i<size_t(iOutputBlockSize/SIZEOF__BYTE); i++)
 		pvecOutputData->Enqueue(vecbydata[i], SIZEOF__BYTE);
 }

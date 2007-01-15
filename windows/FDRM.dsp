@@ -383,6 +383,18 @@ SOURCE=..\common\mlc\ViterbiDecoder.cpp
 
 # End Source File
 # End Group
+# Begin Group "Source Tables"
+
+# PROP Default_Filter ""
+# Begin Source File
+
+SOURCE=..\common\tables\TableFAC.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\tables\TableCarMap.cpp
+# End Source File
+# End Group
 # Begin Group "Source FAC"
 
 # PROP Default_Filter ""
@@ -417,6 +429,10 @@ SOURCE=..\common\sync\SyncUsingPil.cpp
 # Begin Source File
 
 SOURCE=..\common\sync\TimeSync.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\sync\TimeSyncFilter.cpp
 # End Source File
 # Begin Source File
 
@@ -657,12 +673,19 @@ SOURCE=..\common\resample\Resample.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\resample\ResampleFilter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\SimulationParameters.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\IQInputFilter.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\Source\Sound.cpp
-# ADD CPP /YX
 # End Source File
 # Begin Source File
 

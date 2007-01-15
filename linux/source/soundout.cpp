@@ -171,7 +171,7 @@ void CSoundOut::close_HW( void )
 
 #include <alsa/asoundlib.h>
 
-CSoundOut::CSoundOut() : iCurrentDevice(-1),devices(),handle(NULL),names(),bChangDev(TRUE)
+CSoundOut::CSoundOut() : devices(), handle(NULL),names(),bChangDev(TRUE), iCurrentDevice(-1)
 {
 	PlayThread.pSoundOut = this;
 	getdevices(names, devices, true);
@@ -183,11 +183,8 @@ void CSoundOut::Init_HW()
 	int err, dir;
     snd_pcm_hw_params_t *hwparams;
     snd_pcm_sw_params_t *swparams;
-	unsigned int rrate;
 	snd_pcm_uframes_t period_size = FRAGSIZE * NUM_OUT_CHANNELS/2;
 	snd_pcm_uframes_t buffer_size;
-	int periods = 2;
-	
 	
 	/* playback device */
 	if(devices.size()==0)
@@ -195,11 +192,11 @@ void CSoundOut::Init_HW()
 
 	/* Default ? */
 	if(iCurrentDevice < 0)
-		iCurrentDevice = devices.size()-1;
+		iCurrentDevice = int(devices.size())-1;
 
 	/* out of range ? (could happen from command line parameter or USB device unplugged */
-	if(iCurrentDevice >= devices.size())
-		iCurrentDevice = devices.size()-1;
+	if(iCurrentDevice >= int(devices.size()))
+		iCurrentDevice = int(devices.size())-1;
 
 	string playdevice = devices[iCurrentDevice];
 	

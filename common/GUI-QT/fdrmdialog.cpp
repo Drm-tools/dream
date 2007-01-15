@@ -31,8 +31,7 @@
 
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
-	bool modal, WFlags f) : pDRMRec(pNDRMR),
-	FDRMDialogBase(parent, name, modal, f)
+	bool modal, WFlags f) : FDRMDialogBase(parent, name, modal, f), pDRMRec(pNDRMR)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -363,7 +362,7 @@ void FDRMDialog::OnTimer()
 			}
 		}
 
-		const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
+		//const int iCurSelDataServ = ReceiverParam.GetCurSelDataService();
 
 		/* If selected service is audio and text message is true */
 		if ((ReceiverParam.Service[iCurSelAudioServ].
@@ -381,7 +380,7 @@ void FDRMDialog::OnTimer()
 					.AudioParam.strTextMessage.c_str();
 			QString textMessage = QString().fromUtf8(utf8Message);
 			QString formattedMessage = "";
-			for (int i = 0; i < textMessage.length(); i++)
+			for (size_t i = 0; i < textMessage.length(); i++)
 			{
 				switch (textMessage.at(i).unicode())
 				{
@@ -411,7 +410,7 @@ void FDRMDialog::OnTimer()
 					break;
 
 				default:
-				formattedMessage += textMessage[i];
+				formattedMessage += QString(textMessage[i]);
 				}
 			}
 			formattedMessage = "<center>" + formattedMessage + "</center>";
@@ -512,7 +511,7 @@ void FDRMDialog::OnTimer()
 			if (!strCntryCode.empty())
 			{
 				LabelCountryCode->
-					setText(QString(GetName(strCntryCode).c_str()));
+					setText(QString(GetISOCountryName(strCntryCode).c_str()));
 			}
 			else
 				LabelCountryCode->setText("");
@@ -767,6 +766,9 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 
 		/* Load correct schedule */
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
+		break;
+
+	case RM_NONE:
 		break;
 	}
 }

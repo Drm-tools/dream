@@ -48,7 +48,7 @@ _BOOLEAN CTagItemGeneratorWithProfiles::IsInProfile(char cProfile)
 {
 	string strProfiles = GetProfiles();
 
-	for (int i=0; i<strProfiles.length(); i++)
+	for (size_t i=0; i<strProfiles.length(); i++)
 		if (strProfiles[i] == cProfile)
 			return TRUE;
 
@@ -271,6 +271,9 @@ void CTagItemGeneratorRobMod::GenTag(const ERobMode eCurRobMode)
 
 	case RM_ROBUSTNESS_MODE_D:
 		Enqueue((uint32_t) 3, 8);
+		break;
+
+	default:
 		break;
 	}
 }

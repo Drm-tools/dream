@@ -34,12 +34,12 @@
 /* Implementation *************************************************************/
 void CFreqSyncAcq::ProcessDataInternal(CParameter& ReceiverParam)
 {
-	int			i, j;
-	int			iMaxIndex;
-	CReal		rMaxValue;
+	int			i;
+	int			iMaxIndex=0;
+	CReal		rMaxValue = 0.0;
 	int			iNumDetPeaks;
-	int			iDiffTemp;
-	CReal		rLevDiff;
+	//int			iDiffTemp;
+	//CReal		rLevDiff;
 	_BOOLEAN	bNoPeaksLeft;
 	CRealVector	vecrPSDPilPoin(3);
 

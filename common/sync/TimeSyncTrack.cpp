@@ -39,13 +39,12 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 {
 	int			i, j;
 	int			iIntShiftVal;
-	int			iFirstPathDelay;
+	int			iFirstPathDelay = 0;
 	CReal		rPeakBound;
-	CReal		rPropGain;
 	CReal		rCurEnergy;
 	CReal		rWinEnergy;
 	CReal		rMaxWinEnergy;
-	_BOOLEAN	bDelayFound;
+	_BOOLEAN	bDelayFound = FALSE;
 	_BOOLEAN	bPDSResultFound;
 
 	/* Rotate the averaged PDP to follow the time shifts -------------------- */
@@ -123,7 +122,6 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		rPeakBound = Max(rBoundHigher, rBoundLower);
 
 		/* Get final estimate, Eq (18) */
-		bDelayFound = FALSE; /* Init flag */
 		for (i = 0; i < iNumIntpFreqPil - 1; i++)
 		{
 			/* We are only interested in the first peak */
@@ -149,7 +147,6 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 		   position which maximises this energy is taken as the new timing
 		   position */
 		rMaxWinEnergy = (CReal) 0.0;
-		iFirstPathDelay = 0;
 		for (i = 0; i < iNumIntpFreqPil - 1 - rGuardSizeFFT; i++)
 		{
 			rWinEnergy = (CReal) 0.0;
@@ -176,6 +173,7 @@ void CTimeSyncTrack::Process(CParameter& Parameter,
 	   activated */
 	if ((bDelayFound == TRUE) && (bTiSyncTracking == TRUE))
 	{
+		CReal rPropGain = 0.0; /* quiet compiler */
 		/* Consider the rotation introduced for earlier peaks in path delay.
 		   Since the "iStPoRot" is the position of the beginning of the block
 		   at the end for cutting out, "iNumIntpFreqPil" must be substracted.

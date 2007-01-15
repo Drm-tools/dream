@@ -66,7 +66,7 @@ bool CPft::DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut)
 		iHeaderLen+=2;
 	}
 
-	int iPktSource, iPktDest;
+	int iPktSource=0, iPktDest=0;
 	if(iAddr==1)
 	{
 		iPktSource = (uint16_t(vecIn[iHeaderLen-2]) << 8) + vecIn[iHeaderLen-1];
@@ -96,8 +96,8 @@ bool CPft::DecodePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut)
 		return false;
 
 	vector<_BYTE> frag;
-	for(i=iHeaderLen; i<vecIn.size(); i++)
-		frag.push_back(vecIn[i]);
+	for(size_t j=iHeaderLen; j<vecIn.size(); j++)
+		frag.push_back(vecIn[j]);
 	if(iFEC==1)
 		return DecodePFTPacketWithFEC(frag, vecOut);
 	else
@@ -123,7 +123,7 @@ bool CPft::DecodeSimplePFTPacket(const vector<_BYTE>& vecIn, vector<_BYTE>& vecO
 	return false;
 }
 
-bool CPft::DecodePFTPacketWithFEC(const vector<_BYTE>& vecIn, vector<_BYTE>& vecOut)
+bool CPft::DecodePFTPacketWithFEC(const vector<_BYTE>&, vector<_BYTE>&)
 {
 	cerr << "sorry, PFT/FEC not implemented yet" << endl;
 	return false;

@@ -59,11 +59,11 @@ GeneralSettingsDlg::~GeneralSettingsDlg()
 {
 }
 
-void GeneralSettingsDlg::hideEvent(QHideEvent* pEvent)
+void GeneralSettingsDlg::hideEvent(QHideEvent*)
 {
 }
 
-void GeneralSettingsDlg::showEvent(QShowEvent* pEvent)
+void GeneralSettingsDlg::showEvent(QShowEvent*)
 {
 	/* Clear all fields */
 	EdtLongitudeDegrees->setText(""); 

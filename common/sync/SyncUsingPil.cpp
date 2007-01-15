@@ -302,7 +302,6 @@ void CSyncUsingPil::InitInternal(CParameter& ReceiverParam)
 {
 	int			i;
 	_COMPLEX	cPhaseCorTermDivi;
-	_REAL		rArgumentTemp;
 
 	/* Init base class for modifying the pilots (rotation) */
 	CPilotModiClass::InitRot(ReceiverParam);

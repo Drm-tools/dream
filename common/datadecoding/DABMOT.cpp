@@ -68,7 +68,7 @@ ostream & operator<<(ostream & out, CMOTDirectory & o)
 void
 CMOTDABEnc::SetMOTObject(CMOTObject & NewMOTObject)
 {
-	int i;
+	size_t i;
 	CMOTObjectRaw MOTObjectRaw;
 
 	/* Get some necessary parameters of object */
@@ -753,6 +753,8 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 		/* Segmentation header ---------------------------------------------- */
 		/* Repetition count (not used) */
 		int repetition_count = vecbiNewData.Separate(3);
+
+		(void)repetition_count; /* silence warnings */
 
 		/* Segment size */
 		iSegmentSize = (int) vecbiNewData.Separate(13);
