@@ -116,7 +116,7 @@ void CChainingLogPrinter::SetNextInstance(CLogPrinter *pInstance)
 
 CFileLogPrinter::CFileLogPrinter()
 {
-	mpLogFile = fopen("C:\\DreamLog.txt", "w");
+	mpLogFile = fopen("DreamLog.txt", "w");
 	fprintf(mpLogFile, "Start of logfile\n");
 }
 

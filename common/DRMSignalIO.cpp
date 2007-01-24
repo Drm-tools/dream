@@ -192,7 +192,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	{
 		iFreeSymbolCounter = 0;
 		/* calculate the PSD once per frame for the RSI output */
-		CalculatePSD(Parameter);
+		//CalculatePSD(Parameter); TODO This is broken
 	}
 
 	if (bUseSoundcard == TRUE)
