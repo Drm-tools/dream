@@ -3090,6 +3090,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\selectioninterface.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\soundinterface.h"
+				>
+			</File>
+			<File
 				RelativePath="Source\Sound.h"
 				>
 			</File>

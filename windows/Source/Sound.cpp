@@ -26,7 +26,7 @@
  *
 \******************************************************************************/
 
-#include "SoundWin.h"
+#include "Sound.h"
 #include <iostream>
 
 /* Implementation *************************************************************/
@@ -34,7 +34,7 @@
 * Wave in                                                                      *
 \******************************************************************************/
 
-CSoundIn::CSoundIn():CSoundInterface(),m_WaveIn(NULL)
+CSoundIn::CSoundIn():CSoundInInterface(),m_WaveIn(NULL)
 {
 	int i;
 
@@ -273,6 +273,16 @@ void CSoundIn::SetDev(int iNewDev)
 	}
 }
 
+void CSoundIn::Enumerate(vector<string>& names)
+{
+	names = vecstrDevices; 
+}
+
+int	CSoundIn::GetDev()
+{
+	return iCurDev;
+}
+
 void CSoundIn::Close()
 {
 	int			i;
@@ -319,7 +329,7 @@ void CSoundIn::Close()
 /******************************************************************************\
 * Wave out                                                                     *
 \******************************************************************************/
-CSoundOut::CSoundOut():CSoundInterface(),m_WaveOut(NULL)
+CSoundOut::CSoundOut():CSoundOutInterface(),m_WaveOut(NULL)
 {
 	int i;
 
@@ -573,6 +583,16 @@ void CSoundOut::OpenDevice()
 #endif
 	if (result != MMSYSERR_NOERROR)
 		throw CGenErr("Sound Interface Start, waveOutOpen() failed.");
+}
+
+void CSoundOut::Enumerate(vector<string>& names)
+{
+	names = vecstrDevices; 
+}
+
+int	CSoundOut::GetDev()
+{
+	return iCurDev;
 }
 
 void CSoundOut::SetDev(int iNewDev)

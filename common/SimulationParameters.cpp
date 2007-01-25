@@ -28,12 +28,13 @@
 
 #include "DrmSimulation.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#include <windows.h>
+#else
 # ifdef HAVE_UNISTD_H
 #  include <unistd.h>
 # endif
 #endif
-
 
 /* Implementation *************************************************************/
 void CDRMSimulation::SimScript()

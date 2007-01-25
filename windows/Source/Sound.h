@@ -38,6 +38,10 @@
 #define NUM_SOUND_BUFFERS_IN	24		/* Number of sound card buffers */
 
 #define NUM_SOUND_BUFFERS_OUT	3		/* Number of sound card buffers */
+#define	NUM_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
+										   use one channel for recording) */
+#define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
+#define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
 
 /* Classes ********************************************************************/
 class CSoundIn : public CSoundInInterface
@@ -46,10 +50,13 @@ public:
 	CSoundIn();
 	virtual ~CSoundIn();
 
-	void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	_BOOLEAN	Read(CVector<short>& psData);
-	void		SetDev(int iNewDev);
-	void		Close();
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+	virtual _BOOLEAN	Read(CVector<short>& psData);
+	virtual void		Enumerate(vector<string>&);
+	virtual int			GetDev();
+	virtual void		SetDev(int iNewDev);
+	virtual void		Close();
+
 protected:
 	void		OpenDevice();
 	void		PrepareBuffer(int iBufNum);
@@ -78,10 +85,12 @@ public:
 	CSoundOut();
 	virtual ~CSoundOut();
 
-	void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
-	_BOOLEAN	Write(CVector<short>& psData);
-	void		SetDev(int iNewDev);
-	void		Close();
+	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
+	virtual _BOOLEAN	Write(CVector<short>& psData);
+	virtual void		Enumerate(vector<string>&);
+	virtual int			GetDev();
+	virtual void		SetDev(int iNewDev);
+	virtual void		Close();
 
 protected:
 	void		OpenDevice();
@@ -104,8 +113,5 @@ protected:
 	short*			psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
 	WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
 };
-
-
-
 
 #endif // !defined(AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_)
