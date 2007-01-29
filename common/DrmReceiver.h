@@ -214,7 +214,9 @@ public:
 	CAudioSourceDecoder*	GetAudSorceDec() {return &AudioSourceDecoder;}
 	CRSIMDIInRCIOut*		GetRSIIn() {return &upstreamRSCI;}
 	CRSIMDIOutRCIIn*		GetRSIOut() {return &downstreamRSCI;}
+#ifdef HAVE_LIBHAMLIB
 	CHamlib*				GetHamlib() {return &Hamlib;}
+#endif
 	_BOOLEAN				SignalStrengthAvailable() { return TRUE; }
 	_BOOLEAN				GetSignalStrength(_REAL& rSigStr);
 
