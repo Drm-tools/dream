@@ -37,6 +37,7 @@
 #include "util/LogPrint.h"
 #ifdef _WIN32
 # include "../windows/Source/Sound.h"
+# include "../windows/Source/audiofilein.h"
 #else
 # include "../linux/source/soundin.h"
 # include "../linux/source/soundout.h"
