@@ -29,6 +29,7 @@
 #ifndef _AUDIOFILEIN
 #define _AUDIOFILEIN
 
+#include "../../common/GlobalDefinitions.h"
 #include "../../common/soundinterface.h"
 
 /* Classes ********************************************************************/
