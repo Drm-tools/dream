@@ -154,6 +154,8 @@ typedef signed __int32 int32_t;
 typedef unsigned __int32 uint32_t;
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
+/* keep faac.h happy */
+#define HAVE_INT32_T
 #else
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
