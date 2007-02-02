@@ -37,7 +37,6 @@
 #include "util/Modul.h"
 #include "util/Utilities.h"
 
-
 /* Definitions ****************************************************************/
 /* Number of FFT blocks used for averaging. See next definition
    ("NUM_SMPLS_4_INPUT_SPECTRUM") for how to set the parameters */

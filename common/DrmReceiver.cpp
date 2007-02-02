@@ -37,12 +37,11 @@
 #include "util/LogPrint.h"
 #ifdef _WIN32
 # include "../windows/Source/Sound.h"
-# include "../windows/Source/audiofilein.h"
 #else
 # include "../linux/source/soundin.h"
 # include "../linux/source/soundout.h"
-# include "../linux/source/audiofilein.h"
 #endif
+# include "audiofilein.h"
 
 const int CDRMReceiver::MAX_UNLOCKED_COUNT=2;
 
@@ -116,7 +115,8 @@ CDRMReceiver::~CDRMReceiver()
 {
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
 	RigPoll.stop();
-	RigPoll.wait();
+	if(RigPoll.wait(1000)==FALSE)
+		cout << "error terminating rig polling thread" << endl;;
 #endif
 	delete pSoundInInterface;
 	delete pSoundOutInterface;
@@ -630,7 +630,7 @@ void CDRMReceiver::Start()
 
 	} while (ReceiverParam.bRunThread);
 
-	if( (upstreamRSCI.GetInEnabled() == FALSE) && (bReadFromFile == FALSE) )
+	if(upstreamRSCI.GetInEnabled() == FALSE)
 		pSoundInInterface->Close();
 	pSoundOutInterface->Close();
 }
@@ -745,15 +745,22 @@ void CDRMReceiver::SetInTrackingModeDelayed()
 void CDRMReceiver::SetReadDRMFromFile(const string strNFN)
 {
 	delete pSoundInInterface;
-	CAudioFileIn* p = new CAudioFileIn;
-	p->SetFileName(strNFN);
-	pSoundInInterface = p;
+	CAudioFileIn* pf = new CAudioFileIn;
+	pf->SetFileName(strNFN);
+	pSoundInInterface = pf;
+	ReceiveData.SetSoundInterface(pSoundInInterface); // needed ?
+	string ext;
+	size_t p = strNFN.rfind('.');
+	if(p != string::npos)
+		ext = strNFN.substr(p+1);
+	_BOOLEAN bIsIQ = FALSE;
+	if(ext.substr(0,2) == "iq") bIsIQ = TRUE;
+	if(ext.substr(0,2) == "IQ") bIsIQ = TRUE;
+	if(bIsIQ)
+		ReceiveData.SetInChanSel(CReceiveData::CS_IQ_POS_ZERO);
+	else
+		ReceiveData.SetInChanSel(CReceiveData::CS_MIX_CHAN);
 	bReadFromFile = TRUE;
-	/* If DRM data is read from file instead of using the sound card, the sound
-	   output must be a blocking function otherwise we cannot achieve a
-	   synchronized stream */
-	/* remove this once CAudioFileIn pacing is working */
-	//WriteData.SetSoundBlocking(TRUE);
 }
 
 void CDRMReceiver::StartParameters(CParameter& Param)

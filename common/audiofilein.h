@@ -29,8 +29,8 @@
 #ifndef _AUDIOFILEIN
 #define _AUDIOFILEIN
 
-#include "../../common/soundinterface.h"
-#include "../../common/util/Pacer.h"
+#include "soundinterface.h"
+#include "util/Pacer.h"
 
 /* Classes ********************************************************************/
 class CAudioFileIn : public CSoundInInterface
@@ -52,7 +52,7 @@ protected:
 	FILE*				pFileReceiver;
 	string				strInFileName;
 	enum {
-		fmt_iq, fmt_if, fmt_txt, fmt_raw_mono, fmt_raw_stereo, fmt_other
+		fmt_txt, fmt_raw_mono, fmt_raw_stereo, fmt_other
 		}				eFmt;
 	int					iFileSampleRate;
 	int					iFileChannels;

@@ -697,7 +697,11 @@ SOURCE=.\Source\Sound.cpp
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\audiofilein.cpp
+SOURCE=.\Source\Pacer.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\audiofilein.cpp
 # End Source File
 # Begin Source File
 
@@ -1161,6 +1165,10 @@ SOURCE=..\common\selectioninterface.h
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\util\Pacer.h
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\soundinterface.h
 # End Source File
 # Begin Source File
@@ -1169,7 +1177,7 @@ SOURCE=.\Source\Sound.h
 # End Source File
 # Begin Source File
 
-SOURCE=.\Source\audiofilein.h
+SOURCE=..\common\audiofilein.h
 # End Source File
 # Begin Source File
 

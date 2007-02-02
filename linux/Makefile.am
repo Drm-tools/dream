@@ -78,10 +78,12 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableFAC.cpp \
 	../common/tables/TableCarMap.cpp \
 	../common/GUI-QT/main.cpp \
+	../common/audiofilein.cpp \
 	source/soundcommon.cpp \
 	source/soundin.cpp \
 	source/soundout.cpp \
-	source/audiofilein.cpp \
+	source/alsa.cpp \
+	source/Pacer.cpp \
 	../common/Version.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
@@ -114,6 +116,7 @@ drmwithoutqt_SOURCES = \
 	../common/util/Utilities.h \
 	../common/util/LogPrint.h \
 	../common/util/Reassemble.h \
+	../common/util/Pacer.h \
 	../common/SDC/SDC.h \
 	../common/IQInputFilter.h \
 	../common/chanest/ChanEstTime.h \
@@ -167,7 +170,8 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableQAMMapping.h \
 	../common/selectioninterface.h \
 	../common/soundinterface.h \
-	source/audiofilein.h \
+	../common/audiofilein.h \
+	source/alsa.h \
 	source/sound.h \
 	source/soundcommon.h \
 	source/soundin.h \
@@ -441,4 +445,4 @@ endif
 
 #drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -ansi -Wshadow -Werror -Weffc++ -Wsign-promo -Wcomment 
 drm_CXXFLAGS=$(QWTINCL) -I../common/GUI-QT -Wall -fno-for-scope -Wsign-promo -Wcomment
-drm_LDFLAGS=-lrt
+drm_LDFLAGS=-lrt -lasound

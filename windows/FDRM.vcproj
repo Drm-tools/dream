@@ -599,7 +599,29 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="Source\audiofilein.cpp"
+				RelativePath="Source\Pacer.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						AdditionalIncludeDirectories=""
+						PreprocessorDefinitions=""
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath="..\common\audiofilein.cpp"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
@@ -3120,11 +3142,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\util\Pacer.h"
+				>
+			</File>
+			<File
 				RelativePath="Source\Sound.h"
 				>
 			</File>
 			<File
-				RelativePath="Source\audiofilein.h"
+				RelativePath="..\common\audiofilein.h"
 				>
 			</File>
 			<File

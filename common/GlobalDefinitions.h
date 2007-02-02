@@ -53,6 +53,10 @@ using namespace std; /* Because of the library: "complex" */
 # define USE_QT_GUI
 //# undef USE_QT_GUI
 
+/* Define whether using libsndfile for audio file I/O */
+//# define HAVE_LIBSNDFILE
+# undef HAVE_LIBSNDFILE
+
 /* Activate or disable faad2 library (AAC decoding) */
 # define USE_FAAD2_LIBRARY
 //# undef USE_FAAD2_LIBRARY
@@ -144,14 +148,21 @@ typedef unsigned char/*bool*/			_BINARY;
 #elif defined(_WIN32)
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
-typedef unsigned __int32 uint32_t;
 typedef unsigned __int16 uint16_t;
+typedef signed __int16 int16_t;
+typedef signed __int32 int32_t;
+typedef unsigned __int32 uint32_t;
+typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #else
 typedef signed char int8_t;
 typedef unsigned char uint8_t;
-typedef unsigned long uint32_t;
+typedef signed int int16_t;
 typedef unsigned int uint16_t;
+typedef signed long int32_t;
+typedef unsigned long uint32_t;
+typedef signed long long int64_t;
+typedef unsigned long long uint64_t;
 #endif
 
 /* Define type-specific information */

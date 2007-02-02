@@ -62,24 +62,33 @@ CAudioFileIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	if (pFileReceiver == NULL)
 		throw CGenErr("The file " + strInFileName + " must exist.");
 
-	interval = uint64_t(1e7 * double(iNewBufferSize) / double(SOUNDCRD_SAMPLE_RATE)/ 2.0);
-	FILETIME ft;
-	GetSystemTimeAsFileTime(&ft);
-	timekeeper = *(uint64_t*)&ft;
-	timekeeper += interval;
+	if(bNewBlocking)
+	{
+		double latency = double(iNewBufferSize/2) / double(SOUNDCRD_SAMPLE_RATE);
+		interval = uint64_t(1e7 * latency);
+		FILETIME ft;
+		GetSystemTimeAsFileTime(&ft);
+		timekeeper = *(uint64_t*)&ft;
+		timekeeper += interval;
+	}
+	else
+		interval = 0;
 }
 
 _BOOLEAN
 CAudioFileIn::Read(CVector<short>& psData)
 {
-	FILETIME ft;
-	GetSystemTimeAsFileTime(&ft);
-	uint64_t now = *(uint64_t*)&ft;
-	double delay_ms = (double(timekeeper) - double(now))/10000.0;
-	timekeeper += interval;
-	if(delay_ms > 10.0)
+	if(interval > 0)
 	{
-		Sleep(uint32_t(delay_ms)-10);
+		FILETIME ft;
+		GetSystemTimeAsFileTime(&ft);
+		uint64_t now = *(uint64_t*)&ft;
+		double delay_ms = (double(timekeeper) - double(now))/10000.0;
+		timekeeper += interval;
+		if(delay_ms > 10.0)
+		{
+			Sleep(uint32_t(delay_ms)-10);
+		}
 	}
 
 	if (pFileReceiver == NULL)

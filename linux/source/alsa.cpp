@@ -33,6 +33,8 @@
 
 CAlsaSoundIn::CAlsaSoundIn():handle(NULL),names(),devices(),dev(-1)
 {
+	vector<string> choices;
+	Enumerate(choices);
 }
 
 CAlsaSoundIn::~CAlsaSoundIn()
@@ -108,7 +110,17 @@ CAlsaSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		throw CGenErr("Capture open error: device not selected");
 
 	if(dev>=int(devices.size()))
-		throw CGenErr("Capture open error: device out of range");
+	{
+		vector<string> choices;
+		Enumerate(choices);
+	}
+
+	if(dev>=int(devices.size()))
+	{
+		ostringstream s;
+		s << "Capture open error: device " << dev << " out of range";
+		throw CGenErr(s.str());
+	}
 
 	if ((err = snd_pcm_open(&handle, devices[dev].c_str(), SND_PCM_STREAM_CAPTURE, 0)) < 0)
 	{
@@ -167,6 +179,8 @@ CAlsaSoundIn::Close()
 
 CAlsaSoundOut::CAlsaSoundOut():handle(NULL),names(),devices(),dev(-1)
 {
+	vector<string> choices;
+	Enumerate(choices);
 }
 
 CAlsaSoundOut::~CAlsaSoundOut()
@@ -216,6 +230,7 @@ CAlsaSoundOut::Enumerate(vector<string>& choices)
 	}
 	names.push_back("Default Playback Device");
 	devices.push_back("dmix");
+	choices = names;
 }
 
 void
@@ -243,7 +258,18 @@ CAlsaSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 		throw CGenErr("Playback open error: device not selected");
 
 	if(dev>=int(devices.size()))
-		throw CGenErr("Playback open error: device out of range");
+	{
+		vector<string> choices;
+		Enumerate(choices);
+	}
+
+	if(dev>=int(devices.size()))
+	if(dev>=int(devices.size()))
+	{
+		ostringstream s;
+		s << "Playback open error: device " << dev << " out of range";
+		throw CGenErr(s.str());
+	}
 
 	if ((err = snd_pcm_open(&handle, devices[dev].c_str(), SND_PCM_STREAM_PLAYBACK, 0)) < 0)
 	{

@@ -1300,6 +1300,8 @@ string CSettings::UsageArguments(char** argv)
 		"  --rsiin <s>                 RSCI/MDI status input address format [[IP#:]IP#:]port\n"
 		"  --rciout <s>                RSCI Control output format IP#:port\n"
 		"  --rciin <s>                 RSCI Control input address number format [IP#:]port\n"
+		"  --rsirecordprofile <s>      RSCI recording profile: A|B|C|D|Q|M\n"
+		"  --recordiq <n>              enable/disable recording an I/Q file\n"
 
 		"  -I <n>, --snddevin <n>      set sound in device\n"
 		"  -O <n>, --snddevout <n>     set sound out device\n"
