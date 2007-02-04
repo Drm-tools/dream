@@ -909,9 +909,5 @@ void CWriteIQFile::ProcessDataInternal(CParameter& ReceiverParam)
 
 		fwrite(bytes, 4, sizeof(_BYTE), pFile);
 	}
-
-
-
-
 }
 

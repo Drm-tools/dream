@@ -474,6 +474,7 @@ void CSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	}
 
 	if ( RecThread.running() == FALSE ) {
+		RecThread.SoundBuf.lock();
 		RecThread.SoundBuf.Init( SOUNDBUFLEN );
 		RecThread.SoundBuf.unlock();
 		RecThread.start();

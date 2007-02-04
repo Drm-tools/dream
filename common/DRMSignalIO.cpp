@@ -199,7 +199,8 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
 	{
 		iFreeSymbolCounter = 0;
 		/* calculate the PSD once per frame for the RSI output */
-		PutPSD(Parameter);
+		if(Parameter.bMeasurePSD)
+			PutPSD(Parameter);
 	}
 
 	if(pSound == NULL)

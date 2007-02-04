@@ -827,11 +827,14 @@ void CDRMReceiver::InitsForAllModules()
 		ReceiverParam.bMeasureDelay = TRUE;
 		ReceiverParam.bMeasureDoppler = TRUE;
 		ReceiverParam.bMeasureInterference = TRUE;
+		ReceiverParam.bMeasurePSD = TRUE;
 	}
+	else
 	{
 		ReceiverParam.bMeasureDelay = FALSE;
 		ReceiverParam.bMeasureDoppler = FALSE;
 		ReceiverParam.bMeasureInterference = FALSE;
+		ReceiverParam.bMeasurePSD = FALSE;
 	}
 
 	/* Set init flags */

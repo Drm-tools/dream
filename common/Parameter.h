@@ -1332,6 +1332,7 @@ class CParameter:public CCellMappingTable
 	_REAL rSigStr;
 	ERecMode GetReceiverMode();
 	CVector <_BINARY> vecbiAudioFrameStatus;
+	_BOOLEAN bMeasurePSD;
 
 	/* vector to hold the PSD valued for the rpsd tag. */
 	CVector <_REAL> vecrPSD;

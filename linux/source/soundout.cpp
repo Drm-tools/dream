@@ -449,6 +449,7 @@ void CSoundOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 	}
 
 	if ( PlayThread.running() == FALSE ) {
+		PlayThread.SoundBuf.lock();
 		PlayThread.SoundBuf.Init( SOUNDBUFLEN );
 		PlayThread.SoundBuf.unlock();
 		PlayThread.start();
