@@ -1028,6 +1028,9 @@ void CAMSSDlg::OnTimer()
 		ListBoxAMSSAFSList->setEnabled(FALSE);
 	}
 
+	TextAMSSServiceID->setText("");
+	TextAMSSAMCarrierMode->setText("");
+
 	if (pDRMRec->GetAMSSDecode()->GetLockStatus() == CAMSSDecode::NO_SYNC)
 	{
 		TextAMSSInfo->setText(tr("No AMSS detected"));
