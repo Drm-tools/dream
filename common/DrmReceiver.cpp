@@ -75,7 +75,7 @@ CDRMReceiver::CDRMReceiver() :
 		rAvSNRHist((_REAL) 0.0),
 		iCurrentCDAud(0),
 #ifdef USE_QT_GUI
-		RigPoll(this),
+		RigPoll(),
 #endif
 		bEnableSMeter(TRUE),
 		iBwAM(10000),
@@ -107,6 +107,7 @@ CDRMReceiver::CDRMReceiver() :
 {
 	downstreamRSCI.SetReceiver(this);
 #if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
+	RigPoll.setReceiver(this);
 	RigPoll.start();
 #endif
 }

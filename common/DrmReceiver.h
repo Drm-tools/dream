@@ -380,9 +380,10 @@ protected:
 	class CRigPoll : public QThread
 	{
 	public:
-		CRigPoll(CDRMReceiver* pRx):pDrmRec(pRx),bQuit(FALSE){ }
+		CRigPoll():pDrmRec(NULL),bQuit(FALSE){ }
 		virtual void	run();
 		virtual void	stop(){bQuit=TRUE;}
+		void setReceiver(CDRMReceiver* pRx){pDrmRec=pRx;}
 	protected:
 			CDRMReceiver* pDrmRec;
 			_BOOLEAN	bQuit;
