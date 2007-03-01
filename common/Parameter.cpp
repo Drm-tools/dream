@@ -661,7 +661,7 @@ void CParameter::SetNominalSNRdB(const _REAL rSNRdBNominal)
 		GetSysToNomBWCorrFact());
 }
 
-_REAL CParameter::GetSysToNomBWCorrFact()
+_REAL CParameter::GetNominalBandwidth()
 {
 	_REAL rNomBW;
 
@@ -696,6 +696,13 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 		rNomBW = (_REAL) 10000.0; /* Hz */
 		break;
 	}
+
+	return rNomBW;
+}
+
+_REAL CParameter::GetSysToNomBWCorrFact()
+{
+	_REAL rNomBW = GetNominalBandwidth();
 
 	/* Calculate system bandwidth (N / T_u) */
 	const _REAL rSysBW = (_REAL) iNumCarrier /
@@ -1011,7 +1018,7 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 				_REAL rDoppler = (_REAL) 0.0;
 				_REAL rDelay = (_REAL) 0.0;
 				if (DRMReceiver.GetReceiverState() ==
-					CDRMReceiver::AS_WITH_SIGNAL)
+					AS_WITH_SIGNAL)
 				{
 					rDelay = DRMReceiver.GetParameters()->rMinDelay;
                     rDoppler = DRMReceiver.GetParameters()->rSigmaEstimate;
@@ -1166,6 +1173,12 @@ ERecMode CParameter::GetReceiverMode()
 {
  return DRMReceiver.GetReceiverMode();		 
 }
+
+EAcqStat CParameter::GetReceiverState()
+{
+	return DRMReceiver.GetReceiverState();
+}
+
 
 /* push from RSCI RX_STATUS OR (TODO) Hamlib */
 void CParameter::SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr)

@@ -82,6 +82,9 @@
 # define MAX_ID_HAMLIB				32768
 #endif
 
+/* max magnitude of front-end cal factor */
+#define MAX_CAL_FACTOR				200
+
 /* change this if you expect to have huge lines in your INI files. Note that
    this is the max size of a single line, NOT the max number of lines */
 #define MAX_INI_LINE				500

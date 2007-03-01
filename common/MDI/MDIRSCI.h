@@ -162,6 +162,7 @@ protected:
 	CTagItemGeneratorRDEL TagItemGeneratorRDEL; /* RDEL tag */
 	CTagItemGeneratorRAFS TagItemGeneratorRAFS; /* RAFS tag */
 	CTagItemGeneratorRINT TagItemGeneratorRINT; /* RINT tag */
+	CTagItemGeneratorRNIP TagItemGeneratorRNIP; /* RNIP tag */
 	CTagItemGeneratorSignalStrength TagItemGeneratorSignalStrength; /* rdbv tag */
 	CTagItemGeneratorReceiverStatus TagItemGeneratorReceiverStatus; /* rsta tag */
 

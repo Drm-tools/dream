@@ -407,7 +407,7 @@ protected:
 template<class TData> class CMatrix
 {
 public:
-	CMatrix() : ppData(NULL), iRow(0) {}
+	CMatrix() : ppData(NULL), iRow(0), iCol(0) {}
 	CMatrix(const int iNewR, const int iNewC) {Init(iNewR, iNewC);}
 	CMatrix(const int iNewR, const int iNewC, const TData tInVa) 
 		{Init(iNewR, iNewC, tInVa);}
@@ -438,10 +438,13 @@ public:
 		}
 		return ppData[iPos];}
 #endif
+	inline int NumRows(void) const { return iRow;}
+	inline int NumColumns(void) const { return iCol;}
 
 protected:
 	CVector<TData>*	ppData;
 	int				iRow;
+	int				iCol;
 };
 
 
@@ -450,6 +453,7 @@ template<class TData> void CMatrix<TData>::Init(const int iNewRow,
 												const int iNewColumn)
 {
 	iRow = iNewRow;
+	iCol = iNewColumn;
 
 	if (iRow > 0)
 	{

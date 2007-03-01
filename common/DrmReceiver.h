@@ -106,11 +106,6 @@ class CDRMReceiver
 #endif
 {
 public:
-	/* Acquisition state of receiver */
-	enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
-
-	/* Receiver state */
-	enum ERecState {RS_TRACKING, RS_ACQUISITION};
 
 	CDRMReceiver();
 	virtual ~CDRMReceiver();

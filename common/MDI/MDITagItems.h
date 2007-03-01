@@ -212,10 +212,19 @@ protected:
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
 };
 
-class CTagItemGeneratorRINT : public CTagItemGeneratorWithProfiles /* RINT tag */
+class CTagItemGeneratorRINT : public CTagItemGeneratorWithProfiles /* rnic tag */
 {
 public:
 	void GenTag(const _BOOLEAN bIsValid, const CReal rIntFreq, const CReal rINR, const CReal rICR);
+protected:
+	virtual string GetTagName(void);
+	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
+};
+
+class CTagItemGeneratorRNIP : public CTagItemGeneratorWithProfiles /* rnic tag */
+{
+public:
+	void GenTag(const _BOOLEAN bIsValid, const CReal rIntFreq, const CReal rISR);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag

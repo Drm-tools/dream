@@ -158,9 +158,15 @@ typedef unsigned char/*bool*/			_BINARY;
 #  define HAVE_INT32_T 1
    typedef signed __int32 int32_t;
 # endif
-typedef unsigned char uint8_t;
-typedef unsigned __int16 uint16_t;
-typedef unsigned __int32 uint32_t;
+   typedef unsigned char uint8_t;
+# ifndef HAVE_U_INT16_T
+#  define HAVE_U_INT16_T 1
+   typedef unsigned __int16 uint16_t;
+# endif
+# ifndef HAVE_U_INT32_T
+#  define HAVE_U_INT32_T 1
+   typedef unsigned __int32 uint32_t;
+# endif
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
 #else

@@ -106,7 +106,7 @@ CDRMReceiver::CDRMReceiver() :
 #endif
 {
 	downstreamRSCI.SetReceiver(this);
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
+#if defined(USE_QT_GUI)
 	RigPoll.setReceiver(this);
 	RigPoll.start();
 #endif
@@ -114,7 +114,7 @@ CDRMReceiver::CDRMReceiver() :
 
 CDRMReceiver::~CDRMReceiver()
 {
-#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
+#if defined(USE_QT_GUI)
 	RigPoll.stop();
 	if(RigPoll.wait(1000)==FALSE)
 		cout << "error terminating rig polling thread" << endl;;
@@ -586,10 +586,11 @@ void CDRMReceiver::InitReceiverMode()
 		ReceiverParam.ReceiveStatus.SetSDCStatus(NOT_PRESENT);
 		ReceiverParam.ReceiveStatus.SetAudioStatus(NOT_PRESENT);
 		ReceiverParam.ReceiveStatus.SetMOTStatus(NOT_PRESENT);
-
 	}
 	else
+	{
 		UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_DRM);
+	}
 
 	/* Reset new mode flag */
 	eNewReceiverMode = RM_NONE;
@@ -1258,7 +1259,7 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 #ifdef HAVE_LIBHAMLIB
 		return Hamlib.SetFrequency(iNewFreqkHz);
 #else
-		return FALSE;
+		return TRUE;
 #endif
 	}
 }
@@ -1278,15 +1279,19 @@ CDRMReceiver::CRigPoll::run()
 {
 	while(bQuit==FALSE)
 	{
-#ifdef HAVE_LIBHAMLIB
 		if (pDrmRec->GetRSIIn()->GetInEnabled() == FALSE)
 		{
+#ifdef HAVE_LIBHAMLIB
 			_BOOLEAN bValid;
 			_REAL r;
 			bValid = pDrmRec->GetHamlib()->GetSMeter(r)==CHamlib::SS_VALID;
+			// Apply any correction
+			if (bValid)
+				r += pDrmRec->GetParameters()->rSigStrengthCorrection;
+
 			pDrmRec->GetParameters()->SetSignalStrength(bValid, r);
-		}
 #endif
+		}
 		msleep(400);
 	}
 }

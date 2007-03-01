@@ -450,7 +450,7 @@ CHamlib::CHamlib():pRig(NULL), bSMeterIsSupported(FALSE),
 #ifdef RIG_MODEL_G313
 	/* Winradio G313 */
 	vecSpecDRMRigs.Add(CSpecDRMRig(RIG_MODEL_G313,
-								   "l_ATT=0,l_AGC=5", 0, "l_ATT=0,l_AGC=5"));
+								   "l_ATT=0,l_AGC=3", 0, "l_ATT=0,l_AGC=3"));
 #endif
 
 #ifdef RIG_MODEL_AR7030

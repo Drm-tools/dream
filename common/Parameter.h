@@ -56,15 +56,26 @@ enum ETypeRxStatus
 enum ERecMode
 { RM_DRM, RM_AM, RM_NONE };
 
+	/* Acquisition state of receiver */
+enum EAcqStat {AS_NO_SIGNAL, AS_WITH_SIGNAL};
+
+	/* Receiver state */
+enum ERecState {RS_TRACKING, RS_ACQUISITION};
+
 /* Classes ********************************************************************/
 class CParameter:public CCellMappingTable
 {
   public:
 	CParameter():sReceiverID("                "), sSerialNumber("000000"),
-		Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
-		bRunThread(FALSE), bUsingMultimedia(TRUE),
+		sDataFilesDirectory(""),
+		Stream(MAX_NUM_STREAMS),
+		iChanEstDelay(0),
+		bRunThread(FALSE),
+		bUsingMultimedia(TRUE),
 		iCurSelAudioService(0), iCurSelDataService(0),
-		vecbiAudioFrameStatus(), vecrPSD(0)
+		rSigStrengthCorrection(_REAL(0.0)),
+		vecbiAudioFrameStatus(),
+		vecrPSD(0)
 	{
 		GenerateRandomSerialNumber();
 	}
@@ -765,6 +776,11 @@ class CParameter:public CCellMappingTable
 	string sReceiverID;
 	string sSerialNumber;
 
+
+	/* Directory for data files */
+	string sDataFilesDirectory;
+
+
 	/* Parameters controlled by SDC ----------------------------------------- */
 	void SetAudioParam(const int iShortID, const CAudioParam NewAudParam);
 	CAudioParam GetAudioParam(const int iShortID)
@@ -1056,6 +1072,7 @@ class CParameter:public CCellMappingTable
 	} RawSimDa;
 
 	/* General -------------------------------------------------------------- */
+	_REAL GetNominalBandwidth();
 	_REAL GetSysToNomBWCorrFact();
 	_BOOLEAN bRunThread;
 	_BOOLEAN bUsingMultimedia;
@@ -1324,14 +1341,54 @@ class CParameter:public CCellMappingTable
 	CRealVector vecrRdelIntervals;
 	_BOOLEAN bMeasureDoppler;
 	_REAL rRdop;
-	/* interference */
+	/* interference (constellation-based measurement rnic)*/
 	_BOOLEAN bMeasureInterference;
 	_REAL rIntFreq, rINR, rICR;
+
+	/* peak of PSD - for PSD-based interference measurement rnip */
+	_REAL rMaxPSDwrtSig;
+	_REAL rMaxPSDFreq;
+	
 	void SetSignalStrength(_BOOLEAN bValid, _REAL rNewSigStr);
 	_BOOLEAN GetSignalStrength(_REAL& rSigStr);
 	_BOOLEAN bValidSignalStrength;
-	_REAL rSigStr;
+	_REAL rSigStr;  
+
+	_REAL rSigStrengthCorrection;
+
+	class CFrontEndParameters
+	{
+	public:
+		enum ESMeterCorrectionType {S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY, S_METER_CORRECTION_TYPE_AGC_ONLY, S_METER_CORRECTION_TYPE_AGC_RSSI};
+
+		// Constructor
+		CFrontEndParameters(ESMeterCorrectionType eType=S_METER_CORRECTION_TYPE_CAL_FACTOR_ONLY, 
+			_REAL rMeterBW = _REAL(10000.0), 
+			_REAL rDefBW = _REAL(10000.0), 
+			_BOOLEAN bAutoBW = true, 
+			_REAL rFactorAM = _REAL(0.0), 
+			_REAL rFactorDRM = _REAL(0.0),
+			_REAL rIFCentFreq = _REAL(12000.0))
+			:
+			eSMeterCorrectionType(eType), rSMeterBandwidth(rMeterBW), rDefaultMeasurementBandwidth(rDefBW),
+				bAutoMeasurementBandwidth(bAutoBW), rCalFactorAM(rFactorAM), rCalFactorDRM(rFactorDRM),
+				rIFCentreFreq(rIFCentFreq)
+			{}
+
+		ESMeterCorrectionType eSMeterCorrectionType;
+		_REAL rSMeterBandwidth; // The bandwidth the S-meter uses to do the measurement
+
+		_REAL rDefaultMeasurementBandwidth; // Bandwidth to do measurement if not synchronised
+		_BOOLEAN bAutoMeasurementBandwidth; // TRUE: use the current FAC bandwidth if locked, FALSE: use default bandwidth always
+		_REAL rCalFactorAM;
+		_REAL rCalFactorDRM;
+		_REAL rIFCentreFreq;
+		
+	} FrontEndParameters;
+
+
 	ERecMode GetReceiverMode();
+	EAcqStat GetReceiverState();
 	CVector <_BINARY> vecbiAudioFrameStatus;
 	_BOOLEAN bMeasurePSD;
 

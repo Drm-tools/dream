@@ -420,6 +420,29 @@ void CSettings::ReadIniFile()
 		pDRMRec->GetHamlib()->SetEnableModRigSettings(bValue);
 #endif
 
+	/* Front-end - combine into Hamlib? */
+	if (GetNumericIniSet(ini, "FrontEnd", "smetercorrectiontype", 
+			0, CParameter::CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_RSSI, iValue) == TRUE)
+		pDRMRec->GetParameters()->FrontEndParameters.eSMeterCorrectionType = CParameter::CFrontEndParameters::ESMeterCorrectionType(iValue);
+
+	if (GetNumericIniSet(ini, "FrontEnd", "smeterbandwidth", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
+		pDRMRec->GetParameters()->FrontEndParameters.rSMeterBandwidth = _REAL(iValue);
+
+	if (GetNumericIniSet(ini, "FrontEnd", "defaultmeasurementbandwidth", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
+		pDRMRec->GetParameters()->FrontEndParameters.rDefaultMeasurementBandwidth = _REAL(iValue);
+
+	if (GetFlagIniSet(ini, "FrontEnd", "automeasurementbandwidth", bValue) == TRUE)
+		pDRMRec->GetParameters()->FrontEndParameters.bAutoMeasurementBandwidth = bValue;
+
+	if (GetNumericIniSet(ini, "FrontEnd", "calfactordrm", -MAX_CAL_FACTOR, MAX_CAL_FACTOR, iValue) == TRUE)
+		pDRMRec->GetParameters()->FrontEndParameters.rCalFactorDRM = _REAL(iValue);
+
+	if (GetNumericIniSet(ini, "FrontEnd", "calfactoram", -MAX_CAL_FACTOR, MAX_CAL_FACTOR, iValue) == TRUE)
+		pDRMRec->GetParameters()->FrontEndParameters.rCalFactorAM = _REAL(iValue);
+
+	if (GetNumericIniSet(ini, "FrontEnd", "ifcentrefrequency", 0, SOUNDCRD_SAMPLE_RATE / 2, iValue) == TRUE)
+		pDRMRec->GetParameters()->FrontEndParameters.rIFCentreFreq = _REAL(iValue);
+
 	/* GPS */
 	if (GetFlagIniSet(ini, "GPS", "use", bValue) == TRUE)
 		pDRMRec->GetParameters()->GPSInformation.SetUse(bValue);
@@ -442,6 +465,17 @@ void CSettings::ReadIniFile()
 		pDRMRec->GetParameters()->sSerialNumber += "_";
 		
 	GenerateReceiverID();
+
+	/* Data files directory */
+	string sDataFilesDirectory = GetIniSetting(ini, "Receiver", "datafilesdirectory");
+	// Default is current directory: set explicitly
+	if (sDataFilesDirectory == "")
+		sDataFilesDirectory = "./";
+	// otherwise, add trailing slash if not there already
+	else if (sDataFilesDirectory[sDataFilesDirectory.length()-1] != '/' && sDataFilesDirectory[sDataFilesDirectory.length()-1] != '\\')
+		sDataFilesDirectory += "/";
+
+	pDRMRec->GetParameters()->sDataFilesDirectory = sDataFilesDirectory;
 }
 
 void CSettings::WriteIniFile()
@@ -727,6 +761,29 @@ void CSettings::WriteIniFile()
 	SetFlagIniSet(ini, "Hamlib", "enmodrig", pDRMRec->GetHamlib()->GetEnableModRigSettings());
 #endif
 
+	/* Front-end - combine into Hamlib? */
+	SetNumericIniSet(ini, "FrontEnd", "smetercorrectiontype",
+		int(pDRMRec->GetParameters()->FrontEndParameters.eSMeterCorrectionType));
+
+	SetNumericIniSet(ini, "FrontEnd", "smeterbandwidth",
+		int(pDRMRec->GetParameters()->FrontEndParameters.rSMeterBandwidth));
+
+	SetNumericIniSet(ini, "FrontEnd", "defaultmeasurementbandwidth",
+		int(pDRMRec->GetParameters()->FrontEndParameters.rDefaultMeasurementBandwidth));
+
+	SetFlagIniSet(ini, "FrontEnd", "automeasurementbandwidth", 
+		pDRMRec->GetParameters()->FrontEndParameters.bAutoMeasurementBandwidth);
+
+	SetNumericIniSet(ini, "FrontEnd", "calfactordrm",
+		int(pDRMRec->GetParameters()->FrontEndParameters.rCalFactorDRM));
+
+	SetNumericIniSet(ini, "FrontEnd", "calfactoram",
+		int(pDRMRec->GetParameters()->FrontEndParameters.rCalFactorAM));
+
+	SetNumericIniSet(ini, "FrontEnd", "ifcentrefrequency",
+		int(pDRMRec->GetParameters()->FrontEndParameters.rIFCentreFreq));
+	
+
 	/* GPS */
 	SetFlagIniSet(ini, "GPS", "use", pDRMRec->GetParameters()->GPSInformation.GetUse());
 
@@ -738,6 +795,8 @@ void CSettings::WriteIniFile()
 	/* Serial Number */
 	PutIniSetting(ini, "Receiver", "serialnumber",
 		pDRMRec->GetParameters()->sSerialNumber.c_str());
+
+	PutIniSetting(ini, "Receiver", "datafilesdirectory", pDRMRec->GetParameters()->sDataFilesDirectory.c_str());
 
 	/* Save settings in init-file */
 	SaveIni(ini, DREAM_INIT_FILE_NAME);

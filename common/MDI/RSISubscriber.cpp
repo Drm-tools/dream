@@ -123,6 +123,7 @@ void CRSISubscriberFile::StartRecording(CParameter &ReceiverParam)
 	struct tm* gmtCur = gmtime(&ltime);
 
 	stringstream filename;
+	filename << ReceiverParam.sDataFilesDirectory;
 	filename << ReceiverParam.sReceiverID << "_";
 	filename << setw(4) << setfill('0') << gmtCur->tm_year + 1900 << "-" << setw(2) << setfill('0')<< gmtCur->tm_mon + 1;
 	filename << "-" << setw(2) << setfill('0')<< gmtCur->tm_mday << "_";

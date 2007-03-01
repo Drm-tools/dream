@@ -303,7 +303,7 @@ void CTagItemGeneratorInfo::GenTag(string strUTF8Text)
 	}
 }
 
-string CTagItemGeneratorInfo::GetTagName(void) {return "info";}
+string CTagItemGeneratorInfo::GetTagName(void) {return "rinf";}
 string CTagItemGeneratorInfo::GetProfiles(void) {return "ABCDQM";}
 
 CTagItemGeneratorStr::CTagItemGeneratorStr()
@@ -502,6 +502,32 @@ void CTagItemGeneratorRINT::GenTag(const _BOOLEAN bIsValid, const CReal rIntFreq
 
 string CTagItemGeneratorRINT::GetTagName(void) {return "Bint";}
 string CTagItemGeneratorRINT::GetProfiles(void) {return "ABCDQ";}
+
+void CTagItemGeneratorRNIP::GenTag(const _BOOLEAN bIsValid, const CReal rIntFreq, const CReal rISR)
+{
+
+	/* If no value is available, set tag length to zero */
+	if (bIsValid == FALSE)
+	{
+		/* Length: 0 byte */
+		PrepareTag(0);
+	}
+	else
+	{
+		/* Length: 2 bytes per value, 2 values = 32 bits */
+		PrepareTag(32);
+
+		/* Interference frequency (Hz) : signed value */
+		Enqueue((uint32_t) ((int)rIntFreq), 16);
+
+		/* Interference-to-signal ratio */
+		/* integer part */
+		Enqueue((uint32_t)((int) (rISR*256)), 16);
+	}
+}
+
+string CTagItemGeneratorRNIP::GetTagName(void) {return "rnip";}
+string CTagItemGeneratorRNIP::GetProfiles(void) {return "ABCDQ";}
 
 void CTagItemGeneratorSignalStrength::GenTag(const _BOOLEAN bIsValid, const _REAL rSigStrength)
 {
@@ -911,7 +937,7 @@ void CTagItemGeneratorPilots::GenTag(CParameter &Parameter)
 	iTagLen += iNumSymPerFrame * 4 * SIZEOF__BYTE; // 4 bytes at start of each symbol (spec typo?) 
 	iTagLen += iTotalNumPilots*2*2*SIZEOF__BYTE; // 4 bytes per pilot value (2 byte re, 2 byte imag) 
 
-	logStatus("rpil gentag: pilots %d tag length %d", iTotalNumPilots, iTagLen);
+	//logStatus("rpil gentag: pilots %d tag length %d", iTotalNumPilots, iTagLen);
 
 	PrepareTag(iTagLen);
 
@@ -919,6 +945,16 @@ void CTagItemGeneratorPilots::GenTag(CParameter &Parameter)
 	Enqueue((uint32_t) iNumSymPerFrame, SIZEOF__BYTE); // SN = number of symbols 
 	Enqueue((uint32_t) iScatPilTimeInt, SIZEOF__BYTE); // SR = symbol repetition 
 	Enqueue((uint32_t) 0, 2*SIZEOF__BYTE);  // rfu 
+
+
+	// Check that the matrix has the expected dimensions (in case of a mode change)
+	if (Parameter.matcReceivedPilotValues.NumRows() != iNumSymPerFrame/iScatPilTimeInt ||
+		Parameter.matcReceivedPilotValues.NumColumns() != ((iNumCarrier-1)/iScatPilFreqInt + 1))
+	{
+		GenEmptyTag();
+		logStatus("Wrong size: %d x %d, expected %d x %d", Parameter.matcReceivedPilotValues.NumRows(), Parameter.matcReceivedPilotValues.NumColumns(), iNumSymPerFrame/iScatPilTimeInt, ((iNumCarrier-1)/iScatPilFreqInt + 1));
+		return;
+	}
 
 	// Now do each symbol in turn 
 	for (int iSymbolNumber = 0; iSymbolNumber<iNumSymPerFrame; iSymbolNumber++)
@@ -943,7 +979,7 @@ void CTagItemGeneratorPilots::GenTag(CParameter &Parameter)
 		// Start from first pilot and step by the pilot spacing (iScatPilFreqInt*iScatPilTimeInt) 
 		for (i=iFirstPilotCarrier/iScatPilFreqInt, iCarrier = iFirstPilotCarrier; 
 			iCarrier < iNumCarrier; i+=iScatPilTimeInt, iCarrier+=iScatPilFreqSpacing)
-		{
+			{
 			iNumPilots ++;
 			// Is it really a pilot? This will be false only in Mode D for the DC carrier 
 			if ( _IsScatPil(Parameter.matiMapTab[iSymbolNumber][iCarrier]))
@@ -960,7 +996,7 @@ void CTagItemGeneratorPilots::GenTag(CParameter &Parameter)
 		_REAL rExponent = Ceil(Log(rMax)/Log(_REAL(2.0)));
 		_REAL rScale = 32767 * pow(_REAL(2.0), -rExponent);
 
-		logStatus("max=%f, exponent=%f, scale=%f", rMax, rExponent, rScale);
+		//logStatus("max=%f, exponent=%f, scale=%f", rMax, rExponent, rScale);
 		// Put to the tag 
 		Enqueue((uint32_t) iNumPilots, SIZEOF__BYTE); // PN = number of pilots 
 		Enqueue((uint32_t) iFirstPilotCarrier, SIZEOF__BYTE); // PO = pilot offset 

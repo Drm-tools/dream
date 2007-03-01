@@ -239,6 +239,11 @@ protected:
 	string				strHamlibConf;
 	int					iFreqOffset;
 };
+#else
+struct CHamlib
+{
+	enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
+};
 #endif
 
 inline int Complement2toInt(const unsigned int iSize, CVector<_BINARY>* pbiData)

@@ -28,6 +28,7 @@
 
 #include "DRMSignalIO.h"
 #include <iostream>
+#include "util/LogPrint.h"
 
 
 /* Implementation *************************************************************/
@@ -475,7 +476,7 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
 
 	const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT *
 		iLenPSDAvEachBlock * iLenPSDAvEachBlock *
-		iNumAvBlocksPSD * iNumAvBlocksPSD;
+		iNumAvBlocksPSD * _REAL(PSD_WINDOW_GAIN);
 
 	/* Init intermediate vectors */
 	CRealVector vecrAvSqMagSpect(iLenSpecWithNyFreq, (CReal) 0.0);
@@ -519,26 +520,194 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
 /* To be used by the rsi output */
 void CReceiveData::PutPSD(CParameter &ReceiverParam)
 {
+	int i, j;
+
 	CVector<_REAL>		vecrData;
 	CVector<_REAL>		vecrScale;
 
-	/* TODO should something be done with rFactorScale ? */
-	//const _REAL rFactorScale =
-	//	(_REAL) SOUNDCRD_SAMPLE_RATE / LEN_PSD_AV_EACH_BLOCK_RSI;
-
 	CalculatePSD(vecrData, vecrScale, LEN_PSD_AV_EACH_BLOCK_RSI, NUM_AV_BLOCKS_PSD_RSI, PSD_OVERLAP_RSI);
 
-	/* extract the values from -8kHz to +8kHz relative to 12kHz, i.e. 4kHz to 20kHz */
+	/* Data required for rpsd tag */
+	/* extract the values from -8kHz to +8kHz/18kHz relative to 12kHz, i.e. 4kHz to 20kHz */
 	/*const int startBin = 4000.0 * LEN_PSD_AV_EACH_BLOCK_RSI /SOUNDCRD_SAMPLE_RATE;
 	const int endBin = 20000.0 * LEN_PSD_AV_EACH_BLOCK_RSI /SOUNDCRD_SAMPLE_RATE;*/
 	/* The above calculation doesn't round in the way FhG expect. Probably better to specify directly */
-	/* TODO: ought to depend on the spectral occupancy and be wider in 18/20k */
-	const int startBin = 22;
-	const int endBin = 106;
 
-	ReceiverParam.vecrPSD.Init(endBin - startBin + 1, (_REAL) 0.0);
+	/* For 20k mode, we need -8/+18, which is more than the Nyquist rate of 24kHz. */
+	/* Assume nominal freq = 7kHz (i.e. 2k to 22k) and pad with zeroes (roughly 1kHz each side) */
 
-	for (int i=0, j=startBin; j<=endBin; i++,j++)
+	int iStartBin = 22;
+	int iEndBin = 106;
+	int iVecSize = iEndBin - iStartBin + 1; //85
+
+	_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
+
+	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
+	if (eSpecOcc == SO_4 || eSpecOcc == SO_5)
+	{
+		iStartBin = 0;
+		iEndBin = 127;
+		iVecSize = 139;
+	}
+	/* Line up the the middle of the vector with the quarter-Nyquist bin of FFT */
+	int iStartIndex = iStartBin - (LEN_PSD_AV_EACH_BLOCK_RSI/4) + (iVecSize-1)/2;
+
+	/* Fill with zeros to start with */
+	ReceiverParam.vecrPSD.Init(iVecSize, (_REAL) 0.0);
+
+	for (i=iStartIndex, j=iStartBin; j<=iEndBin; i++,j++)
 		ReceiverParam.vecrPSD[i] = vecrData[j];
 
+	CalculateSigStrengthCorrection(ReceiverParam, vecrData);
+
+	CalculatePSDInterferenceTag(ReceiverParam, vecrData);
+
+
+}
+
+void CReceiveData::CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)
+{
+
+	_REAL rCorrection = _REAL(0.0);
+
+	/* Calculate signal power in measurement bandwidth */
+	
+	_REAL rFreqKmin, rFreqKmax;
+
+	_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
+
+	if (ReceiverParam.GetReceiverState() == AS_WITH_SIGNAL && 
+		ReceiverParam.FrontEndParameters.bAutoMeasurementBandwidth)
+	{
+		// Receiver is locked, so measure in the current DRM signal bandwidth Kmin to Kmax
+		_REAL rDCFrequency = ReceiverParam.GetDCFrequency();
+		rFreqKmin = rDCFrequency + _REAL(ReceiverParam.iCarrierKmin)/ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+		rFreqKmax = rDCFrequency + _REAL(ReceiverParam.iCarrierKmax)/ReceiverParam.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+		//logStatus("GetDCFrequency() returned %f rFreqKmin %f rFreqKmax %f", rDCFrequency, rFreqKmin, rFreqKmax);
+	}
+	else
+	{
+		// Receiver unlocked, or measurement is requested in fixed bandwidth
+		_REAL rMeasBandwidth = ReceiverParam.FrontEndParameters.rDefaultMeasurementBandwidth;
+		rFreqKmin = rIFCentreFrequency - rMeasBandwidth/_REAL(2.0);
+		rFreqKmax = rIFCentreFrequency + rMeasBandwidth/_REAL(2.0);
+	}
+
+	_REAL rSigPower = CalcTotalPower(vecrPSD, FreqToBin(rFreqKmin), FreqToBin(rFreqKmax));
+
+	if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CParameter::CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_ONLY)
+	{
+		/* Write it to the receiver params to help with calculating the signal strength */
+		rCorrection += _REAL(10.0) * log10(rSigPower);
+	}
+	else if (ReceiverParam.FrontEndParameters.eSMeterCorrectionType == CParameter::CFrontEndParameters::S_METER_CORRECTION_TYPE_AGC_RSSI)
+	{
+		_REAL rSMeterBandwidth = ReceiverParam.FrontEndParameters.rSMeterBandwidth;
+
+		_REAL rFreqSMeterMin = _REAL(rIFCentreFrequency - rSMeterBandwidth / _REAL(2.0));
+		_REAL rFreqSMeterMax = _REAL(rIFCentreFrequency + rSMeterBandwidth / _REAL(2.0));
+
+		_REAL rPowerInSMeterBW = CalcTotalPower(vecrPSD, FreqToBin(rFreqSMeterMin), FreqToBin(rFreqSMeterMax)); 
+
+		/* Write it to the receiver params to help with calculating the signal strength */
+		//logStatus("rSigPower %f sPowerInSMeterBW %f", rSigPower, rPowerInSMeterBW);
+
+		rCorrection += _REAL(10.0) * log10(rSigPower/rPowerInSMeterBW);
+	} 
+
+	// Add on the calibration factor for the current mode
+	if (ReceiverParam.GetReceiverMode() == RM_DRM)
+		rCorrection += ReceiverParam.FrontEndParameters.rCalFactorDRM;
+	else if (ReceiverParam.GetReceiverMode() == RM_AM)		
+		rCorrection += ReceiverParam.FrontEndParameters.rCalFactorAM;
+
+	ReceiverParam.rSigStrengthCorrection = rCorrection;
+
+
+	//logStatus("Correction %fdB", rCorrection);
+
+	return;
+
+}
+
+
+void CReceiveData::CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD)
+{
+
+	/* Interference tag (rnip) */
+
+	// Calculate search range: defined as +/-5.1kHz except if locked and in 20k
+	_REAL rIFCentreFrequency = ReceiverParam.FrontEndParameters.rIFCentreFreq;
+
+	_REAL rFreqSearchMin = rIFCentreFrequency - _REAL(RNIP_SEARCH_RANGE_NARROW);
+	_REAL rFreqSearchMax = rIFCentreFrequency + _REAL(RNIP_SEARCH_RANGE_NARROW);
+	
+	ESpecOcc eSpecOcc = ReceiverParam.GetSpectrumOccup();
+
+	if (ReceiverParam.GetReceiverState() == AS_WITH_SIGNAL &&
+		(eSpecOcc == SO_4 || eSpecOcc == SO_5) )
+	{
+		rFreqSearchMax = rIFCentreFrequency + _REAL(RNIP_SEARCH_RANGE_WIDE);
+	}
+	int iSearchStartBin = FreqToBin(rFreqSearchMin);
+	int iSearchEndBin = FreqToBin(rFreqSearchMax);
+
+	//logStatus("search freq %f to %f bin %d to %d", rFreqSearchMin, rFreqSearchMax, iSearchStartBin, iSearchEndBin);
+
+	if (iSearchStartBin < 0) iSearchStartBin = 0;
+	if (iSearchEndBin > LEN_PSD_AV_EACH_BLOCK_RSI/2)
+		iSearchEndBin = LEN_PSD_AV_EACH_BLOCK_RSI/2;
+
+	_REAL rMaxPSD = _REAL(-1000.0);
+	int iMaxPSDBin = 0;
+
+	for (int i=iSearchStartBin; i<=iSearchEndBin; i++)
+	{
+		_REAL rPSD = _REAL(2.0) * pow(_REAL(10.0), vecrPSD[i]/_REAL(10.0));
+		if (rPSD > rMaxPSD)
+		{
+			rMaxPSD = rPSD;
+			iMaxPSDBin = i;
+		}
+	}
+
+	// For total signal power, exclude the biggest one and e.g. 2 either side
+	int iExcludeStartBin = iMaxPSDBin - RNIP_EXCLUDE_BINS;
+	int iExcludeEndBin = iMaxPSDBin + RNIP_EXCLUDE_BINS;
+
+	// Calculate power. TotalPower() function will deal with start>end correctly
+	_REAL rSigPowerExcludingInterferer = CalcTotalPower(vecrPSD, iSearchStartBin, iExcludeStartBin-1) +
+		CalcTotalPower(vecrPSD, iExcludeEndBin+1, iSearchEndBin);
+
+	/* interferer level wrt signal power */
+	ReceiverParam.rMaxPSDwrtSig = _REAL(10.0) * log10(rMaxPSD / rSigPowerExcludingInterferer);
+
+	/* interferer frequency */
+	ReceiverParam.rMaxPSDFreq = _REAL(iMaxPSDBin) * _REAL(SOUNDCRD_SAMPLE_RATE) / _REAL(LEN_PSD_AV_EACH_BLOCK_RSI) - rIFCentreFrequency;
+
+	//logStatus("rnip: maxbin %i maxpsd %f sigpower %f ratio %f freq %f", iMaxPSDBin, rMaxPSD, rSigPowerExcludingInterferer, ReceiverParam.rMaxPSDwrtSig, ReceiverParam.rMaxPSDFreq);
+
+}
+
+
+int CReceiveData::FreqToBin(_REAL rFreq)
+{
+	return int(rFreq/SOUNDCRD_SAMPLE_RATE * LEN_PSD_AV_EACH_BLOCK_RSI);
+}
+
+_REAL CReceiveData::CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin)
+{
+	if (iStartBin < 0) iStartBin = 0;
+	if (iEndBin > LEN_PSD_AV_EACH_BLOCK_RSI/2)
+		iEndBin = LEN_PSD_AV_EACH_BLOCK_RSI/2;
+
+	_REAL rSigPower = _REAL(0.0);
+	for (int i=iStartBin; i<=iEndBin; i++)
+	{
+		_REAL rPSD = pow(_REAL(10.0), vecrData[i]/_REAL(10.0));
+		// The factor of 2 below is needed because half of the power is in the negative frequencies
+		rSigPower += rPSD * _REAL(2.0); 
+	}
+
+	return rSigPower;
 }

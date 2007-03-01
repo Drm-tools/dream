@@ -335,7 +335,7 @@ void FDRMDialog::OnTimer()
 	SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
 
 	/* Check if receiver does receive a DRM signal */
-	if ((pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
+	if ((pDRMRec->GetReceiverState() == AS_WITH_SIGNAL) &&
 		(pDRMRec->GetReceiverMode() == RM_DRM))
 	{
 		/* Receiver does receive a DRM signal ------------------------------- */

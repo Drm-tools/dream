@@ -136,6 +136,14 @@ catch (CGenErr GenErr)
 {
 	ErrorMessage(GenErr.strError);
 }
+catch (string strError)
+{
+	ErrorMessage(strError);
+}
+catch (char* Error)
+{
+	ErrorMessage(Error);
+}
 
 	return 0;
 }

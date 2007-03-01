@@ -689,7 +689,7 @@ void systemevalDlg::OnTimer()
     SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.GetInterfaceStatus());
 
 	/* Show SNR if receiver is in tracking mode */
-	if (pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL)
+	if (pDRMRec->GetReceiverState() == AS_WITH_SIGNAL)
 	{
 		/* Get a consistant snapshot */
 		ReceiverParam.Lock();
@@ -1112,7 +1112,7 @@ void systemevalDlg::OnCheckWriteLog()
 		QString strAddText = "";
 
 		/* Check if receiver does receive a DRM signal */
-		if ((pDRMRec->GetReceiverState() == CDRMReceiver::AS_WITH_SIGNAL) &&
+		if ((pDRMRec->GetReceiverState() == AS_WITH_SIGNAL) &&
 			(pDRMRec->GetReceiverMode() == RM_DRM))
 		{
 			/* First get current selected audio service */

@@ -48,14 +48,23 @@
 #define LEN_PSD_AV_EACH_BLOCK_RSI		256
 #define PSD_OVERLAP_RSI	128
 
+/* power gain of the Hamming window */
+#define PSD_WINDOW_GAIN 0.39638
+
 /* Length of vector for input spectrum. We use approx. 0.2 sec
    of sampled data for spectrum calculation, this is 2^13 = 8192 to 
    make the FFT work more efficient. Make sure that this number is not smaller
    than the symbol lenght in 48 khz domain of longest mode (which is mode A/B:
    1280) */
+#define NUM_SMPLS_4_INPUT_SPECTRUM (NUM_AV_BLOCKS_PSD * LEN_PSD_AV_EACH_BLOCK)
+
 /* The RSI output needs 400ms with a 50% overlap, so this needs more space 
    I think the RSCI spec is slightly wrong - using 150 windows consumes just over 400ms, 149 would be exact */
-#define NUM_SMPLS_4_INPUT_SPECTRUM	(NUM_AV_BLOCKS_PSD_RSI * (LEN_PSD_AV_EACH_BLOCK_RSI-PSD_OVERLAP_RSI)+PSD_OVERLAP_RSI)
+#define INPUT_DATA_VECTOR_SIZE (NUM_AV_BLOCKS_PSD_RSI * (LEN_PSD_AV_EACH_BLOCK_RSI-PSD_OVERLAP_RSI)+PSD_OVERLAP_RSI)
+
+#define RNIP_SEARCH_RANGE_NARROW 5100.0
+#define RNIP_SEARCH_RANGE_WIDE 15100.0
+#define RNIP_EXCLUDE_BINS 2 // either side of the peak
 
 /* Use raw 16 bit data or in text form for file format for DRM data. Defining
    the following macro will enable the raw data option */
@@ -115,7 +124,7 @@ public:
 		CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO};
 
 	CReceiveData() : pSound(NULL),
-	vecrInpData(NUM_SMPLS_4_INPUT_SPECTRUM, (_REAL) 0.0),
+	vecrInpData(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0),
 	bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN)
 		 {}
 	virtual ~CReceiveData();
@@ -165,6 +174,13 @@ protected:
 							   const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
 							   const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
 							   const int iPSDOverlap = 0);
+
+	void CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD);
+	void CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD);
+
+	int FreqToBin(_REAL rFreq);
+	_REAL CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin);
+
 };
 
 

@@ -111,6 +111,7 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorRDEL.GenTag(TRUE, Parameter.vecrRdelThresholds, Parameter.vecrRdelIntervals);
 	TagItemGeneratorRDOP.GenTag(TRUE, Parameter.rRdop);
 	TagItemGeneratorRINT.GenTag(TRUE,Parameter.rIntFreq, Parameter.rINR, Parameter.rICR);
+	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
 	TagItemGeneratorRxService.GenTag(TRUE, Parameter.GetCurSelAudioService());
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
@@ -161,6 +162,8 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 
 	TagItemGeneratorPilots.GenEmptyTag();
 
+	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
+
 	/* Generate some other tags */
 	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
@@ -205,6 +208,8 @@ void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
 	TagItemGeneratorPilots.GenEmptyTag();
+
+	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
 
 	/* Generate some other tags */
 	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
@@ -296,6 +301,7 @@ void CRSIMDIOutRCIIn::GenMDIPacket()
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorRDEL);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorRDOP);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorRINT);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRNIP);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorReceiverStatus);
 
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerSpectralDensity);
@@ -342,6 +348,7 @@ void CRSIMDIOutRCIIn::ResetTags()
 	TagItemGeneratorRDEL.GenEmptyTag(); /* rdel tag */
 	TagItemGeneratorRDOP.GenEmptyTag(); /* rdop tag */
 	TagItemGeneratorRINT.GenEmptyTag(); /* rint tag */
+	TagItemGeneratorRNIP.GenEmptyTag(); /* rnip tag */
 	TagItemGeneratorRAFS.GenEmptyTag(); /* rafs tag */
 
 	/* Tags that are not fully implemented yet */

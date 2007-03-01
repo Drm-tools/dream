@@ -28,6 +28,7 @@
 
 #include "DataDecoder.h"
 #include "./epg/epgutil.h"
+#include <iostream>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -342,6 +343,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				/* Decode all IDs regardless whether activated or not
 				   (iPacketID == or != iServPacketID) */
 				/* Only DAB multimedia is supported */
+				//cout << "new data unit for packet id " << iPacketID << " apptype " << eAppType[iPacketID] << endl;
 
 				switch (eAppType[iPacketID])
 				{
