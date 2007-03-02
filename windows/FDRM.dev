@@ -1,7 +1,7 @@
 [Project]
 FileName=FDRM.dev
 Name=FDRM
-UnitCount=251
+UnitCount=252
 Type=0
 Ver=1
 ObjFiles=
@@ -2548,6 +2548,16 @@ BuildCmd=
 
 [Unit251]
 FileName=..\common\util\Pacer.h
+CompileCpp=1
+Folder=Headers
+Compile=1
+Link=1
+Priority=1000
+OverrideBuildCmd=0
+BuildCmd=
+
+[Unit252]
+FileName=..\common\soundnull.h
 CompileCpp=1
 Folder=Headers
 Compile=1

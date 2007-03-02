@@ -3142,6 +3142,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\soundnull.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\util\Pacer.h"
 				>
 			</File>

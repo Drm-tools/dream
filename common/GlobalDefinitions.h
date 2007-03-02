@@ -49,6 +49,11 @@ using namespace std; /* Because of the library: "complex" */
 #undef _DEBUG_
 
 #ifdef _WIN32 /* For Windows set flags here, otherwise it is set by configure */
+
+/* build using the real sound interface or a dummy */
+# define WITH_SOUND
+//# undef WITH_SOUND
+
 /* Define whether using GUI or non-GUI receiver */
 # define USE_QT_GUI
 //# undef USE_QT_GUI
