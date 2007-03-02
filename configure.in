@@ -76,6 +76,9 @@ if test "x$enable_sound" = "xyes"; then
 		dnl fall back is to use /dev/dsp
 		AC_DEFINE(USE_DEVDSP, 1, [Define if you want to use /dev/dsp for sound])
 	fi
+	AM_CONDITIONAL(WITH_SOUND, true)
+else
+	AM_CONDITIONAL(WITH_SOUND, false)
 fi
 
 

@@ -79,12 +79,6 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableCarMap.cpp \
 	../common/GUI-QT/main.cpp \
 	../common/audiofilein.cpp \
-if WITH_SOUND
-	source/soundcommon.cpp \
-	source/soundin.cpp \
-	source/soundout.cpp \
-	source/alsa.cpp \
-endif
 	source/Pacer.cpp \
 	../common/Version.h \
 	../common/DRMSignalIO.h \
@@ -172,15 +166,20 @@ endif
 	../common/tables/TableQAMMapping.h \
 	../common/selectioninterface.h \
 	../common/soundinterface.h \
+	../common/soundnull.h \
+	../common/audiofilein.h
 if WITH_SOUND
+drm_sound_SOURCES = \
+	source/soundcommon.cpp \
+	source/soundin.cpp \
+	source/soundout.cpp \
+	source/alsa.cpp \
 	source/alsa.h \
 	source/sound.h \
 	source/soundcommon.h \
 	source/soundin.h \
-	source/soundout.h \
+	source/soundout.h
 endif
-	../common/soundnull.h \
-	../common/audiofilein.h
 
 if USE_QT
 
@@ -231,7 +230,7 @@ drmqtonly_SOURCES = \
 	../common/datadecoding/epg/EPG.cpp \
 	../common/datadecoding/epg/EPG.h
 
-drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES)
+drm_SOURCES = $(drmwithoutqt_SOURCES) $(drmqtonly_SOURCES) $(drm_sound_SOURCES)
 
 
 # these need to be generated before the rest can be compiled
