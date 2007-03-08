@@ -63,6 +63,7 @@ void CSettings::ReadIniFile()
 {
 	int			iValue;
 	_BOOLEAN	bValue;
+	string		sValue;
 
 	/* Load data from init-file */
 	INIFile ini = LoadIni(DREAM_INIT_FILE_NAME);
@@ -150,13 +151,6 @@ void CSettings::ReadIniFile()
 	/* Longitude string for log file */
 	pDRMRec->GetParameters()->ReceptLog.SetLongitude(
 		GetIniSetting(ini, "Logfile", "longitude"));
-
-//update info
-	if (pDRMRec->GetParameters()->GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
-	{
-		pDRMRec->GetParameters()->GPSInformation.SetPositionAvailable(pDRMRec->GetParameters()->GPSInformation.SetLatLongDegreesMinutes(pDRMRec->GetParameters()->ReceptLog.GetLatitude(), pDRMRec->GetParameters()->ReceptLog.GetLongitude()));
-	}
-
 
 	/* Storage path for files saved from Multimedia dialog */
 	pDRMRec->strStoragePathMMDlg = GetIniSetting(ini, "Multimedia dialog", "storagepath");
@@ -444,25 +438,28 @@ void CSettings::ReadIniFile()
 		pDRMRec->GetParameters()->FrontEndParameters.rIFCentreFreq = _REAL(iValue);
 
 	/* GPS */
-	if (GetFlagIniSet(ini, "GPS", "use", bValue) == TRUE)
-		pDRMRec->GetParameters()->GPSInformation.SetUse(bValue);
-
-	if (GetFlagIniSet(ini, "GPS", "staticlocation", bValue) == TRUE)
-		pDRMRec->GetParameters()->GPSInformation.SetGPSSource(CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY);
+	if (GetFlagIniSet(ini, "GPS", "usegpsd", bValue) == TRUE)
+	{
+		if (bValue)
+			pDRMRec->GetParameters()->eGPSSource = CParameter::GPS_SOURCE_GPS_RECEIVER;
+		else
+			pDRMRec->GetParameters()->eGPSSource = CParameter::GPS_SOURCE_MANUAL_ENTRY;
+	}
+	pDRMRec->GetParameters()->sGPSdHost = GetIniSetting(ini, "GPS", "host", "localhost");
+	if (GetNumericIniSet(ini, "GPS", "port", 0, 32767, iValue) == TRUE)
+		pDRMRec->GetParameters()->iGPSdPort = iValue;
+	else
+		pDRMRec->GetParameters()->iGPSdPort = 2947;
 
 	/* Serial Number */
-	string sTempSerialNumber = GetIniSetting(ini, "Receiver", "serialnumber");
-	if (sTempSerialNumber == "")
-		pDRMRec->GetParameters()->GenerateRandomSerialNumber();
-	else
-        pDRMRec->GetParameters()->sSerialNumber = sTempSerialNumber;
-
-	if (pDRMRec->GetParameters()->sSerialNumber.length() > 6)
-		pDRMRec->GetParameters()->sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
-
-	// Pad to a minimum of 6 characters
-	while (pDRMRec->GetParameters()->sSerialNumber.length() < 6)
-		pDRMRec->GetParameters()->sSerialNumber += "_";
+	sValue = GetIniSetting(ini, "Receiver", "serialnumber");
+	if (sValue != "")
+	{
+		// Pad to a minimum of 6 characters
+		while (sValue.length() < 6)
+			sValue += "_";
+		pDRMRec->GetParameters()->sSerialNumber = sValue;
+	}
 		
 	GenerateReceiverID();
 
@@ -548,11 +545,11 @@ void CSettings::WriteIniFile()
 
 	/* Latitude string for log file */
 	PutIniSetting(ini, "Logfile", "latitude",
-		pDRMRec->GetParameters()->ReceptLog.GetLatitude().c_str());
+		pDRMRec->GetParameters()->ReceptLog.GetLatitudeDegreesString().c_str());
 
 	/* Longitude string for log file */
 	PutIniSetting(ini, "Logfile", "longitude",
-		pDRMRec->GetParameters()->ReceptLog.GetLongitude().c_str());
+		pDRMRec->GetParameters()->ReceptLog.GetLongitudeDegreesString().c_str());
 
 	/* Storage path for files saved from Multimedia dialog */
 	PutIniSetting(ini, "Multimedia dialog", "storagepath",
@@ -785,12 +782,15 @@ void CSettings::WriteIniFile()
 	
 
 	/* GPS */
-	SetFlagIniSet(ini, "GPS", "use", pDRMRec->GetParameters()->GPSInformation.GetUse());
-
-	if (pDRMRec->GetParameters()->GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
-		SetFlagIniSet(ini, "GPS", "staticlocation", TRUE);
+	if (pDRMRec->GetParameters()->eGPSSource == CParameter::GPS_SOURCE_GPS_RECEIVER)
+	{
+		SetFlagIniSet(ini, "GPS", "usegpsd", TRUE);
+		PutIniSetting(ini, "GPS", "host", pDRMRec->GetParameters()->sGPSdHost.c_str());
+		SetNumericIniSet(ini, "GPS", "port", pDRMRec->GetParameters()->iGPSdPort);
+	}
 	else
-		SetFlagIniSet(ini, "GPS", "staticlocation", FALSE);
+		SetFlagIniSet(ini, "GPS", "usegpsd", FALSE);
+
 
 	/* Serial Number */
 	PutIniSetting(ini, "Receiver", "serialnumber",
@@ -1662,6 +1662,12 @@ void CSettings::GenerateReceiverID()
 	ssInfoVer << setw(2) << setfill('0') << iImplementation << setw(2) << setfill('0') << iMajor << setw(2) << setfill('0') << iMinor;
 
 	pDRMRec->GetParameters()->sReceiverID += ssInfoVer.str();
+
+	while (pDRMRec->GetParameters()->sSerialNumber.length() < 6)
+			pDRMRec->GetParameters()->sSerialNumber += "_";
+	
+	if (pDRMRec->GetParameters()->sSerialNumber.length() > 6)
+		pDRMRec->GetParameters()->sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
 
 	pDRMRec->GetParameters()->sReceiverID += pDRMRec->GetParameters()->sSerialNumber;
 }

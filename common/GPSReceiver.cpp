@@ -171,7 +171,7 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
 	//GPSD\n\r
 	//GPSD,F=1,A=?\n\r
 
-	int GPSDPos=0;
+	size_t GPSDPos=0;
 
 	while ((GPSDPos = TotalReply.find("GPSD",0)) != string::npos)
 	{
@@ -181,8 +181,8 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
 
 		while (!finished)		// while not all of message has been consumed
 		{
-			int CurrentPos = 0;
-			for (int i=0; i < TotalReply.length(); i++)
+			size_t CurrentPos = 0;
+			for (size_t i=0; i < TotalReply.length(); i++)
 			{
 				if (TotalReply[i] == ',' || TotalReply[i] == '\r' || TotalReply[i] == '\n')
 				{

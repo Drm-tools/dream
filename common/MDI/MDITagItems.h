@@ -135,7 +135,7 @@ protected:
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag
 };
 
-class CTagItemGeneratorInfo : public CTagItemGeneratorWithProfiles /* info tag */
+class CTagItemGeneratorRINF : public CTagItemGeneratorWithProfiles /* info tag */
 {
 public:
 	void GenTag(string strUTF8Text);
@@ -315,10 +315,10 @@ protected:
 };
 
 //andrewm - 7/11/2006
-class CTagItemGeneratorGPSInformation : public CTagItemGeneratorWithProfiles /* rgps */
+class CTagItemGeneratorGPS : public CTagItemGeneratorWithProfiles /* rgps */
 {
 public:
-	void GenTag(_BOOLEAN bIsValid, CParameter::CGPSInformation& GPSInformation);
+	void GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPSData);
 protected:
 	virtual string GetTagName(void);
 	virtual string GetProfiles(void); // Return a string containing the set of profiles for this tag

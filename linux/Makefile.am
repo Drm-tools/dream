@@ -6,6 +6,7 @@ drmwithoutqt_SOURCES = \
 	../common/SimulationParameters.cpp \
 	../common/DRMSignalIO.cpp \
 	../common/DataIO.cpp \
+	../common/GPSReceiver.cpp \
 	../common/DrmReceiver.cpp \
 	../common/DrmSimulation.cpp \
 	../common/DrmTransmitter.cpp \
@@ -16,6 +17,7 @@ drmwithoutqt_SOURCES = \
 	../common/TextMessage.cpp \
 	../common/AMDemodulation.cpp \
 	../common/AMSSDemodulation.cpp \
+	../common/audiofilein.cpp \
 	../common/datadecoding/DataDecoder.cpp \
 	../common/datadecoding/DABMOT.cpp \
 	../common/datadecoding/MOTSlideShow.cpp \
@@ -78,11 +80,11 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableFAC.cpp \
 	../common/tables/TableCarMap.cpp \
 	../common/GUI-QT/main.cpp \
-	../common/audiofilein.cpp \
 	source/Pacer.cpp \
 	../common/Version.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
+	../common/GPSReceiver.h \
 	../common/DrmReceiver.h \
 	../common/DrmSimulation.h \
 	../common/DrmTransmitter.h \
@@ -251,7 +253,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
-	moc/moc_PacketSocketQT.cpp
+	moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp
 
 # and should be cleaned by make clean
 
@@ -272,6 +274,9 @@ moc/moc_DialogUtil.cpp: ../common/GUI-QT/DialogUtil.h
 
 moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
 	$(MOC) ../common/MDI/PacketSocketQT.h -o moc/moc_PacketSocketQT.cpp
+
+moc/moc_GPSReceiver.cpp: ../common/GPSReceiver.h
+	$(MOC) ../common/GPSReceiver.h -o moc/moc_GPSReceiver.cpp
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp

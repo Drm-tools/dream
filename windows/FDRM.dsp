@@ -645,6 +645,10 @@ SOURCE=..\common\DataIO.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=..\common\GPSReceiver.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=..\common\DrmReceiver.cpp
 # End Source File
 # Begin Source File
@@ -1106,6 +1110,10 @@ SOURCE=..\common\drmchannel\ChannelSimulation.h
 # Begin Source File
 
 SOURCE=..\common\DataIO.h
+# End Source File
+# Begin Source File
+
+SOURCE=..\common\GPSReceiver.h
 # End Source File
 # Begin Source File
 

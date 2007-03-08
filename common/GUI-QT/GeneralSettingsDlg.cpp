@@ -245,7 +245,7 @@ QString strCoord;
 
 	/* Extract latitude values */
 
-	strCoord = QString(pDRMRec->GetParameters()->ReceptLog.GetLatitude().c_str());
+	strCoord = QString(pDRMRec->GetParameters()->ReceptLog.GetLatitudeDegreesMinutesString().c_str());
 
 	/* Extract degrees */
 
@@ -264,7 +264,7 @@ QString strCoord;
 
 	/* Extract longitude values */
 
-	strCoord = QString(pDRMRec->GetParameters()->ReceptLog.GetLongitude().c_str());
+	strCoord = QString(pDRMRec->GetParameters()->ReceptLog.GetLongitudeDegreesMinutesString().c_str());
 
 	/* Extract degrees */
 

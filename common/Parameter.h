@@ -42,6 +42,8 @@
 #include "GlobalDefinitions.h"
 #include "ofdmcellmapping/CellMappingTable.h"
 #include "matlib/Matlib.h"
+#include "GPSReceiver.h"
+
 
 enum ETypeIntFreq
 { FLINEAR, FDFTFILTER, FWIENER };
@@ -66,12 +68,10 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 class CParameter:public CCellMappingTable
 {
   public:
-	CParameter():sReceiverID("                "), sSerialNumber("000000"),
-		sDataFilesDirectory(""),
-		Stream(MAX_NUM_STREAMS),
-		iChanEstDelay(0),
-		bRunThread(FALSE),
-		bUsingMultimedia(TRUE),
+	CParameter():
+		sReceiverID("                "),
+		Stream(MAX_NUM_STREAMS), iChanEstDelay(0),
+		bRunThread(FALSE), bUsingMultimedia(TRUE),
 		iCurSelAudioService(0), iCurSelDataService(0),
 		rSigStrengthCorrection(_REAL(0.0)),
 		vecbiAudioFrameStatus(),
@@ -680,6 +680,7 @@ class CParameter:public CCellMappingTable
 	} AltFreqOtherServicesSign;
 
 	/* Misc. Functions ------------------------------------------------------ */
+	void FillGRPSData();
 	void GenerateRandomSerialNumber();
 	void ResetServicesStreams();
 	void GetActiveServices(CVector < int >&veciActServ);
@@ -873,22 +874,17 @@ class CParameter:public CCellMappingTable
 		{
 			return iFrequency;
 		}
-		void SetLatitude(const string strLat)
-		{
-			strLatitude = strLat;
-		}
-		string GetLatitude()
-		{
-			return strLatitude;
-		}
-		void SetLongitude(const string strLon)
-		{
-			strLongitude = strLon;
-		}
-		string GetLongitude()
-		{
-			return strLongitude;
-		}
+		void SetLatitude(const string snewLat);
+		void SetLongitude(const string sNewLong);
+		string GetLatitudeDegreesMinutesString();
+		string GetLongitudeDegreesMinutesString();
+		string GetLatitudeDegreesString();
+		string GetLongitudeDegreesString();
+		_REAL GetLatitudeDegrees() { return rLatitudeDegrees; }
+		_REAL GetLongitudeDegrees() { return rLongitudeDegrees; }
+		_BOOLEAN GetLatitudeValid() { return bLatValid; }
+		_BOOLEAN GetLongitudeValid() { return bLongValid; }
+
 		void SetAdditText(const string strNewTxt)
 		{
 			strAdditText = strNewTxt;
@@ -935,8 +931,9 @@ class CParameter:public CCellMappingTable
 		FILE *pFileLong;
 		FILE *pFileShort;
 		string strAdditText;
-		string strLatitude;
-		string strLongitude;
+		
+		_REAL rLatitudeDegrees, rLongitudeDegrees;
+		_BOOLEAN bLatValid, bLongValid;
 		int iSecDelLogStart;
 
 		ERobMode eCurRobMode;
@@ -1077,11 +1074,21 @@ class CParameter:public CCellMappingTable
 	_BOOLEAN bRunThread;
 	_BOOLEAN bUsingMultimedia;
 
-	//andrewm - GPS location
-	class CGPSInformation
+	//andrewm - GPS Receiver Info
+	CGPSRxData GPSRxData;
+
+	enum EGPSSource { GPS_SOURCE_GPS_RECEIVER, GPS_SOURCE_MANUAL_ENTRY };
+
+	EGPSSource eGPSSource;
+	string	sGPSdHost;
+	int		iGPSdPort;
+
+	//RGPS TAG item data
+		//andrewm - GPS location
+	class CRGPSData
 	{
 	  public:
-		CGPSInformation():bUse(FALSE),
+		CRGPSData():
 			eGPSSource(GPS_SOURCE_INVALID),
 			bSatellitesVisibleAvailable(FALSE),
 			bPositionAvailable(FALSE), bAltitudeAvailable(FALSE),
@@ -1090,184 +1097,64 @@ class CParameter:public CCellMappingTable
 		{
 		}
 
-		void SetUse(_BOOLEAN bNewuse)
-		{
-			bUse = bNewuse;
-		}
-		_BOOLEAN GetUse()
-		{
-			return bUse;
-		}
-
 		enum EGPSSource
 		{ GPS_SOURCE_INVALID, GPS_SOURCE_GPS_RECEIVER,
 			GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER, GPS_SOURCE_MANUAL_ENTRY,
 			GPS_SOURCE_NOT_AVAILABLE
 		};
 
-		EGPSSource GetGPSSource()
-		{
-			return eGPSSource;
-		}
-		void SetGPSSource(EGPSSource eNewSource)
-		{
-			eGPSSource = eNewSource;
-		}
+		EGPSSource GetGPSSource() {	return eGPSSource; }
+		void SetGPSSource(EGPSSource eNewSource) { eGPSSource = eNewSource; }
 
-		void SetSatellitesVisibleAvailable(_BOOLEAN bNewSatVisAv)
-		{
-			bSatellitesVisibleAvailable = bNewSatVisAv;
-		}
-		_BOOLEAN GetSatellitesVisibleAvailable()
-		{
-			return bSatellitesVisibleAvailable;
-		}
+		void SetSatellitesVisibleAvailable(_BOOLEAN bNewSatVisAv) {	bSatellitesVisibleAvailable = bNewSatVisAv; }
+		_BOOLEAN GetSatellitesVisibleAvailable() { return bSatellitesVisibleAvailable; }
 
-		void SetSatellitesVisible(uint8_t uiNewSatVis)
-		{
-			uiSatellitesVisible = uiNewSatVis;
-		}
-		uint8_t GetSatellitesVisible()
-		{
-			return uiSatellitesVisible;
-		}
+		void SetSatellitesVisible(uint8_t uiNewSatVis) { uiSatellitesVisible = uiNewSatVis;	}
+		uint8_t GetSatellitesVisible() { return uiSatellitesVisible; }
 
-		void SetPositionAvailable(_BOOLEAN bNewPosAv)
-		{
-			bPositionAvailable = bNewPosAv;
-		}
-		_BOOLEAN GetPositionAvailable()
-		{
-			return bPositionAvailable;
-		}
+		void SetPositionAvailable(_BOOLEAN bNewPosAv) { bPositionAvailable = bNewPosAv; }
+		_BOOLEAN GetPositionAvailable() { return bPositionAvailable; }
 
-		void SetLatLongDegrees(_REAL rNewLatDeg, _REAL rNewLongDeg)
-		{
-			rLatitudeDegrees = rNewLatDeg;
-			rLongitudeDegrees = rNewLongDeg;
-		}
-		_REAL GetLatitudeDegrees()
-		{
-			return rLatitudeDegrees;
-		}
-		_REAL GetLongitudeDegrees()
-		{
-			return rLongitudeDegrees;
-		}
+		void SetLatLongDegrees(_REAL rNewLatDeg, _REAL rNewLongDeg) { rLatitudeDegrees = rNewLatDeg; rLongitudeDegrees = rNewLongDeg; }
+		_REAL GetLatitudeDegrees() { return rLatitudeDegrees; }
+		_REAL GetLongitudeDegrees() { return rLongitudeDegrees; }
 
-		_BOOLEAN SetLatLongDegreesMinutes(const string& sNewLat,
-										  const string& sNewLong);
+		void SetAltitudeAvailable(_BOOLEAN bNewAltAv) {	bAltitudeAvailable = bNewAltAv; }
+		_BOOLEAN GetAltitudeAvailable() { return bAltitudeAvailable; }
 
-		void SetAltitudeAvailable(_BOOLEAN bNewAltAv)
-		{
-			bAltitudeAvailable = bNewAltAv;
-		}
-		_BOOLEAN GetAltitudeAvailable()
-		{
-			return bAltitudeAvailable;
-		}
+		void SetAltitudeMetres(_REAL rNewAlt) { rAltitudeMetres = rNewAlt; }
+		_REAL GetAltitudeMetres() { return rAltitudeMetres; }
 
-		void SetAltitudeMetres(_REAL rNewAlt)
-		{
-			rAltitudeMetres = rNewAlt;
-		}
-		_REAL GetAltitudeMetres()
-		{
-			return rAltitudeMetres;
-		}
+		void SetTimeAvailable(_BOOLEAN bNewTimeAv) { bTimeAvailable = bNewTimeAv; }
+		_BOOLEAN GetTimeAvailable() { return bTimeAvailable; }
 
-		void SetTimeAvailable(_BOOLEAN bNewTimeAv)
-		{
-			bTimeAvailable = bNewTimeAv;
-		}
-		_BOOLEAN GetTimeAvailable()
-		{
-			return bTimeAvailable;
-		}
+		void SetTimeDate(const time_t ttSecondsSince1970);
 
-		void SetTime(uint8_t uiNewHours, uint8_t uiNewMinutes,
-					 uint8_t uiNewSeconds)
-		{
-			uiTimeHours = uiNewHours;
-			uiTimeMinutes = uiNewMinutes;
-			uiTimeSeconds = uiNewSeconds;
-		}
-		uint8_t GetTimeHours()
-		{
-			return uiTimeHours;
-		}
-		uint8_t GetTimeMinutes()
-		{
-			return uiTimeMinutes;
-		}
-		uint8_t GetTimeSeconds()
-		{
-			return uiTimeSeconds;
-		}
+		void SetTime(uint8_t uiNewHours, uint8_t uiNewMinutes, uint8_t uiNewSeconds) { uiTimeHours = uiNewHours; uiTimeMinutes = uiNewMinutes; uiTimeSeconds = uiNewSeconds; }
+		
+		uint8_t GetTimeHours() { return uiTimeHours; }
+		uint8_t GetTimeMinutes() { return uiTimeMinutes; }
+		uint8_t GetTimeSeconds() { return uiTimeSeconds; }
 
-		void SetDateAvailable(_BOOLEAN bNewDateAv)
-		{
-			bDateAvailable = bNewDateAv;
-		}
-		_BOOLEAN GetDateAvailable()
-		{
-			return bDateAvailable;
-		}
+		void SetDateAvailable(_BOOLEAN bNewDateAv) { bDateAvailable = bNewDateAv; }
+		_BOOLEAN GetDateAvailable() { return bDateAvailable; }
 
-		void SetDate(uint8_t uiNewDay, uint8_t uiNewMonth, uint16_t uiNewYear)
-		{
-			uiDateDay = uiNewDay;
-			uiDateMonth = uiNewMonth;
-			uiDateYear = uiNewYear;
-		}
-		uint8_t GetDateDay()
-		{
-			return uiDateDay;
-		}
-		uint8_t GetDateMonth()
-		{
-			return uiDateMonth;
-		}
-		uint16_t GetDateYear()
-		{
-			return uiDateYear;
-		}
+		void SetDate(uint8_t uiNewDay, uint8_t uiNewMonth, uint16_t uiNewYear) { uiDateDay = uiNewDay; uiDateMonth = uiNewMonth; uiDateYear = uiNewYear; }
+		uint8_t GetDateDay() { return uiDateDay; }
+		uint8_t GetDateMonth() { return uiDateMonth; }
+		uint16_t GetDateYear() { return uiDateYear; }
 
-		void SetSpeedAvailable(_BOOLEAN bNewSpeedAv)
-		{
-			bSpeedAvailable = bNewSpeedAv;
-		}
-		_BOOLEAN GetSpeedAvailable()
-		{
-			return bSpeedAvailable;
-		}
+		void SetSpeedAvailable(_BOOLEAN bNewSpeedAv) { bSpeedAvailable = bNewSpeedAv; }
+		_BOOLEAN GetSpeedAvailable() { return bSpeedAvailable; }
 
-		void SetSpeedMetresPerSecond(_REAL rNewSpeed)
-		{
-			rSpeedMetresPerSecond = rNewSpeed;
-		}
-		_REAL GetSpeedMetresPerSecond()
-		{
-			return rSpeedMetresPerSecond;
-		}
+		void SetSpeedMetresPerSecond(_REAL rNewSpeed) { rSpeedMetresPerSecond = rNewSpeed; }
+		_REAL GetSpeedMetresPerSecond() { return rSpeedMetresPerSecond; }
 
-		void SetHeadingAvailable(_BOOLEAN bNewHeadAv)
-		{
-			bHeadingAvailable = bNewHeadAv;
-		}
-		_BOOLEAN GetHeadingAvailable()
-		{
-			return bHeadingAvailable;
-		}
+		void SetHeadingAvailable(_BOOLEAN bNewHeadAv) { bHeadingAvailable = bNewHeadAv; }
+		_BOOLEAN GetHeadingAvailable() { return bHeadingAvailable; }
 
-		void SetHeadingDegreesFromNorth(uint8_t uiNewHeading)
-		{
-			uiHeadingDegreesFromNorth = uiNewHeading;
-		}
-		uint8_t GetHeadingDegreesFromNorth()
-		{
-			return uiHeadingDegreesFromNorth;
-		}
+		void SetHeadingDegreesFromNorth(uint8_t uiNewHeading) { uiHeadingDegreesFromNorth = uiNewHeading; }
+		uint8_t GetHeadingDegreesFromNorth() { return uiHeadingDegreesFromNorth; }
 
 	  private:
 		_BOOLEAN bUse;
@@ -1301,9 +1188,10 @@ class CParameter:public CCellMappingTable
 		uint8_t uiHeadingDegreesFromNorth;
 
 	}
-	GPSInformation;
+	RGPSData;
 
-  protected:
+
+	  protected:
 	_REAL rSysSimSNRdB;
 
 	/* Current selected audio service for processing */

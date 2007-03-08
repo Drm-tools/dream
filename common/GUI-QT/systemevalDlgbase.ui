@@ -11,8 +11,8 @@
         <rect>
             <x>0</x>
             <y>0</y>
-            <width>756</width>
-            <height>561</height>
+            <width>758</width>
+            <height>570</height>
         </rect>
     </property>
     <property stdset="1">
@@ -1265,7 +1265,7 @@
             <class>QLayoutWidget</class>
             <property stdset="1">
                 <name>name</name>
-                <cstring>Layout22</cstring>
+                <cstring>Layout54</cstring>
             </property>
             <hbox>
                 <property stdset="1">
@@ -1823,7 +1823,7 @@
                     <class>QLayoutWidget</class>
                     <property stdset="1">
                         <name>name</name>
-                        <cstring>Layout21</cstring>
+                        <cstring>Layout52</cstring>
                     </property>
                     <vbox>
                         <property stdset="1">
@@ -1857,7 +1857,7 @@
                             <property>
                                 <name>vAlign</name>
                             </property>
-                            <vbox>
+                            <hbox>
                                 <property stdset="1">
                                     <name>margin</name>
                                     <number>11</number>
@@ -1888,29 +1888,197 @@
                                         <string>Modified &amp;Metrics</string>
                                     </property>
                                 </widget>
+                            </hbox>
+                        </widget>
+                        <widget>
+                            <class>QGroupBox</class>
+                            <property stdset="1">
+                                <name>name</name>
+                                <cstring>GroupBoxGPSStatus</cstring>
+                            </property>
+                            <property stdset="1">
+                                <name>title</name>
+                                <string>GPS</string>
+                            </property>
+                            <vbox>
+                                <property stdset="1">
+                                    <name>margin</name>
+                                    <number>11</number>
+                                </property>
+                                <property stdset="1">
+                                    <name>spacing</name>
+                                    <number>6</number>
+                                </property>
+                                <widget>
+                                    <class>QLayoutWidget</class>
+                                    <property stdset="1">
+                                        <name>name</name>
+                                        <cstring>Layout51</cstring>
+                                    </property>
+                                    <hbox>
+                                        <property stdset="1">
+                                            <name>margin</name>
+                                            <number>0</number>
+                                        </property>
+                                        <property stdset="1">
+                                            <name>spacing</name>
+                                            <number>6</number>
+                                        </property>
+                                        <widget>
+                                            <class>QLayoutWidget</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>Layout47</cstring>
+                                            </property>
+                                            <vbox>
+                                                <property stdset="1">
+                                                    <name>margin</name>
+                                                    <number>0</number>
+                                                </property>
+                                                <property stdset="1">
+                                                    <name>spacing</name>
+                                                    <number>6</number>
+                                                </property>
+                                                <widget>
+                                                    <class>QLabel</class>
+                                                    <property stdset="1">
+                                                        <name>name</name>
+                                                        <cstring>TextLabelGPSPosition</cstring>
+                                                    </property>
+                                                    <property stdset="1">
+                                                        <name>text</name>
+                                                        <string>Lat: 53.123°   Long: 00.456°</string>
+                                                    </property>
+                                                </widget>
+                                                <widget>
+                                                    <class>QLabel</class>
+                                                    <property stdset="1">
+                                                        <name>name</name>
+                                                        <cstring>TextLabelGPSTime</cstring>
+                                                    </property>
+                                                    <property stdset="1">
+                                                        <name>text</name>
+                                                        <string>24/01/2007 15:14.33 UTC</string>
+                                                    </property>
+                                                </widget>
+                                                <widget>
+                                                    <class>QLabel</class>
+                                                    <property stdset="1">
+                                                        <name>name</name>
+                                                        <cstring>TextLabelGPSSpeedHeading</cstring>
+                                                    </property>
+                                                    <property stdset="1">
+                                                        <name>text</name>
+                                                        <string>10.0 m/s  151°</string>
+                                                    </property>
+                                                </widget>
+                                            </vbox>
+                                        </widget>
+                                        <spacer>
+                                            <property>
+                                                <name>name</name>
+                                                <cstring>Spacer18</cstring>
+                                            </property>
+                                            <property>
+                                                <name>orientation</name>
+                                                <enum>Horizontal</enum>
+                                            </property>
+                                            <property>
+                                                <name>sizeType</name>
+                                                <enum>Expanding</enum>
+                                            </property>
+                                            <property>
+                                                <name>sizeHint</name>
+                                                <size>
+                                                    <width>20</width>
+                                                    <height>20</height>
+                                                </size>
+                                            </property>
+                                        </spacer>
+                                        <widget>
+                                            <class>QLayoutWidget</class>
+                                            <property stdset="1">
+                                                <name>name</name>
+                                                <cstring>Layout48</cstring>
+                                            </property>
+                                            <vbox>
+                                                <property stdset="1">
+                                                    <name>margin</name>
+                                                    <number>0</number>
+                                                </property>
+                                                <property stdset="1">
+                                                    <name>spacing</name>
+                                                    <number>6</number>
+                                                </property>
+                                                <spacer>
+                                                    <property>
+                                                        <name>name</name>
+                                                        <cstring>Spacer21</cstring>
+                                                    </property>
+                                                    <property>
+                                                        <name>orientation</name>
+                                                        <enum>Vertical</enum>
+                                                    </property>
+                                                    <property>
+                                                        <name>sizeType</name>
+                                                        <enum>Expanding</enum>
+                                                    </property>
+                                                    <property>
+                                                        <name>sizeHint</name>
+                                                        <size>
+                                                            <width>20</width>
+                                                            <height>20</height>
+                                                        </size>
+                                                    </property>
+                                                </spacer>
+                                                <widget>
+                                                    <class>CMultColorLED</class>
+                                                    <property stdset="1">
+                                                        <name>name</name>
+                                                        <cstring>LEDGPS</cstring>
+                                                    </property>
+                                                    <property stdset="1">
+                                                        <name>minimumSize</name>
+                                                        <size>
+                                                            <width>13</width>
+                                                            <height>13</height>
+                                                        </size>
+                                                    </property>
+                                                    <property stdset="1">
+                                                        <name>maximumSize</name>
+                                                        <size>
+                                                            <width>13</width>
+                                                            <height>13</height>
+                                                        </size>
+                                                    </property>
+                                                </widget>
+                                            </vbox>
+                                        </widget>
+                                    </hbox>
+                                </widget>
+                                <spacer>
+                                    <property>
+                                        <name>name</name>
+                                        <cstring>Spacer36</cstring>
+                                    </property>
+                                    <property>
+                                        <name>orientation</name>
+                                        <enum>Vertical</enum>
+                                    </property>
+                                    <property>
+                                        <name>sizeType</name>
+                                        <enum>Expanding</enum>
+                                    </property>
+                                    <property>
+                                        <name>sizeHint</name>
+                                        <size>
+                                            <width>20</width>
+                                            <height>20</height>
+                                        </size>
+                                    </property>
+                                </spacer>
                             </vbox>
                         </widget>
-                        <spacer>
-                            <property>
-                                <name>name</name>
-                                <cstring>Spacer6</cstring>
-                            </property>
-                            <property>
-                                <name>orientation</name>
-                                <enum>Vertical</enum>
-                            </property>
-                            <property>
-                                <name>sizeType</name>
-                                <enum>Fixed</enum>
-                            </property>
-                            <property>
-                                <name>sizeHint</name>
-                                <size>
-                                    <width>20</width>
-                                    <height>40</height>
-                                </size>
-                            </property>
-                        </spacer>
                         <widget>
                             <class>QLayoutWidget</class>
                             <property stdset="1">
@@ -1980,8 +2148,8 @@
 </widget>
 <customwidgets>
     <customwidget>
-        <class>CMultColorLED</class>
-        <header location="local">MultColorLED.h</header>
+        <class>CDRMPlot</class>
+        <header location="local">DRMPlot.h</header>
         <sizehint>
             <width>-1</width>
             <height>-1</height>
@@ -1994,11 +2162,11 @@
         <pixmap>image19</pixmap>
     </customwidget>
     <customwidget>
-        <class>CDRMPlot</class>
-        <header location="local">DRMPlot.h</header>
+        <class>CMultColorLED</class>
+        <header location="local">MultColorLED.h</header>
         <sizehint>
-            <width>14</width>
-            <height>16</height>
+            <width>-1</width>
+            <height>-1</height>
         </sizehint>
         <container>0</container>
         <sizepolicy>

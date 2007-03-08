@@ -76,7 +76,6 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 
 	const _BOOLEAN bCRCOk = CRCObject.CheckCRC(vecbiAFPkt.Separate(16));
 
-
 	/* Actual packet decoding ----------------------------------------------- */
 	vecbiAFPkt.ResetBitAccess();
 

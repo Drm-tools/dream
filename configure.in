@@ -2,7 +2,7 @@ dnl Process this file with autoconf to produce a configure script.
 AC_PREREQ(2.50)
 AC_INIT(common/GUI-QT/main.cpp)
 
-AM_INIT_AUTOMAKE(drm,1.7.13cvs)
+AM_INIT_AUTOMAKE(drm,1.8.1cvs)
 
 
 AM_CONFIG_HEADER(config.h)
@@ -21,11 +21,13 @@ AC_SUBST(LIBTOOL_DEPS)
 
 dnl Configuration Arguments
 
-AC_ARG_ENABLE( alsa, [  --enable-alsa         use alsa sound lib], enable_alsa=$enableval, enable_alsa=no)
+AC_ARG_ENABLE( alsa, [  --enable-alsa           use alsa sound lib], enable_alsa=$enableval, enable_alsa=no)
 
-AC_ARG_ENABLE( sound,[  --enable-sound        generic sound support], enable_sound=$enableval, enable_sound=yes)
+AC_ARG_ENABLE( sound,[  --enable-sound          generic sound support], enable_sound=$enableval, enable_sound=yes)
 
-AC_ARG_ENABLE( simulation,[  --enable-simulation   simulation mode], enable_simulation=$enableval, enable_simulation=no)
+AC_ARG_ENABLE( gps,[  --enable-gps            gps input via gpsd], enable_gps=$enableval, enable_gps=no)
+
+AC_ARG_ENABLE( simulation,[  --enable-simulation     simulation mode], enable_simulation=$enableval, enable_simulation=no)
 
 AC_ARG_WITH( qtgui,[  --with-qtgui            use GUI QT],WITHQTGUI=$withval, WITHQTGUI=yes)
 
@@ -33,7 +35,7 @@ AC_ARG_WITH( qtdir,[  --with-qtdir=path to QT],QTDIR=$withval)
 
 AC_ARG_WITH( faad2,[  --with-faad2            use faad2 library for decoding AAC audio],WITHFAAD2=$withval, WITHFAAD2=yes)
 
-AC_ARG_WITH( faac,[  --with-faac              use faac library for encoding AAC audio],WITHFAAC=$withval, WITHFAAC=no)
+AC_ARG_WITH( faac,[  --with-faac             use faac library for encoding AAC audio],WITHFAAC=$withval, WITHFAAC=no)
 
 AC_ARG_WITH( journaline,[  --with-journaline       support Journaline],WITHJOURNALINE=$withval, WITHJOURNALINE=no)
 
@@ -41,7 +43,7 @@ AC_ARG_WITH( hamlib,[  --with-hamlib           use hamlib library],WITHHAMLIB=$w
 
 AC_ARG_WITH( freeimage,[  --with-freeimage        use FreeImage library],WITHFREEIMAGE=$withval, WITHFREEIMAGE=no)
 
-AC_ARG_WITH( libpcap,[  --with-libpcap        use pcap library],WITHPCAP=$withval, WITHPCAP=no)
+AC_ARG_WITH( libpcap,[  --with-libpcap          use pcap library],WITHPCAP=$withval, WITHPCAP=no)
 
 if test "$enable_simulation" = "yes"; then
 	dnl Only minimal configuration for simulation
@@ -80,7 +82,10 @@ if test "x$enable_sound" = "xyes"; then
 else
 	AM_CONDITIONAL(WITH_SOUND, false)
 fi
-
+ 
+if test "x$enable_gps" = "xyes"; then
+	AC_DEFINE(USE_GPS, 1, [Define if you want to use gps])
+fi
 
 dnl Checks for header files.
 AC_HEADER_STDC
@@ -91,6 +96,7 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl Checks for some external libraries that need to be installed
 AC_LANG(C++)
+AC_CHECK_LIB(z, inflateEnd)
 
 dnl fftw ------------------------------------------------------------------------
 AC_SEARCH_LIBS(fftw_create_plan, dfftw fftw, , exit 1)

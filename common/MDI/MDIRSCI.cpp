@@ -101,7 +101,7 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	   with each AF packet */
 	TagItemGeneratorSDCChanInf.GenTag(Parameter);
 
-	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
+	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
 
 	/* RSCI tags ------------------------------------------------------------ */
 	TagItemGeneratorRAFS.GenTag(Parameter);
@@ -125,10 +125,8 @@ void CRSIMDIOutRCIIn::SendLockedFrame(CParameter& Parameter,
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
-	if (Parameter.GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
-		Parameter.GPSInformation.SetPositionAvailable(Parameter.GPSInformation.SetLatLongDegreesMinutes(Parameter.ReceptLog.GetLatitude(), Parameter.ReceptLog.GetLongitude()));
-	
-	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
+	Parameter.FillGRPSData();
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.RGPSData);	// rgps
 	
 	GenMDIPacket();
 }
@@ -165,17 +163,15 @@ void CRSIMDIOutRCIIn::SendUnlockedFrame(CParameter& Parameter)
 	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
 
 	/* Generate some other tags */
-	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
+	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 	_REAL rSigStr = 0.0;
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
-	if (Parameter.GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
-		Parameter.GPSInformation.SetPositionAvailable(Parameter.GPSInformation.SetLatLongDegreesMinutes(Parameter.ReceptLog.GetLatitude(), Parameter.ReceptLog.GetLongitude()));
-	
-	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
+	Parameter.FillGRPSData();
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.RGPSData);	/* rgps */
 
 	GenMDIPacket();
 }
@@ -212,17 +208,15 @@ void CRSIMDIOutRCIIn::SendAMFrame(CParameter& Parameter)
 	TagItemGeneratorRNIP.GenTag(TRUE,Parameter.rMaxPSDFreq, Parameter.rMaxPSDwrtSig);
 
 	/* Generate some other tags */
-	TagItemGeneratorInfo.GenTag(Parameter.sReceiverID);	/* rinf */
+	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
 	TagItemGeneratorRxFrequency.GenTag(TRUE, Parameter.ReceptLog.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(TRUE); /* ract */
 	_REAL rSigStr = 0.0;
 	_BOOLEAN bValid = Parameter.GetSignalStrength(rSigStr);
 	TagItemGeneratorSignalStrength.GenTag(bValid, rSigStr + S9_DBUV);
 
-	if (Parameter.GPSInformation.GetGPSSource() == CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY)
-		Parameter.GPSInformation.SetPositionAvailable(Parameter.GPSInformation.SetLatLongDegreesMinutes(Parameter.ReceptLog.GetLatitude(), Parameter.ReceptLog.GetLongitude()));
-	
-	TagItemGeneratorGPSInformation.GenTag(Parameter.GPSInformation.GetUse(), Parameter.GPSInformation);	/* rgps */
+	Parameter.FillGRPSData();
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.RGPSData);	/* rgps */
 
 	// TransmitPacket(GenMDIPacket());
 	GenMDIPacket();
@@ -257,10 +251,10 @@ void CRSIMDIOutRCIIn::GenMDIPacket()
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProTyRSCI);
 
 	/* rinf taf */
-	TagPacketGenerator.AddTagItem(&TagItemGeneratorInfo);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorRINF);
 
 	/* rgps tag */
-	TagPacketGenerator.AddTagItem(&TagItemGeneratorGPSInformation);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorGPS);
 
 	/* rpro tag */
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorProfile);
@@ -330,11 +324,11 @@ void CRSIMDIOutRCIIn::ResetTags()
 	TagItemGeneratorFAC.Reset(); /* fac_ tag */
 	TagItemGeneratorSDCChanInf.Reset(); /* sdci tag */
 	TagItemGeneratorRobMod.Reset(); /* robm tag */
-	TagItemGeneratorInfo.Reset(); /* info tag */
+	TagItemGeneratorRINF.Reset(); /* info tag */
 	TagItemGeneratorReceiverStatus.Reset(); /* rsta */
 
 	TagItemGeneratorProfile.Reset(); /* rpro */
-	TagItemGeneratorGPSInformation.Reset();	/* rgps */
+	TagItemGeneratorGPS.Reset();	/* rgps */
 
 	TagItemGeneratorPowerSpectralDensity.Reset();
 	TagItemGeneratorPilots.Reset();

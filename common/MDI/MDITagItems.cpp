@@ -39,6 +39,8 @@
 
 #include "MDITagItems.h"
 #include <iostream>
+#include <fstream>
+using namespace std;
 
 #include "../util/LogPrint.h"
 
@@ -288,7 +290,7 @@ void CTagItemGeneratorRobMod::GenTag(const ERobMode eCurRobMode)
 string CTagItemGeneratorRobMod::GetTagName(void) {return "robm";}
 string CTagItemGeneratorRobMod::GetProfiles(void) {return "ABCDQM";}
 
-void CTagItemGeneratorInfo::GenTag(string strUTF8Text)
+void CTagItemGeneratorRINF::GenTag(string strUTF8Text)
 {
 	/* Data length: n * 8 bits */
 	PrepareTag(16 * SIZEOF__BYTE);
@@ -303,8 +305,8 @@ void CTagItemGeneratorInfo::GenTag(string strUTF8Text)
 	}
 }
 
-string CTagItemGeneratorInfo::GetTagName(void) {return "rinf";}
-string CTagItemGeneratorInfo::GetProfiles(void) {return "ABCDQM";}
+string CTagItemGeneratorRINF::GetTagName(void) {return "rinf";}
+string CTagItemGeneratorRINF::GetProfiles(void) {return "ABCDQM";}
 
 CTagItemGeneratorStr::CTagItemGeneratorStr()
 : iStreamNumber(0)
@@ -729,8 +731,9 @@ void CTagItemGenerator::Enqueue(uint32_t iInformation, const int iNumOfBits)
 /* e.g. rpil, rpsd, ... */
 
 //andrewm - 2006-12-08
-void CTagItemGeneratorGPSInformation::GenTag(_BOOLEAN bIsValid, CParameter::CGPSInformation& GPSInformation) // Long/Lat in degrees
+void CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CParameter::CRGPSData& RGPSData) // Long/Lat in degrees
 {
+
 	int iLatitudeDegrees;
 	uint8_t uiLatitudeMinutes;
 	uint16_t uiLatitudeMinuteFractions;
@@ -744,27 +747,28 @@ void CTagItemGeneratorGPSInformation::GenTag(_BOOLEAN bIsValid, CParameter::CGPS
 
 	if (bIsValid == FALSE)
 	{
+
 		PrepareTag(0);
 	}
 	else
 	{
 		PrepareTag(26*SIZEOF__BYTE);
 
-		switch (GPSInformation.GetGPSSource())
+		switch (RGPSData.GetGPSSource())
 		{
-			case CParameter::CGPSInformation::GPS_SOURCE_INVALID:
+			case CParameter::CRGPSData::GPS_SOURCE_INVALID:
 				Enqueue((uint32_t) 0x00, SIZEOF__BYTE);
 				break;
-			case CParameter::CGPSInformation::GPS_SOURCE_GPS_RECEIVER:
+			case CParameter::CRGPSData::GPS_SOURCE_GPS_RECEIVER:
 				Enqueue((uint32_t) 0x01, SIZEOF__BYTE);
 				break;
-			case CParameter::CGPSInformation::GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER:
+			case CParameter::CRGPSData::GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER:
 				Enqueue((uint32_t) 0x02, SIZEOF__BYTE);
 				break;
-			case CParameter::CGPSInformation::GPS_SOURCE_MANUAL_ENTRY:
+			case CParameter::CRGPSData::GPS_SOURCE_MANUAL_ENTRY:
 				Enqueue((uint32_t) 0x03, SIZEOF__BYTE);
 				break;
-			case CParameter::CGPSInformation::GPS_SOURCE_NOT_AVAILABLE:
+			case CParameter::CRGPSData::GPS_SOURCE_NOT_AVAILABLE:
 				Enqueue((uint32_t) 0xFF, SIZEOF__BYTE);
 				break;
 			default:
@@ -773,46 +777,32 @@ void CTagItemGeneratorGPSInformation::GenTag(_BOOLEAN bIsValid, CParameter::CGPS
 		}
 
 
-		if (GPSInformation.GetSatellitesVisibleAvailable())
+		if (RGPSData.GetSatellitesVisibleAvailable())
 		{
-			Enqueue((uint32_t) GPSInformation.GetSatellitesVisible(), SIZEOF__BYTE);
+			Enqueue((uint32_t) RGPSData.GetSatellitesVisible(), SIZEOF__BYTE);
 		}
 		else
 		{
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-
-		if (GPSInformation.GetPositionAvailable())
+		if (RGPSData.GetPositionAvailable())
 		{
-			if (GPSInformation.GetLatitudeDegrees() > 0)
-			{
-				iLatitudeDegrees = (int) GPSInformation.GetLatitudeDegrees();
-				uiLatitudeMinutes = (uint8_t) ( 60.0 * (GPSInformation.GetLatitudeDegrees() - iLatitudeDegrees) );
-				uiLatitudeMinuteFractions = (uint16_t) ( ((60.0 * (GPSInformation.GetLatitudeDegrees() - iLatitudeDegrees)) - uiLatitudeMinutes) * 65536.0 );
-				
-			}
+			if (RGPSData.GetLatitudeDegrees() >= 0)
+				iLatitudeDegrees = (int) RGPSData.GetLatitudeDegrees();
 			else
-			{
-				iLatitudeDegrees = (int) GPSInformation.GetLatitudeDegrees() - 1;
-				uiLatitudeMinutes = (uint8_t) ( 60 - (60.0 * (GPSInformation.GetLatitudeDegrees() - iLatitudeDegrees - 1)) );
-				uiLatitudeMinuteFractions = (uint16_t) ( ( 60 - (60.0 * (GPSInformation.GetLatitudeDegrees() - iLatitudeDegrees - 1)) ) * 65536.0 );
-			}
-			
+				iLatitudeDegrees = (int) RGPSData.GetLatitudeDegrees() - 1;
 
-			if (GPSInformation.GetLongitudeDegrees() > 0)
-			{
-				iLongitudeDegrees = (int) GPSInformation.GetLongitudeDegrees();
-				uiLongitudeMinutes = (uint8_t) ( 60.0 * (GPSInformation.GetLongitudeDegrees() - iLongitudeDegrees) );
-				uiLongitudeMinuteFractions = (uint16_t) ( ((60.0 * (GPSInformation.GetLongitudeDegrees() - iLongitudeDegrees)) - uiLongitudeMinutes) * 65536.0 );
-			}
+			uiLatitudeMinutes = (uint8_t) ( 60.0 * (RGPSData.GetLatitudeDegrees() - iLatitudeDegrees) );
+			uiLatitudeMinuteFractions = (uint16_t) ( ((60.0 * (RGPSData.GetLatitudeDegrees() - iLatitudeDegrees)) - uiLatitudeMinutes) * 65536.0 );
+
+			if (RGPSData.GetLongitudeDegrees() >= 0)
+				iLongitudeDegrees = (int) RGPSData.GetLongitudeDegrees();
 			else
-			{
-				iLongitudeDegrees = (int) GPSInformation.GetLongitudeDegrees() - 1;
-				uiLongitudeMinutes = (uint8_t) ( 60 - (60.0 * (GPSInformation.GetLongitudeDegrees() - iLongitudeDegrees - 1)) );
-				uiLongitudeMinuteFractions = (uint16_t) ( ( 60 - (60.0 * (GPSInformation.GetLongitudeDegrees() - iLongitudeDegrees - 1)) ) * 65536.0 );
-			}
+				iLongitudeDegrees = (int) RGPSData.GetLongitudeDegrees() - 1;
 
+			uiLongitudeMinutes = (uint8_t) ( 60.0 * (RGPSData.GetLongitudeDegrees() - iLongitudeDegrees) );
+			uiLongitudeMinuteFractions = (uint16_t) ( ((60.0 * (RGPSData.GetLongitudeDegrees() - iLongitudeDegrees)) - uiLongitudeMinutes) * 65536.0 );
 
 			Enqueue((uint32_t) iLatitudeDegrees, 2*SIZEOF__BYTE);
 			Enqueue((uint32_t) uiLatitudeMinutes, SIZEOF__BYTE);
@@ -832,35 +822,31 @@ void CTagItemGeneratorGPSInformation::GenTag(_BOOLEAN bIsValid, CParameter::CGPS
 		}
 
 
-		if (GPSInformation.GetAltitudeAvailable())
+		if (RGPSData.GetAltitudeAvailable())
 		{
-			if (GPSInformation.GetAltitudeMetres() > 0)
-			{
-				iAltitudeMetres = (int) GPSInformation.GetAltitudeMetres();
-				uiAltitudeMetreFractions = (uint8_t) ( 256.0 * (GPSInformation.GetAltitudeMetres() - iAltitudeMetres) );
-			}
+			if (RGPSData.GetAltitudeMetres() >= 0)
+				iAltitudeMetres = (int) RGPSData.GetAltitudeMetres();
 			else
-			{
-				iAltitudeMetres = (int) (GPSInformation.GetAltitudeMetres() - 1);
-				uiAltitudeMetreFractions = (uint8_t) ( 256.0 * (GPSInformation.GetAltitudeMetres() - iAltitudeMetres - 1.0) );
-			}
+				iAltitudeMetres = (int) (RGPSData.GetAltitudeMetres() - 1);
+
+			uiAltitudeMetreFractions = (uint8_t) ( 256.0 * (RGPSData.GetAltitudeMetres() - iAltitudeMetres) );
+			
 
 			Enqueue((uint32_t) iAltitudeMetres, 2*SIZEOF__BYTE);
 			Enqueue((uint32_t) uiAltitudeMetreFractions, SIZEOF__BYTE);
 		}
 		else
 		{
-			Enqueue((uint32_t) 0xff, 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xffff, 2*SIZEOF__BYTE);
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
 
-
-		if (GPSInformation.GetTimeAvailable())
+		if (RGPSData.GetTimeAvailable())
 		{
-			Enqueue((uint32_t) GPSInformation.GetTimeHours(), SIZEOF__BYTE);
-			Enqueue((uint32_t) GPSInformation.GetTimeMinutes(), SIZEOF__BYTE);
-			Enqueue((uint32_t) GPSInformation.GetTimeSeconds(), SIZEOF__BYTE);
+			Enqueue((uint32_t) RGPSData.GetTimeHours(), SIZEOF__BYTE);
+			Enqueue((uint32_t) RGPSData.GetTimeMinutes(), SIZEOF__BYTE);
+			Enqueue((uint32_t) RGPSData.GetTimeSeconds(), SIZEOF__BYTE);
 		}
 		else
 		{
@@ -870,9 +856,22 @@ void CTagItemGeneratorGPSInformation::GenTag(_BOOLEAN bIsValid, CParameter::CGPS
 		}
 		
 
-		if (GPSInformation.GetSpeedAvailable())
+		if (RGPSData.GetDateAvailable())
 		{
-			Enqueue((uint32_t) (GPSInformation.GetSpeedMetresPerSecond()*10.0), 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) RGPSData.GetDateYear(), SIZEOF__BYTE);
+			Enqueue((uint32_t) RGPSData.GetDateMonth(), 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) RGPSData.GetDateDay(), SIZEOF__BYTE);
+		}
+		else
+		{
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xff, 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
+		}
+
+		if (RGPSData.GetSpeedAvailable())
+		{
+			Enqueue((uint32_t) (RGPSData.GetSpeedMetresPerSecond()*10.0), 2*SIZEOF__BYTE);
 		}
 		else
 		{
@@ -880,20 +879,19 @@ void CTagItemGeneratorGPSInformation::GenTag(_BOOLEAN bIsValid, CParameter::CGPS
 		}
 
 
-		if (GPSInformation.GetHeadingAvailable())
+		if (RGPSData.GetHeadingAvailable())
 		{
-			Enqueue((uint32_t) GPSInformation.GetHeadingDegreesFromNorth(), 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) RGPSData.GetHeadingDegreesFromNorth(), 2*SIZEOF__BYTE);
 		}
 		else
 		{
 			Enqueue((uint32_t) 0xffff, 2*SIZEOF__BYTE);
 		}
 	}
-
 }
 
-string CTagItemGeneratorGPSInformation::GetTagName(void) {return "rgps";}
-string CTagItemGeneratorGPSInformation::GetProfiles(void) {return "AD";}
+string CTagItemGeneratorGPS::GetTagName(void) {return "rgps";}
+string CTagItemGeneratorGPS::GetProfiles(void) {return "AD";}
 
 void CTagItemGeneratorPowerSpectralDensity::GenTag(CParameter &Parameter)
 {
@@ -1013,3 +1011,4 @@ void CTagItemGeneratorPilots::GenTag(CParameter &Parameter)
 	} // next symbol
 
 }
+

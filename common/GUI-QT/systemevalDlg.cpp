@@ -28,7 +28,6 @@
 
 #include "systemevalDlg.h"
 
-
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	const char* name, bool modal, WFlags f) :
@@ -926,6 +925,78 @@ void systemevalDlg::OnTimer()
 	FACTimeDateL->setText(tr("Received time - date:")); /* Label */
 	FACTimeDateV->setText(strFACInfo); /* Value */
 
+	//display GPS info
+
+
+	switch (ReceiverParam.GPSRxData.GetStatus())
+	{
+		case CGPSRxData::GPS_RX_NOT_CONNECTED:
+			LEDGPS->SetLight(2); // Red
+			break;
+
+		case CGPSRxData::GPS_RX_NO_DATA:
+			LEDGPS->SetLight(1); // Yellow
+			break;
+
+		case CGPSRxData::GPS_RX_DATA_AVAILABLE:
+			LEDGPS->SetLight(0); // Green
+			break;
+	}
+
+	QString qStrPosition;
+	if (ReceiverParam.GPSRxData.GetPositionAvailable())
+		{
+			float fLatDeg, fLongDeg;
+			ReceiverParam.GPSRxData.GetLatLongDegrees(fLatDeg, fLongDeg);
+
+			qStrPosition = "Lat: "+QString().setNum(fLatDeg, 'f', 4) + "\260  " +	"Long: "+ QString().setNum(fLongDeg, 'f', 4) + "\260";
+		}
+	else
+		qStrPosition = "Lat: ?  Long: ?";
+
+	if (ReceiverParam.GPSRxData.GetAltitudeAvailable())
+		qStrPosition += "  Alt: " + QString().setNum(ReceiverParam.GPSRxData.GetAltitudeMetres(), 'f', 0) + "m";
+	else
+		qStrPosition += "  Alt: ?";
+
+	TextLabelGPSPosition->setText(qStrPosition);
+
+
+
+	QString qStrSpeedHeading;
+	qStrSpeedHeading = "Speed: ";
+
+	if (ReceiverParam.GPSRxData.GetSpeedAvailable())
+		qStrSpeedHeading += QString().setNum(ReceiverParam.GPSRxData.GetSpeedMetresPerSecond(), 'f', 1);
+	else
+		qStrSpeedHeading += "?";
+
+
+	qStrSpeedHeading += "  Heading: ";
+	if (ReceiverParam.GPSRxData.GetHeadingAvailable())
+		qStrSpeedHeading += QString().setNum(ReceiverParam.GPSRxData.GetHeadingDegrees()) += "\260";
+	else
+		qStrSpeedHeading += "?";
+
+	TextLabelGPSSpeedHeading->setText(qStrSpeedHeading);
+
+	QString qStrTime;
+
+	if (ReceiverParam.GPSRxData.GetTimeAndDateAvailable())
+	{
+		QDateTime qDT;
+		qDT.setTime_t(ReceiverParam.GPSRxData.GetTimeSecondsSince1970());
+		qStrTime += "UTC: " + qDT.toString() + "  ";
+	}
+	else
+		qStrTime = "UTC: ?  ";
+
+	if (ReceiverParam.GPSRxData.GetSatellitesVisibleAvailable())
+		qStrTime += "Satellites: " + QString().setNum(ReceiverParam.GPSRxData.GetSatellitesVisible());
+	else
+		qStrTime += "Satellites: ?";
+
+	TextLabelGPSTime->setText(qStrTime);
 
 	/* Update controls */
 	UpdateControls();

@@ -41,6 +41,7 @@ rem .h --------------
 %qtdir%\bin\moc.exe ..\common\GUI-QT\AnalogDemDlg.h -o moc\moc_AnalogDemDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\EPGDlg.h -o moc\moc_EPGDlg.cpp
 %qtdir%\bin\moc.exe ..\common\MDI\PacketSocketQT.h -o moc\moc_PacketSocketQT.cpp
+%qtdir%\bin\moc.exe ..\common\GPSReceiver.h -o moc\moc_GPSReceiver.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\MultSettingsDlg.h -o moc\moc_MultSettingsDlg.cpp
 %qtdir%\bin\moc.exe ..\common\GUI-QT\GeneralSettingsDlg.h -o moc\moc_GeneralSettingsDlg.cpp
 

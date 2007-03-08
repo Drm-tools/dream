@@ -167,11 +167,12 @@ public:
 	~CGPSReceiver();
 	
 	void SetGPSRxData(CGPSRxData* pGPSRxData) { m_pGPSRxData = pGPSRxData; }
+	void SetGPSd(const string& host, int port) { m_GPSdHostName = host; m_GPSdPort = port; }
 	virtual void	run();
+	void Stop() { m_bFinished = TRUE; }
 
 protected:
 	void Start();
-	void Stop() { m_bFinished = TRUE; }
 
 	void DecodeGPSDReply(string Reply);
 	void DecodeString(char Command, string Value);

@@ -33,6 +33,7 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
+#include "../GPSReceiver.h"
 
 #ifdef USE_QT_GUI
 # include <qapplication.h>
@@ -109,6 +110,13 @@ try
 		   ready than the GUI thread */
 		DRMReceiver.Init();
 
+#if USE_GPS
+		CGPSReceiver GPSReceiver;
+		GPSReceiver.SetGPSRxData(&DRMReceiver.GetParameters()->GPSRxData);
+		GPSReceiver.SetGPSd(DRMReceiver.GetParameters()->sGPSdHost, DRMReceiver.GetParameters()->iGPSdPort);
+		GPSReceiver.start();
+#endif
+
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
 
 		/* TODO better persistance variable */
@@ -126,6 +134,11 @@ try
 
 		/* Working thread has been initialized so start the GUI! */
 		app.exec();
+
+#if USE_GPS
+		GPSReceiver.Stop();
+		GPSReceiver.wait();
+#endif
 	}
 
 	/* Save settings to init-file */

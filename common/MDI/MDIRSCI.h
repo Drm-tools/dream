@@ -154,7 +154,7 @@ protected:
 	CTagItemGeneratorSDC TagItemGeneratorSDCEmpty; /* empty sdc_ tag for use in non-SDC frames */
 	CTagItemGeneratorSDCChanInf TagItemGeneratorSDCChanInf; /* sdci tag */
 	CTagItemGeneratorRobMod TagItemGeneratorRobMod; /* robm tag */
-	CTagItemGeneratorInfo TagItemGeneratorInfo; /* info tag */
+	CTagItemGeneratorRINF TagItemGeneratorRINF; /* info tag */
 	CTagItemGeneratorRWMF TagItemGeneratorRWMF; /* RWMF tag */
 	CTagItemGeneratorRWMM TagItemGeneratorRWMM; /* RWMM tag */
 	CTagItemGeneratorRMER TagItemGeneratorRMER; /* RMER tag */
@@ -173,7 +173,7 @@ protected:
 	CTagItemGeneratorRxBandwidth TagItemGeneratorRxBandwidth; /* rbw_ */
 	CTagItemGeneratorRxService TagItemGeneratorRxService; /* rser */
 
-	CTagItemGeneratorGPSInformation TagItemGeneratorGPSInformation; /* rgps */
+	CTagItemGeneratorGPS TagItemGeneratorGPS; /* rgps */
 	CTagItemGeneratorPowerSpectralDensity TagItemGeneratorPowerSpectralDensity; /* rpsd */
 	CTagItemGeneratorPilots TagItemGeneratorPilots; /* rpil */
 

@@ -717,8 +717,8 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	pViewMenu->insertItem(tr("Stations &preview"),pPreviewMenu);
 
 	/* Get current receiver latitude and longitude if defined */
-	DRMSchedule.SetReceiverCoordinates(pDRMRec->GetParameters()->ReceptLog.GetLatitude()
-			,pDRMRec->GetParameters()->ReceptLog.GetLongitude());
+	DRMSchedule.SetReceiverCoordinates(pDRMRec->GetParameters()->ReceptLog.GetLatitudeDegreesMinutesString()
+			,pDRMRec->GetParameters()->ReceptLog.GetLongitudeDegreesMinutesString());
 
 	SetStationsView();
 

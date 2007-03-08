@@ -715,7 +715,8 @@ _REAL CParameter::GetSysToNomBWCorrFact()
 CParameter::CReceptLog::CReceptLog() : iNumAACFrames(10), iFrequency(0),
 	bLogActivated(FALSE), bLogEnabled(FALSE),
 	pFileLong(NULL), pFileShort(NULL),
-	strAdditText(""), strLatitude(""), strLongitude(""), 
+	strAdditText(""), 
+	bLatValid(FALSE), bLongValid(FALSE),
 	iSecDelLogStart(0)
 {
 	ResetLog(TRUE);
@@ -921,8 +922,8 @@ void CParameter::CReceptLog::SetLogHeader(FILE* pFile, const _BOOLEAN bIsLong)
 			if (iFrequency != 0)
 				fprintf(pFile, "%d kHz", iFrequency);
 			
-			fprintf(pFile, "\nLatitude         %7s", strLatitude.c_str());
-			fprintf(pFile, "\nLongitude        %7s", strLongitude.c_str());
+			fprintf(pFile, "\nLatitude         %7s", GetLatitudeDegreesMinutesString().c_str());
+			fprintf(pFile, "\nLongitude        %7s", GetLatitudeDegreesMinutesString().c_str());
 
 			/* Write additional text */
 			if (strAdditText != "")
@@ -1169,6 +1170,174 @@ void CParameter::CReceptLog::WriteParameters(const _BOOLEAN bIsLong)
 	}
 }
 
+//andrewm - 20070302 - modified internal representation of Lat/Long 
+// as floats for increased accuracy and ease of handling
+
+void CParameter::CReceptLog::SetLatitude(const string sNewLat)
+{ 
+	if (sNewLat.empty())
+	{
+		bLatValid = FALSE;
+		return;
+	}
+
+	char chrDegrees = 0xb0; // degrees char based on Latin-1
+
+	// see which type of input: float or degrees, minutes
+
+	if (sNewLat.find(chrDegrees) != string::npos)
+	{
+		string sLat;
+		sLat = sNewLat;		// take a local copy we can alter
+	
+		int Degrees, Minutes;
+
+		size_t pos;
+
+		//lat
+		pos = sLat.find(chrDegrees);
+		if (pos != string::npos)
+			sLat.replace(pos, 1, " ");
+
+		pos = sLat.find("\'");
+		if (pos != string::npos)
+			sLat.replace(pos, 1, " ");
+
+		stringstream ssLat(sLat);
+		ssLat >> Degrees >> Minutes;
+		rLatitudeDegrees = Degrees + (Minutes/60.0);
+
+		if (sLat.find("N") == string::npos)	// N not found, so must be south
+			rLatitudeDegrees *= -1;
+	}
+	else
+		rLatitudeDegrees = atof(sNewLat.c_str());
+
+	bLatValid = TRUE;
+}
+
+void CParameter::CReceptLog::SetLongitude(const string sNewLong)
+{
+	if (sNewLong.empty())
+	{
+		bLongValid = FALSE;
+		return;
+	}
+
+	char chrDegrees = 0xb0; // degrees char based on Latin-1
+
+	// see which type of input: float or degrees, minutes
+
+	if (sNewLong.find(chrDegrees) != string::npos)
+	{
+		string sLong;
+		sLong = sNewLong;
+	
+		int Degrees, Minutes;
+
+		size_t pos;
+
+		//long
+		pos = sLong.find(chrDegrees);
+		if (pos != string::npos)
+			sLong.replace(pos, 1, " ");
+
+		pos = sLong.find("\'");
+		if (pos != string::npos)
+			sLong.replace(pos, 1, " ");
+
+		stringstream ssLong(sLong);
+		ssLong >> Degrees >> Minutes;
+		rLongitudeDegrees = Degrees + (Minutes/60.0);
+
+		if (sNewLong.find("E") == string::npos)	// E not found, so must be west
+			rLongitudeDegrees *= -1;
+	}
+	else
+		rLongitudeDegrees = atof(sNewLong.c_str());
+
+	bLongValid = TRUE;
+}
+
+
+string CParameter::CReceptLog::GetLatitudeDegreesString()
+{
+	if (!bLatValid)
+		return "";
+
+	stringstream ssLatitude;
+	ssLatitude.precision(7);
+	ssLatitude.width(10);
+	ssLatitude.setf(ios::left);
+	ssLatitude.fill('0');
+	ssLatitude << rLatitudeDegrees;
+
+	return ssLatitude.str();
+}
+
+string CParameter::CReceptLog::GetLongitudeDegreesString()
+{
+	if (!bLongValid)
+		return "";
+
+	stringstream ssLongitude;
+	ssLongitude.precision(7);
+	ssLongitude.width(10);
+	ssLongitude.setf(ios::left);
+	ssLongitude.fill('0');
+	ssLongitude << rLongitudeDegrees;
+
+	return ssLongitude.str();
+}
+
+
+string CParameter::CReceptLog::GetLatitudeDegreesMinutesString()
+{
+	if (!bLatValid)
+		return "";
+
+	char chrDegrees = 0xb0; // degrees char based on Latin-1
+
+	unsigned int Degrees, Minutes;
+
+	Degrees = (unsigned int) rLatitudeDegrees;
+	Minutes = (unsigned int) ((rLatitudeDegrees - Degrees) * 60.0);
+
+	stringstream ssLatitude;
+	ssLatitude << Degrees << chrDegrees << Minutes << "'";
+
+	if (rLatitudeDegrees < 0)
+		ssLatitude << "S";
+	else
+		ssLatitude << "N";
+
+	return ssLatitude.str();
+}
+
+string CParameter::CReceptLog::GetLongitudeDegreesMinutesString()
+{
+	if (!bLongValid)
+		return "";
+
+	char chrDegrees = 0xb0; // degrees char based on Latin-1
+
+	unsigned int Degrees, Minutes;
+
+	Degrees = (unsigned int) rLongitudeDegrees;
+	Minutes = (unsigned int) ((rLongitudeDegrees - Degrees) * 60.0);
+
+	stringstream ssLongitude;
+	ssLongitude << Degrees << chrDegrees << Minutes << "'";
+
+	if (rLongitudeDegrees < 0)
+		ssLongitude << "W";
+	else
+		ssLongitude << "E";
+
+	return ssLongitude.str();
+}
+
+
 ERecMode CParameter::GetReceiverMode()
 {
  return DRMReceiver.GetReceiverMode();		 
@@ -1314,83 +1483,123 @@ ETypeRxStatus CParameter::CReceiveStatus::GetMOTStatus()
 	return MOTOK;
 }
 
-_BOOLEAN CParameter::CGPSInformation::SetLatLongDegreesMinutes(const string& sNewLat, const string& sNewLong) 
-{ 
-	if (sNewLat.empty() || sNewLong.empty())
-		return FALSE;
+void CParameter::CRGPSData::SetTimeDate(const time_t ttSecondsSince1970)
+{
+	struct tm*	p_ts;
+	p_ts = gmtime(&ttSecondsSince1970);
 
-	unsigned char chrDegrees = 0xb0; /* degrees char based on Latin-1 */
+	uiTimeHours = p_ts->tm_hour;
+	uiTimeMinutes = p_ts->tm_min;
+	uiTimeSeconds = p_ts->tm_sec;
 
-	string sLat, sLong;
-	
-	sLat = sNewLat;		/* take a local copy we can alter */
-	sLong = sNewLong;
-	
-	int Degrees, Minutes;
-
-	size_t pos;
-
-	//lat
-	pos = sLat.find(chrDegrees);
-	if (pos != string::npos)
-		sLat.replace(pos, 1, " ");
-
-	pos = sLat.find("\'");
-	if (pos != string::npos)
-		sLat.replace(pos, 1, " ");
-
-	stringstream ssLat(sLat);
-	ssLat >> Degrees >> Minutes;
-	rLatitudeDegrees = Degrees + (Minutes/60.0);
-
-	if (sLat.find("N") == string::npos)	/* N not found, so must be south */
-		rLatitudeDegrees *= -1;
-
-	//long
-	pos = sLong.find(chrDegrees);
-	if (pos != string::npos)
-		sLong.replace(pos, 1, " ");
-
-	pos = sLong.find("\'");
-	if (pos != string::npos)
-		sLong.replace(pos, 1, " ");
-
-	stringstream ssLong(sLong);
-	ssLong >> Degrees >> Minutes;
-	rLongitudeDegrees = Degrees + (Minutes/60.0);
-
-	if (sNewLat.find("E") == string::npos)	/* E not found, so must be west */
-		rLongitudeDegrees *= -1;
-
-	return TRUE;
+	uiDateYear = 1900+p_ts->tm_year;
+	uiDateMonth = 1+p_ts->tm_mon;
+	uiDateDay = p_ts->tm_mday;
 }
 
 void CParameter::GenerateRandomSerialNumber()
 {
-        /* seed random number generator */
-        srand(time(0));
+	//seed random number generator
+	srand(time(0));
 
+	char randomChars[36];
 
-        char randomChars[36];
+	for (int q=0; q < 36; q++)
+	{
+		if (q < 26)
+			randomChars[q] = q+97;
+		else
+			randomChars[q] = (q-26)+48;
+	}
 
+	char serialNumTemp[7];
+			
+	for (int i=0; i < 6; i++)
+		serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
 
-        for (int q=0; q < 36; q++)
-        {
-                if (q < 26)
-                        randomChars[q] = q+97;
-                else
-                        randomChars[q] = (q-26)+48;
-        }
+	serialNumTemp[6] = '\0';
 
+	sSerialNumber = serialNumTemp;
+}
 
-        char serialNumTemp[7];
-                        
-        for (int i=0; i < 6; i++)
-                serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
+void CParameter::FillGRPSData()
+{
+	if (eGPSSource == CParameter::GPS_SOURCE_MANUAL_ENTRY)
+	{
+		RGPSData.SetGPSSource(CParameter::CRGPSData::GPS_SOURCE_MANUAL_ENTRY);
+		RGPSData.SetSatellitesVisibleAvailable(FALSE);
+		RGPSData.SetPositionAvailable(ReceptLog.GetLatitudeValid() & ReceptLog.GetLongitudeValid());
+		RGPSData.SetLatLongDegrees(ReceptLog.GetLatitudeDegrees(), ReceptLog.GetLongitudeDegrees());
+		RGPSData.SetAltitudeAvailable(FALSE);
+		RGPSData.SetTimeAvailable(FALSE);
+		RGPSData.SetDateAvailable(FALSE);
+		RGPSData.SetSpeedAvailable(FALSE);
+		RGPSData.SetHeadingAvailable(FALSE);
+	}
+	else if (eGPSSource == GPS_SOURCE_GPS_RECEIVER)
+	{
+		//source
+		RGPSData.SetGPSSource(CParameter::CRGPSData::GPS_SOURCE_GPS_RECEIVER);
+		
+		//satellites visible
+		if (GPSRxData.GetSatellitesVisibleAvailable())
+		{
+			RGPSData.SetSatellitesVisibleAvailable(TRUE);
+			RGPSData.SetSatellitesVisible(GPSRxData.GetSatellitesVisible());
+		}
+		else
+			RGPSData.SetSatellitesVisibleAvailable(FALSE);
+		
+		// position
+		if (GPSRxData.GetPositionAvailable())
+		{
+			RGPSData.SetPositionAvailable(TRUE);
+			float fLatDeg, fLongDeg;
+			GPSRxData.GetLatLongDegrees(fLatDeg, fLongDeg);
+			RGPSData.SetLatLongDegrees(fLatDeg, fLongDeg);
+		}
+		else
+			RGPSData.SetPositionAvailable(FALSE);
+	
+		//altitude
+		if (GPSRxData.GetAltitudeAvailable())
+		{
+			RGPSData.SetAltitudeAvailable(TRUE);
+			RGPSData.SetAltitudeMetres(GPSRxData.GetAltitudeMetres());
+		}
+		else
+			RGPSData.SetAltitudeAvailable(FALSE);
 
+		//time/date
+		if (GPSRxData.GetTimeAndDateAvailable())
+		{
+			RGPSData.SetTimeAvailable(TRUE);
+			RGPSData.SetDateAvailable(TRUE);
+			RGPSData.SetTimeDate(GPSRxData.GetTimeSecondsSince1970());
+		}
+		else
+		{
+			RGPSData.SetTimeAvailable(FALSE);
+			RGPSData.SetDateAvailable(FALSE);
+		}
 
-        serialNumTemp[6] = '\0';
+		//speed
+		if (GPSRxData.GetSpeedAvailable())
+		{
+			RGPSData.SetSpeedAvailable(TRUE);
+			RGPSData.SetSpeedMetresPerSecond(GPSRxData.GetSpeedMetresPerSecond());
+		}
+		else
+			RGPSData.SetSpeedAvailable(FALSE);
 
-
-        sSerialNumber = serialNumTemp;
+		//heading
+		if (GPSRxData.GetHeadingAvailable())
+		{
+			RGPSData.SetHeadingAvailable(TRUE);
+			RGPSData.SetHeadingDegreesFromNorth(GPSRxData.GetHeadingDegrees());
+		}
+		else
+			RGPSData.SetHeadingAvailable(FALSE);
+		
+	}
 }
