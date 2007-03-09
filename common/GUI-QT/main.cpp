@@ -110,7 +110,7 @@ try
 		   ready than the GUI thread */
 		DRMReceiver.Init();
 
-#if USE_GPS
+#ifdef USE_GPS
 		CGPSReceiver GPSReceiver;
 		GPSReceiver.SetGPSRxData(&DRMReceiver.GetParameters()->GPSRxData);
 		GPSReceiver.SetGPSd(DRMReceiver.GetParameters()->sGPSdHost, DRMReceiver.GetParameters()->iGPSdPort);
@@ -135,7 +135,7 @@ try
 		/* Working thread has been initialized so start the GUI! */
 		app.exec();
 
-#if USE_GPS
+#ifdef USE_GPS
 		GPSReceiver.Stop();
 		GPSReceiver.wait();
 #endif
