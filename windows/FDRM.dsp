@@ -250,6 +250,10 @@ SOURCE=.\moc\systemevalDlgbase.cpp
 
 SOURCE=.\moc\TransmDlgbase.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\moc\moc_GPSReceiver.cpp
+# End Source File
 # End Group
 # Begin Source File
 
