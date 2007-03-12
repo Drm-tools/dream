@@ -1301,7 +1301,7 @@ string CParameter::CReceptLog::GetLatitudeDegreesMinutesString()
 	unsigned int Degrees, Minutes;
 
 	Degrees = (unsigned int) rLatitudeDegrees;
-	Minutes = (unsigned int) ((rLatitudeDegrees - Degrees) * 60.0);
+	Minutes = (unsigned int) ((rLatitudeDegrees - Degrees) * 60.0 + 0.0000001);
 
 	stringstream ssLatitude;
 	ssLatitude << Degrees << chrDegrees << Minutes << "'";
@@ -1324,7 +1324,7 @@ string CParameter::CReceptLog::GetLongitudeDegreesMinutesString()
 	unsigned int Degrees, Minutes;
 
 	Degrees = (unsigned int) rLongitudeDegrees;
-	Minutes = (unsigned int) ((rLongitudeDegrees - Degrees) * 60.0);
+	Minutes = (unsigned int) ((rLongitudeDegrees - Degrees) * 60.0 + 0.0000001);
 
 	stringstream ssLongitude;
 	ssLongitude << Degrees << chrDegrees << Minutes << "'";
