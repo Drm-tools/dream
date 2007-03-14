@@ -519,6 +519,9 @@ void CSettings::WriteIniFile()
 	SetNumericIniSet(ini, "Receiver", "mlciter",
 		pDRMRec->GetMSCMLC()->GetInitNumIterations());
 
+	/* Tuned Frequency */
+	SetNumericIniSet(ini, "Receiver", "frequency", pDRMRec->GetFrequency());
+
 	/* Active/Deactivate EPG decoding */
 	SetFlagIniSet(ini, "EPG", "decodeepg",
 		pDRMRec->GetDataDecoder()->GetDecodeEPG());
@@ -532,10 +535,6 @@ void CSettings::WriteIniFile()
 	/* Start log file delayed */
 	SetNumericIniSet(ini, "Logfile", "delay",
 		pDRMRec->GetParameters()->ReceptLog.GetDelLogStart());
-
-	/* Frequency for log file */
-	SetNumericIniSet(ini, "Logfile", "frequency",
-		pDRMRec->GetParameters()->ReceptLog.GetFrequency());
 
 #ifdef WIN32
 	/* Enable/Disable process priority flag */

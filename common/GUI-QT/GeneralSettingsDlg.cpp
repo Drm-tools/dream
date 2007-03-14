@@ -239,7 +239,7 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 QString sVal;
 QString strCoord;
 
-	/* parse the latitude and longitude string stored into Dream settings for
+	/* parse the latitude and longitude string stored into Dream settings to
 		extract local latitude and longitude coordinates */
 
 
@@ -285,7 +285,7 @@ void GeneralSettingsDlg::AddWhatsThisHelp()
 {
 	QWhatsThis::add(this,
 		tr("<b>Receiver coordinates:</b> Are used on "
-		"Live Schedule Dialog for show a little green cube on the left"
+		"Live Schedule Dialog to show a little green cube on the left"
 		" of the target column if the receiver coordinates (latitude and longitude)"
 		" are inside the target area of this transmission.<br>"
 		"Receiver coordinates are also saved into the Log file."));

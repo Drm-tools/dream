@@ -1257,14 +1257,15 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 	if(iFreqkHz == iNewFreqkHz)
 		return TRUE;
 	iFreqkHz = iNewFreqkHz;
+
+ 	ReceiverParam.ReceptLog.SetFrequency(iNewFreqkHz);
+
 	if (upstreamRSCI.GetOutEnabled() == TRUE)
 	{
 		return upstreamRSCI.SetFrequency(iNewFreqkHz);
 	}
 	else
 	{
- 		ReceiverParam.ReceptLog.SetFrequency(iNewFreqkHz);
-
 		/* tell the RSCI and IQ file writer that freq has changed in case it needs to start a new file */
 		if (downstreamRSCI.GetOutEnabled() == TRUE)
 			downstreamRSCI.NewFrequency(ReceiverParam);
