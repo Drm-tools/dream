@@ -642,6 +642,10 @@ StationsDlg::StationsDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerSMeter, SIGNAL(timeout()),
 		this, SLOT(OnTimerSMeter()));
 
+	TimerList.stop();
+	TimerUTCLabel.stop();
+	TimerSMeter.stop();
+
 	connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
 		this, SLOT(OnListItemClicked(QListViewItem*)));
 
@@ -863,6 +867,7 @@ void StationsDlg::hideEvent(QHideEvent*)
 	/* Deactivate real-time timers */
 	TimerList.stop();
 	TimerUTCLabel.stop();
+	EnableSMeter(FALSE);
 }
 
 void StationsDlg::showEvent(QShowEvent*)
@@ -894,6 +899,11 @@ void StationsDlg::showEvent(QShowEvent*)
 	/* Activate real-time timer when window is shown */
 	TimerList.start(GUI_TIMER_LIST_VIEW_STAT); /* Stations list */
 	TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
+
+	EnableSMeter(pDRMRec->bEnableSMeter);
+	/* update window */
+	if (pDRMRec->bEnableSMeter)
+		OnTimerSMeter();
 
 	/* add last update information on menu item */
 	AddUpdateDateTime();

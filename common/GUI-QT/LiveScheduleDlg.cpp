@@ -753,6 +753,9 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	/* Check boxes */
 	connect(CheckBoxFreeze, SIGNAL(clicked()),
 		this, SLOT(OnCheckFreeze()));
+
+	TimerList.stop();
+	TimerUTCLabel.stop();
 }
 
 LiveScheduleDlg::~LiveScheduleDlg()

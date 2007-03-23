@@ -259,11 +259,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver* pNDRMR, QWidget* parent, const char* name,
 	TextTextMessage->setText("");
 	TextTextMessage->setEnabled(FALSE);
 
-	/* Set timer for real-time controls */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
-
 	/* Update window */
 	OnTimer();
+
+	/* Set timer for real-time controls */
+ 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 FDRMDialog::~FDRMDialog()
@@ -320,21 +320,19 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void FDRMDialog::OnTimer()
 {
-
-	/* has the receiver changed mode ? */
-	if(pDRMRec->GetReceiverMode() != eReceiverMode)
-		SetReceiverMode(pDRMRec->GetReceiverMode());
-
-	/* Input level meter */
-	ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
-	
 	CParameter& ReceiverParam = *(pDRMRec->GetParameters());
 
-	SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
-	SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
-	SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
+	if (pDRMRec->GetReceiverMode() == RM_DRM)
+	{
+		/* Input level meter */
+		ProgrInputLevel->setValue(pDRMRec->GetReceiver()->GetLevelMeter());
+	
+		SetStatus(CLED_MSC, ReceiverParam.ReceiveStatus.GetAudioStatus());
+		SetStatus(CLED_SDC, ReceiverParam.ReceiveStatus.GetSDCStatus());
+		SetStatus(CLED_FAC, ReceiverParam.ReceiveStatus.GetFACStatus());
+	}
 
-	/* Check if receiver does receive a DRM signal */
+	/* Check if receiver does receive a signal */
 	if ((pDRMRec->GetReceiverState() == AS_WITH_SIGNAL) &&
 		(pDRMRec->GetReceiverMode() == RM_DRM))
 	{
@@ -732,6 +730,11 @@ void FDRMDialog::OnTimer()
 
 void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 {
+	const _BOOLEAN bModeHastChanged = pDRMRec->GetReceiverMode() != eNewReMo;
+
+	/* Set mode in receiver object */
+	pDRMRec->SetReceiverMode(eNewReMo);
+
 	/* Make sure correct evaluation dialog is shown */
 	switch (eNewReMo)
 	{
@@ -742,7 +745,7 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 		pAnalogDemDlg->hide();
 
 		/* Recover visibility state (only if mode has changed) */
-		if (eNewReMo != eReceiverMode)
+		if (bModeHastChanged)
 		{
 			if (bSysEvalDlgWasVis == TRUE)
 				pSysEvalDlg->show();
@@ -753,6 +756,8 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 			if (bLiveSchedDlgWasVis == TRUE)
 				pLiveScheduleDlg->show();
 		}
+
+		pSysEvalDlg->StartTimerLogFileStart();
 
 		/* Load correct schedule */
 		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
@@ -773,6 +778,8 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 		pLiveScheduleDlg->hide();
 		pEPGDlg->hide();
 
+		pSysEvalDlg->StopLogTimers();
+
 		pAnalogDemDlg->show();
 
 		/* Load correct schedule */
@@ -785,19 +792,29 @@ void FDRMDialog::SetReceiverMode(const ERecMode eNewReMo)
 	eReceiverMode = eNewReMo;
 }
 
-	/* Set mode in receiver object
-	 * OnTimer will update the GUI
-	 * when the receiver has actioned
-	 * this.
-	 */
+void FDRMDialog::showEvent(QShowEvent*)
+{
+	/* Update window */
+	OnTimer();
+
+	/* Set timer for real-time controls */
+ 	Timer.start(GUI_CONTROL_UPDATE_TIME);
+}
+
+void FDRMDialog::hideEvent(QHideEvent*)
+{
+	/* Deactivate real-time timer */
+	Timer.stop();
+}
+
 void FDRMDialog::OnSwitchToDRM()
 {
-	pDRMRec->SetReceiverMode(RM_DRM);
+	SetReceiverMode(RM_DRM);
 }
 
 void FDRMDialog::OnSwitchToAM()
 {
-	pDRMRec->SetReceiverMode(RM_AM);
+	SetReceiverMode(RM_AM);
 }
 
 void FDRMDialog::OnButtonService1()

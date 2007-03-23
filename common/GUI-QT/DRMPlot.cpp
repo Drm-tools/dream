@@ -69,6 +69,8 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 		this, SLOT(OnClicked(const QMouseEvent&)));
 	connect(&TimerChart, SIGNAL(timeout()),
 		this, SLOT(OnTimerChart()));
+
+	TimerChart.stop();
 }
 
 void CDRMPlot::OnTimerChart()
@@ -299,7 +301,7 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
 
 void CDRMPlot::showEvent(QShowEvent*)
 {
-	/* Activte real-time timers when window is shown */
+	/* Activate real-time timers when window is shown */
 	SetupChart(CurCharType);
 
 	/* Update window */

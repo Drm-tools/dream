@@ -168,6 +168,8 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
+
+	Timer.stop();
 }
 
 MultimediaDlg::~MultimediaDlg()
@@ -519,11 +521,11 @@ void MultimediaDlg::SetJournalineText()
 
 void MultimediaDlg::showEvent(QShowEvent*)
 {
-	/* Activte real-time timer when window is shown */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
-
 	/* Update window */
 	OnTimer();
+
+	/* Activate real-time timer when window is shown */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 void MultimediaDlg::hideEvent(QHideEvent*)

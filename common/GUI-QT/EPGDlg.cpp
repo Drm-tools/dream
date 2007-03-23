@@ -63,6 +63,9 @@ EPGDlg::EPGDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
 
+	/* Deactivate real-time timer */
+	Timer.stop();
+
 	connect(Prev, SIGNAL(clicked()), this, SLOT(previousDay()));
 	connect(Next, SIGNAL(clicked()), this, SLOT(nextDay()));
 	connect(channel, SIGNAL(activated(const QString&)), this

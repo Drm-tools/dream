@@ -85,7 +85,6 @@ CDRMReceiver::CDRMReceiver() :
 #ifdef USE_QT_GUI
 		RigPoll(),
 #endif
-		bEnableSMeter(TRUE),
 		iBwAM(10000),
 		iBwLSB(5000),
 		iBwUSB(5000),

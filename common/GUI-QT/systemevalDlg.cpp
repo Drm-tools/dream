@@ -392,19 +392,11 @@ systemevalDlg::systemevalDlg(CDRMReceiver* pNDRMR, QWidget* parent,
 	connect(&TimerLogFileStart, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFileStart()));
 
-	/* Activate real-time timer */
-	Timer.start(GUI_CONTROL_UPDATE_TIME);
+	Timer.stop();
+	StopLogTimers();
 
-	/* Activate log file start if necessary.
-	   Timer is set to fire only once.
-	   Relies on timer firing immediately if delay is zero.
-	 */
-	if (pDRMRec->GetParameters()->ReceptLog.GetLoggingEnabled() == TRUE)
-	{
-		/* One shot timer */
-		TimerLogFileStart.start(pDRMRec->GetParameters()->
-			ReceptLog.GetDelLogStart() * 1000 /* ms */, TRUE);
-	}
+	/* Activate log file start if necessary. */
+	StartTimerLogFileStart();
 }
 
 systemevalDlg::~systemevalDlg()
@@ -546,6 +538,12 @@ void systemevalDlg::showEvent(QShowEvent*)
 
 	/* Update controls */
 	UpdateControls();
+
+	/* update data */
+	OnTimer();
+
+	/* Activate real-time timer */
+	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
 void systemevalDlg::hideEvent(QHideEvent*)
@@ -581,6 +579,16 @@ void systemevalDlg::hideEvent(QHideEvent*)
 
 	/* We do not need the pointers anymore, reset vector */
 	vecpDRMPlots.Init(0);
+
+	/* stop real-time timer */
+	Timer.stop();
+}
+
+void systemevalDlg::StopLogTimers()
+{
+	TimerLogFileLong.stop();
+	TimerLogFileShort.stop();
+	TimerLogFileStart.stop();
 }
 
 void systemevalDlg::UpdatePlotsStyle()
@@ -1166,6 +1174,19 @@ void systemevalDlg::OnTimerLogFileStart()
 	}
 }
 
+void systemevalDlg::StartTimerLogFileStart()
+{
+	/* Activate log file start if necessary.
+	   Timer is set to fire only once.
+	   Relies on timer firing immediately if delay is zero.
+	 */
+	if (pDRMRec->GetParameters()->ReceptLog.GetLoggingEnabled() == TRUE)
+	{
+		/* One shot timer */
+		TimerLogFileStart.start(pDRMRec->GetParameters()->
+			ReceptLog.GetDelLogStart() * 1000 /* ms */, TRUE);
+	}	
+}
 void systemevalDlg::OnCheckWriteLog()
 {
 	if (CheckBoxWriteLog->isChecked())

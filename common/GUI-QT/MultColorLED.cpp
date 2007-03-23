@@ -70,6 +70,10 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) :
 		this, SLOT(OnTimerGreenLight()));
 	connect(&TimerYellowLight, SIGNAL(timeout()), 
 		this, SLOT(OnTimerYellowLight()));
+
+	TimerRedLight.stop();
+	TimerGreenLight.stop();
+	TimerYellowLight.stop();
 }
 
 void CMultColorLED::OnTimerRedLight() 
