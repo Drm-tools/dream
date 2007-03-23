@@ -264,7 +264,23 @@ Phase Offset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>AMSSContryCode</source>
+        <source>AMSSAMCarrierMode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AMSSServiceID</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AMSSLanguage</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AMSSCountryCode</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>AMSSTimeDate</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -306,24 +322,20 @@ Phase Offset</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Volker Fischer, Alexander Kurpiers</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Darmstadt University of Technology
-Institute for Communication Technology</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Copyright (C) 2001 - 2005</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <source>TextViewCredits</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
         <source>&amp;OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Volker Fischer, Alexander Kurpiers, Andrea Russo
+Julian Cable, Andrew Murphy, Oliver Haffenden</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Copyright (C) 2001 - 2007</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -1052,7 +1064,7 @@ Institute for Communication Technology</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>&lt;b&gt;Receiver coordinates:&lt;/b&gt; Are used on Live Schedule Dialog for show a little green cube on the left of the target column if the receiver coordinates (latitude and longitude) are inside the target area of this transmission.&lt;br&gt;Receiver coordinates are also saved into the Log file.</source>
+        <source>&lt;b&gt;Receiver coordinates:&lt;/b&gt; Are used on Live Schedule Dialog to show a little green cube on the left of the target column if the receiver coordinates (latitude and longitude) are inside the target area of this transmission.&lt;br&gt;Receiver coordinates are also saved into the Log file.</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
@@ -2287,6 +2299,22 @@ Bandwidth        </source>
     </message>
     <message>
         <source>Modified &amp;Metrics</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>GPS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>Lat: 53.123°   Long: 00.456°</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>24/01/2007 15:14.33 UTC</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message encoding="UTF-8">
+        <source>10.0 m/s  151°</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
