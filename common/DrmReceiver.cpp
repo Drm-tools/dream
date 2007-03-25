@@ -115,14 +115,20 @@ CDRMReceiver::CDRMReceiver() :
 	downstreamRSCI.SetReceiver(this);
 #if defined(USE_QT_GUI)
 	RigPoll.setReceiver(this);
-	RigPoll.start();
+# if defined(HAVE_LIBHAMLIB)
+	if(Hamlib.GetHamlibModelID() != 0)
+		RigPoll.start();
+# endif
 #endif
 }
 
 CDRMReceiver::~CDRMReceiver()
 {
 #if defined(USE_QT_GUI)
-	RigPoll.stop();
+	if(RigPoll.running())
+	{
+		RigPoll.stop();
+	}
 	if(RigPoll.wait(1000)==FALSE)
 		cout << "error terminating rig polling thread" << endl;;
 #endif
@@ -141,6 +147,20 @@ void CDRMReceiver::Run()
 		   problems with shared data */
 		if (eNewReceiverMode != RM_NONE)
 			InitReceiverMode();
+
+		/* Check for changes in front end selection */
+#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
+		if(Hamlib.GetHamlibModelID()==0)
+		{
+			if(RigPoll.running() )
+				RigPoll.stop();
+		}
+		else
+		{
+			if(RigPoll.running() == FALSE)
+				RigPoll.start();
+		}
+#endif
 
 		/* Receive data ----------------------------------------------------- */
 
@@ -601,6 +621,11 @@ void CDRMReceiver::InitReceiverMode()
 
 	/* Reset new mode flag */
 	eNewReceiverMode = RM_NONE;
+
+	if (upstreamRSCI.GetOutEnabled() == TRUE)
+	{
+		upstreamRSCI.SetReceiverMode(eReceiverMode);
+	}
 }
 
 #ifdef USE_QT_GUI
@@ -1261,7 +1286,8 @@ _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 
 	if (upstreamRSCI.GetOutEnabled() == TRUE)
 	{
-		return upstreamRSCI.SetFrequency(iNewFreqkHz);
+		upstreamRSCI.SetFrequency(iNewFreqkHz);
+		return TRUE;
 	}
 	else
 	{
