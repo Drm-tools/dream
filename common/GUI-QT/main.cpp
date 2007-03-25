@@ -110,12 +110,14 @@ try
 		   ready than the GUI thread */
 		DRMReceiver.Init();
 
-#ifdef USE_GPS
-		CGPSReceiver GPSReceiver;
-		GPSReceiver.SetGPSRxData(&DRMReceiver.GetParameters()->GPSRxData);
-		GPSReceiver.SetGPSd(DRMReceiver.GetParameters()->sGPSdHost, DRMReceiver.GetParameters()->iGPSdPort);
-		GPSReceiver.start();
-#endif
+		CGPSReceiver* pGPSReceiver=NULL;
+		if(DRMReceiver.GetParameters()->eGPSSource == CParameter::GPS_SOURCE_GPS_RECEIVER)
+		{
+			pGPSReceiver = new CGPSReceiver;
+			pGPSReceiver->SetGPSRxData(&DRMReceiver.GetParameters()->GPSRxData);
+			pGPSReceiver->SetGPSd(DRMReceiver.GetParameters()->sGPSdHost, DRMReceiver.GetParameters()->iGPSdPort);
+			pGPSReceiver->start();
+		}
 
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
 
@@ -129,10 +131,11 @@ try
 		/* Working thread has been initialized so start the GUI! */
 		app.exec();
 
-#ifdef USE_GPS
-		GPSReceiver.Stop();
-		GPSReceiver.wait();
-#endif
+		if(pGPSReceiver)
+		{
+			pGPSReceiver->Stop();
+			pGPSReceiver->wait();
+		}
 	}
 
 	/* Save settings to init-file */

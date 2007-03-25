@@ -450,6 +450,11 @@ void CSettings::ReadIniFile()
 		else
 			pDRMRec->GetParameters()->eGPSSource = CParameter::GPS_SOURCE_MANUAL_ENTRY;
 	}
+	else
+	{
+		pDRMRec->GetParameters()->eGPSSource = CParameter::GPS_SOURCE_MANUAL_ENTRY;
+	}
+
 	pDRMRec->GetParameters()->sGPSdHost = GetIniSetting(ini, "GPS", "host", "localhost");
 	if (GetNumericIniSet(ini, "GPS", "port", 0, 32767, iValue) == TRUE)
 		pDRMRec->GetParameters()->iGPSdPort = iValue;

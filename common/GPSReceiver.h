@@ -179,7 +179,7 @@ protected:
 	void DecodeO(string Value);
 	void DecodeY(string Value);
 	
-	enum EGPSState { DISCONNECTED, INITIALISING, WAITING, STREAMING};
+	enum EGPSState { DISCONNECTED, INITIALISING, WAITING, STREAMING, COMMS_ERROR };
 
 	EGPSState m_eGPSState;
 
@@ -199,6 +199,7 @@ protected:
 
 public slots:
 	void slotReadyRead();
+	void slotSocketError(int);
 };
 
 

@@ -31,6 +31,7 @@
 #include <qsignal.h>
 
 #include <fstream>
+#include <iostream>
 #include <iomanip>
 using namespace std;
 
@@ -49,7 +50,7 @@ CGPSReceiver::CGPSReceiver() :
 
 	//connect signals
 	connect(&m_Socket, SIGNAL(readyRead()), this, SLOT(slotReadyRead()));
-
+	connect(&m_Socket, SIGNAL(error(int)), this, SLOT(slotSocketError(int)));
 
 	m_sStateMachineCyclesSinceLastGPSDReply = c_sMaximumStateMachineCyclesSinceLastGPSDReplyBeforeReset;
 }
@@ -88,6 +89,8 @@ void CGPSReceiver::Start()
 						m_Socket.connectToHost(m_GPSdHostName.c_str(), m_GPSdPort);
 						break;
 					case(QSocket::HostLookup):	// stay put, wait for open
+						usleep(100000);
+						break;
 					case(QSocket::Connecting):
 						usleep(100000);
 						break;
@@ -151,6 +154,12 @@ void CGPSReceiver::Start()
 				}
 				
 				//otherwise stay put
+				break;
+
+			case COMMS_ERROR:
+				m_Socket.close(); // try and free the resources - maybe we need to destroy the socket ?
+				sleep(30);		// sleep for 30 seconds
+				m_eGPSState = DISCONNECTED;
 				break;
 		}
 
@@ -316,4 +325,9 @@ void CGPSReceiver::slotReadyRead()
 {
 	while (m_Socket.canReadLine())
 		DecodeGPSDReply((const char*) m_Socket.readLine());
+}
+
+void CGPSReceiver::slotSocketError(int)
+{
+	m_eGPSState = COMMS_ERROR;
 }
