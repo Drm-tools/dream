@@ -1,7 +1,10 @@
-#ifndef TIMER_H_INCLUDED
-#define TIMER_H_INCLUDED
+#ifndef PACER_H_INCLUDED
+#define PACER_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
+#ifdef _WIN32
+# include <winnt.h>
+#endif
 
 class CPacer
 {

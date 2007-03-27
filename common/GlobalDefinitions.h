@@ -100,11 +100,6 @@ using namespace std; /* Because of the library: "complex" */
 //# undef HAVE_LIBZ
 # endif
 
-# ifdef USE_QT_GUI
-//#  define USE_GPS 1
-#  undef USE_GPS
-# endif
-
 #endif
 
 

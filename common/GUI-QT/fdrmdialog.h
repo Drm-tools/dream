@@ -76,6 +76,9 @@ public:
 
 	virtual ~FDRMDialog();
 
+	void	ChangeGUIModeToDRM();
+	void	ChangeGUIModeToAM();
+
 protected:
 	CDRMReceiver*		pDRMRec;
 
@@ -105,7 +108,8 @@ protected:
 	void			hideEvent(QHideEvent* pEvent);
 	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
-	void			SetReceiverMode(const ERecMode eNewReMo);
+	void			UpdateDisplay();
+	void			ClearDisplay();
 
 	QString			GetCodecString(const int iServiceID);
 	QString			GetTypeString(const int iServiceID);

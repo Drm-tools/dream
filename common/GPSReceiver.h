@@ -30,6 +30,9 @@
 #define _GPSRECEIVER_H_
 
 #include "GlobalDefinitions.h"
+
+#ifdef USE_QT_GUI
+
 #include <qsocket.h>
 
 class CAutoMutex
@@ -202,6 +205,6 @@ public slots:
 	void slotSocketError(int);
 };
 
+#endif // QT
 
 #endif // !defined(_GPSRECEIVER_H_)
-

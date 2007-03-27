@@ -27,7 +27,11 @@
  *
 \******************************************************************************/
 
+
 #include "GPSReceiver.h"
+
+#ifdef USE_QT_GUI
+
 #include <qsignal.h>
 
 #include <fstream>
@@ -331,3 +335,5 @@ void CGPSReceiver::slotSocketError(int)
 {
 	m_eGPSState = COMMS_ERROR;
 }
+
+#endif

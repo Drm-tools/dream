@@ -111,6 +111,7 @@ protected:
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
 	CAMSSDlg		AMSSDlg;
+
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
     virtual void	showEvent(QShowEvent* pEvent);

@@ -25,8 +25,6 @@ AC_ARG_ENABLE( alsa, [  --enable-alsa           use alsa sound lib], enable_alsa
 
 AC_ARG_ENABLE( sound,[  --enable-sound          generic sound support], enable_sound=$enableval, enable_sound=yes)
 
-AC_ARG_ENABLE( gps,[  --enable-gps            gps input via gpsd], enable_gps=$enableval, enable_gps=no)
-
 AC_ARG_ENABLE( simulation,[  --enable-simulation     simulation mode], enable_simulation=$enableval, enable_simulation=no)
 
 AC_ARG_WITH( qtgui,[  --with-qtgui            use GUI QT],WITHQTGUI=$withval, WITHQTGUI=yes)
@@ -148,14 +146,6 @@ if test "x$WITHQTGUI" = xyes; then
 	AM_CONDITIONAL(USE_QT, true)
 else
 	AM_CONDITIONAL(USE_QT, false)
-fi
-
-if test "x$enable_gps" = "xyes"; then
-	if test "x$WITHQTGUI" = xyes; then
-		AC_DEFINE(USE_GPS, 1, [Define if you want to use gps])
-	else
-		AC_MSG_ERROR("gps needs qt");
-	fi
 fi
 
 dnl Hamlib (optional) -----------------------------------------------------------
