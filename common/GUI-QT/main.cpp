@@ -121,15 +121,10 @@ try
 
 		FDRMDialog		MainDlg(&DRMReceiver, 0, 0, FALSE, Qt::WStyle_MinMax);
 
-		/* TODO start up in AM mode if AM last time without taking too much CPU */
-#if 0
 		if(DRMReceiver.GeomAnalogDemDlg.bVisible == TRUE)
 			DRMReceiver.SetReceiverMode(RM_AM);
 		else
 			DRMReceiver.SetReceiverMode(RM_DRM);
-#else
-		DRMReceiver.SetReceiverMode(RM_DRM);
-#endif
 
 		/* Start working thread */
 		DRMReceiver.start();

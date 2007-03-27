@@ -337,6 +337,10 @@ void FDRMDialog::OnTimer()
 		}
 		break;
 	case RM_AM:
+		/* stopping the timer is normally done by the hide signal, but at startup we
+		 * are already hidden and the hide signal doesn't hit the slot
+		 */
+		Timer.stop();
 		ChangeGUIModeToAM();
 		break;
 	case RM_NONE: // wait until working thread starts operating
@@ -784,7 +788,7 @@ void FDRMDialog::ChangeGUIModeToAM()
 	/* Load correct schedule */
 	pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
 
-	hide();
+	this->hide();
 
 	pAnalogDemDlg->show();
 
