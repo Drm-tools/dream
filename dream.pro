@@ -14,12 +14,11 @@ macx {
 	CONFIG		+= portaudio
 	OBJECTS_DIR	= darwin
 	DEFINES		+= USE_PORTAUDIO 
-	DEFINES		+= HAVE_DFFTW_H HAVE_DRFFTW_H
 	INCLUDEPATH	+= darwin
-	INCLUDEPATH	+= /usr/local/include /opt/local/include
-	LIBS 		+= -L/usr/local/lib -L/opt/local/lib
+	INCLUDEPATH	+= /Developer/dream/include
+	LIBS 		+= -L/Developer/dream/lib
 	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
-	LIBS 		+= -ldrfftw -ldfftw 
+	LIBS 		+= -lrfftw -lfftw 
 	UI_DIR		= darwin/moc
 	MOC_DIR		= darwin/moc
 }
