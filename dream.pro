@@ -10,7 +10,6 @@ FORMS		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
 FORMS		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
 
 macx {
-	TEMPLATE	= pbuilder
 	CONFIG		+= portaudio
 	OBJECTS_DIR	= darwin
 	DEFINES		+= USE_PORTAUDIO 
