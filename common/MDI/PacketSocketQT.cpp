@@ -131,6 +131,7 @@ CPacketSocketQT::SetNetwOutAddr (const string & strNewAddr)
         iHostPortOut = parts[1].toInt ();
         if(setsockopt(SocketDevice.socket(), IPPROTO_IP, IP_TTL,
                 (char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
+        	bAddressOK = FALSE;
         break;
     case 3:
         QHostAddress AddrInterface;
