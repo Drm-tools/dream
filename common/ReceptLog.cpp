@@ -160,8 +160,9 @@ CShortLog::writeHeader()
 	if (RobMode != "")
 	{
 		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
+		File << fixed << setprecision(1);
 		File << "Label            " << label << endl;
-		File << "Bitrate          " << fixed << bitrate << " kbps" << endl;
+		File << "Bitrate          " << setw(4) << bitrate << " kbps" << endl;
 		File << "Mode             " << RobMode << endl;
 		File << "Bandwidth        ";
 		switch (SpecOcc)
