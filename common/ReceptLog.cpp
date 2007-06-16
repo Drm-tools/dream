@@ -160,7 +160,7 @@ CShortLog::writeHeader()
 	if (RobMode != "")
 	{
 		/* Service label (UTF-8 encoded string -> convert ? TODO locale) */
-		File << fixed << setprecision(1);
+		File << fixed << setprecision(2);
 		File << "Label            " << label << endl;
 		File << "Bitrate          " << setw(4) << bitrate << " kbps" << endl;
 		File << "Mode             " << RobMode << endl;
@@ -248,7 +248,7 @@ CShortLog::writeParameters()
 			<< setfill(' ') << setw(5) << iAverageSNR
 			<< setw(9) << iNumCRCOkFAC
 			<< setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
-			<< setfill(' ') << "        0";
+			<< setfill(' ') << "      0";
 		if (bRxlEnabled)
 		{
 			File << setw(10) << setprecision(2) << iRXL;
