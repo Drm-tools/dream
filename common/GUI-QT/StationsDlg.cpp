@@ -50,6 +50,60 @@ extern "C"
 
 
 /* Implementation *************************************************************/
+void CDRMSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
+{
+QStringList result;
+
+QString strTarget = QString(StationsItem.strTarget.c_str());
+QString strCountry = QString(StationsItem.strCountry.c_str());
+QString strLanguage = QString(StationsItem.strLanguage.c_str());
+
+   result = ListTargets.grep(strTarget);
+   if (result.isEmpty())
+     ListTargets.append(strTarget);
+
+   result = ListCountries.grep(strCountry);
+   if (result.isEmpty())
+     ListCountries.append(strCountry);
+
+
+   result = ListLanguages.grep(strLanguage);
+   if (result.isEmpty())
+     ListLanguages.append(strLanguage);
+}
+
+void StationsDlg::FilterChanged(const QString&)
+{
+	/* Update list view */
+	SetStationsView();
+}
+
+_BOOLEAN StationsDlg::CheckFilter(const int iPos)
+{
+_BOOLEAN bCheck = TRUE;
+QString sFilter = "";
+
+	sFilter = ComboBoxFilterTarget->currentText();
+
+	if ((sFilter != "") && 
+		(QString(DRMSchedule.GetItem(iPos).strTarget.c_str()) != sFilter))
+		bCheck = FALSE;
+
+	sFilter = ComboBoxFilterCountry->currentText();
+
+	if ((sFilter != "") && 
+		(QString(DRMSchedule.GetItem(iPos).strCountry.c_str()) != sFilter))
+		bCheck = FALSE;
+
+	sFilter = ComboBoxFilterLanguage->currentText();
+
+	if ((sFilter != "") && 
+		(QString(DRMSchedule.GetItem(iPos).strLanguage.c_str()) != sFilter))
+		bCheck = FALSE;
+
+return bCheck;
+}
+
 void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 {
 	const int	iMaxLenName = 256;
@@ -171,7 +225,9 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 
 			/* Add new item in table */
 			StationsTable.push_back(StationsItem);
-		}
+
+			UpdateStringListForFilter(StationsItem);
+}
 	} while (!((iFileStat == EOF) || (bReadOK == FALSE)));
 
 	fclose(pFile);
@@ -446,6 +502,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	{
 	case NUM_SECONDS_PREV_5MIN:
 		pPreviewMenu->setItemChecked(1, TRUE);
+		DRMSchedule.SetSecondsPreview(NUM_SECONDS_PREV_5MIN);
 		break;
 
 	case NUM_SECONDS_PREV_15MIN:
@@ -639,6 +696,13 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
 		this, SLOT(OnFreqCntNewValue(double)));
+
+	connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)),
+                  this, SLOT(FilterChanged(const QString&)));
+	connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)),
+                  this, SLOT(FilterChanged(const QString&)));
+	connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)),
+                  this, SLOT(FilterChanged(const QString&)));
 }
 
 StationsDlg::~StationsDlg()
@@ -958,9 +1022,25 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 	SetSortSettings(eNewSchM);
 
 	ClearStationsView();
+	/* Empty the string lists for combos filter */
+	DRMSchedule.ListTargets = QStringList("");
+	DRMSchedule.ListCountries = QStringList("");
+	DRMSchedule.ListLanguages = QStringList("");
+
+	ComboBoxFilterTarget->clear();
+	ComboBoxFilterCountry->clear();
+	ComboBoxFilterLanguage->clear();
 
 	/* Read initialization file */
 	DRMSchedule.ReadStatTabFromFile(eNewSchM);
+
+	DRMSchedule.ListTargets.sort();
+	DRMSchedule.ListCountries.sort();
+	DRMSchedule.ListLanguages.sort();
+
+	ComboBoxFilterTarget->insertStringList(DRMSchedule.ListTargets);
+	ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
+	ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
 
 	/* Update list view */
 	SetStationsView();
@@ -1022,8 +1102,9 @@ void StationsDlg::SetStationsView()
 	{
 		CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
 
-		if (!((bShowAll == FALSE) &&
-			(iState == CDRMSchedule::IS_INACTIVE)))
+		if (!(((bShowAll == FALSE) &&
+			(iState == CDRMSchedule::IS_INACTIVE))
+			|| (CheckFilter(i) == FALSE)))
 		{
 			/* Only insert item if it is not already in the list */
 			if (vecpListItems[i] == NULL)

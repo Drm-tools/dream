@@ -484,6 +484,13 @@ modes(), levels(), functions(), parameters(), config()
 	RigSpecialParameters(RIG_MODEL_ELEKTOR304, "", 0, "");
 #endif
 
+#ifdef RIG_MODEL_ELEKTOR507
+    /* Elektor 5/07 */
+    RigSpecialParameters(RIG_MODEL_ELEKTOR507, "", 
+						-12 /* kHz frequency offset */ ,
+						"");
+#endif
+
 #ifdef RIG_MODEL_NRD535
 	/* JRC NRD 535 */
 	RigSpecialParameters(RIG_MODEL_NRD535,
