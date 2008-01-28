@@ -857,7 +857,7 @@ void systemevalDlg::OnTimer()
 	/* Robustness mode #################### */
 	strFACInfo = GetRobModeStr() + " / " + GetSpecOccStr();
 
-	FACDRMModeBWL->setText("DRM Mode / Bandwidth:"); /* Label */
+	FACDRMModeBWL->setText(tr("DRM Mode / Bandwidth:")); /* Label */
 	FACDRMModeBWV->setText(strFACInfo); /* Value */
 
 
@@ -1010,27 +1010,27 @@ void systemevalDlg::OnTimer()
 	{
 		double latitude, longitude;
 		ReceiverParam.GPSData.GetLatLongDegrees(latitude, longitude);
-		qStrPosition = QString("Lat: %1\260  Long: %2\260").arg(latitude, 0, 'f', 4).arg(longitude,0, 'f',4);
+		qStrPosition = QString(tr("Lat: %1\260  Long: %2\260")).arg(latitude, 0, 'f', 4).arg(longitude,0, 'f',4);
 	}
 	else
-		qStrPosition = "Lat: ?  Long: ?";
+		qStrPosition = tr("Lat: ?  Long: ?");
 
 	if (ReceiverParam.GPSData.GetAltitudeAvailable())
-		qStrPosition += QString("  Alt: %1 m").arg(ReceiverParam.GPSData.GetAltitudeMetres(), 0, 'f', 0);
+		qStrPosition += QString(tr("  Alt: %1 m")).arg(ReceiverParam.GPSData.GetAltitudeMetres(), 0, 'f', 0);
 	else
-		qStrPosition += "  Alt: ?";
+		qStrPosition += tr("  Alt: ?");
 
 	TextLabelGPSPosition->setText(qStrPosition);
 
 	QString qStrSpeedHeading;
-	qStrSpeedHeading = "Speed: ";
+	qStrSpeedHeading = tr("Speed: ");
 
 	if (ReceiverParam.GPSData.GetSpeedAvailable())
-		qStrSpeedHeading += QString("%1 m/s").arg(ReceiverParam.GPSData.GetSpeedMetresPerSecond(), 0, 'f', 1);
+		qStrSpeedHeading += QString(tr("%1 m/s")).arg(ReceiverParam.GPSData.GetSpeedMetresPerSecond(), 0, 'f', 1);
 	else
 		qStrSpeedHeading += "?";
 
-	qStrSpeedHeading += "  Heading: ";
+	qStrSpeedHeading += tr("  Heading: ");
 	if (ReceiverParam.GPSData.GetHeadingAvailable())
 		qStrSpeedHeading += QString("%1\260").arg(ReceiverParam.GPSData.GetHeadingDegrees());
 	else
@@ -1048,9 +1048,9 @@ void systemevalDlg::OnTimer()
 		qStrTime = "UTC: ?  ";
 
 	if (ReceiverParam.GPSData.GetSatellitesVisibleAvailable())
-		qStrTime += "Satellites: " + QString().setNum(ReceiverParam.GPSData.GetSatellitesVisible());
+		qStrTime += tr("Satellites: ") + QString().setNum(ReceiverParam.GPSData.GetSatellitesVisible());
 	else
-		qStrTime += "Satellites: ?";
+		qStrTime += tr("Satellites: ?");
 
 	TextLabelGPSTime->setText(qStrTime);
 
