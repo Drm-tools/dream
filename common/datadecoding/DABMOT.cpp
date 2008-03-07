@@ -315,7 +315,6 @@ CMOTDABEnc::GenMOTObj(CVector < _BINARY > &vecbiData,
 	const _BOOLEAN bUsAccFieldUsed = TRUE;	/* user access field */
 	const _BOOLEAN bTransIDFieldUsed = TRUE;	/* transport ID field */
 
-// TODO: Better solution!
 /* Total length of object in bits */
 	int iTotLenMOTObj = 16 /* group header */ ;
 	if (bSegFieldUsed == TRUE)
@@ -844,18 +843,22 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 					MOTmode = directoryMode;
 					//cout << "Reset " << MOTDirectory << endl;
 				}
+
+				/* The carousel is changing */
 				if (MOTDirectory.TransportID != TransportID)
 				{
-					/* The carousel is changing */
-					if (MOTDirectory.TransportID != TransportID)
-					{
-						/* we never got all the previous directory */
-						//cout << " we never got all the previous directory " << TransportID << ", " << MOTDirectory.  TransportID << endl;
-						MOTDirectory.Reset();
-						MOTDirectory.TransportID = TransportID;
-						MOTDirectoryEntity.Reset();
-						MOTDirComprEntity.Reset();
-					}
+					/* we never got all the previous directory */
+					//cout << " we never got all the previous directory " << TransportID << ", " << MOTDirectory.  TransportID << endl;
+					MOTDirectory.Reset();
+					MOTDirectory.TransportID = TransportID;
+					MOTDirectoryEntity.Reset();
+					MOTDirComprEntity.Reset();
+				}
+
+				if ((MOTDirectory.TransportID != TransportID) ||
+					((MOTDirectory.TransportID == TransportID)
+						&& (!MOTDirectoryEntity.Ready())))
+				{
 
 					/* Handle the new segment */
 
@@ -886,18 +889,21 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 					MOTDirectory.TransportID = -1;	/* forced reset */
 					MOTmode = directoryMode;
 				}
+
+				/* The carousel is changing */
 				if (MOTDirectory.TransportID != TransportID)
 				{
-					/* The carousel is changing */
-					if (MOTDirectory.TransportID != TransportID)
-					{
-						/* we never got all the previous directory */
-						MOTDirectory.Reset();
-						MOTDirectory.TransportID = TransportID;
-						MOTDirectoryEntity.Reset();
-						MOTDirComprEntity.Reset();
-					}
+					/* we never got all the previous directory */
+					MOTDirectory.Reset();
+					MOTDirectory.TransportID = TransportID;
+					MOTDirectoryEntity.Reset();
+					MOTDirComprEntity.Reset();
+				}
 
+				if ((MOTDirectory.TransportID != TransportID) ||
+					((MOTDirectory.TransportID == TransportID)
+						&& (!MOTDirComprEntity.Ready())))
+				{
 					/* Handle the new segment */
 
 					/* rely on the Add routine to check duplicates, set ready, etc. */
@@ -1481,12 +1487,12 @@ CReassembler::uncompress()
 #endif
 }
 
-static char *txt[] = { "txt", "txt", "html", 0 };
-static char *img[] = { "gif", "jpeg", "bmp", "png", 0 };
-static char *audio[] = { "mpg", "mp2", "mp3", "mpg", "mp2", "mp3",
+static const char *txt[] = { "txt", "txt", "html", 0 };
+static const char *img[] = { "gif", "jpeg", "bmp", "png", 0 };
+static const char *audio[] = { "mpg", "mp2", "mp3", "mpg", "mp2", "mp3",
 	"pcm", "aiff", "atrac", "atrac2", "mp4", 0
 };
-static char *video[] = { "mpg", "mp2", "mp4", "h263", 0 };
+static const char *video[] = { "mpg", "mp2", "mp4", "h263", 0 };
 
 void
 CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
@@ -1560,7 +1566,7 @@ CMOTObject::AddHeader(CVector < _BINARY > &vecbiHeader)
 			strName = extractString(vecbiHeader, iDataFieldLen - 1);
 			break;
 		case 13:				/* UniqueBodyVersion */
-			iUniqueBodyVersion = (int) vecbiHeader.Separate(24);
+			iUniqueBodyVersion = (int) vecbiHeader.Separate(32);
 			break;
 		case 15:				/* Content Description */
 			iCharacterSetForDescription = vecbiHeader.Separate(4);
