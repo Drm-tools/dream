@@ -347,13 +347,15 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
-		/* Color scheme main plot ------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-y", "--colorscheme", 0,
+		
+		/* Plot Style main plot ------------------------------------------- */
+		if (GetNumericArgument(argc, argv, i, "-y", "--sysevplotstyle", 0,
 							   MAX_COLOR_SCHEMES_VAL, rArgument) == TRUE)
 		{
-			Put("DRM Dialog", "colorscheme", (int) rArgument);
+			Put("System Evaluation Dialog", "plotstyle", (int) rArgument);
 			continue;
 		}
+
 
 #endif
 		/* MDI out address -------------------------------------------------- */
@@ -527,7 +529,7 @@ CSettings::UsageArguments(char **argv)
 		"  -g <n>, --enablelog <n>     enable/disable logging (0: no logging; 1: logging\n"
 		"  -r <n>, --frequency <n>     set frequency [kHz] for log file\n"
 		"  -l <n>, --logdelay <n>      delay start of logging by <n> seconds, allowed range: 0...3600)\n"
-		"  -y <n>, --colorscheme <n>   set color scheme for main plot\n"
+		"  -y <n>, --sysevplotstyle <n> set style for main plot\n"
 		"                              0: blue-white (default);   1: green-black;   2: black-grey\n"
 #endif
 		"  --mdiout <s>                MDI out address format [IP#:]IP#:port (for Content Server)\n"

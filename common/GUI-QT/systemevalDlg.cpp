@@ -54,10 +54,10 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
-	int iScheme = Settings.Get("System Evaluation Dialog", "colorscheme", 0);
-	Settings.Put("System Evaluation Dialog", "colorscheme", iScheme);
+	int iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
+	Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
 	MainPlot->SetRecObj(&DRMReceiver);
-	MainPlot->SetPlotStyle(iScheme);
+	MainPlot->SetPlotStyle(iPlotStyle);
 	MainPlot->setMargin(1);
 
 	/* Init slider control */
@@ -67,7 +67,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	TextNumOfIterations->setText(tr("MLC: Number of Iterations: ") +
 		QString().setNum(DRMReceiver.GetMSCMLC()->GetInitNumIterations()));
 
-	/* Update times for color LEDs */
+	/* Update times for colour LEDs */
 	LEDFAC->SetUpdateTime(1500);
 	LEDSDC->SetUpdateTime(1500);
 	LEDMSC->SetUpdateTime(600);
@@ -642,13 +642,13 @@ void systemevalDlg::hideEvent(QHideEvent*)
 
 void systemevalDlg::UpdatePlotsStyle()
 {
-	int iColor = Settings.Get("System Evaluation Dialog", "colorscheme", 0xff0000);
+	int iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
 	/* Update chart windows */
 	for (size_t i = 0; i < vecpDRMPlots.size(); i++)
-		vecpDRMPlots[i]->SetPlotStyle(iColor);
+		vecpDRMPlots[i]->SetPlotStyle(iPlotStyle);
 
 	/* Update main plot window */
-	MainPlot->SetPlotStyle(iColor);
+	MainPlot->SetPlotStyle(iPlotStyle);
 }
 
 CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
@@ -657,8 +657,8 @@ CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
 	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
 	pNewChartWin->setCaption(tr("Chart Window"));
 
-	/* Set color scheme */
-	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "colorscheme", 0xff0000));
+    /* Set plot style*/
+	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
 	pNewChartWin->setIcon(*this->icon());

@@ -83,7 +83,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Init main plot */
 	MainPlot->SetRecObj(&DRMReceiver);
-	MainPlot->SetPlotStyle(Settings.Get("DRM Dialog", "plotcolor", 0xff0000));
+	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 	MainPlot->setMargin(1);
 	MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD_ANALOG);
 
@@ -320,7 +320,7 @@ void AnalogDemDlg::UpdateControls()
 void AnalogDemDlg::UpdatePlotsStyle()
 {
 	/* Update main plot window */
-	MainPlot->SetPlotStyle(Settings.Get("DRM Dialog", "plotcolor", 0xff0000));
+	MainPlot->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 }
 
 void AnalogDemDlg::OnSwitchToDRM()
@@ -534,7 +534,7 @@ void AnalogDemDlg::AddWhatsThisHelp()
 		"domain optimal filter design based algorithm. The noise PSD is "
 		"estimated utilizing a minimum statistic. A problem of this type of "
 		"algorithm is that it produces the so called \"musical tones\". The "
-		"noise becomes colored and sounds a bit strange. At the same time, "
+		"noise becomes coloured and sounds a bit strange. At the same time, "
 		"the useful signal (which might be speech or music) is also "
 		"distorted by the algorithm. By selecting the level of noise "
 		"reduction, a compromise between distortion of the useful signal "
