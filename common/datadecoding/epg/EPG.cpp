@@ -1363,10 +1363,7 @@ EPG::parseDoc (const QDomNode & n)
 				}
 				l2 = l2.nextSibling ();
 			}
-			if (shortId != 0)
-			{
-				progs[shortId] = p;
-			}
+            progs[shortId] = p;
 		}
 		l1 = l1.nextSibling ();
 	}
