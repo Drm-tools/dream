@@ -80,6 +80,9 @@
 
 #include <algorithm>
 #include <time.h>
+#ifdef WIN32
+# include <windows.h> // for GetTickCount
+#endif
 
 #if defined(_MSC_VER) && (_MSC_VER==1200)
 #pragma warning(default:4512)
