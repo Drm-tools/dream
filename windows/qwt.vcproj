@@ -122,7 +122,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="-Zm200 -GX -GX -w34100 -w34189"
 				Optimization="1"
-				AdditionalIncludeDirectories="include,$(QTDIR)\include,..\..\qwt-4.2.0\src\moc\,$(QTDIR)\mkspecs\win32-msvc.net"
+				AdditionalIncludeDirectories="&quot;..\..\qwt-4.2.0\include&quot;;&quot;$(QTDIR)\include&quot;;&quot;..\..\qwt-4.2.0\src\moc\&quot;;&quot;$(QTDIR)\mkspecs\win32-msvc.net&quot;"
 				PreprocessorDefinitions="QT_NO_DEBUG,_WINDOWS,UNICODE,WIN32,QT_DLL,QWT_DLL,QWT_MAKEDLL,QT_DLL,QT_THREAD_SUPPORT"
 				GeneratePreprocessedFile="0"
 				ExceptionHandling="1"
@@ -135,6 +135,7 @@
 				WarningLevel="3"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
+				DisableSpecificWarnings="4996"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
