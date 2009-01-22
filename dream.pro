@@ -25,7 +25,7 @@ macx {
 
 unix {
 	LIBS 		+= -lsndfile -lpcap
-	LIBS 		+= -lz -lqwt -lfhgjournaline -lfaac -lfaad -lrfftw -lfftw 
+	LIBS 		+= -lz -lqwt -lfaac -lfaad -lrfftw -lfftw 
 	SOURCES		+= linux/source/Pacer.cpp
 	DEFINES		+= HAVE_DLFCN_H HAVE_MEMORY_H HAVE_STDINT_H HAVE_STDLIB_H 
 	DEFINES		+= HAVE_STRINGS_H HAVE_STRING_H STDC_HEADERS
@@ -49,7 +49,7 @@ win32 {
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
 # this next line could be cross platform if the windows library names do not start with lib
-	LIBS 		+= zdll.lib libqwt.lib libfhgjournaline.lib libfaac.lib libfaad.lib libhamlib.lib
+	LIBS 		+= zdll.lib libqwt.lib libfaac.lib libfaad.lib libhamlib.lib
 	LIBS		+= FFTW2dll.lib RFFTW2dll.lib
 	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrt.lib
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrtd.lib
