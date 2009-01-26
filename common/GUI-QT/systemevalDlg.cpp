@@ -122,7 +122,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	pCurLiViIt = pCurLiViIt->firstChild();
 	const QPixmap pixFreqSamHist(*pCurLiViIt->pixmap(0));
 
-	/* Now clear the dummy list view items */	
+	/* Now clear the dummy list view items */
 	ListViewCharSel->clear();
 
 	/* No sorting of items */
@@ -150,7 +150,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 		CDRMPlot::NONE_OLD, FALSE);
 	pSpectrumLiViIt->setPixmap(0, pixSpectrum);
 
- 
+
 	/* Inser actual items. The list is not sorted -> items which are inserted
 	   first show up at the end of the list */
 	/* Spectrum */
@@ -418,7 +418,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	{
 		/* One shot timer */
 		TimerLogFileStart.start(iLogDelay * 1000 /* ms */, TRUE);
-	}	
+	}
 
 	/* GPS */
 	_REAL latitude, longitude;
@@ -428,7 +428,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	longitude = Settings.Get("Logfile", "longitude", 1000.0);
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 
 	if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
 	{
@@ -437,7 +437,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	}
 	else
 		Parameters.GPSData.SetPositionAvailable(FALSE);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 
 	if (Settings.Get("GPS", "usegpsd", FALSE) == TRUE)
 		EnableGPS();
@@ -454,7 +454,7 @@ systemevalDlg::~systemevalDlg()
 		shortLog.Stop();
 	if(longLog.GetLoggingActivated())
 		longLog.Stop();
-	
+
 	double latitude, longitude;
 	DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
 	Settings.Put("Logfile", "delay", iLogDelay);
@@ -546,6 +546,8 @@ void systemevalDlg::UpdateControls()
 	{
 		EdtFrequency->setText(QString().setNum(iFrequency));
 		iCurFrequency = iFrequency;
+        longLog.SetLogFrequency(iFrequency);
+        shortLog.SetLogFrequency(iFrequency);
 	}
 }
 
@@ -738,7 +740,7 @@ void systemevalDlg::OnTimer()
 {
 	CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
 
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 
 	if (this->isVisible())
 	{
@@ -753,7 +755,7 @@ void systemevalDlg::OnTimer()
 	if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
 	{
 		/* Get a consistant snapshot */
-		
+
 		/* We only get SNR from a local DREAM Front-End */
 		_REAL rSNR = ReceiverParam.GetSNR();
 		if (rSNR >= 0.0)
@@ -1057,51 +1059,51 @@ void systemevalDlg::OnTimer()
 	/* Update controls */
 	UpdateControls();
 	}
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
-void systemevalDlg::OnRadioTimeLinear() 
+void systemevalDlg::OnRadioTimeLinear()
 {
 	if (DRMReceiver.GetTimeInt() != CChannelEstimation::TLINEAR)
 		DRMReceiver.SetTimeInt(CChannelEstimation::TLINEAR);
 }
 
-void systemevalDlg::OnRadioTimeWiener() 
+void systemevalDlg::OnRadioTimeWiener()
 {
 	if (DRMReceiver.GetTimeInt() != CChannelEstimation::TWIENER)
 		DRMReceiver.SetTimeInt(CChannelEstimation::TWIENER);
 }
 
-void systemevalDlg::OnRadioFrequencyLinear() 
+void systemevalDlg::OnRadioFrequencyLinear()
 {
 	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FLINEAR)
 		DRMReceiver.SetFreqInt(CChannelEstimation::FLINEAR);
 }
 
-void systemevalDlg::OnRadioFrequencyDft() 
+void systemevalDlg::OnRadioFrequencyDft()
 {
 	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FDFTFILTER)
 		DRMReceiver.SetFreqInt(CChannelEstimation::FDFTFILTER);
 }
 
-void systemevalDlg::OnRadioFrequencyWiener() 
+void systemevalDlg::OnRadioFrequencyWiener()
 {
 	if (DRMReceiver.GetFreqInt() != CChannelEstimation::FWIENER)
 		DRMReceiver.SetFreqInt(CChannelEstimation::FWIENER);
 }
 
-void systemevalDlg::OnRadioTiSyncFirstPeak() 
+void systemevalDlg::OnRadioTiSyncFirstPeak()
 {
-	if (DRMReceiver.GetTiSyncTracType() != 
+	if (DRMReceiver.GetTiSyncTracType() !=
 		CTimeSyncTrack::TSFIRSTPEAK)
 	{
 		DRMReceiver.SetTiSyncTracType(CTimeSyncTrack::TSFIRSTPEAK);
 	}
 }
 
-void systemevalDlg::OnRadioTiSyncEnergy() 
+void systemevalDlg::OnRadioTiSyncEnergy()
 {
-	if (DRMReceiver.GetTiSyncTracType() != 
+	if (DRMReceiver.GetTiSyncTracType() !=
 		CTimeSyncTrack::TSENERGY)
 	{
 		DRMReceiver.SetTiSyncTracType(CTimeSyncTrack::TSENERGY);
@@ -1274,7 +1276,7 @@ void systemevalDlg::OnCheckWriteLog()
 }
 
 QString	systemevalDlg::GetRobModeStr()
-{		
+{
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	switch (Parameters.GetWaveMode())
 	{
@@ -1771,9 +1773,9 @@ void systemevalDlg::EnableGPS()
 		return;
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 	pGPSReceiver = new CGPSReceiver(Parameters, Settings);
 }
 
@@ -1785,7 +1787,7 @@ void systemevalDlg::DisableGPS()
 		pGPSReceiver = NULL;
 	}
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
-	Parameters.Unlock(); 
+	Parameters.Unlock();
 }

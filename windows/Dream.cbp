@@ -24,7 +24,6 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\DKULTUR_EPG1.rsA" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />
@@ -61,7 +60,6 @@
 			<Add library="wsock32" />
 			<Add library="winmm" />
 			<Add library="setupapi" />
-			<Add library="wpcap" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="..\libs" />
 		</Linker>
@@ -304,6 +302,9 @@
 		<Unit filename="Source\Pacer.cpp" />
 		<Unit filename="Source\Sound.cpp" />
 		<Unit filename="Source\Sound.h" />
+		<Unit filename="dream.rc">
+			<Option compilerVar="WINDRES" />
+		</Unit>
 		<Unit filename="moc\AMSSDlgbase.cpp" />
 		<Unit filename="moc\AboutDlgbase.cpp" />
 		<Unit filename="moc\AnalogDemDlgbase.cpp" />
