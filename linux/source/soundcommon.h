@@ -32,8 +32,8 @@
 # if QT_VERSION >= 0x030000 	 
 #  include <qmutex.h>
 # else
-#  include <qthread.h>
 # endif
+# include <qthread.h>
 #endif
 #include "../../common/util/Buffer.h"
 #ifdef USE_ALSA
