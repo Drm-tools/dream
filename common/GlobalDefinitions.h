@@ -95,17 +95,6 @@ using namespace std; /* Because of the library: "complex" */
 //# undef HAVE_LIBZ
 # endif
 
-#elif defined(__APPLE__) && !defined(QT_VERSION)
-
-# define USE_QT_GUI
-# define HAVE_LIBSNDFILE
-# define USE_FAAD2_LIBRARY
-# define USE_FAAC_LIBRARY
-# define HAVE_LIBPCAP
-# define HAVE_LIBHAMLIB
-# define HAVE_RIG_PARSE_MODE			1
-# define HAVE_LIBZ
-
 #endif
 
 
