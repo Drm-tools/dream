@@ -178,7 +178,7 @@ else
 fi
 
 dnl faad2 -----------------------------------------------------------------------
-AC_CHECK_HEADER(faad.h, , enable_faad2=no)
+AC_CHECK_HEADER(neaacdec.h, , enable_faad2=no)
 AC_CHECK_LIB(faad,NeAACDecOpen, , enable_faad2=no, -lm )
 if test "x$enable_faad2" = xyes; then
 	AC_CHECK_LIB(faad,NeAACDecInitDRM, , enable_faad2=no, -lm )
