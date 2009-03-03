@@ -55,7 +55,7 @@
 /// @file       NML.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.cpp,v 1.3 2008/12/26 20:04:53 jcable Exp $
+/// $Id: NML.cpp,v 1.4 2009/03/03 17:47:17 jcable Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -66,6 +66,7 @@
 ///
 //////////////////////////////////////////////////////////////////////////////
 
+#include <cstdlib>
 #include <zlib.h>
 #include "NML.h"
 #include "Splitter.h"
