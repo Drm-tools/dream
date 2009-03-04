@@ -40,7 +40,8 @@
 #include <sstream>
 #include <iostream>
 #include <iomanip>
-#include <limits>
+#include <cstring>
+#include <cstdlib>
 using namespace std;
 
 /* Implementation *************************************************************/

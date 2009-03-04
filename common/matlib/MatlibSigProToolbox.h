@@ -30,6 +30,7 @@
 
 #include "Matlib.h"
 #include "MatlibStdToolbox.h"
+#include <cstdlib>
 
 
 /* Helpfunctions **************************************************************/
