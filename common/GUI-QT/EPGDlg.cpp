@@ -245,7 +245,7 @@ void EPGDlg::select()
     }
     Data->setSorting(COL_START);
 
-    for (QMap < QDateTime, EPG::CProg >::Iterator i = epg.progs.begin();
+    for (QMap < time_t, EPG::CProg >::Iterator i = epg.progs.begin();
 	 i != epg.progs.end(); i++)
 	{
 	    const EPG::CProg & p = i.data();
@@ -258,9 +258,9 @@ void EPGDlg::select()
         // collapse white space in description
         description.replace(QRegExp("[\t\r\n ]+"), " ");
         // TODO - let user choose time or actualTime if available, or show as tooltip
-        QDateTime start;
+        time_t start;
         int duration;
-        if(p.actualTime.isValid())
+        if(p.actualTime!=0)
         {
             start = p.actualTime;
             duration = p.actualDuration;
@@ -273,7 +273,9 @@ void EPGDlg::select()
         QString s_start, s_duration;
         {
             char s[40];
-            sprintf(s, "%02d:%02d", start.time().hour(), start.time().minute());
+            tm bdt;
+            bdt = *gmtime(&start);
+            sprintf(s, "%02d:%02d", bdt.tm_hour, bdt.tm_min);
             s_start = s;
             sprintf(s, "%02d:%02d", int(duration/60), duration%60);
             s_duration = s;

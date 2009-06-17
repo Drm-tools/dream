@@ -33,6 +33,10 @@
 #include <qtextstream.h>
 #include <qregexp.h>
 #include <iostream>
+#include <cstdlib>
+#ifdef _WIN32
+# include <windows.h>
+#endif
 
 const
 	EPG::gl
@@ -1361,17 +1365,17 @@ EPG::parseDoc (const QDomNode & n)
 				}
 				l2 = l2.nextSibling ();
 			}
-			QDateTime start;
-			if(p.actualTime.isValid())
-                start = p.actualTime;
-            else
-                start = p.time;
-            QMap<QDateTime,CProg>::ConstIterator existing = progs.find(start);
+			time_t start;
+			if(p.actualTime!=0)
+				start = p.actualTime;
+			else
+				start = p.time;
+			QMap<time_t,CProg>::ConstIterator existing = progs.find(start);
 			if (existing != progs.end())
 			{
 			    p.augment(existing.data());
 			}
-            progs[start] = p;
+			progs[start] = p;
 		}
 		l1 = l1.nextSibling ();
 	}
@@ -1379,9 +1383,9 @@ EPG::parseDoc (const QDomNode & n)
 
 void EPG::CProg::augment(const CProg& p)
 {
-    if(p.time.isValid())
+    if(p.time!=0)
         time = p.time;
-    if(p.actualTime.isValid())
+    if(p.actualTime!=0)
         actualTime = p.actualTime;
     if(p.duration>0)
         duration = p.duration;
@@ -1495,16 +1499,61 @@ EPG::loadChannels (const QString & fileName)
 	}
 }
 
-QDateTime EPG::parseTime(const QString & time)
+time_t EPG::parseTime(const QString & time)
 {
     if(time=="")
-        return QDateTime(); // invalid
+        return 0; // invalid
     QRegExp q("[-T:+Z]");
     QStringList sl = QStringList::split(q, time);
-    QDateTime t(
-        QDate(sl[0].toUInt(), sl[1].toUInt(), sl[2].toUInt()),
-        QTime(sl[3].toUInt(), sl[4].toUInt(), sl[5].toUInt())
-    );
+#ifdef _WIN32
+    SYSTEMTIME st;
+    st.wYear = 1970;
+    st.wMonth = 1;
+    st.wDay = 1;
+    st.wHour = 0;
+    st.wMinute = 0;
+    st.wSecond = 0;
+    FILETIME tmp, zero;
+    SystemTimeToFileTime(&st, &tmp);
+    LocalFileTimeToFileTime(&tmp, &zero);
+    ULARGE_INTEGER unix_zero;
+    unix_zero.LowPart = zero.dwLowDateTime;
+    unix_zero.HighPart = zero.dwHighDateTime;
+
+    st.wYear = sl[0].toUInt();
+    st.wMonth = sl[1].toUInt();
+    st.wDay = sl[2].toUInt();
+    st.wHour = sl[3].toUInt();
+    st.wMinute = sl[4].toUInt();
+    st.wSecond = sl[5].toUInt();
+    FILETIME to;
+    SystemTimeToFileTime(&st, &tmp);
+    LocalFileTimeToFileTime(&tmp, &to);
+    ULARGE_INTEGER ft;
+    ft.LowPart = to.dwLowDateTime;
+    ft.HighPart = to.dwHighDateTime;
+
+    if(sl.count()==8)
+    {
+        int hh = sl[6].toInt();
+        int mm = sl[7].toInt();
+        ULARGE_INTEGER offset;
+        offset.QuadPart = 10000000LL*60LL*(60LL*hh+mm);
+        if(time[19]=='+') // + offset means UTC is earlier
+            ft.QuadPart -= offset.QuadPart;
+	else
+            ft.QuadPart += offset.QuadPart;
+    }
+    time_t t = time_t((ft.QuadPart - unix_zero.QuadPart)/10000000LL);
+#else
+    tm bdt;
+    bdt.tm_year = sl[0].toUInt()-1900;
+    bdt.tm_mon = sl[1].toUInt()-1;
+    bdt.tm_mday = sl[2].toUInt();
+    bdt.tm_hour = sl[3].toUInt();
+    bdt.tm_min = sl[4].toUInt();
+    bdt.tm_sec = sl[5].toUInt();
+    time_t t = mktime(&bdt);
     // time zone offset
     if(sl.count()==8)
     {
@@ -1512,9 +1561,11 @@ QDateTime EPG::parseTime(const QString & time)
         int mm = sl[7].toInt();
         int secs = 60*(60*hh+mm);
         if(time[19]=='+') // + offset means UTC is earlier
-            secs = 0 - secs;
-        t = t.addSecs(secs);
+            t -= secs;
+	else
+	    t += secs;
     }
+#endif
     return t;
 }
 
@@ -1532,3 +1583,4 @@ int EPG::parseDuration (const QString & duration)
 	m = dur[4].toInt();
     return 60*h+m;
 }
+

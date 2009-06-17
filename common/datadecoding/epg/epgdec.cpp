@@ -448,6 +448,7 @@ decode_dateandtime(const _BYTE* p)
     	sign = p[n] & 0x20;
     	lto = p[n] & 0x3f;
     	int mins = 60*hours+minutes;
+//    	cerr << mjd << " " << hours << ":" << minutes << " " << mins << " " << sign << " " << lto << endl;
     	if(sign)
     	{
 	    mins -= 30*lto;
@@ -490,6 +491,7 @@ decode_dateandtime(const _BYTE* p)
     out << year << '-';
     if(month<10) out << '0';
     out << int(month) << '-';
+    if(day<10) out << '0';
     out << int(day) << 'T';
     if(hours<10) out << '0';
     out << hours << ':';

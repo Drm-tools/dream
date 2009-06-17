@@ -58,13 +58,13 @@ class EPG
     {
       public:
 
-	  CProg(): time(), actualTime(), duration(0), actualDuration(0),
+	  CProg(): time(0), actualTime(0), duration(0), actualDuration(0),
                 name(""), description(""),
 			  crid(""), shortId(0), mainGenre(), secondaryGenre(), otherGenre()
 		{}
         void augment(const CProg&);
 
-		QDateTime time, actualTime;
+		time_t time, actualTime;
 		int duration, actualDuration;
 		QString name, description;
 		QString crid;
@@ -72,13 +72,13 @@ class EPG
 		vector<QString> mainGenre, secondaryGenre, otherGenre;
     };
 
-    QMap < QDateTime, CProg > progs;
+    QMap < time_t, CProg > progs;
     QMap < QString, QString > genres;
     QString dir, servicesFilename;
     CEPGDecoder basic, advanced;
-	CParameter& Parameters;
+    CParameter& Parameters;
 private:
     static const struct gl { const char *genre; const char* desc; } genre_list[];
-    QDateTime parseTime(const QString & time);
+    time_t parseTime(const QString & time);
     int parseDuration (const QString & duration);
 };
