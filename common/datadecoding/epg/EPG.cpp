@@ -1263,10 +1263,9 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
     d.month = date.month();
     d.day = date.day();
 
-    QString fileName = dir + "/" + QString (epgFilename (d, sid, 1, bAdvanced).c_str ());
+    QString fileName(epgFilename (d, sid, 1, bAdvanced).c_str ());
     CEPGDecoder epg;
-    epg.doc.setContent (QString (""));
-    QFile file (fileName);
+    QFile file (dir + "/" +fileName);
     if (!file.open (IO_ReadOnly))
     {
         return epg.doc;
@@ -1277,6 +1276,10 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
     file.readBlock ((char *) &vecData.front (), file.size ());
     file.close ();
     epg.decode (vecData);
+    epg.doc.documentElement().insertBefore(
+	epg.doc.createComment(fileName),
+	epg.doc.documentElement().firstChild()
+    );
     return epg.doc;
 }
 
@@ -1578,7 +1581,7 @@ int EPG::parseDuration (const QString& duration)
         bool date=true;
         for (size_t i=1; i<duration.length(); i++)
         {
-            switch (duration[i])
+            switch (duration[int(i)])
             {
             case 'T':
                 d = 0;
@@ -1638,6 +1641,8 @@ int EPG::parseDuration (const QString& duration)
                 d=0;
             }
         }
+        // assume date part is empty
+        return 60*(60*hh+mi)+ss;
     }
     else
         return 0;
