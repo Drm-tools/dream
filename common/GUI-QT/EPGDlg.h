@@ -84,7 +84,18 @@ protected:
     virtual	void showEvent(QShowEvent *e);
 	virtual void hideEvent(QHideEvent* pEvent);
 
-	_BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now);
+    class MyListViewItem : public QListViewItem
+    {
+    	public:
+
+    	MyListViewItem( QListView * parent, QString a, QString b, QString c, QString d, QString e,
+    	time_t s, int dr):QListViewItem(parent,a,b,c,d,e),start(s),duration(dr){}
+
+
+	_BOOLEAN IsActive();
+	time_t start;
+	int duration;
+    };
 
 	QPixmap			BitmCubeGreen;
 

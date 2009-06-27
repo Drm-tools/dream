@@ -109,13 +109,13 @@ void EPGDlg::OnTimer()
         if (date == todayUTC) /* if today */
         {
             /* Extract values from the list */
-            QListViewItem * myItem = Data->firstChild();
+            MyListViewItem * myItem = (MyListViewItem*)Data->firstChild();
 
             while ( myItem )
             {
                 /* Check, if the programme is now on line. If yes, set
                 special pixmap */
-                if (IsActive(myItem->text(COL_START), myItem->text(COL_DURATION), gmtCur))
+                if (myItem->IsActive())
                 {
                     myItem->setPixmap(COL_START, BitmCubeGreen);
                     Data->ensureItemVisible(myItem);
@@ -123,7 +123,7 @@ void EPGDlg::OnTimer()
                 else
                     myItem->setPixmap(COL_START,QPixmap()); /* no pixmap */
 
-                myItem = myItem->nextSibling();
+                myItem = (MyListViewItem*)myItem->nextSibling();
             }
         }
     }
@@ -305,7 +305,8 @@ void EPGDlg::select()
 
         sprintf(s, "%02d:%02d", bdt.tm_hour, bdt.tm_min);
         s_start = s;
-        sprintf(s, "%02d:%02d", int(duration/60), duration%60);
+        int min = duration / 60;
+        sprintf(s, "%02d:%02d", int(min/60), min%60);
         s_duration = s;
         QString name, description, genre;
         if (p.name=="" && p.mainGenre.size()>0)
@@ -327,24 +328,15 @@ void EPGDlg::select()
                 }
             }
         }
-        QListViewItem* CurrItem = new QListViewItem(Data, s_start, name, genre, description, s_duration);
+        MyListViewItem* CurrItem = new MyListViewItem(Data, s_start, name, genre, description, s_duration,
+        start, duration);
 
-        /* Get current UTC time */
-        time_t ltime;
-        time(&ltime);
-        tm gmtCur = *gmtime(&ltime);
-        /* today in UTC */
-        QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
-
-        if (date == todayUTC) /* if today */
-        {
-            /* Check, if the programme is now on line. If yes, set
-            special pixmap */
-            if (IsActive(s_start, s_duration, gmtCur))
-            {
-                CurrItem->setPixmap(COL_START, BitmCubeGreen);
-                CurrActiveItem = CurrItem;
-            }
+    /* Check, if the programme is now on line. If yes, set
+    special pixmap */
+    if (CurrItem->IsActive())
+    {
+	CurrItem->setPixmap(COL_START, BitmCubeGreen);
+	CurrActiveItem = CurrItem;
         }
     }
 
@@ -352,15 +344,12 @@ void EPGDlg::select()
         Data->ensureItemVisible(CurrActiveItem);
 }
 
-_BOOLEAN EPGDlg::IsActive(const QString& start, const QString& duration, const tm& now)
+_BOOLEAN EPGDlg::MyListViewItem::IsActive()
 {
-    QStringList sl = QStringList::split(":", start);
-    QStringList dl = QStringList::split(":", duration);
-    int s = 60*sl[0].toInt()+sl[1].toInt();
-    int e = s + 60*dl[0].toInt()+dl[1].toInt();
-    int n = 60*now.tm_hour+now.tm_min;
-    if ((s <= n) && (n < e))
-        return TRUE;
-    else
-        return FALSE;
+	time_t now = time(NULL);
+	if(now<start)
+		return false;
+	if(now>=(start+duration))
+		return false;
+	return true;
 }
