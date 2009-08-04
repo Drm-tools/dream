@@ -9,9 +9,8 @@
 			<Target title="Win32 Release">
 				<Option output="Dream" prefix_auto="1" extension_auto="1" />
 				<Option object_output="Release" />
-				<Option type="0" />
+				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\hf_downlink.pcap" />
 				<Compiler>
 					<Add option="-O2" />
 					<Add option="-W" />
@@ -31,6 +30,9 @@
 					<Add option="-D_DEBUG" />
 				</Compiler>
 			</Target>
+			<Environment>
+				<Variable name="QTDIR" value="D:\Qt\3.3" />
+			</Environment>
 		</Build>
 		<Compiler>
 			<Add option="-DQT_DLL" />
@@ -62,6 +64,7 @@
 			<Add library="setupapi" />
 			<Add library="wpcap" />
 			<Add library="sndfile" />
+			<Add library="C:\winnt\system32\Kernel32.dll" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="..\libs" />
 		</Linker>

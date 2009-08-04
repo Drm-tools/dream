@@ -467,6 +467,7 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 void
 CDataDecoder::InitInternal(CParameter & ReceiverParam)
 {
+	cerr << "DataDecoder::InitInternal" << endl;
 	int iTotalNumInputBits;
 	int iTotalNumInputBytes;
 	int iCurDataStreamID;

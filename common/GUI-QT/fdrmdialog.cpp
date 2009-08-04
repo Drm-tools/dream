@@ -657,8 +657,6 @@ void FDRMDialog::UpdateDisplay()
 				== CService::SF_AUDIO) m_StaticService[0] += tr(" + AFS");
 	}
 
-	Parameters.Unlock();
-
 	/* set data service to be decoded to EPG until user selects something else */
 	int iEPGServiceID=-1;
 	if((!TextMiniService1->text().contains("EPG")) && (m_StaticService[0].contains("EPG")))
@@ -673,6 +671,9 @@ void FDRMDialog::UpdateDisplay()
 	{
 		Parameters.SetCurSelDataService(iEPGServiceID);
 	}
+
+	Parameters.Unlock();
+
 	/* Set texts */
 	TextMiniService1->setText(m_StaticService[0]);
 	TextMiniService2->setText(m_StaticService[1]);
