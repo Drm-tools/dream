@@ -486,7 +486,7 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 			QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
 
 		/* Check if user not hit the cancel button */
-		if (!strFileName.isNull())
+		if (!strFileName.isEmpty())
 		{
 			DRMReceiver.GetWriteData()->
 				StartWriteWaveFile(strFileName.latin1());

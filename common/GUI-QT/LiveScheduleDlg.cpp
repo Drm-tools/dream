@@ -453,9 +453,7 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
 	bCurrentSortAscending = Settings.Get("Live Schedule Dialog", "sortascending", TRUE);
 	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 	/* Retrieve the setting saved into the .ini file */
-	string str = strCurrentSavePath.latin1();
-	str = Settings.Get("Live Schedule Dialog", "storagepath", str);
-	strCurrentSavePath = str.c_str();
+	strCurrentSavePath = (DRMReceiver.GetParameters()->sDataFilesDirectory+"/AFS").c_str();
 
 	/* Set stations in list view which are active right now */
 	bShowAll = Settings.Get("Live Schedule Dialog", "showall", FALSE);
@@ -512,10 +510,6 @@ LiveScheduleDlg::SaveSettings(CSettings& Settings)
 
 	/* Store preview settings */
 	Settings.Put("Live Schedule Dialog", "showall", bShowAll);
-
-	/* Store save path */
-	string str = strCurrentSavePath.latin1();
-	Settings.Put("Live Schedule Dialog", "storagepath", str);
 }
 
 void
@@ -959,7 +953,7 @@ LiveScheduleDlg::OnSave()
 				+ strStationName + "_" + "LiveSchedule.html";
 		strFileName = QFileDialog::getSaveFileName(strPath, "*.html", this);
 
-		if (!strFileName.isNull())
+		if (!strFileName.isEmpty())
 		{
 
 			/* Save as a text stream */

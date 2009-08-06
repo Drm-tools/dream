@@ -29,14 +29,18 @@
 
 /* Implementation *************************************************************/
 
-MultSettingsDlg::MultSettingsDlg(CSettings& NSettings, QWidget* parent,
+MultSettingsDlg::MultSettingsDlg(CParameter& NP, CSettings& NSettings, QWidget* parent,
 	const char* name, bool modal, WFlags f) :
-	CMultSettingsDlgBase(parent, name, modal, f), Settings(NSettings)
+	CMultSettingsDlgBase(parent, name, modal, f), Parameters(NP), Settings(NSettings)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
 	/* Connect buttons */
+
+	connect(PushButtonChooseDir, SIGNAL(clicked()),
+		this, SLOT(OnbuttonChooseDir()));
+
 	connect(buttonClearCacheMOT, SIGNAL(clicked()),
 		this, SLOT(OnbuttonClearCacheMOT()));
 
@@ -73,9 +77,13 @@ void MultSettingsDlg::showEvent(QShowEvent*)
 		CheckBoxAddRefresh->setChecked(TRUE);
 
 	EdtSecRefresh->setText(QString().setNum(Settings.Get("Multimedia Dialog", "motbwsrefresh", 10)));
+
+	QString dir = Parameters.sDataFilesDirectory.c_str();
+	TextLabelDir->setText(dir);
+        QToolTip::add(TextLabelDir, dir);
 }
 
-void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN bDeleteDirs = FALSE)
+void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN bDeleteDirs)
 {
 	/* Delete files into sPath directory with scan recursive */
 
@@ -119,16 +127,28 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 	}
 }
 
+void MultSettingsDlg::OnbuttonChooseDir()
+{
+    QString strFileName = QFileDialog::getExistingDirectory(TextLabelDir->text(), this);
+    /* Check if user not hit the cancel button */
+    if (!strFileName.isEmpty())
+    {
+        TextLabelDir->setText(strFileName);
+        QToolTip::add(TextLabelDir, strFileName);
+        Parameters.sDataFilesDirectory = (const char*)strFileName.utf8();
+    }
+}
+
 void MultSettingsDlg::OnbuttonClearCacheMOT()
 {
-	/* delete all files and directories into the MOTBWS directory */
-	ClearCache(Settings.Get("Multimedia Dialog", "storagepath").c_str(), "", TRUE);
+	/* delete all files and directories in the MOT directory */
+	ClearCache(TextLabelDir->text()+"/MOT", "", TRUE);
 }
 
 void MultSettingsDlg::OnbuttonClearCacheEPG()
 {
 	/* Delete all EPG files */
-	ClearCache(Settings.Get("Receiver", "datafilesdirectory").c_str(), "*.EHA;*.EHB");
+	ClearCache((Parameters.sDataFilesDirectory+"/EPG").c_str(), "*.EHA;*.EHB");
 }
 
 void MultSettingsDlg::AddWhatsThisHelp()

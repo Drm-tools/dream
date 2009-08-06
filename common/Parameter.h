@@ -22,16 +22,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -108,9 +108,9 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			eAudioCoding(ap.eAudioCoding),
 			eSBRFlag(ap.eSBRFlag),
 			eAudioSamplRate(ap.eAudioSamplRate),
-			bTextflag(ap.bTextflag),	
+			bTextflag(ap.bTextflag),
 			bEnhanceFlag(ap.bEnhanceFlag),
-			eAudioMode(ap.eAudioMode),	
+			eAudioMode(ap.eAudioMode),
 			iCELPIndex(ap.iCELPIndex),
 			bCELPCRC(ap.bCELPCRC),
 			eHVXCRate(ap.eHVXCRate),
@@ -124,9 +124,9 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 			eAudioCoding = ap.eAudioCoding;
 			eSBRFlag = ap.eSBRFlag;
 			eAudioSamplRate = ap.eAudioSamplRate;
-			bTextflag =	ap.bTextflag;	
+			bTextflag =	ap.bTextflag;
 			bEnhanceFlag = ap.bEnhanceFlag;
-			eAudioMode = ap.eAudioMode;	
+			eAudioMode = ap.eAudioMode;
 			iCELPIndex = ap.iCELPIndex;
 			bCELPCRC = ap.bCELPCRC;
 			eHVXCRate = ap.eHVXCRate;
@@ -884,7 +884,7 @@ enum ERecState {RS_TRACKING, RS_ACQUISITION};
 		_REAL rCalFactorAM;
 		_REAL rCalFactorDRM;
 		_REAL rIFCentreFreq;
-		
+
 	};
 
 
@@ -1012,11 +1012,7 @@ class CParameter
 	/* Serial number and received ID */
 	string sReceiverID;
 	string sSerialNumber;
-
-
-	/* Directory for data files */
 	string sDataFilesDirectory;
-
 
 	/* Parameters controlled by SDC ----------------------------------------- */
 	void SetAudioParam(const int iShortID, const CAudioParam& NewAudParam);
@@ -1145,7 +1141,7 @@ class CParameter
 	/* peak of PSD - for PSD-based interference measurement rnip */
 	_REAL rMaxPSDwrtSig;
 	_REAL rMaxPSDFreq;
-	
+
 	/* the signal level as measured at IF by dream */
 	void SetIFSignalLevel(_REAL);
 	_REAL GetIFSignalLevel();
@@ -1168,8 +1164,8 @@ protected:
 
 	int iFrequency;
 	_BOOLEAN bValidSignalStrength;
-	_REAL rSigStr;  
-	_REAL rIFSigStr;  
+	_REAL rSigStr;
+	_REAL rIFSigStr;
 
 	/* Current selected audio service for processing */
 	int iCurSelAudioService;

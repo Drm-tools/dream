@@ -951,7 +951,9 @@ void FDRMDialog::OnViewMultSettingsDlg()
 {
 
 	/* Show multimedia settings window */
-	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(Settings, this, "", TRUE, Qt::WStyle_Dialog);
+	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(
+		*DRMReceiver.GetParameters(), Settings,
+		this, "", TRUE, Qt::WStyle_Dialog);
 
 	SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
 

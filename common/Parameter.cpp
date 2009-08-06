@@ -38,8 +38,8 @@
 CParameter::CParameter(CDRMReceiver *pRx):
  pDRMRec(pRx),
  eSymbolInterlMode(),
- eMSCCodingScheme(),	
- eSDCCodingScheme(),	
+ eMSCCodingScheme(),
+ eSDCCodingScheme(),
  iNumAudioService(0),
  iNumDataService(0),
  iAMSSCarrierMode(0),
@@ -50,9 +50,9 @@ CParameter::CParameter(CDRMReceiver *pRx):
  Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
  iNumBitsHierarchFrameTotal(0),
  iNumDecodedBitsMSC(0),
- iNumSDCBitsPerSFrame(0),	
- iNumAudioDecoderBits(0),	
- iNumDataDecoderBits(0),	
+ iNumSDCBitsPerSFrame(0),
+ iNumAudioDecoderBits(0),
+ iNumDataDecoderBits(0),
  iYear(0),
  iMonth(0),
  iDay(0),
@@ -76,7 +76,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  iDRMChannelNum(0),
  iSpecChDoppler(0),
  rBitErrRate(0.0),
- rSyncTestParam(0.0),		
+ rSyncTestParam(0.0),
  rSINR(0.0),
  iNumBitErrors(0),
  iChanEstDelay(0),
@@ -117,7 +117,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
  rIFSigStr(0.0),
  iCurSelAudioService(0),
  iCurSelDataService(0),
- eRobustnessMode(RM_ROBUSTNESS_MODE_B),	
+ eRobustnessMode(RM_ROBUSTNESS_MODE_B),
  eSpectOccup(SO_3),
  LastAudioService(),
  LastDataService(),
@@ -175,7 +175,7 @@ CParameter::CParameter(const CParameter& p):
  iDRMChannelNum(p.iDRMChannelNum),
  iSpecChDoppler(p.iSpecChDoppler),
  rBitErrRate(p.rBitErrRate),
- rSyncTestParam	(p.rSyncTestParam),	
+ rSyncTestParam	(p.rSyncTestParam),
  rSINR(p.rSINR),
  iNumBitErrors(p.iNumBitErrors),
  iChanEstDelay(p.iChanEstDelay),
@@ -223,7 +223,7 @@ CParameter::CParameter(const CParameter& p):
  //, Mutex() // jfbc: I don't think this state should be copied
 {
 	CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
-	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO 
+	matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO
 }
 
 CParameter& CParameter::operator=(const CParameter& p)
@@ -269,7 +269,7 @@ CParameter& CParameter::operator=(const CParameter& p)
 	iDRMChannelNum = p.iDRMChannelNum;
 	iSpecChDoppler = p.iSpecChDoppler;
 	rBitErrRate = p.rBitErrRate;
-	rSyncTestParam	 = p.rSyncTestParam;	
+	rSyncTestParam	 = p.rSyncTestParam;
 	rSINR = p.rSINR;
 	iNumBitErrors = p.iNumBitErrors;
 	iChanEstDelay = p.iChanEstDelay;
@@ -523,7 +523,7 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
 {
 	/* First check if spectrum occupancy and robustness mode pair is defined */
 	if ((
-		(eNewWaveMode == RM_ROBUSTNESS_MODE_C) || 
+		(eNewWaveMode == RM_ROBUSTNESS_MODE_C) ||
 		(eNewWaveMode == RM_ROBUSTNESS_MODE_D)
 		) && !(
 		(eSpectOccup == SO_3) ||
@@ -557,7 +557,7 @@ void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
 {
 	/* First check if spectrum occupancy and robustness mode pair is defined */
 	if ((
-		(eRobustnessMode == RM_ROBUSTNESS_MODE_C) || 
+		(eRobustnessMode == RM_ROBUSTNESS_MODE_C) ||
 		(eRobustnessMode == RM_ROBUSTNESS_MODE_D)
 		) && !(
 		(eNewSpecOcc == SO_3) ||
@@ -680,7 +680,7 @@ void CParameter::SetMSCProtLev(const CMSCProtLev NewMSCPrLe,
 		if (NewMSCPrLe.iHierarch != MSCPrLe.iHierarch)
 		{
 			MSCPrLe.iHierarch = NewMSCPrLe.iHierarch;
-		
+
 			bParamersHaveChanged = TRUE;
 		}
 	}
@@ -793,7 +793,7 @@ void CParameter::SetCurSelDataService(const int iNewService)
 		(Service[iNewService].DataParam.iStreamID != STREAM_ID_NOT_USED))
 	{
 		iCurSelDataService = iNewService;
-		
+
 		LastDataService.Reset();
 
 		/* Set init flags */
@@ -863,7 +863,7 @@ void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 		if(pDRMRec) pDRMRec->InitsForMSC();
 
 
-		/* If the receiver has lost the sync automatically restore 
+		/* If the receiver has lost the sync automatically restore
 			last current service selected */
 
 		if ((iShortID > 0) && (iNewServiceID > 0))
@@ -895,15 +895,15 @@ void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
 
 
 /* Implementaions for simulation -------------------------------------------- */
-void CRawSimData::Add(uint32_t iNewSRS) 
+void CRawSimData::Add(uint32_t iNewSRS)
 {
 	/* Attention, function does not take care of overruns, data will be
 	   lost if added to a filled shift register! */
-	if (iCurWritePos < ciMaxDelBlocks) 
+	if (iCurWritePos < ciMaxDelBlocks)
 		veciShRegSt[iCurWritePos++] = iNewSRS;
 }
 
-uint32_t CRawSimData::Get() 
+uint32_t CRawSimData::Get()
 {
 	/* We always use the first value of the array for reading and do a
 	   shift of the other data by adding a arbitrary value (0) at the
@@ -1036,7 +1036,7 @@ void CParameter::GenerateReceiverID()
 
 	while((pos = sVer.find('.')) != string::npos)
 		sVer.replace(pos, 1, " ");
-	
+
 	if ((pos = sVer.find("cvs")) != string::npos)
 		sVer.replace(pos, 3, "   ");
 
@@ -1050,7 +1050,7 @@ void CParameter::GenerateReceiverID()
 
 	while (sSerialNumber.length() < 6)
 			sSerialNumber += "_";
-	
+
 	if (sSerialNumber.length() > 6)
 		sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
 
@@ -1073,7 +1073,7 @@ void CParameter::GenerateRandomSerialNumber()
 	}
 
 	char serialNumTemp[7];
-			
+
 	for (size_t i=0; i < 6; i++)
 		serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
 
@@ -1308,7 +1308,7 @@ CAltFreqSched::IsActive(const time_t ltime)
 	struct tm *gmtCur = gmtime(&ltime);
 
 	/* Check day
-	   tm_wday: day of week (0 - 6; Sunday = 0) 
+	   tm_wday: day of week (0 - 6; Sunday = 0)
 	   I must normalize so Monday = 0   */
 
 	if (gmtCur->tm_wday == 0)
@@ -1323,7 +1323,7 @@ CAltFreqSched::IsActive(const time_t ltime)
 		(iWeekDay * 24 * 60) + (gmtCur->tm_hour * 60) + gmtCur->tm_min;
 
 	/* Day Code: this field indicates which days the frequency schedule
-	 * (the following Start Time and Duration) applies to. 
+	 * (the following Start Time and Duration) applies to.
 	 * The msb indicates Monday, the lsb Sunday. Between one and seven bits may be set to 1.
 	 */
 	for (int i = 0; i < 7; i++)

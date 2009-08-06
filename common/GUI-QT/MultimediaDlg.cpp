@@ -46,7 +46,7 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	QWidget* parent, const char* name, bool modal, WFlags f)
 	: MultimediaDlgBase(parent, name, modal, f),
 	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()),
-	strCurrentSavePath("."), strDirMOTCache("MOTCache")
+	strCurrentSavePath(".")
 {
 
 	/* Add body's stylesheet */
@@ -256,7 +256,7 @@ void MultimediaDlg::OnTimer()
 			/* Store received MOT object on disk */
 			const QString strNewObjName = NewObj.strName.c_str();
 			const QString strFileName =
-				QString(strDirMOTCache + "/" + strNewObjName);
+				QString(strCurrentSavePath + "/" + strNewObjName);
 
 			SaveMOTObject(NewObj.Body.vecData, strFileName);
 
@@ -323,7 +323,7 @@ void MultimediaDlg::OnTimer()
 						+ tr("Impossible to uncompress the home page.<br>"
 						"For uncompress data compile Dream with zlib or Freeimage.<br>"
 						"Compress files will be saved on disk here:<br>" +
-						strDirMOTCache + "/") + "</center>");
+						strCurrentSavePath + "/") + "</center>");
 				}
 			}
 		}
@@ -486,12 +486,7 @@ void MultimediaDlg::LoadSettings(const CSettings& Settings)
 	fontDefault = TextBrowser->font();
 
 	/* Retrieve the setting saved into the .ini file */
-	string str = strDirMOTCache.latin1();
-	str = Settings.Get("Multimedia Dialog", "MOTCache", str);
-	strDirMOTCache = str.c_str();
-	str = strCurrentSavePath.latin1();
-	str = Settings.Get("Multimedia Dialog", "storagepath", str);
-	SetCurrentSavePath(str.c_str());
+	strCurrentSavePath = (Parameters.sDataFilesDirectory+"/MOT").c_str();
 
 	/* Retrieve the font setting saved into the .ini file */
 	string strFontFamily = Settings.Get("Multimedia Dialog", "fontfamily");
@@ -525,12 +520,6 @@ void MultimediaDlg::SaveSettings(CSettings& Settings)
 	c.iHSize = WinGeom.height();
 	c.iWSize = WinGeom.width();
 	Settings.Put("Multimedia Dialog", c);
-
-	/* Store save path */
-	string s = strCurrentSavePath.latin1();
-	Settings.Put("Multimedia Dialog","storagepath", s);
-	s = strDirMOTCache.latin1();
-	Settings.Put("Multimedia Dialog", "MOTCache", s);
 
 	/* Store current TextBrowser font */
 	Settings.Put("Multimedia Dialog","fontfamily", fontTextBrowser.family().latin1());
@@ -607,11 +596,11 @@ void MultimediaDlg::OnButtonStepForw()
 
 	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
 		/* Try to open browser */
-		if (!openBrowser(this, strDirMOTCache + "/" + strBWSHomePage))
+		if (!openBrowser(this, strCurrentSavePath + "/" + strBWSHomePage))
 		{
 			QMessageBox::information(this, "Dream",
 				tr("Failed to start the default browser.\n"
-				"Open the home page:\n" + strDirMOTCache +
+				"Open the home page:\n" + strCurrentSavePath +
 				"/" + strBWSHomePage + "\nmanually."), QMessageBox::Ok);
 		}
 		break;
@@ -749,13 +738,6 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 	}
 }
 
-void MultimediaDlg::SetCurrentSavePath(const QString strFileName)
-{
-	strCurrentSavePath = QFileInfo(strFileName).dirPath();
-	if (strCurrentSavePath.right(1) == QString("/"))
-		strCurrentSavePath.truncate(strCurrentSavePath.length()-1);
-}
-
 void MultimediaDlg::OnSave()
 {
 	QString strFileName;
@@ -790,9 +772,8 @@ void MultimediaDlg::OnSave()
 			strFilter, this);
 
 		/* Check if user not hit the cancel button */
-		if (!strFileName.isNull())
+		if (!strFileName.isEmpty())
 		{
-			SetCurrentSavePath(strFileName);
 			SaveMOTObject(vecRawImages[iCurImagePos].Body.vecData, strFileName);
 		}
 		break;
@@ -822,10 +803,8 @@ void MultimediaDlg::OnSave()
 			strFileName = QFileDialog::getSaveFileName(strCurrentSavePath + "/" +
 				strTitle + ".html", "*.html", this);
 
-			if (!strFileName.isNull())
+			if (!strFileName.isEmpty())
 			{
-				SetCurrentSavePath(strFileName);
-
 				/* Save Journaline page as a text stream */
 				QFile FileObj(strFileName);
 
@@ -850,7 +829,7 @@ void MultimediaDlg::OnSaveAll()
 	QString strDirName =
 		QFileDialog::getExistingDirectory(NULL, this);
 
-	if (!strDirName.isNull())
+	if (!strDirName.isEmpty())
 	{
 		/* add slashes if not present */
 		if (strDirName.right(1) != "/")
@@ -948,8 +927,8 @@ void MultimediaDlg::InitBroadcastWebSite()
 			"</h2></center>");
 
 		/* Create the cache directory if not exist */
-		if (!QFileInfo(strDirMOTCache).exists())
-			QDir().mkdir(strDirMOTCache);
+		if (!QFileInfo(strCurrentSavePath).exists())
+			QDir().mkdir(strCurrentSavePath);
 	}
 }
 
