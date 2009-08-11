@@ -546,8 +546,8 @@ void systemevalDlg::UpdateControls()
 	{
 		EdtFrequency->setText(QString().setNum(iFrequency));
 		iCurFrequency = iFrequency;
-        longLog.SetLogFrequency(iFrequency);
-        shortLog.SetLogFrequency(iFrequency);
+		longLog.SetLogFrequency(iFrequency);
+		shortLog.SetLogFrequency(iFrequency);
 	}
 }
 
@@ -1273,6 +1273,8 @@ void systemevalDlg::OnCheckWriteLog()
 	/* set the focus */
 	if (CheckBoxWriteLog->isEnabled() && !CheckBoxWriteLog->hasFocus())
 		CheckBoxWriteLog->setFocus();
+
+	Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
 }
 
 QString	systemevalDlg::GetRobModeStr()

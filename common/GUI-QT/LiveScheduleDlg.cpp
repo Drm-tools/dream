@@ -454,6 +454,9 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
 	ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
 	/* Retrieve the setting saved into the .ini file */
 	strCurrentSavePath = (DRMReceiver.GetParameters()->sDataFilesDirectory+"/AFS").c_str();
+	/* and make sure it exists */
+	if (!QFileInfo(strCurrentSavePath).exists())
+		QDir().mkdir(strCurrentSavePath);
 
 	/* Set stations in list view which are active right now */
 	bShowAll = Settings.Get("Live Schedule Dialog", "showall", FALSE);
