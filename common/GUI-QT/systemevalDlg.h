@@ -6,22 +6,22 @@
  *	Volker Fischer
  *
  * Description:
- *	
+ *
  *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -96,38 +96,37 @@ protected:
 	};
 
 	CDRMReceiver&		DRMReceiver;
-	CSettings&			Settings;
+	CSettings&		Settings;
 
-	QTimer				Timer;
+	QTimer			Timer;
+	QTimer			TimerInterDigit;
 
 	/* logging */
-	QTimer				TimerLogFileLong;
-	QTimer				TimerLogFileShort;
-	QTimer				TimerLogFileStart;
+	QTimer			TimerLogFileLong;
+	QTimer			TimerLogFileShort;
+	QTimer			TimerLogFileStart;
 
-	CShortLog			shortLog;
-	CLongLog			longLog;
-	_BOOLEAN			bEnableShortLog;
-	_BOOLEAN			bEnableLongLog;
-	int					iLogDelay;
+	CShortLog		shortLog;
+	CLongLog		longLog;
+	int			iLogDelay;
 
-	int					iCurFrequency;
-    virtual void		showEvent(QShowEvent* pEvent);
+	virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
-	void				UpdateControls();
-	void				AddWhatsThisHelp();
-	CDRMPlot*			OpenChartWin(const CDRMPlot::ECharType eNewType);
+	void			UpdateControls();
+	void			AddWhatsThisHelp();
+	CDRMPlot*		OpenChartWin(const CDRMPlot::ECharType eNewType);
 
-	QString				GetRobModeStr();
-	QString				GetSpecOccStr();
+	QString			GetRobModeStr();
+	QString			GetSpecOccStr();
 
-	QPopupMenu*			pListViewContextMenu;
+	QPopupMenu*		pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
 	CGPSReceiver*		pGPSReceiver;
 
 public slots:
 	void OnTimer();
+	void OnTimerInterDigit();
 	void OnTimerLogFileStart();
 	void OnTimerLogFileShort();
 	void OnTimerLogFileLong();
@@ -148,6 +147,7 @@ public slots:
 	void OnCheckModiMetric();
 	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListViContMenu();
+	void OnFrequencyEdited (const QString&);
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
 		int iCol);
 	void EnableGPS();

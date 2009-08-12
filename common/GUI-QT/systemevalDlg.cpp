@@ -36,10 +36,10 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
 	Settings(NSettings),
-	Timer(), TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
+	Timer(), TimerInterDigit(),
+	TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
 	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
-	bEnableShortLog(FALSE), bEnableLongLog(FALSE),
-	iLogDelay(0), iCurFrequency(0), pGPSReceiver(NULL)
+	iLogDelay(0), pGPSReceiver(NULL)
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -76,7 +76,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	LEDIOInterface->SetUpdateTime(2000); /* extra long -> red light stays long */
 
 	/* Init parameter for frequency edit for log file */
-	iCurFrequency = 0;
+	EdtFrequency->setText(QString().setNum(DRMReceiver.GetFrequency()));
 
 	/* Update controls */
 	UpdateControls();
@@ -388,6 +388,10 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Timers */
 	connect(&Timer, SIGNAL(timeout()),
 		this, SLOT(OnTimer()));
+
+	connect(&TimerInterDigit, SIGNAL(timeout()),
+		this, SLOT(OnTimerInterDigit()));
+
 	connect(&TimerLogFileLong, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFileLong()));
 	connect(&TimerLogFileShort, SIGNAL(timeout()),
@@ -395,12 +399,15 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	connect(&TimerLogFileStart, SIGNAL(timeout()),
 		this, SLOT(OnTimerLogFileStart()));
 
+	connect(EdtFrequency, SIGNAL(textChanged ( const QString&)),
+		this, SLOT(OnFrequencyEdited ( const QString &)));
+
 	StopLogTimers();
 
 	/* Logfile -------------------------------------------------------------- */
 
 	/* Start log file flag */
-	bEnableLongLog = bEnableShortLog = Settings.Get("Logfile", "enablelog", FALSE);
+	CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
 
     /* log file flag for storing signal strength in long log */
 	shortLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
@@ -412,14 +419,14 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* logging delay value */
 	iLogDelay = Settings.Get("Logfile", "delay", 0);
-
+#if 0
 	/* Activate log file start if necessary. */
-	if (bEnableLongLog == TRUE)
+	if (CheckBoxWriteLog->isChecked())
 	{
 		/* One shot timer */
 		TimerLogFileStart.start(iLogDelay * 1000 /* ms */, TRUE);
 	}
-
+#endif
 	/* GPS */
 	_REAL latitude, longitude;
 	/* Latitude string for log file */
@@ -460,7 +467,7 @@ systemevalDlg::~systemevalDlg()
 	Settings.Put("Logfile", "delay", iLogDelay);
 	Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
 	Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
-	Settings.Put("Logfile", "enablelog", bEnableLongLog);
+	Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
 	Settings.Put("Logfile", "latitude", latitude);
 	Settings.Put("Logfile", "longitude", longitude);
 
@@ -539,8 +546,8 @@ void systemevalDlg::UpdateControls()
 
 	/* Update frequency edit control (frequency could be changed by
 	   schedule dialog */
-	QString strFreq = EdtFrequency->text();
-	const int iFrequency = DRMReceiver.GetFrequency();
+	int iFrequency = DRMReceiver.GetFrequency();
+	int iCurFrequency = EdtFrequency->text().toInt();
 
 	if (iFrequency != iCurFrequency)
 	{
@@ -640,6 +647,17 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	 * TODO: better solution
 	 */
 	Settings.Put("System Evaluation Dialog", "sysevplottype", (int) MainPlot->GetChartType());
+}
+
+void systemevalDlg::OnTimerInterDigit()
+{
+	TimerInterDigit.stop();
+	DRMReceiver.SetFrequency(EdtFrequency->text().toInt());
+}
+
+void systemevalDlg::OnFrequencyEdited ( const QString & text )
+{
+	TimerInterDigit.changeInterval(100);
 }
 
 void systemevalDlg::UpdatePlotsStyle()
@@ -1225,8 +1243,6 @@ void systemevalDlg::OnTimerLogFileStart()
 	/* Start logging (if not already done) */
 	if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
 	{
-		CheckBoxWriteLog->setChecked(TRUE);
-
 		/* Activate log file timer for long and short log file */
 		TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
 		TimerLogFileLong.start(1000); /* Every second */
@@ -1271,10 +1287,10 @@ void systemevalDlg::OnCheckWriteLog()
 	}
 
 	/* set the focus */
-	if (CheckBoxWriteLog->isEnabled() && !CheckBoxWriteLog->hasFocus())
+	if (CheckBoxWriteLog->isEnabled())
+	{
 		CheckBoxWriteLog->setFocus();
-
-	Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
+	}
 }
 
 QString	systemevalDlg::GetRobModeStr()
