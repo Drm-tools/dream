@@ -92,6 +92,8 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableCarMap.cpp \
 	../common/GUI-QT/main.cpp \
 	source/Pacer.cpp \
+	source/pa_shm_ringbuffer.c \
+	source/shmsoundin.cpp \
 	../common/Version.h \
 	../common/ReceptLog.h \
 	../common/PlotManager.h \
@@ -195,6 +197,8 @@ drmwithoutqt_SOURCES = \
 	../common/soundinterface.h \
 	../common/soundnull.h \
 	../common/audiofilein.h \
+	source/pa_shm_ringbuffer.h \
+	source/shmsoundin.h \
 	source/sound.h
 
 if USE_OSS
