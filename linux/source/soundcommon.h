@@ -13,7 +13,7 @@
 * Foundation; either version 2 of the License, or (at your option) any later
 * version.
 *
-* This program is distributed in the hope that it will be useful, but WITHOUT 
+* This program is distributed in the hope that it will be useful, but WITHOUT
 * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
 * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
 * details.
@@ -29,7 +29,7 @@
 #define _SOUND_COMMON_H
 
 #ifdef USE_QT_GUI
-# if QT_VERSION >= 0x030000 	 
+# if QT_VERSION >= 0x030000
 #  include <qmutex.h>
 # else
 # endif
@@ -42,7 +42,7 @@
 
 /* Definitions ****************************************************************/
 #define	NUM_IN_CHANNELS			2		/* Stereo recording (but we only
-										   use one channel for recording) */
+use one channel for recording) */
 #define	NUM_OUT_CHANNELS		2		/* Stereo Playback */
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
 #define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
@@ -52,45 +52,52 @@
 
 class COSSDev
 {
-public:
-	COSSDev():name(){}
-	void open(const string& devname, int mode);
-	int fildes(){ return dev[name].fildes();}
-	void close();
+    public:
+COSSDev():name() {}
+void open(const string& devname, int mode);
+int fildes() {
+    return dev[name].fildes();
+}
+void close();
 protected:
-	class devdata
-	{
-	public:
-		devdata():count(0),fd(0){}
-		void open(const string&, int);
-		void close();
-		int fildes();
-	protected:
-		int count; int fd;
-	};
-	static map<string,devdata> dev;
-	string name;
+class devdata
+{
+public:
+    devdata():count(0),fd(0) {}
+    void open(const string&, int);
+    void close();
+    int fildes();
+protected:
+    int count;
+    int fd;
+};
+static map<string,devdata> dev;
+string name;
 };
 #endif
 
 class CSoundBuf : public CCyclicBuffer<_SAMPLE> {
 
-public:
-	CSoundBuf() : keep_running(TRUE)
+    public:
+    CSoundBuf() : keep_running(TRUE)
 #ifdef USE_QT_GUI
-	, data_accessed()
+            , data_accessed()
 #endif
-	{}
-	bool keep_running;
+{}
+bool keep_running;
 #ifdef USE_QT_GUI
-	void lock (){ data_accessed.lock(); }
-	void unlock (){ data_accessed.unlock(); }
-	
+void lock () {
+    data_accessed.lock();
+}
+void unlock () {
+    data_accessed.unlock();
+}
+
 protected:
-	QMutex	data_accessed;
+QMutex	data_accessed;
 #else
-	void lock (){ }
-	void unlock (){ }
+void lock () { }
+void unlock () { }
 #endif
 };
 
@@ -98,12 +105,14 @@ protected:
 typedef QThread CThread;
 #else
 class CThread {
-public:
-	void run() {}
-	void start() {}
-	void wait(int) {}
-	void msleep(int) {}
-	bool running() { return true; }
+    public:
+void run() {}
+void start() {}
+void wait(int) {}
+void msleep(int) {}
+bool running() {
+    return true;
+}
 };
 #endif
 

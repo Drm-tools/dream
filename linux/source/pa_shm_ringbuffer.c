@@ -1,5 +1,5 @@
 /*
- * $Id: pa_shm_ringbuffer.c,v 1.2 2009/12/17 23:40:25 jcable Exp $
+ * $Id: pa_shm_ringbuffer.c,v 1.3 2009/12/23 14:37:22 jcable Exp $
  * Portable Audio I/O Library
  * Ring Buffer utility.
  *
@@ -35,13 +35,13 @@
  */
 
 /*
- * The text above constitutes the entire PortAudio license; however, 
+ * The text above constitutes the entire PortAudio license; however,
  * the PortAudio community also makes the following non-binding requests:
  *
  * Any person wishing to distribute modifications to the Software is
  * requested to send the modifications to the original developer so that
- * they can be incorporated into the canonical version. It is also 
- * requested that these non-binding requests be included along with the 
+ * they can be incorporated into the canonical version. It is also
+ * requested that these non-binding requests be included along with the
  * license above.
  */
 
@@ -73,14 +73,14 @@
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #   include <libkern/OSAtomic.h>
-    /* Here are the memory barrier functions. Mac OS X and FreeBSD only provide
-       full memory barriers, so the three types of barriers are the same. */
+/* Here are the memory barrier functions. Mac OS X and FreeBSD only provide
+   full memory barriers, so the three types of barriers are the same. */
 #   define PaUtil_FullMemoryBarrier()  OSMemoryBarrier()
 #   define PaUtil_ReadMemoryBarrier()  OSMemoryBarrier()
 #   define PaUtil_WriteMemoryBarrier() OSMemoryBarrier()
 #elif defined(__GNUC__)
-    /* GCC understands volatile asm and "memory" to mean it
-     * should not reorder memory read/writes */
+/* GCC understands volatile asm and "memory" to mean it
+ * should not reorder memory read/writes */
 #   if defined( __PPC__ )
 #      define PaUtil_FullMemoryBarrier()  asm volatile("sync":::"memory")
 #      define PaUtil_ReadMemoryBarrier()  asm volatile("sync":::"memory")
@@ -118,7 +118,7 @@
  */
 long PaUtil_InitializeShmRingBuffer( PaUtilShmRingBuffer *rbuf, long numBytes, void *dataPtr )
 {
-    if( ((numBytes-1) & numBytes) != 0) return -1; /* Not Power of two. */
+    if ( ((numBytes-1) & numBytes) != 0) return -1; /* Not Power of two. */
     rbuf->bufferSize = numBytes;
     //rbuf->buffer = (char *)dataPtr;
     PaUtil_FlushShmRingBuffer( rbuf );
@@ -156,17 +156,17 @@ void PaUtil_FlushShmRingBuffer( PaUtilShmRingBuffer *rbuf )
 ** Returns room available to be written or numBytes, whichever is smaller.
 */
 long PaUtil_GetShmRingBufferWriteRegions( PaUtilShmRingBuffer *rbuf, long numBytes,
-                                       void **dataPtr1, long *sizePtr1,
-                                       void **dataPtr2, long *sizePtr2 )
+        void **dataPtr1, long *sizePtr1,
+        void **dataPtr2, long *sizePtr2 )
 {
     long   index;
     long   available = PaUtil_GetShmRingBufferWriteAvailable( rbuf );
     char *buffer = (char*)rbuf+sizeof(PaUtilShmRingBuffer);
 
-    if( numBytes > available ) numBytes = available;
+    if ( numBytes > available ) numBytes = available;
     /* Check to see if write is not contiguous. */
     index = rbuf->writeIndex & rbuf->smallMask;
-    if( (index + numBytes) > rbuf->bufferSize )
+    if ( (index + numBytes) > rbuf->bufferSize )
     {
         /* Write data in two blocks that wrap the buffer. */
         long   firstHalf = rbuf->bufferSize - index;
@@ -202,17 +202,17 @@ long PaUtil_AdvanceShmRingBufferWriteIndex( PaUtilShmRingBuffer *rbuf, long numB
 ** Returns room available to be written or numBytes, whichever is smaller.
 */
 long PaUtil_GetShmRingBufferReadRegions( PaUtilShmRingBuffer *rbuf, long numBytes,
-                                void **dataPtr1, long *sizePtr1,
-                                void **dataPtr2, long *sizePtr2 )
+        void **dataPtr1, long *sizePtr1,
+        void **dataPtr2, long *sizePtr2 )
 {
     long   index;
     long   available = PaUtil_GetShmRingBufferReadAvailable( rbuf );
     char *buffer = (char*)rbuf+sizeof(PaUtilShmRingBuffer);
 
-    if( numBytes > available ) numBytes = available;
+    if ( numBytes > available ) numBytes = available;
     /* Check to see if read is not contiguous. */
     index = rbuf->readIndex & rbuf->smallMask;
-    if( (index + numBytes) > rbuf->bufferSize )
+    if ( (index + numBytes) > rbuf->bufferSize )
     {
         /* Write data in two blocks that wrap the buffer. */
         long firstHalf = rbuf->bufferSize - index;
@@ -246,7 +246,7 @@ long PaUtil_WriteShmRingBuffer( PaUtilShmRingBuffer *rbuf, const void *data, lon
     long size1, size2, numWritten;
     void *data1, *data2;
     numWritten = PaUtil_GetShmRingBufferWriteRegions( rbuf, numBytes, &data1, &size1, &data2, &size2 );
-    if( size2 > 0 )
+    if ( size2 > 0 )
     {
 
         memcpy( data1, data, size1 );
@@ -268,7 +268,7 @@ long PaUtil_ReadShmRingBuffer( PaUtilShmRingBuffer *rbuf, void *data, long numBy
     long size1, size2, numRead;
     void *data1, *data2;
     numRead = PaUtil_GetShmRingBufferReadRegions( rbuf, numBytes, &data1, &size1, &data2, &size2 );
-    if( size2 > 0 )
+    if ( size2 > 0 )
     {
         memcpy( data, data1, size1 );
         data = ((char *)data) + size1;

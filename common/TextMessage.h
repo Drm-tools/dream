@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -36,7 +36,7 @@
 
 /* Definitions ****************************************************************/
 /* The text message may comprise up to 8 segments ... The body shall contain
-   16 bytes of character data ... 
+   16 bytes of character data ...
    We add "+ 1" since the entry "0" is not used */
 #define MAX_NUM_SEG_TEXT_MESSAGE		(8 + 1)
 #define BYTES_PER_SEG_TEXT_MESS			16
@@ -50,39 +50,45 @@
 class CTextMessage
 {
 public:
-	CTextMessage() : iNumSeg(0) {}
-	virtual ~CTextMessage() {}
+    CTextMessage() : iNumSeg(0) {}
+    virtual ~CTextMessage() {}
 
-	CVector<_BINARY>&	operator[](const int iI) {return vvbiSegment[iI];}
+    CVector<_BINARY>&	operator[](const int iI) {
+        return vvbiSegment[iI];
+    }
 
-	void				SetText(const string& strMessage, const _BINARY biToggleBit);
-	inline int			GetNumSeg() const {return iNumSeg;}
-	inline int			GetSegSize(const int iSegID) const
-							{return vvbiSegment[iSegID].Size() / SIZEOF__BYTE;}
+    void				SetText(const string& strMessage, const _BINARY biToggleBit);
+    inline int			GetNumSeg() const {
+        return iNumSeg;
+    }
+    inline int			GetSegSize(const int iSegID) const
+    {
+        return vvbiSegment[iSegID].Size() / SIZEOF__BYTE;
+    }
 
 protected:
-	CVector<CVector<_BINARY> >	vvbiSegment;
-	int							iNumSeg;
+    CVector<CVector<_BINARY> >	vvbiSegment;
+    int							iNumSeg;
 };
 
 class CTextMessageEncoder
 {
 public:
-	CTextMessageEncoder() : vecstrText(0), iNumMess(0) {}
-	virtual ~CTextMessageEncoder() {}
+    CTextMessageEncoder() : vecstrText(0), iNumMess(0) {}
+    virtual ~CTextMessageEncoder() {}
 
-	void Encode(CVector<_BINARY>& pData);
-	void SetMessage(const string& strMessage);
-	void ClearAllText();
+    void Encode(CVector<_BINARY>& pData);
+    void SetMessage(const string& strMessage);
+    void ClearAllText();
 
 protected:
-	CTextMessage	CurTextMessage;
-	CVector<string>	vecstrText;
-	int				iSegCnt;
-	int				iByteCnt;
-	int				iNumMess;
-	int				iMessCnt;
-	_BINARY			biToggleBit;
+    CTextMessage	CurTextMessage;
+    CVector<string>	vecstrText;
+    int				iSegCnt;
+    int				iByteCnt;
+    int				iNumMess;
+    int				iMessCnt;
+    _BINARY			biToggleBit;
 };
 
 
@@ -90,49 +96,49 @@ protected:
 class CTextMessSegment
 {
 public:
-	CTextMessSegment() : byData(BYTES_PER_SEG_TEXT_MESS), bIsOK(FALSE),
-		iNumBytes(0) {}
+    CTextMessSegment() : byData(BYTES_PER_SEG_TEXT_MESS), bIsOK(FALSE),
+            iNumBytes(0) {}
 
-	CVector<_BYTE>	byData;
-	_BOOLEAN		bIsOK;
-	int				iNumBytes;
+    CVector<_BYTE>	byData;
+    _BOOLEAN		bIsOK;
+    int				iNumBytes;
 };
 
 class CTextMessageDecoder
 {
 public:
-	CTextMessageDecoder() {}
-	virtual ~CTextMessageDecoder() {}
+    CTextMessageDecoder() {}
+    virtual ~CTextMessageDecoder() {}
 
-	void Decode(CVector<_BINARY>& pData);
-	void Init(string* pstrNewPText);
+    void Decode(CVector<_BINARY>& pData);
+    void Init(string* pstrNewPText);
 
 protected:
-	void ReadHeader();
-	void ClearText();
-	void SetText();
-	void ResetSegments();
+    void ReadHeader();
+    void ClearText();
+    void SetText();
+    void ResetSegments();
 
-	CVector<_BINARY>	biStreamBuffer;
+    CVector<_BINARY>	biStreamBuffer;
 
-	string*				pstrText;
+    string*				pstrText;
 
-	_BINARY				biCommandFlag;
+    _BINARY				biCommandFlag;
 
-	_BINARY				biFirstFlag;
-	_BINARY				biLastFlag;
-	_BYTE				byCommand;
-	_BYTE				bySegmentID;
-	_BINARY				biToggleBit;
-	_BYTE				byLengthBody;
-	int					iBitCount;
-	int					iNumSegments;
+    _BINARY				biFirstFlag;
+    _BINARY				biLastFlag;
+    _BYTE				byCommand;
+    _BYTE				bySegmentID;
+    _BINARY				biToggleBit;
+    _BYTE				byLengthBody;
+    int					iBitCount;
+    int					iNumSegments;
 
-	_BINARY				biOldToggleBit;
+    _BINARY				biOldToggleBit;
 
-	CTextMessSegment	Segment[MAX_NUM_SEG_TEXT_MESSAGE];
+    CTextMessSegment	Segment[MAX_NUM_SEG_TEXT_MESSAGE];
 
-	CCRC				CRCObject;
+    CCRC				CRCObject;
 };
 
 

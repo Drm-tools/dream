@@ -42,18 +42,20 @@
 class CInputResample : public CReceiverModul<_REAL, _REAL>
 {
 public:
-	CInputResample() : bSyncInput(FALSE) {}
-	virtual ~CInputResample() {}
+    CInputResample() : bSyncInput(FALSE) {}
+    virtual ~CInputResample() {}
 
-	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(_BOOLEAN bNewS) {bSyncInput = bNewS;}
+    /* To set the module up for synchronized DRM input data stream */
+    void SetSyncInput(_BOOLEAN bNewS) {
+        bSyncInput = bNewS;
+    }
 
 protected:
-	CResample	ResampleObj;
-	_BOOLEAN	bSyncInput;
+    CResample	ResampleObj;
+    _BOOLEAN	bSyncInput;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& ReceiverParam);
+    virtual void ProcessDataInternal(CParameter& ReceiverParam);
 };
 
 

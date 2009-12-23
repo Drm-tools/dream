@@ -38,72 +38,72 @@
 
 struct instance_data_t
 {
-  instance_data_t();
-  ~instance_data_t();
-  int num_channels;
-  jack_port_t *left;
-  jack_port_t *right;
-  jack_ringbuffer_t* buff;
-  int underruns;
-  int overruns;
-  string peer_left, peer_right;
+    instance_data_t();
+    ~instance_data_t();
+    int num_channels;
+    jack_port_t *left;
+    jack_port_t *right;
+    jack_ringbuffer_t* buff;
+    int underruns;
+    int overruns;
+    string peer_left, peer_right;
 };
-  
+
 class CJackPorts
 {
 public:
-	CJackPorts():devices(),ports(){}
-	vector<string> devices;
-	void load(jack_client_t * client, unsigned long flags);
- 	pair< string, string>get_ports(int dev);
+    CJackPorts():devices(),ports() {}
+    vector<string> devices;
+    void load(jack_client_t * client, unsigned long flags);
+    pair< string, string>get_ports(int dev);
 protected:
- 	map<string, pair< string, string> > ports;
+    map<string, pair< string, string> > ports;
 };
 
 class CSoundInJack : public CSoundInInterface
 {
 public:
-	CSoundInJack();
-	virtual ~CSoundInJack();
+    CSoundInJack();
+    virtual ~CSoundInJack();
     CSoundInJack(const CSoundInJack& e);
     CSoundInJack& operator=(const CSoundInJack& e);
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN	Read(CVector<short>& psData);
-	virtual void		Enumerate(vector<string>&);
-	virtual int			GetDev();
-	virtual void		SetDev(int iNewDev);
-	virtual void		Close();
+    virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+    virtual _BOOLEAN	Read(CVector<short>& psData);
+    virtual void		Enumerate(vector<string>&);
+    virtual int			GetDev();
+    virtual void		SetDev(int iNewDev);
+    virtual void		Close();
 protected:
-	int iBufferSize;
-	_BOOLEAN bBlocking;
-	_BOOLEAN device_changed;
-	instance_data_t capture_data;
-	int dev;
-	CJackPorts ports;
+    int iBufferSize;
+    _BOOLEAN bBlocking;
+    _BOOLEAN device_changed;
+    instance_data_t capture_data;
+    int dev;
+    CJackPorts ports;
 };
 
 class CSoundOutJack : public CSoundOutInterface
 {
 public:
-	CSoundOutJack();
-	virtual ~CSoundOutJack();
+    CSoundOutJack();
+    virtual ~CSoundOutJack();
     CSoundOutJack(const CSoundOutJack& e);
     CSoundOutJack& operator=(const CSoundOutJack& e);
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN	Write(CVector<short>& psData);
-	virtual void		Enumerate(vector<string>&);
-	virtual int			GetDev();
-	virtual void		SetDev(int iNewDev);
-	virtual void		Close();
+    virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+    virtual _BOOLEAN	Write(CVector<short>& psData);
+    virtual void		Enumerate(vector<string>&);
+    virtual int			GetDev();
+    virtual void		SetDev(int iNewDev);
+    virtual void		Close();
 protected:
-	int iBufferSize;
-	_BOOLEAN bBlocking;
-	_BOOLEAN device_changed;
-	instance_data_t play_data;
-	int dev;
-	CJackPorts ports;
+    int iBufferSize;
+    _BOOLEAN bBlocking;
+    _BOOLEAN device_changed;
+    instance_data_t play_data;
+    int dev;
+    CJackPorts ports;
 };
 
-#endif 
+#endif

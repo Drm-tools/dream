@@ -8,9 +8,9 @@
  * Description:
  *	See PlotManager.cpp
  *
- * 
- *	
- * 
+ *
+ *
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -52,60 +52,64 @@
 class CPlotManager
 {
 public:
-	
-	CPlotManager();
 
-	void SetReceiver(CDRMReceiver *pRx) {pReceiver = pRx;}
+    CPlotManager();
 
-	void Init();
+    void SetReceiver(CDRMReceiver *pRx) {
+        pReceiver = pRx;
+    }
 
-	void SetCurrentCDAud(int iN) {iCurrentCDAud = iN;}
+    void Init();
 
-	void UpdateParamHistories(ERecState eReceiverState);
+    void SetCurrentCDAud(int iN) {
+        iCurrentCDAud = iN;
+    }
 
-	void UpdateParamHistoriesRSIIn();
+    void UpdateParamHistories(ERecState eReceiverState);
 
-	void GetTransferFunction(CVector<_REAL>& vecrData,
-		CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
+    void UpdateParamHistoriesRSIIn();
 
-	void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale, 
-					 _REAL& rLowerBound, _REAL& rHigherBound,
-					 _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
-					 _REAL& rPDSEnd);
+    void GetTransferFunction(CVector<_REAL>& vecrData,
+                             CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
 
-	void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+                     _REAL& rLowerBound, _REAL& rHigherBound,
+                     _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
+                     _REAL& rPDSEnd);
 
-	void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	/* Interfaces to internal parameters/vectors used for the plot */
-	void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
-		CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
-		_REAL& rFreqAquVal);
+    void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 
-	void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
-		CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
+    /* Interfaces to internal parameters/vectors used for the plot */
+    void GetFreqSamOffsHist(CVector<_REAL>& vecrFreqOffs,
+                            CVector<_REAL>& vecrSamOffs, CVector<_REAL>& vecrScale,
+                            _REAL& rFreqAquVal);
 
-	void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
-		CVector<_REAL>& vecrScale);
+    void GetDopplerDelHist(CVector<_REAL>& vecrLenIR,
+                           CVector<_REAL>& vecrDoppler, CVector<_REAL>& vecrScale);
+
+    void GetSNRHist(CVector<_REAL>& vecrSNR, CVector<_REAL>& vecrCDAud,
+                    CVector<_REAL>& vecrScale);
 
 
 
 
 private:
-	CDRMReceiver			*pReceiver;
-	/* Storing parameters for plot */
-	CShiftRegister<_REAL>	vecrFreqSyncValHist;
-	CShiftRegister<_REAL>	vecrSamOffsValHist;
-	CShiftRegister<_REAL>	vecrLenIRHist;
-	CShiftRegister<_REAL>	vecrDopplerHist;
-	CShiftRegister<_REAL>	vecrSNRHist;
-	CShiftRegister<int>		veciCDAudHist;
-	int						iSymbolCount;
-	_REAL					rSumDopplerHist;
-	_REAL					rSumSNRHist;
-	int						iCurrentCDAud;
+    CDRMReceiver			*pReceiver;
+    /* Storing parameters for plot */
+    CShiftRegister<_REAL>	vecrFreqSyncValHist;
+    CShiftRegister<_REAL>	vecrSamOffsValHist;
+    CShiftRegister<_REAL>	vecrLenIRHist;
+    CShiftRegister<_REAL>	vecrDopplerHist;
+    CShiftRegister<_REAL>	vecrSNRHist;
+    CShiftRegister<int>		veciCDAudHist;
+    int						iSymbolCount;
+    _REAL					rSumDopplerHist;
+    _REAL					rSumSNRHist;
+    int						iCurrentCDAud;
 #ifdef USE_QT_GUI
-	QMutex					MutexHist;
+    QMutex					MutexHist;
 #endif
 
 };

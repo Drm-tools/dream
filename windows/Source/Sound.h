@@ -39,79 +39,79 @@
 
 #define NUM_SOUND_BUFFERS_OUT	3		/* Number of sound card buffers */
 #define	NUM_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
-										   use one channel for recording) */
+use one channel for recording) */
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
 #define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
 
 /* Classes ********************************************************************/
 class CSoundIn : public CSoundInInterface
 {
-public:
-	CSoundIn();
-	virtual ~CSoundIn();
+    public:
+    CSoundIn();
+virtual ~CSoundIn();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-	virtual _BOOLEAN	Read(CVector<short>& psData);
-	virtual void		Enumerate(vector<string>&);
-	virtual int			GetDev();
-	virtual void		SetDev(int iNewDev);
-	virtual void		Close();
+virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+virtual _BOOLEAN	Read(CVector<short>& psData);
+virtual void		Enumerate(vector<string>&);
+virtual int			GetDev();
+virtual void		SetDev(int iNewDev);
+virtual void		Close();
 
 protected:
-	void		OpenDevice();
-	void		PrepareBuffer(int iBufNum);
-	void		AddBuffer();
+void		OpenDevice();
+void		PrepareBuffer(int iBufNum);
+void		AddBuffer();
 
-	vector<string>	vecstrDevices;
-	int				iCurDev;
-	WAVEFORMATEX	sWaveFormatEx;
-	BOOLEAN			bChangDev;
-	HANDLE			m_WaveEvent;
-	int				iBufferSize;
-	int				iWhichBuffer;
-	_BOOLEAN		bBlocking;
+vector<string>	vecstrDevices;
+int				iCurDev;
+WAVEFORMATEX	sWaveFormatEx;
+BOOLEAN			bChangDev;
+HANDLE			m_WaveEvent;
+int				iBufferSize;
+int				iWhichBuffer;
+_BOOLEAN		bBlocking;
 
-	/* Wave in */
-	WAVEINCAPS		m_WaveInDevCaps;
-	HWAVEIN			m_WaveIn;
-	WAVEHDR			m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
-	short*			psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
+/* Wave in */
+WAVEINCAPS		m_WaveInDevCaps;
+HWAVEIN			m_WaveIn;
+WAVEHDR			m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
+short*			psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
 
 };
 
 class CSoundOut : public CSoundOutInterface
 {
-public:
-	CSoundOut();
-	virtual ~CSoundOut();
+    public:
+    CSoundOut();
+virtual ~CSoundOut();
 
-	virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
-	virtual _BOOLEAN	Write(CVector<short>& psData);
-	virtual void		Enumerate(vector<string>&);
-	virtual int			GetDev();
-	virtual void		SetDev(int iNewDev);
-	virtual void		Close();
+virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
+virtual _BOOLEAN	Write(CVector<short>& psData);
+virtual void		Enumerate(vector<string>&);
+virtual int			GetDev();
+virtual void		SetDev(int iNewDev);
+virtual void		Close();
 
 protected:
-	void		OpenDevice();
-	void		PrepareBuffer(int iBufNum);
-	void		AddBuffer(int iBufNum);
-	void		GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf);
+void		OpenDevice();
+void		PrepareBuffer(int iBufNum);
+void		AddBuffer(int iBufNum);
+void		GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf);
 
-	vector<string>	vecstrDevices;
-	int				iCurDev;
-	WAVEFORMATEX	sWaveFormatEx;
-	BOOLEAN			bChangDev;
-	HANDLE			m_WaveEvent;
-	int				iBufferSize;
-	int				iWhichBuffer;
-	_BOOLEAN		bBlocking;
+vector<string>	vecstrDevices;
+int				iCurDev;
+WAVEFORMATEX	sWaveFormatEx;
+BOOLEAN			bChangDev;
+HANDLE			m_WaveEvent;
+int				iBufferSize;
+int				iWhichBuffer;
+_BOOLEAN		bBlocking;
 
-	/* Wave out */
-	WAVEOUTCAPS		m_WaveOutDevCaps;
-	HWAVEOUT		m_WaveOut;
-	short*			psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
-	WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
+/* Wave out */
+WAVEOUTCAPS		m_WaveOutDevCaps;
+HWAVEOUT		m_WaveOut;
+short*			psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
+WAVEHDR			m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
 };
 
 #endif // !defined(AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_)

@@ -1,5 +1,5 @@
 /*
- * $Id: pa_ringbuffer.c,v 1.6 2009/11/23 12:40:17 jcable Exp $
+ * $Id: pa_ringbuffer.c,v 1.7 2009/12/23 14:37:22 jcable Exp $
  * Portable Audio I/O Library
  * Ring Buffer utility.
  *
@@ -35,13 +35,13 @@
  */
 
 /*
- * The text above constitutes the entire PortAudio license; however, 
+ * The text above constitutes the entire PortAudio license; however,
  * the PortAudio community also makes the following non-binding requests:
  *
  * Any person wishing to distribute modifications to the Software is
  * requested to send the modifications to the original developer so that
- * they can be incorporated into the canonical version. It is also 
- * requested that these non-binding requests be included along with the 
+ * they can be incorporated into the canonical version. It is also
+ * requested that these non-binding requests be included along with the
  * license above.
  */
 
@@ -73,14 +73,14 @@
 
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #   include <libkern/OSAtomic.h>
-    /* Here are the memory barrier functions. Mac OS X and FreeBSD only provide
-       full memory barriers, so the three types of barriers are the same. */
+/* Here are the memory barrier functions. Mac OS X and FreeBSD only provide
+   full memory barriers, so the three types of barriers are the same. */
 #   define PaUtil_FullMemoryBarrier()  OSMemoryBarrier()
 #   define PaUtil_ReadMemoryBarrier()  OSMemoryBarrier()
 #   define PaUtil_WriteMemoryBarrier() OSMemoryBarrier()
 #elif defined(__GNUC__)
-    /* GCC understands volatile asm and "memory" to mean it
-     * should not reorder memory read/writes */
+/* GCC understands volatile asm and "memory" to mean it
+ * should not reorder memory read/writes */
 #   if defined( __PPC__ )
 #      define PaUtil_FullMemoryBarrier()  asm volatile("sync":::"memory")
 #      define PaUtil_ReadMemoryBarrier()  asm volatile("sync":::"memory")
@@ -118,7 +118,7 @@
  */
 long PaUtil_InitializeRingBuffer( PaUtilRingBuffer *rbuf, long numBytes, void *dataPtr )
 {
-    if( ((numBytes-1) & numBytes) != 0) return -1; /* Not Power of two. */
+    if ( ((numBytes-1) & numBytes) != 0) return -1; /* Not Power of two. */
     rbuf->bufferSize = numBytes;
     rbuf->buffer = (char *)dataPtr;
     PaUtil_FlushRingBuffer( rbuf );
@@ -161,10 +161,10 @@ long PaUtil_GetRingBufferWriteRegions( PaUtilRingBuffer *rbuf, long numBytes,
 {
     long   index;
     long   available = PaUtil_GetRingBufferWriteAvailable( rbuf );
-    if( numBytes > available ) numBytes = available;
+    if ( numBytes > available ) numBytes = available;
     /* Check to see if write is not contiguous. */
     index = rbuf->writeIndex & rbuf->smallMask;
-    if( (index + numBytes) > rbuf->bufferSize )
+    if ( (index + numBytes) > rbuf->bufferSize )
     {
         /* Write data in two blocks that wrap the buffer. */
         long   firstHalf = rbuf->bufferSize - index;
@@ -200,15 +200,15 @@ long PaUtil_AdvanceRingBufferWriteIndex( PaUtilRingBuffer *rbuf, long numBytes )
 ** Returns room available to be written or numBytes, whichever is smaller.
 */
 long PaUtil_GetRingBufferReadRegions( PaUtilRingBuffer *rbuf, long numBytes,
-                                void **dataPtr1, long *sizePtr1,
-                                void **dataPtr2, long *sizePtr2 )
+                                      void **dataPtr1, long *sizePtr1,
+                                      void **dataPtr2, long *sizePtr2 )
 {
     long   index;
     long   available = PaUtil_GetRingBufferReadAvailable( rbuf );
-    if( numBytes > available ) numBytes = available;
+    if ( numBytes > available ) numBytes = available;
     /* Check to see if read is not contiguous. */
     index = rbuf->readIndex & rbuf->smallMask;
-    if( (index + numBytes) > rbuf->bufferSize )
+    if ( (index + numBytes) > rbuf->bufferSize )
     {
         /* Write data in two blocks that wrap the buffer. */
         long firstHalf = rbuf->bufferSize - index;
@@ -242,7 +242,7 @@ long PaUtil_WriteRingBuffer( PaUtilRingBuffer *rbuf, const void *data, long numB
     long size1, size2, numWritten;
     void *data1, *data2;
     numWritten = PaUtil_GetRingBufferWriteRegions( rbuf, numBytes, &data1, &size1, &data2, &size2 );
-    if( size2 > 0 )
+    if ( size2 > 0 )
     {
 
         memcpy( data1, data, size1 );
@@ -264,7 +264,7 @@ long PaUtil_ReadRingBuffer( PaUtilRingBuffer *rbuf, void *data, long numBytes )
     long size1, size2, numRead;
     void *data1, *data2;
     numRead = PaUtil_GetRingBufferReadRegions( rbuf, numBytes, &data1, &size1, &data2, &size2 );
-    if( size2 > 0 )
+    if ( size2 > 0 )
     {
         memcpy( data, data1, size1 );
         data = ((char *)data) + size1;

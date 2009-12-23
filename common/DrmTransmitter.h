@@ -45,71 +45,85 @@
 class CDRMTransmitter
 {
 public:
-	CDRMTransmitter();
-	virtual ~CDRMTransmitter() {}
+    CDRMTransmitter();
+    virtual ~CDRMTransmitter() {}
 
-	void Init();
-	void Start();
-	void Stop();
+    void Init();
+    void Start();
+    void Stop();
 
-	/* Get pointer to internal modules */
-	CSoundInInterface*		GetSoundInInterface() {return pSoundInInterface;}
-	CSoundOutInterface*		GetSoundOutInterface() {return pSoundOutInterface;}
-	CAudioSourceEncoder*	GetAudSrcEnc() {return &AudioSourceEncoder;}
-	CTransmitData*			GetTransData() {return &TransmitData;}
-	CReadData*				GetReadData() {return &ReadData;}
+    /* Get pointer to internal modules */
+    CSoundInInterface*		GetSoundInInterface() {
+        return pSoundInInterface;
+    }
+    CSoundOutInterface*		GetSoundOutInterface() {
+        return pSoundOutInterface;
+    }
+    CAudioSourceEncoder*	GetAudSrcEnc() {
+        return &AudioSourceEncoder;
+    }
+    CTransmitData*			GetTransData() {
+        return &TransmitData;
+    }
+    CReadData*				GetReadData() {
+        return &ReadData;
+    }
 
-	CParameter*				GetParameters() {return &TransmParam;}
+    CParameter*				GetParameters() {
+        return &TransmParam;
+    }
 
-	void SetCarOffset(const _REAL rNewCarOffset)
-	{
-		/* Has to be set in OFDM modulation and transmitter filter module */
-		OFDMModulation.SetCarOffset(rNewCarOffset);
-		TransmitData.SetCarOffset(rNewCarOffset);
-		rDefCarOffset = rNewCarOffset;
-	}
-	_REAL GetCarOffset() {return rDefCarOffset;}
+    void SetCarOffset(const _REAL rNewCarOffset)
+    {
+        /* Has to be set in OFDM modulation and transmitter filter module */
+        OFDMModulation.SetCarOffset(rNewCarOffset);
+        TransmitData.SetCarOffset(rNewCarOffset);
+        rDefCarOffset = rNewCarOffset;
+    }
+    _REAL GetCarOffset() {
+        return rDefCarOffset;
+    }
 
 protected:
-	void Run();
+    void Run();
 
-	/* Parameters */
-	CParameter				TransmParam;
-	
-	/* Buffers */
-	CSingleBuffer<_SAMPLE>	DataBuf;
-	CSingleBuffer<_BINARY>	AudSrcBuf;
+    /* Parameters */
+    CParameter				TransmParam;
 
-	CSingleBuffer<_COMPLEX>	MLCEncBuf;
-	CCyclicBuffer<_COMPLEX>	IntlBuf;
+    /* Buffers */
+    CSingleBuffer<_SAMPLE>	DataBuf;
+    CSingleBuffer<_BINARY>	AudSrcBuf;
 
-	CSingleBuffer<_BINARY>	GenFACDataBuf;
-	CCyclicBuffer<_COMPLEX>	FACMapBuf;
+    CSingleBuffer<_COMPLEX>	MLCEncBuf;
+    CCyclicBuffer<_COMPLEX>	IntlBuf;
 
-	CSingleBuffer<_BINARY>	GenSDCDataBuf;
-	CCyclicBuffer<_COMPLEX>	SDCMapBuf;
-	
-	CSingleBuffer<_COMPLEX>	CarMapBuf;
-	CSingleBuffer<_COMPLEX>	OFDMModBuf;
+    CSingleBuffer<_BINARY>	GenFACDataBuf;
+    CCyclicBuffer<_COMPLEX>	FACMapBuf;
 
-	CSoundInInterface*		pSoundInInterface;
-	CSoundOutInterface*		pSoundOutInterface;
+    CSingleBuffer<_BINARY>	GenSDCDataBuf;
+    CCyclicBuffer<_COMPLEX>	SDCMapBuf;
 
-	/* Modules */
-	CReadData				ReadData;
-	CAudioSourceEncoder		AudioSourceEncoder;
-	CMSCMLCEncoder			MSCMLCEncoder;
-	CSymbInterleaver		SymbInterleaver;
-	CGenerateFACData		GenerateFACData;
-	CFACMLCEncoder			FACMLCEncoder;
-	CGenerateSDCData		GenerateSDCData;
-	CSDCMLCEncoder			SDCMLCEncoder;
-	COFDMCellMapping		OFDMCellMapping;
-	COFDMModulation			OFDMModulation;
-	CTransmitData			TransmitData;
+    CSingleBuffer<_COMPLEX>	CarMapBuf;
+    CSingleBuffer<_COMPLEX>	OFDMModBuf;
 
-	_REAL					rDefCarOffset;
-	_BOOLEAN				bUseUEP;
+    CSoundInInterface*		pSoundInInterface;
+    CSoundOutInterface*		pSoundOutInterface;
+
+    /* Modules */
+    CReadData				ReadData;
+    CAudioSourceEncoder		AudioSourceEncoder;
+    CMSCMLCEncoder			MSCMLCEncoder;
+    CSymbInterleaver		SymbInterleaver;
+    CGenerateFACData		GenerateFACData;
+    CFACMLCEncoder			FACMLCEncoder;
+    CGenerateSDCData		GenerateSDCData;
+    CSDCMLCEncoder			SDCMLCEncoder;
+    COFDMCellMapping		OFDMCellMapping;
+    COFDMModulation			OFDMModulation;
+    CTransmitData			TransmitData;
+
+    _REAL					rDefCarOffset;
+    _BOOLEAN				bUseUEP;
 };
 
 

@@ -148,24 +148,24 @@ typedef unsigned char/*bool*/			_BINARY;
 #elif defined(_WIN32)
 # ifndef HAVE_INT8_T
 #  define HAVE_INT8_T 1
-   typedef signed char int8_t;
+typedef signed char int8_t;
 # endif
 # ifndef HAVE_INT16_T
 #  define HAVE_INT16_T 1
-   typedef signed __int16 int16_t;
+typedef signed __int16 int16_t;
 # endif
 # ifndef HAVE_INT32_T
 #  define HAVE_INT32_T 1
-   typedef signed __int32 int32_t;
+typedef signed __int32 int32_t;
 # endif
-   typedef unsigned char uint8_t;
+typedef unsigned char uint8_t;
 # ifndef HAVE_U_INT16_T
 #  define HAVE_U_INT16_T 1
-   typedef unsigned __int16 uint16_t;
+typedef unsigned __int16 uint16_t;
 # endif
 # ifndef HAVE_U_INT32_T
 #  define HAVE_U_INT32_T 1
-   typedef unsigned __int32 uint32_t;
+typedef unsigned __int32 uint32_t;
 # endif
 typedef signed __int64 int64_t;
 typedef unsigned __int64 uint64_t;
@@ -195,8 +195,12 @@ typedef unsigned long long uint64_t;
 #ifdef USE_MAX_LOG_MAP
 typedef _REAL							_DECISION;
 # define ML_SOFT_INF_MAX_VALUE			((_DECISION) 1e10)
-inline _BINARY ExtractBit(_DECISION dD) {return dD > 0 ? 1 : 0;}
-inline _DECISION BitToSoft(_BINARY biB) {return biB == 0 ? -1.0 : 1.0;}
+inline _BINARY ExtractBit(_DECISION dD) {
+    return dD > 0 ? 1 : 0;
+}
+inline _DECISION BitToSoft(_BINARY biB) {
+    return biB == 0 ? -1.0 : 1.0;
+}
 #else
 typedef _BINARY							_DECISION;
 #define ExtractBit(a)					(a)
@@ -222,8 +226,9 @@ typedef unsigned int					_MESSAGE_IDENT;
 /* Global enumerations ------------------------------------------------------ */
 enum ESpecOcc {SO_0, SO_1, SO_2, SO_3, SO_4, SO_5}; /* SO: Spectrum Occupancy */
 enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
-		RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D,
-		RM_NO_MODE_DETECTED}; /* RM: Robustness Mode */
+               RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D,
+               RM_NO_MODE_DETECTED
+              }; /* RM: Robustness Mode */
 
 
 /* Constants ---------------------------------------------------------------- */
@@ -246,20 +251,20 @@ const _REAL crPi = ((_REAL) 3.14159265358979323846);
 class CDistance
 {
 public:
-	/* Distance towards 0 or towards 1 */
-	_REAL rTow0;
-	_REAL rTow1;
+    /* Distance towards 0 or towards 1 */
+    _REAL rTow0;
+    _REAL rTow1;
 };
 
 /* Viterbi needs information of equalized received signal and channel */
 class CEquSig
 {
 public:
-	CEquSig() : cSig(_COMPLEX((_REAL) 0.0, (_REAL) 0.0)), rChan((_REAL) 0.0) {}
-	CEquSig(const _COMPLEX cNS, const _REAL rNC) : cSig(cNS), rChan(rNC) {}
+    CEquSig() : cSig(_COMPLEX((_REAL) 0.0, (_REAL) 0.0)), rChan((_REAL) 0.0) {}
+    CEquSig(const _COMPLEX cNS, const _REAL rNC) : cSig(cNS), rChan(rNC) {}
 
-	_COMPLEX	cSig; /* Actual signal */
-	_REAL		rChan; /* Channel power at this cell */
+    _COMPLEX	cSig; /* Actual signal */
+    _REAL		rChan; /* Channel power at this cell */
 };
 
 /* Mutex object to access data safely from different threads */
@@ -273,27 +278,31 @@ public:
 class CMutex
 {
 public:
-	void Lock() {Mutex.lock();}
-	void Unlock() {Mutex.unlock();}
+    void Lock() {
+        Mutex.lock();
+    }
+    void Unlock() {
+        Mutex.unlock();
+    }
 
 protected:
-	QMutex Mutex;
+    QMutex Mutex;
 };
 #else
 /* No GUI and no threads, we do not need mutex in this case */
 class CMutex
 {
 public:
-	void Lock() {}
-	void Unlock() {}
+    void Lock() {}
+    void Unlock() {}
 };
 #endif
 
 class CGenErr
 {
 public:
-	CGenErr(string strNE) : strError(strNE) {}
-	string strError;
+    CGenErr(string strNE) : strError(strNE) {}
+    string strError;
 };
 
 // FIXME something nicer than using "MAX_NUM_TAPS_DRM_CHAN"
@@ -302,11 +311,11 @@ public:
 template<class T> class CChanSimData
 {
 public:
-	T					tIn; /* Channel input data */
-	T					tOut; /* Output of the channel (with noise) */
-	T					tRef; /* Channel reference signal (without noise) */
-	_COMPLEX			veccTap[MAX_NUM_TAPS_DRM_CHAN]; /* Tap gains */
-	_COMPLEX			veccTapBackw[MAX_NUM_TAPS_DRM_CHAN];
+    T					tIn; /* Channel input data */
+    T					tOut; /* Output of the channel (with noise) */
+    T					tRef; /* Channel reference signal (without noise) */
+    _COMPLEX			veccTap[MAX_NUM_TAPS_DRM_CHAN]; /* Tap gains */
+    _COMPLEX			veccTapBackw[MAX_NUM_TAPS_DRM_CHAN];
 };
 typedef CChanSimData<_REAL>		CChanSimDataMod; /* OFDM modulated signals */
 typedef CChanSimData<_COMPLEX>	CChanSimDataDemod; /* Demodulated signals */
@@ -321,8 +330,8 @@ typedef CChanSimData<_COMPLEX>	CChanSimDataDemod; /* Demodulated signals */
 
 /* Debug error handling */
 void DebugError(const char* pchErDescr, const char* pchPar1Descr,
-				const double dPar1, const char* pchPar2Descr,
-				const double dPar2);
+                const double dPar1, const char* pchPar2Descr,
+                const double dPar2);
 
 void ErrorMessage(string strErrorString);
 
@@ -331,15 +340,15 @@ void ErrorMessage(string strErrorString);
 /* Converting _REAL to _SAMPLE */
 inline _SAMPLE Real2Sample(const _REAL rInput)
 {
-	/* Lower bound */
-	if (rInput < -_MAXSHORT)
-		return -_MAXSHORT;
+    /* Lower bound */
+    if (rInput < -_MAXSHORT)
+        return -_MAXSHORT;
 
-	/* Upper bound */
-	if (rInput > _MAXSHORT)
-		return _MAXSHORT;
+    /* Upper bound */
+    if (rInput > _MAXSHORT)
+        return _MAXSHORT;
 
-	return (_SAMPLE) rInput;
+    return (_SAMPLE) rInput;
 }
 
 

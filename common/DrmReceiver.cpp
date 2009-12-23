@@ -42,6 +42,19 @@
 #endif
 #include "audiofilein.h"
 
+template<class TInput, class TOutput>
+void CConvertModul<TInput,TOutput>::ProcessDataInternal(CParameter&)
+{
+	_REAL r=0.0;
+	for (int i = 0; i < this->iInputBlockSize; i++)
+	{
+		TInput n = TInput((*(this->pvecInputData))[i]*ScaleFactor);
+		(*this->pvecOutputData)[i] = n;
+		r+=(n*n);
+	}
+	cerr << this->iInputBlockSize << " samples, rms " << sqrt(r/this->iInputBlockSize) << endl;
+}
+
 const int
 CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
@@ -263,6 +276,10 @@ CDRMReceiver::Run()
             DemodulateAM(bEnoughData);
             DecodeAM(bEnoughData);
             break;
+        case RM_FM:
+            DemodulateFM(bEnoughData);
+            DecodeFM(bEnoughData);
+            break;
         case RM_NONE:
             break;
         }
@@ -288,6 +305,9 @@ CDRMReceiver::Run()
     case RM_AM:
         SplitAudio.ProcessData(ReceiverParam, AMAudioBuf, AudSoDecBuf, AMSoEncBuf);
         break;
+    case RM_FM:
+        SplitAudio.ProcessData(ReceiverParam, AMAudioBuf, AudSoDecBuf, AMSoEncBuf);
+        break;
     case RM_NONE:
         break;
     }
@@ -311,6 +331,9 @@ CDRMReceiver::Run()
             break;
         case RM_AM:
             UtilizeAM(bEnoughData);
+            break;
+        case RM_FM:
+            UtilizeFM(bEnoughData);
             break;
         case RM_NONE:
             break;
@@ -344,6 +367,7 @@ CDRMReceiver::Run()
             }
             break;
         case RM_AM:
+        case RM_FM:
             /* Encode audio for RSI output */
             if (AudioSourceEncoder.ProcessData(ReceiverParam, AMSoEncBuf, MSCSendBuf[0]))
                 bFrameToSend = TRUE;
@@ -357,7 +381,8 @@ CDRMReceiver::Run()
     }
 
     /* Play and/or save the audio */
-    if (iAudioStreamID != STREAM_ID_NOT_USED || eReceiverMode == RM_AM)
+    if (iAudioStreamID != STREAM_ID_NOT_USED || (eReceiverMode == RM_AM) || (eReceiverMode == RM_FM))
+
     {
         if (WriteData.WriteData(ReceiverParam, AudSoDecBuf))
         {
@@ -583,6 +608,23 @@ CDRMReceiver::UtilizeAM(_BOOLEAN& bEnoughData)
     }
 }
 
+void CDRMReceiver::DemodulateFM(_BOOLEAN& bEnoughData)
+{
+	CParameter & ReceiverParam = *pReceiverParam;
+	if (ConvertAudio.ProcessData(ReceiverParam, DemodDataBuf, AMAudioBuf))
+	{
+		bEnoughData = TRUE;
+	}
+}
+
+void CDRMReceiver::DecodeFM(_BOOLEAN& bEnoughData)
+{
+}
+
+void CDRMReceiver::UtilizeFM(_BOOLEAN& bEnoughData)
+{
+}
+
 void
 CDRMReceiver::DetectAcquiFAC()
 {
@@ -659,6 +701,7 @@ CDRMReceiver::InitReceiverMode()
     switch (eNewReceiverMode)
     {
     case RM_AM:
+    case RM_FM:
         if (pAMParam == NULL)
         {
             /* its the first time we have been in AM mode */
@@ -674,6 +717,8 @@ CDRMReceiver::InitReceiverMode()
                  */
                 pAMParam = new CParameter(*pDRMParam);
             }
+            ConvertAudio.SetInputBlockSize(*pAMParam);
+            ConvertAudio.SetScaleFactor(32767.0); // TODO should it be 32767.0 ?
         }
         else
         {
@@ -683,7 +728,12 @@ CDRMReceiver::InitReceiverMode()
             switch (eReceiverMode)
             {
             case RM_AM:
-                /* AM to AM switch - re-acquisition requested - no special action */
+                /* AM to AM switch */
+            	ConvertAudio.SetInputBlockSize(*pAMParam);
+            	ConvertAudio.SetScaleFactor(32767.0); // TODO should it be 32767.0 ?
+                break;
+            case RM_FM:
+                /* AM to FM switch - re-acquisition requested - no special action */
                 break;
             case RM_DRM:
                 /* DRM to AM switch - grab some common stuff */
@@ -1058,6 +1108,8 @@ CDRMReceiver::InitsForAllModules()
         MSCUseBuf[i].Clear();
         MSCSendBuf[i].Clear();
     }
+    ConvertAudio.SetInitFlag();
+
     ReceiveData.SetSoundInterface(pSoundInInterface);
     ReceiveData.SetInitFlag();
     InputResample.SetInitFlag();
@@ -1712,6 +1764,8 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
     if (eReceiverMode == RM_AM)
         s.Put("GUI", "mode", "AMRX");
+    else if(eReceiverMode == RM_FM)
+        s.Put("GUI", "mode", "FMRX");
     else
         s.Put("GUI", "mode", "DRMRX");
 
