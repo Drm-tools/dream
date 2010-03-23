@@ -26,11 +26,11 @@
  *
 \******************************************************************************/
 
-#include "DialogUtil.h"
-#include <qaction.h>
 #ifdef _WIN32
 # include <winsock2.h>
 #endif
+#include "DialogUtil.h"
+#include <qaction.h>
 #include "../Version.h"
 #ifdef USE_ALSA
 # include <alsa/version.h>
