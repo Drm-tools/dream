@@ -735,17 +735,8 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 			if (pNetwOp->state() == QNetworkProtocol::StDone)
 			{
 				/* Notify the user that update was successful */
-#ifdef _WIN32
-				QMessageBox::warning(this, "Dream", tr("Update successful.\n"
-					"Due to network problems with the Windows version of QT, "
-					"the Dream software must be restarted after a DRMSchedule "
-					"update.\nPlease exit Dream now."),
-					tr("Ok"));
-#else
 				QMessageBox::information(this, "Dream",
 					tr("Update successful."), QMessageBox::Ok);
-#endif
-
 				/* Read updated ini-file */
 				LoadSchedule(CDRMSchedule::SM_DRM);
 			}

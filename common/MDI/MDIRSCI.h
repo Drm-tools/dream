@@ -81,7 +81,7 @@ protected:
 	string						strDestination;
 	CMDIInBuffer	  			queue;
 	CPacketSource*				source;
-	CRSISubscriberSocket		sink; 
+	CRSISubscriberSocket		sink;
 	CPft						Pft;
 
 	_BOOLEAN					bUseAFCRC;
@@ -126,8 +126,8 @@ public:
 	_BOOLEAN SetOrigin(const string& strAddr);
 	void SetRSIRecording(CParameter& Parameter, _BOOLEAN bOn, char cPro, const string& type="");
 	void NewFrequency(CParameter& Parameter); /* needs to be called in case a new RSCI file needs to be started */
-	
-	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;} 
+
+	virtual _BOOLEAN GetOutEnabled() {return bMDIOutEnabled;}
 	virtual _BOOLEAN GetInEnabled() {return bMDIInEnabled;}
 	void GetNextPacket(CSingleBuffer<_BINARY>&	buf);
 	void SetReceiver(CDRMReceiver *pReceiver);
@@ -140,7 +140,7 @@ public:
 	string GetRSIfilename(CParameter& Parameter, const char cProfile);
 
 protected:
-	
+
 	void ResetTags();
 
 	uint32_t					iLogFraCnt;
@@ -186,6 +186,7 @@ protected:
 
 	CTagItemGeneratorGPS TagItemGeneratorGPS; /* rgps */
 	CTagItemGeneratorPowerSpectralDensity TagItemGeneratorPowerSpectralDensity; /* rpsd */
+    CTagItemGeneratorPowerImpulseResponse TagItemGeneratorPowerImpulseResponse; /* rpir */
 	CTagItemGeneratorPilots TagItemGeneratorPilots; /* rpil */
 
 	CVector<CTagItemGeneratorStr>	vecTagItemGeneratorStr; /* strx tag */

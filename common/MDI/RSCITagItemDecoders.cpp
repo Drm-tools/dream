@@ -143,6 +143,31 @@ void CTagItemDecoderRpsd::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 }
 
+void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
+{
+	const _REAL rOffset = _REAL(-60.0);
+
+	if (iLen == 0)
+	{
+		pParameter->vecrPIR.Init(0);
+		return;
+	}
+
+	int iVectorLen = iLen/SIZEOF__BYTE - 4; // 4 bytes for the scale start and end
+
+
+	pParameter->rPIRStart = _REAL(int16_t(vecbiTag.Separate(2 * SIZEOF__BYTE))) / _REAL(256.0);
+	pParameter->rPIREnd = _REAL(int16_t(vecbiTag.Separate(2 * SIZEOF__BYTE))) / _REAL(256.0);
+
+	pParameter->vecrPIR.Init(iVectorLen);
+
+	for (int i = 0; i < iVectorLen; i++)
+	{
+		pParameter->vecrPIR[i] = -(_REAL(vecbiTag.Separate(SIZEOF__BYTE))/_REAL(2.0)) - rOffset;
+	}
+
+}
+
 void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
 	if (iLen != 26 * SIZEOF__BYTE)

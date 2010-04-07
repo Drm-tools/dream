@@ -381,7 +381,7 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 	}
 	for (map<int,Rigmenu>::iterator j=rigmenus.begin(); j!=rigmenus.end(); j++)
 	{
-		pRemoteMenuOther->insertItem(j->second.mfr, j->second.pMenu);
+		pRemoteMenuOther->insertItem(j->second.mfr.c_str(), j->second.pMenu);
 	}
 
 	/* Add "other" menu */
@@ -402,7 +402,9 @@ void RemoteMenu::MakeMenu(QWidget* parent)
 	string strPort = Hamlib.GetComPort();
 	for(map<string,string>::iterator p=ports.begin(); p!=ports.end(); p++)
 	{
-		QAction* pacMenu = new QAction(p->second.c_str(), p->first.c_str(), 0, agCOMPortSel, 0, TRUE);
+		QString text = p->second.c_str();
+		QString menuText = p->first.c_str();
+		QAction* pacMenu = new QAction(text, menuText, 0, agCOMPortSel, 0, TRUE);
 		if(strPort == p->second)
 			pacMenu->setOn(TRUE);
 	}

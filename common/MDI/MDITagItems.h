@@ -157,7 +157,7 @@ protected:
 };
 
 /* all MER tags have the same format, only the name is different */
-class CTagItemGeneratorMERFormat : public CTagItemGeneratorWithProfiles 
+class CTagItemGeneratorMERFormat : public CTagItemGeneratorWithProfiles
 {
 public:
 	void GenTag(_BOOLEAN bIsValid, _REAL rMER);
@@ -334,6 +334,14 @@ protected:
 	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag
 };
 
+class CTagItemGeneratorPowerImpulseResponse : public CTagItemGeneratorWithProfiles /* rpir */
+{
+public:
+	void GenTag(CParameter& Parameter);
+protected:
+	virtual string GetTagName();
+	virtual string GetProfiles(); // Return a string containing the set of profiles for this tag
+};
 
 class CTagItemGeneratorPilots : public CTagItemGeneratorWithProfiles /* rpil */
 {

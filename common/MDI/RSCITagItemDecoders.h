@@ -105,6 +105,13 @@ public:
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
 };
 
+class CTagItemDecoderRpir : public CTagItemDecoderRSI
+{
+public:
+	CTagItemDecoderRpir(CParameter* pP) : CTagItemDecoderRSI(pP, "rpir") {}
+	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits);
+};
+
 class CTagItemDecoderRgps : public CTagItemDecoderRSI
 {
 public:
