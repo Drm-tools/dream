@@ -165,7 +165,6 @@ void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	{
 		pParameter->vecrPIR[i] = -(_REAL(vecbiTag.Separate(SIZEOF__BYTE))/_REAL(2.0)) - rOffset;
 	}
-
 }
 
 void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
