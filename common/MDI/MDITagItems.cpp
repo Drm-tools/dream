@@ -1192,16 +1192,20 @@ CTagItemGeneratorPowerSpectralDensity::GetProfiles()
 void
 CTagItemGeneratorPowerImpulseResponse::GenTag(CParameter & Parameter)
 {
-	const _REAL rOffset = _REAL(-60.0);
-	PrepareTag(Parameter.vecrPIR.Size() * SIZEOF__BYTE + 4 * SIZEOF__BYTE);
-
-	Enqueue(uint32_t(int(Parameter.rPIRStart * _REAL(256.0))), 2*SIZEOF__BYTE);
-	Enqueue(uint32_t(int(Parameter.rPIREnd * _REAL(256.0))), 2*SIZEOF__BYTE);
-	for (int i = 0; i < Parameter.vecrPIR.Size(); i++)
+	int samples = Parameter.vecrPIR.Size();
+	if(samples>0)
 	{
-		uint32_t p = uint8_t((Parameter.vecrPIR[i]+rOffset) * _REAL(-2.0));
-		Enqueue((uint32_t) p, SIZEOF__BYTE);
-	}
+		const _REAL rOffset = _REAL(-60.0);
+		PrepareTag(samples * SIZEOF__BYTE + 4 * SIZEOF__BYTE);
+
+		Enqueue(uint32_t(int(Parameter.rPIRStart * _REAL(256.0))), 2*SIZEOF__BYTE);
+		Enqueue(uint32_t(int(Parameter.rPIREnd * _REAL(256.0))), 2*SIZEOF__BYTE);
+		for (int i = 0; i < samples; i++)
+		{
+			uint32_t p = uint8_t((Parameter.vecrPIR[i]+rOffset) * _REAL(-2.0));
+			Enqueue((uint32_t) p, SIZEOF__BYTE);
+		}
+	} // else generate empty tag
 }
 
 string
