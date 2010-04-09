@@ -1197,7 +1197,6 @@ CTagItemGeneratorPowerImpulseResponse::GenTag(CParameter & Parameter)
 
 	Enqueue(uint32_t(int(Parameter.rPIRStart * _REAL(256.0))), 2*SIZEOF__BYTE);
 	Enqueue(uint32_t(int(Parameter.rPIREnd * _REAL(256.0))), 2*SIZEOF__BYTE);
-
 	for (int i = 0; i < Parameter.vecrPIR.Size(); i++)
 	{
 		uint32_t p = uint8_t((Parameter.vecrPIR[i]+rOffset) * _REAL(-2.0));
