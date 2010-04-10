@@ -155,7 +155,6 @@ void CTagItemDecoderRpir::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	int iVectorLen = iLen/SIZEOF__BYTE - 4; // 4 bytes for the scale start and end
 
-
 	pParameter->rPIRStart = _REAL(int16_t(vecbiTag.Separate(2 * SIZEOF__BYTE))) / _REAL(256.0);
 	pParameter->rPIREnd = _REAL(int16_t(vecbiTag.Separate(2 * SIZEOF__BYTE))) / _REAL(256.0);
 
