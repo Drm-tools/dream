@@ -463,7 +463,7 @@ void RemoteMenu::OnRemoteMenu(int iID)
 					QString strMenuText =
 							"[" + QString().setNum(mID) + "] " +
 							i->second.mfr.c_str() + " " +
-							rigs[mID].strModelName;
+							rigs[mID].strModelName.c_str();
 					int pos = pRemoteMenu->indexOf(OTHER_MENU_ID);
 					pRemoteMenu->insertItem(strMenuText, this, SLOT(OnRemoteMenu(int)), 0, mID, pos);
 					specials.push_back(mID);
