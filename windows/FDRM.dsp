@@ -192,6 +192,10 @@ SOURCE=.\moc\moc_GPSReceiver.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\moc\moc_DrmReceiver.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\moc\moc_LiveScheduleDlg.cpp
 # End Source File
 # Begin Source File
