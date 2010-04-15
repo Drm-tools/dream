@@ -219,6 +219,7 @@ CShortLog::writeHeader()
         File << "      RXL";
     File << endl;
 
+	iCount = 0; // start count each time a new header is put
 }
 
 /*
