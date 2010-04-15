@@ -29,6 +29,7 @@
 
 #include "EPGDlg.h"
 #include <qregexp.h>
+static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now);
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, WFlags f)
@@ -94,7 +95,7 @@ void EPGDlg::OnTimer()
     time(&ltime);
     tm gmtCur = *gmtime(&ltime);
 
-    if (gmtCur.tm_sec==0) // minute boundary
+    if(gmtCur.tm_sec==0) // minute boundary
     {
         /* today in UTC */
         QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
@@ -111,12 +112,16 @@ void EPGDlg::OnTimer()
             /* Extract values from the list */
             QListViewItem * myItem = Data->firstChild();
 
-            while ( myItem )
+            while( myItem )
             {
                 /* Check, if the programme is now on line. If yes, set
                 special pixmap */
+# if QT_VERSION >= 0x030000
                 MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
                 if (item && item->IsActive())
+#else
+                if (IsActive(myItem->text(COL_START), myItem->text(COL_DURATION), gmtCur))
+#endif
                 {
                     myItem->setPixmap(COL_START, BitmCubeGreen);
                     Data->ensureItemVisible(myItem);
@@ -287,7 +292,6 @@ void EPGDlg::select()
             duration = p.duration;
         }
         QString s_start, s_duration;
-        char s[40];
         tm bdt = *gmtime(&start);
 
 	// skip entries not on the wanted day
@@ -304,6 +308,7 @@ void EPGDlg::select()
         	continue;
         }
 
+        char s[40];
         sprintf(s, "%02d:%02d", bdt.tm_hour, bdt.tm_min);
         s_start = s;
         int min = duration / 60;
@@ -329,18 +334,42 @@ void EPGDlg::select()
                 }
             }
         }
+# if QT_VERSION >= 0x030000
         MyListViewItem* CurrItem = new MyListViewItem(Data, s_start, name, genre, description, s_duration,
         start, duration);
-
+#else
+        QListViewItem* CurrItem = new QListViewItem(Data, s_start, name, genre, description, s_duration);
+#endif
     /* Check, if the programme is now on line. If yes, set
     special pixmap */
-    if (CurrItem->IsActive())
-    {
-	CurrItem->setPixmap(COL_START, BitmCubeGreen);
-	CurrActiveItem = CurrItem;
-        }
-    }
+# if QT_VERSION >= 0x030000
+		if (CurrItem->IsActive())
+		{
+			CurrItem->setPixmap(COL_START, BitmCubeGreen);
+			CurrActiveItem = CurrItem;
+		}
+#else
+        /* Get current UTC time */
+        time_t ltime;
+        time(&ltime);
+        tm gmtCur = *gmtime(&ltime);
 
+        /* today in UTC */
+        QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
+
+        if (date == todayUTC) /* if today */
+        {
+            /* Check, if the programme is now on line. If yes, set
+            special pixmap */
+            if (IsActive(s_start, s_duration, gmtCur))
+            {
+                CurrItem->setPixmap(COL_START, BitmCubeGreen);
+                CurrActiveItem = CurrItem;
+            }
+        }
+
+#endif
+    }
     if (CurrActiveItem) /* programme is now on line */
         Data->ensureItemVisible(CurrActiveItem);
 }
@@ -354,3 +383,17 @@ _BOOLEAN EPGDlg::MyListViewItem::IsActive()
 		return false;
 	return true;
 }
+
+static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now)
+{
+    QStringList sl = QStringList::split(":", start);
+    QStringList dl = QStringList::split(":", duration);
+    int s = 60*sl[0].toInt()+sl[1].toInt();
+    int e = s + 60*dl[0].toInt()+dl[1].toInt();
+    int n = 60*now.tm_hour+now.tm_min;
+    if ((s <= n) && (n < e))
+        return TRUE;
+    else
+        return FALSE;
+}
+
