@@ -29,7 +29,9 @@
 
 #include "EPG.h"
 #include "epgutil.h"
+#include <qfileinfo.h>
 #include <qfile.h>
+#include <qdir.h>
 #include <qtextstream.h>
 #include <qregexp.h>
 #include <iostream>
@@ -1234,6 +1236,8 @@ EPG::EPG(CParameter& NParameters):Parameters(NParameters)
     }
 
     dir = (Parameters.sDataFilesDirectory + "/EPG").c_str();
+	if (!QFileInfo(dir).exists())
+	QDir().mkdir(dir);
     servicesFilename = dir + "/services.xml";
     loadChannels (servicesFilename);
     saveChannels (servicesFilename);
@@ -1277,8 +1281,8 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
     file.close ();
     epg.decode (vecData);
     epg.doc.documentElement().insertBefore(
-	epg.doc.createComment(fileName),
-	epg.doc.documentElement().firstChild()
+		epg.doc.createComment(fileName),
+		epg.doc.documentElement().firstChild()
     );
     return epg.doc;
 }
@@ -1413,6 +1417,7 @@ void
 EPG::saveChannels (const QString & fileName)
 {
     QFile f (fileName);
+    cerr << fileName.utf8() << endl;
     if (!f.open (IO_WriteOnly))
     {
         return;
@@ -1452,7 +1457,7 @@ EPG::loadChannels (const QString & fileName)
     QFile f (fileName);
     if (!f.open (IO_ReadOnly))
     {
-        addChannel ("BBCWorld Service", 0xE1C238);
+        addChannel ("BBC & DW", 0xE1C248);
         return;
     }
     if (!domTree.setContent (&f))
