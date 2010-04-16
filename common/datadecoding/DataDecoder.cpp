@@ -467,7 +467,6 @@ CDataDecoder::DecodeEPG(const CParameter & ReceiverParam)
 void
 CDataDecoder::InitInternal(CParameter & ReceiverParam)
 {
-	cerr << "DataDecoder::InitInternal" << endl;
 	int iTotalNumInputBits;
 	int iTotalNumInputBytes;
 	int iCurDataStreamID;
@@ -623,7 +622,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 		{
 			iEPGService = i;
 			iEPGPacketID = ReceiverParam.Service[i].DataParam.iPacketID;
-			cerr << "EPG packet id " << iEPGPacketID << endl;
+			//cerr << "EPG packet id " << iEPGPacketID << endl;
 		}
 	}
 }
