@@ -279,8 +279,9 @@ void CDownstreamDI::GenDIPacket()
 	/* fac_ tag */
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorFAC);
 
-	/* sdc_ tag */
-	TagPacketGenerator.AddTagItem(&TagItemGeneratorSDC);
+	/* sdc_ tag - don't send if empty */
+	if(TagItemGeneratorSDC.GetTotalLength()>64)
+		TagPacketGenerator.AddTagItem(&TagItemGeneratorSDC);
 
 	/* sdci tag */
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorSDCChanInf);

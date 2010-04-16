@@ -46,7 +46,7 @@
 #include "../util/CRC.h"
 #include <iostream>
 
-CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0)
+CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0),iSeqNumber(-1)
 {
 }
 
@@ -112,7 +112,8 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 		iSeqNumber = 0;
 	if(iSeqNumber!=iCurSeqNum)
 	{
-		cerr << "AF SEQ: expected " << iSeqNumber << " got " << iCurSeqNum << endl;
+		if(iSeqNumber!=-1)
+			cerr << "AF SEQ: expected " << iSeqNumber << " got " << iCurSeqNum << endl;
 		iSeqNumber=iCurSeqNum;
 	}
 
