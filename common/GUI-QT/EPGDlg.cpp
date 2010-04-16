@@ -116,12 +116,8 @@ void EPGDlg::OnTimer()
             {
                 /* Check, if the programme is now on line. If yes, set
                 special pixmap */
-# if QT_VERSION >= 0x030000
                 MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
                 if (item && item->IsActive())
-#else
-                if (IsActive(myItem->text(COL_START), myItem->text(COL_DURATION), gmtCur))
-#endif
                 {
                     myItem->setPixmap(COL_START, BitmCubeGreen);
                     Data->ensureItemVisible(myItem);
@@ -334,41 +330,15 @@ void EPGDlg::select()
                 }
             }
         }
-# if QT_VERSION >= 0x030000
         MyListViewItem* CurrItem = new MyListViewItem(Data, s_start, name, genre, description, s_duration,
         start, duration);
-#else
-        QListViewItem* CurrItem = new QListViewItem(Data, s_start, name, genre, description, s_duration);
-#endif
     /* Check, if the programme is now on line. If yes, set
     special pixmap */
-# if QT_VERSION >= 0x030000
 		if (CurrItem->IsActive())
 		{
 			CurrItem->setPixmap(COL_START, BitmCubeGreen);
 			CurrActiveItem = CurrItem;
 		}
-#else
-        /* Get current UTC time */
-        time_t ltime;
-        time(&ltime);
-        tm gmtCur = *gmtime(&ltime);
-
-        /* today in UTC */
-        QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
-
-        if (date == todayUTC) /* if today */
-        {
-            /* Check, if the programme is now on line. If yes, set
-            special pixmap */
-            if (IsActive(s_start, s_duration, gmtCur))
-            {
-                CurrItem->setPixmap(COL_START, BitmCubeGreen);
-                CurrActiveItem = CurrItem;
-            }
-        }
-
-#endif
     }
     if (CurrActiveItem) /* programme is now on line */
         Data->ensureItemVisible(CurrActiveItem);
@@ -396,4 +366,3 @@ static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm
     else
         return FALSE;
 }
-
