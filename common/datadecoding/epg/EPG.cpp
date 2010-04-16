@@ -1291,6 +1291,8 @@ void
 EPG::parseDoc (const QDomDocument & doc)
 {
     QDomNodeList programmes = doc.elementsByTagName ("programme");
+    if(programmes.count()==0)
+		return;
     QDomNode l1 = programmes.item (0);
     while (!l1.isNull ())
     {
@@ -1417,7 +1419,6 @@ void
 EPG::saveChannels (const QString & fileName)
 {
     QFile f (fileName);
-    cerr << fileName.utf8() << endl;
     if (!f.open (IO_WriteOnly))
     {
         return;
