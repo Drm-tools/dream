@@ -239,30 +239,40 @@ void EPGDlg::select()
     advanced->setText(tr("no advanced profile data"));
     QString chan = channel->currentText();
     // get schedule for date +/- 1 - will allow user timezones sometime
-    QDomDocument doc;
+    QDomDocument *doc;
     QDate o = date.addDays(-1);
     doc = epg.getFile (o, sids[chan], false);
-    epg.parseDoc(doc);
+    if(doc)
+		epg.parseDoc(*doc);
     doc = epg.getFile (o, sids[chan], true);
-    epg.parseDoc(doc);
+    if(doc)
+		epg.parseDoc(*doc);
     o = date.addDays(1);
     doc = epg.getFile (o, sids[chan], false);
-    epg.parseDoc(doc);
+    if(doc)
+		epg.parseDoc(*doc);
     doc = epg.getFile (o, sids[chan], true);
-    epg.parseDoc(doc);
+    if(doc)
+		epg.parseDoc(*doc);
 
     QString xml;
     doc = epg.getFile (date, sids[chan], false);
-    epg.parseDoc(doc);
-    xml = doc.toString();
-    if (xml.length() > 0)
-        basic->setText(xml);
+    if(doc)
+    {
+		epg.parseDoc(*doc);
+		xml = doc->toString();
+		if (xml.length() > 0)
+			basic->setText(xml);
+    }
 
     doc = epg.getFile (date, sids[chan], true);
-    epg.parseDoc(doc);
-    xml = doc.toString();
-    if (xml.length() > 0)
-        advanced->setText(xml);
+    if(doc)
+    {
+		epg.parseDoc(*doc);
+		xml = doc->toString();
+		if (xml.length() > 0)
+			advanced->setText(xml);
+    }
 
     if (epg.progs.count()==0) {
         (void) new QListViewItem(Data, tr("no data"));

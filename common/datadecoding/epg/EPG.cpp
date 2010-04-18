@@ -1259,7 +1259,7 @@ EPG::addChannel (const string& label, uint32_t sid)
     Parameters.ServiceInformation[sid].id = sid;
 }
 
-QDomDocument
+QDomDocument*
 EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
 {
     CDateAndTime d;
@@ -1268,32 +1268,28 @@ EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
     d.day = date.day();
 
     QString fileName(epgFilename (d, sid, 1, bAdvanced).c_str ());
-    CEPGDecoder epg;
     QFile file (dir + "/" +fileName);
     if (!file.open (IO_ReadOnly))
     {
-        return epg.doc;
+        return NULL;
     }
-    vector < _BYTE > vecData;
+    vector<_BYTE> vecData;
     vecData.resize (file.size ());
     vecData.resize (file.size ());
     file.readBlock ((char *) &vecData.front (), file.size ());
     file.close ();
-    epg.decode (vecData);
-    epg.doc.documentElement().insertBefore(
-		epg.doc.createComment(fileName),
-		epg.doc.documentElement().firstChild()
+    CEPGDecoder *epg = new CEPGDecoder();
+    epg->decode (vecData);
+    epg->doc.documentElement().insertBefore(
+		epg->doc.createComment(fileName),
+		epg->doc.documentElement().firstChild()
     );
-    return epg.doc;
+    return &(epg->doc);
 }
 
 void
 EPG::parseDoc (const QDomDocument & doc)
 {
-	if(doc.documentElement().nodeType() != QDomNode::ElementNode)
-		return;
-	if(doc.documentElement().nodeName()=="")
-		return;
     QDomNodeList programmes = doc.elementsByTagName ("programme");
     if(programmes.count()==0)
 		return;

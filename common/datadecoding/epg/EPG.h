@@ -51,7 +51,7 @@ class EPG
     void saveChannels (const QString & fileName);
     void addChannel (const string& label, uint32_t sid);
     void parseDoc (const QDomDocument &);
-    QDomDocument getFile (const QDate&, uint32_t, bool);
+    QDomDocument* getFile (const QDate&, uint32_t, bool);
 
     class CProg
     {
