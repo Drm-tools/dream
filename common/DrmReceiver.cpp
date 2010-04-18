@@ -1395,7 +1395,11 @@ CDRMReceiver::SetEnableSMeter(_BOOLEAN bNew)
 _BOOLEAN
 CDRMReceiver::GetEnableSMeter()
 {
+#if defined(USE_QT_GUI) && defined(HAVE_LIBHAMLIB)
     return RigPoll.running();
+#else
+	return FALSE;
+#endif
 }
 
 /* TEST store information about alternative frequency transmitted in SDC */
