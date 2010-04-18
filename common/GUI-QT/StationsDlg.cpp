@@ -819,6 +819,15 @@ void StationsDlg::showEvent(QShowEvent*)
 
 void StationsDlg::OnTimerList()
 {
+	/* frequency could be changed by evaluation dialog or RSCI */
+	int iFrequency = DRMReceiver.GetFrequency();
+	int iCurFrequency = QwtCounterFrequency->value();
+
+	if (iFrequency != iCurFrequency)
+	{
+		QwtCounterFrequency->setValue(iFrequency);
+	}
+
 	/* Update list view */
 	SetStationsView();
 }
