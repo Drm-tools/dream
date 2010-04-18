@@ -36,24 +36,6 @@
 #include <qsocketdevice.h>
 #include <qsocketnotifier.h>
 #include <qdatetime.h>
-#ifndef _WIN32
-# include <netinet/in.h>
-# include <arpa/inet.h>
-#endif
-
-#ifdef _WIN32
-/* Always include winsock2.h before windows.h */
-# include <winsock2.h>
-# include <ws2tcpip.h>
-# include <windows.h>
-#endif
-
-/* Some defines needed for compatibility when using Linux */
-#ifndef _WIN32
-typedef int SOCKET;
-# define SOCKET_ERROR				(-1)
-# define INVALID_SOCKET				(-1)
-#endif
 
 /* Maximum number of bytes received from the network interface. Maximum data
    rate of DRM is approx. 80 kbps. One MDI packet must be sent each DRM frame
@@ -68,7 +50,7 @@ class CPacketSocketQT : public QObject, public CPacketSocket
 	Q_OBJECT
 
 public:
-	CPacketSocketQT();
+	CPacketSocketQT(QSocketDevice::Type type=QSocketDevice::Datagram);
 	virtual ~CPacketSocketQT();
 	// Set the sink which will receive the packets
 	virtual void SetPacketSink(CPacketSink *pSink);

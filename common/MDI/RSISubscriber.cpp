@@ -120,9 +120,29 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 	delete pSocket;
 }
 
-_BOOLEAN CRSISubscriberSocket::SetDestination(const string& str)
+_BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 {
-    return pSocket->SetDestination(str);
+#ifdef USE_QT_GUI
+	string d = dest;
+	QSocketDevice::Type type = QSocketDevice::Datagram;
+	switch(d[0])
+	{
+		case 'P': case 'p':
+			SetPFTFragmentSize(800);
+			d.erase(0, 1);
+			break;
+		case 'T': case 't':
+			d.erase(0, 1);
+			type = QSocketDevice::Stream;
+			break;
+	}
+	delete pSocket;
+	pSocket = new CPacketSocketQT(type);
+	pPacketSink = pSocket;
+    return pSocket->SetDestination(d);
+#else
+	return FALSE;
+#endif
 }
 
 _BOOLEAN CRSISubscriberSocket::GetDestination(string& str)
@@ -176,10 +196,11 @@ _BOOLEAN CRSISubscriberFile::SetDestination(const string& strFName)
 	}
 	else
 		pPacketSinkFile = new CPacketSinkRawFile;
-	if(pPacketSinkFile)
+	if(pPacketSinkFile && pPacketSinkFile->SetDestination(dest))
 	{
+		pPacketSinkFile->StartRecording();
 		pPacketSink = pPacketSinkFile;
-		return pPacketSinkFile->SetDestination(dest);
+		return TRUE;
 	}
 	return FALSE;
 }

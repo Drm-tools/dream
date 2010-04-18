@@ -384,24 +384,30 @@ void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 _BOOLEAN
 CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile)
 {
-	// check PFT prefix on destination
-    string d=dest;
-    bool wantPft = false;
-	if(dest[0]=='P' || dest[0]=='p')
+	CRSISubscriber* subs = NULL;
+
+	// check for file or socket
+	if(dest.find('.'))
 	{
-	    wantPft = true;
-        d.erase(0, 1);
+		subs = new CRSISubscriberFile();
+	}
+	else
+	{
+		subs = new CRSISubscriberSocket(NULL);
 	}
 
-	// Delegate to socket
-	CRSISubscriberSocket* subs = new CRSISubscriberSocket(NULL);
-	_BOOLEAN bOK = subs->SetDestination(d);
+	if(subs == NULL)
+	{
+		cerr << "can't make RSI Subscriber" << endl;
+		return FALSE;
+	}
+
+	// Delegate
+	_BOOLEAN bOK = subs->SetDestination(dest);
 	if (origin != "")
 		bOK &= subs->SetOrigin(origin);
 	if (bOK)
 	{
-        if(wantPft)
-            subs->SetPFTFragmentSize(800);
 		subs->SetProfile(profile);
 		subs->SetReceiver(pDrmReceiver);
 		bMDIInEnabled = TRUE;

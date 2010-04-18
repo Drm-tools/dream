@@ -6,9 +6,9 @@
  *	Volker Fischer, Julian Cable, Oliver Haffenden
  *
  * Description:
- *  
+ *
  * This is an implementation of the CPacketSocket interface that wraps up a QT socket.
- *	
+ *
  *
  ******************************************************************************
  *
@@ -33,11 +33,30 @@
 #include <qtimer.h>
 #include <iostream>
 #include <sstream>
-#include <errno.h>
 
-CPacketSocketQT::CPacketSocketQT():
+#include <errno.h>
+#ifndef _WIN32
+# include <netinet/in.h>
+# include <arpa/inet.h>
+#endif
+
+#ifdef _WIN32
+/* Always include winsock2.h before windows.h */
+# include <winsock2.h>
+# include <ws2tcpip.h>
+# include <windows.h>
+#endif
+
+/* Some defines needed for compatibility when using Linux */
+#ifndef _WIN32
+typedef int SOCKET;
+# define SOCKET_ERROR				(-1)
+# define INVALID_SOCKET				(-1)
+#endif
+
+CPacketSocketQT::CPacketSocketQT(QSocketDevice::Type type):
 	pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
-	SocketDevice(QSocketDevice:: Datagram /* UDP */ ),
+	SocketDevice(type),
 	pSocketNotivRead(NULL)
 {
 	/* Generate the socket notifier and connect the signal */
@@ -47,7 +66,7 @@ CPacketSocketQT::CPacketSocketQT():
 	/* Connect the "activated" signal */
 	QObject::connect(pSocketNotivRead, SIGNAL(activated(int)),
 					  this, SLOT(OnDataReceived()));
-					  
+
 	/* allow connection when others are listening */
 	SocketDevice.setAddressReusable(true);
 }

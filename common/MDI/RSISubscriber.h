@@ -49,6 +49,8 @@ public:
 	/* leave it set to NULL if you want incoming commands to be ignored */
 	void SetReceiver(CDRMReceiver *pReceiver);
 
+	_BOOLEAN SetOrigin(const string&){} // only relevant for network subscribers
+
 	/* Set the profile for this subscriber - could be different for different subscribers */
 	void SetProfile(const char c);
 	char GetProfile(void) const {return cProfile;}
