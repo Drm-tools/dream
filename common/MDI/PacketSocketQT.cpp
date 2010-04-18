@@ -137,9 +137,24 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 	case 2:
 		bAddressOK = HostAddrOut.setAddress(parts[0]);
 		iHostPortOut = parts[1].toUInt();
-    	if(setsockopt(SocketDevice.socket(), IPPROTO_IP, IP_TTL,
+		if(SocketDevice.type() == QSocketDevice::Stream)
+		{
+			bool connected = SocketDevice.connect(HostAddrOut, iHostPortOut);
+			if(!connected)
+			{
+				if(SocketDevice.error()!=0)
+				{
+					cerr << int(SocketDevice.error()) << endl;
+					bAddressOK = FALSE;
+				}
+			}
+		}
+		else
+		{
+			if(setsockopt(SocketDevice.socket(), IPPROTO_IP, IP_TTL,
 				(char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
-			bAddressOK = FALSE;
+				bAddressOK = FALSE;
+		}
 		break;
 	case 3:
 		{
@@ -217,52 +232,59 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		return FALSE;
 	}
 
-	/* Multicast ? */
+	if(SocketDevice.type() == QSocketDevice::Stream)
+	{
+		return SocketDevice.connect(AddrGroup, iPort);
+	}
+	else
+	{
+		/* Multicast ? */
 
 #if QT_VERSION < 0x030000
-	uint32_t gp = AddrGroup.ip4Addr();
+		uint32_t gp = AddrGroup.ip4Addr();
 #else
-	uint32_t gp = AddrGroup.toIPv4Address();
+		uint32_t gp = AddrGroup.toIPv4Address();
 #endif
-	if(gp == 0)
-	{
-		/* Initialize the listening socket. */
-		SocketDevice.bind(AddrInterface, iPort);
-	}
-	else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
-	{
-		struct ip_mreq mreq;
-
-		/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
-		bool ok = SocketDevice.bind(QHostAddress(UINT32(0)), iPort);
-		if(ok == false)
+		if(gp == 0)
 		{
-			//QSocketDevice::Error x = SocketDevice.error();
-			throw CGenErr("Can't bind to port to receive packets");
+			/* Initialize the listening socket. */
+			SocketDevice.bind(AddrInterface, iPort);
 		}
+		else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
+		{
+			struct ip_mreq mreq;
+
+			/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
+			bool ok = SocketDevice.bind(QHostAddress(UINT32(0)), iPort);
+			if(ok == false)
+			{
+				//QSocketDevice::Error x = SocketDevice.error();
+				throw CGenErr("Can't bind to port to receive packets");
+			}
 
 #if QT_VERSION < 0x030000
-		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.ip4Addr());
-		mreq.imr_interface.s_addr = htonl(AddrInterface.ip4Addr());
+			mreq.imr_multiaddr.s_addr = htonl(AddrGroup.ip4Addr());
+			mreq.imr_interface.s_addr = htonl(AddrInterface.ip4Addr());
 #else
-		mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
-		mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
+			mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
+			mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
 #endif
-		const SOCKET s = SocketDevice.socket();
-		int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,
-							sizeof(mreq));
-		if(n == SOCKET_ERROR)
-		{
-			throw
-				CGenErr(string
-						("Can't join multicast group to receive packets: ") +
-						 strerror(errno));
+			const SOCKET s = SocketDevice.socket();
+			int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,
+								sizeof(mreq));
+			if(n == SOCKET_ERROR)
+			{
+				throw
+					CGenErr(string
+							("Can't join multicast group to receive packets: ") +
+							 strerror(errno));
+			}
 		}
-	}
-	else /* one address specified, but not multicast - listen on a specific interface */
-	{
-		/* Initialize the listening socket. */
-		SocketDevice.bind(AddrGroup, iPort);
+		else /* one address specified, but not multicast - listen on a specific interface */
+		{
+			/* Initialize the listening socket. */
+			SocketDevice.bind(AddrGroup, iPort);
+		}
 	}
 	return TRUE;
 }
