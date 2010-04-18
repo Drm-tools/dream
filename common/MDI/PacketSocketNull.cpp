@@ -52,7 +52,7 @@ _BOOLEAN CPacketSocketNull::SetOrigin(const string&)
 	return TRUE;
 }
 
-_BOOLEAN CPacketSocketNull::SetDestination(const string&, char)
+_BOOLEAN CPacketSocketNull::SetDestination(const string&)
 {
 	return TRUE;
 }
