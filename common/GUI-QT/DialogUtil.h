@@ -191,6 +191,8 @@ public:
 	CHamlib::ESMeterState GetSMeter(_REAL& r) { return Hamlib.GetSMeter(r); }
 	void LoadSettings(CSettings& s) { Hamlib.LoadSettings(s);}
 	void SaveSettings(CSettings& s) { Hamlib.SaveSettings(s); }
+	CHamlib* GetRig() { return &Hamlib; }
+
 protected:
 	CHamlib Hamlib;
 #endif

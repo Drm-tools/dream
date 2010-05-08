@@ -77,6 +77,7 @@
 
 /* Classes ********************************************************************/
 class CSettings;
+class CHamlib;
 
 class CSplitFAC : public CSplitModul<_BINARY>
 {
@@ -160,8 +161,7 @@ public:
     void					SetAMDemodType(CAMDemodulation::EDemodType);
     void					SetAMFilterBW(int iBw);
     void					SetAMDemodAcq(_REAL rNewNorCen);
-    void	 				SetEnableSMeter(_BOOLEAN bNew);
-    _BOOLEAN		 		GetEnableSMeter();
+    void	 				SetRig(CHamlib* n) { pRig=n; }
     _BOOLEAN 				SetFrequency(int iNewFreqkHz);
     int		 				GetFrequency() {
         return iFreqkHz;
@@ -442,6 +442,7 @@ protected:
     int						iBwFM;
     _BOOLEAN				bReadFromFile;
     time_t					time_keeper;
+    CHamlib*				pRig;
 
     CPlotManager PlotManager;
 };

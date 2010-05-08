@@ -34,6 +34,7 @@
 
 #include "DrmReceiver.h"
 #include "util/Settings.h"
+#include "util/Utilities.h"
 
 #include "sound.h"
 #include "sound/soundnull.h"
@@ -64,7 +65,7 @@ CDRMReceiver::CDRMReceiver():
         rInitResampleOffset((_REAL) 0.0),
         iFreqkHz(0),
         iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
-        bReadFromFile(FALSE), time_keeper(0)
+        bReadFromFile(FALSE), time_keeper(0),pRig(NULL),PlotManager()
 {
     pReceiverParam = new CParameter(this);
     downstreamRSCI.SetReceiver(this);
@@ -1255,12 +1256,14 @@ CDRMReceiver::InitsForDataParam()
     DataDecoder.SetInitFlag();
 }
 
-
 _BOOLEAN CDRMReceiver::SetFrequency(int iNewFreqkHz)
 {
     if (iFreqkHz == iNewFreqkHz)
         return TRUE;
     iFreqkHz = iNewFreqkHz;
+
+	if(pRig)
+		pRig->SetFrequency(iNewFreqkHz);
 
     pReceiverParam->Lock();
     pReceiverParam->SetFrequency(iNewFreqkHz);

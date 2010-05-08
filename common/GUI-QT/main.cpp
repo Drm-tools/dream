@@ -150,6 +150,9 @@ main(int argc, char **argv)
 			CRig rig(DRMReceiver.GetParameters());
 #ifdef HAVE_LIBHAMLIB
 			rig.LoadSettings(Settings);
+
+			DRMReceiver.SetRig(rig.GetRig());
+
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
 			{
 				rig.subscribe();
