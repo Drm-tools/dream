@@ -63,7 +63,7 @@ CDRMReceiver::CDRMReceiver():
         eNewReceiverMode(RM_DRM), iAudioStreamID(STREAM_ID_NOT_USED),
         iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
         rInitResampleOffset((_REAL) 0.0),
-        iFreqkHz(0),
+        iFreqkHz(-1),
         iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
         bReadFromFile(FALSE), time_keeper(0),pRig(NULL),PlotManager()
 {
@@ -777,6 +777,12 @@ CDRMReceiver::Start()
 {
     /* Set run flag so that the thread can work */
     pReceiverParam->eRunState = CParameter::RUNNING;
+
+    // set the frequency from the command line or ini file
+    if(iFreqkHz!=-1)
+    {
+    	SetFrequency(iFreqkHz);
+    }
 
     do
     {
@@ -1505,18 +1511,25 @@ CDRMReceiver::LoadSettings(CSettings& s)
 #ifdef __linux__
             case 1509:
             {
+            	string shmPath = "/dreamg313if";
+            	string kwd = "if_path";
+                string strHamlibConf = s.Get("Hamlib", "hamlib-config");
+                if (strHamlibConf!="")
+                {
+					if(strHamlibConf.find_first_of(kwd)!=string::npos)
+					{
+						// TODO - parse the string, for now, ignore
+					}
+                    strHamlibConf += ",";
+                }
+				strHamlibConf += kwd + "=" + shmPath;
                 CShmSoundIn* ShmSoundIn = new CShmSoundIn;
                 pSoundInInterface = ShmSoundIn;
                 pSoundInInterface->SetDev(0);
-                ShmSoundIn->SetShmPath("/dreamg313if");
+                ShmSoundIn->SetShmPath(shmPath);
                 ShmSoundIn->SetName("WinRadio G313");
                 ShmSoundIn->SetShmChannels(1);
                 ShmSoundIn->SetWantedChannels(2);
-                string strHamlibConf = s.Get("Hamlib", "hamlib-config");
-                if (strHamlibConf=="")
-                    strHamlibConf = "if_path=/dreamg313if";
-                else
-                    strHamlibConf += ",if_path=/dreamg313if";
                 s.Put("Hamlib", "hamlib-config", strHamlibConf);
             }
             break;
@@ -1599,6 +1612,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
     DataDecoder.SetDecodeEPG(s.Get("EPG", "decodeepg", TRUE));
 
 	SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
+
+    /* Tuned Frequency */
+    iFreqkHz = s.Get("Receiver", "frequency", iFreqkHz);
 
     /* Front-end - combine into Hamlib? */
     CFrontEndParameters& FrontEndParameters = pReceiverParam->FrontEndParameters;
