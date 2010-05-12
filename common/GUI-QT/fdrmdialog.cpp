@@ -34,8 +34,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	QWidget* parent, const char* name, bool modal, WFlags f)
 	: FDRMDialogBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
-	Settings(NSettings),
-	eReceiverMode(RM_NONE)
+	Settings(NSettings)
 {
 	/* recover window size and position */
 	CWinGeom s;
@@ -137,34 +136,24 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 	/* Stations window */
 	pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
-	bStationsDlgWasVis = Settings.Get("Stations Dialog", "visible", FALSE);
-
 	SetDialogCaption(pStationsDlg, tr("Stations"));
 
 	/* Live Schedule window */
 	pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
-	bLiveSchedDlgWasVis = Settings.Get("Live Schedule Dialog", "visible", FALSE);
 	pLiveScheduleDlg->LoadSettings(Settings);
-
 	SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
 
 	/* Programme Guide Window */
 	pEPGDlg = new EPGDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
-	bEPGDlgWasVis = Settings.Get("EPG Dialog", "visible", FALSE);
-
 	SetDialogCaption(pEPGDlg, tr("Programme Guide"));
 
 
 	/* Evaluation window */
-	pSysEvalDlg = new systemevalDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
-	bSysEvalDlgWasVis = Settings.Get("System Evaluation Dialog", "visible", FALSE);
-
+	pSysEvalDlg = new systemevalDlg(DRMReceiver, rig, Settings, this, "", FALSE, Qt::WStyle_MinMax);
 	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
 
 	/* Multimedia window */
 	pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
-	bMultMedDlgWasVis = Settings.Get("Multimedia Dialog", "visible", FALSE);
-
 	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
 	pMultiMediaDlg->LoadSettings(Settings);
 
@@ -284,7 +273,7 @@ void FDRMDialog::OnTimer()
 	switch(eNewReceiverMode)
 	{
 	case RM_DRM:
-		if(eReceiverMode != RM_DRM)
+		if(isVisible()==false)
 		{
 			ChangeGUIModeToDRM();
 		}
@@ -309,8 +298,9 @@ void FDRMDialog::OnTimer()
 		/* stopping the timer is normally done by the hide signal, but at startup we
 		 * are already hidden and the hide signal doesn't hit the slot
 		 */
-		if(eReceiverMode != RM_AM)
+		if(isVisible())
 		{
+			hide();
 			Timer.stop();
 			ChangeGUIModeToAM();
 		} /* otherwise we might still be changing to DRM from AM */
@@ -319,8 +309,9 @@ void FDRMDialog::OnTimer()
 		/* stopping the timer is normally done by the hide signal, but at startup we
 		 * are already hidden and the hide signal doesn't hit the slot
 		 */
-		if(eReceiverMode != RM_FM)
+		if(isVisible())
 		{
+			hide();
 			Timer.stop();
 			ChangeGUIModeToFM();
 		} /* otherwise we might still be changing to DRM from AM */
@@ -748,29 +739,6 @@ void FDRMDialog::ClearDisplay()
 void FDRMDialog::ChangeGUIModeToDRM()
 {
 	show();
-
-	/* Set correct schedule */
-	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_DRM);
-
-	if (bStationsDlgWasVis == TRUE)
-		pStationsDlg->show();
-
-	if (bLiveSchedDlgWasVis == TRUE)
-		pLiveScheduleDlg->show();
-
-	if (bEPGDlgWasVis == TRUE)
-		pEPGDlg->show();
-
-	if (bSysEvalDlgWasVis == TRUE)
-		pSysEvalDlg->show();
-
-	if (bMultMedDlgWasVis == TRUE)
-		pMultiMediaDlg->show();
-
-	if (pStationsDlg->isVisible())
-		pStationsDlg->LoadSchedule(CDRMSchedule::SM_DRM);
-
-	eReceiverMode = RM_DRM;
 }
 
 /* Main window is not needed, hide it.
@@ -780,80 +748,38 @@ void FDRMDialog::ChangeGUIModeToDRM()
 
 void FDRMDialog::ChangeGUIModeToAM()
 {
-	/* Store visibility state */
-	if (eReceiverMode != RM_NONE)
-	{
-		bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
-		bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
-		bEPGDlgWasVis = pEPGDlg->isVisible();
-	}
-
-	pSysEvalDlg->hide();
-	pMultiMediaDlg->hide();
-	pEPGDlg->hide();
-
-	pSysEvalDlg->StopLogTimers();
-
-	Timer.stop();
-
-	this->hide();
-
+	hide();
 	pAnalogDemDlg->show();
-
-	/* Set correct schedule */
-	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_ANALOG);
-
-	if (bStationsDlgWasVis == TRUE)
-		pStationsDlg->show();
-
-	if (bLiveSchedDlgWasVis == TRUE)
-		pLiveScheduleDlg->show();
-
-	if (pStationsDlg->isVisible())
-		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
-
-	eReceiverMode = RM_AM;
 }
 
 void FDRMDialog::ChangeGUIModeToFM()
 {
-	/* Store visibility state */
-	if (eReceiverMode != RM_NONE)
-	{
-		bSysEvalDlgWasVis = pSysEvalDlg->isVisible();
-		bMultMedDlgWasVis = pMultiMediaDlg->isVisible();
-		bEPGDlgWasVis = pEPGDlg->isVisible();
-	}
-
-	pSysEvalDlg->hide();
-	pMultiMediaDlg->hide();
-	pEPGDlg->hide();
-
-	pSysEvalDlg->StopLogTimers();
-
-	Timer.stop();
-
-	this->hide();
-
+	hide();
 	pFMDlg->show();
-
-	/* Set correct schedule */
-	pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_ANALOG);
-
-	if (bStationsDlgWasVis == TRUE)
-		pStationsDlg->show();
-
-	if (bLiveSchedDlgWasVis == TRUE)
-		pLiveScheduleDlg->show();
-
-	if (pStationsDlg->isVisible())
-		pStationsDlg->LoadSchedule(CDRMSchedule::SM_ANALOG);
-
-	eReceiverMode = RM_FM;
 }
 
 void FDRMDialog::showEvent(QShowEvent*)
 {
+	if (Settings.Get("DRM Dialog", "Stations Dialog visible", false))
+		OnViewStationsDlg();
+	else
+		pStationsDlg->hide(); // in case AM had it open
+
+	if (Settings.Get("DRM Dialog", "Live Schedule Dialog visible", false))
+		pLiveScheduleDlg->show();
+
+	if (Settings.Get("DRM Dialog", "EPG Dialog visible", false))
+		pEPGDlg->show();
+
+	if (Settings.Get("DRM Dialog", "System Evaluation Dialog visible", false))
+		pSysEvalDlg->show();
+
+	if (Settings.Get("DRM Dialog", "Multimedia Dialog visible", false))
+		pMultiMediaDlg->show();
+
+	if (Settings.Get("DRM Dialog", "EPG Dialog visible", false))
+		pEPGDlg->show();
+
 	/* Set timer for real-time controls */
 	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -861,8 +787,34 @@ void FDRMDialog::showEvent(QShowEvent*)
 
 void FDRMDialog::hideEvent(QHideEvent*)
 {
-	/* Deactivate real-time timer */
+	/* Deactivate real-time timers */
 	Timer.stop();
+	pSysEvalDlg->StopLogTimers();
+
+	/* remember the state of the windows */
+	Settings.Put("DRM Dialog", "Live Schedule Dialog visible", pLiveScheduleDlg->isVisible());
+	Settings.Put("DRM Dialog", "System Evaluation Dialog visible", pSysEvalDlg->isVisible());
+	Settings.Put("DRM Dialog", "Multimedia Dialog visible", pMultiMediaDlg->isVisible());
+	Settings.Put("DRM Dialog", "EPG Dialog visible", pEPGDlg->isVisible());
+
+	/* now close all the other windows */
+	pSysEvalDlg->hide();
+	pMultiMediaDlg->hide();
+	pLiveScheduleDlg->hide();
+	pEPGDlg->hide();
+	pStationsDlg->hide();
+
+	pMultiMediaDlg->SaveSettings(Settings);
+	pLiveScheduleDlg->SaveSettings(Settings);
+
+	CWinGeom s;
+	QRect WinGeom = geometry();
+	s.iXPos = WinGeom.x();
+	s.iYPos = WinGeom.y();
+	s.iHSize = WinGeom.height();
+	s.iWSize = WinGeom.width();
+	Settings.Put("DRM Dialog", s);
+
 }
 
 void FDRMDialog::OnNewAcquisition()
@@ -872,9 +824,6 @@ void FDRMDialog::OnNewAcquisition()
 
 void FDRMDialog::OnSwitchMode(int newMode)
 {
-	bStationsDlgWasVis = pStationsDlg->isVisible();
-	bLiveSchedDlgWasVis = pLiveScheduleDlg->isVisible();
-
 	DRMReceiver.SetReceiverMode(ERecMode(newMode));
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
@@ -978,16 +927,7 @@ void FDRMDialog::SetService(int iNewServiceID)
 
 void FDRMDialog::OnViewEvalDlg()
 {
-	if (DRMReceiver.GetReceiverMode() == RM_DRM)
-	{
-		/* Show evaluation window in DRM mode */
-		pSysEvalDlg->show();
-	}
-	else
-	{
-		/* Show AM demodulation window in AM mode */
-		pAnalogDemDlg->show();
-	}
+	pSysEvalDlg->show();
 }
 
 void FDRMDialog::OnViewMultiMediaDlg()
@@ -998,6 +938,20 @@ void FDRMDialog::OnViewMultiMediaDlg()
 
 void FDRMDialog::OnViewStationsDlg()
 {
+	/* Set correct schedule */
+	if(DRMReceiver.GetReceiverMode() == RM_DRM)
+	{
+		pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_DRM);
+		Settings.Put("DRM Dialog", "Stations Dialog visible", TRUE);
+	}
+	else
+	{
+		pStationsDlg->SetCurrentSchedule(CDRMSchedule::SM_ANALOG);
+		Settings.Put("AM Dialog", "Stations Dialog visible", TRUE);
+	}
+
+	if(pStationsDlg->isVisible()) // show gets optioised out and we want to make sure the schedule is loaded
+		pStationsDlg->hide();
 	/* Show stations window */
 	pStationsDlg->show();
 }
@@ -1010,7 +964,6 @@ void FDRMDialog::OnViewLiveScheduleDlg()
 
 void FDRMDialog::OnViewMultSettingsDlg()
 {
-
 	/* Show multimedia settings window */
 	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(
 		*DRMReceiver.GetParameters(), Settings,
@@ -1066,84 +1019,6 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 	 * close so that the user knows the program has completed
 	 * when the window closes
 	 */
-
-	/* this can be called in two situations:
-	 * DRM Mode:
-	 * 	this window is visible and this routine is responsible
-	 * 	for storing state, hiding other windows, stopping the working
-	 * 	thread and remaining open until the rest of the system is shut
-	 * 	down
-	 * AM Mode:
-	 *  this window is hidden, the AnalogDemDlg has stored state,
-	 *  stayed open until the system is cleared down and then emitted
-	 *  our signal
-	 */
-	Settings.Put("Receiver", "mode", int(RM_DRM));
-
-	if(eReceiverMode == RM_DRM)
-	{
-		/* remember the state of the windows */
-		Settings.Put("DRM Dialog", "visible", TRUE);
-		Settings.Put("AM Dialog", "visible", FALSE);
-		Settings.Put("FM Dialog", "visible", FALSE);
-		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());
-		Settings.Put("Live Schedule Dialog", "visible", pLiveScheduleDlg->isVisible());
-		Settings.Put("System Evaluation Dialog", "visible", pSysEvalDlg->isVisible());
-		Settings.Put("Multimedia Dialog", "visible", pMultiMediaDlg->isVisible());
-		Settings.Put("EPG Dialog", "visible", pEPGDlg->isVisible());
-
-		/* stop any asynchronous GUI actions */
-		pSysEvalDlg->StopLogTimers();
-		Timer.stop();
-
-		/* now close all the windows except the main window */
-
-		pSysEvalDlg->hide();
-		pMultiMediaDlg->hide();
-		pLiveScheduleDlg->hide();
-		pEPGDlg->hide();
-		pStationsDlg->hide();
-	}
-	else
-	{
-		Settings.Put("DRM Dialog", "visible", FALSE);
-		if(eReceiverMode == RM_AM)
-		{
-			Settings.Put("AM Dialog", "visible", TRUE);
-			Settings.Put("FM Dialog", "visible", FALSE);
-		}
-		else
-		{
-			Settings.Put("AM Dialog", "visible", FALSE);
-			Settings.Put("FM Dialog", "visible", TRUE);
-		}
-		Settings.Put("Stations Dialog", "visible", pStationsDlg->isVisible());
-
-		if (pStationsDlg->isVisible())
-			pStationsDlg->hide();
-
-		Settings.Put("Live Schedule Dialog", "visible", pLiveScheduleDlg->isVisible());
-
-		if (pLiveScheduleDlg->isVisible())
-			pLiveScheduleDlg->hide();
-
-		/* we saved these when we were in DRM Mode */
-		Settings.Put("System Evaluation Dialog", "visible", bSysEvalDlgWasVis);
-		Settings.Put("Multimedia Dialog", "visible", bMultMedDlgWasVis);
-		Settings.Put("EPG Dialog", "visible",  bEPGDlgWasVis);
-	}
-
-	pMultiMediaDlg->SaveSettings(Settings);
-	pLiveScheduleDlg->SaveSettings(Settings);
-
-	CWinGeom s;
-	QRect WinGeom = geometry();
-	s.iXPos = WinGeom.x();
-	s.iYPos = WinGeom.y();
-	s.iHSize = WinGeom.height();
-	s.iWSize = WinGeom.width();
-	Settings.Put("DRM Dialog", s);
-
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 	switch(Parameters.eRunState)
 	{
@@ -1151,17 +1026,23 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
 			// request that the working thread stops
 			DRMReceiver.Stop();
 			QTimer::singleShot(1000, this, SLOT(close()));
+			if(DRMReceiver.GetReceiverMode() == RM_DRM)
+			{
+				Settings.Put("DRM Dialog", "Stations Dialog visible", pStationsDlg->isVisible());
+			}
+			else
+			{
+				Settings.Put("AM Dialog", "Stations Dialog visible", pStationsDlg->isVisible());
+			}
 			ce->ignore();
 			break;
 		case CParameter::STOP_REQUESTED:
 			QMessageBox::critical(this, "Dream", "Exit\n",
 					"Termination of working thread failed");
-			ce->ignore();
+			ce->accept();
 			break;
 		case CParameter::STOPPED:
 			/* now let QT close us */
-			pAnalogDemDlg->close();
-			pFMDlg->close();
 			ce->accept();
 			break;
 	}

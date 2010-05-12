@@ -533,7 +533,6 @@ void CRig::run()
             r += pParameters->rSigStrengthCorrection;
             pParameters->SigStrstat.addSample(r);
         	pParameters->Unlock();
-        	cerr << "CRig " << r << endl;
             emit sigstr(r);
         }
         else

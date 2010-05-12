@@ -54,6 +54,7 @@
 #include "../util/Settings.h"
 
 class CGPSReceiver;
+class CRig;
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -66,7 +67,7 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+	systemevalDlg(CDRMReceiver&, CRig&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, WFlags f = 0);
 
 	virtual ~systemevalDlg();
@@ -108,7 +109,8 @@ protected:
 
 	CShortLog		shortLog;
 	CLongLog		longLog;
-	int			iLogDelay;
+	int				iLogDelay;
+	CRig&			rig;
 
 	virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);

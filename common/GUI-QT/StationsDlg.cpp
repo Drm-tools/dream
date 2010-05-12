@@ -1168,7 +1168,6 @@ void StationsDlg::DisableSMeter()
 
 void StationsDlg::OnSigStr(double rCurSigStr)
 {
-	cerr << "sigstr " << rCurSigStr << endl;
 	ProgrSigStrength->setValue(rCurSigStr);
 }
 

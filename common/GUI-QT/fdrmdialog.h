@@ -93,13 +93,6 @@ protected:
 	int					iOldNoServicesGUI;
 	QTimer				Timer;
 
-	_BOOLEAN		bSysEvalDlgWasVis;
-	_BOOLEAN		bMultMedDlgWasVis;
-	_BOOLEAN		bLiveSchedDlgWasVis;
-	_BOOLEAN		bStationsDlgWasVis;
-	_BOOLEAN		bEPGDlgWasVis;
-	ERecMode		eReceiverMode;
-
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	virtual void	customEvent(QCustomEvent* Event);
 	virtual void	closeEvent(QCloseEvent* ce);

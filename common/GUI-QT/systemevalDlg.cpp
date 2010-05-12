@@ -27,11 +27,12 @@
 \******************************************************************************/
 
 #include "systemevalDlg.h"
+#include "DialogUtil.h"
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
 
 /* Implementation *************************************************************/
-systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, WFlags f) :
 	systemevalDlgBase(parent, name, modal, f),
 	DRMReceiver(NDRMR),
@@ -39,7 +40,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	Timer(), TimerInterDigit(),
 	TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
 	shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
-	iLogDelay(0), pGPSReceiver(NULL)
+	iLogDelay(0), rig(nr), pGPSReceiver(NULL)
 {
 	/* Get window geometry data and apply it */
 	CWinGeom s;
@@ -407,8 +408,12 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Logfile -------------------------------------------------------------- */
 
 	/* log file flag for storing signal strength in long log */
-	shortLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
-	longLog.SetRxlEnabled(Settings.Get("Logfile", "enablerxl", FALSE));
+	_BOOLEAN logrxl = Settings.Get("Logfile", "enablerxl", FALSE);
+	shortLog.SetRxlEnabled(logrxl);
+	longLog.SetRxlEnabled(logrxl);
+	if(logrxl)
+	{
+	}
 
 	/* log file flag for storing lat/long in long log */
 	shortLog.SetPositionEnabled(Settings.Get("Logfile", "enablepositiondata", FALSE));
@@ -1268,6 +1273,10 @@ void systemevalDlg::OnCheckWriteLog()
 	if (CheckBoxWriteLog->isChecked())
 	{
 		TimerLogFileStart.start(1, TRUE);
+		if(longLog.GetRxlEnabled())
+		{
+			rig.subscribe();
+		}
 	}
 	else
 	{
@@ -1275,6 +1284,10 @@ void systemevalDlg::OnCheckWriteLog()
 		StopLogTimers();
 		shortLog.Stop();
 		longLog.Stop();
+		if(longLog.GetRxlEnabled())
+		{
+			rig.unsubscribe();
+		}
 	}
 
 	/* set the focus */

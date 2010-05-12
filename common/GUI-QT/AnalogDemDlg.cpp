@@ -168,6 +168,7 @@ void AnalogDemDlg::showEvent(QShowEvent*)
 {
 	OnTimer();
 	OnTimerPLLPhaseDial();
+	/* Set correct schedule */
 
 	/* Activate real-time timers */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -178,6 +179,9 @@ void AnalogDemDlg::showEvent(QShowEvent*)
 		AMSSDlg.show();
 	else
 		AMSSDlg.hide();
+
+	if(Settings.Get("AM Dialog", "Stations Dialog visible", FALSE))
+		emit ViewStationsDlg();
 
 	UpdateControls();
 }
@@ -200,27 +204,10 @@ void AnalogDemDlg::hideEvent(QHideEvent*)
 	s.iHSize = WinGeom.height();
 	s.iWSize = WinGeom.width();
 	Settings.Put("AM Dialog", s);
-	Settings.Put("Receiver", "mode", int(RM_AM));
-	Settings.Put("GUI", "mode", string("RX"));
 }
 
 void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 {
-	/* stop real-time timers */
-	Timer.stop();
-	TimerPLLPhaseDial.stop();
-
-	Settings.Put("AMSS Dialog", "visible", AMSSDlg.isVisible());
-
-	/* Save window geometry data */
-	CWinGeom s;
-	QRect WinGeom = geometry();
-	s.iXPos = WinGeom.x();
-	s.iYPos = WinGeom.y();
-	s.iHSize = WinGeom.height();
-	s.iWSize = WinGeom.width();
-	Settings.Put("AM Dialog", s);
-
 	/* tell every other window to close too */
 	emit Closed();
 	// stay open until working thread is done

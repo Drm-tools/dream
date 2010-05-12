@@ -465,7 +465,6 @@ void FMDialog::closeEvent(QCloseEvent* ce)
 	s.iHSize = WinGeom.height();
 	s.iWSize = WinGeom.width();
 	Settings.Put("FM Dialog", s);
-	Settings.Put("FM Dialog", "visible", 1);
 
 	/* tell every other window to close too */
 	emit Closed();
