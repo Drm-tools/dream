@@ -295,26 +295,12 @@ void FDRMDialog::OnTimer()
 			ClearDisplay();
 		break;
 	case RM_AM:
-		/* stopping the timer is normally done by the hide signal, but at startup we
-		 * are already hidden and the hide signal doesn't hit the slot
-		 */
-		if(isVisible())
-		{
-			hide();
-			Timer.stop();
-			ChangeGUIModeToAM();
-		} /* otherwise we might still be changing to DRM from AM */
+		ChangeGUIModeToAM();
 		break;
 	case RM_FM:
-		/* stopping the timer is normally done by the hide signal, but at startup we
-		 * are already hidden and the hide signal doesn't hit the slot
-		 */
-		if(isVisible())
-		{
-			hide();
-			Timer.stop();
-			ChangeGUIModeToFM();
-		} /* otherwise we might still be changing to DRM from AM */
+		pStationsDlg->hide(); // in case open in AM mode - AM dialog can't hide this
+		pLiveScheduleDlg->hide(); // in case open in AM mode - AM dialog can't hide this
+		ChangeGUIModeToFM();
 		break;
 	case RM_NONE: // wait until working thread starts operating
 		break;
@@ -740,11 +726,6 @@ void FDRMDialog::ChangeGUIModeToDRM()
 {
 	show();
 }
-
-/* Main window is not needed, hide it.
- * If DRM only windows are open, hide them.
- * Make sure analog demodulation dialog is visible
- */
 
 void FDRMDialog::ChangeGUIModeToAM()
 {
