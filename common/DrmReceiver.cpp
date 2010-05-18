@@ -1365,12 +1365,13 @@ cerr << "LoadSettings" << endl;
             // check if we need to do something special for the rig
             bool special = false;
 			string soundName = s.Get("Hamlib", "sound-name", string(""));
+			string shmPath = s.Get("Hamlib", "shm-path", string(""));
 			if(soundName != "")
             {
 #ifdef __linux__
                 CShmSoundIn* ShmSoundIn = new CShmSoundIn;
                 ShmSoundIn->SetShmPath(shmPath);
-                ShmSoundIn->SetName(shmName);
+                ShmSoundIn->SetName(soundName);
                 ShmSoundIn->SetShmChannels(1);
                 ShmSoundIn->SetWantedChannels(2);
                 pSoundInInterface = ShmSoundIn;
@@ -1379,7 +1380,6 @@ cerr << "LoadSettings" << endl;
             }
             if(!special)
             {
-                int dev = s.Get("Receiver", "snddevin", int(0));
                 pSoundInInterface = new CSoundIn;
             }
 			pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", int(0)));
