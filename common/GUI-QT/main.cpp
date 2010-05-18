@@ -142,10 +142,9 @@ main(int argc, char **argv)
 			   ready before the GUI thread */
 
 #ifdef HAVE_LIBHAMLIB
-			CRig rig(DRMReceiver.GetParameters()); // G313 must be initialised before DRMReceiver
-			rig.LoadSettings(Settings);
+			CRig rig(DRMReceiver.GetParameters());
+			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
-
 			DRMReceiver.LoadSettings(Settings);
 
 			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));

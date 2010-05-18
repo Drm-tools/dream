@@ -752,18 +752,37 @@ CHamlib::LoadSettings(CSettings & s)
 	{
 		/* Hamlib configuration string */
 		string strHamlibConf = s.Get("Hamlib", "hamlib-config");
-		if(model==1509)
+
+		if (model == RIG_MODEL_G313)
 		{
-		    if(strHamlibConf=="")
-		    {
+			string kwd, val;
 #ifdef __linux__
-                strHamlibConf = "if_path=/dreamg313if"
+			kwd = "if_path";
+			val = "/dreamg313if";
+			s.Put("Hamlib", "sound-name", string("WinRadio G313"));
+			s.Put("Hamlib", "shm-path", val);
 #endif
 #ifdef _WIN32
-                strHamlibConf = "wodeviceid=-2";
+			kwd = "wodeviceid";
+			val = "-2";
 #endif
-		    }
+			if(kwd!="")
+			{
+				if (strHamlibConf=="")
+				{
+					strHamlibConf == kwd + "=" + val;
+				}
+				else
+				{
+					// don't overwrite a saved value
+					if(strHamlibConf.find_first_of(kwd)==string::npos)
+					{
+						strHamlibConf += "," + kwd + "=" + val;
+					}
+				}
+			}
 		}
+
 		if (strHamlibConf != "")
 		{
 			istringstream params(strHamlibConf);

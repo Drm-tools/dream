@@ -1359,34 +1359,30 @@ cerr << "LoadSettings" << endl;
         }
         else /* sound card */
         {
-cerr << "LoadSettings - sound card" << endl;
 			/* Sound In device */
             delete pSoundInInterface;
 
             // check if we need to do something special for the rig
             bool special = false;
-#ifdef __linux__
-            string strHamlibConf = s.Get("Hamlib", "hamlib-config");
-            size_t p = strHamlibConf.find_first_of("if_path=");
-            if(p!=string::npos)
+			string soundName = s.Get("Hamlib", "sound-name", string(""));
+			if(soundName != "")
             {
+#ifdef __linux__
                 CShmSoundIn* ShmSoundIn = new CShmSoundIn;
-                pSoundInInterface = ShmSoundIn;
-                pSoundInInterface->SetDev(0);
-                ShmSoundIn->SetShmPath(strHamlibConf.substr(p+8));
-                ShmSoundIn->SetName("WinRadio G313");
+                ShmSoundIn->SetShmPath(shmPath);
+                ShmSoundIn->SetName(shmName);
                 ShmSoundIn->SetShmChannels(1);
                 ShmSoundIn->SetWantedChannels(2);
+                pSoundInInterface = ShmSoundIn;
                 special = true;
-            }
 #endif
+            }
             if(!special)
             {
                 int dev = s.Get("Receiver", "snddevin", int(0));
-cerr << "LoadSettings sound dev " << dev << endl;
                 pSoundInInterface = new CSoundIn;
-                pSoundInInterface->SetDev(dev);
             }
+			pSoundInInterface->SetDev(s.Get("Receiver", "snddevin", int(0)));
         }
 	}
 

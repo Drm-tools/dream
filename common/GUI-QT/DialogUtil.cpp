@@ -500,7 +500,7 @@ void CRig::subscribe()
 	}
 #endif
 	subscribers++;
-	cerr << "subscribe " << subscribers << endl;
+	//cerr << "subscribe " << subscribers << endl;
 	if((subscribers>0) && !running())
 		start();
 }
@@ -517,7 +517,7 @@ void CRig::unsubscribe()
 	if(subscribers>0)
 	{
 		subscribers--;
-		cerr << "unsubscribe " << subscribers << endl;
+		//cerr << "unsubscribe " << subscribers << endl;
 	}
 }
 

@@ -410,14 +410,22 @@ CSoundInJack::Read(CVector<short>& psData)
         Init(iBufferSize, bBlocking);
 
     size_t bytes = iBufferSize * sizeof(short);
+    const int delay_ms = 100;
+#ifdef _WIN32
+    while (jack_ringbuffer_read_space(capture_data.buff) < bytes)
+    {
+        Sleep(delay_ms);
+    }
+#else
     timespec delay;
     delay.tv_sec = 0;
     const long one_ms = 1000000L; // nanoseconds
-    delay.tv_nsec = 100*one_ms;
+    delay.tv_nsec = delay_ms*one_ms;
     while (jack_ringbuffer_read_space(capture_data.buff) < bytes)
     {
         nanosleep(&delay, NULL);
     }
+#endif
     char *buffer = (char *) &psData[0];
     //short buffer[16384];
     size_t n = jack_ringbuffer_read(capture_data.buff, (char*)&buffer[0], bytes);

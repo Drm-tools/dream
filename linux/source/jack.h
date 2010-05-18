@@ -30,6 +30,11 @@
 #define _JACK_H
 
 #include "../../common/soundinterface.h"
+
+#ifdef _WIN32
+# include <windows.h>
+	typedef HANDLE pthread_t;
+#endif
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
 #include <map>

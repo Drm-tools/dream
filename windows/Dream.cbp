@@ -42,14 +42,13 @@
 			<Add option="-DQT_TABLET_SUPPORT" />
 			<Add option="-DQT_NO_DEBUG" />
 			<Add option="-DHAVE_STDINT_H" />
-			<Add option="-D_WINDOWS" />
-			<Add option="-DWIN32" />
 			<Add directory="$(QTDIR)\include" />
 			<Add directory="..\libs" />
 			<Add directory="..\common\GUI-QT" />
 			<Add directory="moc" />
 			<Add directory="..\..\faac\include" />
 			<Add directory="..\..\faad2\include" />
+			<Add directory="..\..\..\..\Program Files\JackNone-0.5\lib" />
 		</Compiler>
 		<Linker>
 			<Add library="faac_drm" />
@@ -65,9 +64,12 @@
 			<Add library="setupapi" />
 			<Add library="wpcap" />
 			<Add library="sndfile" />
-			<Add library="C:\winnt\system32\Kernel32.dll" />
+			<Add library="portaudio_x86" />
+			<Add library="jack" />
+			<Add library="jackserver" />
 			<Add directory="$(QTDIR)\lib" />
 			<Add directory="..\libs" />
+			<Add directory="..\..\..\midwinter\lib" />
 		</Linker>
 		<Unit filename="..\common\AMDemodulation.cpp" />
 		<Unit filename="..\common\AMDemodulation.h" />
@@ -271,6 +273,12 @@
 		<Unit filename="..\common\resample\ResampleFilter.h" />
 		<Unit filename="..\common\selectioninterface.h" />
 		<Unit filename="..\common\sound.h" />
+		<Unit filename="..\common\sound\drm_portaudio.cpp" />
+		<Unit filename="..\common\sound\drm_portaudio.h" />
+		<Unit filename="..\common\sound\pa_ringbuffer.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="..\common\sound\pa_ringbuffer.h" />
 		<Unit filename="..\common\sound\soundnull.h" />
 		<Unit filename="..\common\soundinterface.h" />
 		<Unit filename="..\common\sourcedecoders\AudioSourceDecoder.cpp" />

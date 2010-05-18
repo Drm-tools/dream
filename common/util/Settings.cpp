@@ -322,7 +322,7 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 	/*  */
-#ifdef WIN32
+#ifdef _WIN32
 		/* Enable/Disable process priority flag */
 		if (GetNumericArgument
 			(argc, argv, i, "-P", "--processpriority", 0, 1,
@@ -578,7 +578,7 @@ CSettings::UsageArguments(char **argv)
 		"  -C <s>, --hamlib-config <s> set Hamlib config parameter\n"
 #endif
 		"  -T, --ensmeter              enable S-Meter\n"
-#ifdef WIN32
+#ifdef _WIN32
 		"  -P, --processpriority <n>   enable/disable high priority for working thread\n"
 #endif
 		"  -h, -?, --help             this help text\n"
@@ -774,7 +774,7 @@ bool
 StlIniCompareStringNoCase::operator() (const string & x, const string & y)
 	 const
 	 {
-#ifdef WIN32
+#ifdef _WIN32
 		 return (_stricmp(x.c_str(), y.c_str()) < 0) ? true : false;
 #else
 #ifdef strcasecmp
