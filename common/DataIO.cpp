@@ -137,12 +137,15 @@ void CWriteData::ProcessDataInternal(CParameter& ReceiverParam)
             vecsTmpAudData[i] = 0;
     }
 
-    ReceiverParam.Lock();
     /* Put data to sound card interface. Show sound card state on GUI */
-    if (pSound->Write(vecsTmpAudData) == FALSE)
-        ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
-    else
-        ReceiverParam.ReceiveStatus.Interface.SetStatus(DATA_ERROR);
+    ETypeRxStatus soundCardStatus = RX_OK;
+    if (pSound->Write(vecsTmpAudData) == TRUE)
+    {
+		soundCardStatus = DATA_ERROR;
+    }
+
+    ReceiverParam.Lock();
+	ReceiverParam.ReceiveStatus.Interface.SetStatus(soundCardStatus);
     ReceiverParam.Unlock();
 
     /* Write data as wave in file */

@@ -29,12 +29,13 @@
 #include "fdrmdialog.h"
 #include <iostream>
 
+inline QString str2qstr(const string& s) { return QString().fromUtf8(QCString(s.c_str())); }
+
 /* Implementation *************************************************************/
 FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	QWidget* parent, const char* name, bool modal, WFlags f)
 	: FDRMDialogBase(parent, name, modal, f),
-	DRMReceiver(NDRMR),
-	Settings(NSettings)
+	DRMReceiver(NDRMR),Settings(NSettings),Timer(),serviceLabels(4)
 {
 	/* recover window size and position */
 	CWinGeom s;
@@ -46,20 +47,58 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+	/* Multimedia window */
+	pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
+	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
+	pMultiMediaDlg->LoadSettings(Settings);
+
+	/* Stations window */
+	pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
+	SetDialogCaption(pStationsDlg, tr("Stations"));
+
+	/* Live Schedule window */
+	pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
+	pLiveScheduleDlg->LoadSettings(Settings);
+	SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
+
+	/* Programme Guide Window */
+	pEPGDlg = new EPGDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	SetDialogCaption(pEPGDlg, tr("Programme Guide"));
+
+	/* Evaluation window */
+	pSysEvalDlg = new systemevalDlg(DRMReceiver, rig, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
+
+	/* Analog demodulation window */
+	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
+
+	/* FM window */
+	pFMDlg = new FMDialog(DRMReceiver, Settings, rig, NULL, "FM Receiver", FALSE, Qt::WStyle_MinMax);
+
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+
+	/* general settings window */
+	pGeneralSettingsDlg = new GeneralSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
+	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
+
+	/* Multimedia settings window */
+	pMultSettingsDlg = new MultSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
+	SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
+
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
 	QPopupMenu* EvalWinMenu = new QPopupMenu(this);
 	CHECK_PTR(EvalWinMenu);
-	EvalWinMenu->insertItem(tr("&Evaluation Dialog..."), this,
-		SLOT(OnViewEvalDlg()), CTRL+Key_E, 0);
-	EvalWinMenu->insertItem(tr("M&ultimedia Dialog..."), this,
-		SLOT(OnViewMultiMediaDlg()), CTRL+Key_U, 1);
+	EvalWinMenu->insertItem(tr("&Evaluation Dialog..."), pSysEvalDlg,
+		SLOT(show()), CTRL+Key_E, 0);
+	EvalWinMenu->insertItem(tr("M&ultimedia Dialog..."), pMultiMediaDlg,
+		SLOT(show()), CTRL+Key_U, 1);
 	EvalWinMenu->insertItem(tr("S&tations Dialog..."), this,
 		SLOT(OnViewStationsDlg()), CTRL+Key_T, 2);
-	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), this,
-		SLOT(OnViewLiveScheduleDlg()), CTRL+Key_L, 3);
-	EvalWinMenu->insertItem(tr("&Programme Guide..."), this,
-		SLOT(OnViewEPGDlg()), CTRL+Key_P, 4);
+	EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), pLiveScheduleDlg,
+		SLOT(show()), CTRL+Key_L, 3);
+	EvalWinMenu->insertItem(tr("&Programme Guide..."), pEPGDlg,
+		SLOT(show()), CTRL+Key_P, 4);
 	EvalWinMenu->insertSeparator();
 	EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), CTRL+Key_Q, 5);
 
@@ -95,11 +134,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 	/* multimedia settings */
 	pSettingsMenu->insertSeparator();
-	pSettingsMenu->insertItem(tr("&Multimedia settings..."), this,
-		SLOT(OnViewMultSettingsDlg()));
+	pSettingsMenu->insertItem(tr("&Multimedia settings..."), pMultSettingsDlg,
+		SLOT(show()));
 
-	pSettingsMenu->insertItem(tr("&General settings..."), this,
-		SLOT(OnViewGeneralSettingsDlg()));
+	pSettingsMenu->insertItem(tr("&General settings..."), pGeneralSettingsDlg,
+		SLOT(show()));
 
 	/* Main menu bar -------------------------------------------------------- */
 	pMenu = new QMenuBar(this);
@@ -117,16 +156,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	/* Set display color */
 	SetDisplayColor(CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000)));
 
-	/* Reset text */
-	LabelBitrate->setText("");
-	LabelCodec->setText("");
-	LabelStereoMono->setText("");
-	LabelServiceLabel->setText("");
-	LabelProgrType->setText("");
-	LabelLanguage->setText("");
-	LabelCountryCode->setText("");
-	LabelServiceID->setText("");
-
 	/* Init progress bar for input signal level */
 	ProgrInputLevel->setRange(-50.0, 0.0);
 	ProgrInputLevel->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
@@ -134,97 +163,43 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	ProgrInputLevel->setAlarmLevel(-12.5);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
-	/* Stations window */
-	pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
-	SetDialogCaption(pStationsDlg, tr("Stations"));
-
-	/* Live Schedule window */
-	pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
-	pLiveScheduleDlg->LoadSettings(Settings);
-	SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
-
-	/* Programme Guide Window */
-	pEPGDlg = new EPGDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
-	SetDialogCaption(pEPGDlg, tr("Programme Guide"));
-
-
-	/* Evaluation window */
-	pSysEvalDlg = new systemevalDlg(DRMReceiver, rig, Settings, this, "", FALSE, Qt::WStyle_MinMax);
-	SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
-
-	/* Multimedia window */
-	pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
-	SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
-	pMultiMediaDlg->LoadSettings(Settings);
-
-	/* Analog demodulation window */
-	pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", FALSE, Qt::WStyle_MinMax);
-
-	/* FM window */
-	pFMDlg = new FMDialog(DRMReceiver, Settings, rig, NULL, "FM Receiver", FALSE, Qt::WStyle_MinMax);
-
-	/* general settings window */
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-	pGeneralSettingsDlg = new GeneralSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
-	SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
-
-	Parameters.Lock();
-
-	/* Enable multimedia */
-	Parameters.EnableMultimedia(TRUE);
-
-	/* Init current selected service */
-	Parameters.ResetCurSelAudDatServ();
-
-	Parameters.Unlock();
-
-	iCurSelServiceGUI = 0;
-	iOldNoServicesGUI = 0;
-
-	PushButtonService1->setOn(TRUE);
-	PushButtonService1->setEnabled(FALSE);
-	PushButtonService2->setEnabled(FALSE);
-	PushButtonService3->setEnabled(FALSE);
-	PushButtonService4->setEnabled(FALSE);
+    pButtonGroup = new QButtonGroup(this);
+    pButtonGroup->setExclusive(true);
+    pButtonGroup->insert(PushButtonService1, 0);
+    pButtonGroup->insert(PushButtonService2, 1);
+    pButtonGroup->insert(PushButtonService3, 2);
+    pButtonGroup->insert(PushButtonService4, 3);
 
 	/* Update times for color LEDs */
 	CLED_FAC->SetUpdateTime(1500);
 	CLED_SDC->SetUpdateTime(1500);
 	CLED_MSC->SetUpdateTime(600);
 
-	/* Connect buttons */
-	connect(PushButtonService1, SIGNAL(clicked()),
-		this, SLOT(OnButtonService1()));
-	connect(PushButtonService2, SIGNAL(clicked()),
-		this, SLOT(OnButtonService2()));
-	connect(PushButtonService3, SIGNAL(clicked()),
-		this, SLOT(OnButtonService3()));
-	connect(PushButtonService4, SIGNAL(clicked()),
-		this, SLOT(OnButtonService4()));
-
+	connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectAudioService(int)));
+	connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectDataService(int)));
 
 	connect(pAnalogDemDlg, SIGNAL(SwitchMode(int)), this, SLOT(OnSwitchMode(int)));
 	connect(pAnalogDemDlg, SIGNAL(NewAMAcquisition()), this, SLOT(OnNewAcquisition()));
-	connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()),
-		this, SLOT(OnViewStationsDlg()));
-	connect(pAnalogDemDlg, SIGNAL(ViewLiveScheduleDlg()),
-		this, SLOT(OnViewLiveScheduleDlg()));
-	connect(pAnalogDemDlg, SIGNAL(Closed()),
-		this, SLOT(close()));
+	connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()), this, SLOT(OnViewStationsDlg()));
+	connect(pAnalogDemDlg, SIGNAL(ViewLiveScheduleDlg()), pLiveScheduleDlg, SLOT(show()));
+	connect(pAnalogDemDlg, SIGNAL(Closed()), this, SLOT(close()));
 
 	connect(pFMDlg, SIGNAL(SwitchMode(int)), this, SLOT(OnSwitchMode(int)));
 	connect(pFMDlg, SIGNAL(Closed()), this, SLOT(close()));
 	connect(pFMDlg, SIGNAL(ViewStationsDlg()), this, SLOT(OnViewStationsDlg()));
-	connect(pFMDlg, SIGNAL(ViewLiveScheduleDlg()), this, SLOT(OnViewLiveScheduleDlg()));
+	connect(pFMDlg, SIGNAL(ViewLiveScheduleDlg()), pLiveScheduleDlg, SLOT(show()));
 
 	connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
 	connect(pGeneralSettingsDlg, SIGNAL(StartGPS()), pSysEvalDlg, SLOT(EnableGPS()));
 	connect(pGeneralSettingsDlg, SIGNAL(StopGPS()), pSysEvalDlg, SLOT(DisableGPS()));
 
-	/* Disable text message label */
-	TextTextMessage->setText("");
-	TextTextMessage->setEnabled(FALSE);
+	serviceLabels[0] = TextMiniService1;
+	serviceLabels[1] = TextMiniService2;
+	serviceLabels[2] = TextMiniService3;
+	serviceLabels[3] = TextMiniService4;
+
+	ClearDisplay();
 
 	/* Activate real-time timers */
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
@@ -307,6 +282,199 @@ void FDRMDialog::OnTimer()
 	}
 }
 
+void FDRMDialog::showTextMessage(const QString& textMessage)
+{
+	/* Activate text window */
+	TextTextMessage->setEnabled(TRUE);
+
+	QString formattedMessage = "";
+	for (size_t i = 0; i < textMessage.length(); i++)
+	{
+		switch (textMessage.at(i).unicode())
+		{
+		case 0x0A:
+			/* Code 0x0A may be inserted to indicate a preferred
+			   line break */
+		case 0x1F:
+			/* Code 0x1F (hex) may be inserted to indicate a
+			   preferred word break. This code may be used to
+				   display long words comprehensibly */
+			formattedMessage += "<br>";
+			break;
+
+		case 0x0B:
+			/* End of a headline */
+			formattedMessage = "<b><u>"
+								+ formattedMessage
+								+ "</u></b></center><br><center>";
+			break;
+
+		case '<':
+			formattedMessage += "&lt;";
+			break;
+
+		case '>':
+			formattedMessage += "&gt;";
+			break;
+
+		default:
+			formattedMessage += textMessage[int(i)];
+		}
+	}
+	formattedMessage = "<center>" + formattedMessage + "</center>";
+	TextTextMessage->setText(formattedMessage);
+
+}
+
+void FDRMDialog::showServiceInfo(const CService& service)
+{
+	/* Service label (UTF-8 encoded string -> convert) */
+	LabelServiceLabel->setText(str2qstr(service.strLabel));
+
+	/* Service ID (plot number in hexadecimal format) */
+	const long iServiceID = (long) service.iServiceID;
+
+	if (iServiceID != 0)
+	{
+		LabelServiceID->setText("ID:" + QString().setNum(iServiceID, 16).upper());
+	}
+	else
+		LabelServiceID->setText("");
+
+	/* Codec label */
+	LabelCodec->setText(GetCodecString(service));
+
+	/* Type (Mono / Stereo) label */
+	LabelStereoMono->setText(GetTypeString(service));
+
+	/* Language and program type labels (only for audio service) */
+	if (service.eAudDataFlag == CService::SF_AUDIO)
+	{
+	/* SDC Language */
+	const string strLangCode = service.strLanguageCode;
+
+	if ((!strLangCode.empty()) && (strLangCode != "---"))
+	{
+		 LabelLanguage->
+			setText(QString(GetISOLanguageName(strLangCode).c_str()));
+	}
+	else
+	{
+		/* FAC Language */
+		const int iLanguageID = service.iLanguage;
+
+		if ((iLanguageID > 0) &&
+			(iLanguageID < LEN_TABLE_LANGUAGE_CODE))
+		{
+			LabelLanguage->setText(
+				strTableLanguageCode[iLanguageID].c_str());
+		}
+		else
+			LabelLanguage->setText("");
+	}
+
+		/* Program type */
+		const int iProgrammTypeID = service.iServiceDescr;
+
+		if ((iProgrammTypeID > 0) &&
+			(iProgrammTypeID < LEN_TABLE_PROG_TYPE_CODE))
+		{
+			LabelProgrType->setText(
+				strTableProgTypCod[iProgrammTypeID].c_str());
+		}
+		else
+			LabelProgrType->setText("");
+	}
+
+	/* Country code */
+	const string strCntryCode = service.strCountryCode;
+
+	if ((!strCntryCode.empty()) && (strCntryCode != "--"))
+	{
+		LabelCountryCode->
+			setText(QString(GetISOCountryName(strCntryCode).c_str()));
+	}
+	else
+		LabelCountryCode->setText("");
+}
+
+QString FDRMDialog::serviceSelector(CParameter& Parameters, int i)
+{
+	Parameters.Lock();
+
+	CService service = Parameters.Service[i];
+	const _REAL rAudioBitRate = Parameters.GetBitRateKbps(i, FALSE);
+	const _REAL rDataBitRate = Parameters.GetBitRateKbps(i, TRUE);
+
+	/* detect if AFS mux information is available TODO - align to service */
+	bool bAFS = ((i==0) && (
+				(Parameters.AltFreqSign.vecMultiplexes.size() > 0)
+			 || (Parameters.AltFreqSign.vecOtherServices.size() > 0)
+				));
+
+	Parameters.Unlock();
+
+	QString text;
+
+	/* Check, if service is used */
+	if (service.IsActive())
+	{
+		/* Do UTF-8 to string conversion with the label strings */
+		QString strLabel = str2qstr(service.strLabel);
+
+		/* Label for service selection button (service label, codec
+		   and Mono / Stereo information) */
+		text = strLabel + "  |   " + GetCodecString(service) + " " + GetTypeString(service);
+
+		/* Bit-rate (only show if greater than 0) */
+		if (rAudioBitRate > (_REAL) 0.0)
+		{
+			text += " (" + QString().setNum(rAudioBitRate, 'f', 2) + " kbps)";
+		}
+
+		/* Show, if a multimedia stream is connected to this service */
+		if ((service.eAudDataFlag == CService::SF_AUDIO) &&
+			(service.DataParam.iStreamID != STREAM_ID_NOT_USED))
+		{
+
+			if (service.DataParam.iUserAppIdent == AT_MOTEPG)
+			{
+				text += tr(" + EPG"); /* EPG service */
+			}
+			else
+				text += tr(" + MM"); /* other multimedia service */
+
+			/* Bit-rate of connected data stream */
+			text += " (" + QString().setNum(rDataBitRate, 'f', 2) + " kbps)";
+		}
+
+		if(bAFS)
+		{
+			text += tr(" + AFS");
+		}
+
+		switch (i)
+		{
+		case 0:
+			PushButtonService1->setEnabled(TRUE);
+			break;
+
+		case 1:
+			PushButtonService2->setEnabled(TRUE);
+			break;
+
+		case 2:
+			PushButtonService3->setEnabled(TRUE);
+			break;
+
+		case 3:
+			PushButtonService4->setEnabled(TRUE);
+			break;
+		}
+	}
+	return text;
+}
+
 void FDRMDialog::UpdateDisplay()
 {
 	CParameter& Parameters = *(DRMReceiver.GetParameters());
@@ -317,390 +485,113 @@ void FDRMDialog::UpdateDisplay()
 	/* First get current selected services */
 	int iCurSelAudioServ = Parameters.GetCurSelAudioService();
 
-	/* If the current audio service is not active or is an only data service
-	   select the first audio service available */
-
-	if (!Parameters.Service[iCurSelAudioServ].IsActive() ||
-	    Parameters.Service[iCurSelAudioServ].AudioParam.iStreamID == STREAM_ID_NOT_USED ||
-	    Parameters.Service[iCurSelAudioServ].eAudDataFlag == CService::SF_DATA)
-	{
-		int i = 0;
-		_BOOLEAN bStop = FALSE;
-
-		while ((bStop == FALSE) && (i < MAX_NUM_SERVICES))
-		{
-			if (Parameters.Service[i].IsActive() &&
-			    Parameters.Service[i].AudioParam.iStreamID != STREAM_ID_NOT_USED &&
-			    Parameters.Service[i].eAudDataFlag == CService::SF_AUDIO)
-			{
-				iCurSelAudioServ = i;
-				bStop = TRUE;
-			}
-			else
-				i++;
-		}
-	}
-
-	//const int iCurSelDataServ = Parameters.GetCurSelDataService();
-
-	/* If selected service is audio and text message is true */
-	if ((Parameters.Service[iCurSelAudioServ].
-		eAudDataFlag == CService::SF_AUDIO) &&
-		(Parameters.Service[iCurSelAudioServ].
-		AudioParam.bTextflag == TRUE))
-	{
-		/* Activate text window */
-		TextTextMessage->setEnabled(TRUE);
-
-		/* Text message of current selected audio service
-		   (UTF-8 decoding) */
-		QCString utf8Message =
-			Parameters.Service[iCurSelAudioServ]
-				.AudioParam.strTextMessage.c_str();
-		QString textMessage = QString().fromUtf8(utf8Message);
-		QString formattedMessage = "";
-		for (size_t i = 0; i < textMessage.length(); i++)
-		{
-			switch (textMessage.at(i).unicode())
-			{
-			case 0x0A:
-				/* Code 0x0A may be inserted to indicate a preferred
-				   line break */
-			case 0x1F:
-				/* Code 0x1F (hex) may be inserted to indicate a
-				   preferred word break. This code may be used to
-					   display long words comprehensibly */
-				formattedMessage += "<br>";
-				break;
-
-			case 0x0B:
-				/* End of a headline */
-				formattedMessage = "<b><u>"
-                                    + formattedMessage
-                                    + "</u></b></center><br><center>";
-				break;
-
-			case '<':
-				formattedMessage += "&lt;";
-				break;
-
-			case '>':
-				formattedMessage += "&gt;";
-				break;
-
-			default:
-				formattedMessage += textMessage[int(i)];
-			}
-		}
-		formattedMessage = "<center>" + formattedMessage + "</center>";
-		TextTextMessage->setText(formattedMessage);
-	}
-	else
-	{
-		/* Deactivate text window */
-		TextTextMessage->setEnabled(FALSE);
-
-		/* Clear Text */
-		TextTextMessage->setText("");
-	}
-
-	/* Check whether service parameters were not transmitted yet */
-	if (Parameters.Service[iCurSelAudioServ].IsActive())
-	{
-		/* Service label (UTF-8 encoded string -> convert) */
-		LabelServiceLabel->setText(QString().fromUtf8(QCString(
-			Parameters.Service[iCurSelAudioServ].
-			strLabel.c_str())));
-
-		/* Bit-rate */
-		QString strBitrate = QString().setNum(Parameters.
-			GetBitRateKbps(iCurSelAudioServ, FALSE), 'f', 2) +
-			tr(" kbps");
-
-		/* Equal or unequal error protection */
-		const _REAL rPartABLenRat =
-			Parameters.PartABLenRatio(iCurSelAudioServ);
-
-		if (rPartABLenRat != (_REAL) 0.0)
-		{
-			/* Print out the percentage of part A length to total length */
-			strBitrate += " UEP (" +
-				QString().setNum(rPartABLenRat * 100, 'f', 1) + " %)";
-		}
-		else
-		{
-			/* If part A is zero, equal error protection (EEP) is used */
-			strBitrate += " EEP";
-		}
-		LabelBitrate->setText(strBitrate);
-
-		/* Service ID (plot number in hexadecimal format) */
-		const long iServiceID = (long) Parameters.
-			Service[iCurSelAudioServ].iServiceID;
-
-		if (iServiceID != 0)
-		{
-			LabelServiceID->setText("ID:" +
-				QString().setNum(iServiceID, 16).upper());
-		}
-		else
-			LabelServiceID->setText("");
-
-		/* Codec label */
-		LabelCodec->setText(GetCodecString(iCurSelAudioServ));
-
-		/* Type (Mono / Stereo) label */
-		LabelStereoMono->setText(GetTypeString(iCurSelAudioServ));
-
-		/* Language and program type labels (only for audio service) */
-		if (Parameters.Service[iCurSelAudioServ].
-			eAudDataFlag == CService::SF_AUDIO)
-		{
-		/* SDC Language */
-		const string strLangCode = Parameters.
-			Service[iCurSelAudioServ].strLanguageCode;
-
-		if ((!strLangCode.empty()) && (strLangCode != "---"))
-		{
-			 LabelLanguage->
-				setText(QString(GetISOLanguageName(strLangCode).c_str()));
-		}
-		else
-		{
-			/* FAC Language */
-			const int iLanguageID = Parameters.
-				Service[iCurSelAudioServ].iLanguage;
-
-			if ((iLanguageID > 0) &&
-				(iLanguageID < LEN_TABLE_LANGUAGE_CODE))
-			{
-				LabelLanguage->setText(
-					strTableLanguageCode[iLanguageID].c_str());
-			}
-			else
-				LabelLanguage->setText("");
-		}
-
-			/* Program type */
-			const int iProgrammTypeID = Parameters.
-				Service[iCurSelAudioServ].iServiceDescr;
-
-			if ((iProgrammTypeID > 0) &&
-				(iProgrammTypeID < LEN_TABLE_PROG_TYPE_CODE))
-			{
-				LabelProgrType->setText(
-					strTableProgTypCod[iProgrammTypeID].c_str());
-			}
-			else
-				LabelProgrType->setText("");
-		}
-
-		/* Country code */
-		const string strCntryCode = Parameters.
-			Service[iCurSelAudioServ].strCountryCode;
-
-		if ((!strCntryCode.empty()) && (strCntryCode != "--"))
-		{
-			LabelCountryCode->
-				setText(QString(GetISOCountryName(strCntryCode).c_str()));
-		}
-		else
-			LabelCountryCode->setText("");
-		}
-	else
-	{
-		LabelServiceLabel->setText(tr("No Service"));
-
-		LabelBitrate->setText("");
-		LabelCodec->setText("");
-		LabelStereoMono->setText("");
-		LabelProgrType->setText("");
-		LabelLanguage->setText("");
-		LabelCountryCode->setText("");
-		LabelServiceID->setText("");
-	}
-
-
-	/* Update service selector ------------------------------------------ */
-	/* Make sure a possible service was selected. If not, correct. Make sure
-	   an audio service is selected. If we have a data only service, we do
-	   not want to have the button pressed */
-	if (((!Parameters.Service[iCurSelServiceGUI].IsActive()) ||
-		(iCurSelServiceGUI != iCurSelAudioServ) &&
-		Parameters.Service[iCurSelAudioServ].IsActive()) &&
-		/* Make sure current selected audio service is not a data only
-		   service */
-		(Parameters.Service[iCurSelAudioServ].IsActive() &&
-		(Parameters.Service[iCurSelAudioServ].eAudDataFlag !=
-		CService::SF_DATA)))
-	{
-		/* Reset checks */
-		PushButtonService1->setOn(FALSE);
-		PushButtonService2->setOn(FALSE);
-		PushButtonService3->setOn(FALSE);
-		PushButtonService4->setOn(FALSE);
-
-		/* Set right flag */
-		switch (iCurSelAudioServ)
-		{
-		case 0:
-			PushButtonService1->setOn(TRUE);
-			iCurSelServiceGUI = 0;
-			break;
-
-		case 1:
-			PushButtonService2->setOn(TRUE);
-			iCurSelServiceGUI = 1;
-			break;
-
-		case 2:
-			PushButtonService3->setOn(TRUE);
-			iCurSelServiceGUI = 2;
-			break;
-
-		case 3:
-			PushButtonService4->setOn(TRUE);
-			iCurSelServiceGUI = 3;
-			break;
-		}
-	}
-	else if (Parameters.Service[iCurSelServiceGUI].
-		eAudDataFlag ==	CService::SF_DATA)
-	{
-		/* In case we only have data services, reset checks */
-		PushButtonService1->setOn(FALSE);
-		PushButtonService2->setOn(FALSE);
-		PushButtonService3->setOn(FALSE);
-		PushButtonService4->setOn(FALSE);
-	}
-
-	/* Service selector ------------------------------------------------- */
-	/* Enable only so many number of channel switches as present in the stream */
-	const int iNumServices = Parameters.GetTotNumServices();
-
-	QString m_StaticService[MAX_NUM_SERVICES] = {"", "", "", ""};
-
-	/* Reset all buttons only if number of services has changed */
-	if (iOldNoServicesGUI != iNumServices)
-	{
-		PushButtonService1->setEnabled(FALSE);
-		PushButtonService2->setEnabled(FALSE);
-		PushButtonService3->setEnabled(FALSE);
-		PushButtonService4->setEnabled(FALSE);
-	}
-	iOldNoServicesGUI = iNumServices;
-
-	for (int i = 0; i < MAX_NUM_SERVICES; i++)
-	{
-		/* Check, if service is used */
-		if (Parameters.Service[i].IsActive())
-		{
-			/* Do UTF-8 to string conversion with the label strings */
-			QString strLabel = QString().fromUtf8(
-			QCString(Parameters.Service[i].strLabel.c_str()));
-
-			/* Label for service selection button (service label, codec
-			   and Mono / Stereo information) */
-			m_StaticService[i] = strLabel + "  |   ";
-			m_StaticService[i] += GetCodecString(i) + " ";
-			m_StaticService[i] += GetTypeString(i);
-
-			/* Bit-rate (only show if greater than 0) */
-			const _REAL rBitRate =
-				Parameters.GetBitRateKbps(i, FALSE);
-
-			if (rBitRate > (_REAL) 0.0)
-			{
-				m_StaticService[i] += " (" +
-					QString().setNum(rBitRate, 'f', 2) + " kbps)";
-			}
-
-			/* Show, if a multimedia stream is connected to this service */
-			if ((Parameters.Service[i].
-				eAudDataFlag == CService::SF_AUDIO) &&
-				(Parameters.Service[i].
-				DataParam.iStreamID != STREAM_ID_NOT_USED))
-			{
-
-				if (Parameters.Service[i].
-					DataParam.iUserAppIdent == AT_MOTEPG)
-				{
-					m_StaticService[i] += tr(" + EPG"); /* EPG service */
-				}
-				else
-					m_StaticService[i] += tr(" + MM"); /* other multimedia service */
-
-				/* Bit-rate of connected data stream */
-				m_StaticService[i] += " (" + QString().setNum(
-				Parameters.GetBitRateKbps(i, TRUE), 'f', 2) +
-					" kbps)";
-			}
-
-			switch (i)
-			{
-			case 0:
-				PushButtonService1->setEnabled(TRUE);
-				break;
-
-			case 1:
-				PushButtonService2->setEnabled(TRUE);
-				break;
-
-			case 2:
-				PushButtonService3->setEnabled(TRUE);
-				break;
-
-			case 3:
-				PushButtonService4->setEnabled(TRUE);
-				break;
-			}
-		}
-	}
-
-	/* detect if AFS informations are available */
-	if ((Parameters.AltFreqSign.vecMultiplexes.size() > 0) || (Parameters.AltFreqSign.vecOtherServices.size() > 0))
-	{
-		/* show AFS label */
-		if (Parameters.Service[0].eAudDataFlag
-				== CService::SF_AUDIO) m_StaticService[0] += tr(" + AFS");
-	}
-
-	/* set data service to be decoded to EPG until user selects something else */
-	int iEPGServiceID=-1;
-	if((!TextMiniService1->text().contains("EPG")) && (m_StaticService[0].contains("EPG")))
-		iEPGServiceID=0;
-	if((!TextMiniService2->text().contains("EPG")) && (m_StaticService[1].contains("EPG")))
-		iEPGServiceID=1;
-	if((!TextMiniService3->text().contains("EPG")) && (m_StaticService[2].contains("EPG")))
-		iEPGServiceID=2;
-	if((!TextMiniService4->text().contains("EPG")) && (m_StaticService[3].contains("EPG")))
-		iEPGServiceID=3;
-	if(iEPGServiceID!=-1)
-	{
-		Parameters.SetCurSelDataService(iEPGServiceID);
-	}
-
+	CService audioService = Parameters.Service[iCurSelAudioServ];
 	Parameters.Unlock();
 
-	/* Set texts */
-	TextMiniService1->setText(m_StaticService[0]);
-	TextMiniService2->setText(m_StaticService[1]);
-	TextMiniService3->setText(m_StaticService[2]);
-	TextMiniService4->setText(m_StaticService[3]);
+	bool bServiceIsValid = audioService.IsActive()
+	    && (audioService.AudioParam.iStreamID != STREAM_ID_NOT_USED)
+	    && (audioService.eAudDataFlag == CService::SF_AUDIO);
+	int i;
+	for(i=0; i < MAX_NUM_SERVICES; i++)
+	{
+		QString label = serviceSelector(Parameters, i);
+		serviceLabels[i]->setText(label);
+		if(label == "")
+		{
+			// disable the button
+			pButtonGroup->find(i)->setEnabled(false);
+		}
+		else
+		{
+			// enable the button
+			pButtonGroup->find(i)->setEnabled(true);
+		}
+
+		/* If the current audio service is not active or is an only data service
+			select the first audio service available */
+		if(bServiceIsValid==false)
+		{
+			Parameters.Lock();
+			audioService = Parameters.Service[i];
+			Parameters.Unlock();
+
+			if (audioService.IsActive()
+				&& (audioService.AudioParam.iStreamID != STREAM_ID_NOT_USED)
+				&& (audioService.eAudDataFlag == CService::SF_AUDIO))
+			{
+				iCurSelAudioServ = i;
+				bServiceIsValid = true;
+			}
+		}
+	}
+
+	if(bServiceIsValid)
+	{
+		pButtonGroup->setButton(iCurSelAudioServ);
+
+		/* If we have text messages */
+		if (audioService.AudioParam.bTextflag == TRUE)
+		{
+			// Text message of current selected audio service (UTF-8 decoding)
+			showTextMessage(str2qstr(audioService.AudioParam.strTextMessage));
+		}
+		else
+		{
+			/* Deactivate text window */
+			TextTextMessage->setEnabled(FALSE);
+
+			/* Clear Text */
+			TextTextMessage->setText("");
+		}
+
+		/* Check whether service parameters were not transmitted yet */
+		if (audioService.IsActive())
+		{
+			showServiceInfo(audioService);
+
+			Parameters.Lock();
+			_REAL rPartABLenRat = Parameters.PartABLenRatio(iCurSelAudioServ);
+			_REAL rBitRate = Parameters.GetBitRateKbps(iCurSelAudioServ, FALSE);
+			Parameters.Unlock();
+
+			/* Bit-rate */
+			QString strBitrate = QString().setNum(rBitRate, 'f', 2) + tr(" kbps");
+
+			/* Equal or unequal error protection */
+			if (rPartABLenRat != (_REAL) 0.0)
+			{
+				/* Print out the percentage of part A length to total length */
+				strBitrate += " UEP (" +
+					QString().setNum(rPartABLenRat * 100, 'f', 1) + " %)";
+			}
+			else
+			{
+				/* If part A is zero, equal error protection (EEP) is used */
+				strBitrate += " EEP";
+			}
+			LabelBitrate->setText(strBitrate);
+
+		}
+		else
+		{
+			LabelServiceLabel->setText(tr("No Service"));
+			LabelBitrate->setText("");
+			LabelCodec->setText("");
+			LabelStereoMono->setText("");
+			LabelProgrType->setText("");
+			LabelLanguage->setText("");
+			LabelCountryCode->setText("");
+			LabelServiceID->setText("");
+		}
+	}
 }
 
 void FDRMDialog::ClearDisplay()
 {
 	/* No signal is currently received ---------------------------------- */
 	/* Disable service buttons and associated labels */
-	PushButtonService1->setEnabled(FALSE);
-	PushButtonService2->setEnabled(FALSE);
-	PushButtonService3->setEnabled(FALSE);
-	PushButtonService4->setEnabled(FALSE);
-	TextMiniService1->setText("");
-	TextMiniService2->setText("");
-	TextMiniService3->setText("");
-	TextMiniService4->setText("");
+	for(size_t i=0; i<serviceLabels.size(); i++)
+		serviceLabels[i]->setText("");
 
 	/* Main text labels */
 	LabelBitrate->setText("");
@@ -809,112 +700,57 @@ void FDRMDialog::OnSwitchMode(int newMode)
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void FDRMDialog::OnButtonService1()
-{
-	if (PushButtonService1->isOn())
-	{
-		/* Set all other buttons up */
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
-
-		SetService(0);
-	}
-	else
-		PushButtonService1->setOn(TRUE);
-}
-
-void FDRMDialog::OnButtonService2()
-{
-	if (PushButtonService2->isOn())
-	{
-		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
-
-		SetService(1);
-	}
-	else
-		PushButtonService2->setOn(TRUE);
-
-}
-
-void FDRMDialog::OnButtonService3()
-{
-	if (PushButtonService3->isOn())
-	{
-		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
-		if (PushButtonService4->isOn()) PushButtonService4->setOn(FALSE);
-
-		SetService(2);
-	}
-	else
-		PushButtonService3->setOn(TRUE);
-}
-
-void FDRMDialog::OnButtonService4()
-{
-	if (PushButtonService4->isOn())
-	{
-		/* Set all other buttons up */
-		if (PushButtonService1->isOn()) PushButtonService1->setOn(FALSE);
-		if (PushButtonService2->isOn()) PushButtonService2->setOn(FALSE);
-		if (PushButtonService3->isOn()) PushButtonService3->setOn(FALSE);
-
-		SetService(3);
-	}
-	else
-		PushButtonService4->setOn(TRUE);
-}
-
-void FDRMDialog::SetService(int iNewServiceID)
+void FDRMDialog::OnSelectAudioService(int shortId)
 {
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
 	Parameters.Lock();
 
-	Parameters.SetCurSelAudioService(iNewServiceID);
-	Parameters.SetCurSelDataService(iNewServiceID);
-	iCurSelServiceGUI = iNewServiceID;
+	Parameters.SetCurSelAudioService(shortId);
 
-
-	/* Eventually activate multimedia window */
-	int iAppIdent = Parameters.Service[iNewServiceID].DataParam.iUserAppIdent;
-
-	/* If service is only data service or has a multimedia content
-	   , activate multimedia window */
-	CService::ETyOServ eAudDataFlag = Parameters.Service[iNewServiceID].eAudDataFlag;
 	Parameters.Unlock();
-	if (eAudDataFlag == CService::SF_DATA)
+}
+
+void FDRMDialog::OnSelectDataService(int shortId)
+{
+	CParameter& Parameters = *DRMReceiver.GetParameters();
+	QDialog* pDlg = NULL;
+
+	Parameters.Lock();
+
+	int iAppIdent = Parameters.Service[shortId].DataParam.iUserAppIdent;
+
+	switch(iAppIdent)
 	{
-	    switch(iAppIdent)
-	    {
-		case AT_MOTEPG:
-		    OnViewEPGDlg();
-		    break;
-        case AT_MOTBROADCASTWEBSITE:
-        case AT_JOURNALINE:
-        case AT_MOTSLISHOW:
-            OnViewMultiMediaDlg();
-            break;
-        default:
-            QMessageBox::information(this, "Dream", tr("unsupported data application"));
+	case AT_MOTEPG:
+		pDlg = pEPGDlg;
+		Parameters.SetCurSelDataService(shortId);
+		break;
+	case AT_MOTBROADCASTWEBSITE:
+	case AT_JOURNALINE:
+	case AT_MOTSLISHOW:
+		pDlg = pMultiMediaDlg;
+		Parameters.SetCurSelDataService(shortId);
+		break;
+	default:
+		;
+	}
+
+	CService::ETyOServ eAudDataFlag = Parameters.Service[shortId].eAudDataFlag;
+
+	Parameters.Unlock();
+
+	if(pDlg != NULL)
+	{
+		pDlg->show();
+	}
+	else
+	{
+		if (eAudDataFlag == CService::SF_DATA)
+		{
+			QMessageBox::information(this, "Dream", tr("unsupported data application"));
 		}
 	}
-}
-
-void FDRMDialog::OnViewEvalDlg()
-{
-	pSysEvalDlg->show();
-}
-
-void FDRMDialog::OnViewMultiMediaDlg()
-{
-	/* Show Multimedia window */
-	pMultiMediaDlg->show();
 }
 
 void FDRMDialog::OnViewStationsDlg()
@@ -935,36 +771,6 @@ void FDRMDialog::OnViewStationsDlg()
 		pStationsDlg->hide();
 	/* Show stations window */
 	pStationsDlg->show();
-}
-
-void FDRMDialog::OnViewLiveScheduleDlg()
-{
-	/* Show live schedule window */
-	pLiveScheduleDlg->show();
-}
-
-void FDRMDialog::OnViewMultSettingsDlg()
-{
-	/* Show multimedia settings window */
-	MultSettingsDlg* pMultSettingsDlg = new MultSettingsDlg(
-		*DRMReceiver.GetParameters(), Settings,
-		this, "", TRUE, Qt::WStyle_Dialog);
-
-	SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
-
-	pMultSettingsDlg->show();
-
-}
-
-void FDRMDialog::OnViewGeneralSettingsDlg()
-{
-	pGeneralSettingsDlg->show();
-}
-
-void FDRMDialog::OnViewEPGDlg()
-{
-	/* Show programme guide window */
-	pEPGDlg->show();
 }
 
 void FDRMDialog::OnMenuSetDisplayColor()
@@ -1066,22 +872,18 @@ void FDRMDialog::customEvent(QCustomEvent* Event)
 	}
 }
 
-QString FDRMDialog::GetCodecString(const int iServiceID)
+QString FDRMDialog::GetCodecString(const CService& service)
 {
 	QString strReturn;
 
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-
 	/* First check if it is audio or data service */
-	if (Parameters.Service[iServiceID].eAudDataFlag == CService::SF_AUDIO)
+	if (service.eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Audio service */
-		const CAudioParam::EAudSamRat eSamRate = Parameters.
-			Service[iServiceID].AudioParam.eAudioSamplRate;
+		const CAudioParam::EAudSamRat eSamRate = service.AudioParam.eAudioSamplRate;
 
 		/* Audio coding */
-		switch (Parameters.Service[iServiceID].
-			AudioParam.eAudioCoding)
+		switch (service.AudioParam.eAudioCoding)
 		{
 		case CAudioParam::AC_AAC:
 			/* Only 12 and 24 kHz sample rates are supported for AAC encoding */
@@ -1105,8 +907,7 @@ QString FDRMDialog::GetCodecString(const int iServiceID)
 		}
 
 		/* SBR */
-		if (Parameters.Service[iServiceID].
-			AudioParam.eSBRFlag == CAudioParam::SB_USED)
+		if (service.AudioParam.eSBRFlag == CAudioParam::SB_USED)
 		{
 			strReturn += "+";
 		}
@@ -1120,20 +921,16 @@ QString FDRMDialog::GetCodecString(const int iServiceID)
 	return strReturn;
 }
 
-QString FDRMDialog::GetTypeString(const int iServiceID)
+QString FDRMDialog::GetTypeString(const CService& service)
 {
 	QString strReturn;
 
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-
 	/* First check if it is audio or data service */
-	if (Parameters.Service[iServiceID].
-		eAudDataFlag == CService::SF_AUDIO)
+	if (service.eAudDataFlag == CService::SF_AUDIO)
 	{
 		/* Audio service */
 		/* Mono-Stereo */
-		switch (Parameters.
-			Service[iServiceID].AudioParam.eAudioMode)
+		switch (service.AudioParam.eAudioMode)
 		{
 			case CAudioParam::AM_MONO:
 				strReturn = "Mono";
@@ -1151,12 +948,11 @@ QString FDRMDialog::GetTypeString(const int iServiceID)
 	else
 	{
 		/* Data service */
-		if (Parameters.Service[iServiceID].DataParam.
-			ePacketModInd == CDataParam::PM_PACKET_MODE)
+		if (service.DataParam.ePacketModInd == CDataParam::PM_PACKET_MODE)
 		{
-			if (Parameters.Service[iServiceID].DataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
+			if (service.DataParam.eAppDomain == CDataParam::AD_DAB_SPEC_APP)
 			{
-				switch (Parameters.Service[iServiceID].DataParam.iUserAppIdent)
+				switch (service.DataParam.iUserAppIdent)
 				{
 				case 1:
 					strReturn = "Dynamic labels";

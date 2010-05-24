@@ -23,7 +23,7 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="D:\ws-drm0-sw.pcap " />
+				<Option parameters="D:\DKULTUR_177.rsA" />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />

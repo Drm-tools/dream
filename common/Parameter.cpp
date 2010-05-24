@@ -107,7 +107,6 @@ CParameter::CParameter(CDRMReceiver *pRx):
         rMaxPSDFreq(0.0),
         rSigStrengthCorrection(0.0),
         eRunState(STOPPED),
-        bUsingMultimedia(FALSE),
         CellMappingTable(),
         GPSData(),
         rSysSimSNRdB(0.0),
@@ -206,7 +205,6 @@ CParameter::CParameter(const CParameter& p):
         rMaxPSDFreq(p.rMaxPSDFreq),
         rSigStrengthCorrection(p.rSigStrengthCorrection),
         eRunState(p.eRunState),
-        bUsingMultimedia(p.bUsingMultimedia),
         CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
         GPSData(p.GPSData),
         rSysSimSNRdB(p.rSysSimSNRdB),
@@ -301,7 +299,6 @@ CParameter& CParameter::operator=(const CParameter& p)
     rMaxPSDFreq = p.rMaxPSDFreq;
     rSigStrengthCorrection = p.rSigStrengthCorrection;
     eRunState = p.eRunState;
-    bUsingMultimedia = p.bUsingMultimedia;
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
     GPSData = p.GPSData;
     rSysSimSNRdB = p.rSysSimSNRdB;
@@ -449,7 +446,7 @@ void CParameter::GetActiveStreams(set<int>& actStr)
     }
 }
 
-_REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
+_REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData) const
 {
     /* Init lengths to zero in case the stream is not yet assigned */
     int iLen = 0;
@@ -478,7 +475,7 @@ _REAL CParameter::GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData)
     return (_REAL) iLen * SIZEOF__BYTE * 3 / (_REAL) 1.2 / 1000;
 }
 
-_REAL CParameter::PartABLenRatio(const int iShortID)
+_REAL CParameter::PartABLenRatio(const int iShortID) const
 {
     int iLenA = 0;
     int iLenB = 0;
@@ -599,7 +596,7 @@ void CParameter::SetStreamLen(const int iStreamID, const int iNewLenPartA,
     }
 }
 
-int CParameter::GetStreamLen(const int iStreamID)
+int CParameter::GetStreamLen(const int iStreamID) const
 {
     if (iStreamID != STREAM_ID_NOT_USED)
         return Stream[iStreamID].iLenPartA + Stream[iStreamID].iLenPartB;
@@ -708,7 +705,7 @@ void CParameter::SetAudioParam(const int iShortID, const CAudioParam& NewAudPara
     }
 }
 
-CAudioParam CParameter::GetAudioParam(const int iShortID)
+CAudioParam CParameter::GetAudioParam(const int iShortID) const
 {
     return Service[iShortID].AudioParam;
 }
@@ -727,7 +724,7 @@ void CParameter::SetDataParam(const int iShortID, const CDataParam& NewDataParam
     }
 }
 
-CDataParam CParameter::GetDataParam(const int iShortID)
+CDataParam CParameter::GetDataParam(const int iShortID) const
 {
     return Service[iShortID].DataParam;
 }
@@ -799,17 +796,6 @@ void CParameter::SetCurSelDataService(const int iNewService)
 
         /* Set init flags */
         if (pDRMRec) pDRMRec->InitsForDataParam();
-    }
-}
-
-void CParameter::EnableMultimedia(const _BOOLEAN bFlag)
-{
-    if (bUsingMultimedia != bFlag)
-    {
-        bUsingMultimedia = bFlag;
-
-        /* Set init flags */
-        if (pDRMRec) pDRMRec->InitsForMSCDemux();
     }
 }
 

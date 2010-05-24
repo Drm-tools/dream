@@ -7,16 +7,16 @@
  *
  * Description:
  *	Implements Digital Radio Mondiale (DRM) Multiplex Distribution Interface
- *	(MDI), Receiver Status and Control Interface (RSCI)  
+ *	(MDI), Receiver Status and Control Interface (RSCI)
  *  and Distribution and Communications Protocol (DCP) as described in
  *	ETSI TS 102 820,  ETSI TS 102 349 and ETSI TS 102 821 respectively.
  *
- *	This module implements a buffer for decoded Digital Radio Mondiale (DRM) 
+ *	This module implements a buffer for decoded Digital Radio Mondiale (DRM)
  *  Multiplex Distribution Interface (MDI) packets at the receiver input.
- *	
+ *
  *	see ETSI TS 102 820 and ETSI TS 102 821.
  *
- *	
+ *
  *
  ******************************************************************************
  *
@@ -46,18 +46,18 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 
 	CTagPacketDecoder::Error err = TagPacketDecoderMDI.DecodeAFPacket(*pvecInputData);
 
-	ReceiverParam.Lock(); 
-
-	if(err == CTagPacketDecoder::E_OK)
+	if(err != CTagPacketDecoder::E_OK)
 	{
-		ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
-	}
-	else
-	{
+		ReceiverParam.Lock();
 		ReceiverParam.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
-		ReceiverParam.Unlock(); 
+		ReceiverParam.Unlock();
 		return;
 	}
+
+	ReceiverParam.Lock();
+
+	ReceiverParam.ReceiveStatus.Interface.SetStatus(RX_OK);
+
 	if (TagPacketDecoderMDI.TagItemDecoderRobMod.IsReady())
 		ReceiverParam.SetWaveMode(TagPacketDecoderMDI.TagItemDecoderRobMod.eRobMode);
 	CVector<_BINARY>& vecbiFACData = TagPacketDecoderMDI.TagItemDecoderFAC.vecbidata;
@@ -174,7 +174,7 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 			AudioParam.iStreamID = 0;
 
 			ReceiverParam.SetAudioParam(0, AudioParam);
-			
+
 			ReceiverParam.SetStreamLen(0, 0, iStreamLen/SIZEOF__BYTE);
 			ReceiverParam.SetNumOfServices(1,0);
 			ReceiverParam.SetCurSelAudioService(0);
@@ -191,12 +191,12 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 
 	// TODO RSCI Data Items, MER, etc.
 
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }
 
 void CDecodeRSIMDI::InitInternal(CParameter& ReceiverParam)
 {
-	ReceiverParam.Lock(); 
+	ReceiverParam.Lock();
 
 	iOutputBlockSize = NUM_FAC_BITS_PER_BLOCK;
 	//iOutputBlockSize2 = ReceiverParam.iNumSDCBitsPerSFrame;
@@ -212,5 +212,5 @@ void CDecodeRSIMDI::InitInternal(CParameter& ReceiverParam)
 	}
 	iFramesSinceSDC = 3;
 
-	ReceiverParam.Unlock(); 
+	ReceiverParam.Unlock();
 }

@@ -986,22 +986,17 @@ public:
         iCurSelDataService = 0;
     }
 
-    void EnableMultimedia(const _BOOLEAN bFlag);
-    _BOOLEAN GetEnableMultimedia() const {
-        return bUsingMultimedia;
-    }
-
     _REAL GetDCFrequency() const
     {
         return SOUNDCRD_SAMPLE_RATE * (rFreqOffsetAcqui + rFreqOffsetTrack);
     }
 
-    _REAL GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData);
-    _REAL PartABLenRatio(const int iShortID);
+    _REAL GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData) const;
+    _REAL PartABLenRatio(const int iShortID) const;
 
     /* Parameters controlled by FAC ----------------------------------------- */
     void SetInterleaverDepth(const ESymIntMod eNewDepth);
-    ESymIntMod GetInterleaverDepth()
+    ESymIntMod GetInterleaverDepth() const
     {
         return eSymbolInterlMode;
     }
@@ -1016,7 +1011,7 @@ public:
     }
 
     void SetNumOfServices(const size_t iNNumAuSe, const size_t iNNumDaSe);
-    size_t GetTotNumServices()
+    size_t GetTotNumServices() const
     {
         return iNumAudioService + iNumDataService;
     }
@@ -1045,14 +1040,14 @@ public:
 
     /* Parameters controlled by SDC ----------------------------------------- */
     void SetAudioParam(const int iShortID, const CAudioParam& NewAudParam);
-    CAudioParam GetAudioParam(const int iShortID);
-    CDataParam GetDataParam(const int iShortID);
+    CAudioParam GetAudioParam(const int iShortID) const;
+    CDataParam GetDataParam(const int iShortID) const;
     void SetDataParam(const int iShortID, const CDataParam& NewDataParam);
 
     void SetMSCProtLev(const CMSCProtLev NewMSCPrLe, const _BOOLEAN bWithHierarch);
     void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
-    void GetStreamLen(const int iStreamID, int& iLenPartA, int& iLenPartB);
-    int GetStreamLen(const int iStreamID);
+    void GetStreamLen(const int iStreamID, int& iLenPartA, int& iLenPartB) const;
+    int GetStreamLen(const int iStreamID) const;
 
     /* Protection levels for MSC */
     CMSCProtLev MSCPrLe;
@@ -1189,7 +1184,6 @@ public:
     _REAL GetNominalBandwidth();
     _REAL GetSysToNomBWCorrFact();
     enum { STOPPED, RUNNING, STOP_REQUESTED } eRunState;
-    _BOOLEAN bUsingMultimedia;
 
     CCellMappingTable CellMappingTable;
 

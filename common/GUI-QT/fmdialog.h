@@ -65,8 +65,6 @@ protected:
 	QPopupMenu*			pReceiverModeMenu;
 	QPopupMenu*			pSettingsMenu;
 	QPopupMenu*			pPlotStyleMenu;
-	int					iCurSelServiceGUI;
-	int					iOldNoServicesGUI;
 	QTimer				Timer;
 
 	_BOOLEAN		bSysEvalDlgWasVis;

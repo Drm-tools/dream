@@ -117,6 +117,8 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 		iSeqNumber=iCurSeqNum;
 	}
 
+	// cerr << "frame " << iCurSeqNum << " crc " << (bCRCOk?"OK":"BAD") << endl;
+
 	/* AR: AF protocol Revision -
 	   a field combining the CF, MAJ and MIN fields */
 	/* CF: CRC Flag, 0 if the CRC field is not used (CRC value shall be

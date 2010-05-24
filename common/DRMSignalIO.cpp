@@ -222,10 +222,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameter)
     _BOOLEAN bBad = pSound->Read(vecsSoundBuffer);
 
     Parameter.Lock();
-    if (bBad == FALSE)
-        Parameter.ReceiveStatus.Interface.SetStatus(RX_OK);
-    else
-        Parameter.ReceiveStatus.Interface.SetStatus(CRC_ERROR);
+	Parameter.ReceiveStatus.Interface.SetStatus(bBad?CRC_ERROR:RX_OK);
     Parameter.Unlock();
 
     /* Write data to output buffer. Do not set the switch command inside

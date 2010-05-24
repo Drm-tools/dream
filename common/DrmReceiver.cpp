@@ -1300,7 +1300,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
 {
     string str;
 	CReceiveData::EInChanSel defaultInChanSel = CReceiveData::CS_MIX_CHAN;
-cerr << "LoadSettings" << endl;
+
     /* Serial Number */
     string sValue = s.Get("Receiver", "serialnumber");
     if (sValue != "")

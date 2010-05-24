@@ -76,9 +76,12 @@ public:
 protected:
 	CDRMReceiver&		DRMReceiver;
 	CSettings&			Settings;
+	QTimer				Timer;
+	vector<QLabel*>		serviceLabels;
 
 	systemevalDlg*		pSysEvalDlg;
 	MultimediaDlg*		pMultiMediaDlg;
+	MultSettingsDlg*	pMultSettingsDlg;
 	StationsDlg*		pStationsDlg;
 	LiveScheduleDlg*	pLiveScheduleDlg;
 	EPGDlg*				pEPGDlg;
@@ -89,22 +92,17 @@ protected:
 	QPopupMenu*			pReceiverModeMenu;
 	QPopupMenu*			pSettingsMenu;
 	QPopupMenu*			pPlotStyleMenu;
-	int					iCurSelServiceGUI;
-	int					iOldNoServicesGUI;
-	QTimer				Timer;
+    QButtonGroup*		pButtonGroup;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
 	virtual void	customEvent(QCustomEvent* Event);
 	virtual void	closeEvent(QCloseEvent* ce);
 	virtual void	showEvent(QShowEvent* pEvent);
 	void			hideEvent(QHideEvent* pEvent);
-	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
 	void			UpdateDisplay();
 	void			ClearDisplay();
 
-	QString			GetCodecString(const int iServiceID);
-	QString			GetTypeString(const int iServiceID);
 
 	void			SetDisplayColor(const QColor newColor);
 
@@ -112,19 +110,17 @@ protected:
 	void			ChangeGUIModeToAM();
 	void			ChangeGUIModeToFM();
 
+	QString	GetCodecString(const CService&);
+	QString	GetTypeString(const CService&);
+	QString serviceSelector(CParameter&, int);
+	void showTextMessage(const QString&);
+	void showServiceInfo(const CService&);
+
 public slots:
 	void OnTimer();
-	void OnButtonService1();
-	void OnButtonService2();
-	void OnButtonService3();
-	void OnButtonService4();
-	void OnViewEvalDlg();
-	void OnViewMultiMediaDlg();
+	void OnSelectAudioService(int);
+	void OnSelectDataService(int);
 	void OnViewStationsDlg();
-	void OnViewLiveScheduleDlg();
-	void OnViewEPGDlg();
-	void OnViewMultSettingsDlg();
-	void OnViewGeneralSettingsDlg();
 	void OnMenuSetDisplayColor();
 	void OnMenuPlotStyle(int value);
 	void OnNewAcquisition();

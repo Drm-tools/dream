@@ -110,21 +110,6 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	ProgrInputLevel->setAlarmLevel(-12.5);
 	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
 
-	CParameter& Parameters = *DRMReceiver.GetParameters();
-
-	Parameters.Lock();
-
-	/* Enable multimedia */
-	Parameters.EnableMultimedia(FALSE);
-
-	/* Init current selected service */
-	Parameters.ResetCurSelAudDatServ();
-
-	Parameters.Unlock();
-
-	iCurSelServiceGUI = 0;
-	iOldNoServicesGUI = 0;
-
 	/* Update times for color LEDs */
 	CLED_FAC->SetUpdateTime(1500);
 	CLED_SDC->SetUpdateTime(1500);
@@ -431,12 +416,8 @@ void FMDialog::hideEvent(QHideEvent*)
 void FMDialog::SetService(int iNewServiceID)
 {
 	CParameter& Parameters = *DRMReceiver.GetParameters();
-
 	Parameters.Lock();
-
 	Parameters.SetCurSelAudioService(iNewServiceID);
-	Parameters.SetCurSelDataService(iNewServiceID);
-	iCurSelServiceGUI = iNewServiceID;
 	Parameters.Unlock();
 }
 
