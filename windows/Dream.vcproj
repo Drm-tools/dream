@@ -85,7 +85,7 @@
 				OutputFile="Release\Dream.exe"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;..\libs"
-				IgnoreDefaultLibraryNames="msvcrt.lib"
+				IgnoreDefaultLibraryNames="msvcrt.lib;msvcrtd.lib"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile=""
 				SubSystem="2"
@@ -238,6 +238,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\sourcedecoders\AudioSourceEncoder.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\common\mlc\BitInterleaver.cpp"
 				>
 			</File>
@@ -287,6 +291,10 @@
 			</File>
 			<File
 				RelativePath="..\common\datadecoding\DataDecoder.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\common\datadecoding\DataEncoder.cpp"
 				>
 			</File>
 			<File
@@ -709,6 +717,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\common\sourcedecoders\AudioSourceEncoder.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\mlc\BitInterleaver.h"
 				>
 			</File>
@@ -770,6 +782,10 @@
 			</File>
 			<File
 				RelativePath="..\common\datadecoding\DataDecoder.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\datadecoding\DataEncoder.h"
 				>
 			</File>
 			<File
@@ -906,6 +922,10 @@
 			</File>
 			<File
 				RelativePath="..\common\datadecoding\epg\epgutil.h"
+				>
+			</File>
+			<File
+				RelativePath="..\common\sourcedecoders\faac_dll.h"
 				>
 			</File>
 			<File
@@ -1202,6 +1222,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath="..\common\sourcedecoders\neaacdec_dll.h"
+				>
+			</File>
+			<File
 				RelativePath="..\common\datadecoding\journaline\newsobject.h"
 				>
 			</File>
@@ -1354,11 +1378,11 @@
 				>
 			</File>
 			<File
-				RelativePath="Source\Sound.h"
+				RelativePath="..\common\sound.h"
 				>
 			</File>
 			<File
-				RelativePath="..\common\sound.h"
+				RelativePath="Source\Sound.h"
 				>
 			</File>
 			<File
@@ -1577,6 +1601,10 @@
 				>
 			</File>
 			<File
+				RelativePath="moc\moc_DrmReceiver.cpp"
+				>
+			</File>
+			<File
 				RelativePath="moc\moc_EPGDlg.cpp"
 				>
 			</File>
@@ -1610,10 +1638,6 @@
 			</File>
 			<File
 				RelativePath="moc\moc_GPSReceiver.cpp"
-				>
-			</File>
-			<File
-				RelativePath="moc\moc_DrmReceiver.cpp"
 				>
 			</File>
 			<File

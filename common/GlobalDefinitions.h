@@ -50,6 +50,8 @@ using namespace std; /* Because of the library: "complex" */
 
 #ifdef _WIN32 /* For Windows set flags here, otherwise it is set by configure */
 
+# define NOMINMAX
+
 /* Define whether using GUI or non-GUI receiver */
 # define USE_QT_GUI
 //# undef USE_QT_GUI
@@ -58,25 +60,8 @@ using namespace std; /* Because of the library: "complex" */
 # define HAVE_SETUPAPI
 //# undef HAVE_SETUPAPI
 
-/* Define whether using libsndfile for audio file I/O */
-//# define HAVE_LIBSNDFILE
-//# undef HAVE_LIBSNDFILE
-
-/* Activate or disable faad2 library (AAC decoding) */
-# define USE_FAAD2_LIBRARY
-//# undef USE_FAAD2_LIBRARY
-
-# define USE_FAAC_LIBRARY
-//# undef USE_FAAC_LIBRARY
-
-//# define HAVE_LIBPCAP
-//# undef HAVE_LIBPCAP
-
 # define DLL_EXPORT 1
 //# undef DLL_EXPORT 1
-
-//# define HAVE_LIBHAMLIB
-//# undef HAVE_LIBHAMLIB
 
 /* set sensible defaults for QT2 or QT3 */
 # ifdef USE_QT_GUI

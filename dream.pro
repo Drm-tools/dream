@@ -144,6 +144,7 @@ common/chanest/TimeLinear.h   \
 common/chanest/TimeWiener.h   \
 common/datadecoding/DABMOT.h   \
 common/datadecoding/DataDecoder.h   \
+common/datadecoding/DataEncoder.h   \
 common/datadecoding/epg/EPG.h   \
 common/datadecoding/epg/epgdec.h   \
 common/datadecoding/epg/epgutil.h   \
@@ -235,6 +236,7 @@ common/soundinterface.h   \
 common/sound.h   \
 common/sound/soundnull.h   \
 common/sourcedecoders/AudioSourceDecoder.h   \
+common/sourcedecoders/AudioSourceEncoder.h   \
 common/sync/FreqSyncAcq.h   \
 common/sync/SyncUsingPil.h   \
 common/sync/TimeSync.h   \
@@ -269,6 +271,7 @@ common/chanest/TimeLinear.cpp   \
 common/chanest/TimeWiener.cpp   \
 common/datadecoding/DABMOT.cpp   \
 common/datadecoding/DataDecoder.cpp   \
+common/datadecoding/DataEncoder.cpp   \
 common/datadecoding/epg/EPG.cpp   \
 common/datadecoding/epg/epgdec.cpp   \
 common/datadecoding/epg/epgutil.cpp   \
@@ -353,6 +356,7 @@ common/SDC/SDCReceive.cpp   \
 common/SDC/SDCTransmit.cpp   \
 common/SimulationParameters.cpp   \
 common/sourcedecoders/AudioSourceDecoder.cpp   \
+common/sourcedecoders/AudioSourceEncoder.cpp   \
 common/sync/FreqSyncAcq.cpp   \
 common/sync/SyncUsingPil.cpp   \
 common/sync/TimeSync.cpp   \

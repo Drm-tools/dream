@@ -233,8 +233,9 @@ protected:
 
 };
 #else
-struct CHamlib
+class CHamlib
 {
+public:
 	enum ESMeterState {SS_VALID, SS_NOTVALID, SS_TIMEOUT};
 	void SetFrequency(int) {}
 };
