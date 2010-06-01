@@ -30,7 +30,8 @@
 
 #include "PacketSourceFile.h"
 #include <iostream>
-#include <errno.h>
+#include <cstdlib>
+#include <cerrno>
 #include <qtimer.h>
 #include <qstringlist.h>
 

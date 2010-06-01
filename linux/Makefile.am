@@ -22,6 +22,7 @@ drmwithoutqt_SOURCES = \
 	../common/AMSSDemodulation.cpp \
 	../common/audiofilein.cpp \
 	../common/datadecoding/DataDecoder.cpp \
+	../common/datadecoding/DataEncoder.cpp \
 	../common/datadecoding/DABMOT.cpp \
 	../common/datadecoding/MOTSlideShow.cpp \
 	../common/datadecoding/Journaline.cpp \
@@ -83,6 +84,7 @@ drmwithoutqt_SOURCES = \
 	../common/resample/Resample.cpp \
 	../common/resample/ResampleFilter.cpp \
 	../common/sourcedecoders/AudioSourceDecoder.cpp \
+	../common/sourcedecoders/AudioSourceEncoder.cpp \
 	../common/sync/FreqSyncAcq.cpp \
 	../common/sync/TimeSync.cpp \
 	../common/sync/SyncUsingPil.cpp \
@@ -113,6 +115,7 @@ drmwithoutqt_SOURCES = \
 	../common/AMDemodulation.h \
 	../common/AMSSDemodulation.h \
 	../common/datadecoding/DataDecoder.h \
+	../common/datadecoding/DataEncoder.h \
 	../common/datadecoding/DABMOT.h \
 	../common/datadecoding/MOTSlideShow.h \
 	../common/datadecoding/Journaline.h \
@@ -182,6 +185,7 @@ drmwithoutqt_SOURCES = \
 	../common/resample/Resample.h \
 	../common/resample/ResampleFilter.h \
 	../common/sourcedecoders/AudioSourceDecoder.h \
+	../common/sourcedecoders/AudioSourceEncoder.h \
 	../common/sync/FreqSyncAcq.h \
 	../common/sync/SyncUsingPil.h \
 	../common/sync/TimeSync.h \

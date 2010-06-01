@@ -193,8 +193,8 @@ struct ic_stream
     uint8_t gain_control_data_present;
     uint8_t predictor_data_present;
 
-    pulse_info pul;
-    tns_info tns;
+    //pulse_info pul;
+    //tns_info tns;
 #ifdef MAIN_DEC
     pred_info pred;
 #endif
@@ -265,6 +265,7 @@ char Init(unsigned long samplerate, unsigned char channels)
 void DRM_aac_scalable_main_element(NeAACDecFrameInfo *hInfo,
                                    bitfile *ld, program_config *pce, drc_info *drc)
 {
+#if 0
     uint8_t retval = 0;
     uint8_t channels = fr_channels = 0;
     uint8_t ch;
@@ -467,13 +468,13 @@ void DRM_aac_scalable_main_element(NeAACDecFrameInfo *hInfo,
 
     fr_channels += element_output_channels[fr_ch_ele];
     fr_ch_ele++;
-
-    return;
+#endif
 }
 
 int8_t DRM_aac_scalable_main_header(ic_stream *ics1, ic_stream *ics2,
                                            bitfile *ld, uint8_t this_layer_stereo)
 {
+#if 0
     uint8_t retval = 0;
     uint8_t ch;
     ic_stream *ics;
@@ -535,11 +536,13 @@ int8_t DRM_aac_scalable_main_header(ic_stream *ics1, ic_stream *ics2,
         ics1->ms_mask_present = 0;
     }
 
+#endif
     return 0;
 }
 
 void* aac_frame_decode(NeAACDecFrameInfo* hInfo,unsigned char * buffer,unsigned long buffer_size)
 {
+#if 0
     uint16_t i;
     uint8_t channels = 0;
     uint8_t output_channels = 0;
@@ -792,7 +795,7 @@ error:
     }
 
     faad_endbits(&ld);
-
+#endif
     return NULL;
 }
 
