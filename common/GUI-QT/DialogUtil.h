@@ -196,11 +196,12 @@ public:
 protected:
 	CHamlib Hamlib;
 #endif
+protected:
+	int subscribers;
+	CParameter* pParameters;
 
 signals:
     void sigstr(double);
-	int subscribers;
-	CParameter* pParameters;
 };
 
 class RemoteMenu : public QObject
