@@ -185,12 +185,6 @@ protected:
 
 	NeAACDecHandle		HandleAACDecoder;
 
-	CVector<_BYTE>		vecbyPrepAudioFrame;
-	CVector<_BYTE>		aac_crc_bits;
-	CMatrix<_BYTE>		audio_frame;
-
-	CVector<int>		veciFrameLength;
-
 	int					iNumBorders;
 	int					iNumHigherProtectedBytes;
 	int					iMaxLenOneAudFrame;
@@ -216,6 +210,7 @@ protected:
 
 	_BOOLEAN			bCELPCRC;
 	CCRC				CELPCRCObject;
+	string				audiodecoder;
 
 #ifdef USE_CELP_DECODER
 	/* TODO put here decoder specific things */

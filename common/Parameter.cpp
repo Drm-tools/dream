@@ -109,7 +109,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
         eRunState(STOPPED),
         CellMappingTable(),
         GPSData(),
-        aacenc(""),aacdec(""),
+        audioencoder(""),audiodecoder(""),
         rSysSimSNRdB(0.0),
         iFrequency(0),
         bValidSignalStrength(FALSE),
@@ -208,7 +208,7 @@ CParameter::CParameter(const CParameter& p):
         eRunState(p.eRunState),
         CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
         GPSData(p.GPSData),
-		aacenc(p.aacenc),aacdec(p.aacdec),
+		audioencoder(p.audioencoder),audiodecoder(p.audiodecoder),
         rSysSimSNRdB(p.rSysSimSNRdB),
         iFrequency(p.iFrequency),
         bValidSignalStrength(p.bValidSignalStrength),
@@ -303,8 +303,8 @@ CParameter& CParameter::operator=(const CParameter& p)
     eRunState = p.eRunState;
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
     GPSData = p.GPSData;
-	aacenc =  p.aacenc;
-	aacdec =  p.aacdec;
+	audiodecoder =  p.audiodecoder;
+	audioencoder =  p.audioencoder;
     rSysSimSNRdB = p.rSysSimSNRdB;
     iFrequency = p.iFrequency;
     bValidSignalStrength = p.bValidSignalStrength;

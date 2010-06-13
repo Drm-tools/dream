@@ -36,7 +36,7 @@
 				<Option object_output="Debug" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters='&quot;D:\SDC_problem rsM.pcap&quot;' />
+				<Option parameters='&quot;RTLwithSlideshow_ModeB_10kHz.wav&quot;' />
 				<Compiler>
 					<Add option="-W" />
 					<Add option="-g" />
@@ -45,9 +45,13 @@
 					<Add option="-DHAVE_LIBHAMLIB" />
 					<Add option="-DHAVE_LIBSNDFILE" />
 					<Add option="-DHAVE_LIBPCAP" />
-					<Add option="-DUSE_LIBFAAD" />
-					<Add option="-DUSE_LIBFAAC" />
+					<Add option="-DUSE_FAAD2_LIBRARY" />
+					<Add option="-DUSE_FAAC_LIBRARY" />
 				</Compiler>
+				<Linker>
+					<Add library="faac_drm" />
+					<Add library="faad_drmd" />
+				</Linker>
 			</Target>
 			<Environment>
 				<Variable name="QTDIR" value="D:\Qt\3.3" />
@@ -69,8 +73,6 @@
 			<Add directory="..\..\..\..\Program Files\JackNone-0.5\lib" />
 		</Compiler>
 		<Linker>
-			<Add library="faac_drm" />
-			<Add library="faad_drm" />
 			<Add library="hamlib" />
 			<Add library="fftw" />
 			<Add library="rfftw" />

@@ -41,7 +41,7 @@ char NEAACDECAPI NeAACDecInitDRMDummy(NeAACDecHandle* h, unsigned long samplerat
 
 void* NEAACDECAPI NeAACDecDecodeDummy(NeAACDecHandle h,NeAACDecFrameInfo* hInfo,unsigned char * buffer,unsigned long buffer_size)
 {
-	hInfo->error = 1; // check_crc(buffer, buffer_size);
+	hInfo->error = 1;
 	return NULL;
 }
 
@@ -90,18 +90,26 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 	/* Reset bit extraction access */
 	(*pvecInputData).ResetBitAccess();
 
+	vector< vector<uint8_t> > audio_frame(iNumAudioFrames);
+	vector<uint8_t> aac_crc_bits(iNumAudioFrames);
+
 	/* Check which audio coding type is used */
 	if (eAudioCoding == CAudioParam::AC_AAC)
 	{
 		/* AAC super-frame-header ------------------------------------------- */
-		int iPrevBorder = 0;
+		bGoodValues = TRUE;
+		size_t iPrevBorder = 0;
+
 		for (i = 0; i < iNumBorders; i++)
 		{
 			/* Frame border in bytes (12 bits) */
-			const int iFrameBorder = (*pvecInputData).Separate(12);
+			size_t iFrameBorder = (*pvecInputData).Separate(12);
 
-			/* The lenght is difference between borders */
-			veciFrameLength[i] = iFrameBorder - iPrevBorder;
+			/* The length is difference between borders */
+			if(iFrameBorder>=iPrevBorder)
+				audio_frame[i].resize(iFrameBorder - iPrevBorder);
+			else
+				bGoodValues = FALSE;
 			iPrevBorder = iFrameBorder;
 		}
 
@@ -110,14 +118,15 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			(*pvecInputData).Separate(4);
 
 		/* Frame length of last frame */
-		veciFrameLength[iNumBorders] = iAudioPayloadLen - iPrevBorder;
+		if(iAudioPayloadLen>=int(iPrevBorder))
+			audio_frame[iNumBorders].resize(iAudioPayloadLen - iPrevBorder);
+		else
+			bGoodValues = FALSE;
 
 		/* Check if frame length entries represent possible values */
-		bGoodValues = TRUE;
 		for (i = 0; i < iNumAudioFrames; i++)
 		{
-			if ((veciFrameLength[i] < 0) ||
-				(veciFrameLength[i] > iMaxLenOneAudFrame))
+			if(int(audio_frame[i].size()) > iMaxLenOneAudFrame)
 			{
 				bGoodValues = FALSE;
 			}
@@ -142,7 +151,7 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				/* First calculate frame length, derived from higher protected
 				   part frame length and total size */
 				const int iNumLowerProtectedBytes =
-					veciFrameLength[i] - iNumHigherProtectedBytes;
+					audio_frame[i].size() - iNumHigherProtectedBytes;
 
 				/* Extract lower protected part bytes (8 bits per byte) */
 				for (j = 0; j < iNumLowerProtectedBytes; j++)
@@ -191,9 +200,10 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 			{
 				/* Prepare data vector with CRC at the beginning (the definition
 				   with faad2 DRM interface) */
+				vector<uint8_t> vecbyPrepAudioFrame(audio_frame[j].size()+1);
 				vecbyPrepAudioFrame[0] = aac_crc_bits[j];
 
-				for (i = 0; i < veciFrameLength[j]; i++)
+				for (i = 0; i < int(audio_frame[j].size()); i++)
 					vecbyPrepAudioFrame[i + 1] = audio_frame[j][i];
 
 #if 0
@@ -242,12 +252,12 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 #endif
 
 				/* Call decoder routine */
+fprintf(stderr, "Call decoder routine buffer %p len %d\n", &vecbyPrepAudioFrame[0], vecbyPrepAudioFrame.size());
+
 				psDecOutSampleBuf = (short *) NeAACDecDecode(HandleAACDecoder,
 															 &DecFrameInfo,
-															 &vecbyPrepAudioFrame
-															 [0],
-															 veciFrameLength
-															 [j] + 1);
+															 &vecbyPrepAudioFrame[0],
+															 vecbyPrepAudioFrame.size());
 
 				/* OPH: add frame status to vector for RSCI */
 				ReceiverParam.Lock();
@@ -572,6 +582,8 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 
 		ReceiverParam.Lock();
 
+		ReceiverParam.audiodecoder = audiodecoder;
+
 		/* Init counter for correctly decoded audio blocks */
 		iNumCorDecAudio = 0;
 
@@ -731,15 +743,6 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			   the total size, but we do not know at this time how the data is
 			   split in the transmitter source coder */
 			iMaxLenOneAudFrame = iAudioPayloadLen;
-			audio_frame.Init(iNumAudioFrames, iMaxLenOneAudFrame);
-
-			/* Init vector which stores the data with the CRC at the beginning
-			   ("+ 1" for CRC) */
-			vecbyPrepAudioFrame.Init(iMaxLenOneAudFrame + 1);
-
-			/* Init storage for CRCs and frame lengths */
-			aac_crc_bits.Init(iNumAudioFrames);
-			veciFrameLength.Init(iNumAudioFrames);
 
 			/* Init AAC-decoder */
 			NeAACDecInitDRM(&HandleAACDecoder, iAACSampleRate,
@@ -929,7 +932,13 @@ CAudioSourceDecoder::GetNumCorDecAudio()
 CAudioSourceDecoder::CAudioSourceDecoder()
 :	bUseReverbEffect(TRUE), AudioRev((CReal) 1.0 /* seconds delay */ )
 {
-#ifndef USE_FAAD2_LIBRARY
+#ifdef USE_FAAD2_LIBRARY
+# ifdef FAAD2_VERSION
+	audiodecoder = string("Nero AAC Version ")+FAAD2_VERSION;
+# else
+	audiodecoder = "unknown";
+# endif
+#else
     NeAACDecOpen = NeAACDecOpenDummy;
     NeAACDecInitDRM = NeAACDecInitDRMDummy;
     NeAACDecClose = NeAACDecCloseDummy;
@@ -956,6 +965,7 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 		NeAACDecInitDRM = (NeAACDecInitDRM_t*)dlsym(hFaaDlib, "NeAACDecInitDRM");
 		NeAACDecClose = (NeAACDecClose_t*)dlsym(hFaaDlib, "NeAACDecClose");
 		NeAACDecDecode = (NeAACDecDecode_t*)dlsym(hFaaDlib,"NeAACDecDecode");
+		audiodecoder = string("Nero AAC (dynamically loaded)");
     }
 # endif
     if(NeAACDecInitDRM != NULL) // Might be non-DRM version of FAAD2

@@ -1190,7 +1190,7 @@ public:
     CGPSData GPSData;
     CMinMaxMean SNRstat, SigStrstat;
 
-    string aacenc, aacdec;
+    string audioencoder, audiodecoder;
 
 protected:
 

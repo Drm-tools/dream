@@ -12,16 +12,16 @@
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later 
+ * Foundation; either version 2 of the License, or (at your option) any later
  * version.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT 
+ * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc., 
+ * this program; if not, write to the Free Software Foundation, Inc.,
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
@@ -30,7 +30,7 @@
 
 
 /* Implementation *************************************************************/
-CDRMPlot::CDRMPlot(QWidget *p, const char *name) :  
+CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 	QwtPlot (p, name), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
 	bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL)
 {
@@ -96,11 +96,12 @@ void CDRMPlot::OnTimerChart()
 	_REAL				rCenterFreq, rBandwidth;
 
 	CParameter& Parameters = *pDRMRec->GetParameters();
-	Parameters.Lock(); 
+	Parameters.Lock();
 	_REAL rDCFrequency = Parameters.GetDCFrequency();
 	ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
 	ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
-	Parameters.Unlock(); 
+	string audiodecoder = Parameters.audiodecoder;
+	Parameters.Unlock();
 
 	CPlotManager& PlotManager = *pDRMRec->GetPlotManager();
 
@@ -112,7 +113,7 @@ void CDRMPlot::OnTimerChart()
 			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 
 		/* Prepare graph and set data */
-		SetAvIR(vecrData, vecrScale, rLowerBound, rHigherBound, 
+		SetAvIR(vecrData, vecrScale, rLowerBound, rHigherBound,
 			rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
 		break;
 
@@ -178,7 +179,14 @@ void CDRMPlot::OnTimerChart()
 	case AUDIO_SPECTRUM:
 		/* Get data from module */
 		pDRMRec->GetWriteData()->GetAudioSpec(vecrData, vecrScale);
-
+		if(audiodecoder=="")
+		{
+			setTitle(tr("No audio decoding possible"));
+		}
+		else
+		{
+			setTitle(tr("Audio Spectrum"));
+		}
 		/* Prepare graph and set data */
 		SetAudioSpec(vecrData, vecrScale);
 		break;
@@ -485,7 +493,7 @@ void CDRMPlot::SetupAvIR()
 
 	/* Add main curve */
 	main1curve = insertCurve(tr("Channel Impulse Response"));
-	
+
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
@@ -557,7 +565,7 @@ void CDRMPlot::SetAvIR(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 		setCurveData(curve5, dX, dY, 2);
 
 		/* Adjust scale for x-axis */
-		setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], 
+		setAxisScale(QwtPlot::xBottom, (double) vecrScale[0],
 			(double) vecrScale[vecrScale.Size() - 1]);
 
 		replot();
@@ -624,7 +632,6 @@ void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 void CDRMPlot::SetupAudioSpec()
 {
 	/* Init chart for audio spectrum */
-	setTitle(tr("Audio Spectrum"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
@@ -644,7 +651,7 @@ void CDRMPlot::SetupAudioSpec()
 	/* Add main curve */
 	clear();
 	main1curve = insertCurve(tr("Audio Spectrum"));
-	
+
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
@@ -911,7 +918,7 @@ void CDRMPlot::SetupPSD()
 
 	/* Add main curve */
 	main1curve = insertCurve(tr("Shifted PSD"));
-	
+
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 1, SolidLine, RoundCap,
 		RoundJoin));
@@ -946,7 +953,7 @@ void CDRMPlot::SetupSNRSpectrum()
 	/* Add main curve */
 	clear();
 	main1curve = insertCurve(tr("SNR Spectrum"));
-	
+
 	/* Curve color */
 	setCurvePen(main1curve, QPen(MainPenColorPlot, 2, SolidLine, RoundCap,
 		RoundJoin));
