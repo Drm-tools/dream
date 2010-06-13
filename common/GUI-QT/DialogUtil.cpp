@@ -51,6 +51,13 @@
 # include <wtap.h>
 #endif
 
+#ifdef HAVE_LIBFREEIMAGE
+# include <FreeImage.h> /* to extract the library version */
+#endif
+
+#include <qwt/qwt_global.h> /* to extract the library version */
+
+
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
@@ -91,7 +98,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 		"</b></p>"
 		"<ul>"
 		"<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
-#if 0
+#if USE_FAAD2_LIBRARY
 		"<li><b>FAAD2</b> (" + QString(FAAD2_VERSION) + ") <i>AAC/HE-AAC/HE-AACv2/DRM decoder "
 		"(c) Ahead Software, www.nero.com (http://faac.sf.net)</i></li>"
 #endif
@@ -505,8 +512,8 @@ void CRig::run()
 {
     while (subscribers>0)
     {
-        _REAL r;
 #ifdef HAVE_LIBHAMLIB
+        _REAL r;
         if (Hamlib.GetSMeter(r) == CHamlib::SS_VALID)
         {
         	pParameters->Lock();

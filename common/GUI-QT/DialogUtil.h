@@ -37,17 +37,11 @@
 #include <qtextview.h>
 #include <qlabel.h>
 #include <qwhatsthis.h>
+#include <qthread.h>
 
 #include "AboutDlgbase.h"
-#include "../DrmReceiver.h"
-
-#ifdef USE_QT_GUI
-# include <qwt/qwt_global.h> /* to extract the library version */
-#endif
-
-#ifdef HAVE_LIBFREEIMAGE
-# include <FreeImage.h> /* to extract the library version */
-#endif
+#include "../Parameter.h"
+#include "../selectioninterface.h"
 
 /* Definitions ****************************************************************/
 

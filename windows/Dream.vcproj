@@ -53,7 +53,7 @@
 				MinimalRebuild="false"
 				ExceptionHandling="1"
 				SmallerTypeCheck="false"
-				RuntimeLibrary="0"
+				RuntimeLibrary="2"
 				BufferSecurityCheck="true"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="2"
@@ -81,11 +81,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="false"
-				AdditionalDependencies="qt-mt3.lib qtmain.lib zdll.lib qwt.lib libfaac.lib libfaad.lib libhamlib-2.lib libfftw.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib setupapi.lib"
+				AdditionalDependencies="qt-mt3.lib qtmain.lib zdll.lib qwt.lib libhamlib-2.lib fftw.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib setupapi.lib"
 				OutputFile="Release\Dream.exe"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;..\libs"
-				IgnoreDefaultLibraryNames="msvcrt.lib;msvcrtd.lib"
+				IgnoreDefaultLibraryNames="libcmt"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile=""
 				SubSystem="2"
@@ -143,7 +143,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="1"
+				Optimization="0"
 				AdditionalIncludeDirectories="..\libs;&quot;$(QTDIR)\include&quot;;moc\;&quot;..\common\GUI-QT&quot;;&quot;$(QTDIR)\mkspecs\win32-msvc.net&quot;"
 				PreprocessorDefinitions="QT_NO_DEBUG;_WINDOWS;WIN32;QT_DLL;QT_THREAD_SUPPORT;FAACAPI=_cdecl"
 				GeneratePreprocessedFile="0"
@@ -156,7 +156,7 @@
 				ProgramDataBaseFileName=""
 				WarningLevel="3"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="0"
+				DebugInformationFormat="4"
 				DisableSpecificWarnings="4996;4521"
 			/>
 			<Tool
@@ -172,11 +172,11 @@
 			<Tool
 				Name="VCLinkerTool"
 				IgnoreImportLibrary="false"
-				AdditionalDependencies="qt-mt3.lib zdll.lib qwt.lib libfaacd.lib libfaadd.lib libhamlib-2.lib libfftw.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib setupapi.lib"
+				AdditionalDependencies="qt-mt3.lib qtmain.lib zdll.lib qwt.lib libhamlib-2.lib fftw.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib setupapi.lib"
 				OutputFile="Debug\Dream.exe"
 				SuppressStartupBanner="true"
 				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;..\libs"
-				IgnoreDefaultLibraryNames="msvcrtd.lib;libcmtd.lib;libcmt.lib"
+				IgnoreDefaultLibraryNames="libcmt.lib;libcmtd.lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=""
 				SubSystem="2"
