@@ -211,6 +211,9 @@ protected:
 	_BOOLEAN			bCELPCRC;
 	CCRC				CELPCRCObject;
 	string				audiodecoder;
+	bool				canDecodeAAC;
+	bool				canDecodeCELP;
+	bool				canDecodeHVXC;
 
 #ifdef USE_CELP_DECODER
 	/* TODO put here decoder specific things */

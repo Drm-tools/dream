@@ -58,4 +58,6 @@ typedef char (NEAACDECAPI NeAACDecInitDRM_t)(NeAACDecHandle*, unsigned long, uns
 typedef void (NEAACDECAPI NeAACDecClose_t)(NeAACDecHandle);
 typedef void* (NEAACDECAPI NeAACDecDecode_t)(NeAACDecHandle,NeAACDecFrameInfo*,unsigned char *,unsigned long);
 
+#define FAAD2_VERSION "(dynamically loaded)"
+
 #endif

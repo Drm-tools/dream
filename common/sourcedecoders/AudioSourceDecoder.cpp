@@ -252,8 +252,6 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 #endif
 
 				/* Call decoder routine */
-fprintf(stderr, "Call decoder routine buffer %p len %d\n", &vecbyPrepAudioFrame[0], vecbyPrepAudioFrame.size());
-
 				psDecOutSampleBuf = (short *) NeAACDecDecode(HandleAACDecoder,
 															 &DecFrameInfo,
 															 &vecbyPrepAudioFrame[0],
@@ -582,8 +580,6 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 
 		ReceiverParam.Lock();
 
-		ReceiverParam.audiodecoder = audiodecoder;
-
 		/* Init counter for correctly decoded audio blocks */
 		iNumCorDecAudio = 0;
 
@@ -637,6 +633,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		}
 
 		/* Get audio coding type */
+		audiodecoder = ""; // set to empty string - means "unknown" and "can't decode" to GUI
 		eAudioCoding =
 			ReceiverParam.Service[iCurSelServ].AudioParam.eAudioCoding;
 
@@ -644,6 +641,9 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		{
 			/* Init for AAC decoding ---------------------------------------- */
 			int iAACSampleRate, iNumHeaderBytes, iDRMchanMode = DRMCH_MONO;
+
+			if(canDecodeAAC)
+				audiodecoder = string("Nero AAC Version ")+FAAD2_VERSION;
 
 			/* Length of higher protected part of audio stream */
 			const int iLenAudHigh =
@@ -751,6 +751,7 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 		else if (eAudioCoding == CAudioParam::AC_CELP)
 		{
 			/* Init for CELP decoding --------------------------------------- */
+
 			int iCurCelpIdx, iCelpFrameLength;
 
 			/* Set number of AAC frames in a AAC super-frame */
@@ -849,6 +850,9 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
 			throw CInitErr(ET_AUDDECODER);
 		}
 
+		/* set string for GUI */
+		ReceiverParam.audiodecoder = audiodecoder;
+
 		/* Set number of Audio frames for log file */
 		ReceiverParam.iNumAudioFrames = iNumAudioFrames;
 
@@ -930,14 +934,11 @@ CAudioSourceDecoder::GetNumCorDecAudio()
 }
 
 CAudioSourceDecoder::CAudioSourceDecoder()
-:	bUseReverbEffect(TRUE), AudioRev((CReal) 1.0 /* seconds delay */ )
+:	bUseReverbEffect(TRUE), AudioRev((CReal) 1.0 /* seconds delay */ ),
+	canDecodeAAC(false),canDecodeCELP(false),canDecodeHVXC(false)
 {
 #ifdef USE_FAAD2_LIBRARY
-# ifdef FAAD2_VERSION
-	audiodecoder = string("Nero AAC Version ")+FAAD2_VERSION;
-# else
-	audiodecoder = "unknown";
-# endif
+	canDecodeAAC = true;
 #else
     NeAACDecOpen = NeAACDecOpenDummy;
     NeAACDecInitDRM = NeAACDecInitDRMDummy;
@@ -965,10 +966,13 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 		NeAACDecInitDRM = (NeAACDecInitDRM_t*)dlsym(hFaaDlib, "NeAACDecInitDRM");
 		NeAACDecClose = (NeAACDecClose_t*)dlsym(hFaaDlib, "NeAACDecClose");
 		NeAACDecDecode = (NeAACDecDecode_t*)dlsym(hFaaDlib,"NeAACDecDecode");
-		audiodecoder = string("Nero AAC (dynamically loaded)");
     }
 # endif
     if(NeAACDecInitDRM != NULL) // Might be non-DRM version of FAAD2
+    {
+    	canDecodeAAC = true;
+    }
+    else
     {
 		NeAACDecInitDRM = NeAACDecInitDRMDummy;
     }
