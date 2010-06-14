@@ -847,28 +847,6 @@
 			<File
 				RelativePath="..\common\DrmReceiver.h"
 				>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Moc&apos;ing ..\common\DrmReceiver.h..."
-						CommandLine="$(QTDIR)\bin\moc.exe ..\common\DrmReceiver.h -o moc\moc_DrmReceiver.cpp&#x0D;&#x0A;"
-						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
-						Outputs="moc\moc_DrmReceiver.cpp"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-						Description="Moc&apos;ing ..\common\DrmReceiver.h..."
-						CommandLine="$(QTDIR)\bin\moc.exe ..\common\DrmReceiver.h -o moc\moc_DrmReceiver.cpp&#x0D;&#x0A;"
-						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
-						Outputs="moc\moc_DrmReceiver.cpp"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath="..\common\DRMSignalIO.h"
