@@ -50,6 +50,10 @@
 #include <qfont.h>
 #include <qstylesheet.h>
 
+#ifdef HAVE_LIBFREEIMAGE
+# include <FreeImage.h>
+#endif
+
 #include "MultimediaDlgbase.h"
 #include "MultColorLED.h"
 #include "DialogUtil.h"
