@@ -311,7 +311,7 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 void
 CPacketSocketQT::OnDataReceived()
 {
-	cerr << "DataReceived" << endl;
+	//cerr << "DataReceived" << endl;
 	vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
 
 	/* Read block from network interface */

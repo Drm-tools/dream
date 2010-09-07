@@ -30,7 +30,8 @@
 #include "jack.h"
 #include <sstream>
 #include <iostream>
-#include <math.h>
+#include <cmath>
+#include <cstdlib>
 using namespace std;
 
 instance_data_t::instance_data_t():num_channels(2),
