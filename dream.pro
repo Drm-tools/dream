@@ -158,6 +158,7 @@ common/datadecoding/journaline/log.h \
 common/datadecoding/journaline/newsobject.h \
 common/datadecoding/journaline/newssvcdec.h \
 common/datadecoding/journaline/newssvcdec_impl.h \
+common/datadecoding/Experiment.h   \
 common/datadecoding/Journaline.h   \
 common/datadecoding/MOTSlideShow.h   \
 common/DataIO.h   \
@@ -282,6 +283,7 @@ common/datadecoding/journaline/newsobject.cpp \
 common/datadecoding/journaline/newssvcdec_impl.cpp \
 common/datadecoding/journaline/crc_8_16.c \
 common/datadecoding/journaline/log.c \
+common/datadecoding/Experiment.cpp   \
 common/datadecoding/Journaline.cpp   \
 common/datadecoding/MOTSlideShow.cpp   \
 common/DataIO.cpp   \

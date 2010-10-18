@@ -25,6 +25,7 @@ drmwithoutqt_SOURCES = \
 	../common/datadecoding/DataEncoder.cpp \
 	../common/datadecoding/DABMOT.cpp \
 	../common/datadecoding/MOTSlideShow.cpp \
+	../common/datadecoding/Experiment.cpp \
 	../common/datadecoding/Journaline.cpp \
 	../common/datadecoding/epg/epgutil.cpp \
     ../common/datadecoding/journaline/NML.cpp \
@@ -118,6 +119,7 @@ drmwithoutqt_SOURCES = \
 	../common/datadecoding/DataEncoder.h \
 	../common/datadecoding/DABMOT.h \
 	../common/datadecoding/MOTSlideShow.h \
+	../common/datadecoding/Experiment.h \
 	../common/datadecoding/Journaline.h \
 	../common/datadecoding/epg/epgutil.h \
     ../common/datadecoding/journaline/NML.h \
