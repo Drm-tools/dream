@@ -152,7 +152,7 @@ void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
 	/* Actual inits */
 	switch (eAppType)
 	{
-	case CDataDecoder::AT_MOTSLISHOW:
+	case CDataDecoder::AT_MOTSLIDESHOW:
 		InitMOTSlideShow();
 		break;
 
@@ -160,7 +160,7 @@ void MultimediaDlg::InitApplication(CDataDecoder::EAppType eNewAppType)
 		InitJournaline();
 		break;
 
-	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+	case CDataDecoder::AT_BROADCASTWEBSITE:
 		InitBroadcastWebSite();
 		break;
 
@@ -226,7 +226,7 @@ void MultimediaDlg::OnTimer()
 
 	switch (eAppType)
 	{
-	case CDataDecoder::AT_MOTSLISHOW:
+	case CDataDecoder::AT_MOTSLIDESHOW:
 		/* Poll the data decoder module for new picture */
 		if (DataDecoder.GetMOTObject(NewObj, eAppType) == TRUE)
 		{
@@ -246,7 +246,7 @@ void MultimediaDlg::OnTimer()
 		}
 		break;
 
-	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+	case CDataDecoder::AT_BROADCASTWEBSITE:
 		/* Poll the data decoder module for new object */
 		if (DataDecoder.GetMOTObject(NewObj, eAppType) == TRUE)
 		{
@@ -560,7 +560,7 @@ void MultimediaDlg::OnButtonStepBack()
 {
 	switch (eAppType)
 	{
-	case CDataDecoder::AT_MOTSLISHOW:
+	case CDataDecoder::AT_MOTSLIDESHOW:
 		iCurImagePos--;
 		SetSlideShowPicture();
 		break;
@@ -586,12 +586,12 @@ void MultimediaDlg::OnButtonStepForw()
 	/* Different behaviour for slideshow and broadcast web site */
 	switch (eAppType)
 	{
-	case CDataDecoder::AT_MOTSLISHOW:
+	case CDataDecoder::AT_MOTSLIDESHOW:
 		iCurImagePos++;
 		SetSlideShowPicture();
 		break;
 
-	case CDataDecoder::AT_MOTBROADCASTWEBSITE:
+	case CDataDecoder::AT_BROADCASTWEBSITE:
 		/* Try to open browser */
 		if (!openBrowser(this, strCurrentSavePath + "/" + strBWSHomePage))
 		{
@@ -744,7 +744,7 @@ void MultimediaDlg::OnSave()
 
 	switch (eAppType)
 	{
-	case CDataDecoder::AT_MOTSLISHOW:
+	case CDataDecoder::AT_MOTSLIDESHOW:
 
 		strExt = QString(vecRawImages[iCurImagePos].strFormat.c_str());
 

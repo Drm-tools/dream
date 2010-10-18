@@ -37,12 +37,24 @@
 #include "DABMOT.h"
 #include "MOTSlideShow.h"
 
+class CExperiment;
 class CJournaline;
 class CNews;
 
 /* Definitions ****************************************************************/
 /* Maximum number of packets per stream */
 #define MAX_NUM_PACK_PER_STREAM					4
+
+/* Define for application types */
+#define DAB_AT_MOTSLIDESHOW 2
+#define DAB_AT_BROADCASTWEBSITE 3
+#define DAB_AT_TPEG 4
+#define DAB_AT_DGPS 5
+#define DAB_AT_TMC 	6
+#define DAB_AT_EPG 	7
+#define DAB_AT_JAVA 	8
+#define DAB_AT_JOURNALINE 0x44A
+#define DAB_AT_EXPERIMENTAL 0x44B
 
 class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
@@ -51,9 +63,9 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     virtual ~CDataDecoder ();
 
     enum EAppType
-    { AT_NOT_SUP, AT_MOTSLISHOW, AT_JOURNALINE,
-	AT_MOTBROADCASTWEBSITE, AT_MOTTPEG, AT_DGPS, AT_TMC, AT_MOTEPG,
-	    AT_JAVA
+    { AT_NOT_SUP, AT_MOTSLIDESHOW, AT_JOURNALINE,
+	AT_BROADCASTWEBSITE, AT_TPEG, AT_DGPS, AT_TMC, AT_EPG,
+	    AT_JAVA, AT_EXPERIMENTAL
     };
 
     _BOOLEAN GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
@@ -93,6 +105,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     CDataUnit DataUnit[MAX_NUM_PACK_PER_STREAM];
     CMOTDABDec MOTObject[MAX_NUM_PACK_PER_STREAM];
     CJournaline& Journaline;
+    CExperiment& Experiment;
     uint32_t iOldJournalineServiceID;
 
     EAppType eAppType[MAX_NUM_PACK_PER_STREAM];

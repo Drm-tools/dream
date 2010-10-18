@@ -438,7 +438,7 @@ QString FDRMDialog::serviceSelector(CParameter& Parameters, int i)
 			(service.DataParam.iStreamID != STREAM_ID_NOT_USED))
 		{
 
-			if (service.DataParam.iUserAppIdent == AT_MOTEPG)
+			if (service.DataParam.iUserAppIdent == DAB_AT_EPG)
 			{
 				text += tr(" + EPG"); /* EPG service */
 			}
@@ -723,13 +723,13 @@ void FDRMDialog::OnSelectDataService(int shortId)
 
 	switch(iAppIdent)
 	{
-	case AT_MOTEPG:
+	case DAB_AT_EPG:
 		pDlg = pEPGDlg;
 		Parameters.SetCurSelDataService(shortId);
 		break;
-	case AT_MOTBROADCASTWEBSITE:
-	case AT_JOURNALINE:
-	case AT_MOTSLISHOW:
+	case DAB_AT_BROADCASTWEBSITE:
+	case DAB_AT_JOURNALINE:
+	case DAB_AT_MOTSLIDESHOW:
 		pDlg = pMultiMediaDlg;
 		Parameters.SetCurSelDataService(shortId);
 		break;
@@ -956,47 +956,47 @@ QString FDRMDialog::GetTypeString(const CService& service)
 				switch (service.DataParam.iUserAppIdent)
 				{
 				case 1:
-					strReturn = "Dynamic labels";
+					strReturn = tr("Dynamic labels");
 					break;
 
-				case AT_MOTSLISHOW:
-					strReturn = "MOT Slideshow";
+				case DAB_AT_MOTSLIDESHOW:
+					strReturn = tr("MOT Slideshow");
 					break;
 
-				case AT_MOTBROADCASTWEBSITE:
-					strReturn = "MOT WebSite";
+				case DAB_AT_BROADCASTWEBSITE:
+					strReturn = tr("MOT WebSite");
 					break;
 
-				case 4:
-					strReturn = "TPEG";
+				case DAB_AT_TPEG:
+					strReturn = tr("TPEG");
 					break;
 
-				case 5:
-					strReturn = "DGPS";
+				case DAB_AT_DGPS:
+					strReturn = tr("DGPS");
 					break;
 
-				case 6:
-					strReturn = "TMC";
+				case DAB_AT_TMC:
+					strReturn = tr("TMC");
 					break;
 
-				case AT_MOTEPG:
-					strReturn = "EPG - Electronic Programme Guide";
+				case DAB_AT_EPG:
+					strReturn = tr("EPG - Electronic Programme Guide");
 					break;
 
-				case 8:
-					strReturn = "Java";
+				case DAB_AT_JAVA:
+					strReturn = tr("Java");
 					break;
 
-				case AT_JOURNALINE: /* Journaline */
-					strReturn = "Journaline";
+				case DAB_AT_JOURNALINE: /* Journaline */
+					strReturn = tr("Journaline");
 					break;
 				}
 			}
 			else
-				strReturn = "Unknown Service";
+				strReturn = tr("Unknown Service");
 		}
 		else
-			strReturn = "Unknown Service";
+			strReturn = tr("Unknown Service");
 	}
 
 	return strReturn;

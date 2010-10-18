@@ -29,11 +29,12 @@
 #include "DataDecoder.h"
 #include "./epg/epgutil.h"
 #include "Journaline.h"
+#include "Experiment.h"
 #include <iostream>
 
 CDataDecoder::CDataDecoder ():iServPacketID (0), DoNotProcessData (TRUE),
-	Journaline(*new CJournaline()),
-	iOldJournalineServiceID (0)
+	Journaline(*new CJournaline()),iOldJournalineServiceID (0),
+	Experiment(*new CExperiment())
 {
 		for(size_t i=0; i<MAX_NUM_PACK_PER_STREAM; i++)
 			eAppType[i] = AT_NOT_SUP;
@@ -228,12 +229,12 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 
 				switch (eAppType[iPacketID])
 				{
-				case AT_MOTSLISHOW:	/* MOTSlideshow */
+				case AT_MOTSLIDESHOW:	/* MOTSlideshow */
 					/* Packet unit decoding */
 					MOTObject[iPacketID].
 						AddDataUnit(DataUnit[iPacketID].vecbiData);
 					break;
-				case AT_MOTEPG:	/* EPG */
+				case AT_EPG:	/* EPG */
 					/* Packet unit decoding */
 					//cout << iEPGPacketID << " " << iPacketID << endl; cout.flush();
 					if(iEPGPacketID == -1)
@@ -244,7 +245,7 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 					MOTObject[iEPGPacketID].AddDataUnit(DataUnit[iPacketID].vecbiData);
 					break;
 
-				case AT_MOTBROADCASTWEBSITE:	/* MOT Broadcast Web Site */
+				case AT_BROADCASTWEBSITE:	/* MOT Broadcast Web Site */
 					/* Packet unit decoding */
 					MOTObject[iPacketID].AddDataUnit(DataUnit[iPacketID].vecbiData);
 					break;
@@ -252,6 +253,11 @@ CDataDecoder::ProcessDataInternal(CParameter & ReceiverParam)
 				case AT_JOURNALINE:
 					Journaline.AddDataUnit(DataUnit[iPacketID].vecbiData);
 					break;
+
+				case AT_EXPERIMENTAL:
+					Experiment.AddDataUnit(DataUnit[iPacketID].vecbiData);
+					break;
+
 				default:		/* do nothing */
 					;
 				}
@@ -437,7 +443,7 @@ CDataDecoder::InitInternal(CParameter & ReceiverParam)
 		{
 			iEPGService = i;
 			iEPGPacketID = ReceiverParam.Service[i].DataParam.iPacketID;
-			eAppType[iEPGPacketID] = AT_MOTEPG;
+			eAppType[iEPGPacketID] = AT_EPG;
 			//cerr << "EPG packet id " << iEPGPacketID << endl;
 		}
 	}
@@ -516,36 +522,40 @@ CDataDecoder::EAppType CDataDecoder::GetAppType(const CDataParam& DataParam)
 
 		switch (iDABUserAppIdent)
 		{
-		case 2:		/* MOTSlideshow */
-			eAppType = AT_MOTSLISHOW;
+		case DAB_AT_MOTSLIDESHOW:		/* MOTSlideshow */
+			eAppType = AT_MOTSLIDESHOW;
 			break;
 
-		case 3:		/* MOT Broadcast Web Site */
-			eAppType = AT_MOTBROADCASTWEBSITE;
+		case DAB_AT_BROADCASTWEBSITE:		/* MOT Broadcast Web Site */
+			eAppType = AT_BROADCASTWEBSITE;
 			break;
 
-		case 4:
-			eAppType = AT_MOTTPEG;
+		case DAB_AT_TPEG:
+			eAppType = AT_TPEG;
 			break;
 
-		case 5:
+		case DAB_AT_DGPS:
 			eAppType = AT_DGPS;
 			break;
 
-		case 6:
+		case DAB_AT_TMC:
 			eAppType = AT_TMC;
 			break;
 
-		case 7:
-			eAppType  = AT_MOTEPG;
+		case DAB_AT_EPG:
+			eAppType  = AT_EPG;
 			break;
 
-		case 8:
+		case DAB_AT_JAVA:
 			eAppType = AT_JAVA;
 			break;
 
-		case 0x44A:	/* Journaline */
+		case DAB_AT_JOURNALINE:	/* Journaline */
 			eAppType  = AT_JOURNALINE;
+			break;
+
+		case DAB_AT_EXPERIMENTAL:	/* Journaline */
+			eAppType  = AT_EXPERIMENTAL;
 			break;
 		}
 	}

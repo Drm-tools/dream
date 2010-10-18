@@ -223,6 +223,8 @@
 		<Unit filename="..\common\datadecoding\DataDecoder.h" />
 		<Unit filename="..\common\datadecoding\DataEncoder.cpp" />
 		<Unit filename="..\common\datadecoding\DataEncoder.h" />
+		<Unit filename="..\common\datadecoding\Experiment.cpp" />
+		<Unit filename="..\common\datadecoding\Experiment.h" />
 		<Unit filename="..\common\datadecoding\Journaline.cpp" />
 		<Unit filename="..\common\datadecoding\Journaline.h" />
 		<Unit filename="..\common\datadecoding\MOTSlideShow.cpp" />
