@@ -55,7 +55,7 @@
 /// @file       NML.cpp
 /// @author     Michael Reichenbächer <rbr@iis.fraunhofer.de>
 ///
-/// $Id: NML.cpp,v 1.7 2010/02/10 23:45:38 jcable Exp $
+/// $Id: NML.cpp,v 1.8 2011/02/14 19:39:50 stoeppsi Exp $
 ///
 /// Module:     Journaline(R)
 ///
@@ -289,6 +289,7 @@ unsigned char* NMLFactory::getNextSection( const unsigned char*& p, unsigned sho
 			}
 			// we can safely skip the datasection now
 			i += 2 + dslen;
+			            continue;	
 		}
 
 		if( !(p[i] & 0xF0) ) // any jml code
