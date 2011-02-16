@@ -835,11 +835,13 @@ _BOOLEAN CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
 {
     /* Check length -> must be 3 or 4 bytes */
     if (iLengthOfBody < 3)
-        return TRUE;
+        return FALSE;
 
     if (iLengthOfBody > 4)
-        return TRUE;
+        return FALSE;
 
+	if (iLengthOfBody == 3)
+    {
     /* Decode date */
     CModJulDate ModJulDate((*pbiData).Separate(17));
 
@@ -851,12 +853,36 @@ _BOOLEAN CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
     /* UTC (hours and minutes) */
     Parameter.iUTCHour = (*pbiData).Separate(5);
     Parameter.iUTCMin = (*pbiData).Separate(6);
+	
+    }
 
     if (iLengthOfBody == 4)
     {
-    	// TODO decode local time offset
-    }
+		/* Decode date */
+    CModJulDate ModJulDate((*pbiData).Separate(17));
+	
+    Parameter.Lock();
+    Parameter.iDay = ModJulDate.GetDay();
+    Parameter.iMonth = ModJulDate.GetMonth();
+    Parameter.iYear = ModJulDate.GetYear();
 
+	/* UTC (hours and minutes) */
+    Parameter.iUTCHour = (*pbiData).Separate(5);
+    Parameter.iUTCMin = (*pbiData).Separate(6);
+	    
+    	// TODO decode local time offset
+	   //  Test Simone decode LTO
+
+    /* rfu */
+        (*pbiData).Separate(2);
+
+	/* UTC Sense */
+	Parameter.iUTCSense =(*pbiData).Separate(1); 
+	  
+    /* UTC Offset */
+    Parameter.iUTCOff = ((*pbiData).Separate(5));
+    }
+	
     Parameter.Unlock();
 
     return FALSE;
