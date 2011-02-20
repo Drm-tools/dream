@@ -204,7 +204,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, WFlags f)
 	/* Set version number in about dialog */
 	QString strVersionText;
 	strVersionText = "<center><b>" + tr("Dream, Version ");
-	strVersionText += dream_version;
+	strVersionText += QString("%1.%2").arg(dream_version_major).arg(dream_version_minor);
 	strVersionText += "</b><br> " + tr("Open-Source Software Implementation of "
 		"a DRM-Receiver") + "<br>";
 	strVersionText += tr("Under the GNU General Public License (GPL)") +

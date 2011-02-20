@@ -27,4 +27,8 @@
 \******************************************************************************/
 #include "Version.h"
 
-char dream_version[] = "1.13";
+char dream_manufacturer[] = "drea";
+char dream_implementation[] = "Q2";
+int dream_version_major = 1;
+int dream_version_minor = 13;
+

@@ -1017,39 +1017,18 @@ void CRxStatus::SetStatus(const ETypeRxStatus OK)
 
 void CParameter::GenerateReceiverID()
 {
-    //Set receiver ID
-    string sVer;
-    unsigned int iImplementation = 0;;
-    unsigned int iMajor = 0;
-    unsigned int iMinor = 0;
-
-    sReceiverID = "drea";
-
-    sVer = dream_version;
-
-    size_t pos;
-
-    while ((pos = sVer.find('.')) != string::npos)
-        sVer.replace(pos, 1, " ");
-
-    if ((pos = sVer.find("cvs")) != string::npos)
-        sVer.replace(pos, 3, "   ");
-
-    stringstream ssVer(sVer);
-    ssVer >> iImplementation >> iMajor >> iMinor;
-
     stringstream ssInfoVer;
-    ssInfoVer << setw(2) << setfill('0') << iImplementation << setw(2) << setfill('0') << iMajor << setw(2) << setfill('0') << iMinor;
+    ssInfoVer << setw(2) << setfill('0') << setw(2) << setfill('0') << dream_version_major << setw(2) << setfill('0') << dream_version_minor;
 
-    sReceiverID += ssInfoVer.str();
+    sReceiverID = string(dream_manufacturer)+string(dream_implementation)+ssInfoVer.str();
 
     while (sSerialNumber.length() < 6)
         sSerialNumber += "_";
 
     if (sSerialNumber.length() > 6)
-        sSerialNumber.erase(6, pDRMRec->GetParameters()->sSerialNumber.length()-6);
+        sSerialNumber.erase(6, sSerialNumber.length()-6);
 
-    sReceiverID += pDRMRec->GetParameters()->sSerialNumber;
+    sReceiverID += sSerialNumber;
 }
 
 void CParameter::GenerateRandomSerialNumber()

@@ -152,7 +152,7 @@ CShortLog::writeHeader()
 
     /* Beginning of new table (similar to DW DRM log file) */
     File << endl << ">>>>" << endl << "Dream" << endl
-    << "Software Version " << dream_version << endl;
+    << "Software Version " << dream_version_major << "." << dream_version_minor << endl;
 
     time_t now;
     (void) time(&now);
