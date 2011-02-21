@@ -1318,7 +1318,6 @@ CDRMReceiver::LoadSettings(CSettings& s)
     }
 
     pReceiverParam->GenerateReceiverID();
-cerr << pReceiverParam->sSerialNumber << " " << pReceiverParam->sReceiverID << endl;
 
     /* Data files directory */
     string sDataFilesDirectory = s.Get(
