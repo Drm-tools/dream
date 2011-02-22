@@ -43,7 +43,7 @@ RSC=rc.exe
 # PROP Ignore_Export_Lib 0
 # PROP Target_Dir ""
 # ADD BASE CPP /nologo /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /YX /FD /c
-# ADD CPP /nologo /MD /GX /O2 /I "$(QTDIR)\include" /I "../libs" /I "../common/GUI-QT" /I "./moc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "FREEIMAGE_LIB" /D "HAVE_LIBHAMLIB" /YX /FD /c
+# ADD CPP /nologo /MD /GX /O2 /I "$(QTDIR)\include" /I "../libs" /I "../common/GUI-QT" /I "./moc" /D "WIN32" /D "NDEBUG" /D "_WINDOWS" /D "QT_DLL" /D "QT_THREAD_SUPPORT" /D "FREEIMAGE_LIB" /YX /FD /c
 # SUBTRACT CPP /Fr
 # ADD BASE MTL /nologo /D "NDEBUG" /mktyplib203 /win32
 # ADD MTL /nologo /D "NDEBUG" /mktyplib203 /win32
@@ -582,10 +582,6 @@ SOURCE=..\common\datadecoding\Journaline.cpp
 
 SOURCE=..\common\datadecoding\MOTSlideShow.cpp
 # End Source File
-# Begin Source File
-
-SOURCE=..\common\datadecoding\Experiment.cpp
-# End Source File
 # End Group
 # Begin Group "Source Utilities"
 
@@ -1109,10 +1105,6 @@ SOURCE=..\common\datadecoding\Journaline.h
 # Begin Source File
 
 SOURCE=..\common\datadecoding\MOTSlideShow.h
-# End Source File
-# Begin Source File
-
-SOURCE=..\common\datadecoding\Experiment.h
 # End Source File
 # End Group
 # Begin Group "Header Utilities"
