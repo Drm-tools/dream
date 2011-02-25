@@ -121,7 +121,8 @@ void EPGDlg::sendNowNext(QString s)
 	Settings.Put("NowNext", "address", addr);
 	Settings.Put("NowNext", "port", port);
 	Q3SocketDevice sock(Q3SocketDevice::Datagram);
-	sock.writeBlock(s.utf8(), s.length(), QHostAddress(addr.c_str()), port);
+	QHostAddress a; a.setAddress(addr.c_str());
+	sock.writeBlock(s.utf8(), s.length(), a, port);
 }
 
 void EPGDlg::OnTimer()
