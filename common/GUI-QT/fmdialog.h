@@ -32,11 +32,6 @@
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
-#if QT_VERSION < 0x040000
-# include <qwt/qwt_thermo.h>
-#else
-# include <qwt_thermo.h>
-#endif
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>

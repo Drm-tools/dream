@@ -30,6 +30,7 @@
 #include "DialogUtil.h"
 #include <qmessagebox.h>
 #include <qinputdialog.h>
+#include <qwt_thermo.h>
 #if QT_VERSION < 0x040000
 # include <qwhatsthis.h>
 # define Q3WhatsThis QWhatsThis

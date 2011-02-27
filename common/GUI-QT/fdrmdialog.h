@@ -35,13 +35,12 @@
 #include <qlayout.h>
 #include <qpalette.h>
 #include <qcolordialog.h>
+#include <qwt_thermo.h>
 #if QT_VERSION < 0x040000
 # define Q3PopupMenu QPopupMenu
 # define Q3ButtonGroup QButtonGroup
-# include <qwt/qwt_thermo.h>
 # include <qpopupmenu.h>
 #else
-# include <qwt_thermo.h>
 # include <q3popupmenu.h>
 # include <QShowEvent>
 # include <QHideEvent>

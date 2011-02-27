@@ -1,5 +1,5 @@
 CONFIG		+= uic3
-QT			+= qt3support network xml
+QT		+= qt3support network xml
 FORMS3		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui fmdialogbase.ui
 FORMS3		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
 FORMS3		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
@@ -16,3 +16,6 @@ win32 {
 }
 
 include("dream-common.pro")
+
+HEADERS		+= common/GUI-QT/DRMPlot.h common/GUI-QT/DRMPlot-qwt5.h
+SOURCES		+= common/GUI-QT/DRMPlot.cpp common/GUI-QT/DRMPlot-qwt5.cpp

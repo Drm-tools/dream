@@ -31,9 +31,9 @@
 #include "AnalogDemDlg.h"
 #include <qmessagebox.h>
 #include <qdatetime.h>
+#include <qwt_dial.h>
+#include <qwt_dial_needle.h>
 #if QT_VERSION < 0x040000
-# include <qwt/qwt_dial.h>
-# include <qwt/qwt_dial_needle.h>
 # include <qbuttongroup.h>
 # include <qfiledialog.h>
 # include <qprogressbar.h>
@@ -43,8 +43,6 @@
 # define Q3FileDialog QFileDialog
 # define Q3CString QCString
 #else
-# include <qwt_dial.h>
-# include <qwt_dial_needle.h>
 # include <q3buttongroup.h>
 # include <q3filedialog.h>
 # include <q3progressbar.h>

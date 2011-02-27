@@ -42,12 +42,11 @@
 #include <qlayout.h>
 #include <qthread.h>
 #include <qtimer.h>
+#include <qwt_thermo.h>
 #if QT_VERSION < 0x040000
-#include <qwt/qwt_thermo.h>
 # include <qpopupmenu.h>
 # define Q3PopupMenu QPopupMenu
 #else
-#include <qwt_thermo.h>
 # include <q3popupmenu.h>
 #endif
 

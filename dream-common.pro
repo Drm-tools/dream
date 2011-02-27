@@ -177,7 +177,6 @@ common/GPSData.h   \
 common/GPSReceiver.h   \
 common/GUI-QT/AnalogDemDlg.h   \
 common/GUI-QT/DialogUtil.h   \
-common/GUI-QT/DRMPlot.h   \
 common/GUI-QT/EPGDlg.h   \
 common/GUI-QT/fdrmdialog.h   \
 common/GUI-QT/fmdialog.h   \
@@ -301,7 +300,6 @@ common/GPSData.cpp   \
 common/GPSReceiver.cpp   \
 common/GUI-QT/AnalogDemDlg.cpp   \
 common/GUI-QT/DialogUtil.cpp   \
-common/GUI-QT/DRMPlot.cpp   \
 common/GUI-QT/EPGDlg.cpp   \
 common/GUI-QT/fmdialog.cpp   \
 common/GUI-QT/fdrmdialog.cpp   \

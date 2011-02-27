@@ -66,7 +66,7 @@
 # include <FreeImage.h> /* to extract the library version */
 #endif
 
-#include <qwt/qwt_global.h> /* to extract the library version */
+#include <qwt_global.h> /* to extract the library version */
 
 #ifdef USE_FAAD2_LIBRARY
 # include <neaacdec.h>
