@@ -52,7 +52,6 @@
 #include <qpixmap.h>
 
 #include "systemevalDlgbase.h"
-#include "DRMPlot.h"
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
@@ -62,6 +61,7 @@
 
 class CGPSReceiver;
 class CRig;
+class CDRMPlot;
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -85,26 +85,10 @@ public:
 	void StopLogTimers();
 
 protected:
-	class CCharSelItem : public Q3ListViewItem
-	{
-	public:
-		CCharSelItem(Q3ListView* parent, QString str1,
-			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
-			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
-			{setSelectable(bSelble);}
-		CCharSelItem(Q3ListViewItem* parent, QString str1,
-			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
-			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
-			{setSelectable(bSelble);}
-
-		CDRMPlot::ECharType GetCharType() {return eCharTy;}
-
-	protected:
-		CDRMPlot::ECharType eCharTy;
-	};
-
 	CDRMReceiver&		DRMReceiver;
 	CSettings&		Settings;
+
+	CDRMPlot*		MainPlot;
 
 	QTimer			Timer;
 	QTimer			TimerInterDigit;
@@ -123,7 +107,7 @@ protected:
 	virtual void		hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
-	CDRMPlot*		OpenChartWin(const CDRMPlot::ECharType eNewType);
+	CDRMPlot*		OpenChartWin(int);
 
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();

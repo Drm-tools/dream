@@ -46,12 +46,10 @@
 #include <AnalogDemDlgbase.h>
 #include "AMSSDlgbase.h"
 #include "DialogUtil.h"
-#include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
 #include "../tables/TableAMSS.h"
-
 
 /* Definitions ****************************************************************/
 /* Update time of PLL phase dial control */
@@ -59,6 +57,9 @@
 
 
 /* Classes ********************************************************************/
+
+class CDRMPlot;
+
 /* AMSS dialog -------------------------------------------------------------- */
 class CAMSSDlg : public CAMSSDlgBase
 {
@@ -98,6 +99,8 @@ public:
 protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
+
+	CDRMPlot*		MainPlot;
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;

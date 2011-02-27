@@ -30,8 +30,10 @@
 #include "DialogUtil.h"
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
+#include <qlayout.h>
 #if QT_VERSION < 0x040000
-#include <qbuttongroup.h>
+# include "DRMPlot.h"
+# include <qbuttongroup.h>
 # include <qfiledialog.h>
 # include <qwhatsthis.h>
 # define Q3WhatsThis QWhatsThis
@@ -42,6 +44,24 @@
 # include <QHideEvent>
 # include <QShowEvent>
 #endif
+
+	class CCharSelItem : public Q3ListViewItem
+	{
+	public:
+		CCharSelItem(Q3ListView* parent, QString str1,
+			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
+			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
+			{setSelectable(bSelble);}
+		CCharSelItem(Q3ListViewItem* parent, QString str1,
+			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
+			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
+			{setSelectable(bSelble);}
+
+		CDRMPlot::ECharType GetCharType() {return eCharTy;}
+
+	protected:
+		CDRMPlot::ECharType eCharTy;
+	};
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings,
@@ -64,6 +84,10 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
+
+	MainPlot = new CDRMPlot( ButtonGroupPlotSNR, "MainPlot" );
+	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, 0, 0, MainPlot->sizePolicy().hasHeightForWidth() ) );
+	ButtonGroupPlotSNRLayout->addWidget( MainPlot );
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
@@ -694,8 +718,10 @@ void systemevalDlg::UpdatePlotsStyle()
 	MainPlot->SetPlotStyle(iPlotStyle);
 }
 
-CDRMPlot* systemevalDlg::OpenChartWin(const CDRMPlot::ECharType eNewType)
+CDRMPlot* systemevalDlg::OpenChartWin(int iNewType)
 {
+	const CDRMPlot::ECharType eNewType = CDRMPlot::ECharType(iNewType);
+
 	/* Create new chart window */
 	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
 	pNewChartWin->setCaption(tr("Chart Window"));

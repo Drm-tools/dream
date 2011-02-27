@@ -30,10 +30,12 @@
 
 #include "AnalogDemDlg.h"
 #include <qmessagebox.h>
+#include <qlayout.h>
 #include <qdatetime.h>
 #include <qwt_dial.h>
 #include <qwt_dial_needle.h>
 #if QT_VERSION < 0x040000
+# include "DRMPlot.h"
 # include <qbuttongroup.h>
 # include <qfiledialog.h>
 # include <qprogressbar.h>
@@ -71,6 +73,10 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
+
+	MainPlot = new CDRMPlot( ButtonGroupChart, "MainPlot" );
+	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, 0, 0, MainPlot->sizePolicy().hasHeightForWidth() ) );
+	ButtonGroupChartLayout->addWidget( MainPlot );
 
 	/* Set Menu ***************************************************************/
 	/* View menu ------------------------------------------------------------ */
