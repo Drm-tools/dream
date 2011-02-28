@@ -38,12 +38,13 @@
 # define Q3CString QCString
 # define Q3FileDialog QFileDialog
 #else
-# include <q3filedialog.h>
-#include <Q3TextStream>
-#include <Q3CString>
-#include <QDateTime>
-#include <QHideEvent>
-#include <QShowEvent>
+# include <Q3WhatsThis>
+# include <Q3FileDialog>
+# include <Q3TextStream>
+# include <Q3CString>
+# include <QDateTime>
+# include <QHideEvent>
+# include <QShowEvent>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 
