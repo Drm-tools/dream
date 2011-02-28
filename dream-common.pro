@@ -95,7 +95,7 @@ sndfile {
         LIBS 		+= -lsndfile
 	}
 	win32 {
-        LIBS 		+= libfaac.lib
+        LIBS 		+= libsndfile-1.lib
 	}
 }
 
