@@ -97,7 +97,11 @@ EPGDlg::~EPGDlg()
 
 void EPGDlg::setActive(Q3ListViewItem* myItem)
 {
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+	MyListViewItem* item = (MyListViewItem*)(myItem);
+#else
 	MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
+#endif
 	if(item->IsActive())
 	{
 		item->setPixmap(COL_START, BitmCubeGreen);
