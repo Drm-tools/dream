@@ -36,20 +36,20 @@
 #include <qdatetime.h>
 #include <qlineedit.h>
 #include <qtooltip.h>
+#include <qwt_thermo.h>
+#include <qpixmap.h>
+
 #if QT_VERSION < 0x040000
 # include <qpopupmenu.h>
 # include <qlistview.h>
 # define Q3ListView QListView
 # define Q3ListViewItem QListViewItem
 # define Q3PopupMenu QPopupMenu
-#include <qwt_thermo.h>
 #else
-# include <q3listview.h>
-# include <q3buttongroup.h>
-# include <q3popupmenu.h>
-# include <qwt_thermo.h>
+# include <Q3ListView>
+# include <Q3ButtonGroup>
+# include <Q3PopupMenu>
 #endif
-#include <qpixmap.h>
 
 #include "systemevalDlgbase.h"
 #include "MultColorLED.h"
@@ -140,13 +140,8 @@ public slots:
 	void OnCheckModiMetric();
 	void OnListViContMenu();
 	void OnFrequencyEdited (const QString&);
-#if QT_VERSION < 0x040000
-	void OnListSelChanged(QListViewItem* NewSelIt);
-	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
-#else
 	void OnListSelChanged(Q3ListViewItem* NewSelIt);
 	void OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
-#endif
 	void EnableGPS();
 	void DisableGPS();
 };
