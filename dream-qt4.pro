@@ -1,5 +1,6 @@
 CONFIG		+= uic3 debug
 QT		+= qt3support network xml
+VPATH		+= common/GUI-QT
 FORMS3		+= TransmDlgbase.ui fdrmdialogbase.ui AnalogDemDlgbase.ui fmdialogbase.ui
 FORMS3		+= AMSSDlgbase.ui systemevalDlgbase.ui MultimediaDlgbase.ui
 FORMS3		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui

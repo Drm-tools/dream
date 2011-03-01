@@ -259,19 +259,19 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/AnalogDemDlg.cpp \
 	../common/MDI/PacketSourceFile.cpp \
 	../common/MDI/PacketSocketQT.cpp \
-	../common/GUI-QT/fdrmdialogbase.ui \
-	../common/GUI-QT/fmdialogbase.ui \
-	../common/GUI-QT/TransmDlgbase.ui \
-	../common/GUI-QT/AboutDlgbase.ui \
-	../common/GUI-QT/systemevalDlgbase.ui \
-	../common/GUI-QT/MultimediaDlgbase.ui \
-	../common/GUI-QT/StationsDlgbase.ui \
-	../common/GUI-QT/LiveScheduleDlgbase.ui \
-	../common/GUI-QT/MultSettingsDlgbase.ui \
-	../common/GUI-QT/GeneralSettingsDlgbase.ui \
-	../common/GUI-QT/EPGDlgbase.ui \
-	../common/GUI-QT/AnalogDemDlgbase.ui \
-	../common/GUI-QT/AMSSDlgbase.ui \
+	../common/GUI-QT/qt2/fdrmdialogbase.ui \
+	../common/GUI-QT/qt2/fmdialogbase.ui \
+	../common/GUI-QT/qt2/TransmDlgbase.ui \
+	../common/GUI-QT/qt2/AboutDlgbase.ui \
+	../common/GUI-QT/qt2/systemevalDlgbase.ui \
+	../common/GUI-QT/qt2/MultimediaDlgbase.ui \
+	../common/GUI-QT/qt2/StationsDlgbase.ui \
+	../common/GUI-QT/qt2/LiveScheduleDlgbase.ui \
+	../common/GUI-QT/qt2/MultSettingsDlgbase.ui \
+	../common/GUI-QT/qt2/GeneralSettingsDlgbase.ui \
+	../common/GUI-QT/qt2/EPGDlgbase.ui \
+	../common/GUI-QT/qt2/AnalogDemDlgbase.ui \
+	../common/GUI-QT/qt2/AMSSDlgbase.ui \
 	../common/GPSReceiver.h \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialog.h \
@@ -348,11 +348,11 @@ moc/moc_GPSReceiver.cpp: ../common/GPSReceiver.h
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp
 	
-moc/AboutDlgbase.h: ../common/GUI-QT/AboutDlgbase.ui
-	$(UIC) ../common/GUI-QT/AboutDlgbase.ui -o moc/AboutDlgbase.h
+moc/AboutDlgbase.h: ../common/GUI-QT/qt2/AboutDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/AboutDlgbase.ui -o moc/AboutDlgbase.h
 	
-moc/AboutDlgbase.cpp: ../common/GUI-QT/AboutDlgbase.ui moc/AboutDlgbase.h
-	$(UIC) ../common/GUI-QT/AboutDlgbase.ui -i moc/AboutDlgbase.h -o moc/AboutDlgbase.cpp	
+moc/AboutDlgbase.cpp: ../common/GUI-QT/qt2/AboutDlgbase.ui moc/AboutDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/AboutDlgbase.ui -i moc/AboutDlgbase.h -o moc/AboutDlgbase.cpp	
 
 	
 moc/moc_fdrmdialog.cpp: ../common/GUI-QT/fdrmdialog.h
@@ -367,17 +367,17 @@ moc/moc_fdrmdialogbase.cpp: moc/fdrmdialogbase.h
 moc/moc_fmdialogbase.cpp: moc/fmdialogbase.h
 	$(MOC) moc/fmdialogbase.h -o moc/moc_fmdialogbase.cpp
 
-moc/fdrmdialogbase.h: ../common/GUI-QT/fdrmdialogbase.ui
-	$(UIC) ../common/GUI-QT/fdrmdialogbase.ui -o moc/fdrmdialogbase.h
+moc/fdrmdialogbase.h: ../common/GUI-QT/qt2/fdrmdialogbase.ui
+	$(UIC) ../common/GUI-QT/qt2/fdrmdialogbase.ui -o moc/fdrmdialogbase.h
 
-moc/fmdialogbase.h: ../common/GUI-QT/fmdialogbase.ui
-	$(UIC) ../common/GUI-QT/fmdialogbase.ui -o moc/fmdialogbase.h
+moc/fmdialogbase.h: ../common/GUI-QT/qt2/fmdialogbase.ui
+	$(UIC) ../common/GUI-QT/qt2/fmdialogbase.ui -o moc/fmdialogbase.h
 
-moc/fdrmdialogbase.cpp: ../common/GUI-QT/fdrmdialogbase.ui moc/fdrmdialogbase.h
-	$(UIC) ../common/GUI-QT/fdrmdialogbase.ui -i moc/fdrmdialogbase.h -o moc/fdrmdialogbase.cpp
+moc/fdrmdialogbase.cpp: ../common/GUI-QT/qt2/fdrmdialogbase.ui moc/fdrmdialogbase.h
+	$(UIC) ../common/GUI-QT/qt2/fdrmdialogbase.ui -i moc/fdrmdialogbase.h -o moc/fdrmdialogbase.cpp
 
-moc/fmdialogbase.cpp: ../common/GUI-QT/fmdialogbase.ui moc/fmdialogbase.h
-	$(UIC) ../common/GUI-QT/fmdialogbase.ui -i moc/fmdialogbase.h -o moc/fmdialogbase.cpp
+moc/fmdialogbase.cpp: ../common/GUI-QT/qt2/fmdialogbase.ui moc/fmdialogbase.h
+	$(UIC) ../common/GUI-QT/qt2/fmdialogbase.ui -i moc/fmdialogbase.h -o moc/fmdialogbase.cpp
 
 moc/moc_TransmDlg.cpp: ../common/GUI-QT/TransmDlg.h
 	$(MOC) ../common/GUI-QT/TransmDlg.h -o moc/moc_TransmDlg.cpp
@@ -385,11 +385,11 @@ moc/moc_TransmDlg.cpp: ../common/GUI-QT/TransmDlg.h
 moc/moc_TransmDlgbase.cpp: moc/TransmDlgbase.h
 	$(MOC) moc/TransmDlgbase.h -o moc/moc_TransmDlgbase.cpp
 
-moc/TransmDlgbase.h: ../common/GUI-QT/TransmDlgbase.ui
-	$(UIC) ../common/GUI-QT/TransmDlgbase.ui -o moc/TransmDlgbase.h
+moc/TransmDlgbase.h: ../common/GUI-QT/qt2/TransmDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/TransmDlgbase.ui -o moc/TransmDlgbase.h
 
-moc/TransmDlgbase.cpp: ../common/GUI-QT/TransmDlgbase.ui moc/TransmDlgbase.h
-	$(UIC) ../common/GUI-QT/TransmDlgbase.ui -i moc/TransmDlgbase.h -o moc/TransmDlgbase.cpp
+moc/TransmDlgbase.cpp: ../common/GUI-QT/qt2/TransmDlgbase.ui moc/TransmDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/TransmDlgbase.ui -i moc/TransmDlgbase.h -o moc/TransmDlgbase.cpp
 
 moc/moc_systemevalDlg.cpp: ../common/GUI-QT/systemevalDlg.h
 	$(MOC) ../common/GUI-QT/systemevalDlg.h -o moc/moc_systemevalDlg.cpp
@@ -397,11 +397,11 @@ moc/moc_systemevalDlg.cpp: ../common/GUI-QT/systemevalDlg.h
 moc/moc_systemevalDlgbase.cpp: moc/systemevalDlgbase.h
 	$(MOC) moc/systemevalDlgbase.h -o moc/moc_systemevalDlgbase.cpp
 	
-moc/systemevalDlgbase.h: ../common/GUI-QT/systemevalDlgbase.ui
-	$(UIC) ../common/GUI-QT/systemevalDlgbase.ui -o moc/systemevalDlgbase.h
+moc/systemevalDlgbase.h: ../common/GUI-QT/qt2/systemevalDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/systemevalDlgbase.ui -o moc/systemevalDlgbase.h
 
-moc/systemevalDlgbase.cpp: ../common/GUI-QT/systemevalDlgbase.ui moc/systemevalDlgbase.h
-	$(UIC) ../common/GUI-QT/systemevalDlgbase.ui -i moc/systemevalDlgbase.h -o moc/systemevalDlgbase.cpp
+moc/systemevalDlgbase.cpp: ../common/GUI-QT/qt2/systemevalDlgbase.ui moc/systemevalDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/systemevalDlgbase.ui -i moc/systemevalDlgbase.h -o moc/systemevalDlgbase.cpp
 
 moc/moc_MultimediaDlg.cpp: ../common/GUI-QT/MultimediaDlg.h
 	$(MOC) ../common/GUI-QT/MultimediaDlg.h -o moc/moc_MultimediaDlg.cpp
@@ -409,11 +409,11 @@ moc/moc_MultimediaDlg.cpp: ../common/GUI-QT/MultimediaDlg.h
 moc/moc_MultimediaDlgbase.cpp: moc/MultimediaDlgbase.h
 	$(MOC) moc/MultimediaDlgbase.h -o moc/moc_MultimediaDlgbase.cpp
 	
-moc/MultimediaDlgbase.h: ../common/GUI-QT/MultimediaDlgbase.ui
-	$(UIC) ../common/GUI-QT/MultimediaDlgbase.ui -o moc/MultimediaDlgbase.h
+moc/MultimediaDlgbase.h: ../common/GUI-QT/qt2/MultimediaDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/MultimediaDlgbase.ui -o moc/MultimediaDlgbase.h
 
-moc/MultimediaDlgbase.cpp: ../common/GUI-QT/MultimediaDlgbase.ui moc/MultimediaDlgbase.h
-	$(UIC) ../common/GUI-QT/MultimediaDlgbase.ui -i moc/MultimediaDlgbase.h -o moc/MultimediaDlgbase.cpp
+moc/MultimediaDlgbase.cpp: ../common/GUI-QT/qt2/MultimediaDlgbase.ui moc/MultimediaDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/MultimediaDlgbase.ui -i moc/MultimediaDlgbase.h -o moc/MultimediaDlgbase.cpp
 
 moc/moc_StationsDlg.cpp: ../common/GUI-QT/StationsDlg.h
 	$(MOC) ../common/GUI-QT/StationsDlg.h -o moc/moc_StationsDlg.cpp
@@ -421,11 +421,11 @@ moc/moc_StationsDlg.cpp: ../common/GUI-QT/StationsDlg.h
 moc/moc_StationsDlgbase.cpp: moc/StationsDlgbase.h
 	$(MOC) moc/StationsDlgbase.h -o moc/moc_StationsDlgbase.cpp
 	
-moc/StationsDlgbase.h: ../common/GUI-QT/StationsDlgbase.ui
-	$(UIC) ../common/GUI-QT/StationsDlgbase.ui -o moc/StationsDlgbase.h
+moc/StationsDlgbase.h: ../common/GUI-QT/qt2/StationsDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/StationsDlgbase.ui -o moc/StationsDlgbase.h
 
-moc/StationsDlgbase.cpp: ../common/GUI-QT/StationsDlgbase.ui moc/StationsDlgbase.h
-	$(UIC) ../common/GUI-QT/StationsDlgbase.ui -i moc/StationsDlgbase.h -o moc/StationsDlgbase.cpp
+moc/StationsDlgbase.cpp: ../common/GUI-QT/qt2/StationsDlgbase.ui moc/StationsDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/StationsDlgbase.ui -i moc/StationsDlgbase.h -o moc/StationsDlgbase.cpp
 
 moc/moc_LiveScheduleDlg.cpp: ../common/GUI-QT/LiveScheduleDlg.h
 	$(MOC) ../common/GUI-QT/LiveScheduleDlg.h -o moc/moc_LiveScheduleDlg.cpp
@@ -433,11 +433,11 @@ moc/moc_LiveScheduleDlg.cpp: ../common/GUI-QT/LiveScheduleDlg.h
 moc/moc_LiveScheduleDlgbase.cpp: moc/LiveScheduleDlgbase.h
 	$(MOC) moc/LiveScheduleDlgbase.h -o moc/moc_LiveScheduleDlgbase.cpp
 	
-moc/LiveScheduleDlgbase.h: ../common/GUI-QT/LiveScheduleDlgbase.ui
-	$(UIC) ../common/GUI-QT/LiveScheduleDlgbase.ui -o moc/LiveScheduleDlgbase.h
+moc/LiveScheduleDlgbase.h: ../common/GUI-QT/qt2/LiveScheduleDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/LiveScheduleDlgbase.ui -o moc/LiveScheduleDlgbase.h
 
-moc/LiveScheduleDlgbase.cpp: ../common/GUI-QT/LiveScheduleDlgbase.ui moc/LiveScheduleDlgbase.h
-	$(UIC) ../common/GUI-QT/LiveScheduleDlgbase.ui -i moc/LiveScheduleDlgbase.h -o moc/LiveScheduleDlgbase.cpp
+moc/LiveScheduleDlgbase.cpp: ../common/GUI-QT/qt2/LiveScheduleDlgbase.ui moc/LiveScheduleDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/LiveScheduleDlgbase.ui -i moc/LiveScheduleDlgbase.h -o moc/LiveScheduleDlgbase.cpp
 
 moc/moc_MultSettingsDlg.cpp: ../common/GUI-QT/MultSettingsDlg.h
 	$(MOC) ../common/GUI-QT/MultSettingsDlg.h -o moc/moc_MultSettingsDlg.cpp
@@ -445,11 +445,11 @@ moc/moc_MultSettingsDlg.cpp: ../common/GUI-QT/MultSettingsDlg.h
 moc/moc_MultSettingsDlgbase.cpp: moc/MultSettingsDlgbase.h
 	$(MOC) moc/MultSettingsDlgbase.h -o moc/moc_MultSettingsDlgbase.cpp
 	
-moc/MultSettingsDlgbase.h: ../common/GUI-QT/MultSettingsDlgbase.ui
-	$(UIC) ../common/GUI-QT/MultSettingsDlgbase.ui -o moc/MultSettingsDlgbase.h
+moc/MultSettingsDlgbase.h: ../common/GUI-QT/qt2/MultSettingsDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/MultSettingsDlgbase.ui -o moc/MultSettingsDlgbase.h
 
-moc/MultSettingsDlgbase.cpp: ../common/GUI-QT/MultSettingsDlgbase.ui moc/MultSettingsDlgbase.h
-	$(UIC) ../common/GUI-QT/MultSettingsDlgbase.ui -i moc/MultSettingsDlgbase.h -o moc/MultSettingsDlgbase.cpp
+moc/MultSettingsDlgbase.cpp: ../common/GUI-QT/qt2/MultSettingsDlgbase.ui moc/MultSettingsDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/MultSettingsDlgbase.ui -i moc/MultSettingsDlgbase.h -o moc/MultSettingsDlgbase.cpp
 
 moc/moc_GeneralSettingsDlg.cpp: ../common/GUI-QT/GeneralSettingsDlg.h
 	$(MOC) ../common/GUI-QT/GeneralSettingsDlg.h -o moc/moc_GeneralSettingsDlg.cpp
@@ -457,11 +457,11 @@ moc/moc_GeneralSettingsDlg.cpp: ../common/GUI-QT/GeneralSettingsDlg.h
 moc/moc_GeneralSettingsDlgbase.cpp: moc/GeneralSettingsDlgbase.h
 	$(MOC) moc/GeneralSettingsDlgbase.h -o moc/moc_GeneralSettingsDlgbase.cpp
 	
-moc/GeneralSettingsDlgbase.h: ../common/GUI-QT/GeneralSettingsDlgbase.ui
-	$(UIC) ../common/GUI-QT/GeneralSettingsDlgbase.ui -o moc/GeneralSettingsDlgbase.h
+moc/GeneralSettingsDlgbase.h: ../common/GUI-QT/qt2/GeneralSettingsDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/GeneralSettingsDlgbase.ui -o moc/GeneralSettingsDlgbase.h
 
-moc/GeneralSettingsDlgbase.cpp: ../common/GUI-QT/GeneralSettingsDlgbase.ui moc/GeneralSettingsDlgbase.h
-	$(UIC) ../common/GUI-QT/GeneralSettingsDlgbase.ui -i moc/GeneralSettingsDlgbase.h -o moc/GeneralSettingsDlgbase.cpp
+moc/GeneralSettingsDlgbase.cpp: ../common/GUI-QT/qt2/GeneralSettingsDlgbase.ui moc/GeneralSettingsDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/GeneralSettingsDlgbase.ui -i moc/GeneralSettingsDlgbase.h -o moc/GeneralSettingsDlgbase.cpp
 
 moc/moc_EPGDlg.cpp: ../common/GUI-QT/EPGDlg.h
 	$(MOC) ../common/GUI-QT/EPGDlg.h -o moc/moc_EPGDlg.cpp
@@ -469,11 +469,11 @@ moc/moc_EPGDlg.cpp: ../common/GUI-QT/EPGDlg.h
 moc/moc_EPGDlgbase.cpp: moc/EPGDlgbase.h
 	$(MOC) moc/EPGDlgbase.h -o moc/moc_EPGDlgbase.cpp
 	
-moc/EPGDlgbase.h: ../common/GUI-QT/EPGDlgbase.ui
-	$(UIC) ../common/GUI-QT/EPGDlgbase.ui -o moc/EPGDlgbase.h
+moc/EPGDlgbase.h: ../common/GUI-QT/qt2/EPGDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/EPGDlgbase.ui -o moc/EPGDlgbase.h
 
-moc/EPGDlgbase.cpp: ../common/GUI-QT/EPGDlgbase.ui moc/EPGDlgbase.h
-	$(UIC) ../common/GUI-QT/EPGDlgbase.ui -i moc/EPGDlgbase.h -o moc/EPGDlgbase.cpp
+moc/EPGDlgbase.cpp: ../common/GUI-QT/qt2/EPGDlgbase.ui moc/EPGDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/EPGDlgbase.ui -i moc/EPGDlgbase.h -o moc/EPGDlgbase.cpp
 
 moc/moc_AnalogDemDlg.cpp: ../common/GUI-QT/AnalogDemDlg.h
 	$(MOC) ../common/GUI-QT/AnalogDemDlg.h -o moc/moc_AnalogDemDlg.cpp
@@ -481,20 +481,20 @@ moc/moc_AnalogDemDlg.cpp: ../common/GUI-QT/AnalogDemDlg.h
 moc/moc_AnalogDemDlgbase.cpp: moc/AnalogDemDlgbase.h
 	$(MOC) moc/AnalogDemDlgbase.h -o moc/moc_AnalogDemDlgbase.cpp
 	
-moc/AnalogDemDlgbase.h: ../common/GUI-QT/AnalogDemDlgbase.ui
-	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -o moc/AnalogDemDlgbase.h
+moc/AnalogDemDlgbase.h: ../common/GUI-QT/qt2/AnalogDemDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/AnalogDemDlgbase.ui -o moc/AnalogDemDlgbase.h
 
-moc/AnalogDemDlgbase.cpp: ../common/GUI-QT/AnalogDemDlgbase.ui moc/AnalogDemDlgbase.h
-	$(UIC) ../common/GUI-QT/AnalogDemDlgbase.ui -i moc/AnalogDemDlgbase.h -o moc/AnalogDemDlgbase.cpp
+moc/AnalogDemDlgbase.cpp: ../common/GUI-QT/qt2/AnalogDemDlgbase.ui moc/AnalogDemDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/AnalogDemDlgbase.ui -i moc/AnalogDemDlgbase.h -o moc/AnalogDemDlgbase.cpp
 	
 moc/moc_AMSSDlgbase.cpp: moc/AMSSDlgbase.h
 	$(MOC) moc/AMSSDlgbase.h -o moc/moc_AMSSDlgbase.cpp
 	
-moc/AMSSDlgbase.h: ../common/GUI-QT/AMSSDlgbase.ui
-	$(UIC) ../common/GUI-QT/AMSSDlgbase.ui -o moc/AMSSDlgbase.h
+moc/AMSSDlgbase.h: ../common/GUI-QT/qt2/AMSSDlgbase.ui
+	$(UIC) ../common/GUI-QT/qt2/AMSSDlgbase.ui -o moc/AMSSDlgbase.h
 	
-moc/AMSSDlgbase.cpp: ../common/GUI-QT/AMSSDlgbase.ui moc/AMSSDlgbase.h
-	$(UIC) ../common/GUI-QT/AMSSDlgbase.ui -i moc/AMSSDlgbase.h -o moc/AMSSDlgbase.cpp		
+moc/AMSSDlgbase.cpp: ../common/GUI-QT/qt2/AMSSDlgbase.ui moc/AMSSDlgbase.h
+	$(UIC) ../common/GUI-QT/qt2/AMSSDlgbase.ui -i moc/AMSSDlgbase.h -o moc/AMSSDlgbase.cpp		
 
 
 # QT translation file (added by Stephane Fillod 11/10/2004)
