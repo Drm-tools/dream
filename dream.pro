@@ -52,8 +52,29 @@ macx {
 	RC_FILE		= common/GUI-QT/res/macicons.icns
 }
 
+exists("libs/faac.h") {
+	CONFIG      += faac
+	message("with FAAC")
+}
+exists("libs/neaacdec.h") {
+	CONFIG      += faad
+	message("with FAAD2")
+}
+
 unix {
     CONFIG      += pcap faac faad sndfile hamlib
+	exists("/usr/include/hamlib/rig.h") {
+		CONFIG      += hamlib
+		message("with hamlib")
+	}
+	exists("/usr/include/pcap.h") {
+		CONFIG      += pcap
+		message("with pcap")
+	}
+	exists("/usr/include/sndfile.h") {
+		CONFIG      += sndfile
+		message("with libsndfile")
+	}
 	LIBS 		+= -lz -lrfftw -lfftw
 	SOURCES		+= linux/source/Pacer.cpp
 	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
@@ -74,19 +95,18 @@ unix {
 
 win32 {
 	TEMPLATE	= vcapp
-    CONFIG      += faac faad
-    system("dir libs\hamlib\rig.h") {
-        CONFIG      += hamlib
-        message("with hamlib")
-    }
-    system("dir libs\pcap.h") {
-        CONFIG      += pcap
-        message("with pcap")
-    }
-    system("dir libs\sndfile.h") {
-        CONFIG      += sndfile
-        message("with libsndfile")
-    }
+	exists("libs\hamlib\rig.h") {
+		CONFIG      += hamlib
+		message("with hamlib")
+	}
+	exists("libs\pcap.h") {
+		CONFIG      += pcap
+		message("with pcap")
+	}
+	exists("libs\sndfile.h") {
+		CONFIG      += sndfile
+		message("with libsndfile")
+	}
 	OBJECTS_DIR	= windows
 	UI_DIR		= windows/moc
 	MOC_DIR		= windows/moc
