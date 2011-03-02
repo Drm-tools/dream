@@ -39,9 +39,7 @@ FORMS		+= LiveScheduleDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
 FORMS		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
 
 macx {
-	CONFIG		+= portaudio
 	OBJECTS_DIR	= darwin
-	DEFINES		+= USE_PORTAUDIO
 	INCLUDEPATH	+= darwin
 	INCLUDEPATH	+= /Developer/dream/include
 	LIBS 		+= -L/Developer/dream/lib
@@ -52,26 +50,26 @@ macx {
 	RC_FILE		= common/GUI-QT/res/macicons.icns
 }
 
-exists("libs/faac.h") {
+exists(libs/faac.h) {
 	CONFIG      += faac
 	message("with FAAC")
 }
-exists("libs/neaacdec.h") {
+exists(libs/neaacdec.h) {
 	CONFIG      += faad
 	message("with FAAD2")
 }
 
 unix {
-    CONFIG      += pcap faac faad sndfile hamlib
-	exists("/usr/include/hamlib/rig.h") {
+	CONFIG      += portaudio
+	exists(/usr/include/hamlib/rig.h) {
 		CONFIG      += hamlib
 		message("with hamlib")
 	}
-	exists("/usr/include/pcap.h") {
+	exists(/usr/include/pcap.h) {
 		CONFIG      += pcap
 		message("with pcap")
 	}
-	exists("/usr/include/sndfile.h") {
+	exists(/usr/include/sndfile.h) {
 		CONFIG      += sndfile
 		message("with libsndfile")
 	}
@@ -95,15 +93,15 @@ unix {
 
 win32 {
 	TEMPLATE	= vcapp
-	exists("libs\hamlib\rig.h") {
+	exists(libs\hamlib\rig.h) {
 		CONFIG      += hamlib
 		message("with hamlib")
 	}
-	exists("libs\pcap.h") {
+	exists(libs\pcap.h) {
 		CONFIG      += pcap
 		message("with pcap")
 	}
-	exists("libs\sndfile.h") {
+	exists(libs\sndfile.h) {
 		CONFIG      += sndfile
 		message("with libsndfile")
 	}
