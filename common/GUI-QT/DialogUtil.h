@@ -241,7 +241,11 @@ public:
 public slots:
 	void OnModRigMenu(int iID);
 	void OnRemoteMenu(int iID);
+#if QT_VERSION < 0x040000
+	void OnComPortMenu(QAction* action);
+#else
 	void OnComPortMenu(Q3Action* action);
+#endif
 
 signals:
 	void SMeterAvailable();
