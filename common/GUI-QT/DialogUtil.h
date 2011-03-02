@@ -83,12 +83,17 @@ public:
 
 
 /* About dialog ------------------------------------------------------------- */
-class CAboutDlg :
-#if QT_VERSION < 0x040000
-	public CAboutDlgBase
-#else
-	public QDialog, public Ui_CAboutDlgBase
+#if QT_VERSION >= 0x040000
+class CAboutDlgBase : public QDialog, public Ui_CAboutDlgBase
+{
+public:
+	CAboutDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~CAboutDlgBase() {}
+};
 #endif
+class CAboutDlg : public CAboutDlgBase
 {
 	Q_OBJECT
 

@@ -215,12 +215,17 @@ public:
 class RemoteMenu;
 class CRig;
 
-class StationsDlg :
-#if QT_VERSION < 0x040000
-	public CStationsDlgBase
-#else
-	public QDialog, public Ui_CStationsDlgBase
+#if QT_VERSION >= 0x040000
+class CStationsDlgBase : public QDialog, public Ui_CStationsDlgBase
+{
+public:
+	CStationsDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~CStationsDlgBase() {}
+};
 #endif
+class StationsDlg : public CStationsDlgBase
 {
 	Q_OBJECT
 

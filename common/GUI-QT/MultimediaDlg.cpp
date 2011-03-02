@@ -63,17 +63,10 @@
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f):
-#if QT_VERSION < 0x040000
 	MultimediaDlgBase(parent, name, modal, f),
-#else
-	QDialog(parent, name, modal, f), Ui_MultimediaDlgBase(),
-#endif
 	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()),
 	JournalineDecoder(),strCurrentSavePath("."),bGetFromFile(false)
 {
-#if QT_VERSION >= 0x040000
-	setupUi(this);
-#endif
 	/* Add body's stylesheet */
 	Q3StyleSheetItem* styleBody =
 		new Q3StyleSheetItem(TextBrowser->styleSheet(), "stylebody");

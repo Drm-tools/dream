@@ -70,12 +70,17 @@
 #define COL_DURATION	4
 
 /* Classes ********************************************************************/
-class EPGDlg :
-#if QT_VERSION < 0x040000
-	public CEPGDlgbase
-#else
-	public QDialog, public Ui_CEPGDlgbase
+#if QT_VERSION >= 0x040000
+class CEPGDlgbase : public QDialog, public Ui_CEPGDlgbase
+{
+public:
+	CEPGDlgbase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~CEPGDlgbase() {}
+};
 #endif
+class EPGDlg : public CEPGDlgbase
 {
 	Q_OBJECT
 

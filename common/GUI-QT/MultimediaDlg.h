@@ -104,12 +104,17 @@ protected:
 	int				iNumHist;
 };
 
-class MultimediaDlg :
-#if QT_VERSION < 0x040000
-	public MultimediaDlgBase
-#else
-	public QDialog, public Ui_MultimediaDlgBase
+#if QT_VERSION >= 0x040000
+class MultimediaDlgBase : public QDialog, public Ui_MultimediaDlgBase
+{
+public:
+	MultimediaDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~MultimediaDlgBase() {}
+};
 #endif
+class MultimediaDlg : public MultimediaDlgBase
 {
 	Q_OBJECT
 

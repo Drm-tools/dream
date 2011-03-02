@@ -30,25 +30,20 @@
 # include <qfiledialog.h>
 # define Q3FileDialog QFileDialog
 #else
-# include <q3filedialog.h>
+# include <Q3FileDialog>
 # include <QShowEvent>
 # include <QHideEvent>
 #endif
+#include <qlabel.h>
+#include <qtooltip.h>
 
 /* Implementation *************************************************************/
 
 MultSettingsDlg::MultSettingsDlg(CParameter& NP, CSettings& NSettings, QWidget* parent,
 	const char* name, bool modal, Qt::WFlags f) :
-#if QT_VERSION < 0x040000
 	CMultSettingsDlgBase(parent, name, modal, f),
-#else
-	QDialog(parent, name, modal, f), Ui_CMultSettingsDlgBase(),
-#endif
 	Parameters(NP), Settings(NSettings)
 {
-#if QT_VERSION >= 0x040000
-	setupUi(this);
-#endif
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 

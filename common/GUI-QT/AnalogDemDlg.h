@@ -44,10 +44,10 @@
 #include <qmotifstyle.h>
 
 #if QT_VERSION < 0x040000
-# include <AnalogDemDlgbase.h>
+# include "AnalogDemDlgbase.h"
 # include "AMSSDlgbase.h"
 #else
-# include <ui_AnalogDemDlgbase.h>
+# include "ui_AnalogDemDlgbase.h"
 # include "ui_AMSSDlgbase.h"
 # include <QDialog>
 #endif
@@ -67,12 +67,17 @@
 class CDRMPlot;
 
 /* AMSS dialog -------------------------------------------------------------- */
-class CAMSSDlg :
-#if QT_VERSION < 0x040000
- public CAMSSDlgBase
-#else
- public QDialog, public Ui_CAMSSDlgBase
+#if QT_VERSION >= 0x040000
+class CAMSSDlgBase : public QDialog, public Ui_CAMSSDlgBase
+{
+public:
+	CAMSSDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~CAMSSDlgBase() {}
+};
 #endif
+class CAMSSDlg : public CAMSSDlgBase
 {
 	Q_OBJECT
 
@@ -97,12 +102,17 @@ public slots:
 
 
 /* Analog demodulation dialog ----------------------------------------------- */
-class AnalogDemDlg :
-#if QT_VERSION < 0x040000
- public AnalogDemDlgBase
-#else
- public QDialog, public Ui_AnalogDemDlgBase
+#if QT_VERSION >= 0x040000
+class AnalogDemDlgBase : public QDialog, public Ui_AnalogDemDlgBase
+{
+public:
+	AnalogDemDlgBase(QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~AnalogDemDlgBase() {}
+};
 #endif
+class AnalogDemDlg : public AnalogDemDlgBase
 {
 	Q_OBJECT
 

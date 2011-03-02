@@ -44,12 +44,17 @@
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class MultSettingsDlg :
-#if QT_VERSION < 0x040000
-	public CMultSettingsDlgBase
-#else
-	public QDialog, public Ui_CMultSettingsDlgBase
+#if QT_VERSION >= 0x040000
+class CMultSettingsDlgBase : public QDialog, public Ui_CMultSettingsDlgBase
+{
+public:
+	CMultSettingsDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~CMultSettingsDlgBase() {}
+};
 #endif
+class MultSettingsDlg : public CMultSettingsDlgBase
 {
 	Q_OBJECT
 

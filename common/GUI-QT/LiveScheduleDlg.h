@@ -146,12 +146,17 @@ public:
 };
 
 
-class LiveScheduleDlg :
-#if QT_VERSION < 0x040000
-	public CLiveScheduleDlgBase
-#else
-	public QDialog, public Ui_CLiveScheduleDlgBase
+#if QT_VERSION >= 0x040000
+class CLiveScheduleDlgBase : public QDialog, public Ui_CLiveScheduleDlgBase
+{
+public:
+	CLiveScheduleDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~CLiveScheduleDlgBase() {}
+};
 #endif
+class LiveScheduleDlg : public CLiveScheduleDlgBase
 {
 	Q_OBJECT
 

@@ -49,12 +49,17 @@
 #include <qcolordialog.h>
 
 /* Classes ********************************************************************/
-class FMDialog :
-#if QT_VERSION < 0x040000
-	public FMDialogBase
-#else
-	public QDialog, public Ui_FMDialogBase
+#if QT_VERSION >= 0x040000
+class FMDialogBase : public QDialog, public Ui_FMDialogBase
+{
+public:
+	FMDialogBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~FMDialogBase() {}
+};
 #endif
+class FMDialog : public FMDialogBase
 {
 	Q_OBJECT
 

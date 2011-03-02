@@ -100,12 +100,17 @@ public:
 	CDRMTransmitter	DRMTransmitter;
 };
 
-class TransmDialog :
-#if QT_VERSION < 0x040000
-	public TransmDlgBase
-#else
-	public QDialog, public Ui_TransmDlgBase
+#if QT_VERSION >= 0x040000
+class TransmDlgBase : public QDialog, public Ui_TransmDlgBase
+{
+public:
+	TransmDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~TransmDlgBase() {}
+};
 #endif
+class TransmDialog : public TransmDlgBase
 {
 	Q_OBJECT
 

@@ -71,12 +71,17 @@ class CDRMPlot;
 
 
 /* Classes ********************************************************************/
-class systemevalDlg :
-#if QT_VERSION < 0x040000
-	public systemevalDlgBase
-#else
-	public QDialog, public Ui_systemevalDlgBase
+#if QT_VERSION >= 0x040000
+class systemevalDlgBase : public QDialog, public Ui_systemevalDlgBase
+{
+public:
+	systemevalDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~systemevalDlgBase() {}
+};
 #endif
+class systemevalDlg : public systemevalDlgBase
 {
 	Q_OBJECT
 

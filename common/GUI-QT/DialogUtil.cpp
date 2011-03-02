@@ -75,15 +75,8 @@
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f):
-#if QT_VERSION < 0x040000
 	CAboutDlgBase(parent, name, modal, f)
-#else
-	QDialog(parent, name, modal, f), Ui_CAboutDlgBase()
-#endif
 {
-#if QT_VERSION >= 0x040000
-	setupUi(this);
-#endif
 #ifdef HAVE_LIBSNDFILE
 	char  sfversion [128] ;
 	sf_command (NULL, SFC_GET_LIB_VERSION, sfversion, sizeof (sfversion)) ;

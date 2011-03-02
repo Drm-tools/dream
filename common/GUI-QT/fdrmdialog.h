@@ -69,12 +69,17 @@
 
 
 /* Classes ********************************************************************/
-class FDRMDialog :
-#if QT_VERSION < 0x040000
-	public FDRMDialogBase
-#else
-	public QDialog, public Ui_FDRMDialogBase
+#if QT_VERSION >= 0x040000
+class FDRMDialogBase : public QDialog, public Ui_FDRMDialogBase
+{
+public:
+	FDRMDialogBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,name,modal,f){setupUi(this);}
+	virtual ~FDRMDialogBase() {}
+};
 #endif
+class FDRMDialog : public FDRMDialogBase
 {
 	Q_OBJECT
 
