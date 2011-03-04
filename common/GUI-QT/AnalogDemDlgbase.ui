@@ -42,6 +42,16 @@
               <number>6</number>
             </property>
             <item>
+              <widget class="QwtPlot" name="plot">
+                <property name="sizePolicy">
+                  <sizepolicy>
+                    <hsizetype>7</hsizetype>
+                    <vsizetype>7</vsizetype>
+                  </sizepolicy>
+                </property>
+              </widget>
+            </item>
+            <item>
               <layout class="QVBoxLayout">
                 <property name="margin">
                   <number>0</number>
@@ -498,6 +508,21 @@ Phase Offset</string>
     </layout>
   </widget>
   <customwidgets>
+    <customwidget>
+      <class>QwtPlot</class>
+      <extends>QWidget</extends>
+      <header location="local">qwt_plot.h</header>
+      <sizehint>
+        <width>-1</width>
+        <height>-1</height>
+      </sizehint>
+      <container>0</container>
+      <sizepolicy>
+        <hordata>5</hordata>
+        <verdata>5</verdata>
+      </sizepolicy>
+      <pixmap>image1</pixmap>
+    </customwidget>
     <customwidget>
       <class>QwtDial</class>
       <extends>QWidget</extends>

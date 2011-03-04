@@ -79,22 +79,8 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#if QT_VERSION < 0x040000
-	MainPlot = new CDRMPlot( ButtonGroupChart, "MainPlot" );
-#else
-	QwtPlot* plot = new QwtPlot(ButtonGroupChart);
+#if QT_VERSION >= 0x040000
 	MainPlot = new CDRMPlot(plot);
-#endif
-#if QT_VERSION < 0x030000
-	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, MainPlot->sizePolicy().hasHeightForWidth() ) );
-
-#elif QT_VERSION < 0x040000
-	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, 0, 0, MainPlot->sizePolicy().hasHeightForWidth() ) );
-#endif
-#if QT_VERSION < 0x040000
-	ButtonGroupChartLayout->addWidget( MainPlot );
-#else
-	// TODO ButtonGroupPlotSNR->layout()->addWidget( plot );
 #endif
 
 	/* Set Menu ***************************************************************/

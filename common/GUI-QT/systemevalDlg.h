@@ -100,8 +100,6 @@ protected:
 	CDRMReceiver&		DRMReceiver;
 	CSettings&		Settings;
 
-	CDRMPlot*		MainPlot;
-
 	QTimer			Timer;
 	QTimer			TimerInterDigit;
 
@@ -114,6 +112,9 @@ protected:
 	CLongLog		longLog;
 	int			iLogDelay;
 	CRig&			rig;
+#if QT_VERSION >= 0x040000
+	CDRMPlot*		MainPlot;
+#endif
 
 	virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);

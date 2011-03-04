@@ -86,18 +86,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#if QT_VERSION < 0x040000
-	MainPlot = new CDRMPlot( ButtonGroupPlotSNR, "MainPlot" );
-#else
+#if QT_VERSION >= 0x040000
 	MainPlot = new CDRMPlot(plot);
-#endif
-#if QT_VERSION < 0x030000
-	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, MainPlot->sizePolicy().hasHeightForWidth() ) );
-#elif QT_VERSION < 0x040000
-	MainPlot->setSizePolicy( QSizePolicy( (QSizePolicy::SizeType)7, (QSizePolicy::SizeType)7, 0, 0, MainPlot->sizePolicy().hasHeightForWidth() ) );
-#endif
-#if QT_VERSION < 0x040000
-	ButtonGroupPlotSNRLayout->addWidget( MainPlot );
 #endif
 
 	/* Init controls -------------------------------------------------------- */

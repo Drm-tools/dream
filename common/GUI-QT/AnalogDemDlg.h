@@ -126,7 +126,9 @@ protected:
 	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
 
+#if QT_VERSION >= 0x040000
 	CDRMPlot*		MainPlot;
+#endif
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
