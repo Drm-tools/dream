@@ -122,6 +122,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	/* Init chart selector list view ---------------------------------------- */
 	/* Get pixmaps from dummy list view entries which where inserted in the
 	   qdesigner environment (storage container for the pixmaps) */
+#if QT_VERSION < 0x040000
 	Q3ListViewItem* pCurLiViIt = ListViewCharSel->firstChild();
 	const QPixmap pixSpectrum(*pCurLiViIt->pixmap(0));
 	pCurLiViIt = pCurLiViIt->firstChild();
@@ -369,6 +370,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 		}
 	}
 
+#endif
 	/* Init context menu for list view */
 	pListViewContextMenu = new Q3PopupMenu(this, tr("ListView context menu"));
 	pListViewContextMenu->insertItem(tr("&Open in separate window"), this,
@@ -403,9 +405,9 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 		SIGNAL(rightButtonClicked(QListViewItem*, const QPoint&, int)),
 		this, SLOT(OnListRightButClicked(QListViewItem*, const QPoint&, int)));
 #else
-	connect(ListViewCharSel, SIGNAL(selectionChanged(Q3ListViewItem*)),
+	connect(chartSelector, SIGNAL(selectionChanged(Q3ListViewItem*)),
 		this, SLOT(OnListSelChanged(Q3ListViewItem*)));
-	connect(ListViewCharSel,
+	connect(chartSelector,
 		SIGNAL(rightButtonClicked(Q3ListViewItem*, const QPoint&, int)),
 		this, SLOT(OnListRightButClicked(Q3ListViewItem*, const QPoint&, int)));
 #endif
@@ -1216,6 +1218,7 @@ void systemevalDlg::OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint
 
 void systemevalDlg::OnListViContMenu()
 {
+#if QT_VERSION < 0x040000
 	/* Get chart type from current selected list view item */
 	Q3ListViewItem* pCurSelLVItem = ListViewCharSel->selectedItem();
 
@@ -1225,6 +1228,7 @@ void systemevalDlg::OnListViContMenu()
 		   (needed for closing the windows) */
 		vecpDRMPlots.push_back(OpenChartWin(((CCharSelItem*) pCurSelLVItem)->GetCharType()));
 	}
+#endif
 }
 
 void systemevalDlg::OnCheckFlipSpectrum()

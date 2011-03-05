@@ -742,142 +742,20 @@
     </layout>
    </item>
    <item>
-    <widget class="Q3ButtonGroup" name="ButtonGroupPlotSNR">
-     <property name="title">
-      <string/>
+    <layout class="QHBoxLayout">
+     <property name="spacing">
+      <number>6</number>
      </property>
-     <property name="alignment">
-      <set>Qt::AlignLeading</set>
+     <property name="margin">
+      <number>0</number>
      </property>
-     <property name="exclusive">
-      <bool>true</bool>
-     </property>
-     <layout class="QHBoxLayout">
-      <property name="spacing">
-       <number>6</number>
-      </property>
-      <property name="margin">
-       <number>6</number>
-      </property>
       <item>
-       <widget class="Q3ListView" name="ListViewCharSel">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="rootIsDecorated">
-         <bool>true</bool>
-        </property>
-        <column>
-         <property name="text">
-          <string>Chart Selector</string>
-         </property>
-         <property name="clickable">
-          <bool>true</bool>
-         </property>
-         <property name="resizable">
-          <bool>true</bool>
-         </property>
-        </column>
-        <item>
-         <property name="text">
-          <string>D-Spectrum</string>
-         </property>
-         <item>
-          <property name="text">
-           <string>D-InpPSD</string>
-          </property>
-          <item>
-           <property name="text">
-            <string>D-InpSpectr</string>
-           </property>
-           <item>
-            <property name="text">
-             <string>D-Waterfall</string>
-            </property>
-            <item>
-             <property name="text">
-              <string>D-ShiftedPSD</string>
-             </property>
-             <item>
-              <property name="text">
-               <string>D-AudSpectr</string>
-              </property>
-              <item>
-               <property name="text">
-                <string>D-SNRSpectr</string>
-               </property>
-               <item>
-                <property name="text">
-                 <string>D-Channel</string>
-                </property>
-                <item>
-                 <property name="text">
-                  <string>D-IR</string>
-                 </property>
-                 <item>
-                  <property name="text">
-                   <string>D-TF</string>
-                  </property>
-                  <item>
-                   <property name="text">
-                    <string>D-Constellation</string>
-                   </property>
-                   <item>
-                    <property name="text">
-                     <string>D-FAC</string>
-                    </property>
-                    <item>
-                     <property name="text">
-                      <string>D-SDC</string>
-                     </property>
-                     <item>
-                      <property name="text">
-                       <string>D-MSC</string>
-                      </property>
-                      <item>
-                       <property name="text">
-                        <string>D-History</string>
-                       </property>
-                       <item>
-                        <property name="text">
-                         <string>D-SNRAudiHist</string>
-                        </property>
-                        <item>
-                         <property name="text">
-                          <string>D-DelDopp</string>
-                         </property>
-                         <item>
-                          <property name="text">
-                           <string>D-FreqSam</string>
-                          </property>
-                         </item>
-                        </item>
-                       </item>
-                      </item>
-                     </item>
-                    </item>
-                   </item>
-                  </item>
-                 </item>
-                </item>
-               </item>
-              </item>
-             </item>
-            </item>
-           </item>
-          </item>
-         </item>
-        </item>
-       </widget>
+       <widget class="QTreeView" name="chartSelector"/>
       </item>
       <item>
        <widget class="QwtPlot" name="plot"/>
       </item>
      </layout>
-    </widget>
    </item>
    <item>
     <layout class="QHBoxLayout">
@@ -1473,11 +1351,6 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>Q3ListView</class>
-   <extends>Q3Frame</extends>
-   <header>q3listview.h</header>
-  </customwidget>
-  <customwidget>
    <class>QwtPlot</class>
    <extends>QFrame</extends>
    <header>qwt_plot.h</header>
@@ -1506,7 +1379,6 @@
   <tabstop>CheckBoxReverb</tabstop>
   <tabstop>CheckBoxRecFilter</tabstop>
   <tabstop>CheckBoxModiMetric</tabstop>
-  <tabstop>ListViewCharSel</tabstop>
  </tabstops>
  <resources/>
  <connections/>
