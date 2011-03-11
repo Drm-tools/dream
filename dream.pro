@@ -61,6 +61,8 @@ exists(libs/neaacdec.h) {
 
 unix {
 	CONFIG      += portaudio
+	target.path = /usr/bin
+	INSTALLS += target
 	exists(/usr/include/hamlib/rig.h) {
 		CONFIG      += hamlib
 		message("with hamlib")
@@ -423,5 +425,3 @@ common/util/Settings.cpp   \
 common/util/Utilities.cpp   \
 common/Version.cpp
 
-target.path = /usr/bin
-INSTALLS += target
