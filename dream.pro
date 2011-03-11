@@ -75,7 +75,7 @@ unix {
 		CONFIG      += sndfile
 		message("with libsndfile")
 	}
-	LIBS 		+= -lz -lrfftw -lfftw
+	LIBS 		+= -lz -lrfftw -lfftw -ldl
 	SOURCES		+= linux/source/Pacer.cpp
 	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c
