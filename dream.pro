@@ -82,7 +82,7 @@ unix {
 	DEFINES		+= HAVE_INTTYPES_H HAVE_STDINT_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
 	DEFINES		+= HAVE_FFTW_H HAVE_RFFTW_H USE_QT_GUI HAVE_LIBZ
 	!macx {
-		MAKEFILE	= Makefile.qt
+		MAKEFILE	= Makefile
 		INCLUDEPATH	+= linux
 		LIBS 		+= -lrt
 		OBJECTS_DIR	= linux
@@ -422,3 +422,6 @@ common/util/Reassemble.cpp   \
 common/util/Settings.cpp   \
 common/util/Utilities.cpp   \
 common/Version.cpp
+
+target.path = /usr/bin
+INSTALLS += target

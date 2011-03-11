@@ -415,8 +415,12 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 #endif
 
 	/* Buttons */
+#if QT_VERSION < 0x040000
 	connect(buttonOk, SIGNAL(clicked()),
 		this, SLOT(accept()));
+#else
+	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
+#endif
 
 	/* Check boxes */
 	connect(CheckBoxFlipSpec, SIGNAL(clicked()),
@@ -645,6 +649,9 @@ void systemevalDlg::showEvent(QShowEvent*)
 
 	/* Activate real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
+#if QT_VERSION >= 0x040000
+	setIconSize(QSize(16,16));
+#endif
 }
 
 void systemevalDlg::hideEvent(QHideEvent*)

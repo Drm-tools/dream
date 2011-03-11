@@ -20,7 +20,7 @@ BuildRequires:	faad2 >= 2.0.1, faad2-devel >= 2.0.1
 BuildRequires:	libjournaline, hamlib, hamlib-devel
 
 %description
-Digital Radio Mondiale (DRM) is a new digital radio standard for
+Digital Radio Mondiale (DRM) is the digital radio standard for
 the long, medium and short wave ranges.
 
 Dream is an open source software implementation of a DRM receiver.
