@@ -5,7 +5,7 @@
  *	Volker Fischer
  *
  * Description:
- *	c++ Mathematic Library (Matlib)
+ *	C++ Mathematic Library (Matlib)
  *
  ******************************************************************************
  *
@@ -87,7 +87,7 @@ enum EVecTy {VTY_CONST, VTY_TEMP};
 
 // On Visual c++ 2005 Express Edition there is a segmentation fault if these macros are empty
 // TODO: FIX this with a better solution
-#ifdef _MSC_VER
+#if _MSC_VER && (_MSC_VER == 1400)
 #define _TESTRNGR(POS) if (POS != POS) int idummy=0
 #define _TESTRNGW(POS) if (POS != POS) int idummy=0
 #define _TESTSIZE(INP) if (INP != INP) int idummy=0
