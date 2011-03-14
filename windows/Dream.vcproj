@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
-	Name="dream"
-	ProjectGUID="{D2B6F1C6-16EA-33F8-9AED-94580D6A5FCB}"
-	RootNamespace="dream"
+	Version="9,00"
+	Name="Dream"
+	ProjectGUID="{811EC90A-5D62-3003-B41E-AE7D035DE797}"
 	TargetFrameworkVersion="131072"
 	>
 	<Platforms>
@@ -20,9 +19,9 @@
 			OutputDirectory="."
 			IntermediateDirectory="Release\"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC70.vsprops"
 			UseOfMFC="0"
-			WholeProgramOptimization="1"
-			BuildLogFile="$(IntDir)\DreamBuildLog.htm"
+			ATLMinimizesCRunTimeLibraryUsage="false"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -44,29 +43,22 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="3"
-				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\libs;&quot;$(QTDIR)\include&quot;;moc\;&quot;..\common\GUI-QT&quot;;&quot;$(QTDIR)\mkspecs\win32-msvc.net&quot;"
-				PreprocessorDefinitions="QMAKESPEC=win32-msvc.net;QT_NO_DEBUG;NDEBUG;_WINDOWS;WIN32;QT_DLL;QT_THREAD_SUPPORT;FAACAPI=_cdecl;HAVE_LIBHAMLIB"
+				AdditionalOptions="-Zm200 -EHsc -EHsc"
+				Optimization="2"
+				AdditionalIncludeDirectories="..\libs\qwt;&quot;..\common\GUI-QT&quot;;..\libs;&quot;$(QTDIR)\include&quot;;moc\;&quot;..\common\GUI-QT\qt2&quot;;&quot;C:\qt-3\mkspecs\win32-msvc2005&quot;"
+				PreprocessorDefinitions="QT_NO_DEBUG;NDEBUG;_WINDOWS;WIN32;HAVE_SETUPAPI;USE_QT_GUI;HAVE_LIBZ;HAVE_LIBFAAD;USE_FAAD2_LIBRARY;HAVE_LIBHAMLIB;HAVE_RIG_PARSE_MODE;QT_DLL;QT_THREAD_SUPPORT;QT_ACCESSIBILITY_SUPPORT;QT_TABLET_SUPPORT"
 				GeneratePreprocessedFile="0"
-				StringPooling="true"
-				MinimalRebuild="false"
 				ExceptionHandling="1"
-				SmallerTypeCheck="false"
 				RuntimeLibrary="2"
-				BufferSecurityCheck="true"
-				EnableFunctionLevelLinking="true"
-				EnableEnhancedInstructionSet="2"
-				FloatingPointExceptions="false"
+				BufferSecurityCheck="false"
 				RuntimeTypeInfo="true"
 				AssemblerListingLocation="Release\"
 				ObjectFile="Release\"
 				ProgramDataBaseFileName=".\"
-				WarningLevel="3"
+				WarningLevel="0"
 				SuppressStartupBanner="true"
 				DebugInformationFormat="0"
-				CompileAs="0"
-				DisableSpecificWarnings="4996;4521"
+				DisableSpecificWarnings="4996,&quot;4996&quot;,&quot;4521&quot;"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -80,12 +72,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				IgnoreImportLibrary="false"
-				AdditionalDependencies="qt-mt3.lib qtmain.lib zdll.lib qwt.lib libhamlib-2.lib fftw.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib setupapi.lib"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="qt-mt3.lib qtmain.lib opengl32.lib glu32.lib qwt.lib zdll.lib fftw.lib setupapi.lib winmm.lib wsock32.lib faad_drm.lib libhamlib-2.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winspool.lib"
 				OutputFile="Release\Dream.exe"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;..\libs"
-				IgnoreDefaultLibraryNames="libcmt"
+				AdditionalLibraryDirectories="&quot;C:\qt-3\lib&quot;;../libs/qwt;../libs"
+				IgnoreDefaultLibraryNames="libcmt.lib,libcmt.lib"
 				GenerateDebugInformation="false"
 				ProgramDatabaseFile=""
 				SubSystem="2"
@@ -117,11 +109,11 @@
 		<Configuration
 			Name="Debug|Win32"
 			OutputDirectory="."
-			IntermediateDirectory="Debug\"
+			IntermediateDirectory="windows\"
 			ConfigurationType="1"
+			InheritedPropertySheets="$(VCInstallDir)VCProjectDefaults\UpgradeFromVC70.vsprops"
 			UseOfMFC="0"
 			ATLMinimizesCRunTimeLibraryUsage="false"
-			BuildLogFile="$(IntDir)DreamBuildLog.htm"
 			>
 			<Tool
 				Name="VCPreBuildEventTool"
@@ -143,21 +135,22 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
-				Optimization="0"
-				AdditionalIncludeDirectories="..\libs;&quot;$(QTDIR)\include&quot;;moc\;&quot;..\common\GUI-QT&quot;;&quot;$(QTDIR)\mkspecs\win32-msvc.net&quot;"
-				PreprocessorDefinitions="QT_NO_DEBUG;_WINDOWS;WIN32;QT_DLL;QT_THREAD_SUPPORT;FAACAPI=_cdecl"
+				AdditionalOptions="-Zm200 -EHsc -EHsc"
+				Optimization="2"
+				AdditionalIncludeDirectories="..\libs\qwt;&quot;..\common\GUI-QT&quot;;..\libs;&quot;$(QTDIR)\include&quot;;moc\;&quot;..\common\GUI-QT\qt2&quot;;&quot;$(QTDIR)\mkspecs\win32-msvc2005&quot;"
+				PreprocessorDefinitions="QT_NO_DEBUG;_WINDOWS;WIN32;HAVE_SETUPAPI;USE_QT_GUI;HAVE_LIBZ;HAVE_LIBFAAD;USE_FAAD2_LIBRARY;HAVE_LIBHAMLIB;HAVE_RIG_PARSE_MODE;QT_DLL;QT_THREAD_SUPPORT;QT_ACCESSIBILITY_SUPPORT;QT_TABLET_SUPPORT"
 				GeneratePreprocessedFile="0"
 				ExceptionHandling="1"
 				RuntimeLibrary="2"
 				BufferSecurityCheck="false"
 				RuntimeTypeInfo="true"
-				AssemblerListingLocation="Debug\"
-				ObjectFile="Debug\"
-				ProgramDataBaseFileName=""
-				WarningLevel="3"
+				AssemblerListingLocation="windows\"
+				ObjectFile="windows\"
+				ProgramDataBaseFileName=".\"
+				WarningLevel="0"
 				SuppressStartupBanner="true"
-				DebugInformationFormat="4"
-				DisableSpecificWarnings="4996;4521"
+				DebugInformationFormat="0"
+				DisableSpecificWarnings="4996,&quot;4996&quot;,&quot;4521&quot;"
 			/>
 			<Tool
 				Name="VCManagedResourceCompilerTool"
@@ -171,12 +164,12 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				IgnoreImportLibrary="false"
-				AdditionalDependencies="qt-mt3.lib qtmain.lib zdll.lib qwt.lib libhamlib-2.lib fftw.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winmm.lib wsock32.lib winspool.lib setupapi.lib"
+				IgnoreImportLibrary="true"
+				AdditionalDependencies="qt-mt3.lib qtmain.lib opengl32.lib glu32.lib qwt.lib zdll.lib fftw.lib setupapi.lib winmm.lib wsock32.lib faad_drm.lib libhamlib-2.lib kernel32.lib user32.lib gdi32.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib imm32.lib winspool.lib"
 				OutputFile="Debug\Dream.exe"
 				SuppressStartupBanner="true"
-				AdditionalLibraryDirectories="&quot;$(QTDIR)\lib&quot;;..\libs"
-				IgnoreDefaultLibraryNames="libcmt.lib;libcmtd.lib"
+				AdditionalLibraryDirectories="C:\qt-3\lib,libs"
+				IgnoreDefaultLibraryNames="libcmt.lib"
 				GenerateDebugInformation="true"
 				ProgramDatabaseFile=""
 				SubSystem="2"
@@ -911,10 +904,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\common\sourcedecoders\faac_dll.h"
-				>
-			</File>
-			<File
 				RelativePath="..\common\FAC\FAC.h"
 				>
 			</File>
@@ -949,6 +938,17 @@
 				>
 				<FileConfiguration
 					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Moc&apos;ing ..\common\GUI-QT\fmdialog.h..."
+						CommandLine="$(QTDIR)\bin\moc.exe ..\common\GUI-QT\fmdialog.h -o moc\moc_fmdialog.cpp&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe"
+						Outputs="moc\moc_fmdialog.cpp"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -1206,10 +1206,6 @@
 						Outputs="moc\moc_MultSettingsDlg.cpp"
 					/>
 				</FileConfiguration>
-			</File>
-			<File
-				RelativePath="..\common\sourcedecoders\neaacdec_dll.h"
-				>
 			</File>
 			<File
 				RelativePath="..\common\datadecoding\journaline\newsobject.h"
@@ -1798,15 +1794,15 @@
 			ParseFiles="false"
 			>
 			<File
-				RelativePath="..\common\GUI-QT\AboutDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\AboutDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\AboutDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AboutDlgbase.ui -o moc\AboutDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AboutDlgbase.ui -i AboutDlgbase.h -o moc\AboutDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AboutDlgbase.h -o moc\moc_AboutDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\AboutDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AboutDlgbase.ui -o moc\AboutDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AboutDlgbase.ui -i AboutDlgbase.h -o moc\AboutDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AboutDlgbase.h -o moc\moc_AboutDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\AboutDlgbase.h;moc\AboutDlgbase.cpp;moc\moc_AboutDlgbase.cpp"
 					/>
@@ -1816,23 +1812,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\AboutDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AboutDlgbase.ui -o moc\AboutDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AboutDlgbase.ui -i AboutDlgbase.h -o moc\AboutDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AboutDlgbase.h -o moc\moc_AboutDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\AboutDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AboutDlgbase.ui -o moc\AboutDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AboutDlgbase.ui -i AboutDlgbase.h -o moc\AboutDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AboutDlgbase.h -o moc\moc_AboutDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\AboutDlgbase.h;moc\AboutDlgbase.cpp;moc\moc_AboutDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\AMSSDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\AMSSDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\AMSSDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -o moc\AMSSDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -i AMSSDlgbase.h -o moc\AMSSDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AMSSDlgbase.h -o moc\moc_AMSSDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\AMSSDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AMSSDlgbase.ui -o moc\AMSSDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AMSSDlgbase.ui -i AMSSDlgbase.h -o moc\AMSSDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AMSSDlgbase.h -o moc\moc_AMSSDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\AMSSDlgbase.h;moc\AMSSDlgbase.cpp;moc\moc_AMSSDlgbase.cpp"
 					/>
@@ -1842,23 +1838,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\AMSSDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -o moc\AMSSDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AMSSDlgbase.ui -i AMSSDlgbase.h -o moc\AMSSDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AMSSDlgbase.h -o moc\moc_AMSSDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\AMSSDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AMSSDlgbase.ui -o moc\AMSSDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AMSSDlgbase.ui -i AMSSDlgbase.h -o moc\AMSSDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AMSSDlgbase.h -o moc\moc_AMSSDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\AMSSDlgbase.h;moc\AMSSDlgbase.cpp;moc\moc_AMSSDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\AnalogDemDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\AnalogDemDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\AnalogDemDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -o moc\AnalogDemDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -i AnalogDemDlgbase.h -o moc\AnalogDemDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AnalogDemDlgbase.h -o moc\moc_AnalogDemDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\AnalogDemDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AnalogDemDlgbase.ui -o moc\AnalogDemDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AnalogDemDlgbase.ui -i AnalogDemDlgbase.h -o moc\AnalogDemDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AnalogDemDlgbase.h -o moc\moc_AnalogDemDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\AnalogDemDlgbase.h;moc\AnalogDemDlgbase.cpp;moc\moc_AnalogDemDlgbase.cpp"
 					/>
@@ -1868,23 +1864,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\AnalogDemDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -o moc\AnalogDemDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\AnalogDemDlgbase.ui -i AnalogDemDlgbase.h -o moc\AnalogDemDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AnalogDemDlgbase.h -o moc\moc_AnalogDemDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\AnalogDemDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AnalogDemDlgbase.ui -o moc\AnalogDemDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\AnalogDemDlgbase.ui -i AnalogDemDlgbase.h -o moc\AnalogDemDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\AnalogDemDlgbase.h -o moc\moc_AnalogDemDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\AnalogDemDlgbase.h;moc\AnalogDemDlgbase.cpp;moc\moc_AnalogDemDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\EPGDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\EPGDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\EPGDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -o moc\EPGDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -i EPGDlgbase.h -o moc\EPGDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\EPGDlgbase.h -o moc\moc_EPGDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\EPGDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\EPGDlgbase.ui -o moc\EPGDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\EPGDlgbase.ui -i EPGDlgbase.h -o moc\EPGDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\EPGDlgbase.h -o moc\moc_EPGDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\EPGDlgbase.h;moc\EPGDlgbase.cpp;moc\moc_EPGDlgbase.cpp"
 					/>
@@ -1894,23 +1890,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\EPGDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -o moc\EPGDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\EPGDlgbase.ui -i EPGDlgbase.h -o moc\EPGDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\EPGDlgbase.h -o moc\moc_EPGDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\EPGDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\EPGDlgbase.ui -o moc\EPGDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\EPGDlgbase.ui -i EPGDlgbase.h -o moc\EPGDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\EPGDlgbase.h -o moc\moc_EPGDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\EPGDlgbase.h;moc\EPGDlgbase.cpp;moc\moc_EPGDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\fdrmdialogbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\fdrmdialogbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\fdrmdialogbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -i fdrmdialogbase.h -o moc\fdrmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fdrmdialogbase.h -o moc\moc_fdrmdialogbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\fdrmdialogbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\fdrmdialogbase.ui -o moc\fdrmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\fdrmdialogbase.ui -i fdrmdialogbase.h -o moc\fdrmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fdrmdialogbase.h -o moc\moc_fdrmdialogbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\fdrmdialogbase.h;moc\fdrmdialogbase.cpp;moc\moc_fdrmdialogbase.cpp"
 					/>
@@ -1920,38 +1916,49 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\fdrmdialogbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -o moc\fdrmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fdrmdialogbase.ui -i fdrmdialogbase.h -o moc\fdrmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fdrmdialogbase.h -o moc\moc_fdrmdialogbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\fdrmdialogbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\fdrmdialogbase.ui -o moc\fdrmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\fdrmdialogbase.ui -i fdrmdialogbase.h -o moc\fdrmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fdrmdialogbase.h -o moc\moc_fdrmdialogbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\fdrmdialogbase.h;moc\fdrmdialogbase.cpp;moc\moc_fdrmdialogbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\fmdialogbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\fmdialogbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\fmdialogbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fmdialogbase.ui -o moc\fmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\fmdialogbase.ui -i fmdialogbase.h -o moc\fmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fmdialogbase.h -o moc\moc_fmdialogbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\fmdialogbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\fmdialogbase.ui -o moc\fmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\fmdialogbase.ui -i fmdialogbase.h -o moc\fmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fmdialogbase.h -o moc\moc_fmdialogbase.cpp&#x0D;&#x0A;"
+						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
+						Outputs="moc\fmdialogbase.h;moc\fmdialogbase.cpp;moc\moc_fmdialogbase.cpp"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCustomBuildTool"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\fmdialogbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\fmdialogbase.ui -o moc\fmdialogbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\fmdialogbase.ui -i fmdialogbase.h -o moc\fmdialogbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\fmdialogbase.h -o moc\moc_fmdialogbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\fmdialogbase.h;moc\fmdialogbase.cpp;moc\moc_fmdialogbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\GeneralSettingsDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\GeneralSettingsDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -o moc\GeneralSettingsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\GeneralSettingsDlgbase.h -o moc\moc_GeneralSettingsDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui -o moc\GeneralSettingsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\GeneralSettingsDlgbase.h -o moc\moc_GeneralSettingsDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\GeneralSettingsDlgbase.h;moc\GeneralSettingsDlgbase.cpp;moc\moc_GeneralSettingsDlgbase.cpp"
 					/>
@@ -1961,23 +1968,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\GeneralSettingsDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -o moc\GeneralSettingsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\GeneralSettingsDlgbase.h -o moc\moc_GeneralSettingsDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui -o moc\GeneralSettingsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\GeneralSettingsDlgbase.ui -i GeneralSettingsDlgbase.h -o moc\GeneralSettingsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\GeneralSettingsDlgbase.h -o moc\moc_GeneralSettingsDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\GeneralSettingsDlgbase.h;moc\GeneralSettingsDlgbase.cpp;moc\moc_GeneralSettingsDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\LiveScheduleDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\LiveScheduleDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\LiveScheduleDlgbase.ui -o moc\LiveScheduleDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\LiveScheduleDlgbase.ui -i LiveScheduleDlgbase.h -o moc\LiveScheduleDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\LiveScheduleDlgbase.h -o moc\moc_LiveScheduleDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui -o moc\LiveScheduleDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui -i LiveScheduleDlgbase.h -o moc\LiveScheduleDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\LiveScheduleDlgbase.h -o moc\moc_LiveScheduleDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\LiveScheduleDlgbase.h;moc\LiveScheduleDlgbase.cpp;moc\moc_LiveScheduleDlgbase.cpp"
 					/>
@@ -1987,23 +1994,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\LiveScheduleDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\LiveScheduleDlgbase.ui -o moc\LiveScheduleDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\LiveScheduleDlgbase.ui -i LiveScheduleDlgbase.h -o moc\LiveScheduleDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\LiveScheduleDlgbase.h -o moc\moc_LiveScheduleDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui -o moc\LiveScheduleDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\LiveScheduleDlgbase.ui -i LiveScheduleDlgbase.h -o moc\LiveScheduleDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\LiveScheduleDlgbase.h -o moc\moc_LiveScheduleDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\LiveScheduleDlgbase.h;moc\LiveScheduleDlgbase.cpp;moc\moc_LiveScheduleDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\MultimediaDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\MultimediaDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\MultimediaDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -o moc\MultimediaDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -i MultimediaDlgbase.h -o moc\MultimediaDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\MultimediaDlgbase.h -o moc\moc_MultimediaDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\MultimediaDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\MultimediaDlgbase.ui -o moc\MultimediaDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\MultimediaDlgbase.ui -i MultimediaDlgbase.h -o moc\MultimediaDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\MultimediaDlgbase.h -o moc\moc_MultimediaDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\MultimediaDlgbase.h;moc\MultimediaDlgbase.cpp;moc\moc_MultimediaDlgbase.cpp"
 					/>
@@ -2013,23 +2020,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\MultimediaDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -o moc\MultimediaDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\MultimediaDlgbase.ui -i MultimediaDlgbase.h -o moc\MultimediaDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\MultimediaDlgbase.h -o moc\moc_MultimediaDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\MultimediaDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\MultimediaDlgbase.ui -o moc\MultimediaDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\MultimediaDlgbase.ui -i MultimediaDlgbase.h -o moc\MultimediaDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\MultimediaDlgbase.h -o moc\moc_MultimediaDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\MultimediaDlgbase.h;moc\MultimediaDlgbase.cpp;moc\moc_MultimediaDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\MultSettingsDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\MultSettingsDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\MultSettingsDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -o moc\MultSettingsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\MultSettingsDlgbase.h -o moc\moc_MultSettingsDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\MultSettingsDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\MultSettingsDlgbase.ui -o moc\MultSettingsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\MultSettingsDlgbase.h -o moc\moc_MultSettingsDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\MultSettingsDlgbase.h;moc\MultSettingsDlgbase.cpp;moc\moc_MultSettingsDlgbase.cpp"
 					/>
@@ -2039,23 +2046,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\MultSettingsDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -o moc\MultSettingsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\MultSettingsDlgbase.h -o moc\moc_MultSettingsDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\MultSettingsDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\MultSettingsDlgbase.ui -o moc\MultSettingsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\MultSettingsDlgbase.ui -i MultSettingsDlgbase.h -o moc\MultSettingsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\MultSettingsDlgbase.h -o moc\moc_MultSettingsDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\MultSettingsDlgbase.h;moc\MultSettingsDlgbase.cpp;moc\moc_MultSettingsDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\StationsDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\StationsDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\StationsDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\StationsDlgbase.ui -o moc\StationsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\StationsDlgbase.ui -i StationsDlgbase.h -o moc\StationsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\StationsDlgbase.h -o moc\moc_StationsDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\StationsDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\StationsDlgbase.ui -o moc\StationsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\StationsDlgbase.ui -i StationsDlgbase.h -o moc\StationsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\StationsDlgbase.h -o moc\moc_StationsDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\StationsDlgbase.h;moc\StationsDlgbase.cpp;moc\moc_StationsDlgbase.cpp"
 					/>
@@ -2065,23 +2072,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\StationsDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\StationsDlgbase.ui -o moc\StationsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\StationsDlgbase.ui -i StationsDlgbase.h -o moc\StationsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\StationsDlgbase.h -o moc\moc_StationsDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\StationsDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\StationsDlgbase.ui -o moc\StationsDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\StationsDlgbase.ui -i StationsDlgbase.h -o moc\StationsDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\StationsDlgbase.h -o moc\moc_StationsDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\StationsDlgbase.h;moc\StationsDlgbase.cpp;moc\moc_StationsDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\systemevalDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\systemevalDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\systemevalDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\systemevalDlgbase.ui -o moc\systemevalDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\systemevalDlgbase.ui -i systemevalDlgbase.h -o moc\systemevalDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\systemevalDlgbase.h -o moc\moc_systemevalDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\systemevalDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\systemevalDlgbase.ui -o moc\systemevalDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\systemevalDlgbase.ui -i systemevalDlgbase.h -o moc\systemevalDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\systemevalDlgbase.h -o moc\moc_systemevalDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\systemevalDlgbase.h;moc\systemevalDlgbase.cpp;moc\moc_systemevalDlgbase.cpp"
 					/>
@@ -2091,23 +2098,23 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\systemevalDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\systemevalDlgbase.ui -o moc\systemevalDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\systemevalDlgbase.ui -i systemevalDlgbase.h -o moc\systemevalDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\systemevalDlgbase.h -o moc\moc_systemevalDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\systemevalDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\systemevalDlgbase.ui -o moc\systemevalDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\systemevalDlgbase.ui -i systemevalDlgbase.h -o moc\systemevalDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\systemevalDlgbase.h -o moc\moc_systemevalDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\systemevalDlgbase.h;moc\systemevalDlgbase.cpp;moc\moc_systemevalDlgbase.cpp"
 					/>
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\common\GUI-QT\TransmDlgbase.ui"
+				RelativePath="..\common\GUI-QT\qt2\TransmDlgbase.ui"
 				>
 				<FileConfiguration
 					Name="Release|Win32"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\TransmDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\TransmDlgbase.ui -o moc\TransmDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\TransmDlgbase.ui -i TransmDlgbase.h -o moc\TransmDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\TransmDlgbase.h -o moc\moc_TransmDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\TransmDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\TransmDlgbase.ui -o moc\TransmDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\TransmDlgbase.ui -i TransmDlgbase.h -o moc\TransmDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\TransmDlgbase.h -o moc\moc_TransmDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\TransmDlgbase.h;moc\TransmDlgbase.cpp;moc\moc_TransmDlgbase.cpp"
 					/>
@@ -2117,8 +2124,8 @@
 					>
 					<Tool
 						Name="VCCustomBuildTool"
-						Description="Uic&apos;ing ..\common\GUI-QT\TransmDlgbase.ui..."
-						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\TransmDlgbase.ui -o moc\TransmDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\TransmDlgbase.ui -i TransmDlgbase.h -o moc\TransmDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\TransmDlgbase.h -o moc\moc_TransmDlgbase.cpp&#x0D;&#x0A;"
+						Description="Uic&apos;ing ..\common\GUI-QT\qt2\TransmDlgbase.ui..."
+						CommandLine="$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\TransmDlgbase.ui -o moc\TransmDlgbase.h&#x0D;&#x0A;$(QTDIR)\bin\uic.exe ..\common\GUI-QT\qt2\TransmDlgbase.ui -i TransmDlgbase.h -o moc\TransmDlgbase.cpp&#x0D;&#x0A;$(QTDIR)\bin\moc.exe moc\TransmDlgbase.h -o moc\moc_TransmDlgbase.cpp&#x0D;&#x0A;"
 						AdditionalDependencies="$(QTDIR)\bin\moc.exe;$(QTDIR)\bin\uic.exe"
 						Outputs="moc\TransmDlgbase.h;moc\TransmDlgbase.cpp;moc\moc_TransmDlgbase.cpp"
 					/>
