@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 7.0.50~),
                libsndfile1-dev,
                libpcap0.8-dev,
                libhamlib-dev
-Standards-Version: 3.8.4
+Standards-Version: 3.9.1
 Homepage: http://sourceforge.net/apps/mediawiki/drm/
 #Vcs-Git: git://git.debian.org/collab-maint/drm.git
 #Vcs-Browser: http://git.debian.org/?p=collab-maint/drm.git;a=summary
@@ -20,11 +20,14 @@ Package: drm
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
 Description: a DRM (Digital Radio Mondiale) and AM Software Defined Radio
- Digital Radio Mondiale (DRM) is the digital radio standard for the long-, medium-
- and short-wave ranges. The standard was formed by a consortium in co-operation with
- the International Telecommunication Union (ITU).  For more information visit www.drm.org.
- Dream uses the sound card as the input and output device. A long, medium and short wave
- front-end with an intermediate frequency (IF) between 5 kHz and 15 kHz is used to receive
- the DRM signal. Any commercial front-end with an IF of 455 kHz should be usable by adding a
- 455 kHz to 12 kHz adaptor (assuming the receiver bandwidth is sufficient for a DRM signal).
- Documentation of receiver modifications for DRM reception can be found at www.drmrx.org. 
+ Digital Radio Mondiale (DRM) is the digital radio standard for the
+ long-, medium- and short-wave ranges. The standard was formed by a
+ consortium in co-operation with the International Telecommunication
+ Union (ITU).  For more information visit www.drm.org.  Dream uses the
+ sound card as the input and output device. A long, medium and short wave
+ front-end with an intermediate frequency (IF) between 5 kHz and 15 kHz
+ is used to receive the DRM signal. Any commercial front-end with an IF
+ of 455 kHz should be usable by adding a 455 kHz to 12 kHz adaptor
+ (assuming the receiver bandwidth is sufficient for a DRM signal).
+ Documentation of receiver modifications for DRM reception can be found
+ at www.drmrx.org. 
