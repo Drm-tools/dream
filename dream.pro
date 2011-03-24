@@ -98,11 +98,9 @@ unix {
 		message("with libsndfile")
 	}
 	exists(/usr/include/fftw.h) {
-		DEFINES		+= HAVE_DFFTW_H
 		LIBS 		+= -lfftw
 	}
 	exists(/usr/include/rfftw.h) {
-		DEFINES		+= HAVE_DRFFTW_H
 		LIBS 		+= -lrfftw
 	}
 	exists(/opt/local/include/dfftw.h) {
