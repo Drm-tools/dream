@@ -5,8 +5,14 @@ contains(QT_VERSION, ^4\\..*) {
 	HEADERS		+= common/GUI-QT/DRMPlot-qwt5.h
 	SOURCES		+= common/GUI-QT/DRMPlot-qwt5.cpp
 	unix {
-		INCLUDEPATH	+= /usr/include/qwt-qt4
-		LIBS 		+= -lqwt-qt4
+		exists(/usr/local/qwt-5.2.1) {
+			INCLUDEPATH	+= /usr/local/qwt-5.2.1/include
+			LIBS 		+= -L/usr/local/qwt-5.2.1/lib -lqwt
+		}
+		exists(/usr/include/qwt-qt4) {
+			INCLUDEPATH	+= /usr/include/qwt-qt4
+			LIBS 		+= -lqwt-qt4
+		}
 	}
 	win32 {
 		INCLUDEPATH	+= libs/qwt5
@@ -41,8 +47,8 @@ FORMS		+= GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
 macx {
 	OBJECTS_DIR	= darwin
 	INCLUDEPATH	+= darwin
-	INCLUDEPATH	+= /Developer/dream/include
-	LIBS 		+= -L/Developer/dream/lib
+	INCLUDEPATH	+= /Developer/dream/include /opt/local/include
+	LIBS 		+= -L/Developer/dream/lib -L/opt/local/lib
 	LIBS 		+= -framework CoreFoundation -framework CoreServices
 	LIBS 		+= -framework CoreAudio -framework AudioToolbox -framework AudioUnit
 	UI_DIR		= darwin/moc
@@ -54,9 +60,21 @@ exists(libs/faac.h) {
 	CONFIG      += faac
 	message("with FAAC")
 }
+exists(../usr/local/include/faac.h) {
+	CONFIG      += faac
+	message("with FAAC")
+}
 exists(libs/neaacdec.h) {
 	CONFIG      += faad
 	message("with FAAD2")
+}
+exists(../usr/local/include/neaacdec.h) {
+	CONFIG      += faad
+	message("with FAAD2")
+}
+exists(../usr/local) {
+	INCLUDEPATH += ../usr/local/include
+	LIBS        += -L../usr/local/lib
 }
 
 unix {
@@ -64,6 +82,10 @@ unix {
 	target.path = /usr/bin
 	INSTALLS += target
 	exists(/usr/include/hamlib/rig.h) {
+		CONFIG      += hamlib
+		message("with hamlib")
+	}
+	exists(/usr/local/include/hamlib/rig.h) {
 		CONFIG      += hamlib
 		message("with hamlib")
 	}
@@ -75,7 +97,23 @@ unix {
 		CONFIG      += sndfile
 		message("with libsndfile")
 	}
-	LIBS 		+= -lz -lrfftw -lfftw -ldl
+	exists(/usr/include/fftw.h) {
+		DEFINES		+= HAVE_DFFTW_H
+		LIBS 		+= -lfftw
+	}
+	exists(/usr/include/rfftw.h) {
+		DEFINES		+= HAVE_DRFFTW_H
+		LIBS 		+= -lrfftw
+	}
+	exists(/opt/local/include/dfftw.h) {
+		DEFINES		+= HAVE_DFFTW_H
+		LIBS 		+= -ldfftw
+	}
+	exists(/opt/local/include/drfftw.h) {
+		DEFINES		+= HAVE_DRFFTW_H
+		LIBS 		+= -ldrfftw
+	}
+	LIBS 		+= -lz -ldl
 	SOURCES		+= linux/source/Pacer.cpp
 	HEADERS		+= linux/source/shmsoundin.h linux/source/pa_shm_ringbuffer.h
 	SOURCES		+= linux/source/shmsoundin.cpp linux/source/pa_shm_ringbuffer.c

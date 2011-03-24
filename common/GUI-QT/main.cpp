@@ -92,9 +92,13 @@ main(int argc, char **argv)
 	/* create app before running Settings.Load to consume platform/QT parameters */
 	QApplication app(argc, argv);
 
-#if defined(__APPLE__) &&  QT_VERSION >= 0x030000
+#if defined(__APPLE__)
 	/* find plugins on MacOs when deployed in a bundle */
+# if QT_VERSION>0x040000
+	app.addLibraryPath(app.applicationDirPath()+"../PlugIns");
+# else
 	app.setLibraryPaths(app.applicationDirPath()+"../PlugIns");
+# endif
 #endif
 
 	/* Load and install multi-language support (if available) */
