@@ -32,14 +32,12 @@
 #include <qmessagebox.h>
 #include <qlayout.h>
 #if QT_VERSION < 0x040000
-# include "DRMPlot.h"
 # include <qbuttongroup.h>
 # include <qfiledialog.h>
 # include <qwhatsthis.h>
 # define Q3WhatsThis QWhatsThis
 # define Q3FileDialog QFileDialog
 #else
-# include "DRMPlot-qwt6.h"
 # include <q3whatsthis.h>
 # include <q3filedialog.h>
 # include <QHideEvent>
@@ -729,18 +727,17 @@ void systemevalDlg::UpdatePlotsStyle()
 	MainPlot->SetPlotStyle(iPlotStyle);
 }
 
-CDRMPlot* systemevalDlg::OpenChartWin(int iNewType)
+CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
 {
-	const CDRMPlot::ECharType eNewType = CDRMPlot::ECharType(iNewType);
 	/* Create new chart window */
 	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
-	setCaption(tr("Chart Window"));
+	pNewChartWin->setCaption(tr("Chart Window"));
 
 	/* Set plot style*/
 	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
-	setIcon(*this->icon());
+	pNewChartWin->setIcon(*this->icon());
 
 	/* Set receiver object and correct chart type */
 	pNewChartWin->SetRecObj(&DRMReceiver);

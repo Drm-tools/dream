@@ -46,12 +46,14 @@
 # define Q3ListViewItem QListViewItem
 # define Q3PopupMenu QPopupMenu
 # include "systemevalDlgbase.h"
+# include "DRMPlot.h"
 #else
 # include <Q3ListView>
 # include <Q3ButtonGroup>
 # include <Q3PopupMenu>
 # include <QMainWindow>
 # include "ui_systemevalDlgbase.h"
+# include "DRMPlot-qwt6.h"
 #endif
 
 #include "MultColorLED.h"
@@ -63,7 +65,6 @@
 
 class CGPSReceiver;
 class CRig;
-class CDRMPlot;
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -120,7 +121,7 @@ protected:
 	virtual void		hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
-	CDRMPlot*		OpenChartWin(int);
+	CDRMPlot*		OpenChartWin(CDRMPlot::ECharType eNewType);
 
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();
