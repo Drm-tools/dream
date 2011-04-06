@@ -496,8 +496,10 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
         pdScale[i] = vecrScale[i];
     }
 
+#if QWT_VERSION < 0x060000
+#else
     main1curve->setSamples(pdScale, pdData, vecrData.Size());
-
+#endif
     delete[] pdData;
     delete[] pdScale;
 }
@@ -518,9 +520,11 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
         pdScale[i] = vecrScale[i];
     }
 
+#if QWT_VERSION < 0x060000
+#else
     main1curve->setSamples(pdScale, pdData1, vecrData1.Size());
     main2curve->setSamples(pdScale, pdData2, vecrData2.Size());
-
+#endif
     delete[] pdData1;
     delete[] pdData2;
     delete[] pdScale;
@@ -636,19 +640,30 @@ void CDRMPlot::SetVerticalBounds(
 
     /* Left bound */
     dX[0] = dX[1] = rStartGuard;
+#if QWT_VERSION < 0x060000
+#else
     curve1->setSamples(dX, dY, 2);
+#endif
 
     /* Right bound */
     dX[0] = dX[1] = rEndGuard;
+#if QWT_VERSION < 0x060000
+#else
     curve2->setSamples(dX, dY, 2);
-
+#endif
     /* Estimated begin of impulse response */
     dX[0] = dX[1] = rBeginIR;
+#if QWT_VERSION < 0x060000
+#else
     curve3->setSamples(dX, dY, 2);
+#endif
 
     /* Estimated end of impulse response */
     dX[0] = dX[1] = rEndIR;
+#if QWT_VERSION < 0x060000
+#else
     curve4->setSamples(dX, dY, 2);
+#endif
 }
 
 void CDRMPlot::SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLowerB, _REAL rHigherB)
@@ -660,8 +675,10 @@ void CDRMPlot::SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLow
 
     /* Only include highest bound */
     dY[0] = dY[1] = Max(rHigherB, rLowerB);
+#if QWT_VERSION < 0x060000
+#else
     curve5->setSamples(dX, dY, 2);
-
+#endif
     /* Adjust scale for x-axis */
     plot->setAxisScale(QwtPlot::xBottom, (double) rScaleMin, (double) rScaleMax);
 }
@@ -966,8 +983,10 @@ void CDRMPlot::SetupPSD()
     dY[0] = MIN_VAL_SHIF_PSD_Y_AXIS_DB;
     dY[1] = MAX_VAL_SHIF_PSD_Y_AXIS_DB;
 
+#if QWT_VERSION < 0x060000
+#else
     curve1->setSamples(dX, dY, 2);
-
+#endif
     /* Add main curve */
     main1curve->setTitle(tr("Shifted PSD"));
     main1curve->attach(plot);
@@ -1046,7 +1065,10 @@ void CDRMPlot::SetDCCarrier(const _REAL rDCFreq)
     dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
     dY[1] = MAX_VAL_INP_SPEC_Y_AXIS_DB;
 
+#if QWT_VERSION < 0x060000
+#else
     curve1->setSamples(dX, dY, 2);
+#endif
 }
 
 void CDRMPlot::SetupInpPSD()
@@ -1150,10 +1172,18 @@ void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
         dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
         dY[1] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
 
+#if QWT_VERSION < 0x060000
+#else
         curve2->setSamples(dX, dY, 2);
+#endif
     }
     else
+    {
+#if QWT_VERSION < 0x060000
+#else
         curve2->setSamples(NULL, NULL, 0);
+#endif
+    }
 
 }
 
