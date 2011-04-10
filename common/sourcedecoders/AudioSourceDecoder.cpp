@@ -944,7 +944,9 @@ CAudioSourceDecoder::GetNumCorDecAudio()
 
 CAudioSourceDecoder::CAudioSourceDecoder()
     :	bUseReverbEffect(TRUE), AudioRev((CReal) 1.0 /* seconds delay */ ),
+#ifndef USE_FAAD2_LIBRARY
     NeAACDecOpen (NULL), NeAACDecInitDRM(NULL), NeAACDecClose(NULL), NeAACDecDecode(NULL) ,
+#endif
         canDecodeAAC(false),canDecodeCELP(false),canDecodeHVXC(false)
 {
     cerr << "looking for FAAD2" << endl;
