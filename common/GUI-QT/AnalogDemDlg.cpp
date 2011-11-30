@@ -137,7 +137,6 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     PhaseDial->setOrigin(270);
     PhaseDial->setNeedle(new QwtDialSimpleNeedle(QwtDialSimpleNeedle::Arrow));
     PhaseDial->setFrameShadow(QwtDial::Plain);
-    PhaseDial->setScaleOptions(QwtDial::ScaleTicks);
 
 
     /* Update controls */
@@ -734,7 +733,6 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     PhaseDialAMSS->setOrigin(270);
     PhaseDialAMSS->setNeedle(new QwtDialSimpleNeedle(QwtDialSimpleNeedle::Arrow));
     PhaseDialAMSS->setFrameShadow(QwtDial::Plain);
-    PhaseDialAMSS->setScaleOptions(QwtDial::ScaleTicks);
 
     TextAMSSServiceLabel->setText("");
     TextAMSSCountryCode->setText("");

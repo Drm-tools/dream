@@ -540,12 +540,16 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 	ProgrSigStrength->setOrientation(Qt::Horizontal, QwtThermo::TopScale);
 #endif
 	ProgrSigStrength->setAlarmLevel(S_METER_THERMO_ALARM);
-	ProgrSigStrength->setAlarmColor(QColor(255, 0, 0));
+        QBrush alarmBrush(QColor(255, 0, 0));
+        ProgrSigStrength->setAlarmBrush(alarmBrush);
+        ProgrSigStrength->setAlarmLevel(-12.5);
+
 	ProgrSigStrength->setScale(S_METER_THERMO_MIN, S_METER_THERMO_MAX, 10.0);
 
 	ProgrSigStrength->setAlarmEnabled(TRUE);
 	ProgrSigStrength->setValue(S_METER_THERMO_MIN);
-	ProgrSigStrength->setFillColor(QColor(0, 190, 0));
+        QBrush fillBrush(QColor(0, 190, 0));
+        ProgrSigStrength->setFillBrush(fillBrush);
 
 	/* Update menu ---------------------------------------------------------- */
 	pUpdateMenu = new Q3PopupMenu(this);

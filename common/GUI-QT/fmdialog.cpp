@@ -49,7 +49,8 @@
 FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f):
 	FMDialogBase(parent, name, modal, f),
-	DRMReceiver(NDRMR), Settings(NSettings), eReceiverMode(RM_NONE)
+	DRMReceiver(NDRMR), Settings(NSettings), eReceiverMode(RM_NONE),
+	alarmBrush(QColor(255, 0, 0))
 {
 	/* recover window size and position */
 	CWinGeom s;
@@ -126,9 +127,10 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 #else
 	ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
 #endif
-	ProgrInputLevel->setFillColor(QColor(0, 190, 0));
+        QBrush fillBrush(QColor(0, 190, 0));
+	ProgrInputLevel->setFillBrush(fillBrush);
 	ProgrInputLevel->setAlarmLevel(-12.5);
-	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
+	ProgrInputLevel->setAlarmBrush(alarmBrush);
 
 	/* Update times for color LEDs */
 	CLED_FAC->SetUpdateTime(1500);

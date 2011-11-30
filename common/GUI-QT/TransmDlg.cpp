@@ -88,9 +88,12 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 #else
 	ProgrInputLevel->setOrientation(Qt::Horizontal, QwtThermo::BottomScale);
 #endif
-	ProgrInputLevel->setFillColor(QColor(0, 190, 0));
+        QBrush fillBrush(QColor(0, 190, 0));
+        ProgrInputLevel->setFillBrush(fillBrush);
 	ProgrInputLevel->setAlarmLevel(-5.0);
-	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
+        QBrush alarmBrush(QColor(255, 0, 0));
+        ProgrInputLevel->setAlarmBrush(alarmBrush);
+
 
 	/* Init progress bar for current transmitted picture */
 	ProgressBarCurPict->setTotalSteps(100);

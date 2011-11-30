@@ -7,23 +7,11 @@ contains(QT_VERSION, ^4\\..*) {
     HEADERS += common/GUI-QT/DRMPlot-qwt6.h
     SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp
     unix { 
-        exists(/usr/local/qwt-6.0.0-rc5)
+        exists(/usr/local/qwt-6.0.2-svn)
          { 
-            INCLUDEPATH += /usr/local/qwt-6.0.0-rc5/include
-            LIBS += -L/usr/local/qwt-6.0.0-rc5/lib \
+            INCLUDEPATH += /usr/local/qwt-6.0.2-svn/include
+            LIBS += -L/usr/local/qwt-6.0.2-svn/lib \
                 -lqwt
-        }
-        !exists(/usr/local/qwt-6.0.0-rc5)
-         { 
-            exists(/usr/local/qwt-6.0.0) { 
-                INCLUDEPATH += /usr/local/qwt-6.0.0/include
-                LIBS += -L/usr/local/qwt-6.0.0/lib \
-                    -lqwt
-            }
-            exists(/usr/include/qwt-qt4) { 
-                INCLUDEPATH += /usr/include/qwt-qt4
-                LIBS += -lqwt-qt4
-            }
         }
     }
     win32 { 

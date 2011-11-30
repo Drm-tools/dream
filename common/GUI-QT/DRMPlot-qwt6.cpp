@@ -74,9 +74,10 @@
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QWidget* parent) :
     plot(new QwtPlot(parent)), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
-    bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL)
-    , leftTitle(), rightTitle(), bottomTitle(),
-    MarkerSym1(), MarkerSym2(), MarkerSym3()
+    MarkerSym1(), MarkerSym2(), MarkerSym3(),
+    leftTitle(), rightTitle(), bottomTitle(),
+    bOnTimerCharMutexFlag(FALSE),
+    pDRMRec(NULL)
 {
     grid = new QwtPlotGrid();
 
@@ -122,7 +123,7 @@ CDRMPlot::CDRMPlot(QWidget* parent) :
     /* Global frame */
     plot->setFrameStyle(QFrame::Panel|QFrame::Sunken);
     plot->setLineWidth(2);
-    plot->setMargin(10);
+    plot->setStyleSheet("QwtPlot { padding: 10px }");
 
     /* Canvas */
     plot->setCanvasLineWidth(0);
@@ -480,7 +481,7 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
     InitCharType = NONE_OLD;
 
     /* was in every use of this */
-    plot->setMargin(1);
+    plot->setStyleSheet("QwtPlot { padding: 1px }");
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)

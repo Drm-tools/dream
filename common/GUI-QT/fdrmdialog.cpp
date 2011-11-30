@@ -186,9 +186,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 #else
 	ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
 #endif
-	ProgrInputLevel->setFillColor(QColor(0, 190, 0));
 	ProgrInputLevel->setAlarmLevel(-12.5);
-	ProgrInputLevel->setAlarmColor(QColor(255, 0, 0));
+        QBrush fillBrush(QColor(0, 190, 0));
+	ProgrInputLevel->setFillBrush(fillBrush);
+	ProgrInputLevel->setAlarmLevel(-12.5);
 
     pButtonGroup = new Q3ButtonGroup(this);
     pButtonGroup->hide();

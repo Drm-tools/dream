@@ -80,6 +80,7 @@ protected:
 	Q3PopupMenu*			pSettingsMenu;
 	Q3PopupMenu*			pPlotStyleMenu;
 	QTimer				Timer;
+	QBrush				alarmBrush;
 
 	_BOOLEAN		bSysEvalDlgWasVis;
 	_BOOLEAN		bMultMedDlgWasVis;
