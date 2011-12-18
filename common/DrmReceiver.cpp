@@ -168,7 +168,6 @@ CDRMReceiver::Run()
     {
         if (bDoInitRun == FALSE)	/* don't wait for a packet in Init mode */
         {
-cerr << "wait RSCI Frame" << endl;
             RSIPacketBuf.Clear();
             upstreamRSCI.ReadData(ReceiverParam, RSIPacketBuf);
             if (RSIPacketBuf.GetFillLevel() > 0)
@@ -177,7 +176,6 @@ cerr << "wait RSCI Frame" << endl;
                 DecodeRSIMDI.ProcessData(ReceiverParam, RSIPacketBuf, FACDecBuf, SDCDecBuf, MSCDecBuf);
                 PlotManager.UpdateParamHistoriesRSIIn();
                 bFrameToSend = TRUE;
-cerr << "Got RSCI Frame" << endl;
             }
             else
             {

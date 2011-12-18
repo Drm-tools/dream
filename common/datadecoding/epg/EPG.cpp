@@ -28,7 +28,6 @@
 \******************************************************************************/
 
 #include "EPG.h"
-#include "epgutil.h"
 #include <qfileinfo.h>
 #include <qfile.h>
 #include <qdir.h>
@@ -1257,52 +1256,6 @@ EPG::addChannel (const string& label, uint32_t sid)
 {
     Parameters.ServiceInformation[sid].label.insert(label);
     Parameters.ServiceInformation[sid].id = sid;
-}
-
-QDomDocument*
-EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
-{
-    CDateAndTime d;
-    d.year = date.year();
-    d.month = date.month();
-    d.day = date.day();
-
-    QString fileName(epgFilename(d, sid, 1, bAdvanced).c_str ());
-    QFile file (dir + "/" +fileName);
-# if QT_VERSION < 0x040000
-    if (!file.open (IO_ReadOnly))
-#else
-    if (!file.open (QIODevice::ReadOnly))
-#endif
-    {
-		fileName = epgFilename_etsi(d, sid, 1, bAdvanced).c_str(); // try the other filename convention
-# if QT_VERSION < 0x040000
-		file.setName(dir + "/" +fileName);
-		if (!file.open (IO_ReadOnly))
-#else
-		file.setFileName(dir + "/" +fileName);
-		if (!file.open (QIODevice::ReadOnly))
-#endif
-		{
-				return NULL;
-		}
-    }
-    vector<_BYTE> vecData;
-    vecData.resize (file.size ());
-    vecData.resize (file.size ());
-# if QT_VERSION < 0x040000
-    file.readBlock ((char *) &vecData.front (), file.size ());
-#else
-    file.read((char *) &vecData.front (), file.size ());
-#endif
-    file.close ();
-    CEPGDecoder *epg = new CEPGDecoder();
-    epg->decode (vecData);
-    epg->doc.documentElement().insertBefore(
-		epg->doc.createComment(fileName),
-		epg->doc.documentElement().firstChild()
-    );
-    return &(epg->doc);
 }
 
 void

@@ -102,6 +102,11 @@ protected:
 	virtual void hideEvent(QHideEvent* pEvent);
 	virtual void setActive(Q3ListViewItem*);
 
+	virtual QString getFileName(const QDate& date, uint32_t sid, bool bAdvanced);
+	virtual QString getFileName_etsi(const QDate& date, uint32_t sid, bool bAdvanced);
+	virtual QDomDocument* getFile (const QString&);
+	virtual QDomDocument* getFile (const QDate& date, uint32_t sid, bool bAdvanced);
+
     class MyListViewItem : public Q3ListViewItem
     {
     	public:

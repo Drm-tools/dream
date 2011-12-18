@@ -107,3 +107,18 @@ epgFilename_etsi (const CDateAndTime & date, uint32_t sid, int type, bool advanc
 	s << ".EHB";
     return s.str ();
 }
+
+string
+epgFilename_dab (const CDateAndTime & date, uint32_t sid, int type, bool advanced)
+{
+    string name;
+    ostringstream s (name);
+    s << "w" << setfill ('0') << setw (4) << date.year;
+    s << setw (2) << int (date.month) << setw(2) << int (date.day);
+    s << "d" << hex << setw (6) << ((unsigned long) sid);
+    if (advanced)
+	s << ".EHA";
+    else
+	s << ".EHB";
+    return s.str ();
+}

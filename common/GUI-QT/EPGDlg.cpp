@@ -28,7 +28,9 @@
 \******************************************************************************/
 
 #include "EPGDlg.h"
+#include "../datadecoding/epg/epgutil.h"
 #include <qregexp.h>
+#include <qfile.h>
 #if QT_VERSION < 0x040000
 # include <qtextbrowser.h>
 # include <qsocketdevice.h>
@@ -288,22 +290,22 @@ void EPGDlg::select()
     // get schedule for date +/- 1 - will allow user timezones sometime
     QDomDocument *doc;
     QDate o = date.addDays(-1);
-    doc = epg.getFile (o, sids[chan], false);
+    doc = getFile (o, sids[chan], false);
     if(doc)
         epg.parseDoc(*doc);
-    doc = epg.getFile (o, sids[chan], true);
+    doc = getFile (o, sids[chan], true);
     if(doc)
         epg.parseDoc(*doc);
     o = date.addDays(1);
-    doc = epg.getFile (o, sids[chan], false);
+    doc = getFile (o, sids[chan], false);
     if(doc)
         epg.parseDoc(*doc);
-    doc = epg.getFile (o, sids[chan], true);
+    doc = getFile (o, sids[chan], true);
     if(doc)
         epg.parseDoc(*doc);
 
     QString xml;
-    doc = epg.getFile (date, sids[chan], false);
+    doc = getFile (date, sids[chan], false);
     if(doc)
     {
         epg.parseDoc(*doc);
@@ -312,7 +314,7 @@ void EPGDlg::select()
             basic->setText(xml);
     }
 
-    doc = epg.getFile (date, sids[chan], true);
+    doc = getFile (date, sids[chan], true);
     if(doc)
     {
         epg.parseDoc(*doc);
@@ -404,6 +406,63 @@ void EPGDlg::select()
     }
     if (CurrActiveItem) /* programme is now on line */
         setActive(CurrActiveItem);
+}
+
+QString EPGDlg::getFileName(const QDate& date, uint32_t sid, bool bAdvanced)
+{
+    CDateAndTime d;
+    d.year = date.year();
+    d.month = date.month();
+    d.day = date.day();
+    return epg.dir + "/" + epgFilename(d, sid, 1, bAdvanced).c_str();
+}
+
+QString EPGDlg::getFileName_etsi(const QDate& date, uint32_t sid, bool bAdvanced)
+{
+    CDateAndTime d;
+    d.year = date.year();
+    d.month = date.month();
+    d.day = date.day();
+    return epg.dir + "/" + epgFilename_etsi(d, sid, 1, bAdvanced).c_str();
+}
+
+QDomDocument*
+EPGDlg::getFile(const QString& path)
+{
+    QFile file (path);
+# if QT_VERSION < 0x040000
+    if (!file.open (IO_ReadOnly))
+#else
+    if (!file.open (QIODevice::ReadOnly))
+#endif
+    {
+	return NULL;
+    }
+    vector<_BYTE> vecData;
+    vecData.resize (file.size ());
+# if QT_VERSION < 0x040000
+    file.readBlock ((char *) &vecData.front (), file.size ());
+#else
+    file.read((char *) &vecData.front (), file.size ());
+#endif
+    file.close ();
+    CEPGDecoder *epg = new CEPGDecoder();
+    epg->decode (vecData);
+    epg->doc.documentElement().insertBefore(
+		epg->doc.createComment(path),
+		epg->doc.documentElement().firstChild()
+    );
+    return &(epg->doc);
+}
+
+QDomDocument*
+EPGDlg::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
+{
+	QString path = getFileName(date, sid, bAdvanced);
+	QDomDocument* doc = getFile(path);
+	if(doc != NULL)
+		return doc;
+	return getFile(getFileName_etsi(date, sid, bAdvanced));
 }
 
 _BOOLEAN EPGDlg::MyListViewItem::IsActive()
