@@ -62,6 +62,7 @@
 #ifdef HAVE_LIBWIRETAP
 # include <wtap.h>
 #endif
+#include "Rig.h"
 
 #ifdef HAVE_LIBFREEIMAGE
 # include <FreeImage.h> /* to extract the library version */
