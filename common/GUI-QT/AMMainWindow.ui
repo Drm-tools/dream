@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>AnalogDemDlgBase</class>
- <widget class="QMainWindow" name="AnalogDemDlgBase">
+ <class>AMMainWindow</class>
+ <widget class="QMainWindow" name="AMMainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -421,11 +421,78 @@ Phase Offset</string>
      <x>0</x>
      <y>0</y>
      <width>941</width>
-     <height>26</height>
+     <height>18</height>
     </rect>
    </property>
+   <widget class="QMenu" name="menu_View">
+    <property name="title">
+     <string>View</string>
+    </property>
+    <addaction name="action_Stations_Dialog"/>
+    <addaction name="action_Live_Schedule_Dialog"/>
+    <addaction name="separator"/>
+    <addaction name="actionExit"/>
+   </widget>
+   <widget class="QMenu" name="menu_Settings">
+    <property name="title">
+     <string>Settings</string>
+    </property>
+    <addaction name="actionDRM"/>
+    <addaction name="actionFM"/>
+    <addaction name="actionAM"/>
+   </widget>
+   <addaction name="menu_View"/>
+   <addaction name="menu_Settings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_Stations_Dialog">
+   <property name="text">
+    <string>S&amp;tations Dialog...</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+T</string>
+   </property>
+  </action>
+  <action name="action_Live_Schedule_Dialog">
+   <property name="text">
+    <string>&amp;Live Schedule Dialog...</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+L</string>
+   </property>
+  </action>
+  <action name="actionExit">
+   <property name="text">
+    <string>E&amp;xit</string>
+   </property>
+   <property name="shortcut">
+    <string>Alt+X</string>
+   </property>
+  </action>
+  <action name="actionAM">
+   <property name="text">
+    <string>New AM Acquisition</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+A</string>
+   </property>
+  </action>
+  <action name="actionFM">
+   <property name="text">
+    <string>FM (analog)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+F</string>
+   </property>
+  </action>
+  <action name="actionDRM">
+   <property name="text">
+    <string>DRM (digital)</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+D</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

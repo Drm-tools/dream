@@ -78,7 +78,7 @@
 
 /* Classes ********************************************************************/
 class CSettings;
-class CHamlib;
+class CRig;
 
 class CSplitFAC : public CSplitModul<_BINARY>
 {
@@ -124,8 +124,8 @@ protected:
 class CConvertAudio : public CReceiverModul<_REAL,_SAMPLE>
 {
 protected:
-	virtual void InitInternal(CParameter&);
-	virtual void ProcessDataInternal(CParameter&);
+    virtual void InitInternal(CParameter&);
+    virtual void ProcessDataInternal(CParameter&);
 };
 
 class CDRMReceiver
@@ -151,8 +151,8 @@ public:
     }
     bool GetDownstreamRSCIOutEnabled()
     {
-		return downstreamRSCI.GetOutEnabled();
-	}
+        return downstreamRSCI.GetOutEnabled();
+    }
 
     void					SetReceiverMode(ERecMode eNewMode);
     void					SetInitResOff(_REAL rNRO)
@@ -162,9 +162,13 @@ public:
     void					SetAMDemodType(CAMDemodulation::EDemodType);
     void					SetAMFilterBW(int iBw);
     void					SetAMDemodAcq(_REAL rNewNorCen);
-    void	 				SetRig(CHamlib* n) { pRig=n; }
+    void	 				SetRig(CRig* n) {
+        pRig=n;
+    }
     void	 				SetFrequency(int);
-    int		 				GetFrequency() {return pReceiverParam->GetFrequency();}
+    int		 				GetFrequency() {
+        return pReceiverParam->GetFrequency();
+    }
     void					SetIQRecording(_BOOLEAN);
     void					SetRSIRecording(_BOOLEAN, const char);
 
@@ -436,7 +440,7 @@ protected:
     int						iBwFM;
     _BOOLEAN				bReadFromFile;
     time_t					time_keeper;
-    CHamlib*				pRig;
+    CRig*				pRig;
 
     CPlotManager PlotManager;
     string			rsiOrigin;

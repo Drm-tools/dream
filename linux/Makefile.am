@@ -94,9 +94,11 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableFAC.cpp \
 	../common/tables/TableCarMap.cpp \
 	../common/GUI-QT/main.cpp \
+	../common/GUI-QT/Rig.cpp \
 	source/Pacer.cpp \
 	source/pa_shm_ringbuffer.c \
 	source/shmsoundin.cpp \
+	../common/GUI-QT/Rig.h \
 	../common/Version.h \
 	../common/ReceptLog.h \
 	../common/PlotManager.h \

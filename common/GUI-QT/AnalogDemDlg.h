@@ -47,7 +47,7 @@
 # include "AnalogDemDlgbase.h"
 # include "AMSSDlgbase.h"
 #else
-# include "ui_AnalogDemDlgbase.h"
+# include "ui_AMMainWindow.h"
 # include "ui_AMSSDlgbase.h"
 # include <QDialog>
 #endif
@@ -103,7 +103,7 @@ public slots:
 
 /* Analog demodulation dialog ----------------------------------------------- */
 #if QT_VERSION >= 0x040000
-class AnalogDemDlgBase : public QMainWindow, public Ui::AnalogDemDlgBase
+class AnalogDemDlgBase : public QMainWindow, public Ui_AMMainWindow
 {
 public:
 	AnalogDemDlgBase(QWidget* parent = 0,

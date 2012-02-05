@@ -26,6 +26,8 @@
  *
 \******************************************************************************/
 
+#include <QActionGroup>
+#include <QSignalMapper>
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>
@@ -48,7 +50,8 @@
 # include <QHideEvent>
 # include <QCustomEvent>
 # include <QCloseEvent>
-# include "ui_fdrmdialogbase.h"
+//# include "ui_fdrmdialogbase.h"
+# include "ui_DRMMainWindow.h"
 #endif
 
 #include "DialogUtil.h"
@@ -70,77 +73,81 @@
 
 /* Classes ********************************************************************/
 #if QT_VERSION >= 0x040000
-class FDRMDialogBase : public QDialog, public Ui_FDRMDialogBase
+class DRMBase : public QMainWindow, public Ui_DRMMainWindow
 {
 public:
-	FDRMDialogBase(QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
-	virtual ~FDRMDialogBase() {}
+    DRMBase(QWidget* parent = 0, const char* name = 0,
+            bool modal = FALSE, Qt::WFlags f = 0):
+        QMainWindow(parent,name,f) {
+        setupUi(this);
+    }
+    virtual ~DRMBase() {}
 };
 #endif
-class FDRMDialog : public FDRMDialogBase
+class FDRMDialog : public DRMBase
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	FDRMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE,	Qt::WFlags f = 0);
+    FDRMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
+               bool modal = FALSE,	Qt::WFlags f = 0);
 
-	virtual ~FDRMDialog();
+    virtual ~FDRMDialog();
 
 protected:
-	CDRMReceiver&		DRMReceiver;
-	CSettings&			Settings;
-	QTimer				Timer;
-	vector<QLabel*>		serviceLabels;
+    CDRMReceiver&		DRMReceiver;
+    CSettings&			Settings;
+    QTimer				Timer;
+    vector<QLabel*>		serviceLabels;
 
-	systemevalDlg*		pSysEvalDlg;
-	MultimediaDlg*		pMultiMediaDlg;
-	MultSettingsDlg*	pMultSettingsDlg;
-	StationsDlg*		pStationsDlg;
-	LiveScheduleDlg*	pLiveScheduleDlg;
-	EPGDlg*				pEPGDlg;
-	AnalogDemDlg*		pAnalogDemDlg;
-	FMDialog*			pFMDlg;
-	GeneralSettingsDlg* pGeneralSettingsDlg;
-	QMenuBar*			pMenu;
-	Q3PopupMenu*			pReceiverModeMenu;
-	Q3PopupMenu*			pSettingsMenu;
-	Q3PopupMenu*			pPlotStyleMenu;
-	Q3ButtonGroup*		pButtonGroup;
+    systemevalDlg*		pSysEvalDlg;
+    MultimediaDlg*		pMultiMediaDlg;
+    MultSettingsDlg*	pMultSettingsDlg;
+    StationsDlg*		pStationsDlg;
+    LiveScheduleDlg*	pLiveScheduleDlg;
+    EPGDlg*				pEPGDlg;
+    AnalogDemDlg*		pAnalogDemDlg;
+    FMDialog*			pFMDlg;
+    GeneralSettingsDlg* pGeneralSettingsDlg;
+    QMenuBar*			pMenu;
+    Q3PopupMenu*			pReceiverModeMenu;
+    Q3PopupMenu*			pSettingsMenu;
+    Q3PopupMenu*			pPlotStyleMenu;
+    Q3ButtonGroup*		pButtonGroup;
+    QSignalMapper* plotStyleMapper;
+    QActionGroup* plotStyleGroup;
 
-	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	virtual void	customEvent(QCustomEvent* Event);
-	virtual void	closeEvent(QCloseEvent* ce);
-	virtual void	showEvent(QShowEvent* pEvent);
-	void			hideEvent(QHideEvent* pEvent);
-	void			AddWhatsThisHelp();
-	void			UpdateDisplay();
-	void			ClearDisplay();
+    void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
+    virtual void	customEvent(QCustomEvent* Event);
+    virtual void	closeEvent(QCloseEvent* ce);
+    virtual void	showEvent(QShowEvent* pEvent);
+    void			hideEvent(QHideEvent* pEvent);
+    void			AddWhatsThisHelp();
+    void			UpdateDisplay();
+    void			ClearDisplay();
 
 
-	void			SetDisplayColor(const QColor newColor);
+    void			SetDisplayColor(const QColor newColor);
 
-	void			ChangeGUIModeToDRM();
-	void			ChangeGUIModeToAM();
-	void			ChangeGUIModeToFM();
+    void			ChangeGUIModeToDRM();
+    void			ChangeGUIModeToAM();
+    void			ChangeGUIModeToFM();
 
-	QString	GetCodecString(const CService&);
-	QString	GetTypeString(const CService&);
-	QString serviceSelector(CParameter&, int);
-	void showTextMessage(const QString&);
-	void showServiceInfo(const CService&);
+    QString	GetCodecString(const CService&);
+    QString	GetTypeString(const CService&);
+    QString serviceSelector(CParameter&, int);
+    void showTextMessage(const QString&);
+    void showServiceInfo(const CService&);
 
 public slots:
-	void OnTimer();
-	void OnSelectAudioService(int);
-	void OnSelectDataService(int);
-	void OnViewStationsDlg();
-	void OnMenuSetDisplayColor();
-	void OnMenuPlotStyle(int value);
-	void OnNewAcquisition();
-	void OnSwitchMode(int);
-	void OnSwitchToFM();
-	void OnSwitchToAM();
+    void OnTimer();
+    void OnSelectAudioService(int);
+    void OnSelectDataService(int);
+    void OnViewStationsDlg();
+    void OnMenuSetDisplayColor();
+    void OnMenuPlotStyle(int value);
+    void OnNewAcquisition();
+    void OnSwitchMode(int);
+    void OnSwitchToFM();
+    void OnSwitchToAM();
 };

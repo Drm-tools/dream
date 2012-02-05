@@ -30,6 +30,7 @@
 
 #include "StationsDlg.h"
 #include "DialogUtil.h"
+#include "Rig.h"
 #if QT_VERSION < 0x040000
 # include <qheader.h>
 # include <qftp.h>
@@ -527,9 +528,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 		this, SLOT(OnSMeterMenu(int)), 0, SMETER_MENU_ID);
 
 	connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
-#ifdef HAVE_LIBHAMLIB
 	connect(&rig, SIGNAL(sigstr(double)), this, SLOT(OnSigStr(double)));
-#endif
 
 	/* Init progress bar for input s-meter */
 
@@ -1191,17 +1190,13 @@ void StationsDlg::EnableSMeter()
 	ProgrSigStrength->setEnabled(TRUE);
 	TextLabelSMeter->setEnabled(TRUE);
 	ProgrSigStrength->show();
-#ifdef HAVE_LIBHAMLIB
 	rig.subscribe();
-#endif
 }
 
 void StationsDlg::DisableSMeter()
 {
 	ProgrSigStrength->hide();
-#ifdef HAVE_LIBHAMLIB
 	rig.unsubscribe();
-#endif
 }
 
 void StationsDlg::OnSigStr(double rCurSigStr)
@@ -1246,7 +1241,6 @@ void StationsDlg::AddWhatsThisHelp()
 		"Universal Time (UTC) which is also known as Greenwich Mean Time "
 		"(GMT)."));
 
-#ifdef HAVE_LIBHAMLIB
 	/* S-meter */
 	const QString strSMeter =
 		tr("<b>Signal-Meter:</b> Shows the signal strength "
@@ -1256,5 +1250,4 @@ void StationsDlg::AddWhatsThisHelp()
 
 	Q3WhatsThis::add(TextLabelSMeter, strSMeter);
 	Q3WhatsThis::add(ProgrSigStrength, strSMeter);
-#endif
 }

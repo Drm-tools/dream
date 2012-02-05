@@ -42,6 +42,7 @@
 # include "source/shmsoundin.h"
 #endif
 #include "audiofilein.h"
+#include "GUI-QT/Rig.h"
 
 const int
 CDRMReceiver::MAX_UNLOCKED_COUNT = 2;

@@ -83,6 +83,16 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     AddWhatsThisHelp();
 
 
+#if QT_VERSION >= 0x040000
+    connect(action_Stations_Dialog, SIGNAL(triggered()), this, SIGNAL(ViewStationsDlg()));
+    connect(action_Live_Schedule_Dialog, SIGNAL(triggered()), this, SIGNAL(ViewLiveScheduleDlg()));
+    connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
+    connect(actionAM, SIGNAL(triggered()), this, SIGNAL(NewAMAcquisition()));
+    connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
+    connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
+    menu_Settings->addMenu(new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
+    menubar->addMenu(new CDreamHelpMenu(this));
+#else
     /* Set Menu ***************************************************************/
     /* View menu ------------------------------------------------------------ */
     Q3PopupMenu* EvalWinMenu = new Q3PopupMenu(this);
@@ -116,10 +126,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
     /* Now tell the layout about the menu */
-#if QT_VERSION < 0x040000
     AnalogDemDlgBaseLayout->setMenuBar(pMenu);
-#else
-    setMenuBar(pMenu);
 #endif
 
 

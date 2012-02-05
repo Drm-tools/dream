@@ -28,6 +28,7 @@
 
 #include "systemevalDlg.h"
 #include "DialogUtil.h"
+#include "Rig.h"
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
 #include <qlayout.h>

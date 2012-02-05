@@ -41,7 +41,7 @@
 #else
 # include <Q3PopupMenu>
 # include <QDialog>
-# include "ui_fmdialogbase.h"
+# include "ui_FMMainWindow.h"
 #endif
 #include "DialogUtil.h"
 #include "MultColorLED.h"
@@ -52,12 +52,12 @@
 
 /* Classes ********************************************************************/
 #if QT_VERSION >= 0x040000
-class FMDialogBase : public QDialog, public Ui_FMDialogBase
+class FMDialogBase : public QMainWindow, public Ui_FMMainWindow
 {
 public:
 	FMDialogBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		QMainWindow(parent,name,f){setupUi(this);}
 	virtual ~FMDialogBase() {}
 };
 #endif

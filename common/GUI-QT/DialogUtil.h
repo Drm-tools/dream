@@ -31,28 +31,19 @@
 
 #include "../Parameter.h"
 #include "../selectioninterface.h"
-#ifdef HAVE_LIBHAMLIB
-# include "../util/Utilities.h"
-#endif
 
 #include<map>
 
 #include <qthread.h>
-#if QT_VERSION < 0x040000
-# include <qpopupmenu.h>
-# include "AboutDlgbase.h"
-#else
-# include "ui_AboutDlgbase.h"
-# include <QDialog>
-# include <Q3PopupMenu>
-# define QPopupMenu Q3PopupMenu
-#endif
+#include "ui_AboutDlgbase.h"
+#include <QDialog>
+#include <QMenu>
+#include <QAction>
+#include <QSignalMapper>
+#include <QActionGroup>
 
-class QAction;
-
-#ifndef HAVE_LIBHAMLIB
+class CRig;
 typedef int rig_model_t;
-#endif
 
 /* Definitions ****************************************************************/
 
@@ -97,7 +88,7 @@ public:
 
 
 /* Help menu ---------------------------------------------------------------- */
-class CDreamHelpMenu : public QPopupMenu
+class CDreamHelpMenu : public QMenu
 {
 	Q_OBJECT
 
@@ -114,7 +105,7 @@ public slots:
 
 
 /* Sound card selection menu ------------------------------------------------ */
-class CSoundCardSelMenu : public QPopupMenu
+class CSoundCardSelMenu : public QMenu
 {
 	Q_OBJECT
 
@@ -125,12 +116,7 @@ public:
 protected:
 	CSelectionInterface*	pSoundInIF;
 	CSelectionInterface*	pSoundOutIF;
-	vector<string>		vecSoundInNames;
-	vector<string>		vecSoundOutNames;
-	int			iNumSoundInDev;
-	int			iNumSoundOutDev;
-	QPopupMenu*		pSoundInMenu;
-	QPopupMenu*		pSoundOutMenu;
+	QSignalMapper* Init(const QString& text, CSelectionInterface* intf);
 
 public slots:
 	void OnSoundInDevice(int id);
@@ -177,55 +163,13 @@ inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 	pDlg->setCaption(sCap + sTitle);
 }
 
-class CRig :
-#if QT_VERSION < 0x040000
-	public QObject,      // looks harmless as Qt2 & Qt3 see the whole thing and Qt4 is smart
-#endif
-	public QThread
-{
-	Q_OBJECT
-public:
-	CRig(CParameter* np):
-#ifdef HAVE_LIBHAMLIB
-	Hamlib(),
-#endif
-	subscribers(0),pParameters(np)
-	{ }
-	void run();
-	void subscribe();
-	void unsubscribe();
-#ifdef HAVE_LIBHAMLIB
-	void GetRigList(map<rig_model_t,CHamlib::SDrRigCaps>& r) { Hamlib.GetRigList(r); }
-	rig_model_t GetHamlibModelID() { return Hamlib.GetHamlibModelID(); }
-	void SetHamlibModelID(rig_model_t r) { Hamlib.SetHamlibModelID(r); }
-	void SetEnableModRigSettings(_BOOLEAN b) { Hamlib.SetEnableModRigSettings(b); }
-	void GetPortList(map<string,string>& ports) { Hamlib.GetPortList(ports); }
-	string GetComPort() { return Hamlib.GetComPort(); }
-	void SetComPort(const string& s) { Hamlib.SetComPort(s); }
-	_BOOLEAN GetEnableModRigSettings() { return Hamlib.GetEnableModRigSettings(); }
-	CHamlib::ESMeterState GetSMeter(_REAL& r) { return Hamlib.GetSMeter(r); }
-	void LoadSettings(CSettings& s) { Hamlib.LoadSettings(s);}
-	void SaveSettings(CSettings& s) { Hamlib.SaveSettings(s); }
-	CHamlib* GetRig() { return &Hamlib; }
-
-protected:
-	CHamlib Hamlib;
-#endif
-protected:
-	int subscribers;
-	CParameter* pParameters;
-
-signals:
-    void sigstr(double);
-};
-
 class RemoteMenu : public QObject
 {
 	Q_OBJECT
 
 public:
 	RemoteMenu(QWidget*, CRig&);
-	QPopupMenu* menu(){ return pRemoteMenu; }
+	QMenu* menu(){ return pRemoteMenu; }
 
 public slots:
 	void OnModRigMenu(int iID);
@@ -237,13 +181,13 @@ signals:
 
 protected:
 #ifdef HAVE_LIBHAMLIB
-	struct Rigmenu {std::string mfr; QPopupMenu* pMenu;};
+	struct Rigmenu {std::string mfr; QMenu* pMenu;};
 	std::map<int,Rigmenu> rigmenus;
 	std::vector<rig_model_t> specials;
 	CRig&	rig;
 #endif
-	QPopupMenu* pRemoteMenu;
-	QPopupMenu* pRemoteMenuOther;
+	QMenu* pRemoteMenu;
+	QMenu* pRemoteMenuOther;
 };
 
 #define OTHER_MENU_ID (666)

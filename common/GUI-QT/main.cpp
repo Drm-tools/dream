@@ -41,6 +41,7 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
+#include "Rig.h"
 
 #include <iostream>
 
@@ -150,23 +151,19 @@ main(int argc, char **argv)
 			   ready before the GUI thread */
 
 			CRig rig(DRMReceiver.GetParameters());
-#ifdef HAVE_LIBHAMLIB
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
-#endif
 			DRMReceiver.LoadSettings(Settings);
 
 			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
 
 			DRMReceiver.Init();
 
-#ifdef HAVE_LIBHAMLIB
-			DRMReceiver.SetRig(rig.GetRig());
+			DRMReceiver.SetRig(&rig);
 
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
 			{
 				rig.subscribe();
 			}
-#endif
 
 			FDRMDialog MainDlg(DRMReceiver, Settings, rig, NULL, NULL, FALSE, Qt::WStyle_MinMax);
 
@@ -179,13 +176,11 @@ main(int argc, char **argv)
 
 			app.exec();
 
-#ifdef HAVE_LIBHAMLIB
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
 			{
 				rig.unsubscribe();
 			}
 			rig.SaveSettings(Settings);
-#endif
 			DRMReceiver.SaveSettings(Settings);
 		}
 		else if(mode == "transmit")
