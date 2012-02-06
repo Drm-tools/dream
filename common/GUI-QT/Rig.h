@@ -1,0 +1,80 @@
+/******************************************************************************\
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001-2006
+ *
+ * Author(s):
+ *	Volker Fischer, Andrea Russo
+ *
+ * Description:
+ *
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#ifndef __RIG_H
+#define __RIG_H
+
+#include "../Parameter.h"
+#include "../util/Utilities.h"
+#include <qthread.h>
+#include <qobject.h>
+
+class CRig :
+#if QT_VERSION < 0x040000
+	public QObject,      // looks harmless as Qt2 & Qt3 see the whole thing and Qt4 is smart
+#endif
+	public QThread
+{
+	Q_OBJECT
+public:
+	CRig(CParameter* np):
+#ifdef HAVE_LIBHAMLIB
+	Hamlib(),
+#endif
+	subscribers(0),pParameters(np)
+	{ }
+	void run();
+	void subscribe();
+	void unsubscribe();
+	void LoadSettings(CSettings&);
+	void SaveSettings(CSettings&);
+	void SetFrequency(int);
+#ifdef HAVE_LIBHAMLIB
+	void GetRigList(map<rig_model_t,CHamlib::SDrRigCaps>& r) { Hamlib.GetRigList(r); }
+	rig_model_t GetHamlibModelID() { return Hamlib.GetHamlibModelID(); }
+	void SetHamlibModelID(rig_model_t r) { Hamlib.SetHamlibModelID(r); }
+	void SetEnableModRigSettings(_BOOLEAN b) { Hamlib.SetEnableModRigSettings(b); }
+	void GetPortList(map<string,string>& ports) { Hamlib.GetPortList(ports); }
+	string GetComPort() { return Hamlib.GetComPort(); }
+	void SetComPort(const string& s) { Hamlib.SetComPort(s); }
+	_BOOLEAN GetEnableModRigSettings() { return Hamlib.GetEnableModRigSettings(); }
+	CHamlib::ESMeterState GetSMeter(_REAL& r) { return Hamlib.GetSMeter(r); }
+	CHamlib* GetRig() { return &Hamlib; }
+
+protected:
+	CHamlib Hamlib;
+#endif
+protected:
+	int subscribers;
+	CParameter* pParameters;
+
+signals:
+    void sigstr(double);
+};
+
+#endif
