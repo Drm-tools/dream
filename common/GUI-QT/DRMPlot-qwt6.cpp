@@ -72,13 +72,16 @@
 
 
 /* Implementation *************************************************************/
-CDRMPlot::CDRMPlot(QWidget* parent) :
-    plot(new QwtPlot(parent)), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
-    MarkerSym1(), MarkerSym2(), MarkerSym3(),
+CDRMPlot::CDRMPlot(QwtPlot* pplot) :
+    plot(pplot), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
+    symbolMSC(), symbolSDC(), symbolFAC(),
     leftTitle(), rightTitle(), bottomTitle(),
     bOnTimerCharMutexFlag(FALSE),
     pDRMRec(NULL)
 {
+    if(plot==NULL)
+	plot = new QwtPlot(NULL);
+
     grid = new QwtPlotGrid();
 
     curve1 = new QwtPlotCurve("");
@@ -128,6 +131,22 @@ CDRMPlot::CDRMPlot(QWidget* parent) :
     /* Canvas */
     plot->setCanvasLineWidth(0);
     plot->canvas()->setBackgroundRole(QPalette::Window);
+
+    /* initialise constellation symbols */
+    symbolMSC.setStyle(QwtSymbol::Rect);
+    symbolMSC.setSize(2);
+    symbolMSC.setPen(QPen(MainPenColorConst));
+    symbolMSC.setBrush(QBrush(MainPenColorConst));
+
+    symbolSDC.setStyle(QwtSymbol::XCross);
+    symbolSDC.setSize(4);
+    symbolSDC.setPen(QPen(SpecLine1ColorPlot));
+    symbolSDC.setBrush(QBrush(SpecLine1ColorPlot));
+
+    symbolFAC.setStyle(QwtSymbol::Ellipse);
+    symbolFAC.setSize(4);
+    symbolFAC.setPen(QPen(SpecLine2ColorPlot));
+    symbolFAC.setBrush(QBrush(SpecLine2ColorPlot));
 
     /* Set default style */
     SetPlotStyle(0);
@@ -316,10 +335,7 @@ void CDRMPlot::OnTimerChart()
 
         if(change) SetupFACConst();
         /* Prepare graph and set data */
-#if QWT_VERSION < 0x050000
-        removeMarkers();
-#endif
-        SetData(veccData1);
+        SetData(main1curve, veccData1, symbolFAC);
         break;
 
     case SDC_CONSTELLATION:
@@ -328,10 +344,7 @@ void CDRMPlot::OnTimerChart()
 
         /* Always set up plot. TODO: only set up plot if constellation scheme has changed */
         SetupSDCConst(eSDCCodingScheme);
-#if QWT_VERSION < 0x050000
-        removeMarkers();
-#endif
-        SetData(veccData1);
+        SetData(main1curve, veccData1, symbolSDC);
         break;
 
     case MSC_CONSTELLATION:
@@ -340,10 +353,7 @@ void CDRMPlot::OnTimerChart()
 
         /* Always set up plot. TODO: only set up plot if constellation scheme has changed */
         SetupMSCConst(eMSCCodingScheme);
-#if QWT_VERSION < 0x050000
-        removeMarkers();
-#endif
-        SetData(veccData1);
+        SetData(main1curve, veccData1, symbolMSC);
         break;
 
     case ALL_CONSTELLATION:
@@ -353,9 +363,6 @@ void CDRMPlot::OnTimerChart()
         pDRMRec->GetFACMLC()->GetVectorSpace(veccData3);
 
         if(change) SetupAllConst();
-#if QWT_VERSION < 0x050000
-        removeMarkers();
-#endif
         SetData(veccData1, veccData2, veccData3);
         break;
 
@@ -497,10 +504,7 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
         pdScale[i] = vecrScale[i];
     }
 
-#if QWT_VERSION < 0x060000
-#else
     main1curve->setSamples(pdScale, pdData, vecrData.Size());
-#endif
     delete[] pdData;
     delete[] pdScale;
 }
@@ -521,65 +525,38 @@ void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
         pdScale[i] = vecrScale[i];
     }
 
-#if QWT_VERSION < 0x060000
-#else
     main1curve->setSamples(pdScale, pdData1, vecrData1.Size());
     main2curve->setSamples(pdScale, pdData2, vecrData2.Size());
-#endif
     delete[] pdData1;
     delete[] pdData2;
     delete[] pdScale;
 }
 
-void CDRMPlot::SetData(CVector<_COMPLEX>& veccData)
+void CDRMPlot::SetData(QwtPlotCurve* curve, CVector<_COMPLEX>& veccData, const QwtSymbol& marker)
 {
     /* Copy data from vectors in temporary arrays */
-    const int iDataSize = veccData.Size();
+    int iDataSize = veccData.Size();
+    double* pdData = new double[iDataSize];
+    double* pdScale = new double[iDataSize];
     for (int i = 0; i < iDataSize; i++)
     {
-#if QWT_VERSION < 0x050000
-        const long lMarkerKey = insertMarker();
-        setMarkerSymbol(lMarkerKey, MarkerSym1);
-        setMarkerPos(lMarkerKey, veccData[i].real(), veccData[i].imag());
-#endif
+        pdData[i] = veccData[i].real();
+        pdScale[i] = veccData[i].imag();
     }
+    curve->setSymbol( &marker );
+    curve->setStyle( QwtPlotCurve::NoCurve );
+    curve->setSamples(pdScale, pdData, iDataSize);
+    delete[] pdData;
+    delete[] pdScale;
 }
 
 void CDRMPlot::SetData(CVector<_COMPLEX>& veccMSCConst,
                        CVector<_COMPLEX>& veccSDCConst,
                        CVector<_COMPLEX>& veccFACConst)
 {
-#if QWT_VERSION < 0x050000
-    int i;
-
-    /* Copy data from vectors in temporary arrays */
-    const int iMSCSize = veccMSCConst.Size();
-    for (i = 0; i < iMSCSize; i++)
-    {
-        const long lMarkerKey = insertMarker();
-        setMarkerSymbol(lMarkerKey, MarkerSym1);
-        setMarkerPos(lMarkerKey,
-                     veccMSCConst[i].real(), veccMSCConst[i].imag());
-    }
-
-    const int iSDCSize = veccSDCConst.Size();
-    for (i = 0; i < iSDCSize; i++)
-    {
-        const long lMarkerKey = insertMarker();
-        setMarkerSymbol(lMarkerKey, MarkerSym2);
-        setMarkerPos(lMarkerKey,
-                     veccSDCConst[i].real(), veccSDCConst[i].imag());
-    }
-
-    const int iFACSize = veccFACConst.Size();
-    for (i = 0; i < iFACSize; i++)
-    {
-        const long lMarkerKey = insertMarker();
-        setMarkerSymbol(lMarkerKey, MarkerSym3);
-        setMarkerPos(lMarkerKey,
-                     veccFACConst[i].real(), veccFACConst[i].imag());
-    }
-#endif
+    SetData(main1curve, veccMSCConst, symbolMSC);
+    SetData(main2curve, veccSDCConst, symbolSDC);
+    SetData(curve1, veccFACConst, symbolFAC);
 }
 
 void CDRMPlot::SetupAvIR()
@@ -641,30 +618,18 @@ void CDRMPlot::SetVerticalBounds(
 
     /* Left bound */
     dX[0] = dX[1] = rStartGuard;
-#if QWT_VERSION < 0x060000
-#else
     curve1->setSamples(dX, dY, 2);
-#endif
 
     /* Right bound */
     dX[0] = dX[1] = rEndGuard;
-#if QWT_VERSION < 0x060000
-#else
     curve2->setSamples(dX, dY, 2);
-#endif
     /* Estimated begin of impulse response */
     dX[0] = dX[1] = rBeginIR;
-#if QWT_VERSION < 0x060000
-#else
     curve3->setSamples(dX, dY, 2);
-#endif
 
     /* Estimated end of impulse response */
     dX[0] = dX[1] = rEndIR;
-#if QWT_VERSION < 0x060000
-#else
     curve4->setSamples(dX, dY, 2);
-#endif
 }
 
 void CDRMPlot::SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLowerB, _REAL rHigherB)
@@ -676,10 +641,7 @@ void CDRMPlot::SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLow
 
     /* Only include highest bound */
     dY[0] = dY[1] = Max(rHigherB, rLowerB);
-#if QWT_VERSION < 0x060000
-#else
     curve5->setSamples(dX, dY, 2);
-#endif
     /* Adjust scale for x-axis */
     plot->setAxisScale(QwtPlot::xBottom, (double) rScaleMin, (double) rScaleMax);
 }
@@ -1350,10 +1312,10 @@ void CDRMPlot::SetupFACConst()
     plot->setAxisScale(QwtPlot::yLeft, (double) -1.4142, (double) 1.4142);
 
     /* Set marker symbol */
-    MarkerSym1.setStyle(QwtSymbol::Ellipse);
-    MarkerSym1.setSize(4);
-    MarkerSym1.setPen(QPen(MainPenColorConst));
-    MarkerSym1.setBrush(QBrush(MainPenColorConst));
+    symbolMSC.setStyle(QwtSymbol::Ellipse);
+    symbolMSC.setSize(4);
+    symbolMSC.setPen(QPen(MainPenColorConst));
+    symbolMSC.setBrush(QBrush(MainPenColorConst));
 
     /* Insert grid */
     clear();
@@ -1386,10 +1348,10 @@ void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
         SetQAM16Grid();
 
     /* Set marker symbol */
-    MarkerSym1.setStyle(QwtSymbol::Ellipse);
-    MarkerSym1.setSize(4);
-    MarkerSym1.setPen(QPen(MainPenColorConst));
-    MarkerSym1.setBrush(QBrush(MainPenColorConst));
+    symbolMSC.setStyle(QwtSymbol::Ellipse);
+    symbolMSC.setSize(4);
+    symbolMSC.setPen(QPen(MainPenColorConst));
+    symbolMSC.setBrush(QBrush(MainPenColorConst));
 }
 
 void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
@@ -1418,10 +1380,10 @@ void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
         SetQAM64Grid();
 
     /* Set marker symbol */
-    MarkerSym1.setStyle(QwtSymbol::Ellipse);
-    MarkerSym1.setSize(2);
-    MarkerSym1.setPen(QPen(MainPenColorConst));
-    MarkerSym1.setBrush(QBrush(MainPenColorConst));
+    symbolMSC.setStyle(QwtSymbol::Ellipse);
+    symbolMSC.setSize(2);
+    symbolMSC.setPen(QPen(MainPenColorConst));
+    symbolMSC.setBrush(QBrush(MainPenColorConst));
 }
 
 void CDRMPlot::SetupAllConst()
@@ -1442,40 +1404,22 @@ void CDRMPlot::SetupAllConst()
     plot->setAxisScale(QwtPlot::xBottom, (double) -1.5, (double) 1.5);
     plot->setAxisScale(QwtPlot::yLeft, (double) -1.5, (double) 1.5);
 
-    /* Set marker symbols */
-    /* MSC */
-    MarkerSym1.setStyle(QwtSymbol::Rect);
-    MarkerSym1.setSize(2);
-    MarkerSym1.setPen(QPen(MainPenColorConst));
-    MarkerSym1.setBrush(QBrush(MainPenColorConst));
-
-    /* SDC */
-    MarkerSym2.setStyle(QwtSymbol::XCross);
-    MarkerSym2.setSize(4);
-    MarkerSym2.setPen(QPen(SpecLine1ColorPlot));
-    MarkerSym2.setBrush(QBrush(SpecLine1ColorPlot));
-
-    /* FAC */
-    MarkerSym3.setStyle(QwtSymbol::Ellipse);
-    MarkerSym3.setSize(4);
-    MarkerSym3.setPen(QPen(SpecLine2ColorPlot));
-    MarkerSym3.setBrush(QBrush(SpecLine2ColorPlot));
 
     /* Insert "dummy" curves for legend */
     clear();
 #if QWT_VERSION < 0x050000
     curve1 = insertCurve("MSC");
-    setCurveSymbol(curve1, MarkerSym1);
+    setCurveSymbol(curve1, symbolMSC);
     curve1->setPen(QPen(Qt::NoPen));
     plot->enableLegend(TRUE, curve1);
 
     curve2 = insertCurve("SDC");
-    setCurveSymbol(curve2, MarkerSym2);
+    setCurveSymbol(curve2, symbolSDC);
     curve2->setPen(QPen(Qt::NoPen));
     plot->enableLegend(TRUE, curve2);
 
     curve3 = insertCurve("FAC");
-    setCurveSymbol(curve3, MarkerSym3);
+    setCurveSymbol(curve3, symbolFAC);
     curve3->setPen(QPen(Qt::NoPen));
     plot->enableLegend(TRUE, curve3);
 #endif

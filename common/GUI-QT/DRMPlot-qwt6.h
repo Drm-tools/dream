@@ -86,7 +86,7 @@ public:
         NONE_OLD = 16 /* None must always be the last element! (see settings) */
     };
 
-    CDRMPlot(QWidget*);
+    CDRMPlot(QwtPlot*);
     virtual ~CDRMPlot() {}
 
     QwtPlot*	plot;
@@ -132,7 +132,7 @@ protected:
     void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
     void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
                  CVector<_REAL>& vecrScale);
-    void SetData(CVector<_COMPLEX>& veccData);
+    void SetData(QwtPlotCurve*, CVector<_COMPLEX>&, const QwtSymbol&);
     void SetData(CVector<_COMPLEX>& veccMSCConst,
                  CVector<_COMPLEX>& veccSDCConst,
                  CVector<_COMPLEX>& veccFACConst);
@@ -177,7 +177,7 @@ protected:
     QwtPlotCurve	*main1curve, *main2curve;
     QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5;
     QwtPlotGrid*    	grid;
-    QwtSymbol		MarkerSym1, MarkerSym2, MarkerSym3;
+    QwtSymbol		symbolMSC, symbolSDC, symbolFAC;
     QwtText         	leftTitle, rightTitle, bottomTitle;
 
     _BOOLEAN		bOnTimerCharMutexFlag;

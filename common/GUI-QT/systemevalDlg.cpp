@@ -45,6 +45,7 @@
 # include <QShowEvent>
 #endif
 
+#if QT_VERSION < 0x040000
 	class CCharSelItem : public Q3ListViewItem
 	{
 	public:
@@ -62,6 +63,7 @@
 	protected:
 		CDRMPlot::ECharType eCharTy;
 	};
+#endif
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings,
@@ -86,7 +88,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	AddWhatsThisHelp();
 
 #if QT_VERSION >= 0x040000
-	MainPlot = new CDRMPlot(this);
+	MainPlot = new CDRMPlot(plot);
 #endif
 
 	/* Init controls -------------------------------------------------------- */
@@ -119,7 +121,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 
 
 	/* Init chart selector list view ---------------------------------------- */
-#if QT_VERSION < 0x040000
 	/* Get pixmaps from dummy list view entries which where inserted in the
 	   qdesigner environment (storage container for the pixmaps) */
 #if QT_VERSION < 0x040000
@@ -251,10 +252,75 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	ListViewCharSel->setColumnWidth(0, 0);
 	ListViewCharSel->setColumnWidthMode(0, Q3ListView::Maximum);
 #else
+    QTreeWidgetItemIterator it(chartSelector, QTreeWidgetItemIterator::NoChildren);
+     while (*it) {
+         if ((*it)->text(0) == tr("SNR Spectrum"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::SNR_SPECTRUM);
+	}
+         if ((*it)->text(0) == tr("Audio Spectrum"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::AUDIO_SPECTRUM);
+	}
+         if ((*it)->text(0) == tr("Shifted PSD"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::POWER_SPEC_DENSITY);
+	}
+         if ((*it)->text(0) == tr("Waterfall Input Spectrum"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::INP_SPEC_WATERF);
+	}
+         if ((*it)->text(0) == tr("Input Spectrum"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::INPUTSPECTRUM_NO_AV);
+	}
+         if ((*it)->text(0) == tr("Input PSD"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::INPUT_SIG_PSD);
+	}
+         if ((*it)->text(0) == tr("MSC"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::MSC_CONSTELLATION);
+	}
+         if ((*it)->text(0) == tr("SDC"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::SDC_CONSTELLATION);
+	}
+         if ((*it)->text(0) == tr("FAC"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::FAC_CONSTELLATION);
+	}
+         if ((*it)->text(0) == tr("FAC / SDC / MSC"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::ALL_CONSTELLATION);
+	}
+         if ((*it)->text(0) == tr("Frequency / Sample Rate"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::FREQ_SAM_OFFS_HIST);
+	}
+         if ((*it)->text(0) == tr("Delay / Doppler"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::DOPPLER_DELAY_HIST);
+	}
+         if ((*it)->text(0) == tr("SNR / Audio"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::SNR_AUDIO_HIST);
+	}
+         if ((*it)->text(0) == tr("Transfer Function"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::TRANSFERFUNCTION);
+	}
+         if ((*it)->text(0) == tr("Impulse Response"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::AVERAGED_IR);
+	}
+         ++it;
+     }
 #endif
 
 	/* If MDI in is enabled, disable some of the controls and use different
 	   initialization for the chart and chart selector */
+#if QT_VERSION < 0x040000
 	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
 	{
 		//ListViewCharSel->setEnabled(FALSE);
@@ -322,7 +388,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 			break;
 
 		case (int) CDRMPlot::FAC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
+			LNewSelIt istViewCharSel->setOpen(pConstellationLiViIt, TRUE);
 			ListViewCharSel->setSelected(pListItConstFAC, TRUE);
 			MainPlot->SetupChart(CDRMPlot::FAC_CONSTELLATION);
 			break;
@@ -370,13 +436,13 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 			break;
 		}
 	}
-
-#endif
 	/* Init context menu for list view */
 	pListViewContextMenu = new Q3PopupMenu(this, tr("ListView context menu"));
 	pListViewContextMenu->insertItem(tr("&Open in separate window"), this,
 		SLOT(OnListViContMenu()));
 
+#else
+#endif
 
 	/* Connect controls ----------------------------------------------------- */
 	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
@@ -406,11 +472,10 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 		SIGNAL(rightButtonClicked(QListViewItem*, const QPoint&, int)),
 		this, SLOT(OnListRightButClicked(QListViewItem*, const QPoint&, int)));
 #else
-	connect(chartSelector, SIGNAL(selectionChanged(Q3ListViewItem*)),
-		this, SLOT(OnListSelChanged(Q3ListViewItem*)));
-	connect(chartSelector,
-		SIGNAL(rightButtonClicked(Q3ListViewItem*, const QPoint&, int)),
-		this, SLOT(OnListRightButClicked(Q3ListViewItem*, const QPoint&, int)));
+	connect(chartSelector, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)),
+		this, SLOT(OnListSelChanged( QTreeWidgetItem *, QTreeWidgetItem *)));
+	connect(chartSelector, SIGNAL(itemDoubleClicked( QTreeWidgetItem *, int)),
+		this, SLOT(OnOpenNewChart(QTreeWidgetItem *, int)));
 #endif
 
 	/* Buttons */
@@ -731,14 +796,16 @@ void systemevalDlg::UpdatePlotsStyle()
 CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
 {
 	/* Create new chart window */
-	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
+	CDRMPlot* pNewChartWin = new CDRMPlot(new QwtPlot(NULL));
 	pNewChartWin->setCaption(tr("Chart Window"));
 
 	/* Set plot style*/
 	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
-	pNewChartWin->setIcon(*this->icon());
+	const QPixmap* icon = this->icon();
+	if(icon!=NULL)
+		pNewChartWin->setIcon(*icon);
 
 	/* Set receiver object and correct chart type */
 	pNewChartWin->SetRecObj(&DRMReceiver);
@@ -1197,19 +1264,12 @@ void systemevalDlg::OnSliderIterChange(int value)
 
 #if QT_VERSION < 0x040000
 void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
-#else
-void systemevalDlg::OnListSelChanged(Q3ListViewItem* NewSelIt)
-#endif
 {
 	/* Get char type from selected item and setup chart */
 	MainPlot->SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());
 }
 
-#if QT_VERSION < 0x040000
 void systemevalDlg::OnListRightButClicked(QListViewItem* NewSelIt, const QPoint&, int)
-#else
-void systemevalDlg::OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint&, int)
-#endif
 {
 	/* Make sure that list item is valid */
 	if (NewSelIt != NULL)
@@ -1219,6 +1279,19 @@ void systemevalDlg::OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint
 			pListViewContextMenu->exec(QCursor::pos());
 	}
 }
+#else
+void systemevalDlg::OnListSelChanged(QTreeWidgetItem *curr, QTreeWidgetItem *prev)
+{
+	/* Get char type from selected item and setup chart */
+	MainPlot->SetupChart(CDRMPlot::ECharType(curr->data(0, Qt::UserRole).toInt()));
+}
+
+void systemevalDlg::OnOpenNewChart(QTreeWidgetItem* item, int)
+{
+	if (item != NULL)
+		vecpDRMPlots.push_back(OpenChartWin(CDRMPlot::ECharType(item->data(0, Qt::UserRole).toInt())));
+}
+#endif
 
 void systemevalDlg::OnListViContMenu()
 {

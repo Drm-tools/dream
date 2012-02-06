@@ -160,7 +160,7 @@ public slots:
 	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
 #else
-	void OnListSelChanged(Q3ListViewItem* NewSelIt);
-	void OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
+	void OnListSelChanged(QTreeWidgetItem*, QTreeWidgetItem*);
+	void OnOpenNewChart(QTreeWidgetItem*, int);
 #endif
 };
