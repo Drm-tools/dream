@@ -486,7 +486,7 @@ SOURCES += common/GPSData.cpp \
     common/GUI-QT/MultimediaDlg.h \
     common/GUI-QT/MultSettingsDlg.h \
     common/GUI-QT/StationsDlg.h \
-    common/GUI-QT/systemevalDlg.h \
+    common/GUI-QT/EvaluationDlg.h \
     common/GUI-QT/TransmDlg.h
   SOURCES += common/GPSReceiver.cpp \
     common/GUI-QT/AnalogDemDlg.cpp \
@@ -500,6 +500,6 @@ SOURCES += common/GPSData.cpp \
     common/GUI-QT/MultimediaDlg.cpp \
     common/GUI-QT/MultSettingsDlg.cpp \
     common/GUI-QT/StationsDlg.cpp \
-    common/GUI-QT/systemevalDlg.cpp \
+    common/GUI-QT/EvaluationDlg.cpp \
     common/GUI-QT/TransmDlg.cpp
 }

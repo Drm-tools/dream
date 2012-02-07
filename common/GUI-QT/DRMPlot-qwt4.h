@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+#ifndef __DRMPLOT_QWT4_H
+#define __DRMPLOT_QWT4_H
+
 protected:
 	void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 	void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
@@ -79,4 +82,4 @@ protected:
 	QTimer			TimerChart;
 
 	CDRMReceiver*	pDRMRec;
-
+#endif

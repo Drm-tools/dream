@@ -25,6 +25,9 @@
  *
 \******************************************************************************/
 
+#ifndef __MultSettingsDlg_H
+#define __MultSettingsDlg_H
+
 #include <qcheckbox.h>
 #include <qlineedit.h>
 #include <qdir.h>
@@ -80,3 +83,5 @@ public slots:
 	void OnbuttonClearCacheMOT();
 	void OnbuttonClearCacheEPG();
 };
+
+#endif

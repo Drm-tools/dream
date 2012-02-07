@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+#ifndef __FMDIALOG_H
+#define __FMDIALOG_H
+
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>
@@ -117,3 +120,5 @@ signals:
 	void ViewLiveScheduleDlg();
 	void Closed();
 };
+
+#endif

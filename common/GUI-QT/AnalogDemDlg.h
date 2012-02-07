@@ -29,6 +29,9 @@
  *
 \******************************************************************************/
 
+#ifndef __ANALOGDEMDLG_H
+#define __ANALOGDEMDLG_H
+
 #include <qtimer.h>
 #include <qstring.h>
 #include <qlabel.h>
@@ -164,3 +167,5 @@ signals:
 	void ViewLiveScheduleDlg();
 	void Closed();
 };
+
+#endif

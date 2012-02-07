@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#ifndef __SYSEVALDLG_H
-#define __SYSEVALDLG_H
+#ifndef __EVALUATIONDLH_H
+#define __EVALUATIONDLH_H
 
 #include <qtimer.h>
 #include <qstring.h>
@@ -42,22 +42,12 @@
 #include <qwt_thermo.h>
 #include <qpixmap.h>
 
-#if QT_VERSION < 0x040000
-# include <qpopupmenu.h>
-# include <qlistview.h>
-# define Q3ListView QListView
-# define Q3ListViewItem QListViewItem
-# define Q3PopupMenu QPopupMenu
-# include "systemevalDlgbase.h"
-# include "DRMPlot.h"
-#else
-# include <Q3ListView>
-# include <Q3ButtonGroup>
-# include <Q3PopupMenu>
-# include <QMainWindow>
-# include "ui_systemevalDlgbase.h"
-# include "DRMPlot-qwt6.h"
-#endif
+#include <Q3ListView>
+#include <Q3ButtonGroup>
+#include <Q3PopupMenu>
+#include <QMainWindow>
+#include "ui_systemevalDlgbase.h"
+#include "DRMPlot-qwt6.h"
 
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
@@ -75,7 +65,6 @@ class CRig;
 
 
 /* Classes ********************************************************************/
-#if QT_VERSION >= 0x040000
 class systemevalDlgBase : public QMainWindow, public Ui::SystemEvaluationWindow
 {
 public:
@@ -84,7 +73,7 @@ public:
 		QMainWindow(parent,f){setupUi(this);}
 	virtual ~systemevalDlgBase() {}
 };
-#endif
+
 class systemevalDlg : public systemevalDlgBase
 {
 	Q_OBJECT
@@ -116,9 +105,7 @@ protected:
 	CLongLog		longLog;
 	int				iLogDelay;
 	CRig&			rig;
-#if QT_VERSION >= 0x040000
 	CDRMPlot*		MainPlot;
-#endif
 
 	virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
@@ -155,17 +142,11 @@ public slots:
 	void OnCheckSaveAudioWAV();
 	void OnCheckRecFilter();
 	void OnCheckModiMetric();
-	void OnListViContMenu();
 	void OnFrequencyEdited (const QString&);
 	void EnableGPS();
 	void DisableGPS();
-#if QT_VERSION < 0x040000
-	void OnListSelChanged(QListViewItem* NewSelIt);
-	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
-#else
-	void OnListSelChanged(Q3ListViewItem* NewSelIt);
-	void OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
-#endif
+	void OnListSelChanged(QTreeWidgetItem*, QTreeWidgetItem*);
+	void OnOpenNewChart(QTreeWidgetItem*, int);
 };
 
 #endif

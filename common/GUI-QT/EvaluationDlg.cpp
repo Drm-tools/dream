@@ -26,43 +26,16 @@
  *
 \******************************************************************************/
 
-#include "systemevalDlg.h"
+#include "EvaluationDlg.h"
 #include "DialogUtil.h"
+#include "Rig.h"
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
 #include <qlayout.h>
-#if QT_VERSION < 0x040000
-# include "DRMPlot.h"
-# include <qbuttongroup.h>
-# include <qfiledialog.h>
-# include <qwhatsthis.h>
-# define Q3WhatsThis QWhatsThis
-# define Q3FileDialog QFileDialog
-#else
-# include "DRMPlot-qwt6.h"
-# include <q3whatsthis.h>
-# include <q3filedialog.h>
-# include <QHideEvent>
-# include <QShowEvent>
-#endif
-
-	class CCharSelItem : public Q3ListViewItem
-	{
-	public:
-		CCharSelItem(Q3ListView* parent, QString str1,
-			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
-			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
-			{setSelectable(bSelble);}
-		CCharSelItem(Q3ListViewItem* parent, QString str1,
-			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
-			Q3ListViewItem(parent, str1), eCharTy(eNewCharTy)
-			{setSelectable(bSelble);}
-
-		CDRMPlot::ECharType GetCharType() {return eCharTy;}
-
-	protected:
-		CDRMPlot::ECharType eCharTy;
-	};
+#include <q3whatsthis.h>
+#include <q3filedialog.h>
+#include <QHideEvent>
+#include <QShowEvent>
 
 /* Implementation *************************************************************/
 systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings,
@@ -86,9 +59,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
-#if QT_VERSION >= 0x040000
-	MainPlot = new CDRMPlot(this);
-#endif
+	MainPlot = new CDRMPlot(plot);
 
 	/* Init controls -------------------------------------------------------- */
 	/* Init main plot */
@@ -118,147 +89,76 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 	/* Update controls */
 	UpdateControls();
 
+    QTreeWidgetItemIterator it(chartSelector, QTreeWidgetItemIterator::NoChildren);
+     while (*it) {
+         if ((*it)->text(0) == tr("SNR Spectrum"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::SNR_SPECTRUM);
+	}
+         if ((*it)->text(0) == tr("Audio Spectrum"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::AUDIO_SPECTRUM);
+	}
+         if ((*it)->text(0) == tr("Shifted PSD"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::POWER_SPEC_DENSITY);
+	}
+         if ((*it)->text(0) == tr("Waterfall Input Spectrum"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::INP_SPEC_WATERF);
+	}
+         if ((*it)->text(0) == tr("Input Spectrum"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::INPUTSPECTRUM_NO_AV);
+	}
+         if ((*it)->text(0) == tr("Input PSD"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::INPUT_SIG_PSD);
+	}
+         if ((*it)->text(0) == tr("MSC"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::MSC_CONSTELLATION);
+	}
+         if ((*it)->text(0) == tr("SDC"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::SDC_CONSTELLATION);
+	}
+         if ((*it)->text(0) == tr("FAC"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::FAC_CONSTELLATION);
+	}
+         if ((*it)->text(0) == tr("FAC / SDC / MSC"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::ALL_CONSTELLATION);
+	}
+         if ((*it)->text(0) == tr("Frequency / Sample Rate"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::FREQ_SAM_OFFS_HIST);
+	}
+         if ((*it)->text(0) == tr("Delay / Doppler"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::DOPPLER_DELAY_HIST);
+	}
+         if ((*it)->text(0) == tr("SNR / Audio"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::SNR_AUDIO_HIST);
+	}
+         if ((*it)->text(0) == tr("Transfer Function"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::TRANSFERFUNCTION);
+	}
+         if ((*it)->text(0) == tr("Impulse Response"))
+	{
+             (*it)->setData(0,  Qt::UserRole, CDRMPlot::AVERAGED_IR);
+	}
+         ++it;
+     }
 
-	/* Init chart selector list view ---------------------------------------- */
-#if QT_VERSION < 0x040000
-	/* Get pixmaps from dummy list view entries which where inserted in the
-	   qdesigner environment (storage container for the pixmaps) */
-#if QT_VERSION < 0x040000
-	Q3ListViewItem* pCurLiViIt = ListViewCharSel->firstChild();
-	const QPixmap pixSpectrum(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixSpectrPSD(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixSpectrInpSpec(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixSpectrWaterf(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixSpectrShiftedPSD(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixSpectrAudio(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixSpectrSNR(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixChannel(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixChannelIR(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixChannelTF(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixConstellation(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixFAC(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixSDC(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixMSC(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixHistory(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixSNRAudHist(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixDelDoppHist(*pCurLiViIt->pixmap(0));
-	pCurLiViIt = pCurLiViIt->firstChild();
-	const QPixmap pixFreqSamHist(*pCurLiViIt->pixmap(0));
-
-	/* Now clear the dummy list view items */
-	ListViewCharSel->clear();
-
-	/* No sorting of items */
-	ListViewCharSel->setSorting(-1);
-
-	/* Insert parent list view items. Parent list view items should not be
-	   selectable */
-	CCharSelItem* pHistoryLiViIt =
-		new CCharSelItem(ListViewCharSel, tr("History"),
-		CDRMPlot::NONE_OLD, FALSE);
-	pHistoryLiViIt->setPixmap(0, pixHistory);
-
-	CCharSelItem* pConstellationLiViIt =
-		new CCharSelItem(ListViewCharSel, tr("Constellation"),
-		CDRMPlot::NONE_OLD, FALSE);
-	pConstellationLiViIt->setPixmap(0, pixConstellation);
-
-	CCharSelItem* pChannelLiViIt =
-		new CCharSelItem(ListViewCharSel, tr("Channel"),
-		CDRMPlot::NONE_OLD, FALSE);
-	pChannelLiViIt->setPixmap(0, pixChannel);
-
-	CCharSelItem* pSpectrumLiViIt =
-		new CCharSelItem(ListViewCharSel, tr("Spectrum"),
-		CDRMPlot::NONE_OLD, FALSE);
-	pSpectrumLiViIt->setPixmap(0, pixSpectrum);
-
-
-	/* Insert actual items. The list is not sorted -> items which are inserted
-	   first show up at the end of the list */
-	/* Spectrum */
-	CCharSelItem* pListItSNRSpec = new CCharSelItem(pSpectrumLiViIt,
-		tr("SNR Spectrum"), CDRMPlot::SNR_SPECTRUM);
-	pListItSNRSpec->setPixmap(0, pixSpectrSNR);
-	CCharSelItem* pListItAudSpec = new CCharSelItem(pSpectrumLiViIt,
-		tr("Audio Spectrum"), CDRMPlot::AUDIO_SPECTRUM);
-	pListItAudSpec->setPixmap(0, pixSpectrAudio);
-	CCharSelItem* pListItPowSpecDens = new CCharSelItem(pSpectrumLiViIt,
-		tr("Shifted PSD"), CDRMPlot::POWER_SPEC_DENSITY);
-	pListItPowSpecDens->setPixmap(0, pixSpectrShiftedPSD);
-	CCharSelItem* pListItInpSpecWater = new CCharSelItem(pSpectrumLiViIt,
-		tr("Waterfall Input Spectrum"), CDRMPlot::INP_SPEC_WATERF);
-	pListItInpSpecWater->setPixmap(0, pixSpectrWaterf);
-	CCharSelItem* pListItInpSpectrNoAv = new CCharSelItem(pSpectrumLiViIt,
-		tr("Input Spectrum"), CDRMPlot::INPUTSPECTRUM_NO_AV);
-	pListItInpSpectrNoAv->setPixmap(0, pixSpectrInpSpec);
-	CCharSelItem* pListItInpPSD = new CCharSelItem(pSpectrumLiViIt,
-		tr("Input PSD"), CDRMPlot::INPUT_SIG_PSD);
-	pListItInpPSD->setPixmap(0, pixSpectrPSD);
-
-	/* Constellation */
-	CCharSelItem* pListItConstMSC = new CCharSelItem(pConstellationLiViIt,
-		tr("MSC"), CDRMPlot::MSC_CONSTELLATION);
-	pListItConstMSC->setPixmap(0, pixMSC);
-	CCharSelItem* pListItConstSDC = new CCharSelItem(pConstellationLiViIt,
-		tr("SDC"), CDRMPlot::SDC_CONSTELLATION);
-	pListItConstSDC->setPixmap(0, pixSDC);
-	CCharSelItem* pListItConstFAC = new CCharSelItem(pConstellationLiViIt,
-		tr("FAC"), CDRMPlot::FAC_CONSTELLATION);
-	pListItConstFAC->setPixmap(0, pixFAC);
-	CCharSelItem* pListItConstAll = new CCharSelItem(pConstellationLiViIt,
-		tr("FAC / SDC / MSC"), CDRMPlot::ALL_CONSTELLATION);
-	pListItConstAll->setPixmap(0, pixConstellation);
-
-	/* History */
-	CCharSelItem* pListItHistFrSa = new CCharSelItem(pHistoryLiViIt,
-		tr("Frequency / Sample Rate"), CDRMPlot::FREQ_SAM_OFFS_HIST);
-	pListItHistFrSa->setPixmap(0, pixFreqSamHist);
-	CCharSelItem* pListItHistDeDo = new CCharSelItem(pHistoryLiViIt,
-		tr("Delay / Doppler"), CDRMPlot::DOPPLER_DELAY_HIST);
-	pListItHistDeDo->setPixmap(0, pixDelDoppHist);
-	CCharSelItem* pListItHistSNRAu = new CCharSelItem(pHistoryLiViIt,
-		tr("SNR / Audio"), CDRMPlot::SNR_AUDIO_HIST);
-	pListItHistSNRAu->setPixmap(0, pixSNRAudHist);
-
-	/* Channel */
-	CCharSelItem* pListItChanTF = new CCharSelItem(pChannelLiViIt,
-		tr("Transfer Function"), CDRMPlot::TRANSFERFUNCTION);
-	pListItChanTF->setPixmap(0, pixChannelTF);
-	CCharSelItem* pListItChanIR = new CCharSelItem(pChannelLiViIt,
-		tr("Impulse Response"), CDRMPlot::AVERAGED_IR);
-	pListItChanIR->setPixmap(0, pixChannelIR);
-
-	/* Use this trick to update the automatic column width adjustment to the
-	   new items inserted above. If we do not do the update, the column width
-	   is much larger than desired because of the dummy items inserted for
-	   storing the pixmaps in the QDesigner */
-	ListViewCharSel->setColumnWidth(0, 0);
-	ListViewCharSel->setColumnWidthMode(0, Q3ListView::Maximum);
-#else
-#endif
-
+	string  plotType = Settings.Get("System Evaluation Dialog", "sysevplottype", string("Audio Spectrum"));
 	/* If MDI in is enabled, disable some of the controls and use different
 	   initialization for the chart and chart selector */
 	if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
 	{
-		//ListViewCharSel->setEnabled(FALSE);
 		SliderNoOfIterations->setEnabled(FALSE);
 
 		ButtonGroupChanEstFreqInt->setEnabled(FALSE);
@@ -270,114 +170,15 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 		GroupBoxInterfRej->setEnabled(FALSE);
 
 		/* Only audio spectrum makes sence for MDI in */
-		ListViewCharSel->setSelected(pListItAudSpec, TRUE);
-		ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-		MainPlot->SetupChart(CDRMPlot::AUDIO_SPECTRUM);
+		plotType = "Audio Spectrum";
 	}
-	else
+	QList<QTreeWidgetItem*> pl = chartSelector->findItems(plotType.c_str(), Qt::MatchRecursive);
+	if(pl.size()>0)
 	{
-		int iSysEvalDlgPlotType = Settings.Get("System Evaluation Dialog", "sysevplottype", 0);
-		/* Set chart type */
-		switch (iSysEvalDlgPlotType)
-		{
-		case (int) CDRMPlot::POWER_SPEC_DENSITY:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItPowSpecDens, TRUE);
-			MainPlot->SetupChart(CDRMPlot::POWER_SPEC_DENSITY);
-			break;
-
-		case (int) CDRMPlot::INPUTSPECTRUM_NO_AV:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItInpSpectrNoAv, TRUE);
-			MainPlot->SetupChart(CDRMPlot::INPUTSPECTRUM_NO_AV);
-			break;
-
-		case (int) CDRMPlot::AUDIO_SPECTRUM:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItAudSpec, TRUE);
-			MainPlot->SetupChart(CDRMPlot::AUDIO_SPECTRUM);
-			break;
-
-		case (int) CDRMPlot::SNR_SPECTRUM:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItSNRSpec, TRUE);
-			MainPlot->SetupChart(CDRMPlot::SNR_SPECTRUM);
-			break;
-
-		case (int) CDRMPlot::INP_SPEC_WATERF:
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItInpSpecWater, TRUE);
-			MainPlot->SetupChart(CDRMPlot::INP_SPEC_WATERF);
-			break;
-
-		case (int) CDRMPlot::TRANSFERFUNCTION:
-			ListViewCharSel->setOpen(pChannelLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItChanTF, TRUE);
-			MainPlot->SetupChart(CDRMPlot::TRANSFERFUNCTION);
-			break;
-
-		case (int) CDRMPlot::AVERAGED_IR:
-			ListViewCharSel->setOpen(pChannelLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItChanIR, TRUE);
-			MainPlot->SetupChart(CDRMPlot::AVERAGED_IR);
-			break;
-
-		case (int) CDRMPlot::FAC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItConstFAC, TRUE);
-			MainPlot->SetupChart(CDRMPlot::FAC_CONSTELLATION);
-			break;
-
-		case (int) CDRMPlot::SDC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItConstSDC, TRUE);
-			MainPlot->SetupChart(CDRMPlot::SDC_CONSTELLATION);
-			break;
-
-		case (int) CDRMPlot::MSC_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItConstMSC, TRUE);
-			MainPlot->SetupChart(CDRMPlot::MSC_CONSTELLATION);
-			break;
-
-		case (int) CDRMPlot::ALL_CONSTELLATION:
-			ListViewCharSel->setOpen(pConstellationLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItConstAll, TRUE);
-			MainPlot->SetupChart(CDRMPlot::ALL_CONSTELLATION);
-			break;
-
-		case (int) CDRMPlot::FREQ_SAM_OFFS_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItHistFrSa, TRUE);
-			MainPlot->SetupChart(CDRMPlot::FREQ_SAM_OFFS_HIST);
-			break;
-
-		case (int) CDRMPlot::DOPPLER_DELAY_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItHistDeDo, TRUE);
-			MainPlot->SetupChart(CDRMPlot::DOPPLER_DELAY_HIST);
-			break;
-
-		case (int) CDRMPlot::SNR_AUDIO_HIST:
-			ListViewCharSel->setOpen(pHistoryLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItHistSNRAu, TRUE);
-			MainPlot->SetupChart(CDRMPlot::SNR_AUDIO_HIST);
-			break;
-
-		default: /* INPUT_SIG_PSD, includes INPUT_SIG_PSD_ANALOG and NONE_OLD */
-			ListViewCharSel->setOpen(pSpectrumLiViIt, TRUE);
-			ListViewCharSel->setSelected(pListItInpPSD, TRUE);
-			MainPlot->SetupChart(CDRMPlot::INPUT_SIG_PSD);
-			break;
-		}
+		QTreeWidgetItem* i = pl.first();
+		chartSelector->setCurrentItem(i, 0);
+		OnListSelChanged(i, NULL); // TODO why doesn't setCurrentItem send signal ?
 	}
-
-#endif
-	/* Init context menu for list view */
-	pListViewContextMenu = new Q3PopupMenu(this, tr("ListView context menu"));
-	pListViewContextMenu->insertItem(tr("&Open in separate window"), this,
-		SLOT(OnListViContMenu()));
-
 
 	/* Connect controls ----------------------------------------------------- */
 	connect(SliderNoOfIterations, SIGNAL(valueChanged(int)),
@@ -400,27 +201,13 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
 		this, SLOT(OnRadioTiSyncFirstPeak()));
 
 	/* Char selector list view */
-#if QT_VERSION < 0x040000
-	connect(ListViewCharSel, SIGNAL(selectionChanged(QListViewItem*)),
-		this, SLOT(OnListSelChanged(QListViewItem*)));
-	connect(ListViewCharSel,
-		SIGNAL(rightButtonClicked(QListViewItem*, const QPoint&, int)),
-		this, SLOT(OnListRightButClicked(QListViewItem*, const QPoint&, int)));
-#else
-	connect(chartSelector, SIGNAL(selectionChanged(Q3ListViewItem*)),
-		this, SLOT(OnListSelChanged(Q3ListViewItem*)));
-	connect(chartSelector,
-		SIGNAL(rightButtonClicked(Q3ListViewItem*, const QPoint&, int)),
-		this, SLOT(OnListRightButClicked(Q3ListViewItem*, const QPoint&, int)));
-#endif
+	connect(chartSelector, SIGNAL(currentItemChanged(QTreeWidgetItem *, QTreeWidgetItem *)),
+		this, SLOT(OnListSelChanged( QTreeWidgetItem *, QTreeWidgetItem *)));
+	connect(chartSelector, SIGNAL(itemDoubleClicked( QTreeWidgetItem *, int)),
+		this, SLOT(OnOpenNewChart(QTreeWidgetItem *, int)));
 
 	/* Buttons */
-#if QT_VERSION < 0x040000
-	connect(buttonOk, SIGNAL(clicked()),
-		this, SLOT(accept()));
-#else
 	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
-#endif
 
 	/* Check boxes */
 	connect(CheckBoxFlipSpec, SIGNAL(clicked()),
@@ -648,9 +435,7 @@ void systemevalDlg::showEvent(QShowEvent*)
 
 	/* Activate real-time timer */
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
-#if QT_VERSION >= 0x040000
 	setIconSize(QSize(16,16));
-#endif
 }
 
 void systemevalDlg::hideEvent(QHideEvent*)
@@ -701,10 +486,9 @@ void systemevalDlg::hideEvent(QHideEvent*)
 	s.iWSize = WinGeom.width();
 	Settings.Put("System Evaluation Dialog", s);
 
-	/* Store current plot type. Convert plot type into an integer type.
-	 * TODO: better solution
-	 */
-	Settings.Put("System Evaluation Dialog", "sysevplottype", (int) MainPlot->GetChartType());
+	/* Store current plot type. Convert plot type into an integer type.  */
+	QString ctext = chartSelector->currentItem()->text(0);
+	Settings.Put("System Evaluation Dialog", "sysevplottype", ctext.toStdString());
 }
 
 void systemevalDlg::OnTimerInterDigit()
@@ -729,18 +513,19 @@ void systemevalDlg::UpdatePlotsStyle()
 	MainPlot->SetPlotStyle(iPlotStyle);
 }
 
-CDRMPlot* systemevalDlg::OpenChartWin(int iNewType)
+CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
 {
-	const CDRMPlot::ECharType eNewType = CDRMPlot::ECharType(iNewType);
 	/* Create new chart window */
-	CDRMPlot* pNewChartWin = new CDRMPlot(NULL);
-	setCaption(tr("Chart Window"));
+	CDRMPlot* pNewChartWin = new CDRMPlot(new QwtPlot(NULL));
+	pNewChartWin->setCaption(tr("Chart Window"));
 
 	/* Set plot style*/
 	pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
 	/* Set correct icon (use the same as this dialog) */
-	setIcon(*this->icon());
+	const QPixmap* icon = this->icon();
+	if(icon!=NULL)
+		pNewChartWin->setIcon(*icon);
 
 	/* Set receiver object and correct chart type */
 	pNewChartWin->SetRecObj(&DRMReceiver);
@@ -1197,44 +982,16 @@ void systemevalDlg::OnSliderIterChange(int value)
 		QString().setNum(value));
 }
 
-#if QT_VERSION < 0x040000
-void systemevalDlg::OnListSelChanged(QListViewItem* NewSelIt)
-#else
-void systemevalDlg::OnListSelChanged(Q3ListViewItem* NewSelIt)
-#endif
+void systemevalDlg::OnListSelChanged(QTreeWidgetItem *curr, QTreeWidgetItem *)
 {
 	/* Get char type from selected item and setup chart */
-	MainPlot->SetupChart(((CCharSelItem*) NewSelIt)->GetCharType());
+	MainPlot->SetupChart(CDRMPlot::ECharType(curr->data(0, Qt::UserRole).toInt()));
 }
 
-#if QT_VERSION < 0x040000
-void systemevalDlg::OnListRightButClicked(QListViewItem* NewSelIt, const QPoint&, int)
-#else
-void systemevalDlg::OnListRightButClicked(Q3ListViewItem* NewSelIt, const QPoint&, int)
-#endif
+void systemevalDlg::OnOpenNewChart(QTreeWidgetItem* item, int)
 {
-	/* Make sure that list item is valid */
-	if (NewSelIt != NULL)
-	{
-		/* Show menu at mouse position only if selectable item was chosen */
-		if (NewSelIt->isSelectable())
-			pListViewContextMenu->exec(QCursor::pos());
-	}
-}
-
-void systemevalDlg::OnListViContMenu()
-{
-#if QT_VERSION < 0x040000
-	/* Get chart type from current selected list view item */
-	Q3ListViewItem* pCurSelLVItem = ListViewCharSel->selectedItem();
-
-	if (pCurSelLVItem != NULL)
-	{
-		/* Open new chart window and add window pointer in vector
-		   (needed for closing the windows) */
-		vecpDRMPlots.push_back(OpenChartWin(((CCharSelItem*) pCurSelLVItem)->GetCharType()));
-	}
-#endif
+	if (item != NULL)
+		vecpDRMPlots.push_back(OpenChartWin(CDRMPlot::ECharType(item->data(0, Qt::UserRole).toInt())));
 }
 
 void systemevalDlg::OnCheckFlipSpectrum()
@@ -1781,23 +1538,6 @@ void systemevalDlg::AddWhatsThisHelp()
 		tr("<b>Save Audio as WAV:</b> Save the audio signal "
 		"as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
 		"box will let the user choose a file name for the recording."));
-
-#if QT_VERSION < 0x030000
-	/* if QWhatsThis is added don't work the right click popup (it used to work in QT2.3) */
-
-	/* Chart Selector */
-	Q3WhatsThis::add(ListViewCharSel,
-		tr("<b>Chart Selector:</b> With the chart selector "
-		"different types of graphical display of parameters and receiver "
-		"states can be chosen. The different plot types are sorted in "
-		"different groups. To open a group just double-click on the group or "
-		"click on the plus left of the group name. After clicking on an item "
-		"it is possible to choose other items by using the up / down arrow "
-		"keys. With these keys it is also possible to open and close the "
-		"groups by using the left / right arrow keys.<br>A separate chart "
-		"window for a selected item can be opened by right click on the item "
-		"and click on the context menu item."));
-#endif
 
 	/* Interferer Rejection */
 	const QString strInterfRej =

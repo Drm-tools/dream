@@ -25,6 +25,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
+#ifndef __StationsDlg_H
+#define __StationsDlg_H
 
 #include <qpixmap.h>
 #include <qradiobutton.h>
@@ -303,3 +305,4 @@ public slots:
 	void FilterChanged(const QString&);
 
 };
+#endif

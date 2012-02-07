@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+#ifndef __FDRMDIALOG_H
+#define __FDRMDIALOG_H
+
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>
@@ -54,7 +57,6 @@
 #endif
 
 #include "DialogUtil.h"
-#include "systemevalDlg.h"
 #include "MultimediaDlg.h"
 #include "StationsDlg.h"
 #include "LiveScheduleDlg.h"
@@ -67,6 +69,12 @@
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 #include "../datadecoding/DataDecoder.h"
+
+#if QT_VERSION >= 0x040000
+# include "EvaluationDlg.h"
+#else
+# include "systemevalDlg.h"
+#endif
 
 
 /* Classes ********************************************************************/
@@ -151,3 +159,5 @@ public slots:
     void OnSwitchToFM();
     void OnSwitchToAM();
 };
+
+#endif

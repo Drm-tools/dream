@@ -25,6 +25,9 @@
  *
 \******************************************************************************/
 
+#ifndef __LiveScheduleDlg_H
+#define LiveScheduleDlg_H
+
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
 #include "DialogUtil.h"
@@ -213,3 +216,5 @@ public slots:
 	void OnSave();
 	void OnCheckFreeze();
 };
+
+#endif

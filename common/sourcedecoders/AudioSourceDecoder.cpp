@@ -31,6 +31,7 @@
 #include <string>
 #include <algorithm>
 
+#if !(defined(_MSC_VER) && (_MSC_VER < 1400))
 /**
  * C++ version 0.4 std::string style "itoa":
  * Contributions from Stuart Lowe, Ray-Yuan Sheu,
@@ -61,6 +62,7 @@ std::string itoa(int value, int base) {
     std::reverse( buf.begin(), buf.end() );
     return buf;
 }
+#endif
 
 
 // dummy AAC Decoder implementation if dll not found

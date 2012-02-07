@@ -25,7 +25,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-
+#ifndef __TransmDlg_H
+#define __TransmDlg_H
 
 #include <qpushbutton.h>
 #include <qstring.h>
@@ -165,3 +166,4 @@ public slots:
 	void OnTimer();
 	void OnHelpWhatsThis();
 };
+#endif

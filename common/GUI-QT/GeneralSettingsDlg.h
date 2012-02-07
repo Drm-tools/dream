@@ -25,6 +25,9 @@
  *
 \******************************************************************************/
 
+#ifndef __GENERAL_SETTINGS_DLG_H
+#define __GENERAL_SETTINGS_DLG_H
+
 #include "../Parameter.h"
 #include "../util/Settings.h"
 
@@ -85,3 +88,5 @@ public slots:
 	void ButtonOkClicked();
 	void OnCheckBoxUseGPS();
 };
+
+#endif
