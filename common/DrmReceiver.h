@@ -137,14 +137,13 @@ public:
 
     void					LoadSettings(CSettings&); // can write to settings to set defaults
     void					SaveSettings(CSettings&);
-    void					Init();
     void					Start();
     void					Stop();
     void					RequestNewAcquisition() {
         bRestartFlag = TRUE;
     }
     EAcqStat				GetAcquiState() {
-        return pReceiverParam->eAcquiState;
+        return pReceiverParam->GetAcquiState();
     }
     ERecMode				GetReceiverMode() {
         return eReceiverMode;
@@ -421,7 +420,6 @@ protected:
     int						iDataStreamID;
 
 
-    _BOOLEAN				bDoInitRun;
     _BOOLEAN				bRestartFlag;
 
     _REAL					rInitResampleOffset;

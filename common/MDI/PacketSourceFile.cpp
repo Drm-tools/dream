@@ -64,10 +64,28 @@ timeKeeper(), last_packet_time(0),
 {
 }
 
+void CPacketSourceFile::run()
+{
+	vector<_BYTE> vecbydata (iMaxPacketSize);
+	int interval;
+	while(pf)
+	{
+	vecbydata.resize(0); // in case we don't find anything
+	if(bRaw)
+		 readRawOrFF(vecbydata, interval);
+	else
+		 readPcap(vecbydata, interval);
+
+	/* Decode the incoming packet */
+	if (pPacketSink != NULL)
+		pPacketSink->SendPacket(vecbydata);
+	msleep(400);
+	}
+}
+
 _BOOLEAN
 CPacketSourceFile::SetOrigin(const string& origin)
 {
-cerr << "Set " << origin << endl;
 	string str = origin;
 	size_t p = str.find_last_of('#');
 	if(p!=string::npos)
@@ -89,8 +107,9 @@ cerr << "Set " << origin << endl;
 	}
 	if ( pf != NULL)
 	{
-		timeKeeper = QTime::currentTime();
-		QTimer::singleShot(100, this, SLOT(OnDataReceived()));
+		//timeKeeper = QTime::currentTime();
+		//QTimer::singleShot(100, this, SLOT(OnDataReceived()));
+		start();
 	}
 	return pf != NULL;
 }
@@ -105,6 +124,10 @@ CPacketSourceFile::~CPacketSourceFile()
 		pcap_close((pcap_t*)pf);
 #endif
 	}
+	pf = 0;
+	while(this->isRunning())
+		msleep(10);
+	quit();
 }
 
 // Set the sink which will receive the packets
@@ -124,7 +147,6 @@ CPacketSourceFile::ResetPacketSink()
 void
 CPacketSourceFile::OnDataReceived ()
 {
-qDebug("CPacketSourceFile::OnDataReceived ()");
 	vector<_BYTE> vecbydata (iMaxPacketSize);
 	vecbydata.resize(0); // in case we don't find anything
 	int interval;

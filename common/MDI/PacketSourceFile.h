@@ -33,10 +33,10 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 #include "PacketInOut.h"
-#include <qobject.h>
+#include <qthread.h>
 #include <qdatetime.h>
 
-class CPacketSourceFile : public QObject, public CPacketSource
+class CPacketSourceFile : public QThread, public CPacketSource
 {
 	Q_OBJECT
 public:
@@ -47,6 +47,10 @@ public:
 	// Stop sending packets to the sink
 	virtual void ResetPacketSink(void);
 	virtual _BOOLEAN SetOrigin(const string& str);
+
+protected:
+
+	void run();
 
 private:
 

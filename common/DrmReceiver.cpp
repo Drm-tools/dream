@@ -62,7 +62,7 @@ CDRMReceiver::CDRMReceiver():
         MSCSendBuf(MAX_NUM_STREAMS), iAcquRestartCnt(0),
         iAcquDetecCnt(0), iGoodSignCnt(0), eReceiverMode(RM_DRM),
         eNewReceiverMode(RM_DRM), iAudioStreamID(STREAM_ID_NOT_USED),
-        iDataStreamID(STREAM_ID_NOT_USED), bDoInitRun(FALSE), bRestartFlag(FALSE),
+        iDataStreamID(STREAM_ID_NOT_USED), bRestartFlag(TRUE),
         rInitResampleOffset((_REAL) 0.0),
         iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
         bReadFromFile(FALSE), time_keeper(0),pRig(NULL),PlotManager(),rsiOrigin("")
@@ -167,8 +167,6 @@ CDRMReceiver::Run()
 
     if (upstreamRSCI.GetInEnabled() == TRUE)
     {
-        if (bDoInitRun == FALSE)	/* don't wait for a packet in Init mode */
-        {
             RSIPacketBuf.Clear();
             upstreamRSCI.ReadData(ReceiverParam, RSIPacketBuf);
             if (RSIPacketBuf.GetFillLevel() > 0)
@@ -192,7 +190,6 @@ CDRMReceiver::Run()
                     ReceiverParam.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
                 }
             }
-        }
     }
     else
     {
@@ -618,22 +615,6 @@ CDRMReceiver::DetectAcquiFAC()
 }
 
 void
-CDRMReceiver::Init()
-{
-    /* Set flags so that we have only one loop in the Run() routine which is
-       enough for initializing all modues */
-    bDoInitRun = TRUE;
-    pReceiverParam->eRunState = CParameter::RUNNING;
-
-    /* Run once */
-    Run();
-
-    /* Reset flags */
-    bDoInitRun = FALSE;
-    pReceiverParam->eRunState = CParameter::STOPPED;
-}
-
-void
 CDRMReceiver::InitReceiverMode()
 {
     switch (eNewReceiverMode)
@@ -795,6 +776,7 @@ CDRMReceiver::Start()
         Run();
     }
     while (pReceiverParam->eRunState == CParameter::RUNNING);
+
     pReceiverParam->eRunState = CParameter::STOPPED;
 
     pSoundInInterface->Close();

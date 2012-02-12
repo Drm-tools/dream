@@ -349,7 +349,7 @@ CLongLog::writeParameters()
        not synchronized, set parameters to zero */
     _REAL rDelay = (_REAL) 0.0;
     _REAL rDoppler = (_REAL) 0.0;
-    if (Parameters.eAcquiState == AS_WITH_SIGNAL)
+    if (Parameters.GetAcquiState() == AS_WITH_SIGNAL)
     {
         rDelay = Parameters.rMinDelay;
         rDoppler = Parameters.rSigmaEstimate;
