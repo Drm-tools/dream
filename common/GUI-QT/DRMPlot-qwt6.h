@@ -38,6 +38,7 @@
 #include <qpainter.h>
 #include <qtimer.h>
 #include <qwhatsthis.h>
+#include <QIcon>
 #include "../util/Vector.h"
 #include "../Parameter.h"
 #include "../DrmReceiver.h"
@@ -105,8 +106,8 @@ public:
     }
     void SetPlotStyle(const int iNewStyleID);
     void setGeometry(const QRect& g) { plot->setGeometry(g); }
-    void setCaption(const QString& s) { plot->setCaption(s); }
-    void setIcon(const QPixmap& s) { plot->setIcon(s); }
+    void setCaption(const QString& s) { plot->setWindowTitle(s); }
+    void setIcon(const QPixmap& s) { plot->setWindowIcon(QIcon(s)); }
 
     bool isVisible() { return plot->isVisible(); }
     QRect geometry() {return plot->geometry();}

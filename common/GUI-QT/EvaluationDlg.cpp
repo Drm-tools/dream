@@ -32,7 +32,7 @@
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
 #include <qlayout.h>
-#include <q3whatsthis.h>
+#include <Q3WhatsThis>
 #include <q3filedialog.h>
 #include <QHideEvent>
 #include <QShowEvent>
@@ -1193,8 +1193,8 @@ void systemevalDlg::AddWhatsThisHelp()
 		"restriction is that the DRM spectrum must be completely inside the "
 		"bandwidth of the sound card.");
 
-	Q3WhatsThis::add(TextFreqOffset, strDCFreqOffs);
-	Q3WhatsThis::add(ValueFreqOffset, strDCFreqOffs);
+	TextFreqOffset->setWhatsThis(strDCFreqOffs);
+	ValueFreqOffset->setWhatsThis(strDCFreqOffs);
 
 	/* Sample Frequency Offset */
 	const QString strFreqOffset =
@@ -1206,8 +1206,8 @@ void systemevalDlg::AddWhatsThisHelp()
 		"useful to inform the Dream software about this value at application "
 		"startup to increase the acquisition speed and reliability.");
 
-	Q3WhatsThis::add(TextSampFreqOffset, strFreqOffset);
-	Q3WhatsThis::add(ValueSampFreqOffset, strFreqOffset);
+	TextSampFreqOffset->setWhatsThis(strFreqOffset);
+	ValueSampFreqOffset->setWhatsThis(strFreqOffset);
 
 	/* Doppler / Delay */
 	const QString strDopplerDelay =

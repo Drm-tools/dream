@@ -28,18 +28,12 @@
 
 #include "DRMPlot-qwt6.h"
 
-#if QT_VERSION < 0x040000
-# include <qwhatsthis.h>
-# define Q3Frame QFrame
-# define Q3WhatsThis QWhatsThis
-#else
-# include <Q3WhatsThis>
-# include <QPixmap>
-# include <Q3Frame>
-# include <QHideEvent>
-# include <QMouseEvent>
-# include <QShowEvent>
-#endif
+#include <QWhatsThis>
+#include <QPixmap>
+#include <QFrame>
+#include <QHideEvent>
+#include <QMouseEvent>
+#include <QShowEvent>
 
 /* Define the plot color profiles */
 
@@ -394,7 +388,7 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
         {
         case INP_SPEC_WATERF:
             /* Very fast update */
-            TimerChart.changeInterval(GUI_CONTROL_UPDATE_WATERFALL);
+            TimerChart.setInterval(GUI_CONTROL_UPDATE_WATERFALL);
             break;
 
         case AVERAGED_IR:
@@ -404,7 +398,7 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
         case INPUT_SIG_PSD_ANALOG:
         case SNR_SPECTRUM:
             /* Fast update */
-            TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME_FAST);
+            TimerChart.setInterval(GUI_CONTROL_UPDATE_TIME_FAST);
             break;
 
         case FAC_CONSTELLATION:
@@ -417,7 +411,7 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
         case DOPPLER_DELAY_HIST:
         case SNR_AUDIO_HIST:
             /* Slow update of plot */
-            TimerChart.changeInterval(GUI_CONTROL_UPDATE_TIME);
+            TimerChart.setInterval(GUI_CONTROL_UPDATE_TIME);
             break;
 
         case NONE_OLD:
@@ -1028,10 +1022,7 @@ void CDRMPlot::SetDCCarrier(const _REAL rDCFreq)
     dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
     dY[1] = MAX_VAL_INP_SPEC_Y_AXIS_DB;
 
-#if QWT_VERSION < 0x060000
-#else
     curve1->setSamples(dX, dY, 2);
-#endif
 }
 
 void CDRMPlot::SetupInpPSD()
@@ -1135,17 +1126,11 @@ void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
         dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
         dY[1] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
 
-#if QWT_VERSION < 0x060000
-#else
         curve2->setSamples(dX, dY, 2);
-#endif
     }
     else
     {
-#if QWT_VERSION < 0x060000
-#else
         curve2->setSamples(NULL, NULL, 0);
-#endif
     }
 
 }
@@ -1169,8 +1154,10 @@ void CDRMPlot::SetupInpSpecWaterf()
     /* Clear background */
     LastCanvasSize = plot->canvas()->size(); /* Initial canvas size */
     QPixmap Canvas(LastCanvasSize);
+#if QWT_VERSION < 0x050000
     Canvas.fill(plot->backgroundColor());
     plot->canvas()->setBackgroundPixmap(Canvas);
+#endif
 }
 
 void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
@@ -1346,12 +1333,6 @@ void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
         SetQAM4Grid();
     else
         SetQAM16Grid();
-
-    /* Set marker symbol */
-    symbolMSC.setStyle(QwtSymbol::Ellipse);
-    symbolMSC.setSize(4);
-    symbolMSC.setPen(QPen(MainPenColorConst));
-    symbolMSC.setBrush(QBrush(MainPenColorConst));
 }
 
 void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
@@ -1378,12 +1359,6 @@ void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
         SetQAM16Grid();
     else
         SetQAM64Grid();
-
-    /* Set marker symbol */
-    symbolMSC.setStyle(QwtSymbol::Ellipse);
-    symbolMSC.setSize(2);
-    symbolMSC.setPen(QPen(MainPenColorConst));
-    symbolMSC.setBrush(QBrush(MainPenColorConst));
 }
 
 void CDRMPlot::SetupAllConst()
@@ -1428,22 +1403,10 @@ void CDRMPlot::SetupAllConst()
 /* Get bounds of scale */
 void getAxisScaleBounds(QwtPlot* plot, double& dXMax0, double& dXMax1, double& dYMax0, double& dYMax1)
 {
-#if QWT_VERSION < 0x050000
-    dXMax0 = plot->axisScale(QwtPlot::xBottom)->lBound();
-    dXMax1 = plot->axisScale(QwtPlot::xBottom)->hBound();
-    dYMax0 = plot->axisScale(QwtPlot::yLeft)->lBound();
-    dYMax1 = plot->axisScale(QwtPlot::yLeft)->hBound();
-#elif QWT_VERSION < 0x050200
-    dXMax0 = plot->axisScaleDiv(QwtPlot::xBottom)->lBound();
-    dXMax1 = plot->axisScaleDiv(QwtPlot::xBottom)->hBound();
-    dYMax0 = plot->axisScaleDiv(QwtPlot::yLeft)->lBound();
-    dYMax1 = plot->axisScaleDiv(QwtPlot::yLeft)->hBound();
-#else
     dXMax0 = plot->axisScaleDiv(QwtPlot::xBottom)->lowerBound();
     dXMax1 = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
     dYMax0 = plot->axisScaleDiv(QwtPlot::yLeft)->lowerBound();
     dYMax1 = plot->axisScaleDiv(QwtPlot::yLeft)->upperBound();
-#endif
 }
 
 void CDRMPlot::SetQAM4Grid()
@@ -1595,11 +1558,7 @@ void CDRMPlot::OnClicked(const QMouseEvent& e)
     const double dFreq = plot->invTransform(QwtPlot::xBottom, e.x());
 
     /* Send normalized frequency to receiver */
-#if QWT_VERSION < 0x050200
-    const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->hBound();
-#else
     const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
-#endif
 
     /* Check if value is valid */
     if (dMaxxBottom != (double) 0.0)
@@ -1765,5 +1724,5 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
     }
 
     /* Main plot */
-    Q3WhatsThis::add(plot, strCurPlotHelp);
+    plot->setWhatsThis(strCurPlotHelp);
 }

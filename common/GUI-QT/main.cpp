@@ -156,8 +156,6 @@ main(int argc, char **argv)
 
 			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
 
-			DRMReceiver.Init();
-
 			DRMReceiver.SetRig(&rig);
 
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
