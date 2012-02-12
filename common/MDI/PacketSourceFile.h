@@ -38,7 +38,6 @@
 
 class CPacketSourceFile : public QThread, public CPacketSource
 {
-	Q_OBJECT
 public:
 	CPacketSourceFile();
 	virtual ~CPacketSourceFile();
@@ -54,17 +53,18 @@ protected:
 
 private:
 
-    void readRawOrFF(vector<_BYTE>& vecbydata, int& interval);
+    void readRawAF(vector<_BYTE>& vecbydata, int& interval);
+    void readFF(vector<_BYTE>& vecbydata, int& interval);
+
     void readPcap(vector<_BYTE>& vecbydata, int& interval);
+    void readTagPacketHeader(string& tag, uint32_t& len);
 
 	CPacketSink		*pPacketSink;
 	QTime			timeKeeper;
 	uint64_t		last_packet_time;
-    void*			pf;
-	_BOOLEAN		bRaw;
+	void*			pF;
 	int 			wanted_dest_port;
-public slots:
-	void OnDataReceived();
+	enum {pcap,ff,af,pf}    eFileType;
 };
 
 #endif
