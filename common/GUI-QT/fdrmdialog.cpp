@@ -183,7 +183,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     connect(action_Programme_Guide_Dialog, SIGNAL(triggered()), pEPGDlg, SLOT(show()));
     connect(actionExit, SIGNAL(triggered()), this, SLOT(close()));
 
-    menu_Settings->addMenu(new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
+    menu_Settings->addMenu( new CSoundCardSelMenu(
+		DRMReceiver.GetSoundInInterface(),
+		DRMReceiver.GetSoundOutInterface(),
+    this));
 
     connect(actionMultimediaSettings, SIGNAL(triggered()), pMultSettingsDlg, SLOT(show()));
     connect(actionGeneralSettings, SIGNAL(triggered()), pGeneralSettingsDlg, SLOT(show()));
@@ -269,6 +272,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     serviceLabels[1] = TextMiniService2;
     serviceLabels[2] = TextMiniService3;
     serviceLabels[3] = TextMiniService4;
+
+#if QT_VERSION >= 0x040000
+	TextTextMessage->setWordWrap(true);
+#endif
 
     ClearDisplay();
 
