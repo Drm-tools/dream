@@ -105,12 +105,12 @@ protected:
 };
 
 #if QT_VERSION >= 0x040000
-class MultimediaDlgBase : public QDialog, public Ui_MultimediaDlgBase
+class MultimediaDlgBase : public QMainWindow, public Ui_MultimediaDlgBase
 {
 public:
 	MultimediaDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		QMainWindow(parent,name,f){setupUi(this);}
 	virtual ~MultimediaDlgBase() {}
 };
 #endif

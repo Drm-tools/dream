@@ -70,8 +70,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     /* Multimedia window */
     pMultiMediaDlg = new MultimediaDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
-    SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
     pMultiMediaDlg->LoadSettings(Settings);
+
 
     /* Stations window */
     pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
@@ -89,9 +89,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     /* Evaluation window */
     pSysEvalDlg = new systemevalDlg(DRMReceiver, rig, Settings, this, "", FALSE, Qt::WStyle_MinMax);
 #if QT_VERSION < 0x040000
-        SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
-#else
-        pSysEvalDlg->setWindowTitle(tr("System Evaluation"));
+    SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
+    SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
 #endif
     /* Analog demodulation window */
     pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", Qt::WStyle_MinMax);
@@ -792,7 +791,7 @@ void FDRMDialog::OnSelectAudioService(int shortId)
 void FDRMDialog::OnSelectDataService(int shortId)
 {
     CParameter& Parameters = *DRMReceiver.GetParameters();
-    QDialog* pDlg = NULL;
+    QWidget* pDlg = NULL;
 
     Parameters.Lock();
 

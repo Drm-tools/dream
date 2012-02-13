@@ -231,8 +231,7 @@ CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QMenu(parent)
 {
     /* Standard help menu consists of about and what's this help */
 #if QT_VERSION < 0x040000
-        insertItem(tr("What's &This"), this ,
-                SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
+        insertItem(tr("What's &This"), this, SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
         insertSeparator();
         insertItem(tr("&About..."), this, SLOT(OnHelpAbout()));
 #else

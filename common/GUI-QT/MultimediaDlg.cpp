@@ -48,7 +48,6 @@
 # define Q3CString QCString
 # define Q3FileDialog QFileDialog
 # define Q3MimeSourceFactory QMimeSourceFactory
-# define Q3StyleSheetItem QStyleSheetItem
 #else
 # include <Q3TextStream>
 # include <Q3CString>
@@ -63,13 +62,20 @@
 /* Implementation *************************************************************/
 MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f):
+#if QT_VERSION < 0x040000
 	MultimediaDlgBase(parent, name, modal, f),
+#else
+	MultimediaDlgBase(parent, name, f),
+#endif
 	Parameters(*NDRMR.GetParameters()), DataDecoder(*NDRMR.GetDataDecoder()),
 	JournalineDecoder(),strCurrentSavePath("."),bGetFromFile(false)
 {
+	QString fhgLogo, jlLogo;
 	/* Add body's stylesheet */
-	Q3StyleSheetItem* styleBody =
-		new Q3StyleSheetItem(TextBrowser->styleSheet(), "stylebody");
+
+#if QT_VERSION < 0x040000
+	QStyleSheetItem* styleBody =
+		new QStyleSheetItem(TextBrowser->styleSheet(), "stylebody");
 
 	styleBody->setFontFamily(fontTextBrowser.family());
 	styleBody->setFontSize(fontTextBrowser.pointSize());
@@ -87,9 +93,17 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	Q3MimeSourceFactory::defaultFactory()->setImage("PixmapLogoJournaline",
 		PixmapLogoJournaline->pixmap()->convertToImage());
 
+	fhgLogo = "PixmapFhGIIS";
+	jlLogo = "PixmapLogoJournaline";
+#else
+	TextBrowser->setCurrentFont(fontTextBrowser);
+	fhgLogo = ":/icons/fhgiis.bmp";
+	jlLogo = ":/icons/LogoJournaline.png";
+#endif
+
 	/* Set FhG IIS text */
 	strFhGIISText =
-		"<table><tr><td><img source=\"PixmapFhGIIS\"></td>"
+		"<table><tr><td><img source=\""+fhgLogo+"\"></td>"
 		"<td><font face=\"" + QString(FONT_COURIER) + "\" size=\"-1\">Features NewsService "
 		"Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
 		"Germany. For more information visit http://www.iis.fhg.de/dab"
@@ -97,13 +111,14 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 
 	/* Set Journaline headline text */
 	strJournalineHeadText =
-		"<table><tr><td><img source=\"PixmapLogoJournaline\"></td>"
+		"<table><tr><td><img source=\""+jlLogo+"\"></td>"
 		"<td valign=\"middle\"><h2>NewsService Journaline" + QString(QChar(174)) /* (R) */ +
 		"</h2></td></tr></table>";
 
 	/* Inits for broadcast website application */
 	strBWSHomePage = "";
 
+#if QT_VERSION < 0x040000
 	/* Set Menu ***************************************************************/
 	/* File menu ------------------------------------------------------------ */
 	pFileMenu = new Q3PopupMenu(this);
@@ -131,10 +146,14 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 	pMenu->insertItem(tr("&Settings"), pSettingsMenu);
 
 	/* Now tell the layout about the menu */
-#if QT_VERSION < 0x040000
 	MultimediaDlgBaseLayout->setMenuBar(pMenu);
 #else
-//TODO
+	connect(actionClearAll, SIGNAL(triggered()), this, SLOT(OnClearAll()));
+	connect(actionLoad, SIGNAL(triggered()), this, SLOT(OnLoad()));
+	connect(actionSave, SIGNAL(triggered()), this, SLOT(OnSave()));
+	connect(actionSaveAll, SIGNAL(triggered()), this, SLOT(OnSaveAll()));
+	connect(actionClose, SIGNAL(triggered()), this, SLOT(close()));
+	connect(actionSetFont, SIGNAL(triggered()), this, SLOT(OnSetFont()));
 #endif
 
 	/* Update time for color LED */
@@ -148,6 +167,8 @@ MultimediaDlg::MultimediaDlg(CDRMReceiver& NDRMR,
 
 
 	/* Connect controls */
+	connect(buttonOk, SIGNAL(clicked()),
+		this, SLOT(close()));
 	connect(PushButtonStepBack, SIGNAL(clicked()),
 		this, SLOT(OnButtonStepBack()));
 	connect(PushButtonStepForw, SIGNAL(clicked()),
@@ -407,7 +428,11 @@ void MultimediaDlg::OnTimer()
 				strTitle += " [" + strLabel + strServiceID + "]";
 		}
 	}
+#if QT_VERSION < 0x040000
 	SetDialogCaption(this, strTitle);
+#else
+	setWindowTitle(strTitle);
+#endif
 }
 
 void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
@@ -499,10 +524,14 @@ void MultimediaDlg::SetJournalineText()
 		TextBrowser->setText(strAllText);
 
 	/* Enable / disable "save" menu item if title is present or not */
+#if QT_VERSION < 0x040000
 	if (strTitle == "")
 		pFileMenu->setItemEnabled(2, FALSE);
 	else
 		pFileMenu->setItemEnabled(2, TRUE);
+#else
+	actionSave->setEnabled(strTitle!="");
+#endif
 }
 
 void MultimediaDlg::LoadSettings(const CSettings& Settings)
@@ -714,9 +743,10 @@ void MultimediaDlg::SetSlideShowPicture()
 
 void MultimediaDlg::UpdateAccButtonsSlideShow()
 {
+#if QT_VERSION < 0x040000
 	/* Set enable menu entry for saving a picture */
 	if (iCurImagePos < 0)
-	{
+	{	
 		pFileMenu->setItemEnabled(0, FALSE);
 		pFileMenu->setItemEnabled(2, FALSE);
 		pFileMenu->setItemEnabled(3, FALSE);
@@ -727,6 +757,12 @@ void MultimediaDlg::UpdateAccButtonsSlideShow()
 		pFileMenu->setItemEnabled(2, TRUE);
 		pFileMenu->setItemEnabled(3, TRUE);
 	}
+#else
+	bool en = iCurImagePos >= 0;
+	actionClearAll->setEnabled(en);
+	actionSave->setEnabled(en);
+	actionSaveAll->setEnabled(en);
+#endif
 
 	if (iCurImagePos <= 0)
 	{
@@ -928,10 +964,17 @@ void MultimediaDlg::ClearAllSlideShow()
 void MultimediaDlg::InitNotSupported()
 {
 	/* Hide all controls, disable menu items */
+#if QT_VERSION < 0x040000
 	pFileMenu->setItemEnabled(0, FALSE);
 	pFileMenu->setItemEnabled(1, TRUE);
 	pFileMenu->setItemEnabled(2, FALSE);
 	pFileMenu->setItemEnabled(3, FALSE);
+#else
+	actionClearAll->setEnabled(false);
+	actionLoad->setEnabled(true);
+	actionSave->setEnabled(false);
+	actionSaveAll->setEnabled(false);
+#endif
 	PushButtonStepForw->hide();
 	PushButtonJumpBegin->hide();
 	PushButtonJumpEnd->hide();
@@ -947,10 +990,17 @@ void MultimediaDlg::InitNotSupported()
 void MultimediaDlg::InitBroadcastWebSite()
 {
 	/* Hide all controls, disable menu items */
+#if QT_VERSION < 0x040000
 	pFileMenu->setItemEnabled(0, FALSE);
 	pFileMenu->setItemEnabled(1, FALSE);
 	pFileMenu->setItemEnabled(2, FALSE);
 	pFileMenu->setItemEnabled(3, FALSE);
+#else
+	actionClearAll->setEnabled(false);
+	actionLoad->setEnabled(false);
+	actionSave->setEnabled(false);
+	actionSaveAll->setEnabled(false);
+#endif
 	PushButtonStepForw->show();
 	PushButtonStepForw->setEnabled(FALSE);
 	PushButtonJumpBegin->hide();
@@ -1010,6 +1060,7 @@ void MultimediaDlg::InitMOTSlideShow()
 
 void MultimediaDlg::InitJournaline()
 {
+#if QT_VERSION < 0x040000
 	/* Disable "clear all" menu item */
 	pFileMenu->setItemEnabled(0, FALSE);
 
@@ -1019,6 +1070,12 @@ void MultimediaDlg::InitJournaline()
 	/* Disable "save" menu items */
 	pFileMenu->setItemEnabled(2, FALSE);
 	pFileMenu->setItemEnabled(3, FALSE);
+#else
+	actionClearAll->setEnabled(false);
+	actionLoad->setEnabled(true);
+	actionSave->setEnabled(false);
+	actionSaveAll->setEnabled(false);
+#endif
 
 	/* Only one back button is visible and enabled */
 	PushButtonStepForw->hide();
@@ -1293,14 +1350,18 @@ void MultimediaDlg::OnSetFont()
 		/* Set the new font */
 		fontTextBrowser = newFont;
 
+#if QT_VERSION < 0x040000
 		/* Change the body stylesheet */
-		Q3StyleSheetItem* styleBody =
+		QStyleSheetItem* styleBody =
 			TextBrowser->styleSheet()->item("stylebody");
 
 		styleBody->setFontFamily(fontTextBrowser.family());
 		styleBody->setFontSize(fontTextBrowser.pointSize());
 		styleBody->setFontWeight(fontTextBrowser.weight());
 		styleBody->setFontItalic(fontTextBrowser.italic());
+#else
+		TextBrowser->setCurrentFont(fontTextBrowser);
+#endif
 
 		/* Restore the text for refresh it with the new font */
 		TextBrowser->setText(strOldText);
