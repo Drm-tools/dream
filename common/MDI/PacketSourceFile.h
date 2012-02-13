@@ -54,6 +54,7 @@ protected:
 private:
 
     void readRawAF(vector<_BYTE>& vecbydata, int& interval);
+    void readRawPFT(vector<_BYTE>& vecbydata, int& interval);
     void readFF(vector<_BYTE>& vecbydata, int& interval);
 
     void readPcap(vector<_BYTE>& vecbydata, int& interval);

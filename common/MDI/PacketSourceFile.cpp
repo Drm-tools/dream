@@ -83,7 +83,7 @@ void CPacketSourceFile::run()
             readRawAF(vecbydata, interval);
             break;
         case pf:
-            readRawAF(vecbydata, interval);
+            readRawPFT(vecbydata, interval);
             break;
         }
 
@@ -162,31 +162,6 @@ CPacketSourceFile::ResetPacketSink()
 {
     pPacketSink = NULL;
 }
-
-#if 0
-void
-CPacketSourceFile::OnDataReceived ()
-{
-    vector<_BYTE> vecbydata (iMaxPacketSize);
-    vecbydata.resize(0); // in case we don't find anything
-    int interval;
-    if(bRaw)
-        readRawOrFF(vecbydata, interval);
-    else
-        readPcap(vecbydata, interval);
-
-    /* Decode the incoming packet */
-    if (pPacketSink != NULL)
-        pPacketSink->SendPacket(vecbydata);
-    QTime iNow = QTime::currentTime();
-    int iDelay = interval - timeKeeper.msecsTo(iNow);
-    if(iDelay<0)
-        iDelay = 0;
-    QTimer::singleShot(iDelay, this, SLOT(OnDataReceived()));
-    timeKeeper = timeKeeper.addMSecs(interval);
-}
-#endif
-
 
 void
 CPacketSourceFile::readTagPacketHeader(string& tag, uint32_t& len)
@@ -292,6 +267,41 @@ CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
     vecbydata.resize(iAFPacketLen);
 
     n = fread(&vecbydata[0], 1, iAFPacketLen, (FILE *)pF);
+}
+
+// not robust against the sync charqacters appearing in the payload!!!!
+void
+CPacketSourceFile::readRawPFT(vector<_BYTE>& vecbydata, int& interval)
+{
+    char sync[2];
+
+    interval = 400;
+
+    size_t n = fread(sync, 2, 1, (FILE *) pF);
+    if (sync[0] != 'P' || sync[1] != 'F')
+    {
+        // throw?
+        fclose((FILE *) pF);
+        pF = 0;
+        return;
+    }
+    vecbydata.resize(0); 
+    vecbydata.push_back(sync[0]);
+    vecbydata.push_back(sync[1]);
+    char prev = '\0';;
+    while(true)
+    {
+	char c;
+        n = fread(&c, 1, 1, (FILE *) pF);
+	if(prev == 'P' && c == 'F')
+	{
+    	    fseek((FILE*)pF, -2, SEEK_CUR);
+	    vecbydata.pop_back();
+	    break;
+	}
+	prev = c;
+    	vecbydata.push_back(c);
+    }
 }
 
 void
