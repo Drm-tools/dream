@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>503</width>
-    <height>535</height>
+    <width>396</width>
+    <height>382</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -16,81 +16,51 @@
   <property name="sizeGripEnabled">
    <bool>true</bool>
   </property>
-  <layout class="QFormLayout" name="formLayout">
+  <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
     <widget class="QLabel" name="label">
      <property name="text">
       <string>Rig Types</string>
      </property>
-     <property name="buddy">
-      <cstring>treeViewRigTypes</cstring>
-     </property>
     </widget>
    </item>
    <item row="1" column="0" colspan="2">
-    <layout class="QGridLayout" name="gridLayout_13">
-     <item row="0" column="0" rowspan="2">
-      <widget class="QTreeView" name="treeViewRigTypes">
-       <property name="minimumSize">
-        <size>
-         <width>0</width>
-         <height>150</height>
-        </size>
-       </property>
-       <property name="allColumnsShowFocus">
-        <bool>true</bool>
+    <widget class="QTreeWidget" name="treeWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Expanding" vsizetype="MinimumExpanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <column>
+      <property name="text">
+       <string notr="true">1</string>
+      </property>
+     </column>
+    </widget>
+   </item>
+   <item row="2" column="0">
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <widget class="QLabel" name="label_2">
+       <property name="text">
+        <string>Connected Rigs</string>
        </property>
       </widget>
      </item>
-     <item row="0" column="1">
-      <widget class="QPushButton" name="pushButtonAddRig">
-       <property name="text">
-        <string>Add</string>
-       </property>
-      </widget>
-     </item>
-     <item row="1" column="1">
-      <widget class="QCheckBox" name="checkBoxModified">
-       <property name="text">
-        <string>Modified for DRM</string>
-       </property>
-      </widget>
+     <item>
+      <widget class="QLineEdit" name="lineEdit"/>
      </item>
     </layout>
    </item>
-   <item row="2" column="0">
-    <widget class="QLabel" name="label_2">
+   <item row="3" column="1">
+    <widget class="QCheckBox" name="checkBoxModified">
      <property name="text">
-      <string>Connected Rigs</string>
+      <string>Modified for DRM</string>
      </property>
     </widget>
    </item>
-   <item row="3" column="0" colspan="2">
-    <layout class="QHBoxLayout" name="horizontalLayout_4">
-     <item>
-      <widget class="QTreeView" name="treeViewRigs"/>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_3">
-       <item>
-        <widget class="QPushButton" name="pushButtonConfigureRig">
-         <property name="text">
-          <string>Configure</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButtonRemoveRig">
-         <property name="text">
-          <string>Remove</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </item>
-    </layout>
-   </item>
-   <item row="4" column="1">
+   <item row="4" column="0">
     <layout class="QHBoxLayout" name="horizontalLayout">
      <item>
       <widget class="QLabel" name="labelPort">
@@ -102,16 +72,9 @@
      <item>
       <widget class="QComboBox" name="comboBoxPort"/>
      </item>
-     <item>
-      <widget class="QPushButton" name="pushButtonTestRig">
-       <property name="text">
-        <string>Test</string>
-       </property>
-      </widget>
-     </item>
     </layout>
    </item>
-   <item row="5" column="1">
+   <item row="5" column="0">
     <widget class="QGroupBox" name="groupBox_8">
      <property name="title">
       <string>S-Meter</string>
@@ -132,6 +95,13 @@
        </widget>
       </item>
      </layout>
+    </widget>
+   </item>
+   <item row="5" column="1">
+    <widget class="QPushButton" name="pushButtonTestRig">
+     <property name="text">
+      <string>Test</string>
+     </property>
     </widget>
    </item>
    <item row="6" column="1">
