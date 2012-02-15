@@ -422,7 +422,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     /* Init UTC time shown with a label control */
     SetUTCTimeLabel();
 
-    bShowAll = FALSE;
 #if QT_VERSION >= 0x040000
 
     ListViewStations->setColumnCount(9);
@@ -445,10 +444,10 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     previewGroup = new QActionGroup(this);
     showMapper = new QSignalMapper(this);
     showGroup = new QActionGroup(this);
-    showGroup->addAction(actionShowAllStations);
-    showMapper->setMapping(actionShowAllStations, 0);
     showGroup->addAction(actionShowOnlyActiveStations);
-    showMapper->setMapping(actionShowOnlyActiveStations, 1);
+    showMapper->setMapping(actionShowOnlyActiveStations, 0);
+    showGroup->addAction(actionShowAllStations);
+    showMapper->setMapping(actionShowAllStations, 1);
     connect(actionShowAllStations, SIGNAL(triggered()), showMapper, SLOT(map()));
     connect(actionShowOnlyActiveStations, SIGNAL(triggered()), showMapper, SLOT(map()));
     connect(showMapper, SIGNAL(mapped(int)), this, SLOT(OnShowStationsMenu(int)));
@@ -546,8 +545,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 #else
     connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
             this, SLOT(OnListItemClicked(QListViewItem*)));
-    connect(ListViewStations->header(), SIGNAL(clicked(int)),
-            this, SLOT(OnHeaderClicked(int)));
+    //connect(ListViewStations->header(), SIGNAL(clicked(int)), this, SLOT(OnHeaderClicked(int)));
 
     connect(&UrlUpdateSchedule, SIGNAL(finished(Q3NetworkOperation*)),
             this, SLOT(OnUrlFinished(Q3NetworkOperation*)));
@@ -689,12 +687,9 @@ void StationsDlg::OnShowStationsMenu(int iID)
     /* Show only active stations if ID is 0, else show all */
     if (iID == 0)
     {
-        bShowAll = FALSE;
         /* clear all and reload. If the list is too big this increase the performance */
         ClearStationsView();
     }
-    else
-        bShowAll = TRUE;
 
     /* Update list view */
     SetStationsView();
@@ -864,12 +859,12 @@ void StationsDlg::hideEvent(QHideEvent*)
     switch (DRMSchedule.GetSchedMode())
     {
     case CDRMSchedule::SM_DRM:
-        Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
+        Settings.Put("Stations Dialog", "sortcolumndrm", currentSortColumn());
         Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
         break;
 
     case CDRMSchedule::SM_ANALOG:
-        Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
+        Settings.Put("Stations Dialog", "sortcolumnanalog", currentSortColumn());
         Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
         break;
     }
@@ -953,34 +948,35 @@ void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
         switch (DRMSchedule.GetSchedMode())
         {
         case CDRMSchedule::SM_DRM:
-            Settings.Put("Stations Dialog", "sortcolumndrm", iCurrentSortColumn);
+            Settings.Put("Stations Dialog", "sortcolumndrm", currentSortColumn());
             Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscending);
             break;
 
         case CDRMSchedule::SM_ANALOG:
-            Settings.Put("Stations Dialog", "sortcolumnanalog", iCurrentSortColumn);
+            Settings.Put("Stations Dialog", "sortcolumnanalog", currentSortColumn());
             Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscending);
             break;
         }
     }
 
     /* Set sorting behaviour of the list */
+    int sortColumn = 0;
     switch (eNewSchM)
     {
     case CDRMSchedule::SM_DRM:
-        iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumndrm", 0);
+        sortColumn = Settings.Get("Stations Dialog", "sortcolumndrm", 0);
         bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendingdrm", TRUE);
         break;
 
     case CDRMSchedule::SM_ANALOG:
-        iCurrentSortColumn = Settings.Get("Stations Dialog", "sortcolumnanalog", 0);
+        sortColumn = Settings.Get("Stations Dialog", "sortcolumnanalog", 0);
         bCurrentSortAscending = Settings.Get("Stations Dialog", "sortascendinganalog", TRUE);
         break;
     }
 #if QT_VERSION < 0x040000
-    ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
+    ListViewStations->setSorting(sortColumn, bCurrentSortAscending);
 #else
-    ListViewStations->sortByColumn(iCurrentSortColumn, bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
+    ListViewStations->sortByColumn(sortColumn, bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
 #endif
 }
 
@@ -1080,7 +1076,7 @@ void StationsDlg::SetStationsView()
     {
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
 
-        if (!(((bShowAll == FALSE) &&
+        if (!(((showAll() == FALSE) &&
                 (iState == CDRMSchedule::IS_INACTIVE))
                 || (CheckFilter(i) == FALSE)))
         {
@@ -1185,7 +1181,7 @@ void StationsDlg::SetStationsView()
     {
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
 
-        if (!(((bShowAll == FALSE) &&
+        if (!(((showAll() == FALSE) &&
                 (iState == CDRMSchedule::IS_INACTIVE))
                 || (CheckFilter(i) == FALSE)))
         {
@@ -1200,7 +1196,7 @@ void StationsDlg::SetStationsView()
                 strPower = "?";
             else
                 strPower.setNum(rPower);
-            QTreeWidgetItem *item = new QTreeWidgetItem(ListViewStations);
+            QTreeWidgetItem *item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
             item->setText(0, station.strName.c_str());
             item->setText(1, QString().sprintf("%04d-%04d",
                                                station.GetStartTimeNum(),
@@ -1212,29 +1208,30 @@ void StationsDlg::SetStationsView()
             item->setText(6, station.strSite.c_str()     /* site */);
             item->setText(7, station.strLanguage.c_str() /* language */);
             item->setText(8, station.strDaysShow.c_str());
-QPixmap* p;
+QString p;
             switch (iState)
             {
             case CDRMSchedule::IS_ACTIVE:
-                p = &BitmCubeGreen;
+                p = ":/greenCube.png";
                 break;
             case CDRMSchedule::IS_PREVIEW:
-                p=&BitmCubeOrange;
+                p = ":/orangeCube.png";
                 break;
             case CDRMSchedule::IS_SOON_INACTIVE:
-                p=&BitmCubePink;
+                p = ":/pinkCube.png";
                 break;
             case CDRMSchedule::IS_INACTIVE:
-                p=&BitmCubeRed;
+                p = ":/redCube.png";
                 break;
             default:
-                p=&BitmCubeRed;
+                p = ":/redCube.png";
                 break;
             }
-	    item->setIcon(0, QIcon(*p));
+	    item->setIcon(0, QIcon(p));
         }
     }
     ListViewStations->setSortingEnabled(true);
+    ListViewStations->sortItems(ListViewStations->sortColumn(), bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
         ListViewStations->setFocus();
 #endif
     ListItemsMutex.unlock();
@@ -1250,12 +1247,10 @@ void StationsDlg::OnFreqCntNewValue(double dVal)
 void StationsDlg::OnHeaderClicked(int c)
 {
     /* Store the "direction" of sorting */
-    if (iCurrentSortColumn == c)
+    if (currentSortColumn() == c)
         bCurrentSortAscending = !bCurrentSortAscending;
     else
         bCurrentSortAscending = TRUE;
-
-    iCurrentSortColumn = c;
 }
 
 
@@ -1421,3 +1416,20 @@ _BOOLEAN StationsDlg::CheckFilter(const int iPos)
     return bCheck;
 }
 
+int StationsDlg::currentSortColumn()
+{
+#if QT_VERSION < 0x040000
+	return ListViewStations->sortColumn();
+#else
+	return ListViewStations->sortColumn();
+#endif
+}
+
+_BOOLEAN StationsDlg::showAll()
+{
+#if QT_VERSION < 0x040000
+	return pViewMenu->findItem(1)->isChecked();
+#else
+	return actionShowAllStations->isChecked();
+#endif
+}

@@ -213,6 +213,20 @@ public:
 	/* Custom "key()" function for correct sorting behaviour */
 	virtual QString key(int column, bool ascending) const;
 };
+#else
+class CaseInsensitiveTreeWidgetItem : public QTreeWidgetItem
+{
+public:
+	CaseInsensitiveTreeWidgetItem(QTreeWidget* parent=0) : QTreeWidgetItem(parent)
+	{
+	}
+
+	bool operator< ( const QTreeWidgetItem & rhs) const
+	{
+		int col = treeWidget()->sortColumn();
+		return text( col ).toLower() < rhs.text( col ).toLower();
+	}
+};
 #endif
 
 class RemoteMenu;
@@ -246,13 +260,13 @@ public:
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
 
-	int				iCurrentSortColumn;
+	int			currentSortColumn();
 	_BOOLEAN		bCurrentSortAscending;
 
 protected:
 	void			SetStationsView();
 	void			ClearStationsView();
-	virtual void	showEvent(QShowEvent* pEvent);
+	void			showEvent(QShowEvent* pEvent);
 	void			hideEvent(QHideEvent* pEvent);
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
@@ -260,6 +274,7 @@ protected:
 	void			DisableSMeter();
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
+	_BOOLEAN		showAll();
 #if QT_VERSION < 0x040000
 	void			setupUi(QObject*);
 #endif
@@ -275,7 +290,6 @@ protected:
 	QPixmap						BitmCubePink;
 	QTimer						TimerList;
 	QTimer						TimerUTCLabel;
-	_BOOLEAN					bShowAll;
 	_BOOLEAN					bReInitOnFrequencyChange;
 	Q3UrlOperator				UrlUpdateSchedule;
 	Q3PopupMenu*					pViewMenu;
