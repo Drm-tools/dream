@@ -16,7 +16,13 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QTreeWidget" name="ListViewStations"/>
+     <widget class="QTreeWidget" name="ListViewStations">
+      <column>
+       <property name="text">
+        <string>1</string>
+       </property>
+      </column>
+     </widget>
     </item>
     <item>
      <widget class="QGroupBox" name="groupBox">
@@ -294,6 +300,8 @@
    <header>qwt_thermo.h</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="res/icons.qrc"/>
+ </resources>
  <connections/>
 </ui>

@@ -378,6 +378,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 #if QT_VERSION < 0x040000
     , vecpListItems(0)
 #endif
+,greenCube(":/icons/greenCube.png"),redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":/icons/pinkCube.png")
 {
     setupUi(this);
     /* Set help text for the controls */
@@ -390,26 +391,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
         setGeometry(WinGeom);
 
-    /* Define size of the bitmaps */
-    const int iXSize = 13;
-    const int iYSize = 13;
-
-    /* Create bitmaps */
-    BitmCubeGreen.resize(iXSize, iYSize);
-    BitmCubeGreen.fill(QColor(0, 255, 0));
-    BitmCubeYellow.resize(iXSize, iYSize);
-    BitmCubeYellow.fill(QColor(255, 255, 0));
-    BitmCubeRed.resize(iXSize, iYSize);
-    BitmCubeRed.fill(QColor(255, 0, 0));
-    BitmCubeOrange.resize(iXSize, iYSize);
-    BitmCubeOrange.fill(QColor(255, 128, 0));
-    BitmCubePink.resize(iXSize, iYSize);
-    BitmCubePink.fill(QColor(255, 128, 128));
 
     ProgrSigStrength->hide();
     TextLabelSMeter->hide();
-
-    ListViewStations->clear();
 
     /* Set up frequency selector control (QWTCounter control) */
     QwtCounterFrequency->setRange(0.0, MAX_RF_FREQ, 1.0);
@@ -543,10 +527,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     connect(ListViewStations->header(), SIGNAL(clicked(int)),
             this, SLOT(OnHeaderClicked(int)));
 #else
-    connect(ListViewStations, SIGNAL(selectionChanged(QListViewItem*)),
-            this, SLOT(OnListItemClicked(QListViewItem*)));
-    //connect(ListViewStations->header(), SIGNAL(clicked(int)), this, SLOT(OnHeaderClicked(int)));
-
     connect(&UrlUpdateSchedule, SIGNAL(finished(Q3NetworkOperation*)),
             this, SLOT(OnUrlFinished(Q3NetworkOperation*)));
 #endif
@@ -566,6 +546,21 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
 #if QT_VERSION < 0x040000
 void StationsDlg::setupUi(QObject*)
 {
+    /* Define size of the bitmaps */
+    const int iXSize = 13;
+    const int iYSize = 13;
+
+    /* Create bitmaps */
+    BitmCubeGreen.resize(iXSize, iYSize);
+    BitmCubeGreen.fill(QColor(0, 255, 0));
+    BitmCubeYellow.resize(iXSize, iYSize);
+    BitmCubeYellow.fill(QColor(255, 255, 0));
+    BitmCubeRed.resize(iXSize, iYSize);
+    BitmCubeRed.fill(QColor(255, 0, 0));
+    BitmCubeOrange.resize(iXSize, iYSize);
+    BitmCubeOrange.fill(QColor(255, 128, 0));
+    BitmCubePink.resize(iXSize, iYSize);
+    BitmCubePink.fill(QColor(255, 128, 128));
     /* We assume that one column is already there */
     ListViewStations->setColumnText(0, tr("Station Name"));
     ListViewStations->addColumn(tr("Time [UTC]"));
@@ -1013,6 +1008,33 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
     ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
     ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
 
+#if QT_VERSION >= 0x040000
+    // fill the view just once, then change the state
+    for (int i = 0; i < DRMSchedule.GetStationNumber(); i++)
+    {
+	    CStationsItem& station = DRMSchedule.GetItem(i);
+            const _REAL rPower = station.rPower;
+
+            QString strPower;
+            if (rPower == (_REAL) 0.0)
+                strPower = "?";
+            else
+                strPower.setNum(rPower);
+            QTreeWidgetItem *item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
+            item->setText(0, station.strName.c_str());
+            item->setText(1, QString().sprintf("%04d-%04d",
+                                               station.GetStartTimeNum(),
+                                               station.GetStopTimeNum()));
+            item->setText(2, QString().setNum(station.iFreq) /* freq. */);
+            item->setText(3, station.strTarget.c_str()   /* target */);
+            item->setText(4, strPower                                   /* power */);
+            item->setText(5, station.strCountry.c_str()  /* country */);
+            item->setText(6, station.strSite.c_str()     /* site */);
+            item->setText(7, station.strLanguage.c_str() /* language */);
+            item->setText(8, station.strDaysShow.c_str());
+	    station.item = item;
+    }
+#endif
     /* Update list view */
     SetStationsView();
 
@@ -1027,7 +1049,6 @@ void StationsDlg::ClearStationsView()
        "vecpListItems" was initialized to 0 at creation of the global object
        otherwise this may cause an segmentation fault) */
     ListItemsMutex.lock();
-    ListViewStations->clear();
     /*
     for (size_t i = 0; i < vecpListItems.size(); i++)
     {
@@ -1036,6 +1057,7 @@ void StationsDlg::ClearStationsView()
     }
     */
 #if QT_VERSION < 0x040000
+    ListViewStations->clear();
     vecpListItems.clear();
 #endif
     ListItemsMutex.unlock();
@@ -1176,59 +1198,39 @@ void StationsDlg::SetStationsView()
 
 #else
     ListViewStations->setSortingEnabled(false);
-    ListViewStations->clear();
     for (int i = 0; i < iNumStations; i++)
     {
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
+	QTreeWidgetItem* item = DRMSchedule.GetItem(i).item; //ListViewStations->topLevelItem(i);
 
         if (!(((showAll() == FALSE) &&
                 (iState == CDRMSchedule::IS_INACTIVE))
                 || (CheckFilter(i) == FALSE)))
         {
-            /* Get power of the station. We have to do a special treatment
-               here, because we want to avoid having a "0" in the list when
-                a "?" was in the schedule-ini-file */
-	    CStationsItem& station = DRMSchedule.GetItem(i);
-            const _REAL rPower = station.rPower;
-
-            QString strPower;
-            if (rPower == (_REAL) 0.0)
-                strPower = "?";
-            else
-                strPower.setNum(rPower);
-            QTreeWidgetItem *item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
-            item->setText(0, station.strName.c_str());
-            item->setText(1, QString().sprintf("%04d-%04d",
-                                               station.GetStartTimeNum(),
-                                               station.GetStopTimeNum()));
-            item->setText(2, QString().setNum(station.iFreq) /* freq. */);
-            item->setText(3, station.strTarget.c_str()   /* target */);
-            item->setText(4, strPower                                   /* power */);
-            item->setText(5, station.strCountry.c_str()  /* country */);
-            item->setText(6, station.strSite.c_str()     /* site */);
-            item->setText(7, station.strLanguage.c_str() /* language */);
-            item->setText(8, station.strDaysShow.c_str());
-QString p;
+	    item->setHidden(false);
             switch (iState)
             {
             case CDRMSchedule::IS_ACTIVE:
-                p = ":/greenCube.png";
+		    item->setIcon(0, greenCube);
                 break;
             case CDRMSchedule::IS_PREVIEW:
-                p = ":/orangeCube.png";
+		    item->setIcon(0, orangeCube);
                 break;
             case CDRMSchedule::IS_SOON_INACTIVE:
-                p = ":/pinkCube.png";
+		    item->setIcon(0, pinkCube);
                 break;
             case CDRMSchedule::IS_INACTIVE:
-                p = ":/redCube.png";
+		    item->setIcon(0, redCube);
                 break;
             default:
-                p = ":/redCube.png";
+		    item->setIcon(0, redCube);
                 break;
             }
-	    item->setIcon(0, QIcon(p));
         }
+	else
+	{
+		item->setHidden(true);
+	}
     }
     ListViewStations->setSortingEnabled(true);
     ListViewStations->sortItems(ListViewStations->sortColumn(), bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
@@ -1254,17 +1256,9 @@ void StationsDlg::OnHeaderClicked(int c)
 }
 
 
-#if QT_VERSION < 0x040000
-void StationsDlg::OnListItemClicked(QListViewItem* item)
+void StationsDlg::SetFrequencyFromGUI(int iFreq)
 {
-    /* Check that it is a valid item (!= 0) */
-    if (item)
-    {
-        /* Third text of list view item is frequency -> text(2)
-           Set value in frequency counter control QWT. Setting this parameter
-           will emit a "value changed" signal which sets the new frequency.
-           Therefore, here is no call to "SetFrequency()" needed.*/
-        QwtCounterFrequency->setValue(QString(item->text(2)).toInt());
+        QwtCounterFrequency->setValue(iFreq);
 
         /* If the mode has changed re-initialise the receiver */
         ERecMode eCurrentMode = DRMReceiver.GetReceiverMode();
@@ -1287,7 +1281,29 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
                 DRMReceiver.RequestNewAcquisition();
             break;
         }
+}
+
+#if QT_VERSION < 0x040000
+void StationsDlg::OnListItemClicked(QListViewItem* item)
+{
+    /* Check that it is a valid item (!= 0) */
+    if (item)
+    {
+        /* Third text of list view item is frequency -> text(2)
+           Set value in frequency counter control QWT. Setting this parameter
+           will emit a "value changed" signal which sets the new frequency.
+           Therefore, here is no call to "SetFrequency()" needed.*/
+	SetFrequencyFromGUI(QString(item->text(2)).toInt());
     }
+}
+#else
+void StationsDlg::on_ListViewStations_itemSelectionChanged()
+{
+	QList<QTreeWidgetItem *> items =  ListViewStations->selectedItems();
+	if(items.size()==1)
+	{
+		SetFrequencyFromGUI(QString(items.first()->text(2)).toInt());
+	}
 }
 #endif
 

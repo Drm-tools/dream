@@ -118,6 +118,36 @@
 #include <iostream>
 
 /* Classes ********************************************************************/
+#if QT_VERSION < 0x040000
+class MyListViewItem : public QListViewItem
+{
+public:
+	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
+	   Settings.h! */
+	MyListViewItem(QListView* parent, QString s1, QString s2 = QString::null,
+		QString s3 = QString::null, QString s4 = QString::null,
+		QString s5 = QString::null, QString s6 = QString::null,
+		QString s7 = QString::null, QString s8 = QString::null) :
+		QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
+
+	/* Custom "key()" function for correct sorting behaviour */
+	virtual QString key(int column, bool ascending) const;
+};
+#else
+class CaseInsensitiveTreeWidgetItem : public QTreeWidgetItem
+{
+public:
+	CaseInsensitiveTreeWidgetItem(QTreeWidget* parent=0) : QTreeWidgetItem(parent)
+	{
+	}
+
+	bool operator< ( const QTreeWidgetItem & rhs) const
+	{
+		int col = treeWidget()->sortColumn();
+		return text( col ).toLower() < rhs.text( col ).toLower();
+	}
+};
+#endif
 class CStationsItem
 {
 public:
@@ -157,6 +187,11 @@ public:
 	string	strDaysFlags;
 	string	strDaysShow;
 	_REAL	rPower;
+#if QT_VERSION < 0x040000
+	QListViewItem* item;
+#else
+	QTreeWidgetItem* item; // for manipulating the display
+#endif
 };
 
 
@@ -198,36 +233,6 @@ protected:
 };
 
 
-#if QT_VERSION < 0x040000
-class MyListViewItem : public QListViewItem
-{
-public:
-	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
-	   Settings.h! */
-	MyListViewItem(QListView* parent, QString s1, QString s2 = QString::null,
-		QString s3 = QString::null, QString s4 = QString::null,
-		QString s5 = QString::null, QString s6 = QString::null,
-		QString s7 = QString::null, QString s8 = QString::null) :
-		QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
-
-	/* Custom "key()" function for correct sorting behaviour */
-	virtual QString key(int column, bool ascending) const;
-};
-#else
-class CaseInsensitiveTreeWidgetItem : public QTreeWidgetItem
-{
-public:
-	CaseInsensitiveTreeWidgetItem(QTreeWidget* parent=0) : QTreeWidgetItem(parent)
-	{
-	}
-
-	bool operator< ( const QTreeWidgetItem & rhs) const
-	{
-		int col = treeWidget()->sortColumn();
-		return text( col ).toLower() < rhs.text( col ).toLower();
-	}
-};
-#endif
 
 class RemoteMenu;
 class CRig;
@@ -264,6 +269,7 @@ public:
 	_BOOLEAN		bCurrentSortAscending;
 
 protected:
+	void			SetFrequencyFromGUI(int);
 	void			SetStationsView();
 	void			ClearStationsView();
 	void			showEvent(QShowEvent* pEvent);
@@ -279,27 +285,34 @@ protected:
 	void			setupUi(QObject*);
 #endif
 
-	CDRMReceiver&				DRMReceiver;
-	CSettings&					Settings;
+	CDRMReceiver&		DRMReceiver;
+	CSettings&		Settings;
 
-	CDRMSchedule				DRMSchedule;
-	QPixmap						BitmCubeGreen;
-	QPixmap						BitmCubeYellow;
-	QPixmap						BitmCubeRed;
-	QPixmap						BitmCubeOrange;
-	QPixmap						BitmCubePink;
-	QTimer						TimerList;
-	QTimer						TimerUTCLabel;
-	_BOOLEAN					bReInitOnFrequencyChange;
-	Q3UrlOperator				UrlUpdateSchedule;
-	Q3PopupMenu*					pViewMenu;
-	Q3PopupMenu*					pPreviewMenu;
-	Q3PopupMenu*					pUpdateMenu;
+	CDRMSchedule		DRMSchedule;
+#if QT_VERSION < 0x040000
+	QPixmap			BitmCubeGreen;
+	QPixmap			BitmCubeYellow;
+	QPixmap			BitmCubeRed;
+	QPixmap			BitmCubeOrange;
+	QPixmap			BitmCubePink;
+#else
+	QIcon			greenCube;
+	QIcon			redCube;
+	QIcon			orangeCube;
+	QIcon			pinkCube;
+#endif
+	QTimer			TimerList;
+	QTimer			TimerUTCLabel;
+	_BOOLEAN		bReInitOnFrequencyChange;
+	Q3UrlOperator		UrlUpdateSchedule;
+	Q3PopupMenu*		pViewMenu;
+	Q3PopupMenu*		pPreviewMenu;
+	Q3PopupMenu*		pUpdateMenu;
 
-	QMutex						ListItemsMutex;
+	QMutex			ListItemsMutex;
 
-	RemoteMenu*					pRemoteMenu;
-	CRig&						rig;
+	RemoteMenu*		pRemoteMenu;
+	CRig&			rig;
 #if QT_VERSION >= 0x040000
     QSignalMapper* previewMapper;
     QActionGroup* previewGroup;
@@ -319,8 +332,8 @@ public slots:
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 #else
-	//void OnListItemClicked(Q3ListViewItem* item);
 	void OnUrlFinished(Q3NetworkOperation* pNetwOp);
+	void on_ListViewStations_itemSelectionChanged();
 #endif
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);

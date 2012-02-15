@@ -5,6 +5,7 @@ console {
 }
 else {
     DEFINES += USE_QT_GUI
+    RESOURCES     = common/GUI-QT/res/icons.qrc
 }
 
 contains(QT_VERSION, ^4\\..*) { 
