@@ -578,7 +578,7 @@ void StationsDlg::setupUi(QObject*)
 
     /* Set Menu ***************************************************************/
     /* View menu ------------------------------------------------------------ */
-    pViewMenu = new Q3PopupMenu(this);
+    pViewMenu = new QPopupMenu(this);
     CHECK_PTR(pViewMenu);
     pViewMenu->insertItem(tr("Show &only active stations"), this,
                           SLOT(OnShowStationsMenu(int)), 0, 0);
@@ -589,7 +589,7 @@ void StationsDlg::setupUi(QObject*)
     pViewMenu->setItemChecked(0, TRUE);
 
     /* Stations Preview menu ------------------------------------------------ */
-    pPreviewMenu = new Q3PopupMenu(this);
+    pPreviewMenu = new QPopupMenu(this);
     CHECK_PTR(pPreviewMenu);
     pPreviewMenu->insertItem(tr("&Disabled"), this,
                              SLOT(OnShowPreviewMenu(int)), 0, 0);
@@ -640,7 +640,7 @@ void StationsDlg::setupUi(QObject*)
     connect(pRemoteMenu, SIGNAL(SMeterAvailable()), this, SLOT(OnSMeterAvailable()));
 
     /* Update menu ---------------------------------------------------------- */
-    pUpdateMenu = new Q3PopupMenu(this);
+    pUpdateMenu = new QPopupMenu(this);
     CHECK_PTR(pUpdateMenu);
     pUpdateMenu->insertItem(tr("&Get Update..."), this, SLOT(on_actionGetUpdate_triggered()), 0, 0);
 
@@ -971,6 +971,9 @@ void StationsDlg::SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM)
     }
 #if QT_VERSION < 0x040000
     ListViewStations->setSorting(sortColumn, bCurrentSortAscending);
+# if QT_VERSION < 0x030000
+    iSortColumn = sortColumn;
+# endif
 #else
     ListViewStations->sortByColumn(sortColumn, bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
 #endif
@@ -1437,8 +1440,8 @@ _BOOLEAN StationsDlg::CheckFilter(const int iPos)
 
 int StationsDlg::currentSortColumn()
 {
-#if QT_VERSION < 0x040000
-	return ListViewStations->sortColumn();
+#if QT_VERSION < 0x030000
+	return iSortColumn;
 #else
 	return ListViewStations->sortColumn();
 #endif
@@ -1447,7 +1450,7 @@ int StationsDlg::currentSortColumn()
 _BOOLEAN StationsDlg::showAll()
 {
 #if QT_VERSION < 0x040000
-	return pViewMenu->findItem(1)->isChecked();
+	return pViewMenu->isItemChecked(1);
 #else
 	return actionShowAllStations->isChecked();
 #endif

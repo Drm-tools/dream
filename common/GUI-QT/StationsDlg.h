@@ -47,7 +47,6 @@
 # include <qpopupmenu.h>
 # include <qurloperator.h>
 # include <qlistview.h>
-# define Q3PopupMenu QPopupMenu
 # define Q3UrlOperator QUrlOperator
 # define Q3NetworkOperation QNetworkOperation
 # define Q3NetworkProtocol QNetworkProtocol
@@ -58,7 +57,6 @@
 # include <QActionGroup>
 # include <QSignalMapper>
 # include <Q3Ftp>
-# include <Q3PopupMenu>
 # include <Q3Header>
 # include <Q3ButtonGroup>
 # include <Q3UrlOperator>
@@ -295,6 +293,9 @@ protected:
 	QPixmap			BitmCubeRed;
 	QPixmap			BitmCubeOrange;
 	QPixmap			BitmCubePink;
+	QPopupMenu*		pViewMenu;
+	QPopupMenu*		pPreviewMenu;
+	QPopupMenu*		pUpdateMenu;
 #else
 	QIcon			greenCube;
 	QIcon			redCube;
@@ -305,9 +306,6 @@ protected:
 	QTimer			TimerUTCLabel;
 	_BOOLEAN		bReInitOnFrequencyChange;
 	Q3UrlOperator		UrlUpdateSchedule;
-	Q3PopupMenu*		pViewMenu;
-	Q3PopupMenu*		pPreviewMenu;
-	Q3PopupMenu*		pUpdateMenu;
 
 	QMutex			ListItemsMutex;
 
@@ -320,6 +318,9 @@ protected:
     QActionGroup* showGroup;
 #else
 	vector<MyListViewItem*>		vecpListItems;
+#endif
+#if QT_VERSION < 0x030000
+    int iSortColumn;
 #endif
 
 public slots:
