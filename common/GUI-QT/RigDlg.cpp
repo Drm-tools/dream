@@ -30,20 +30,43 @@
 \******************************************************************************/
 
 #include "RigDlg.h"
-#include "Rig.h"
+#include <QTreeWidgetItem>
 
 /* Implementation *************************************************************/
 
 RigDlg::RigDlg(
     CSettings& NSettings,
+    CRig& nrig,
     QWidget* parent, Qt::WFlags f) :
     QDialog(parent, f), Ui_RigDlg(),
     Settings(NSettings), loading(true),
-    TimerRig(),iWantedrigModel(0)
+    TimerRig(),iWantedrigModel(0),rig(nrig)
 {
-    setupUi(this);
+    map<rig_model_t,CHamlib::SDrRigCaps> r;
 
+    setupUi(this);
+    rig.GetRigList(r);
     checkBoxModified->setEnabled(false);
+    //rigTypes->setColumnCount(2);
+
+    for(map<rig_model_t,CHamlib::SDrRigCaps>::const_iterator i=r.begin(); i!=r.end(); i++)
+    {
+	CHamlib::SDrRigCaps rc =  i->second;
+	QTreeWidgetItem* mfr, *model;
+        QList<QTreeWidgetItem *> l = rigTypes->findItems(rc.strManufacturer.c_str(), Qt::MatchFixedString); 
+	if(l.size()==0)
+	{
+		mfr = new QTreeWidgetItem(rigTypes);
+		mfr->setText(0,rc.strManufacturer.c_str());
+	}
+	else
+	{
+		mfr = l.first();
+	}
+	model = new QTreeWidgetItem(mfr);
+	model->setText(0,rc.strModelName.c_str());
+	
+    }
 
 }
 

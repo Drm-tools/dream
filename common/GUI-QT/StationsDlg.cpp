@@ -475,7 +475,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     }
 
     //connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
-    RigDlg *pRigDlg = new RigDlg(Settings, this);
+    RigDlg *pRigDlg = new RigDlg(Settings, rig, this);
     connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 #endif

@@ -30,6 +30,7 @@
 
 #include "../util/Utilities.h"
 #include "../util/Settings.h"
+#include "Rig.h"
 #include "ui_RigDlg.h"
 #include <QDialog>
 #include <QTimer>
@@ -46,7 +47,7 @@ class RigDlg : public QDialog, public Ui_RigDlg
 
 public:
 
-    RigDlg(CSettings&, QWidget* parent = 0, Qt::WFlags f = 0);
+    RigDlg(CSettings&, CRig&, QWidget* parent = 0, Qt::WFlags f = 0);
     virtual ~RigDlg();
 
 protected:
@@ -57,6 +58,7 @@ protected:
     bool		loading;
     QTimer		TimerRig;
     int			iWantedrigModel;
+    CRig&		rig;
 
 public slots:
     void		on_rigList_itemSelectionChanged(); 
