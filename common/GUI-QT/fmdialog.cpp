@@ -132,7 +132,7 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 	/* Init progress bar for input signal level */
 	ProgrInputLevel->setRange(-50.0, 0.0);
-#if QT_VERSION < 0x040000
+#if QWT_VERSION < 0x050000
 	ProgrInputLevel->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
 #else
 	ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);

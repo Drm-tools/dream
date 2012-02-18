@@ -49,7 +49,7 @@ count(QT_VERSION, 0) {
     !console {
         HEADERS += common/GUI-QT/DRMPlot.h common/GUI-QT/systemevalDlg.h
         SOURCES += common/GUI-QT/DRMPlot.cpp common/GUI-QT/systemevalDlg.cpp
-        FORMS += fdrmdialogbase.ui fmdialogbase.ui AnalogDemDlgbase.ui LiveScheduleDlgbase.ui \
+        FORMS += fdrmdialogbase.ui fmdialogbase.ui AnalogDemDlgbase.ui LiveScheduleDlgbase.ui
         LIBS += -lqwt
         unix {
             INCLUDEPATH += /usr/include/qwt-4.2.0
@@ -60,14 +60,11 @@ count(QT_VERSION, 0) {
     }
 }
 TEMPLATE = app
-           TARGET = dream
-                    CONFIG += qt \
-                              warn_on \
-                              debug \
-                              thread
-                              INCLUDEPATH += common/GUI-QT
-                                      INCLUDEPATH += libs
-                                              LIBS += -Llibs
+TARGET = dream
+CONFIG += qt warn_on debug thread
+INCLUDEPATH += common/GUI-QT
+INCLUDEPATH += libs
+LIBS += -Llibs
 !console {
     FORMS += TransmDlgbase.ui
     FORMS += AMSSDlgbase.ui \
@@ -166,14 +163,14 @@ unix {
     }
     LIBS += -lz \
             -ldl
-            SOURCES += linux/source/Pacer.cpp
-                       HEADERS += linux/source/shmsoundin.h \
-                                  linux/source/pa_shm_ringbuffer.h
-                                  SOURCES += linux/source/shmsoundin.cpp \
-                                          linux/source/pa_shm_ringbuffer.c
-                                          DEFINES += HAVE_DLFCN_H \
-                                                  HAVE_MEMORY_H \
-                                                  HAVE_STDINT_H \
+    SOURCES += linux/source/Pacer.cpp
+HEADERS += linux/source/shmsoundin.h \
+  linux/source/pa_shm_ringbuffer.h
+  SOURCES += linux/source/shmsoundin.cpp \
+	  linux/source/pa_shm_ringbuffer.c
+	  DEFINES += HAVE_DLFCN_H \
+		  HAVE_MEMORY_H \
+					  HAVE_STDINT_H \
                                                   HAVE_STDLIB_H
                                                   DEFINES += HAVE_STRINGS_H \
                                                           HAVE_STRING_H \
