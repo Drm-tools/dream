@@ -35,6 +35,7 @@
 #include <qwt_plot_grid.h>
 #include <qwt_scale_draw.h>
 #include <qwt_symbol.h>
+#include <qwt_legend.h>
 #include <qpainter.h>
 #include <qtimer.h>
 #include <qwhatsthis.h>
@@ -68,21 +69,16 @@ class Chart: public QObject
 {
 public:
     Chart(CDRMReceiver *pDRMRec, QwtPlot* p);
-    virtual void Setup()=0;
+    virtual void Setup();
     virtual void Update()=0;
     void SetPlotStyle(const int iNewStyleID);
 protected:
     void SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
-    void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2, CVector<_REAL>& vecrScale);
-    void SetData(QwtPlotCurve*, CVector<_COMPLEX>&, const QwtSymbol&);
-    void SetDCCarrier();
-    void SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth);
     CDRMReceiver* receiver;
-    QwtPlot* plot;
-    QwtPlotGrid* grid;;
+    QwtPlot*      plot;
+    QwtPlotGrid*  grid;;
     CPlotManager* plotManager;
-    QwtPlotCurve	*main1curve, *main2curve;
-    QwtPlotCurve	*curve1, *curve2, *curve3, *curve4, *curve5;
+    QwtPlotCurve* main;
     QColor			MainPenColorPlot;
     QColor			MainPenColorConst;
     QColor			MainGridColorPlot;
@@ -90,6 +86,45 @@ protected:
     QColor			SpecLine2ColorPlot;
     QColor			PassBandColorPlot;
     QColor			BckgrdColorPlot;
+    QPen       mainPen;
+};
+
+
+class Chart2: public Chart
+{
+public:
+    Chart2(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+protected:
+    void SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2, CVector<_REAL>& vecrScale);
+    QwtPlotCurve* main2;
+    QwtLegend *legend;
+};
+
+class SpectrumChart: public Chart
+{
+public:
+    SpectrumChart(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+protected:
+    void SetDCCarrier();
+    QwtPlotCurve* carrier;
+};
+
+class InpSpecWaterf: public Chart
+{
+public:
+    InpSpecWaterf(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class AudioSpec: public Chart
+{
+public:
+    AudioSpec(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
 };
 
 class AvIR: public Chart
@@ -103,64 +138,7 @@ protected:
         const _REAL rStartGuard, const _REAL rEndGuard,
         const _REAL rBeginIR, const _REAL rEndIR);
     void SetHorizontalBounds( _REAL rScaleMin, _REAL rScaleMax, _REAL rLowerB, _REAL rHigherB);
-};
-
-class InpSpecWaterf: public Chart
-{
-public:
-    InpSpecWaterf(CDRMReceiver *pDRMRec, QwtPlot* p);
-    void Setup();
-    void Update();
-};
-
-class TranFct: public Chart
-{
-public:
-    TranFct(CDRMReceiver *pDRMRec, QwtPlot* p);
-    void Setup();
-    void Update();
-};
-
-class AudioSpec: public Chart
-{
-public:
-    AudioSpec(CDRMReceiver *pDRMRec, QwtPlot* p);
-    void Setup();
-    void Update();
-};
-
-class FreqSamOffsHist: public Chart
-{
-public:
-    FreqSamOffsHist(CDRMReceiver *pDRMRec, QwtPlot* p);
-    void Setup();
-    void Update();
-    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2, CVector<_REAL>& vecrScale);
-};
-
-class DopplerDelayHist: public Chart
-{
-public:
-    DopplerDelayHist(CDRMReceiver *pDRMRec, QwtPlot* p);
-    void Setup();
-    void Update();
-};
-
-class SNRAudHist: public Chart
-{
-public:
-    SNRAudHist(CDRMReceiver *pDRMRec, QwtPlot* p);
-    void Setup();
-    void Update();
-    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2, CVector<_REAL>& vecrScale);
-};
-
-class PSD: public Chart
-{
-public:
-    PSD(CDRMReceiver *pDRMRec, QwtPlot* p);
-    void Setup();
-    void Update();
+    QwtPlotCurve *curve1,*curve2,*curve3,*curve4,*curve5;
 };
 
 class SNRSpectrum: public Chart
@@ -172,7 +150,50 @@ public:
     void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
 };
 
-class InpSpec: public Chart
+class TranFct: public Chart2
+{
+public:
+    TranFct(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class FreqSamOffsHist: public Chart2
+{
+public:
+    FreqSamOffsHist(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2, CVector<_REAL>& vecrScale);
+};
+
+class DopplerDelayHist: public Chart2
+{
+public:
+    DopplerDelayHist(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+class SNRAudHist: public Chart2
+{
+public:
+    SNRAudHist(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+    void AutoScale(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+};
+
+class PSD: public SpectrumChart
+{
+public:
+    PSD(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
+    void Update();
+};
+
+
+class InpSpec: public SpectrumChart
 {
 public:
     InpSpec(CDRMReceiver *pDRMRec, QwtPlot* p);
@@ -180,7 +201,7 @@ public:
     void Update();
 };
 
-class InpPSD: public Chart
+class InpPSD: public SpectrumChart
 {
 public:
     InpPSD(CDRMReceiver *pDRMRec, QwtPlot* p);
@@ -192,7 +213,11 @@ class AnalogInpPSD: public InpPSD
 {
 public:
     AnalogInpPSD(CDRMReceiver *pDRMRec, QwtPlot* p);
+    void Setup();
     void Update();
+protected:
+    void SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth);
+    QwtPlotCurve* bw;
 };
 
 class ConstellationChart: public Chart
@@ -203,6 +228,8 @@ public:
     void Update();
 protected:
     QwtSymbol symbolMSC, symbolSDC, symbolFAC;
+    QwtPlotCurve *main2,*main3;
+    void SetData(QwtPlotCurve*, CVector<_COMPLEX>&, const QwtSymbol&);
     void SetQAM4Grid();
     void SetQAM16Grid();
     void SetQAM64Grid();

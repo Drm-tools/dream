@@ -366,7 +366,7 @@ void AnalogDemDlg::UpdateControls()
     CheckBoxPLL->setChecked(DRMReceiver.GetAMDemod()->PLLEnabled());
 }
 
-void AnalogDemDlg::UpdatePlotsStyle(int iPlotstyle)
+void AnalogDemDlg::UpdatePlotStyle(int iPlotstyle)
 {
     /* Update main plot window */
     if(MainPlot)

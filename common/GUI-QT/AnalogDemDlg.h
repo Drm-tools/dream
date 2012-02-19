@@ -143,7 +143,7 @@ protected:
 	virtual void	closeEvent(QCloseEvent* pEvent);
 
 public slots:
-	void UpdatePlotsStyle(int);
+	void UpdatePlotStyle(int);
 	void OnTimer();
 	void OnTimerPLLPhaseDial();
 	void OnRadioDemodulation(int iID);

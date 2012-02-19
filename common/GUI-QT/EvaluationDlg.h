@@ -86,7 +86,7 @@ public:
 
 	void SetStatus(int MessID, int iMessPara);
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	void UpdatePlotsStyle();
+	void UpdatePlotStyle();
 	void StopLogTimers();
 
 protected:

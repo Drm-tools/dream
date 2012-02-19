@@ -809,6 +809,15 @@
             <normaloff>:/icons/CSSpectrumAudio.png</normaloff>:/icons/CSSpectrumAudio.png</iconset>
           </property>
          </item>
+         <item>
+          <property name="text">
+           <string>SNR Spectrum</string>
+          </property>
+          <property name="icon">
+           <iconset resource="res/icons.qrc">
+            <normaloff>:/icons/CSSpectrumSNR.png</normaloff>:/icons/CSSpectrumSNR.png</iconset>
+          </property>
+         </item>
         </item>
         <item>
          <property name="text">
@@ -816,20 +825,20 @@
          </property>
          <item>
           <property name="text">
-           <string>Transfer Function</string>
-          </property>
-          <property name="icon">
-           <iconset resource="res/icons.qrc">
-            <normaloff>:/icons/CSTF.png</normaloff>:/icons/CSTF.png</iconset>
-          </property>
-         </item>
-         <item>
-          <property name="text">
            <string>Impulse Response</string>
           </property>
           <property name="icon">
            <iconset resource="res/icons.qrc">
             <normaloff>:/icons/CSChannel.png</normaloff>:/icons/CSChannel.png</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Transfer Function</string>
+          </property>
+          <property name="icon">
+           <iconset resource="res/icons.qrc">
+            <normaloff>:/icons/CSTF.png</normaloff>:/icons/CSTF.png</iconset>
           </property>
          </item>
         </item>

@@ -20,7 +20,13 @@ contains(QT_VERSION, ^4\\..*) {
         unix {
             exists(/usr/include/qwt) {
                 INCLUDEPATH += /usr/include/qwt
-                LIBS += -lqwt
+                exists(/usr/lib/libqwt6.so) {
+	          message("with qwt6")
+                  LIBS += -lqwt6
+                }
+		else {
+                  LIBS += -lqwt
+                }
             }
             else {
                 error("no usable qwt version 6 found")
