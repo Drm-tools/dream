@@ -28,7 +28,6 @@
 
 #include "DRMPlot-qwt6.h"
 
-#include <QWhatsThis>
 #include <QPixmap>
 #include <QFrame>
 #include <QHideEvent>
@@ -37,6 +36,7 @@
 #if QWT_VERSION < 0x060000
 # define setSamples(x,y,s) setData(x,y,s)
 #endif
+#include <qwt_scale_engine.h>
 
 /* Define the plot color profiles */
 
@@ -69,8 +69,8 @@
 
 
 Chart::Chart(CDRMReceiver *pDRMRec, QwtPlot* p):receiver(pDRMRec),plot(p),grid(NULL)
-        //,MainPenColorPlot (), MainPenColorConst (), BckgrdColorPlot (), MainGridColorPlot(), SpecLine1ColorPlot(),
-        //SpecLine2ColorPlot(), PassBandColorPlot()
+    //,MainPenColorPlot (), MainPenColorConst (), BckgrdColorPlot (), MainGridColorPlot(), SpecLine1ColorPlot(),
+    //SpecLine2ColorPlot(), PassBandColorPlot()
 {
     grid = new QwtPlotGrid();
     main = new QwtPlotCurve("");
@@ -79,13 +79,10 @@ Chart::Chart(CDRMReceiver *pDRMRec, QwtPlot* p):receiver(pDRMRec),plot(p),grid(N
 
 void Chart::Setup()
 {
-    SetPlotStyle(0); // initialise colour scheme
-    //plot->detachItems(QwtPlotItem::Legend);
     grid->enableXMin(false);
     grid->enableYMin(false);
     grid->setPen(QPen(MainGridColorPlot, 0, Qt::DotLine, Qt::RoundCap, Qt::RoundJoin));
     grid->attach(plot);
-    plot->enableAxis(QwtPlot::yRight, false);
     plot->enableAxis(QwtPlot::yLeft, true);
     main->setPen(QPen(QBrush(MainPenColorPlot), 2, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
     main->attach(plot);
@@ -173,7 +170,7 @@ void Chart2::Setup()
 }
 
 void Chart2::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
-                    CVector<_REAL>& vecrScale)
+                     CVector<_REAL>& vecrScale)
 {
     double* pdData1 = new double[vecrData1.Size()];
     double* pdData2 = new double[vecrData2.Size()];
@@ -197,7 +194,7 @@ void Chart2::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
 
 SpectrumChart::SpectrumChart(CDRMReceiver *pDRMRec, QwtPlot* p):Chart(pDRMRec, p)
 {
-	carrier = new QwtPlotCurve("");
+    carrier = new QwtPlotCurve("");
 }
 
 void SpectrumChart::Setup()
@@ -265,6 +262,21 @@ void AvIR::Setup()
     main->setTitle(tr("Channel Impulse Response"));
 
     main->setItemAttribute(QwtPlotItem::Legend, false);
+    QString strCurPlotHelp =
+        tr("<b>Impulse Response:</b> This plot shows "
+           "the estimated Impulse Response (IR) of the channel based on the "
+           "channel estimation. It is the averaged, Hamming Window weighted "
+           "Fourier back transformation of the transfer function. The length "
+           "of PDS estimation and time synchronization tracking is based on "
+           "this function. The two red dashed vertical lines show the "
+           "beginning and the end of the guard-interval. The two black dashed "
+           "vertical lines show the estimated beginning and end of the PDS of "
+           "the channel (derived from the averaged impulse response "
+           "estimation). If the \"First Peak\" timing tracking method is "
+           "chosen, a bound for peak estimation (horizontal dashed red line) "
+           "is shown. Only peaks above this bound are used for timing "
+           "estimation.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void AvIR::Update()
@@ -277,7 +289,6 @@ void AvIR::Update()
                              rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
     if (vecrScale.Size() != 0)
     {
-	// TODO the markers should move around
         SetVerticalBounds(rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
         SetData(vecrData, vecrScale);
         SetHorizontalBounds(vecrScale[0], vecrScale[vecrScale.Size() - 1], rLowerBound, rHigherBound);
@@ -348,6 +359,11 @@ void InpSpecWaterf::Setup()
     /* Fixed scale */
     plot->setAxisScale(QwtPlot::xBottom,
                        (double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+    QString strCurPlotHelp =
+        tr("<b>Waterfall Display of Input Spectrum:</b> "
+           "The input spectrum is displayed as a waterfall type. The "
+           "different colors represent different levels.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void InpSpecWaterf::Update()
@@ -486,6 +502,11 @@ void TranFct::Setup()
 
     main->setTitle(tr("Transf. Fct."));
     main2->setTitle(tr("Group Del."));
+    QString strCurPlotHelp =
+        tr("<b>Transfer Function / Group Delay:</b> "
+           "This plot shows the squared magnitude and the group delay of "
+           "the estimated channel at each sub-carrier.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void TranFct::Update()
@@ -518,6 +539,14 @@ void AudioSpec::Setup()
     plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
 
     main->setTitle(tr("Audio Spectrum"));
+    QString strCurPlotHelp =
+        tr("<b>Audio Spectrum:</b> This plot shows the "
+           "averaged audio spectrum of the currently played audio. With this "
+           "plot the actual audio bandwidth can easily determined. Since a "
+           "linear scale is used for the frequency axis, most of the energy "
+           "of the signal is usually concentrated on the far left side of the "
+           "spectrum.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void AudioSpec::Update()
@@ -609,6 +638,14 @@ void FreqSamOffsHist::AutoScale(CVector<_REAL>& vecrData,
                        (double) Ceil(MaxSam / rMinScaleRange));
     plot->setAxisScale(QwtPlot::xBottom, (double) vecrScale[0], (double) 0.0);
 
+    QString strCurPlotHelp =
+        tr("<b>Frequency Offset / Sample Rate Offset History:"
+           "</b> The history "
+           "of the values for frequency offset and sample rate offset "
+           "estimation is shown. If the frequency offset drift is very small, "
+           "this is an indication that the analog front end is of high "
+           "quality.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 
@@ -632,6 +669,12 @@ void DopplerDelayHist::Setup()
     /* Add main curves */
     main->setTitle(tr("Delay"));
     main2->setTitle(tr("Doppler"));
+    QString strCurPlotHelp =
+        tr("<b>Doppler / Delay History:</b> "
+           "The history of the values for the "
+           "Doppler and Impulse response length is shown. Large Doppler "
+           "values might be responsable for audio drop-outs.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void DopplerDelayHist::Update()
@@ -656,6 +699,14 @@ void SNRAudHist::Setup()
 
     main->setTitle(tr("SNR"));
     main2->setTitle(tr("Audio"));
+    QString strCurPlotHelp =
+        tr("<b>SNR History:</b> "
+           "The history of the values for the "
+           "SNR and correctly decoded audio blocks is shown. The maximum "
+           "achievable number of correctly decoded audio blocks per DRM "
+           "frame is 10 or 5 depending on the audio sample rate (24 kHz "
+           "or 12 kHz AAC core bandwidth).");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void SNRAudHist::Update()
@@ -738,6 +789,21 @@ void PSD::Setup()
 
     main->setTitle(tr("Shifted PSD"));
     main->setPen(QPen(QBrush(MainPenColorPlot), 1, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+    QString strCurPlotHelp =
+        tr("<b>Shifted PSD:</b> This plot shows the "
+           "estimated Power Spectrum Density (PSD) of the input signal. The "
+           "DC frequency (red dashed vertical line) is fixed at 6 kHz. If "
+           "the frequency offset acquisition was successful, the rectangular "
+           "DRM spectrum should show up with a center frequency of 6 kHz. "
+           "This plot represents the frequency synchronized OFDM spectrum. "
+           "If the frequency synchronization was successful, the useful "
+           "signal really shows up only inside the actual DRM bandwidth "
+           "since the side loops have in this case only energy between the "
+           "samples in the frequency domain. On the sample positions outside "
+           "the actual DRM spectrum, the DRM signal has zero crossings "
+           "because of the orthogonality. Therefore this spectrum represents "
+           "NOT the actual spectrum but the \"idealized\" OFDM spectrum.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void PSD::Update()
@@ -760,6 +826,11 @@ void SNRSpectrum::Setup()
     plot->setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
 
     main->setTitle(tr("SNR Spectrum"));
+    QString strCurPlotHelp =
+        tr("<b>SNR Spectrum (Weighted MER on MSC Cells):</b> "
+           "This plot shows the Weighted MER on MSC cells for each carrier "
+           "separately.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void SNRSpectrum::Update()
@@ -819,6 +890,18 @@ void InpSpec::Setup()
 
     /* Add main curve */
     main->setTitle(tr("Input spectrum"));
+    QString strCurPlotHelp =
+        tr("<b>Input Spectrum:</b> This plot shows the "
+           "Fast Fourier Transformation (FFT) of the input signal. This plot "
+           "is active in both modes, analog and digital. There is no "
+           "averaging applied. The screen shot of the Evaluation Dialog shows "
+           "the significant shape of a DRM signal (almost rectangular). The "
+           "dashed vertical line shows the estimated DC frequency. This line "
+           "is very important for the analog AM demodulation. Each time a "
+           "new carrier frequency is acquired, the red line shows the "
+           "selected AM spectrum. If more than one AM spectrums are within "
+           "the sound card frequency range, the strongest signal is chosen.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 
@@ -850,6 +933,13 @@ void InpPSD::Setup()
                        MAX_VAL_INP_SPEC_Y_AXIS_DB);
     /* Add main curve */
     main->setTitle(tr("Input PSD"));
+    QString strCurPlotHelp =
+        tr("<b>Input PSD:</b> This plot shows the "
+           "estimated power spectral density (PSD) of the input signal. The "
+           "PSD is estimated by averaging some Hamming Window weighted "
+           "Fourier transformed blocks of the input signal samples. The "
+           "dashed vertical line shows the estimated DC frequency.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void InpPSD::Update()
@@ -863,7 +953,7 @@ void InpPSD::Update()
 
 AnalogInpPSD::AnalogInpPSD(CDRMReceiver *pDRMRec, QwtPlot* p):InpPSD(pDRMRec, p)
 {
-	bw = new QwtPlotCurve("");
+    bw = new QwtPlotCurve("");
 }
 
 void AnalogInpPSD::Setup()
@@ -918,6 +1008,12 @@ void ConstellationChart::Setup()
     plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
     symbol = new QwtSymbol(QwtSymbol::Ellipse, QBrush(MainPenColorConst), QPen(), QSize(4,4));
     SetSymbol(main, symbol);
+    QString strCurPlotHelp =
+        tr("<b>FAC, SDC, MSC:</b> The plots show the "
+           "constellations of the FAC, SDC and MSC logical channel of the DRM "
+           "stream. Depending on the current transmitter settings, the SDC "
+           "and MSC can have 4-QAM, 16-QAM or 64-QAM modulation.");
+    plot->setWhatsThis(strCurPlotHelp);
 }
 
 void ConstellationChart::Update()
@@ -932,6 +1028,11 @@ void ConstellationChart::SetSymbol(QwtPlotCurve* curve, QwtSymbol* symbol)
     curve->setSymbol( symbol );
 #endif
     curve->setStyle( QwtPlotCurve::NoCurve );
+
+    QwtDoubleInterval lim = grid->xScaleDiv().interval();
+
+    plot->setAxisScale(QwtPlot::xBottom, lim.minValue(), lim.maxValue());
+    plot->setAxisScale(QwtPlot::yLeft, lim.minValue(), lim.maxValue());
 }
 
 void ConstellationChart::SetData(QwtPlotCurve* curve, const CVector<_COMPLEX>& veccData)
@@ -959,21 +1060,30 @@ void ConstellationChart::getAxisScaleBounds(double& dXMax0, double& dXMax1, doub
     dYMax1 = plot->axisScaleDiv(QwtPlot::yLeft)->upperBound();
 }
 
+void ConstellationChart::setGrid(int qam)
+{
+    double constellation_size = sqrt(double(qam));
+    double max = sqrt(constellation_size);
+    QwtLinearScaleEngine engine;
+    QwtScaleDiv sd = engine.divideScale(-max, max, constellation_size, 100);
+    grid->setXDiv(sd);
+    grid->setYDiv(sd);
+    QList<double> ticks = sd.ticks(QwtScaleDiv::MajorTick);
+    for(int i=0; i<ticks.size(); i++)
+        cerr << ticks[i] << endl;
+    QwtDoubleInterval v = sd.interval();
+    cerr << v.minValue() << " " << v.maxValue() << endl;
+}
+
 FACConst::FACConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec, p)
 {
 }
 
 void FACConst::Setup()
 {
+    setGrid(4);
     ConstellationChart::Setup();
-    /* Init chart for FAC constellation */
     plot->setTitle(tr("FAC Constellation"));
-
-    /* Fixed scale (2 / sqrt(2)) */
-    plot->setAxisScale(QwtPlot::xBottom, (double) -1.4142, (double) 1.4142);
-    plot->setAxisScale(QwtPlot::yLeft, (double) -1.4142, (double) 1.4142);
-
-
 }
 
 void FACConst::Update()
@@ -989,11 +1099,16 @@ SDCConst::SDCConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec
 
 void SDCConst::Setup()
 {
-    ConstellationChart::Setup();
     CParameter& Parameters = *receiver->GetParameters();
     Parameters.Lock();
     ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
     Parameters.Unlock();
+
+    if(eSDCCodingScheme == CS_1_SM)
+	    setGrid(4);
+    else
+	    setGrid(16);
+    ConstellationChart::Setup();
 
     /* Init chart for SDC constellation */
     plot->setTitle(tr("SDC Constellation"));
@@ -1001,14 +1116,6 @@ void SDCConst::Setup()
     /* Fixed scale (4 / sqrt(10)) */
     plot->setAxisScale(QwtPlot::xBottom, (double) -1.2649, (double) 1.2649);
     plot->setAxisScale(QwtPlot::yLeft, (double) -1.2649, (double) 1.2649);
-
-    /* Insert grid */
-    if(eSDCCodingScheme == CS_1_SM)
-    {
-    }
-    else
-    {
-    }
 }
 
 void SDCConst::Update()
@@ -1024,12 +1131,16 @@ MSCConst::MSCConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec
 
 void MSCConst::Setup()
 {
-    ConstellationChart::Setup();
     CParameter& Parameters = *receiver->GetParameters();
     Parameters.Lock();
     ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
     Parameters.Unlock();
 
+    if (eMSCCodingScheme == CS_2_SM)
+	    setGrid(16);
+    else
+	    setGrid(64);
+    ConstellationChart::Setup();
     /* Init chart for MSC constellation */
     plot->setTitle(tr("MSC Constellation"));
 
@@ -1037,13 +1148,6 @@ void MSCConst::Setup()
     plot->setAxisScale(QwtPlot::xBottom, (double) -1.2344, (double) 1.2344);
     plot->setAxisScale(QwtPlot::yLeft, (double) -1.2344, (double) 1.2344);
 
-    /* Insert grid */
-    if (eMSCCodingScheme == CS_2_SM)
-    {
-    }
-    else
-    {
-    }
 }
 
 void MSCConst::Update()
@@ -1064,6 +1168,7 @@ AllConst::AllConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec
 
 void AllConst::Setup()
 {
+    setGrid(64);
     ConstellationChart::Setup();
     /* Init chart for constellation */
     plot->setTitle(tr("MSC / SDC / FAC Constellation"));
@@ -1076,6 +1181,7 @@ void AllConst::Setup()
     SetSymbol(main, symbolMSC);
     SetSymbol(main2, symbolSDC);
     SetSymbol(main3, symbolFAC);
+
 
     /* Insert "dummy" curves for legend */
     // TODO plot->enableLegend(TRUE, curve1);
@@ -1138,9 +1244,6 @@ CDRMPlot::CDRMPlot(QwtPlot* pplot) :
     /* Canvas */
     plot->setCanvasLineWidth(0);
 
-    /* Set default style */
-    //chart->SetPlotStyle(0);
-
     /* Connections */
     connect(plot, SIGNAL(MouseReleased(const QMouseEvent&)),
             this, SLOT(OnClicked(const QMouseEvent&)));
@@ -1175,9 +1278,9 @@ void CDRMPlot::SetupChart(ECharType InitCharType)
         CurCharType = InitCharType;
         delete chart; // ot maybe hide, etc
 #if QWT_VERSION < 0x060000
-	plot->clear();
+        plot->clear();
 #else
-	plot->detachItems();
+        plot->detachItems();
 #endif
         switch(CurCharType) {
         case INPUT_SIG_PSD:
@@ -1231,7 +1334,8 @@ void CDRMPlot::SetupChart(ECharType InitCharType)
         default:
             chart = new InpPSD(pDRMRec, plot);
         }
-	chart->Setup();
+        chart->SetPlotStyle(plotStyle);
+        chart->Setup();
     }
 
 }
@@ -1254,160 +1358,7 @@ void CDRMPlot::OnClicked(const QMouseEvent& e)
 
 void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 {
-	chart->SetPlotStyle(iNewStyleID);
-	chart->Setup();
-}
-
-void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
-{
-    QString strCurPlotHelp;
-
-    switch (NCharType)
-    {
-    case AVERAGED_IR:
-        /* Impulse Response */
-        strCurPlotHelp =
-            tr("<b>Impulse Response:</b> This plot shows "
-               "the estimated Impulse Response (IR) of the channel based on the "
-               "channel estimation. It is the averaged, Hamming Window weighted "
-               "Fourier back transformation of the transfer function. The length "
-               "of PDS estimation and time synchronization tracking is based on "
-               "this function. The two red dashed vertical lines show the "
-               "beginning and the end of the guard-interval. The two black dashed "
-               "vertical lines show the estimated beginning and end of the PDS of "
-               "the channel (derived from the averaged impulse response "
-               "estimation). If the \"First Peak\" timing tracking method is "
-               "chosen, a bound for peak estimation (horizontal dashed red line) "
-               "is shown. Only peaks above this bound are used for timing "
-               "estimation.");
-        break;
-
-    case TRANSFERFUNCTION:
-        /* Transfer Function */
-        strCurPlotHelp =
-            tr("<b>Transfer Function / Group Delay:</b> "
-               "This plot shows the squared magnitude and the group delay of "
-               "the estimated channel at each sub-carrier.");
-        break;
-
-    case FAC_CONSTELLATION:
-    case SDC_CONSTELLATION:
-    case MSC_CONSTELLATION:
-    case ALL_CONSTELLATION:
-        /* Constellations */
-        strCurPlotHelp =
-            tr("<b>FAC, SDC, MSC:</b> The plots show the "
-               "constellations of the FAC, SDC and MSC logical channel of the DRM "
-               "stream. Depending on the current transmitter settings, the SDC "
-               "and MSC can have 4-QAM, 16-QAM or 64-QAM modulation.");
-        break;
-
-    case POWER_SPEC_DENSITY:
-        /* Shifted PSD */
-        strCurPlotHelp =
-            tr("<b>Shifted PSD:</b> This plot shows the "
-               "estimated Power Spectrum Density (PSD) of the input signal. The "
-               "DC frequency (red dashed vertical line) is fixed at 6 kHz. If "
-               "the frequency offset acquisition was successful, the rectangular "
-               "DRM spectrum should show up with a center frequency of 6 kHz. "
-               "This plot represents the frequency synchronized OFDM spectrum. "
-               "If the frequency synchronization was successful, the useful "
-               "signal really shows up only inside the actual DRM bandwidth "
-               "since the side loops have in this case only energy between the "
-               "samples in the frequency domain. On the sample positions outside "
-               "the actual DRM spectrum, the DRM signal has zero crossings "
-               "because of the orthogonality. Therefore this spectrum represents "
-               "NOT the actual spectrum but the \"idealized\" OFDM spectrum.");
-        break;
-
-    case SNR_SPECTRUM:
-        /* SNR Spectrum (Weighted MER on MSC Cells) */
-        strCurPlotHelp =
-            tr("<b>SNR Spectrum (Weighted MER on MSC Cells):</b> "
-               "This plot shows the Weighted MER on MSC cells for each carrier "
-               "separately.");
-        break;
-
-    case INPUTSPECTRUM_NO_AV:
-        /* Input Spectrum */
-        strCurPlotHelp =
-            tr("<b>Input Spectrum:</b> This plot shows the "
-               "Fast Fourier Transformation (FFT) of the input signal. This plot "
-               "is active in both modes, analog and digital. There is no "
-               "averaging applied. The screen shot of the Evaluation Dialog shows "
-               "the significant shape of a DRM signal (almost rectangular). The "
-               "dashed vertical line shows the estimated DC frequency. This line "
-               "is very important for the analog AM demodulation. Each time a "
-               "new carrier frequency is acquired, the red line shows the "
-               "selected AM spectrum. If more than one AM spectrums are within "
-               "the sound card frequency range, the strongest signal is chosen.");
-        break;
-
-    case INPUT_SIG_PSD:
-    case INPUT_SIG_PSD_ANALOG:
-        /* Input PSD */
-        strCurPlotHelp =
-            tr("<b>Input PSD:</b> This plot shows the "
-               "estimated power spectral density (PSD) of the input signal. The "
-               "PSD is estimated by averaging some Hamming Window weighted "
-               "Fourier transformed blocks of the input signal samples. The "
-               "dashed vertical line shows the estimated DC frequency.");
-        break;
-
-    case AUDIO_SPECTRUM:
-        /* Audio Spectrum */
-        strCurPlotHelp =
-            tr("<b>Audio Spectrum:</b> This plot shows the "
-               "averaged audio spectrum of the currently played audio. With this "
-               "plot the actual audio bandwidth can easily determined. Since a "
-               "linear scale is used for the frequency axis, most of the energy "
-               "of the signal is usually concentrated on the far left side of the "
-               "spectrum.");
-        break;
-
-    case FREQ_SAM_OFFS_HIST:
-        /* Frequency Offset / Sample Rate Offset History */
-        strCurPlotHelp =
-            tr("<b>Frequency Offset / Sample Rate Offset History:"
-               "</b> The history "
-               "of the values for frequency offset and sample rate offset "
-               "estimation is shown. If the frequency offset drift is very small, "
-               "this is an indication that the analog front end is of high "
-               "quality.");
-        break;
-
-    case DOPPLER_DELAY_HIST:
-        /* Doppler / Delay History */
-        strCurPlotHelp =
-            tr("<b>Doppler / Delay History:</b> "
-               "The history of the values for the "
-               "Doppler and Impulse response length is shown. Large Doppler "
-               "values might be responsable for audio drop-outs.");
-        break;
-
-    case SNR_AUDIO_HIST:
-        /* SNR History */
-        strCurPlotHelp =
-            tr("<b>SNR History:</b> "
-               "The history of the values for the "
-               "SNR and correctly decoded audio blocks is shown. The maximum "
-               "achievable number of correctly decoded audio blocks per DRM "
-               "frame is 10 or 5 depending on the audio sample rate (24 kHz "
-               "or 12 kHz AAC core bandwidth).");
-        break;
-
-    case INP_SPEC_WATERF:
-        /* Waterfall Display of Input Spectrum */
-        strCurPlotHelp =
-            tr("<b>Waterfall Display of Input Spectrum:</b> "
-               "The input spectrum is displayed as a waterfall type. The "
-               "different colors represent different levels.");
-        break;
-
-    case NONE_OLD:
-        break;
-    }
-
-    /* Main plot */
-    plot->setWhatsThis(strCurPlotHelp);
+    plotStyle = iNewStyleID;
+    chart->SetPlotStyle(plotStyle);
+    chart->Setup();
 }

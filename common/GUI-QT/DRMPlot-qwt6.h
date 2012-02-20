@@ -86,7 +86,6 @@ protected:
     QColor			SpecLine2ColorPlot;
     QColor			PassBandColorPlot;
     QColor			BckgrdColorPlot;
-    QPen       mainPen;
 };
 
 
@@ -231,6 +230,7 @@ protected:
     void SetData(QwtPlotCurve*, const CVector<_COMPLEX>&);
     void SetSymbol(QwtPlotCurve* curve, QwtSymbol*);
     void getAxisScaleBounds(double& dXMax0, double& dXMax1, double& dYMax0, double& dYMax1);
+    void setGrid(int qam);
 };
 
 class FACConst: public ConstellationChart
@@ -298,13 +298,12 @@ public:
     virtual ~CDRMPlot() {}
 
     QwtPlot*	plot;
+    int plotStyle;
 
     /* This function has to be called before chart can be used! */
     void SetRecObj(CDRMReceiver* pNDRMRec) {
         pDRMRec = pNDRMRec;
     }
-
-    void SetPlotStyle(const int iNewStyleID);
 
     ECharType GetChartType() const {
         return CurCharType;
@@ -336,10 +335,9 @@ public:
     }
 
     void SetupChart(ECharType);
+    void SetPlotStyle(const int iNewStyleID);
 
 protected:
-
-    void AddWhatsThisHelpChar(const ECharType NCharType);
 
     QSize			LastCanvasSize;
 

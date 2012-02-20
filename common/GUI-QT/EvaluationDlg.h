@@ -86,7 +86,6 @@ public:
 
 	void SetStatus(int MessID, int iMessPara);
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	void UpdatePlotStyle();
 	void StopLogTimers();
 
 protected:
@@ -148,6 +147,7 @@ public slots:
 	void DisableGPS();
 	void OnListSelChanged(QTreeWidgetItem*, QTreeWidgetItem*);
 	void OnOpenNewChart(QTreeWidgetItem*, int);
+	void UpdatePlotStyle(int);
 };
 
 #endif
