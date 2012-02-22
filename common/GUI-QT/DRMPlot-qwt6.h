@@ -226,10 +226,10 @@ public:
     void Setup();
     void Update();
 protected:
+    int points;
     QwtSymbol *symbol;
     void SetData(QwtPlotCurve*, const CVector<_COMPLEX>&);
     void SetSymbol(QwtPlotCurve* curve, QwtSymbol*);
-    void setGrid(int qam);
 };
 
 class FACConst: public ConstellationChart
@@ -265,6 +265,7 @@ public:
 protected:
     QwtSymbol *symbolMSC, *symbolSDC, *symbolFAC;
     QwtPlotCurve *main2,*main3;
+    QwtLegend *legend;
 };
 
 class CDRMPlot : public QObject
@@ -342,7 +343,6 @@ protected:
 
     ECharType		CurCharType;
     ECharType		InitCharType;
-    QwtText         	leftTitle, rightTitle, bottomTitle;
 
     _BOOLEAN		bOnTimerCharMutexFlag;
 

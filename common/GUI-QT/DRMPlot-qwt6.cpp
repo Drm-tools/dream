@@ -78,6 +78,31 @@ Chart::Chart(CDRMReceiver *pDRMRec, QwtPlot* p):receiver(pDRMRec),plot(p),grid(N
 
 void Chart::Setup()
 {
+    QFont axisfont;
+    axisfont.setPointSize(8);
+    axisfont.setStyleHint(QFont::SansSerif, QFont::PreferOutline);
+    QFont titlefont(axisfont);
+    titlefont.setWeight(QFont::Bold);
+
+    plot->setAxisFont(QwtPlot::xBottom, axisfont);
+    plot->setAxisFont(QwtPlot::yLeft, axisfont);
+    plot->setAxisFont(QwtPlot::yRight, axisfont);
+
+    QwtText title;
+    title.setFont(titlefont);
+    plot->setTitle(title);
+
+    /* axis titles */
+    QwtText axistitle;
+    plot->setAxisTitle(QwtPlot::xBottom, axistitle);
+    plot->setAxisTitle(QwtPlot::yLeft, axistitle);
+    plot->setAxisTitle(QwtPlot::yRight, axistitle);
+
+    /* Global frame */
+    plot->setFrameStyle(QFrame::Panel|QFrame::Sunken);
+    plot->setLineWidth(2);
+    plot->setStyleSheet("QwtPlot { padding: 10px }");
+
     grid->enableXMin(false);
     grid->enableYMin(false);
     grid->setPen(QPen(MainGridColorPlot, 0, Qt::DotLine, Qt::RoundCap, Qt::RoundJoin));
@@ -155,7 +180,6 @@ Chart2::Chart2(CDRMReceiver *pDRMRec, QwtPlot* p):Chart(pDRMRec, p)
 {
     main2 = new QwtPlotCurve("");
     legend = new QwtLegend();
-
 }
 
 void Chart2::Setup()
@@ -995,7 +1019,8 @@ void AnalogInpPSD::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 
 }
 
-ConstellationChart::ConstellationChart(CDRMReceiver* pDRMRec, QwtPlot* p):Chart(pDRMRec, p), symbol(NULL)
+ConstellationChart::ConstellationChart(CDRMReceiver* pDRMRec, QwtPlot* p)
+:Chart(pDRMRec, p), points(4),symbol(NULL)
 {
 }
 
@@ -1004,8 +1029,18 @@ void ConstellationChart::Setup()
     Chart::Setup();
     plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
     plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
-    symbol = new QwtSymbol(QwtSymbol::Ellipse, QBrush(MainPenColorConst), QPen(), QSize(4,4));
+    symbol = new QwtSymbol(QwtSymbol::Ellipse, QBrush(MainPenColorConst), QPen(MainPenColorConst), QSize(4,4));
     SetSymbol(main, symbol);
+
+    // scaling factor for equal energy see http://www.dsplog.com/2007/09/23/scaling-factor-in-qam/
+    double scale = 2.0/3.0*(points-1);
+    double lim =  sqrt(points) / sqrt(scale); 
+    double steps = sqrt(points)/2;
+    plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
+    plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
+    plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Labels, false);
+    plot->axisScaleDraw(QwtPlot::yLeft)->enableComponent(QwtAbstractScaleDraw::Labels, false);
+
     QString strCurPlotHelp =
         tr("<b>FAC, SDC, MSC:</b> The plots show the "
            "constellations of the FAC, SDC and MSC logical channel of the DRM "
@@ -1045,34 +1080,15 @@ void ConstellationChart::SetData(QwtPlotCurve* curve, const CVector<_COMPLEX>& v
     delete[] pdScale;
 }
 
-void ConstellationChart::setGrid(int qam)
-{
-    double constellation_size = sqrt(double(qam));
-    double max = sqrt(constellation_size);
-    QwtLinearScaleEngine engine;
-    QwtScaleDiv sd = engine.divideScale(-max, max, constellation_size, 100);
-    grid->setXDiv(sd);
-    grid->setYDiv(sd);
-    QList<double> ticks = sd.ticks(QwtScaleDiv::MajorTick);
-    for(int i=0; i<ticks.size(); i++)
-        cerr << ticks[i] << endl;
-    QwtDoubleInterval v = sd.interval();
-    cerr << v.minValue() << " " << v.maxValue() << endl;
-}
-
 FACConst::FACConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec, p)
 {
 }
 
 void FACConst::Setup()
 {
+    points = 4;
     ConstellationChart::Setup();
     plot->setTitle(tr("FAC Constellation"));
-
-    double lim =  1.4142;
-    double steps = 1;
-    plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
-    plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
 }
 
 void FACConst::Update()
@@ -1093,20 +1109,14 @@ void SDCConst::Setup()
     ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
     Parameters.Unlock();
 
-    double steps = 0.0;
     if(eSDCCodingScheme == CS_1_SM)
-	steps = 1.0;
+	points = 4;
     else
-	steps = 2.0;
+	points = 16;
     ConstellationChart::Setup();
 
     /* Init chart for SDC constellation */
     plot->setTitle(tr("SDC Constellation"));
-
-    /* Fixed scale (4 / sqrt(10)) */
-    double lim = 1.2649;
-    plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
-    plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
 }
 
 void SDCConst::Update()
@@ -1127,20 +1137,13 @@ void MSCConst::Setup()
     ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
     Parameters.Unlock();
 
-    double steps = 0.0;
     if (eMSCCodingScheme == CS_2_SM)
-	steps = 2.0;
+	points = 16;
     else
-	steps = 4.0;
+	points = 64;
     ConstellationChart::Setup();
     /* Init chart for MSC constellation */
     plot->setTitle(tr("MSC Constellation"));
-
-    /* Fixed scale (8 / sqrt(42)) */
-    double lim = 1.2344;
-    plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
-    plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
-
 }
 
 void MSCConst::Update()
@@ -1152,32 +1155,33 @@ void MSCConst::Update()
 
 AllConst::AllConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec, p)
 {
-    main2 = new QwtPlotCurve(tr("SDC"));
-    main3 = new QwtPlotCurve(tr("FAC"));
-    symbolMSC = new QwtSymbol(QwtSymbol::Ellipse, QBrush(Qt::blue), QPen(), QSize(4,4));
-    symbolSDC = new QwtSymbol(QwtSymbol::XCross, QBrush(Qt::red), QPen(), QSize(4,4));
-    symbolFAC = new QwtSymbol(QwtSymbol::Rect, QBrush(Qt::black), QPen(), QSize(4,4));
+    main2 = new QwtPlotCurve();
+    main3 = new QwtPlotCurve();
+    symbolMSC = new QwtSymbol(QwtSymbol::Rect, QBrush(Qt::blue), QPen(Qt::blue), QSize(2,2));
+    symbolSDC = new QwtSymbol(QwtSymbol::XCross, QBrush(Qt::red), QPen(Qt::red), QSize(4,4));
+    symbolFAC = new QwtSymbol(QwtSymbol::Ellipse, QBrush(Qt::black), QPen(Qt::black), QSize(4,4));
+    legend = new QwtLegend();
 }
 
 void AllConst::Setup()
 {
-    setGrid(64);
+   
+    points = 64;
     ConstellationChart::Setup();
     /* Init chart for constellation */
     plot->setTitle(tr("MSC / SDC / FAC Constellation"));
 
-    /* Fixed scale */
-    plot->setAxisScale(QwtPlot::xBottom, (double) -1.5, (double) 1.5);
-    plot->setAxisScale(QwtPlot::yLeft, (double) -1.5, (double) 1.5);
     main->setTitle(tr("MSC"));
+    main2->setTitle(tr("SDC"));
+    main3->setTitle(tr("FAC"));
+    main2->attach(plot);
+    main3->attach(plot);
 
     SetSymbol(main, symbolMSC);
     SetSymbol(main2, symbolSDC);
     SetSymbol(main3, symbolFAC);
 
-
-    /* Insert "dummy" curves for legend */
-    // TODO plot->enableLegend(TRUE, curve1);
+    plot->insertLegend(legend, QwtPlot::RightLegend);
 }
 
 void AllConst::Update()
@@ -1194,48 +1198,12 @@ void AllConst::Update()
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QwtPlot* pplot) :
     plot(pplot), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
-    leftTitle(), rightTitle(), bottomTitle(),
-    bOnTimerCharMutexFlag(FALSE),
-    pDRMRec(NULL),chart(NULL)
+    bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL),chart(NULL)
 {
     if(plot==NULL)
         plot = new QwtPlot(NULL);
 
     chart = new InpPSD(pDRMRec, plot);
-    /* Legend should be on the right side */
-    //setLegendPos(QwtPlot::Right);
-
-    /* Fonts */
-    QFont axisfont;
-    axisfont.setPointSize(8);
-    axisfont.setStyleHint(QFont::SansSerif, QFont::PreferOutline);
-    QFont titlefont(axisfont);
-    titlefont.setWeight(QFont::Bold);
-
-    plot->setAxisFont(QwtPlot::xBottom, axisfont);
-    plot->setAxisFont(QwtPlot::yLeft, axisfont);
-    plot->setAxisFont(QwtPlot::yRight, axisfont);
-    QwtText title;
-    title.setFont(titlefont);
-    plot->setTitle(title);
-
-    /* axis titles */
-    bottomTitle.setFont(axisfont);
-    plot->setAxisTitle(QwtPlot::xBottom, bottomTitle);
-
-    leftTitle.setFont(axisfont);
-    plot->setAxisTitle(QwtPlot::yLeft, leftTitle);
-
-    rightTitle.setFont(axisfont);
-    plot->setAxisTitle(QwtPlot::yRight, rightTitle);
-
-    /* Global frame */
-    plot->setFrameStyle(QFrame::Panel|QFrame::Sunken);
-    plot->setLineWidth(2);
-    plot->setStyleSheet("QwtPlot { padding: 10px }");
-
-    /* Canvas */
-    plot->setCanvasLineWidth(0);
 
     /* Connections */
     connect(plot, SIGNAL(MouseReleased(const QMouseEvent&)),
