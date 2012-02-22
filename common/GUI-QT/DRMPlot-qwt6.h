@@ -229,7 +229,6 @@ protected:
     QwtSymbol *symbol;
     void SetData(QwtPlotCurve*, const CVector<_COMPLEX>&);
     void SetSymbol(QwtPlotCurve* curve, QwtSymbol*);
-    void getAxisScaleBounds(double& dXMax0, double& dXMax1, double& dYMax0, double& dYMax1);
     void setGrid(int qam);
 };
 

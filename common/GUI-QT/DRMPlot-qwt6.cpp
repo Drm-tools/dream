@@ -67,7 +67,6 @@
 #define BLACKGREY_SPEC_LINE2_COLOR_PLOT			Qt::yellow
 #define BLACKGREY_PASS_BAND_COLOR_PLOT			QColor(128, 128, 128)
 
-
 Chart::Chart(CDRMReceiver *pDRMRec, QwtPlot* p):receiver(pDRMRec),plot(p),grid(NULL)
     //,MainPenColorPlot (), MainPenColorConst (), BckgrdColorPlot (), MainGridColorPlot(), SpecLine1ColorPlot(),
     //SpecLine2ColorPlot(), PassBandColorPlot()
@@ -998,7 +997,6 @@ void AnalogInpPSD::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 
 ConstellationChart::ConstellationChart(CDRMReceiver* pDRMRec, QwtPlot* p):Chart(pDRMRec, p), symbol(NULL)
 {
-
 }
 
 void ConstellationChart::Setup()
@@ -1029,10 +1027,6 @@ void ConstellationChart::SetSymbol(QwtPlotCurve* curve, QwtSymbol* symbol)
 #endif
     curve->setStyle( QwtPlotCurve::NoCurve );
 
-    QwtDoubleInterval lim = grid->xScaleDiv().interval();
-
-    plot->setAxisScale(QwtPlot::xBottom, lim.minValue(), lim.maxValue());
-    plot->setAxisScale(QwtPlot::yLeft, lim.minValue(), lim.maxValue());
 }
 
 void ConstellationChart::SetData(QwtPlotCurve* curve, const CVector<_COMPLEX>& veccData)
@@ -1049,15 +1043,6 @@ void ConstellationChart::SetData(QwtPlotCurve* curve, const CVector<_COMPLEX>& v
     curve->setSamples(pdScale, pdData, iDataSize);
     delete[] pdData;
     delete[] pdScale;
-}
-
-/* Get bounds of scale */
-void ConstellationChart::getAxisScaleBounds(double& dXMax0, double& dXMax1, double& dYMax0, double& dYMax1)
-{
-    dXMax0 = plot->axisScaleDiv(QwtPlot::xBottom)->lowerBound();
-    dXMax1 = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
-    dYMax0 = plot->axisScaleDiv(QwtPlot::yLeft)->lowerBound();
-    dYMax1 = plot->axisScaleDiv(QwtPlot::yLeft)->upperBound();
 }
 
 void ConstellationChart::setGrid(int qam)
@@ -1081,9 +1066,13 @@ FACConst::FACConst(CDRMReceiver* pDRMRec, QwtPlot* p):ConstellationChart(pDRMRec
 
 void FACConst::Setup()
 {
-    setGrid(4);
     ConstellationChart::Setup();
     plot->setTitle(tr("FAC Constellation"));
+
+    double lim =  1.4142;
+    double steps = 1;
+    plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
+    plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
 }
 
 void FACConst::Update()
@@ -1104,18 +1093,20 @@ void SDCConst::Setup()
     ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
     Parameters.Unlock();
 
+    double steps = 0.0;
     if(eSDCCodingScheme == CS_1_SM)
-	    setGrid(4);
+	steps = 1.0;
     else
-	    setGrid(16);
+	steps = 2.0;
     ConstellationChart::Setup();
 
     /* Init chart for SDC constellation */
     plot->setTitle(tr("SDC Constellation"));
 
     /* Fixed scale (4 / sqrt(10)) */
-    plot->setAxisScale(QwtPlot::xBottom, (double) -1.2649, (double) 1.2649);
-    plot->setAxisScale(QwtPlot::yLeft, (double) -1.2649, (double) 1.2649);
+    double lim = 1.2649;
+    plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
+    plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
 }
 
 void SDCConst::Update()
@@ -1136,17 +1127,19 @@ void MSCConst::Setup()
     ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
     Parameters.Unlock();
 
+    double steps = 0.0;
     if (eMSCCodingScheme == CS_2_SM)
-	    setGrid(16);
+	steps = 2.0;
     else
-	    setGrid(64);
+	steps = 4.0;
     ConstellationChart::Setup();
     /* Init chart for MSC constellation */
     plot->setTitle(tr("MSC Constellation"));
 
     /* Fixed scale (8 / sqrt(42)) */
-    plot->setAxisScale(QwtPlot::xBottom, (double) -1.2344, (double) 1.2344);
-    plot->setAxisScale(QwtPlot::yLeft, (double) -1.2344, (double) 1.2344);
+    double lim = 1.2344;
+    plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
+    plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
 
 }
 
