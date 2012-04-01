@@ -7,16 +7,21 @@ else {
     DEFINES += USE_QT_GUI
     RESOURCES = common/GUI-QT/res/icons.qrc
 }
-
+TEMPLATE = app
+TARGET = dream
+CONFIG += qt warn_on debug thread
+INCLUDEPATH += common/GUI-QT
+INCLUDEPATH += libs
+LIBS += -L$$PWD/libs
 contains(QT_VERSION, ^4\\..*) {
     message("Qt 4")
     QT += network xml
     VPATH += common/GUI-QT
     !console {
         QT += qt3support
-        HEADERS += common/GUI-QT/DRMPlot-qwt6.h common/GUI-QT/EvaluationDlg.h common/GUI-QT/RigDlg.h
-        SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp common/GUI-QT/RigDlg.cpp
-        FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui RigDlg.ui LiveScheduleWindow.ui
+        HEADERS += common/GUI-QT/DRMPlot-qwt6.h common/GUI-QT/EvaluationDlg.h
+        SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp
+        FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
         unix {
             exists(/usr/include/qwt) {
                 INCLUDEPATH += /usr/include/qwt
@@ -33,24 +38,19 @@ contains(QT_VERSION, ^4\\..*) {
             }
         }
         win32 {
-            exists(libs/qwt6) {
-                INCLUDEPATH += libs/qwt6
-                LIBS += -lqwt6
+            exists(libs/qwt) {
+                INCLUDEPATH += libs/qwt
+                LIBS += -lqwt
             }
             else {
-                exists(libs/qwt5) {
-                    INCLUDEPATH += libs/qwt5
-                    LIBS += -lqwt5
-                }
-                else {
-                    error("no usable qwt version found")
-                }
+                error("no usable qwt version found")
             }
         }
     }
 }
 count(QT_VERSION, 0) {
     message("Qt 3")
+    CONFIG += old
     VPATH += common/GUI-QT/qt2
     !console {
         HEADERS += common/GUI-QT/DRMPlot.h common/GUI-QT/systemevalDlg.h
@@ -65,12 +65,6 @@ count(QT_VERSION, 0) {
         }
     }
 }
-TEMPLATE = app
-TARGET = dream
-CONFIG += qt warn_on debug thread
-INCLUDEPATH += common/GUI-QT
-INCLUDEPATH += libs
-LIBS += -Llibs
 !console {
     FORMS += TransmDlgbase.ui
     FORMS += AMSSDlgbase.ui \
@@ -208,10 +202,23 @@ msvc {
 }
 win32-g++ {
     DEFINES += HAVE_STDINT_H
-    LIBS += -lz -lrfftw
-    DEFINES += HAVE_RFFTW_H
+    LIBS += -lz
 }
 win32 {
+    exists(libs/fftw3.h) {
+        DEFINES += HAVE_FFTW3_H
+        LIBS += -lfftw3-3
+        message("with fftw3")
+    }
+    else {
+        exists(libs/fftw.h) {
+            DEFINES += HAVE_FFTW_H HAVE_RFFTW_H
+            LIBS += -lfftw -lrfftw
+        }
+        else {
+            error("no usable fftw version 2 or 3 found")
+        }
+    }
     exists(libs/hamlib/rig.h) {
         CONFIG += hamlib
         message("with hamlib")
@@ -227,13 +234,11 @@ win32 {
     OBJECTS_DIR = windows
     UI_DIR = windows/moc
     MOC_DIR = windows/moc
-    LIBS += -lfftw \
-    -lsetupapi \
+    LIBS += -lsetupapi \
     -lwinmm \
     -lwsock32
     DEFINES += HAVE_SETUPAPI \
     HAVE_LIBZ
-    DEFINES += HAVE_FFTW_H
     DEFINES -= UNICODE
     HEADERS += windows/Source/Sound.h windows/Source/SoundWin.h
     SOURCES += windows/Source/Pacer.cpp windows/Source/Sound.cpp
@@ -264,6 +269,11 @@ hamlib {
     macx:LIBS += -framework IOKit
     unix:LIBS += -lhamlib
     win32:LIBS += libhamlib-2.lib
+    !console:!old {
+        HEADERS += common/GUI-QT/RigDlg.h
+        SOURCES += common/GUI-QT/RigDlg.cpp
+        FORMS += RigDlg.ui
+    }
 }
 alsa {
     DEFINES += USE_ALSA

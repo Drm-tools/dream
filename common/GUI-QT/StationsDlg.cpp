@@ -30,14 +30,20 @@
 
 #include "StationsDlg.h"
 #include "DialogUtil.h"
-#include "Rig.h"
 #if QT_VERSION < 0x040000
 # include <qheader.h>
 # include <qftp.h>
 # include <qwhatsthis.h>
 # define Q3WhatsThis QWhatsThis
+# ifdef HAVE_LIBHAMLIB
+#  include "Rig.h"
+#  include "RigDlg.h"
+# endif
 #else
-# include "RigDlg.h"
+# ifdef HAVE_LIBHAMLIB
+#  include "Rig.h"
+#  include "RigDlg.h"
+# endif
 # include <q3ftp.h>
 # include <q3whatsthis.h>
 # include <QHideEvent>
@@ -475,12 +481,16 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     }
 
     //connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
+# ifdef HAVE_LIBHAMLIB
     RigDlg *pRigDlg = new RigDlg(Settings, rig, this);
     connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
+# endif
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 #endif
     SetStationsView();
+#ifdef HAVE_LIBHAMLIB
     connect(&rig, SIGNAL(sigstr(double)), this, SLOT(OnSigStr(double)));
+#endif
 
     /* Init progress bar for input s-meter */
 
@@ -1344,13 +1354,17 @@ void StationsDlg::EnableSMeter()
     ProgrSigStrength->setEnabled(TRUE);
     TextLabelSMeter->setEnabled(TRUE);
     ProgrSigStrength->show();
+#ifdef HAVE_LIBHAMLIB
     rig.subscribe();
+#endif
 }
 
 void StationsDlg::DisableSMeter()
 {
     ProgrSigStrength->hide();
+#ifdef HAVE_LIBHAMLIB
     rig.unsubscribe();
+#endif
 }
 
 void StationsDlg::OnSigStr(double rCurSigStr)

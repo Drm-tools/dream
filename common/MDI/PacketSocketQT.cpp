@@ -49,6 +49,9 @@
 #if QT_VERSION >= 0x040000
 # include <QUdpSocket>
 # include <QTcpSocket>
+# if QT_VERSION >= 0x040800
+#  include <QNetworkAddressEntry>
+# endif
 #endif
 
 /* Some defines needed for compatibility when using Linux */
@@ -256,10 +259,24 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 							(char*) &ttl, sizeof(ttl)) == SOCKET_ERROR)
 					bAddressOK = FALSE;
 #else
-			if(s != NULL)
+            if(pUdps != NULL)
 			{
-				pUdps->setMulticastInterface();
-				pUdps->setSocketOption(QAbstractSocket::MulticastTtlOption, ttl);
+              QList<QNetworkInterface> list = QNetworkInterface::allInterfaces ();
+              QList<QNetworkInterface>::const_iterator ifIt;
+              for( ifIt = list.begin(); ifIt != list.end(); ++ifIt )
+              {
+                QList<QNetworkAddressEntry> addresses = ifIt->addressEntries();
+                QList<QNetworkAddressEntry>::const_iterator i;
+                for(i = addresses.begin(); i!=addresses.end(); ++i)
+                {
+                    if(i->ip() == AddrInterface)
+                    {
+                        pUdps->setMulticastInterface(*ifIt);
+                        pUdps->setSocketOption(QAbstractSocket::MulticastTtlOption, ttl);
+                        break;
+                    }
+                }
+              }
 			}
 #endif
 		}
