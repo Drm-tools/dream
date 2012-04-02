@@ -483,13 +483,10 @@ AudioSpec::AudioSpec(CDRMReceiver *pDRMRec, QwtPlot* p):Chart(pDRMRec, p)
 void AudioSpec::Setup()
 {
     /* Init chart for audio spectrum */
-<<<<<<< DRMPlot-qwt6.cpp
+    Chart::Setup();
     plot->enableAxis(QwtPlot::yRight, FALSE);
     grid->enableXMin(false);
     grid->enableYMin(false);
-=======
-    Chart::Setup();
->>>>>>> 1.12
     plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
     plot->setAxisTitle(QwtPlot::yLeft, "AS [dB]");
 
@@ -973,8 +970,8 @@ void ConstellationChart::Setup()
 
     // scaling factor for equal energy see http://www.dsplog.com/2007/09/23/scaling-factor-in-qam/
     double scale = 2.0/3.0*(points-1);
-    double lim =  sqrt(points) / sqrt(scale);
-    double steps = sqrt(points)/2;
+    double lim =  sqrt(double(points)) / sqrt(scale);
+    double steps = sqrt(double(points))/2;
     plot->setAxisScale(QwtPlot::xBottom, -lim, lim, lim/steps);
     plot->setAxisScale(QwtPlot::yLeft, -lim, lim, lim/steps);
     plot->axisScaleDraw(QwtPlot::xBottom)->enableComponent(QwtAbstractScaleDraw::Labels, false);
