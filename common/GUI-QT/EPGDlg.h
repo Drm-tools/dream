@@ -43,11 +43,9 @@
 #include <map>
 #if QT_VERSION < 0x040000
 # include <qlistview.h>
-# define Q3ListView QListView
-# define Q3ListViewItem QListViewItem
 # include "EPGDlgbase.h"
 #else
-# include <Q3ListView>
+# include <QTreeWidget>
 # include <QDialog>
 # include "ui_EPGDlgbase.h"
 #endif
@@ -100,20 +98,35 @@ protected:
 
 	virtual	void showEvent(QShowEvent *e);
 	virtual void hideEvent(QHideEvent* pEvent);
-	virtual void setActive(Q3ListViewItem*);
+#if QT_VERSION < 0x040000
+	virtual void setActive(QListViewItem*);
+#else
+	virtual void setActive(QTreeWidgetItem*);
+#endif
 
 	virtual QString getFileName(const QDate& date, uint32_t sid, bool bAdvanced);
 	virtual QString getFileName_etsi(const QDate& date, uint32_t sid, bool bAdvanced);
 	virtual QDomDocument* getFile (const QString&);
 	virtual QDomDocument* getFile (const QDate& date, uint32_t sid, bool bAdvanced);
 
-    class MyListViewItem : public Q3ListViewItem
+    class MyListViewItem : public 
+#if QT_VERSION < 0x040000
+		QListViewItem
+#else
+		QTreeWidgetItem
+#endif
     {
     	public:
 
-    	MyListViewItem( Q3ListView * parent, QString a, QString b, QString c, QString d, QString e,
-    	time_t s, int dr):Q3ListViewItem(parent,a,b,c,d,e),start(s),duration(dr){}
-
+#if QT_VERSION < 0x040000
+    	MyListViewItem(QListView * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
+		QListViewItem(parent,a,b,c,d,e),start(s),duration(dr){}
+#else
+    	MyListViewItem(QTreeWidget * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
+		QTreeWidgetItem(parent, QStringList() << a << b << c << d << e),start(s),duration(dr)
+		{
+		}
+#endif
 
 	_BOOLEAN IsActive();
 
@@ -130,20 +143,28 @@ protected:
 	CSettings&		Settings;
 	QTimer			Timer;
 	map<QString,uint32_t> sids;
-	Q3ListViewItem*		next;
+#if QT_VERSION < 0x040000
+	QListViewItem*	next;
+#else
+	QTreeWidgetItem* next;
+#endif
 
 signals:
 	void NowNext(QString);
 
 public slots:
+    void selectChannel(const QString&);
+	void OnTimer();
+	void sendNowNext(QString);
+#if QT_VERSION < 0x040000
     void nextDay();
     void previousDay();
-    void selectChannel(const QString&);
     void setDay(int);
     void setMonth(int);
     void setYear(int);
-	void OnTimer();
-	void sendNowNext(QString);
+#else
+	void onDateChanged(const QDate&);
+#endif
 };
 
 #endif

@@ -49,9 +49,6 @@
 #if QT_VERSION >= 0x040000
 # include <QUdpSocket>
 # include <QTcpSocket>
-# if QT_VERSION >= 0x040800
-#  include <QNetworkAddressEntry>
-# endif
 #endif
 
 /* Some defines needed for compatibility when using Linux */
@@ -261,22 +258,8 @@ CPacketSocketQT::SetDestination(const string & strNewAddr)
 #else
             if(pUdps != NULL)
 			{
-              QList<QNetworkInterface> list = QNetworkInterface::allInterfaces ();
-              QList<QNetworkInterface>::const_iterator ifIt;
-              for( ifIt = list.begin(); ifIt != list.end(); ++ifIt )
-              {
-                QList<QNetworkAddressEntry> addresses = ifIt->addressEntries();
-                QList<QNetworkAddressEntry>::const_iterator i;
-                for(i = addresses.begin(); i!=addresses.end(); ++i)
-                {
-                    if(i->ip() == AddrInterface)
-                    {
-                        pUdps->setMulticastInterface(*ifIt);
-                        pUdps->setSocketOption(QAbstractSocket::MulticastTtlOption, ttl);
-                        break;
-                    }
-                }
-              }
+                pUdps->setMulticastInterface(GetInterface(AddrInterface));
+                pUdps->setSocketOption(QAbstractSocket::MulticastTtlOption, ttl);
 			}
 #endif
 		}
@@ -343,26 +326,21 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		ok = false;
 	}
 
-	if(ok ==false)
+	if(ok)
 	{
-		return FALSE;
+		return doSetSource(AddrGroup, AddrInterface, iPort);
 	}
+	return FALSE;
+}
 
-	SOCKET s;
-	bool udp = true;
 #if QT_VERSION < 0x040000
-	udp = SocketDevice.type() == QSocketDevice::Datagram;
- 	s = SocketDevice.socket();
-#else
-	s = pSocket->socketDescriptor();
-	QUdpSocket* pUdps = dynamic_cast<QUdpSocket*>(pSocket);
-	if(pUdps == NULL)
-		udp = false;
-#endif
+_BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrInterface, int iPort)
+{
+	bool udp = SocketDevice.type() == QSocketDevice::Datagram;
+	SOCKET s = SocketDevice.socket();
 	if(udp)
 	{
 		/* Multicast ? */
-
 # if QT_VERSION < 0x030000
 		uint32_t gp = AddrGroup.ip4Addr();
 # else
@@ -371,28 +349,18 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 		if(gp == 0)
 		{
 			/* Initialize the listening socket. */
-#if QT_VERSION < 0x040000
 			SocketDevice.bind(AddrInterface, iPort);
-#else
-			pUdps->bind(AddrGroup, iPort);
-#endif
 		}
 		else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
 		{
 			struct ip_mreq mreq;
-
 			/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
-#if QT_VERSION < 0x040000
 			bool ok = SocketDevice.bind(QHostAddress(UINT32(0)), iPort);
-#else
-			bool ok = pUdps->bind(QHostAddress(quint32(0)), iPort);
-#endif
 			if(ok == false)
 			{
 				//QSocketDevice::Error x = SocketDevice.error();
 				throw CGenErr("Can't bind to port to receive packets");
 			}
-
 #if QT_VERSION < 0x030000
 			mreq.imr_multiaddr.s_addr = htonl(AddrGroup.ip4Addr());
 			mreq.imr_interface.s_addr = htonl(AddrInterface.ip4Addr());
@@ -407,21 +375,95 @@ CPacketSocketQT::SetOrigin(const string & strNewAddr)
 				throw
 					CGenErr(string
 							("Can't join multicast group to receive packets: ") +
-							 strerror(errno));
+							strerror(errno));
 			}
 		}
 		else /* one address specified, but not multicast - listen on a specific interface */
 		{
 			/* Initialize the listening socket. */
-#if QT_VERSION < 0x040000
 			SocketDevice.bind(AddrGroup, iPort);
-#else
-			pUdps->bind(AddrGroup, iPort);
-#endif
 		}
 	}
 	return TRUE;
 }
+#else
+_BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrInterface, int iPort)
+{
+	bool udp = true;
+	QUdpSocket* pUdps = dynamic_cast<QUdpSocket*>(pSocket);
+	if(pUdps == NULL)
+		udp = false;
+	if(udp)
+	{
+		/* Multicast ? */
+		uint32_t gp = AddrGroup.toIPv4Address();
+		if(gp == 0)
+		{
+			/* Initialize the listening socket. */
+			pUdps->bind(AddrInterface, iPort);
+		}
+		else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
+		{
+
+			/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" 
+    udpSocket->joinMulticastGroup(groupAddress);
+
+    connect(udpSocket, SIGNAL(readyRead()),this, SLOT(processPendingDatagrams()));
+
+			*/
+			bool ok = pUdps->bind(iPort, QUdpSocket::ShareAddress);
+			if(ok == false)
+			{
+				throw CGenErr("Can't bind to port to receive packets");
+			}
+#if QT_VERSION < 0x040800
+			struct ip_mreq mreq;
+			mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
+			mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
+			int n = setsockopt(pUdps->socketDescriptor, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,	sizeof(mreq));
+			if(n == SOCKET_ERROR)
+				ok = false;
+#else
+			ok = pUdps->joinMulticastGroup(AddrGroup, GetInterface(AddrInterface));
+			//ok = pUdps->joinMulticastGroup(AddrGroup);
+#endif
+			if(!ok)
+			{
+				qDebug("Can't join multicast group");
+				//throw CGenErr(string());
+			}
+		}
+		else /* one address specified, but not multicast - listen on a specific interface */
+		{
+			/* Initialize the listening socket. */
+			pUdps->bind(AddrGroup, iPort);
+		}
+	}
+	return TRUE;
+}
+#endif
+
+#if QT_VERSION >= 0x040000
+QNetworkInterface 
+CPacketSocketQT::GetInterface(QHostAddress AddrInterface)
+{
+	QList<QNetworkInterface> list = QNetworkInterface::allInterfaces ();
+	QList<QNetworkInterface>::const_iterator ifIt;
+	for( ifIt = list.begin(); ifIt != list.end(); ++ifIt )
+	{
+		QList<QNetworkAddressEntry> addresses = ifIt->addressEntries();
+		QList<QNetworkAddressEntry>::const_iterator i;
+		for(i = addresses.begin(); i!=addresses.end(); ++i)
+		{
+			if(i->ip() == AddrInterface)
+			{
+				return *ifIt;
+			}
+		}
+	}
+	return QNetworkInterface::allInterfaces().first();
+}
+#endif
 
 void
 CPacketSocketQT::OnDataReceived()

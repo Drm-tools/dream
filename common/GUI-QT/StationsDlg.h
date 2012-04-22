@@ -47,20 +47,12 @@
 # include <qpopupmenu.h>
 # include <qurloperator.h>
 # include <qlistview.h>
-# define Q3UrlOperator QUrlOperator
-# define Q3NetworkOperation QNetworkOperation
-# define Q3NetworkProtocol QNetworkProtocol
-# define Q3NetworkProtocolFactory QNetworkProtocolFactory
-# define Q3Ftp QFtp
 # include "StationsDlgbase.h"
 #else
 # include <QActionGroup>
 # include <QSignalMapper>
-# include <Q3Ftp>
-# include <Q3Header>
-# include <Q3ButtonGroup>
-# include <Q3UrlOperator>
-# include <Q3NetworkProtocol>
+# include <QNetworkAccessManager>
+# include <QButtonGroup>
 # include <QDialog>
 # include "ui_StationsDlgbase.h"
 #endif
@@ -298,6 +290,7 @@ protected:
 	QPopupMenu*		pPreviewMenu;
 	QPopupMenu*		pUpdateMenu;
 	vector<MyListViewItem*>	vecpListItems;
+	QUrlOperator	UrlUpdateSchedule;
 #else
 	QIcon			greenCube;
 	QIcon			redCube;
@@ -307,16 +300,17 @@ protected:
 	QActionGroup* previewGroup;
 	QSignalMapper* showMapper;
 	QActionGroup* showGroup;
+	QNetworkAccessManager *manager;
 #endif
 	QTimer			TimerList;
 	QTimer			TimerUTCLabel;
 	_BOOLEAN		bReInitOnFrequencyChange;
-	Q3UrlOperator		UrlUpdateSchedule;
 
 	QMutex			ListItemsMutex;
 
 	RemoteMenu*		pRemoteMenu;
 	CRig&			rig;
+	QString		okMessage, badMessage;
 
 public slots:
 	void OnSMeterMenu(int iID);
@@ -328,7 +322,7 @@ public slots:
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 #else
-	void OnUrlFinished(Q3NetworkOperation* pNetwOp);
+	void OnUrlFinished(QNetworkReply*);
 #endif
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);

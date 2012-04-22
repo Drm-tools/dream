@@ -86,7 +86,11 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
     sf_command (NULL, SFC_GET_LIB_VERSION, sfversion, sizeof (sfversion)) ;
 #endif
     /* Set the text for the about dialog html text control */
+#if QT_VERSION < 0x040000
     TextViewCredits->setText(
+#else
+	textBrowser->setText(
+#endif
         "<p>" /* General description of Dream software */
         "<big><b>Dream</b> " + tr("is a software implementation of a Digital "
                                   "Radio Mondiale (DRM) receiver. With Dream, DRM broadcasts can be received "

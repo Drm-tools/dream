@@ -40,15 +40,13 @@
 #include <qcolordialog.h>
 #include <qwt_thermo.h>
 #if QT_VERSION < 0x040000
-# define Q3PopupMenu QPopupMenu
-# define Q3ButtonGroup QButtonGroup
 # include <qpopupmenu.h>
 # include "fdrmdialogbase.h"
 #else
 # include <QActionGroup>
 # include <QSignalMapper>
 # include <QDialog>
-# include <Q3PopupMenu>
+# include <QMenu>
 # include <QShowEvent>
 # include <QHideEvent>
 # include <QCustomEvent>
@@ -116,13 +114,17 @@ protected:
     FMDialog*			pFMDlg;
     GeneralSettingsDlg* pGeneralSettingsDlg;
     QMenuBar*			pMenu;
-    Q3PopupMenu*			pReceiverModeMenu;
-    Q3PopupMenu*			pSettingsMenu;
-    Q3PopupMenu*			pPlotStyleMenu;
-    Q3ButtonGroup*		pButtonGroup;
-#if QT_VERSION >= 0x040000
-    QSignalMapper* plotStyleMapper;
-    QActionGroup* plotStyleGroup;
+    QButtonGroup*		pButtonGroup;
+#if QT_VERSION < 0x040000
+    QPopupMenu*			pReceiverModeMenu;
+    QPopupMenu*			pSettingsMenu;
+    QPopupMenu*			pPlotStyleMenu;
+#else
+    QMenu*				pReceiverModeMenu;
+    QMenu*				pSettingsMenu;
+    QMenu*				pPlotStyleMenu;
+    QSignalMapper*		plotStyleMapper;
+    QActionGroup*		plotStyleGroup;
 #endif
 
     void SetStatus(CMultColorLED* LED, ETypeRxStatus state);

@@ -879,10 +879,14 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
         else if (eAudioCoding == CAudioParam::AC_CELP)
         {
             /* Init for CELP decoding --------------------------------------- */
+            if(canDecodeCELP)
+                audiodecoder = string("CELP Codec");
+			else
+                audiodecoder = "";
 
             int iCurCelpIdx, iCelpFrameLength;
 
-            /* Set number of AAC frames in a AAC super-frame */
+            /* Set number of frames in a super-frame */
             switch (ReceiverParam.Service[iCurSelServ].AudioParam.eAudioSamplRate)	/* Only 8000 and 16000 is allowed */
             {
             case CAudioParam::AS_8_KHZ:
@@ -983,7 +987,12 @@ CAudioSourceDecoder::InitInternal(CParameter & ReceiverParam)
         }
         else if (eAudioCoding == CAudioParam::AC_HVXC)
         {
-            iAudioSampleRate = 8000;
+            if(canDecodeHVXC)
+                audiodecoder = string("HVXC Codec");
+			else
+                audiodecoder = "";
+
+			iAudioSampleRate = 8000;
             iNumAudioFrames = 400 / 20;
 
             iLenDecOutPerChan = 0;
@@ -1176,10 +1185,12 @@ CAudioSourceDecoder::CAudioSourceDecoder()
         NeAACDecDecode = NeAACDecDecodeDummy;
     }
 #endif
-    if(    canDecodeAAC)
+    if(    canDecodeAAC) {
         cerr << "AAC lib found" << endl;
-    else
+        audiodecoder = string("Nero AAC Version ")+FAAD2_VERSION;
+	} else {
         cerr << "no usable AAC lib found" << endl;
+	}
 }
 
 CAudioSourceDecoder::~CAudioSourceDecoder()

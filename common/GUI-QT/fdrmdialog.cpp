@@ -77,7 +77,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
 
     /* Live Schedule window */
-    pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, this, "", FALSE, Qt::WStyle_MinMax);
+    pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, NULL, "", FALSE, Qt::WType_TopLevel);
     pLiveScheduleDlg->LoadSettings(Settings);
 
     /* Programme Guide Window */
@@ -225,22 +225,27 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     /* Init progress bar for input signal level */
     ProgrInputLevel->setRange(-50.0, 0.0);
 #if QT_VERSION < 0x040000
-        ProgrInputLevel->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
-#else
-        ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
-#endif
-    ProgrInputLevel->setAlarmLevel(-12.5);
-    QBrush fillBrush(QColor(0, 190, 0));
-    ProgrInputLevel->setFillBrush(fillBrush);
-    ProgrInputLevel->setAlarmLevel(-12.5);
-
-    pButtonGroup = new Q3ButtonGroup(this);
+    ProgrInputLevel->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
+    pButtonGroup = new QButtonGroup(this);
     pButtonGroup->hide();
     pButtonGroup->setExclusive(true);
     pButtonGroup->insert(PushButtonService1, 0);
     pButtonGroup->insert(PushButtonService2, 1);
     pButtonGroup->insert(PushButtonService3, 2);
     pButtonGroup->insert(PushButtonService4, 3);
+#else
+    ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
+    pButtonGroup = new QButtonGroup(this);
+    pButtonGroup->setExclusive(true);
+    pButtonGroup->addButton(PushButtonService1, 0);
+    pButtonGroup->addButton(PushButtonService2, 1);
+    pButtonGroup->addButton(PushButtonService3, 2);
+    pButtonGroup->addButton(PushButtonService4, 3);
+#endif
+    ProgrInputLevel->setAlarmLevel(-12.5);
+    QBrush fillBrush(QColor(0, 190, 0));
+    ProgrInputLevel->setFillBrush(fillBrush);
+    ProgrInputLevel->setAlarmLevel(-12.5);
 
     /* Update times for color LEDs */
     CLED_FAC->SetUpdateTime(1500);
@@ -572,17 +577,11 @@ void FDRMDialog::UpdateDisplay()
     {
         QString label = serviceSelector(Parameters, i);
         serviceLabels[i]->setText(label);
-        if(label == "")
-        {
-            // disable the button
-            pButtonGroup->find(i)->setEnabled(false);
-        }
-        else
-        {
-            // enable the button
-            pButtonGroup->find(i)->setEnabled(true);
-        }
-
+#if QT_VERSION < 0x040000
+        pButtonGroup->find(i)->setEnabled(label != "");
+#else
+        pButtonGroup->button(i)->setEnabled(label != "");
+#endif
         /* If the current audio service is not active or is an only data service
         	select the first audio service available */
         if(bServiceIsValid==false)
@@ -603,7 +602,12 @@ void FDRMDialog::UpdateDisplay()
 
     if(bServiceIsValid)
     {
+
+#if QT_VERSION < 0x040000
         pButtonGroup->setButton(iCurSelAudioServ);
+#else
+        pButtonGroup->button(iCurSelAudioServ)->setChecked(true);
+#endif
 
         /* If we have text messages */
         if (audioService.AudioParam.bTextflag == TRUE)

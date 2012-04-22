@@ -83,6 +83,10 @@ CRx::run()
     {
         ErrorMessage(GenErr.strError);
     }
+    catch (string strError)
+    {
+        ErrorMessage(strError);
+    }
     qDebug("Working thread complete");
 }
 

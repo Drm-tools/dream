@@ -43,10 +43,10 @@
 #  include "Rig.h"
 #  include "RigDlg.h"
 # endif
-# include <q3ftp.h>
-# include <q3whatsthis.h>
 # include <QHideEvent>
 # include <QShowEvent>
+# include <QNetworkRequest>
+# include <QNetworkReply>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 
@@ -513,14 +513,14 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     QBrush fillBrush(QColor(0, 190, 0));
     ProgrSigStrength->setFillBrush(fillBrush);
 
-
-
-
+#if QT_VERSION < 0x040000
     /* Register the network protokol (ftp). This is needed for the DRMSchedule
        download */
-    Q3NetworkProtocol::registerNetworkProtocol("ftp",
-            new Q3NetworkProtocolFactory<Q3Ftp>);
-
+    QNetworkProtocol::registerNetworkProtocol("ftp", new QNetworkProtocolFactory<QFtp>);
+#else
+	manager = new QNetworkAccessManager(this);
+	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(OnUrlFinished(QNetworkReply*)));
+#endif
     /* Connections ---------------------------------------------------------- */
 
     connect(&TimerList, SIGNAL(timeout()),
@@ -539,8 +539,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     connect(ListViewStations->header(), SIGNAL(clicked(int)),
             this, SLOT(OnHeaderClicked(int)));
 #else
-    connect(&UrlUpdateSchedule, SIGNAL(finished(Q3NetworkOperation*)),
-            this, SLOT(OnUrlFinished(Q3NetworkOperation*)));
 #endif
 
 
@@ -666,6 +664,13 @@ void StationsDlg::setupUi(QObject*)
     /* Now tell the layout about the menu */
     CStationsDlgBaseLayout->setMenuBar(pMenu);
 
+	QString okMessage = tr("Update successful.");
+	QString badMessage = 
+        tr("Update failed. The following things may caused the "
+        "failure:\n"
+        "\t- the internet connection was not set up properly\n"
+        "\t- the server www.drm-dx.de is currently not available\n"
+        "\t- the file 'DRMSchedule.ini' could not be written"); 
 }
 #endif
 
@@ -798,49 +803,59 @@ void StationsDlg::on_actionGetUpdate_triggered()
     {
         /* Try to download the current schedule. Copy the file to the
            current working directory (which is "QDir().absFilePath(NULL)") */
+#if QT_VERSION < 0x040000
         UrlUpdateSchedule.copy(QString(DRM_SCHEDULE_UPDATE_FILE),
                                QString(QDir().absFilePath(NULL)));
+#else
+		manager->get(QNetworkRequest(QUrl(DRM_SCHEDULE_UPDATE_FILE)));
+#endif
     }
 }
 
 #if QT_VERSION < 0x040000
 void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
-#else
-void StationsDlg::OnUrlFinished(Q3NetworkOperation* pNetwOp)
-#endif
 {
     /* Check that pointer points to valid object */
     if (pNetwOp)
     {
-        if (pNetwOp->state() == Q3NetworkProtocol::StFailed)
+        if (pNetwOp->state() == QNetworkProtocol::StFailed)
         {
             /* Something went wrong -> stop all network operations */
             UrlUpdateSchedule.stop();
 
             /* Notify the user of the failure */
-            QMessageBox::information(this, "Dream",
-                                     tr("Update failed. The following things may caused the "
-                                        "failure:\n"
-                                        "\t- the internet connection was not set up properly\n"
-                                        "\t- the server www.drm-dx.de is currently not available\n"
-                                        "\t- the file 'DRMSchedule.ini' could not be written"),
-                                     QMessageBox::Ok);
+            QMessageBox::information(this, "Dream", badMessage, QMessageBox::Ok);
         }
 
         /* We are interested in the state of the final put function */
-        if (pNetwOp->operation() == Q3NetworkProtocol::OpPut)
+        if (pNetwOp->operation() == QNetworkProtocol::OpPut)
         {
-            if (pNetwOp->state() == Q3NetworkProtocol::StDone)
+            if (pNetwOp->state() == QNetworkProtocol::StDone)
             {
                 /* Notify the user that update was successful */
-                QMessageBox::information(this, "Dream",
-                                         tr("Update successful."), QMessageBox::Ok);
+                QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
                 /* Read updated ini-file */
                 LoadSchedule(CDRMSchedule::SM_DRM);
             }
         }
     }
 }
+#else
+void StationsDlg::OnUrlFinished(QNetworkReply* reply)
+{
+	if(reply->error()==QNetworkReply::NoError)
+	{
+		/* Notify the user that update was successful */
+		QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
+		/* Read updated ini-file */
+		LoadSchedule(CDRMSchedule::SM_DRM);
+	}
+	else
+	{
+        QMessageBox::information(this, "Dream", badMessage, QMessageBox::Ok);
+	}
+}
+#endif
 
 void StationsDlg::hideEvent(QHideEvent*)
 {
@@ -1376,7 +1391,7 @@ void StationsDlg::OnSigStr(double rCurSigStr)
 void StationsDlg::AddWhatsThisHelp()
 {
     /* Stations List */
-    Q3WhatsThis::add(ListViewStations,
+	QString strList =
                      tr("<b>Stations List:</b> In the stations list "
                         "view all DRM stations which are stored in the DRMSchedule.ini file "
                         "are shown. It is possible to show only active stations by changing a "
@@ -1393,22 +1408,22 @@ void StationsDlg::AddWhatsThisHelp()
                         "be automatically switched to the current frequency and the "
                         "Dream software is reset to a new acquisition (to speed up the "
                         "synchronization process). Also, the log-file frequency edit "
-                        "is automatically updated."));
+                        "is automatically updated.");
 
     /* Frequency Counter */
-    Q3WhatsThis::add(QwtCounterFrequency,
+	QString strCounter =
                      tr("<b>Frequency Counter:</b> The current frequency "
                         "value can be changed by using this counter. The tuning steps are "
                         "100 kHz for the  buttons with three arrows, 10 kHz for the "
                         "buttons with two arrows and 1 kHz for the buttons having only "
                         "one arrow. By keeping the button pressed, the values are "
-                        "increased / decreased automatically."));
+                        "increased / decreased automatically.");
 
     /* UTC time label */
-    Q3WhatsThis::add(TextLabelUTCTime,
+	QString strTime =
                      tr("<b>UTC Time:</b> Shows the current Coordinated "
                         "Universal Time (UTC) which is also known as Greenwich Mean Time "
-                        "(GMT)."));
+                        "(GMT).");
 
     /* S-meter */
     const QString strSMeter =
@@ -1417,8 +1432,19 @@ void StationsDlg::AddWhatsThisHelp()
            "front-ends controlled by hamlib support this feature. If the s-meter "
            "is not available, the controls are disabled.");
 
-    Q3WhatsThis::add(TextLabelSMeter, strSMeter);
-    Q3WhatsThis::add(ProgrSigStrength, strSMeter);
+#if QT_VERSION < 0x040000
+    QWhatsThis::add(ListViewStations, strList);
+    QWhatsThis::add(QwtCounterFrequency, strCounter);
+    QWhatsThis::add(TextLabelUTCTime, strTime);
+    QWhatsThis::add(TextLabelSMeter, strSMeter);
+    QWhatsThis::add(ProgrSigStrength, strSMeter);
+#else
+	ListViewStations->setWhatsThis(strList);
+    QwtCounterFrequency->setWhatsThis(strCounter);
+    TextLabelUTCTime->setWhatsThis(strTime);
+    TextLabelSMeter->setWhatsThis(strSMeter);
+    ProgrSigStrength->setWhatsThis(strSMeter);
+#endif
 }
 
 void StationsDlg::FilterChanged(const QString&)

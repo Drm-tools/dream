@@ -43,18 +43,12 @@
 # include <qfiledialog.h>
 # include <qstylesheet.h>
 # include <qtextstream.h>
-# define Q3PopupMenu QPopupMenu
-# define Q3TextStream QTextStream
-# define Q3CString QCString
-# define Q3FileDialog QFileDialog
-# define Q3MimeSourceFactory QMimeSourceFactory
 #else
-# include <Q3TextStream>
-# include <Q3CString>
-# include <q3filedialog.h>
+# include <QTextStream>
+# include <QFileDialog>
 # include <QPixmap>
 # include <QHideEvent>
-# include <Q3PopupMenu>
+# include <QMenu>
 # include <QShowEvent>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
@@ -447,7 +441,11 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
         DataDecoder.GetNews(iCurJourID, News);
 
     /* Decode UTF-8 coding for title */
+#if QT_VERSION < 0x040000
     strTitle = QString().fromUtf8(Q3CString(News.sTitle.c_str()));
+#else
+    strTitle = QString().fromUtf8(News.sTitle.c_str());
+#endif
 
     strItems = "";
     for (int i = 0; i < News.vecItem.Size(); i++)
@@ -456,8 +454,12 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
         if (bHTMLExport == FALSE)
         {
             /* Decode UTF-8 coding of this item text */
+#if QT_VERSION < 0x040000
             strCurItem = QString().fromUtf8(
                              Q3CString(News.vecItem[i].sText.c_str()));
+#else
+            strCurItem = QString().fromUtf8(News.vecItem[i].sText.c_str());
+#endif
         }
         else
         {
@@ -489,9 +491,12 @@ void MultimediaDlg::ExtractJournalineBody(const int iCurJourID,
                             QString("\">") + strCurItem +
                             QString("</a></li>");
 
+#if QT_VERSION < 0x040000
                 /* Store link location in factory (stores ID) */
-                Q3MimeSourceFactory::defaultFactory()->
-                setText(strLinkStr, strLinkStr);
+                QMimeSourceFactory::defaultFactory()->setText(strLinkStr, strLinkStr);
+#else
+				// TODO
+#endif
             }
             else
                 strItems += QString("<li>") + strCurItem + QString("</li>");
@@ -686,23 +691,32 @@ void MultimediaDlg::OnButtonJumpEnd()
     SetSlideShowPicture();
 }
 
-void MultimediaDlg::SetSlideShowPicture()
+QImage* JL2Image(CVector<_BYTE>& imagedata)
 {
     QPixmap		NewImage;
+    if(NewImage.loadFromData(&imagedata[0], imagedata.size()))
+		return &NewImage.convertToImage();
+	else
+		return NULL;
+}
 
+void MultimediaDlg::SetSlideShowPicture()
+{
     /* Copy current image from image storage vector */
-    CMOTObject vecbyCurPict(vecRawImages[iCurImagePos]);
+    CMOTObject motObject(vecRawImages[iCurImagePos]);
 
-    /* The standard version of QT does not have jpeg support, if FreeImage
+    QString imagename(motObject.strName.c_str());
+    QString imageformat(motObject.strFormat.c_str());
+
+    /* The standard version of QT2 does not have jpeg support, if FreeImage
        library is installed, the following routine converts the picture to
        png which can be displayed */
-    JpgToPng(vecbyCurPict);
+	if (imageformat.compare("jpeg") == 0)
+	    JpgToPng(motObject);
 
-    CVector<_BYTE>& imagedata = vecbyCurPict.Body.vecData;
-    const QString imagename(vecbyCurPict.strName.c_str());
+	QImage *pImage = JL2Image(motObject.Body.vecData);
 
-    /* Load picture in QT format */
-    if (NewImage.loadFromData(&imagedata[0], imagedata.size()))
+	if(pImage)
     {
 #if QT_VERSION >= 0x030000
         /* The slideshow pictures are not
@@ -713,19 +727,19 @@ void MultimediaDlg::SetSlideShowPicture()
         TextBrowser->setText("<br>");
 #endif
 
+#if QT_VERSION < 0x040000
         /* Set new picture in source factory and set it in text control */
-        Q3MimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage",
-                NewImage.convertToImage());
-
-        TextBrowser->setText("<center><img source=\"MOTSlideShowimage\">"
-                             "</center>");
+        QMimeSourceFactory::defaultFactory()->setImage("MOTSlideShowimage", *pImage);
+        TextBrowser->setText("<center><img source=\"MOTSlideShowimage\"></center>");
+#else
+				// TODO
+#endif
     }
     else
     {
         /* Show text that tells the user of load failure */
-        TextBrowser->setText("<br><br><center><b>" + tr("Image could not be "
-                             "loaded, ") +
-                             QString(vecbyCurPict.strFormat.c_str()) +
+        TextBrowser->setText("<br><br><center><b>" + tr("Image could not be loaded, ") +
+                             imageformat +
                              tr("-format not supported by this version of QT!") +
                              "</b><br><br><br>" + tr("If you want to view the image, "
                                      "save it to file and use an external viewer") + "</center>");
@@ -736,7 +750,7 @@ void MultimediaDlg::SetSlideShowPicture()
 
     /* Add tool tip showing the name of the picture */
     if (imagename.length() != 0)
-        QToolTip::add(TextBrowser,imagename);
+        QToolTip::add(TextBrowser, imagename);
 
     UpdateAccButtonsSlideShow();
 }
@@ -811,7 +825,7 @@ void MultimediaDlg::OnLoad()
 {
     QString strFileName;
     strFileName =
-        Q3FileDialog::getOpenFileName("", "*.jml", this);
+        QFileDialog::getOpenFileName("", "*.jml", this);
     if(strFileName != "")
     {
         bGetFromFile = true;
@@ -850,7 +864,7 @@ void MultimediaDlg::OnSave()
             strDefFileName += "." + strExt;
 
         strFileName =
-            Q3FileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
+            QFileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
                                           strFilter, this);
 
         /* Check if user not hit the cancel button */
@@ -882,7 +896,7 @@ void MultimediaDlg::OnSave()
                                    QDateTime().currentDateTime().toString() + "</i></font></p>"
                                    "</body>\n</html>";
 
-        strFileName = Q3FileDialog::getSaveFileName(strCurrentSavePath + "/" +
+        strFileName = QFileDialog::getSaveFileName(strCurrentSavePath + "/" +
                       strTitle + ".html", "*.html", this);
 
         if (!strFileName.isEmpty())
@@ -896,8 +910,8 @@ void MultimediaDlg::OnSave()
             if (FileObj.open(QIODevice::WriteOnly))
 #endif
             {
-                Q3TextStream TextStream(&FileObj);
-                TextStream << strJornalineText; /* Actual writing */
+                QTextStream textStream(&FileObj);
+                textStream << strJornalineText; /* Actual writing */
                 FileObj.close();
             }
         }
@@ -913,7 +927,7 @@ void MultimediaDlg::OnSaveAll()
 {
     /* Let the user choose a directory */
     QString strDirName =
-        Q3FileDialog::getExistingDirectory(NULL, this);
+        QFileDialog::getExistingDirectory(NULL, this);
 
     if (!strDirName.isEmpty())
     {
@@ -1225,9 +1239,9 @@ _BOOLEAN MultimediaDlg::openBrowser(QWidget *widget, const QString &filename)
     return bResult;
 }
 
+#if defined(HAVE_LIBFREEIMAGE) && (QT_VERSION < 0x030000)
 void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
 {
-#if defined(HAVE_LIBFREEIMAGE) && (QT_VERSION < 0x030000)
     /* This class is needed for FreeImage load and save from memory. This code
        is based on an example code shipped with FreeImage library */
     class MemIO : public FreeImageIO
@@ -1311,9 +1325,6 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
         long int		iPos;
     };
 
-    /* Only jpeg images are converted here */
-    if (NewPic.strFormat.compare("jpeg") != 0)
-        return;
 
     /* If we use freeimage as a static library, we need to initialize it
        first */
@@ -1338,10 +1349,12 @@ void MultimediaDlg::JpgToPng(CMOTObject& NewPic)
         NewPic.Body.vecData = memIO.GetData(); /* Actual copying */
         NewPic.strFormat = "png"; /* New format string */
     }
-#else
-    (void)NewPic; /* quiet compiler warning */
-#endif
 }
+#else
+void MultimediaDlg::JpgToPng(CMOTObject&)
+{
+}
+#endif
 
 void MultimediaDlg::OnSetFont()
 {

@@ -40,9 +40,8 @@
 #if QT_VERSION < 0x040000
 # include "fmdialogbase.h"
 # include <qpopupmenu.h>
-# define Q3PopupMenu QPopupMenu
 #else
-# include <Q3PopupMenu>
+# include <QMenu>
 # include <QDialog>
 # include "ui_FMMainWindow.h"
 #endif
@@ -79,9 +78,15 @@ protected:
 	CSettings&			Settings;
 
 	QMenuBar*			pMenu;
-	Q3PopupMenu*			pReceiverModeMenu;
-	Q3PopupMenu*			pSettingsMenu;
-	Q3PopupMenu*			pPlotStyleMenu;
+#if QT_VERSION < 0x040000
+	QPopupMenu*			pReceiverModeMenu;
+	QPopupMenu*			pSettingsMenu;
+	QPopupMenu*			pPlotStyleMenu;
+#else
+	QMenu*				pReceiverModeMenu;
+	QMenu*				pSettingsMenu;
+	QMenu*				pPlotStyleMenu;
+#endif
 	QTimer				Timer;
 	QBrush				alarmBrush;
 

@@ -37,12 +37,9 @@
 # include <qpopupmenu.h>
 # include <qurloperator.h>
 # include <qlistview.h>
-# define Q3ListView QListView
-# define Q3ListViewItem QListViewItem
 #else
 # include <QDialog>
-# include <Q3Header>
-# include <Q3ListView>
+# include <QTreeWidget>
 # include "ui_LiveScheduleWindow.h"
 #endif
 #include <qpixmap.h>
@@ -133,19 +130,36 @@ protected:
 	double		dReceiverLongitude;
 };
 
-class MyListLiveViewItem : public Q3ListViewItem
+#if QT_VERSION < 0x040000
+class MyListLiveViewItem : public QListViewItem
 {
 public:
-	MyListLiveViewItem(Q3ListView* parent, QString s1, QString s2 = QString::null,
+	MyListLiveViewItem(QListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
 		QString s7 = QString::null, QString s8 = QString::null) :
-		Q3ListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
+	QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8)
+	{}
 
 	/* Custom "key()" function for correct sorting behaviour */
 	virtual QString key(int column, bool ascending) const;
 };
+#else
+class MyListLiveViewItem : public QTreeWidgetItem
+{
+public:
+	MyListLiveViewItem(QTreeWidget* parent, QString s1, QString s2 = QString::null,
+		QString s3 = QString::null, QString s4 = QString::null,
+		QString s5 = QString::null, QString s6 = QString::null,
+		QString s7 = QString::null, QString s8 = QString::null) :	
+	QTreeWidgetItem(parent, QStringList() << s1 << s2 << s3 << s4 << s5 << s6 << s7 << s8)
+	{}
 
+	/* Custom "key()" function for correct sorting behaviour */
+	virtual QString key(int column, bool ascending) const;
+	void setPixmap(int col, QPixmap p) { setIcon(col, p); }
+};
+#endif
 
 #if QT_VERSION >= 0x040000
 class CLiveScheduleDlgBase : public QMainWindow, public Ui_LiveScheduleWindow

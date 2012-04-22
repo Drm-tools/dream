@@ -34,8 +34,7 @@
 #if QT_VERSION < 0x040000
 # include <qsocket.h>
 #else
-# include <q3socket.h>
-# include <q3signal.h>
+# include <QTcpSocket>
 #endif
 #include <qthread.h>
 #if QT_VERSION >= 0x030000
@@ -67,7 +66,7 @@ protected:
 #if QT_VERSION < 0x040000
     QSocket*	m_pSocket;
 #else
-    Q3Socket*	m_pSocket;
+    QTcpSocket*	m_pSocket;
 #endif
     QTimer*		m_pTimer;
     QTimer*		m_pTimerDataTimeout;

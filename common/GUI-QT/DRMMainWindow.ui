@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>484</width>
-    <height>310</height>
+    <height>320</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -868,7 +868,7 @@
             <number>0</number>
            </property>
            <item>
-            <widget class="QwtThermo" name="ProgrInputLevel">
+            <widget class="QwtThermo" name="ProgrInputLevel" native="true">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
                <horstretch>0</horstretch>
@@ -7046,7 +7046,6 @@
    </widget>
    <addaction name="menu_View"/>
    <addaction name="menu_Settings"/>
-   <addaction name="menu"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="action_Evaluation_Dialog">
@@ -7162,12 +7161,12 @@
   <customwidget>
    <class>QwtThermo</class>
    <extends>QWidget</extends>
-   <header>qwt_thermo.h</header>
+   <header location="global">qwt_thermo.h</header>
   </customwidget>
   <customwidget>
    <class>CMultColorLED</class>
    <extends>QWidget</extends>
-   <header>MultColorLED.h</header>
+   <header location="global">MultColorLED.h</header>
   </customwidget>
  </customwidgets>
  <resources/>

@@ -42,9 +42,7 @@
 #include <qwt_thermo.h>
 #include <qpixmap.h>
 
-#include <Q3ListView>
-#include <Q3ButtonGroup>
-#include <Q3PopupMenu>
+#include <QMenu>
 #include <QMainWindow>
 #include "ui_systemevalDlgbase.h"
 #include "DRMPlot-qwt6.h"
@@ -116,7 +114,7 @@ protected:
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();
 
-	Q3PopupMenu*		pListViewContextMenu;
+	QMenu*			pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
 	CGPSReceiver*		pGPSReceiver;

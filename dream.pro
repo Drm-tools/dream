@@ -18,7 +18,6 @@ contains(QT_VERSION, ^4\\..*) {
     QT += network xml
     VPATH += common/GUI-QT
     !console {
-        QT += qt3support
         HEADERS += common/GUI-QT/DRMPlot-qwt6.h common/GUI-QT/EvaluationDlg.h
         SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp
         FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
@@ -40,7 +39,13 @@ contains(QT_VERSION, ^4\\..*) {
         win32 {
             exists(libs/qwt) {
                 INCLUDEPATH += libs/qwt
-                LIBS += -lqwt
+                CONFIG( debug, debug|release ) {
+                    # debug
+                    LIBS += -lqwtd
+                } else {
+                    # release
+                    LIBS += -lqwt
+                }
             }
             else {
                 error("no usable qwt version found")
@@ -191,10 +196,15 @@ HEADERS += linux/source/shmsoundin.h \
         MOC_DIR = linux/moc
     }
 }
-msvc2008:CONFIG += msvc
-msvc2010:CONFIG += msvc
-msvc {
+msvc2008 {
     TEMPLATE = vcapp
+    QMAKE_CXXFLAGS += /wd"4996" /wd"4521"
+    QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmt.lib
+    QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
+    LIB += zlib.lib
+}
+msvc2010 {
+    TEMPLATE = vc
     QMAKE_CXXFLAGS += /wd"4996" /wd"4521"
     QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmt.lib
     QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
@@ -205,6 +215,10 @@ win32-g++ {
     LIBS += -lz
 }
 win32 {
+    exists(libs/portaudio.h) {
+        CONFIG += portaudio
+        message("with portaudio")
+    }
     exists(libs/fftw3.h) {
         DEFINES += HAVE_FFTW3_H
         LIBS += -lfftw3-3

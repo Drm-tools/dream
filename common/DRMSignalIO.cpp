@@ -352,31 +352,42 @@ void CReceiveData::InitInternal(CParameter& Parameter)
     /* Define output block-size */
     iOutputBlockSize = Parameter.CellMappingTable.iSymbolBlockSize;
     Parameter.Unlock();
-    pSound->Init(iOutputBlockSize * 2);
 
-    /* Init buffer size for taking stereo input */
-    vecsSoundBuffer.Init(iOutputBlockSize * 2);
+	try {
+		pSound->Init(iOutputBlockSize * 2);
 
-    /* Init signal meter */
-    SignalLevelMeter.Init(0);
+		/* Init buffer size for taking stereo input */
+		vecsSoundBuffer.Init(iOutputBlockSize * 2);
 
-    /* Inits for I / Q input */
-    vecrReHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
-    vecrImHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
+		/* Init signal meter */
+		SignalLevelMeter.Init(0);
 
-    /* Start with phase null (can be arbitrarily chosen) */
-    cCurExp = (_REAL) 1.0;
+		/* Inits for I / Q input */
+		vecrReHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
+		vecrImHist.Init(NUM_TAPS_IQ_INPUT_FILT, (_REAL) 0.0);
 
-    /* Set rotation vector to mix signal from zero frequency to virtual
-       intermediate frequency */
-    const _REAL rNormCurFreqOffsetIQ =
-        (_REAL) 2.0 * crPi * ((_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE);
+		/* Start with phase null (can be arbitrarily chosen) */
+		cCurExp = (_REAL) 1.0;
 
-    cExpStep = _COMPLEX(cos(rNormCurFreqOffsetIQ), sin(rNormCurFreqOffsetIQ));
+		/* Set rotation vector to mix signal from zero frequency to virtual
+		   intermediate frequency */
+		const _REAL rNormCurFreqOffsetIQ =
+			(_REAL) 2.0 * crPi * ((_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE);
+
+		cExpStep = _COMPLEX(cos(rNormCurFreqOffsetIQ), sin(rNormCurFreqOffsetIQ));
 
 
-    /* OPH: init free-running symbol counter */
-    iFreeSymbolCounter = 0;
+		/* OPH: init free-running symbol counter */
+		iFreeSymbolCounter = 0;
+	}
+    catch (CGenErr GenErr)
+    {
+		pSound = NULL;
+    }
+    catch (string strError)
+    {
+		pSound = NULL;
+    }
 }
 
 _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)

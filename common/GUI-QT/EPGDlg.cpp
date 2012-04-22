@@ -36,8 +36,6 @@
 # include <qsocketdevice.h>
 # define Q3SocketDevice QSocketDevice
 #else
-# include <q3socketdevice.h>
-# include <q3textbrowser.h>
 # include <QShowEvent>
 # include <QHideEvent>
 # include <QPixmap>
@@ -61,8 +59,10 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
         setGeometry(WinGeom);
 
     /* auto resize of the programme name column */
-    Data->setColumnWidthMode(COL_NAME, Q3ListView::Maximum);
-
+#if QT_VERSION < 0x040000
+    Data->setColumnWidthMode(COL_NAME, QListView::Maximum);
+#else
+#endif
     /* Define size of the bitmaps */
     const int iXSize = 8;
     const int iYSize = 8;
@@ -74,6 +74,8 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     /* Connections ---------------------------------------------------------- */
     connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
     connect(this, SIGNAL(NowNext(QString)), this, SLOT(sendNowNext(QString)));
+
+#if QT_VERSION < 0x040000
     connect(Prev, SIGNAL(clicked()), this, SLOT(previousDay()));
     connect(Next, SIGNAL(clicked()), this, SLOT(nextDay()));
     connect(channel, SIGNAL(activated(const QString&)), this
@@ -81,25 +83,28 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     connect(day, SIGNAL(valueChanged(int)), this, SLOT(setDay(int)));
     connect(month, SIGNAL(valueChanged(int)), this, SLOT(setMonth(int)));
     connect(year, SIGNAL(valueChanged(int)), this, SLOT(setYear(int)));
-
-    /* Deactivate real-time timer */
-    Timer.stop();
-
     day->setMinValue(1);
     day->setMaxValue(31);
     month->setMinValue(1);
     month->setMaxValue(12);
     year->setMinValue(0000);
     year->setMaxValue(3000);
+#else
+	connect(dateEdit, SIGNAL(dateChanged(const QDate&)), this, SLOT(onDateChanged(const QDate&))); // TODO is this autowired ?
+#endif
 
-    TextEPGDisabled->hide();
+    /* Deactivate real-time timer */
+    Timer.stop();
+
+	TextEPGDisabled->hide();
 }
 
 EPGDlg::~EPGDlg()
 {
 }
 
-void EPGDlg::setActive(Q3ListViewItem* myItem)
+#if QT_VERSION < 0x040000
+void EPGDlg::setActive(QListViewItem* myItem)
 {
 #if defined(_MSC_VER) && (_MSC_VER < 1400)
     MyListViewItem* item = (MyListViewItem*)(myItem);
@@ -118,6 +123,23 @@ void EPGDlg::setActive(Q3ListViewItem* myItem)
         item->setPixmap(COL_START,QPixmap()); /* no pixmap */
     }
 }
+#else
+void EPGDlg::setActive(QTreeWidgetItem* myItem)
+{
+    MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
+    if(item->IsActive())
+    {
+        item->setIcon(COL_START, BitmCubeGreen);
+        Data->scrollToItem(myItem);
+        emit NowNext(item->text(COL_NAME));
+        next = Data->itemBelow(item);
+    }
+    else
+    {
+        item->setIcon(COL_START,QPixmap()); /* no pixmap */
+    }
+}
+#endif
 
 void EPGDlg::sendNowNext(QString s)
 {
@@ -128,10 +150,14 @@ void EPGDlg::sendNowNext(QString s)
         return;
     Settings.Put("NowNext", "address", addr);
     Settings.Put("NowNext", "port", port);
-    Q3SocketDevice sock(Q3SocketDevice::Datagram);
+#if QT_VERSION < 0x040000
+    QSocketDevice sock(QSocketDevice::Datagram);
     QHostAddress a;
     a.setAddress(addr.c_str());
     sock.writeBlock(s.utf8(), s.length(), a, port);
+#else
+	// TODO
+#endif
 }
 
 void EPGDlg::OnTimer()
@@ -140,7 +166,11 @@ void EPGDlg::OnTimer()
     time_t ltime;
     time(&ltime);
     tm gmtCur = *gmtime(&ltime);
-    static Q3ListViewItem* next = NULL;
+#if QT_VERSION < 0x040000
+    static QListViewItem* next = NULL;
+#else
+    static QTreeWidgetItem* next = NULL;
+#endif
 
     if(gmtCur.tm_sec==30) // 1/2 minute boundary
     {
@@ -164,18 +194,21 @@ void EPGDlg::OnTimer()
 
         next = NULL;
 
+        /* Check the items now on line. */
         if (date == todayUTC) /* if today */
         {
-            /* Extract values from the list */
-            Q3ListViewItem * myItem = Data->firstChild();
-
-            while( myItem )
+#if QT_VERSION < 0x040000
+            for(QListViewItem * myItem = Data->firstChild();
+				myItem;
+                myItem = myItem->itemBelow()
+				)
             {
-                /* Check, if the programme is now on line. */
-                if (myItem)
-                    setActive(myItem);
-                myItem = myItem->nextSibling();
+                setActive(myItem);
             }
+#else
+			for(int i=0; i<Data->topLevelItemCount(); i++)
+				setActive(Data->topLevelItem(i));
+#endif
         }
     }
 }
@@ -231,6 +264,17 @@ void EPGDlg::hideEvent(QHideEvent*)
     Settings.Put("EPG Dialog", s);
 }
 
+void EPGDlg::setDate()
+{
+#if QT_VERSION < 0x040000
+    day->setValue(date.day());
+    month->setValue(date.month());
+    year->setValue(date.year());
+#endif
+}
+
+#if QT_VERSION < 0x040000
+
 void EPGDlg::previousDay()
 {
     date = date.addDays(-1);
@@ -241,19 +285,6 @@ void EPGDlg::nextDay()
 {
     date = date.addDays(1);
     setDate();
-}
-
-void EPGDlg::setDate()
-{
-    day->setValue(date.day());
-    month->setValue(date.month());
-    year->setValue(date.year());
-}
-
-void EPGDlg::selectChannel(const QString &)
-{
-    epg.progs.clear ();
-    select();
 }
 
 void EPGDlg::setDay(int n)
@@ -276,10 +307,27 @@ void EPGDlg::setYear(int n)
     setDate();
     select();
 }
+#else
+void EPGDlg::onDateChanged(const QDate& ndate)
+{
+    date = ndate;
+    setDate();
+}
+#endif
+
+void EPGDlg::selectChannel(const QString &)
+{
+    epg.progs.clear ();
+    select();
+}
 
 void EPGDlg::select()
 {
-    Q3ListViewItem* CurrActiveItem = NULL;
+#if QT_VERSION < 0x040000
+    QListViewItem* CurrActiveItem = NULL;
+#else
+    QTreeWidgetItem* CurrActiveItem = NULL;
+#endif
 
     if (!do_updates)
         return;
@@ -324,10 +372,18 @@ void EPGDlg::select()
     }
 
     if (epg.progs.count()==0) {
-        (void) new Q3ListViewItem(Data, tr("no data"));
+#if QT_VERSION < 0x040000
+        (void) new QListViewItem(Data, tr("no data"));
+#else
+        (void) new QTreeWidgetItem(Data, QStringList() << tr("no data"));
+#endif
         return;
     }
+#if QT_VERSION < 0x040000
     Data->setSorting(COL_START);
+#else
+    Data->sortItems(COL_START, Qt::AscendingOrder);
+#endif
 
     for (QMap < time_t, EPG::CProg >::Iterator i = epg.progs.begin();
             i != epg.progs.end(); i++)

@@ -47,10 +47,9 @@
 #include <qfont.h>
 #if QT_VERSION < 0x040000
 # include <qpopupmenu.h>
-# define Q3PopupMenu QPopupMenu
 # include "MultimediaDlgbase.h"
 #else
-# include <Q3PopupMenu>
+# include <QMenu>
 # include <QDialog>
 # include "ui_MultimediaDlgbase.h"
 #endif
@@ -137,7 +136,11 @@ protected:
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
-	Q3PopupMenu*				pFileMenu;
+#if QT_VERSION < 0x040000
+	QPopupMenu*				pFileMenu;
+#else
+	QMenu*					pFileMenu;
+#endif
 	virtual void			showEvent(QShowEvent* pEvent);
 	virtual void			hideEvent(QHideEvent* pEvent);
 	CVector<CMOTObject>		vecRawImages;

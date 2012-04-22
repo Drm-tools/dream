@@ -34,15 +34,9 @@
 # include <qtextstream.h>
 # include <qheader.h>
 # include <qwhatsthis.h>
-# define Q3WhatsThis QWhatsThis
-# define Q3TextStream QTextStream
-# define Q3CString QCString
-# define Q3FileDialog QFileDialog
 #else
-# include <Q3WhatsThis>
-# include <Q3FileDialog>
-# include <Q3TextStream>
-# include <Q3CString>
+# include <QFileDialog>
+# include <QTextStream>
 # include <QDateTime>
 # include <QHideEvent>
 # include <QShowEvent>
@@ -378,6 +372,7 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     /* Clear list box for file names and set up columns */
     ListViewStations->clear();
 
+#if QT_VERSION < 0x040000
     /* We assume that one column is already there */
     ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz/MHz]"));
     iColStationID = ListViewStations->addColumn(tr(""));
@@ -386,7 +381,6 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     ListViewStations->addColumn(tr("Time [UTC]"));
     ListViewStations->addColumn(tr("Target"));
     ListViewStations->addColumn(tr("Start day"));
-
     /* Set right alignment for numeric columns */
     ListViewStations->setColumnAlignment(COL_FREQ, Qt::AlignRight);
 
@@ -394,6 +388,7 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     vecpListItems.resize(1);
     vecpListItems[0] =
         new MyListLiveViewItem(ListViewStations, "00000000000000000");
+#endif
 
     connect(buttonOk,  SIGNAL(clicked()), this, SLOT(close()));
 
@@ -511,7 +506,11 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
     /* Set sorting behaviour of the list */
     iCurrentSortColumn = Settings.Get("Live Schedule Dialog", "sortcolumn", 0);
     bCurrentSortAscending = Settings.Get("Live Schedule Dialog", "sortascending", TRUE);
+#if QT_VERSION < 0x040000
     ListViewStations->setSorting(iCurrentSortColumn, bCurrentSortAscending);
+#else
+    ListViewStations->sortItems(iCurrentSortColumn, bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
+#endif
     /* Retrieve the setting saved into the .ini file */
     strCurrentSavePath = (DRMReceiver.GetParameters()->sDataFilesDirectory+"/AFS").c_str();
     /* and make sure it exists */
@@ -808,11 +807,13 @@ LiveScheduleDlg::LoadSchedule()
         if (Parameters.Service[iCurSelAudioServ].IsActive())
         {
             /* Do UTF-8 to string conversion with the label strings */
-            QString strStationName =
-                QString().
-                fromUtf8(Q3CString
-                         (Parameters.
-                          Service[iCurSelAudioServ].strLabel.c_str()));
+            QString strStationName = QString().fromUtf8(
+#if QT_VERSION < 0x040000
+				Q3CString(Parameters.Service[iCurSelAudioServ].strLabel.c_str())
+#else
+				Parameters.Service[iCurSelAudioServ].strLabel.c_str()
+#endif
+				);
 
             /* add station name on the title of the dialog */
             if (strStationName != "")
@@ -962,19 +963,21 @@ LiveScheduleDlg::SetStationsView()
 
     if(bHaveOtherServiceIDs)
     {
-        ListViewStations->setColumnText(iColStationID, tr("Station Name/Id"));
         ListViewStations->setColumnWidth(iColStationID, iWidthColStationID);
     }
     else
     {
-        ListViewStations->setColumnText(iColStationID, "");
         ListViewStations->setColumnWidth(iColStationID, 0);
     }
 
     /* Sort the list if items have changed */
+#if QT_VERSION < 0x040000
     if(bListHastChanged)
         ListViewStations->sort();
-
+#else
+    if(bListHastChanged)
+        ListViewStations->sortItems(iCurrentSortColumn, bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
+#endif
     ListItemsMutex.unlock();
 }
 
@@ -1022,12 +1025,12 @@ LiveScheduleDlg::OnSave()
     ListItemsMutex.lock();
 
     /* Force the sort for all items */
-    ListViewStations->firstChild()->sortChildItems(iCurrentSortColumn,
-            bCurrentSortAscending);
+	ListViewStations->sortItems(iCurrentSortColumn, bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
 
     /* Extract values from the list */
-    Q3ListViewItem *myItem = ListViewStations->firstChild();
 
+#if QT_VERSION < 0x040000
+    QListViewItem *myItem = ListViewStations->firstChild();
     while (myItem)
     {
         strSchedule += "<tr>" "<td align=\"right\">" + myItem->text(COL_FREQ) + "</td>"	/* freq */
@@ -1038,6 +1041,18 @@ LiveScheduleDlg::OnSave()
                        "</tr>\n";
         myItem = myItem->nextSibling();
     }
+#else
+	for(int i=0; i<ListViewStations->topLevelItemCount(); i++)
+	{
+		QTreeWidgetItem* myItem = ListViewStations->topLevelItem(i);
+        strSchedule += "<tr>" "<td align=\"right\">" + myItem->text(COL_FREQ) + "</td>"	/* freq */
+                       "<td>" + ColValue(myItem->text(1)) + "</td>"	/* system */
+                       "<td>" + ColValue(myItem->text(2)) + "</td>"	/* time */
+                       "<td>" + ColValue(myItem->text(3)) + "</td>"	/* target */
+                       "<td>" + ColValue(myItem->text(4)) + "</td>"	/* days */
+                       "</tr>\n";
+	}
+#endif
 
     ListItemsMutex.unlock();
 
@@ -1069,7 +1084,7 @@ LiveScheduleDlg::OnSave()
 
         QString strPath = strCurrentSavePath + "/"
                           + strStationName + "_" + "LiveSchedule.html";
-        strFileName = Q3FileDialog::getSaveFileName(strPath, "*.html", this);
+        strFileName = QFileDialog::getSaveFileName(strPath, "*.html", this);
 
         if (!strFileName.isEmpty())
         {
@@ -1083,7 +1098,7 @@ LiveScheduleDlg::OnSave()
             if (FileObj.open(QIODevice::WriteOnly))
 #endif
             {
-                Q3TextStream TextStream(&FileObj);
+                QTextStream TextStream(&FileObj);
                 TextStream << strText;	/* Actual writing */
                 FileObj.close();
                 /* TODO ini files are latin 1 but the storage path could contain non-latin characters,
@@ -1099,7 +1114,7 @@ void
 LiveScheduleDlg::AddWhatsThisHelp()
 {
     /* Stations List */
-    Q3WhatsThis::add(ListViewStations,
+	QString strView =
                      tr("<b>Live Schedule List:</b> In the live schedule list "
                         "it's possible to view AFS (Alternative Frequency Signalling) "
                         "information transmitted with the current DRM or AMSS signal.</b>"
@@ -1115,18 +1130,25 @@ LiveScheduleDlg::AddWhatsThisHelp()
                         "A little green cube on the left of the target column shows that the receiver"
                         " coordinates (latitude and longitude) stored into Dream settings are within"
                         " the target area of this transmission.<br>"
-                        "The list can be sorted by clicking on the headline of the column."));
+                        "The list can be sorted by clicking on the headline of the column.");
 
     /* UTC time label */
-    Q3WhatsThis::add(TextLabelUTCTime,
+	QString strTime =
                      tr("<b>UTC Time:</b> Shows the current Coordinated "
                         "Universal Time (UTC) which is also known as Greenwich Mean Time "
-                        "(GMT)."));
+                        "(GMT).");
 
     /* Check box freeze */
-    Q3WhatsThis::add(CheckBoxFreeze,
-                     tr
-                     ("<b>Freeze:</b> If this check box is selected the live schedule is frozen."));
+	QString strFreeze = tr("<b>Freeze:</b> If this check box is selected the live schedule is frozen.");
+#if QT_VERSION < 0x040000
+    QWhatsThis::add(ListViewStations, strView);
+    QWhatsThis::add(TextLabelUTCTime, strTime);
+    QWhatsThis::add(CheckBoxFreeze, strFreeze);
+#else
+	ListViewStations->setWhatsThis(strView);
+    TextLabelUTCTime->setWhatsThis(strTime);
+    CheckBoxFreeze->setWhatsThis(strFreeze);
+#endif
 }
 
 CDRMLiveSchedule::StationState CDRMLiveSchedule::CheckState(const int iPos)

@@ -46,10 +46,9 @@
 #include <qwt_thermo.h>
 #if QT_VERSION < 0x040000
 # include <qpopupmenu.h>
-# define Q3PopupMenu QPopupMenu
 # include "TransmDlgbase.h"
 #else
-# include <Q3PopupMenu>
+# include <QMenu>
 # include <QDialog>
 # include "ui_TransmDlgbase.h"
 #endif
@@ -126,7 +125,11 @@ protected:
 
 	CSettings&			Settings;
 	QMenuBar*			pMenu;
-	Q3PopupMenu*			pSettingsMenu;
+#if QT_VERSION < 0x040000
+	QPopupMenu*			pSettingsMenu;
+#else
+	QMenu*				pSettingsMenu;
+#endif
 	QTimer				Timer;
 
 	CTransmitterThread	TransThread; /* Working thread object */

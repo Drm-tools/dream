@@ -39,6 +39,9 @@
 #else
 # include <QAbstractSocket>
 # include <QHostAddress>
+#  if QT_VERSION >= 0x040800
+#   include <QNetworkAddressEntry>
+#  endif
 #endif
 #include <qdatetime.h>
 # if QT_VERSION < 0x030000
@@ -77,7 +80,10 @@ public:
 
 private:
 	QStringList parseDest(const string & strNewAddr);
-
+	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int);
+#if QT_VERSION >= 0x040000
+	QNetworkInterface GetInterface(QHostAddress AddrInterface);
+#endif
 	CPacketSink *pPacketSink;
 
 	QHostAddress	HostAddrOut;

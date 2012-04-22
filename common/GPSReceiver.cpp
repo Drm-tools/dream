@@ -63,7 +63,7 @@ void CGPSReceiver::open()
 #if QT_VERSION < 0x040000
         m_pSocket = new QSocket();
 #else
-        m_pSocket = new Q3Socket();
+        m_pSocket = new QTcpSocket();
 #endif
         if (m_pSocket == NULL)
             return;

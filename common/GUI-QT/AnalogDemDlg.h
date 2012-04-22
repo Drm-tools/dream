@@ -53,6 +53,7 @@
 # include "ui_AMMainWindow.h"
 # include "ui_AMSSDlgbase.h"
 # include <QDialog>
+# include <QButtonGroup>
 #endif
 #include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
@@ -131,6 +132,7 @@ protected:
 
 #if QT_VERSION >= 0x040000
 	CDRMPlot*		MainPlot;
+    QButtonGroup	ButtonGroupDemodulation, ButtonGroupAGC, ButtonGroupNoiseReduction;
 #endif
 
 	QTimer			Timer;
