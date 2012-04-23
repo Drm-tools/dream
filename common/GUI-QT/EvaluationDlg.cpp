@@ -32,8 +32,7 @@
 #include "../GPSReceiver.h"
 #include <qmessagebox.h>
 #include <qlayout.h>
-#include <Q3WhatsThis>
-#include <q3filedialog.h>
+#include <qfiledialog.h>
 #include <QHideEvent>
 #include <QShowEvent>
 
@@ -291,7 +290,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
     if (CheckBoxWriteLog->isChecked())
     {
         /* One shot timer */
-        TimerLogFileStart.start(iLogDelay * 1000 /* ms */, TRUE);
+        TimerLogFileStart.start(iLogDelay * 1000 /* ms */);
     }
 
     /* GPS */
@@ -524,7 +523,7 @@ void systemevalDlg::OnTimerInterDigit()
 
 void systemevalDlg::OnFrequencyEdited ( const QString & )
 {
-    TimerInterDigit.changeInterval(100);
+    TimerInterDigit.setInterval(100);
 }
 
 void systemevalDlg::UpdatePlotStyle(int iPlotStyle)
@@ -549,9 +548,8 @@ CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
     pNewChartWin->SetPlotStyle(Settings.Get("System Evaluation Dialog", "plotstyle", 0));
 
     /* Set correct icon (use the same as this dialog) */
-    const QPixmap* icon = this->icon();
-    if(icon!=NULL)
-        pNewChartWin->setIcon(*icon);
+    const QIcon& icon = this->windowIcon();
+	pNewChartWin->setIcon(icon);
 
     /* Set receiver object and correct chart type */
     pNewChartWin->SetRecObj(&DRMReceiver);
@@ -1065,13 +1063,13 @@ void systemevalDlg::OnCheckSaveAudioWAV()
     {
         /* Show "save file" dialog */
         QString strFileName =
-            Q3FileDialog::getSaveFileName(tr("DreamOut.wav"), "*.wav", this);
+            QFileDialog::getSaveFileName(this, "*.wav", tr("DreamOut.wav"));
 
         /* Check if user not hit the cancel button */
         if (!strFileName.isEmpty())
         {
-            DRMReceiver.GetWriteData()->
-            StartWriteWaveFile(strFileName.latin1());
+			string s = strFileName.toUtf8();
+            DRMReceiver.GetWriteData()->StartWriteWaveFile(s);
         }
         else
         {
@@ -1121,7 +1119,7 @@ void systemevalDlg::OnCheckWriteLog()
 {
     if (CheckBoxWriteLog->isChecked())
     {
-        TimerLogFileStart.start(1, TRUE);
+        TimerLogFileStart.start(1);
         if(longLog.GetRxlEnabled())
         {
             rig.subscribe();
@@ -1249,8 +1247,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "the two vertical dashed black lines in the Impulse Response (IR) "
            "plot.");
 
-    Q3WhatsThis::add(TextWiener, strDopplerDelay);
-    Q3WhatsThis::add(ValueWiener, strDopplerDelay);
+	TextWiener->setWhatsThis(strDopplerDelay);
+    ValueWiener->setWhatsThis(strDopplerDelay);
 
     /* I / O Interface LED */
     const QString strLEDIOInterface =
@@ -1268,8 +1266,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "light is that the processor is too slow for running the Dream "
            "software.");
 
-    Q3WhatsThis::add(TextLabelLEDIOInterface, strLEDIOInterface);
-    Q3WhatsThis::add(LEDIOInterface, strLEDIOInterface);
+    TextLabelLEDIOInterface->setWhatsThis(strLEDIOInterface);
+    LEDIOInterface->setWhatsThis(strLEDIOInterface);
 
     /* Time Sync Acq LED */
     const QString strLEDTimeSyncAcq =
@@ -1277,8 +1275,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "state of the timing acquisition (search for the beginning of an OFDM "
            "symbol). If the acquisition is done, this LED will stay green.");
 
-    Q3WhatsThis::add(TextLabelLEDTimeSyncAcq, strLEDTimeSyncAcq);
-    Q3WhatsThis::add(LEDTimeSync, strLEDTimeSyncAcq);
+    TextLabelLEDTimeSyncAcq->setWhatsThis(strLEDTimeSyncAcq);
+    LEDTimeSync->setWhatsThis(strLEDTimeSyncAcq);
 
     /* Frame Sync LED */
     const QString strLEDFrameSync =
@@ -1287,8 +1285,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "active during acquisition state of the Dream receiver. In tracking "
            "mode, this LED is always green.");
 
-    Q3WhatsThis::add(TextLabelLEDFrameSync, strLEDFrameSync);
-    Q3WhatsThis::add(LEDFrameSync, strLEDFrameSync);
+    TextLabelLEDFrameSync->setWhatsThis(strLEDFrameSync);
+    LEDFrameSync->setWhatsThis(strLEDFrameSync);
 
     /* FAC CRC LED */
     const QString strLEDFACCRC =
@@ -1302,8 +1300,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "SDC channels and the interleaver depth are some of the parameters "
            "which are provided by the FAC.");
 
-    Q3WhatsThis::add(TextLabelLEDFACCRC, strLEDFACCRC);
-    Q3WhatsThis::add(LEDFAC, strLEDFACCRC);
+    TextLabelLEDFACCRC->setWhatsThis(strLEDFACCRC);
+    LEDFAC->setWhatsThis(strLEDFACCRC);
 
     /* SDC CRC LED */
     const QString strLEDSDCCRC =
@@ -1317,8 +1315,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "is ok but errors in the content were detected, the LED turns "
            "yellow.");
 
-    Q3WhatsThis::add(TextLabelLEDSDCCRC, strLEDSDCCRC);
-    Q3WhatsThis::add(LEDSDC, strLEDSDCCRC);
+    TextLabelLEDSDCCRC->setWhatsThis(strLEDSDCCRC);
+    LEDSDC->setWhatsThis(strLEDSDCCRC);
 
     /* MSC CRC LED */
     const QString strLEDMSCCRC =
@@ -1332,8 +1330,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "heard. The yellow light shows that only one 40 ms audio frame CRC "
            "was wrong. This causes usually no hearable artifacts.");
 
-    Q3WhatsThis::add(TextLabelLEDMSCCRC, strLEDMSCCRC);
-    Q3WhatsThis::add(LEDMSC, strLEDMSCCRC);
+    TextLabelLEDMSCCRC->setWhatsThis(strLEDMSCCRC);
+    LEDMSC->setWhatsThis(strLEDMSCCRC);
 
     /* MLC, Number of Iterations */
     const QString strNumOfIterations =
@@ -1349,29 +1347,29 @@ void systemevalDlg::AddWhatsThisHelp()
            "<br>The recommended number of iterations given in the DRM "
            "standard is one iteration (number of iterations = 1).");
 
-    Q3WhatsThis::add(TextNumOfIterations, strNumOfIterations);
-    Q3WhatsThis::add(SliderNoOfIterations, strNumOfIterations);
+    TextNumOfIterations->setWhatsThis(strNumOfIterations);
+    SliderNoOfIterations->setWhatsThis(strNumOfIterations);
 
     /* Flip Input Spectrum */
-    Q3WhatsThis::add(CheckBoxFlipSpec,
+    CheckBoxFlipSpec->setWhatsThis(
                      tr("<b>Flip Input Spectrum:</b> Checking this box "
                         "will flip or invert the input spectrum. This is necessary if the "
                         "mixer in the front-end uses the lower side band."));
 
     /* Mute Audio */
-    Q3WhatsThis::add(CheckBoxMuteAudio,
+    CheckBoxMuteAudio->setWhatsThis(
                      tr("<b>Mute Audio:</b> The audio can be muted by "
                         "checking this box. The reaction of checking or unchecking this box "
                         "is delayed by approx. 1 second due to the audio buffers."));
 
     /* Reverberation Effect */
-    Q3WhatsThis::add(CheckBoxReverb,
+    CheckBoxReverb->setWhatsThis(
                      tr("<b>Reverberation Effect:</b> If this check box is checked, a "
                         "reverberation effect is applied each time an audio drop-out occurs. "
                         "With this effect it is possible to mask short drop-outs."));
 
     /* Log File */
-    Q3WhatsThis::add(CheckBoxWriteLog,
+    CheckBoxWriteLog->setWhatsThis(
                      tr("<b>Log File:</b> Checking this box brings the "
                         "Dream software to write a log file about the current reception. "
                         "Every minute the average SNR, number of correct decoded FAC and "
@@ -1389,7 +1387,7 @@ void systemevalDlg::AddWhatsThisHelp()
                         "the name of this file is always DreamLog.txt"));
 
     /* Freq */
-    Q3WhatsThis::add(EdtFrequency,
+    EdtFrequency->setWhatsThis(
                      tr("<b>Freq:</b> In this edit control, the current "
                         "selected frequency on the front-end can be specified. This frequency "
                         "will be written into the log file."));
@@ -1405,8 +1403,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "uses estimation of the statistics of the channel to design an optimal "
            "filter for noise reduction.");
 
-    Q3WhatsThis::add(RadioButtonFreqWiener, strWienerChanEst);
-    Q3WhatsThis::add(RadioButtonTiWiener, strWienerChanEst);
+    RadioButtonFreqWiener->setWhatsThis(strWienerChanEst);
+    RadioButtonTiWiener->setWhatsThis(strWienerChanEst);
 
     /* Linear */
     const QString strLinearChanEst =
@@ -1421,11 +1419,11 @@ void systemevalDlg::AddWhatsThisHelp()
            "interpolated. This algorithm causes the lowest CPU load but "
            "performs much worse than the Wiener interpolation at low SNRs.");
 
-    Q3WhatsThis::add(RadioButtonFreqLinear, strLinearChanEst);
-    Q3WhatsThis::add(RadioButtonTiLinear, strLinearChanEst);
+    RadioButtonFreqLinear->setWhatsThis(strLinearChanEst);
+    RadioButtonTiLinear->setWhatsThis(strLinearChanEst);
 
     /* DFT Zero Pad */
-    Q3WhatsThis::add(RadioButtonFreqDFT,
+    RadioButtonFreqDFT->setWhatsThis(
                      tr("<b>Channel Estimation Settings:</b> With these "
                         "settings, the channel estimation method in time and frequency "
                         "direction can be selected. The default values use the most powerful "
@@ -1440,14 +1438,14 @@ void systemevalDlg::AddWhatsThisHelp()
                         "of the OFDM spectrum due to the leakage effect."));
 
     /* Guard Energy */
-    Q3WhatsThis::add(RadioButtonTiSyncEnergy,
+    RadioButtonTiSyncEnergy->setWhatsThis(
                      tr("<b>Guard Energy:</b> Time synchronization "
                         "tracking algorithm utilizes the estimation of the impulse response. "
                         "This method tries to maximize the energy in the guard-interval to set "
                         "the correct timing."));
 
     /* First Peak */
-    Q3WhatsThis::add(RadioButtonTiSyncFirstPeak,
+    RadioButtonTiSyncFirstPeak->setWhatsThis(
                      tr("<b>First Peak:</b> This algorithms searches for "
                         "the first peak in the estimated impulse response and moves this peak "
                         "to the beginning of the guard-interval (timing tracking algorithm)."));
@@ -1465,8 +1463,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "decoded if only the right side of the DRM spectrum is degraded "
            "by an interferer.");
 
-    Q3WhatsThis::add(ValueSNR, strSNREst);
-    Q3WhatsThis::add(TextSNRText, strSNREst);
+    ValueSNR->setWhatsThis(strSNREst);
+    TextSNRText->setWhatsThis(strSNREst);
 
     /* MSC WMER / MSC MER */
     const QString strMERWMEREst =
@@ -1485,8 +1483,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "multiplied by the squared magnitude of the estimated channel "
            "response.<br>For more information see ETSI TS 102 349.");
 
-    Q3WhatsThis::add(ValueMERWMER, strMERWMEREst);
-    Q3WhatsThis::add(TextMERWMER, strMERWMEREst);
+    ValueMERWMER->setWhatsThis(strMERWMEREst);
+    TextMERWMER->setWhatsThis(strMERWMEREst);
 
     /* DRM Mode / Bandwidth */
     const QString strRobustnessMode =
@@ -1502,8 +1500,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "with severe delay and Doppler spread</li></ul>The "
            "bandwith is the gross bandwidth of the current DRM signal");
 
-    Q3WhatsThis::add(FACDRMModeBWL, strRobustnessMode);
-    Q3WhatsThis::add(FACDRMModeBWV, strRobustnessMode);
+    FACDRMModeBWL->setWhatsThis(strRobustnessMode);
+    FACDRMModeBWV->setWhatsThis(strRobustnessMode);
 
     /* Interleaver Depth */
     const QString strInterleaver =
@@ -1514,8 +1512,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "longer the interleaver length the longer the delay until (after a "
            "re-synchronization) audio can be heard.");
 
-    Q3WhatsThis::add(FACInterleaverDepthL, strInterleaver);
-    Q3WhatsThis::add(FACInterleaverDepthV, strInterleaver);
+    FACInterleaverDepthL->setWhatsThis(strInterleaver);
+    FACInterleaverDepthV->setWhatsThis(strInterleaver);
 
     /* SDC / MSC Mode */
     const QString strSDCMSCMode =
@@ -1524,8 +1522,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "hierarchical modes are defined which can provide a very strong "
            "protected service channel.");
 
-    Q3WhatsThis::add(FACSDCMSCModeL, strSDCMSCMode);
-    Q3WhatsThis::add(FACSDCMSCModeV, strSDCMSCMode);
+    FACSDCMSCModeL->setWhatsThis(strSDCMSCMode);
+    FACSDCMSCModeV->setWhatsThis(strSDCMSCMode);
 
     /* Prot. Level (B/A) */
     const QString strProtLevel =
@@ -1538,8 +1536,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "Error Protection (EEP) is used, only the protection level of part B "
            "is valid.");
 
-    Q3WhatsThis::add(FACCodeRateL, strProtLevel);
-    Q3WhatsThis::add(FACCodeRateV, strProtLevel);
+    FACCodeRateL->setWhatsThis(strProtLevel);
+    FACCodeRateV->setWhatsThis(strProtLevel);
 
     /* Number of Services */
     const QString strNumServices =
@@ -1547,8 +1545,8 @@ void systemevalDlg::AddWhatsThisHelp()
            "number of audio and data services transmitted in the DRM stream. "
            "The maximum number of streams is four.");
 
-    Q3WhatsThis::add(FACNumServicesL, strNumServices);
-    Q3WhatsThis::add(FACNumServicesV, strNumServices);
+    FACNumServicesL->setWhatsThis(strNumServices);
+    FACNumServicesV->setWhatsThis(strNumServices);
 
     /* Received time - date */
     const QString strTimeDate =
@@ -1556,11 +1554,11 @@ void systemevalDlg::AddWhatsThisHelp()
            "the received time and date in UTC. This information is carried in "
            "the SDC channel.");
 
-    Q3WhatsThis::add(FACTimeDateL, strTimeDate);
-    Q3WhatsThis::add(FACTimeDateV, strTimeDate);
+    FACTimeDateL->setWhatsThis(strTimeDate);
+    FACTimeDateV->setWhatsThis(strTimeDate);
 
     /* Save audio as wave */
-    Q3WhatsThis::add(CheckBoxSaveAudioWave,
+    CheckBoxSaveAudioWave->setWhatsThis(
                      tr("<b>Save Audio as WAV:</b> Save the audio signal "
                         "as stereo, 16-bit, 48 kHz sample rate PCM wave file. Checking this "
                         "box will let the user choose a file name for the recording."));
@@ -1612,9 +1610,9 @@ void systemevalDlg::AddWhatsThisHelp()
            "and no interferer are present since the SNR estimation may be "
            "not correct.</li></ul>");
 
-    Q3WhatsThis::add(GroupBoxInterfRej, strInterfRej);
-    Q3WhatsThis::add(CheckBoxRecFilter, strInterfRej);
-    Q3WhatsThis::add(CheckBoxModiMetric, strInterfRej);
+    GroupBoxInterfRej->setWhatsThis(strInterfRej);
+    CheckBoxRecFilter->setWhatsThis(strInterfRej);
+    CheckBoxModiMetric->setWhatsThis(strInterfRej);
 }
 
 void systemevalDlg::EnableGPS()

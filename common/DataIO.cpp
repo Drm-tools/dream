@@ -213,7 +213,7 @@ CWriteData::CWriteData(CSoundOutInterface* pNS) : pSound(pNS), /* Sound interfac
     /* Constructor */
 }
 
-void CWriteData::StartWriteWaveFile(const string strFileName)
+void CWriteData::StartWriteWaveFile(const string& strFileName)
 {
     /* No Lock(), Unlock() needed here */
     if (bDoWriteWaveFile == FALSE)

@@ -73,10 +73,10 @@ void CDRMSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
 {
     QStringList result;
 
-    QString strTarget = QString(StationsItem.strTarget.c_str());
-    QString strCountry = QString(StationsItem.strCountry.c_str());
-    QString strLanguage = QString(StationsItem.strLanguage.c_str());
-
+    QString strTarget = StationsItem.strTarget;
+    QString strCountry = StationsItem.strCountry;
+    QString strLanguage = StationsItem.strLanguage;
+#if QT_VERSION < 0x040000
     result = ListTargets.grep(strTarget);
     if (result.isEmpty())
         ListTargets.append(strTarget);
@@ -89,6 +89,20 @@ void CDRMSchedule::UpdateStringListForFilter(const CStationsItem StationsItem)
     result = ListLanguages.grep(strLanguage);
     if (result.isEmpty())
         ListLanguages.append(strLanguage);
+#else
+    result = ListTargets.filter(strTarget);
+    if (result.isEmpty())
+        ListTargets.append(strTarget);
+
+    result = ListCountries.filter(strCountry);
+    if (result.isEmpty())
+        ListCountries.append(strCountry);
+
+
+    result = ListLanguages.filter(strLanguage);
+    if (result.isEmpty())
+        ListLanguages.append(strLanguage);
+#endif
 }
 
 void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
@@ -141,7 +155,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
         /* Days */
         /* Init days with the "irregular" marker in case no valid string could
            be read */
-        string strNewDaysFlags = FLAG_STR_IRREGULAR_TRANSM;
+        QString strNewDaysFlags = FLAG_STR_IRREGULAR_TRANSM;
 
         iFileStat = fscanf(pFile, "Days[SMTWTFS]=%255[^\n|^\r]\n", cName);
         if (iFileStat != 1)
@@ -149,7 +163,7 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
         else
         {
             /* Check for length of input string (must be 7) */
-            const string strTMP = cName;
+            QString strTMP(cName);
             if (strTMP.length() == 7)
                 strNewDaysFlags = strTMP;
         }
@@ -323,7 +337,7 @@ _BOOLEAN CDRMSchedule::IsActive(const int iPos, const time_t ltime)
     return FALSE;
 }
 
-void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
+void CStationsItem::SetDaysFlagString(const QString& strNewDaysFlags)
 {
     /* Set internal "days flag" string and "show days" string */
     strDaysFlags = strNewDaysFlags;
@@ -343,17 +357,17 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
 
     /* First test for day constellations which allow to apply special names */
     if (strDaysFlags == FLAG_STR_IRREGULAR_TRANSM)
-        strDaysShow = QObject::tr("irregular").latin1();
+        strDaysShow = QObject::tr("irregular");
     else if (strDaysFlags == "1111111")
-        strDaysShow = QObject::tr("daily").latin1();
+        strDaysShow = QObject::tr("daily");
     else if (strDaysFlags == "1111100")
-        strDaysShow = QObject::tr("from Sun to Thu").latin1();
+        strDaysShow = QObject::tr("from Sun to Thu");
     else if (strDaysFlags == "1111110")
-        strDaysShow = QObject::tr("from Sun to Fri").latin1();
+        strDaysShow = QObject::tr("from Sun to Fri");
     else if (strDaysFlags == "0111110")
-        strDaysShow = QObject::tr("from Mon to Fri").latin1();
+        strDaysShow = QObject::tr("from Mon to Fri");
     else if (strDaysFlags == "0111111")
-        strDaysShow = QObject::tr("from Mon to Sat").latin1();
+        strDaysShow = QObject::tr("from Mon to Sat");
     else
     {
         /* No special name could be applied, just list all active days */
@@ -368,7 +382,7 @@ void CStationsItem::SetDaysFlagString(const string strNewDaysFlags)
                     strDaysShow += ",";
 
                 /* Add current day */
-                strDaysShow += strDayDef[i].latin1();
+                strDaysShow += strDayDef[i];
             }
         }
     }
@@ -1034,11 +1048,11 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
     DRMSchedule.ListCountries.sort();
     DRMSchedule.ListLanguages.sort();
 
-    ComboBoxFilterTarget->insertStringList(DRMSchedule.ListTargets);
-    ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
-    ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
 
 #if QT_VERSION >= 0x040000
+    ComboBoxFilterTarget->addItems(DRMSchedule.ListTargets);
+    ComboBoxFilterCountry->addItems(DRMSchedule.ListCountries);
+    ComboBoxFilterLanguage->addItems(DRMSchedule.ListLanguages);
     // fill the view just once, then change the state
     for (int i = 0; i < DRMSchedule.GetStationNumber(); i++)
     {
@@ -1051,19 +1065,23 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
             else
                 strPower.setNum(rPower);
             QTreeWidgetItem *item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
-            item->setText(0, station.strName.c_str());
+            item->setText(0, station.strName);
             item->setText(1, QString().sprintf("%04d-%04d",
                                                station.GetStartTimeNum(),
                                                station.GetStopTimeNum()));
             item->setText(2, QString().setNum(station.iFreq) /* freq. */);
-            item->setText(3, station.strTarget.c_str()   /* target */);
+            item->setText(3, station.strTarget   /* target */);
             item->setText(4, strPower                                   /* power */);
-            item->setText(5, station.strCountry.c_str()  /* country */);
-            item->setText(6, station.strSite.c_str()     /* site */);
-            item->setText(7, station.strLanguage.c_str() /* language */);
-            item->setText(8, station.strDaysShow.c_str());
+            item->setText(5, station.strCountry  /* country */);
+            item->setText(6, station.strSite     /* site */);
+            item->setText(7, station.strLanguage /* language */);
+            item->setText(8, station.strDaysShow);
 	    station.item = item;
     }
+#else
+	ComboBoxFilterTarget->insertStringList(DRMSchedule.ListTargets);
+    ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
+    ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
 #endif
     /* Update list view */
     SetStationsView();
@@ -1461,19 +1479,19 @@ _BOOLEAN StationsDlg::CheckFilter(const int iPos)
     sFilter = ComboBoxFilterTarget->currentText();
 
     if ((sFilter != "") &&
-            (QString(DRMSchedule.GetItem(iPos).strTarget.c_str()) != sFilter))
+            (DRMSchedule.GetItem(iPos).strTarget != sFilter))
         bCheck = FALSE;
 
     sFilter = ComboBoxFilterCountry->currentText();
 
     if ((sFilter != "") &&
-            (QString(DRMSchedule.GetItem(iPos).strCountry.c_str()) != sFilter))
+            (DRMSchedule.GetItem(iPos).strCountry != sFilter))
         bCheck = FALSE;
 
     sFilter = ComboBoxFilterLanguage->currentText();
 
     if ((sFilter != "") &&
-            (QString(DRMSchedule.GetItem(iPos).strLanguage.c_str()) != sFilter))
+            (DRMSchedule.GetItem(iPos).strLanguage != sFilter))
         bCheck = FALSE;
 
     return bCheck;

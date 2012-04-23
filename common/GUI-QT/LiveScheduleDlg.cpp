@@ -349,31 +349,30 @@ LiveScheduleDlg::LiveScheduleDlg(CDRMReceiver & NDRMR,
     /* Set help text for the controls */
     AddWhatsThisHelp();
 
-    /* Define size of the bitmaps */
-    const int iXSize = 13;
-    const int iYSize = 13;
-
-    /* Create bitmaps */
-    BitmCubeGreen.resize(iXSize, iYSize);
-    BitmCubeGreen.fill(QColor(0, 255, 0));
-
-    BitmCubeGreenLittle.resize(5, 5);
-    BitmCubeGreenLittle.fill(QColor(0, 255, 0));
-
-    BitmCubeYellow.resize(iXSize, iYSize);
-    BitmCubeYellow.fill(QColor(255, 255, 0));
-    BitmCubeRed.resize(iXSize, iYSize);
-    BitmCubeRed.fill(QColor(255, 0, 0));
-    BitmCubeOrange.resize(iXSize, iYSize);
-    BitmCubeOrange.fill(QColor(255, 128, 0));
-    BitmCubePink.resize(iXSize, iYSize);
-    BitmCubePink.fill(QColor(255, 128, 128));
-
     /* Clear list box for file names and set up columns */
     ListViewStations->clear();
 
+	/* Create bitmaps */
+    BitmCubeGreen.fill(QColor(0, 255, 0));
+    BitmCubeGreenLittle.fill(QColor(0, 255, 0));
+    BitmCubeYellow.fill(QColor(255, 255, 0));
+    BitmCubeRed.fill(QColor(255, 0, 0));
+    BitmCubeOrange.fill(QColor(255, 128, 0));
+    BitmCubePink.fill(QColor(255, 128, 128));
+
+
 #if QT_VERSION < 0x040000
-    /* We assume that one column is already there */
+    /* Define size of the bitmaps */
+    const int iXSize = 13;
+    const int iYSize = 13;
+    BitmCubeGreen.resize(iXSize, iYSize);
+    BitmCubeGreenLittle.resize(5, 5);
+    BitmCubeYellow.resize(iXSize, iYSize);
+    BitmCubeRed.resize(iXSize, iYSize);
+    BitmCubeOrange.resize(iXSize, iYSize);
+    BitmCubePink.resize(iXSize, iYSize);
+
+	/* We assume that one column is already there */
     ListViewStations->setColumnText(COL_FREQ, tr("Frequency [kHz/MHz]"));
     iColStationID = ListViewStations->addColumn(tr(""));
     iWidthColStationID = this->fontMetrics().width(tr("Station Name/Id"));
@@ -736,7 +735,11 @@ MyListLiveViewItem::key(int column, bool ascending) const
            after the decimal, therefore multiply with 10000 (which moves the
            numbers in front of the comma). Afterwards append zeros at the
            beginning so that positive integer numbers are sorted correctly */
+#if QT_VERSION < 0x040000
         return QString().setNum(long(fFreq * 10000.0)).rightJustify(20, '0');
+#else
+        return QString().setNum(long(fFreq * 10000.0)).rightJustified(20, '0');
+#endif
     }
     else
     {
@@ -747,9 +750,13 @@ MyListLiveViewItem::key(int column, bool ascending) const
         if (!ascending)
             d = 100000.0;
 
+#if QT_VERSION < 0x040000
         const QString sFreq = QString().setNum(long((fFreq - d) * 10000.0)).rightJustify(20, '0');
-
         return text(column).lower() + "|" + sFreq;
+#else
+		const QString sFreq = QString().setNum(long((fFreq - d) * 10000.0)).rightJustified(20, '0');
+        return text(column).toLower() + "|" + sFreq;
+#endif
     }
 }
 
@@ -817,7 +824,11 @@ LiveScheduleDlg::LoadSchedule()
 
             /* add station name on the title of the dialog */
             if (strStationName != "")
+#if QT_VERSION < 0x040000
                 strTitle += " [" + strStationName.stripWhiteSpace() + "]";
+#else
+                strTitle += " [" + strStationName.trimmed() + "]";
+#endif
         }
         Parameters.Unlock();
     }
@@ -1084,7 +1095,10 @@ LiveScheduleDlg::OnSave()
 
         QString strPath = strCurrentSavePath + "/"
                           + strStationName + "_" + "LiveSchedule.html";
-        strFileName = QFileDialog::getSaveFileName(strPath, "*.html", this);
+#if QT_VERSION < 0x040000
+#else
+        strFileName = QFileDialog::getSaveFileName(this, "*.html", strPath);
+#endif
 
         if (!strFileName.isEmpty())
         {
@@ -1104,7 +1118,11 @@ LiveScheduleDlg::OnSave()
                 /* TODO ini files are latin 1 but the storage path could contain non-latin characters,
                  * either from the station name or the current filesystem via the file dialog
                  */
+#if QT_VERSION < 0x040000
                 strCurrentSavePath = strFileName.latin1();
+#else
+                strCurrentSavePath = strFileName.toLatin1();
+#endif
             }
         }
     }

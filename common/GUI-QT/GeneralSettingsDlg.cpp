@@ -25,6 +25,7 @@
  *
 \******************************************************************************/
 
+#include "DialogUtil.h"
 #include "GeneralSettingsDlg.h"
 #include <qlineedit.h>
 #include <qpushbutton.h>
@@ -33,9 +34,7 @@
 #include <qcheckbox.h>
 #if QT_VERSION < 0x040000
 # include <qwhatsthis.h>
-# define Q3WhatsThis QWhatsThis
 #else
-# include <Q3WhatsThis>
 # include <QShowEvent>
 # include <QHideEvent>
 #endif
@@ -46,13 +45,8 @@
 GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
 	QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
 	CGeneralSettingsDlgBase(parent, name, modal, f),
-	Parameters(NParam),Settings(NSettings), host("localhost"),port(2947),bUseGPS(FALSE)
+	Parameters(NParam),Settings(NSettings), host(""),port(2947),bUseGPS(FALSE)
 {
-	host = Settings.Get("GPS", "host", host);
-	port = Settings.Get("GPS", "port", port);
-	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);
-	CheckBoxUseGPS->setChecked(bUseGPS);
-
 	/* Set the validators fro the receiver coordinate */
 	EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
 	EdtLongitudeDegrees->setValidator(new QIntValidator(0, 180, EdtLongitudeDegrees));
@@ -78,13 +72,13 @@ GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
 
 GeneralSettingsDlg::~GeneralSettingsDlg()
 {
-	Settings.Put("GPS", "host", host);
-	Settings.Put("GPS", "port", port);
-	Settings.Put("GPS", "usegpsd", bUseGPS);
 }
 
 void GeneralSettingsDlg::hideEvent(QHideEvent*)
 {
+	Settings.Put("GPS", "host", toStdString(host));
+	Settings.Put("GPS", "port", port);
+	Settings.Put("GPS", "usegpsd", bUseGPS);
 }
 
 void GeneralSettingsDlg::showEvent(QShowEvent*)
@@ -97,10 +91,15 @@ void GeneralSettingsDlg::showEvent(QShowEvent*)
 	EdtLatitudeMinutes->setText("");
 	EdtLatitudeNS->setText("");
 
-    LineEditGPSHost->setText(host.c_str());
-    LineEditGPSPort->setText(QString("%1").arg(port));
+	host = QString(Settings.Get("GPS", "host", string("localhost")).c_str());
+	port = Settings.Get("GPS", "port", port);
+	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);
 
-	/* Extract the receiver coordinates setted */
+	LineEditGPSHost->setText(host);
+    LineEditGPSPort->setText(QString("%1").arg(port));
+	CheckBoxUseGPS->setChecked(bUseGPS);
+
+	/* Extract the receiver coordinates  */
 	ExtractReceiverCoordinates();
 }
 
@@ -108,28 +107,20 @@ void GeneralSettingsDlg::CheckSN(const QString& NewText)
 {
 	/* Only S or N char are accepted */
 
-	const QString sVal = NewText.upper();
+	const QString sVal = NewText;
 
 	if (sVal != "S" && sVal != "N" && sVal != "")
 		EdtLatitudeNS->setText("");
-	else
-		if (sVal != NewText) /* if lowercase change to uppercase */
-			EdtLatitudeNS->setText(sVal);
-
 }
 
 void GeneralSettingsDlg::CheckEW(const QString& NewText)
 {
 	/* Only E or W char are accepted */
 
-	const QString sVal = NewText.upper();
+	const QString sVal = NewText;
 
 	if (sVal != "E" && sVal != "W" && sVal != "")
 		EdtLongitudeEW->setText("");
-	else
-		if (sVal != NewText) /* if lowercase change to uppercase */
-			EdtLongitudeEW->setText(sVal);
-
 }
 
 void GeneralSettingsDlg::OnCheckBoxUseGPS()
@@ -219,11 +210,11 @@ void GeneralSettingsDlg::ButtonOkClicked()
 			double latitude, longitude;
 
 			latitude = EdtLatitudeDegrees->text().toDouble() + EdtLatitudeMinutes->text().toDouble()/60.0;
-			if(EdtLatitudeNS->text().upper().latin1()[0]=='S')
+			if(EdtLatitudeNS->text()[0]=='S' || EdtLatitudeNS->text()[0]=='s')
 				latitude = - latitude;
 
 			longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60.0;
-			if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
+			if(EdtLongitudeEW->text()[0]=='W' || EdtLongitudeEW->text()[0]=='w')
 				longitude = - longitude;
 
 			Parameters.GPSData.SetPositionAvailable(TRUE);
@@ -236,7 +227,7 @@ void GeneralSettingsDlg::ButtonOkClicked()
 		}
 		Parameters.Unlock(); 
 
-    	host = LineEditGPSHost->text().latin1();
+    	host = LineEditGPSHost->text();
     	port = LineEditGPSPort->text().toInt();
 
 		accept(); /* If the values are valid close the dialog */
@@ -362,11 +353,16 @@ void GeneralSettingsDlg::ExtractReceiverCoordinates()
 
 void GeneralSettingsDlg::AddWhatsThisHelp()
 {
-	Q3WhatsThis::add(this,
+	QString str =
 		tr("<b>Receiver coordinates:</b> Are used on "
 		"Live Schedule Dialog to show a little green cube on the left"
 		" of the target column if the receiver coordinates (latitude and longitude)"
 		" are inside the target area of this transmission.<br>"
-		"Receiver coordinates are also saved into the Log file."));
+		"Receiver coordinates are also saved into the Log file.");
+#if QT_VERSION < 0x040000
+	QWhatsThis::add(this, str);
+#else
+	setWhatsThis(str);
+#endif
 }
 

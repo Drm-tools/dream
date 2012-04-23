@@ -28,21 +28,19 @@
 \******************************************************************************/
 
 #include "MultColorLED.h"
-#if QT_VERSION < 0x040000
-# define Q3Frame QFrame
-#else
-# include <Q3Frame>
+#if QT_VERSION >= 0x040000
 # include <QLabel>
 #endif
 
 
 /* Implementation *************************************************************/
 CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) : 
-	QLabel(parent, name, f), eColorFlag(RL_GREY),
+	QLabel(""), eColorFlag(RL_GREY),
 	TimerRedLight(), TimerGreenLight(), TimerYellowLight(),
 	bFlagRedLi(false), bFlagGreenLi(false), bFlagYellowLi(false),
 	iUpdateTime(DEFAULT_UPDATE_TIME)
 {
+#if QT_VERSION < 0x040000
 	/* Define size of the bitmaps */
 	const int iXSize = 13;
 	const int iYSize = 13;
@@ -56,10 +54,15 @@ CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) 
 	BitmCubeGrey.fill(QColor(192, 192, 192));
 	BitmCubeYellow.resize(iXSize, iYSize);
 	BitmCubeYellow.fill(QColor(255, 255, 0));
-
+#else
+	BitmCubeGreen.fill(QColor(0, 255, 0));
+	BitmCubeRed.fill(QColor(255, 0, 0));
+	BitmCubeGrey.fill(QColor(192, 192, 192));
+	BitmCubeYellow.fill(QColor(255, 255, 0));
+#endif
 	/* Set modified style */
-	setFrameShape(Q3Frame::Panel);
-	setFrameShadow(Q3Frame::Sunken);
+	setFrameShape(QFrame::Panel);
+	setFrameShadow(QFrame::Sunken);
 	setIndent(0);
 
 	Reset();
@@ -162,19 +165,31 @@ void CMultColorLED::SetLight(int iNewStatus)
 	case 0:
 		/* Green light */
 		bFlagGreenLi = true;
+#if QT_VERSION < 0x040000
 		TimerGreenLight.changeInterval(iUpdateTime);
+#else
+		TimerGreenLight.setInterval(iUpdateTime);
+#endif
 		break;
 
 	case 1:
 		/* Yellow light */
 		bFlagYellowLi = true;
+#if QT_VERSION < 0x040000
 		TimerYellowLight.changeInterval(iUpdateTime);
+#else
+		TimerYellowLight.setInterval(iUpdateTime);
+#endif
 		break;
 
 	case 2:
 		/* Red light */
 		bFlagRedLi = true;
+#if QT_VERSION < 0x040000
 		TimerRedLight.changeInterval(iUpdateTime);
+#else
+		TimerRedLight.setInterval(iUpdateTime);
+#endif
 		break;
 	}
 

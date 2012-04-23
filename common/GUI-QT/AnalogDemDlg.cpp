@@ -87,6 +87,7 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
     menu_Settings->addMenu(new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
     menubar->addMenu(new CDreamHelpMenu(this));
+    SliderBandwidth->setTickPosition(QSlider::TicksBothSides);
 #else
     /* Set Menu ***************************************************************/
     /* View menu ------------------------------------------------------------ */
@@ -125,10 +126,10 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 
     MainPlot->SetRecObj(&DRMReceiver);
+    SliderBandwidth->setTickmarks(QSlider::Both);
 #endif
 
     SliderBandwidth->setRange(0, SOUNDCRD_SAMPLE_RATE / 2);
-    SliderBandwidth->setTickmarks(QSlider::Both);
     SliderBandwidth->setTickInterval(1000); /* Each kHz a tick */
     SliderBandwidth->setPageStep(1000); /* Hz */
 
@@ -536,13 +537,15 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
     {
         /* Show "save file" dialog */
         QString strFileName =
+#if QT_VERSION < 0x040000
             QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
-
-        /* Check if user not hit the cancel button */
+#else
+			QFileDialog::getSaveFileName(this, tr("Save Audio"), "DreamOut.wav", tr("Wav (*.wav)"));
+#endif
+        /* Check if user hit the cancel button */
         if (!strFileName.isEmpty())
         {
-            DRMReceiver.GetWriteData()->
-            StartWriteWaveFile(strFileName.latin1());
+            DRMReceiver.GetWriteData()->StartWriteWaveFile(toStdString(strFileName));
         }
         else
         {
@@ -964,10 +967,7 @@ void CAMSSDlg::OnTimer()
                 if (iSystemID == 0 || iSystemID == 1)
                 {
                     freqEntry += " ID:";
-                    freqEntry +=
-                        QString().setNum((long) Parameters.
-                                         AltFreqSign.vecOtherServices[i].
-                                         iServiceID, 16).upper();
+                    freqEntry += asHex(Parameters.AltFreqSign.vecOtherServices[i].iServiceID);
                 }
                 break;
 
@@ -990,19 +990,17 @@ void CAMSSDlg::OnTimer()
                 if (iSystemID == 3)
                 {
                     freqEntry += " ECC+PI:";
-                    freqEntry +=
-                        QString().setNum((long) Parameters.
+                    freqEntry += asHex((long) Parameters.
                                          AltFreqSign.vecOtherServices[i].
-                                         iServiceID, 16).upper();
+                                         iServiceID);
                 }
 
                 if (iSystemID == 4)
                 {
                     freqEntry += " PI:";
-                    freqEntry +=
-                        QString().setNum((long) Parameters.
+                    freqEntry += asHex((long) Parameters.
                                          AltFreqSign.vecOtherServices[i].
-                                         iServiceID, 16).upper();
+                                         iServiceID);
                 }
                 break;
 
@@ -1025,10 +1023,9 @@ void CAMSSDlg::OnTimer()
                 if (iSystemID == 6)
                 {
                     freqEntry += " ECC+PI:";
-                    freqEntry +=
-                        QString().setNum((long) Parameters.
+                    freqEntry += asHex(Parameters.
                                          AltFreqSign.vecOtherServices[i].
-                                         iServiceID, 16).upper();
+                                         iServiceID);
                 }
 
                 if (iSystemID == 7)
@@ -1037,7 +1034,7 @@ void CAMSSDlg::OnTimer()
                     freqEntry +=
                         QString().setNum((long) Parameters.
                                          AltFreqSign.vecOtherServices[i].
-                                         iServiceID, 16).upper();
+                                         iServiceID, 16).toUpper();
                 }
                 break;
 
@@ -1089,8 +1086,7 @@ void CAMSSDlg::OnTimer()
             TextAMSSLanguage->setText(QString(strTableLanguageCode[DRMReceiver.
                                               GetParameters()->Service[0].iLanguage].c_str()));
 
-            TextAMSSServiceID->setText("ID:" + QString().setNum(
-                                           (long) Parameters.Service[0].iServiceID, 16).upper());
+            TextAMSSServiceID->setText("ID:" + asHex(Parameters.Service[0].iServiceID));
 
             TextAMSSAMCarrierMode->setText(QString(strTableAMSSCarrierMode[DRMReceiver.
                                                    GetParameters()->iAMSSCarrierMode].c_str()));

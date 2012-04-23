@@ -167,7 +167,7 @@ class CLiveScheduleDlgBase : public QMainWindow, public Ui_LiveScheduleWindow
 public:
 	CLiveScheduleDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QMainWindow(parent,name,f){}
+		QMainWindow(parent,f){}
 	virtual ~CLiveScheduleDlgBase() {}
 };
 #endif

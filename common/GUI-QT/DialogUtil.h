@@ -35,11 +35,11 @@
 #include<map>
 
 #include <qthread.h>
+#include <qevent.h>
 #if QT_VERSION < 0x040000
 # include <qaction.h>
 # include <qpopupmenu.h>
 # include "AboutDlgbase.h"
-# define QMenu QPopupMenu
 #else
 # include "ui_AboutDlgbase.h"
 # include <QDialog>
@@ -48,6 +48,24 @@
 # include <QAction>
 # include <QActionGroup>
 #endif
+
+inline string toStdString(QString s)
+{
+#if QT_VERSION < 0x040000
+	return s.latin1();
+#else
+	return s.toUtf8();
+#endif
+}
+
+inline QString asHex(long n)
+{
+#if QT_VERSION < 0x040000
+	return QString().setNum(n, 18).upper();
+#else
+	return QString().setNum(n, 18).toUpper();
+#endif
+}
 
 class CRig;
 typedef int rig_model_t;
@@ -62,15 +80,29 @@ typedef int rig_model_t;
 #endif
 /* Classes ********************************************************************/
 /* DRM events --------------------------------------------------------------- */
+#if QT_VERSION < 0x040000
 class DRMEvent : public QCustomEvent
 {
 public:
 	DRMEvent(const int iNewMeTy, const int iNewSt) :
-		QCustomEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
+		QEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
 
 	int iMessType;
 	int iStatus;
 };
+#else
+
+
+class DRMEvent : public QEvent
+{
+public:
+	DRMEvent(const int iNewMeTy, const int iNewSt) :
+	  QEvent(QEvent::Type(QEvent::User + 11)), iMessType(iNewMeTy), iStatus(iNewSt) {}
+
+	int iMessType;
+	int iStatus;
+};
+#endif
 
 
 /* About dialog ------------------------------------------------------------- */
@@ -78,9 +110,8 @@ public:
 class CAboutDlgBase : public QDialog, public Ui_CAboutDlgBase
 {
 public:
-	CAboutDlgBase(QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+	CAboutDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f):
+		QDialog(parent,f){setupUi(this);}
 	virtual ~CAboutDlgBase() {}
 };
 #endif
@@ -165,19 +196,23 @@ public:
 
 inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 {
-	/* Under Windows it does seem that QT only sets the caption if a "Qt" is
+#if QT_VERSION < 0x030000
+	/* Under Windows QT only sets the caption if a "Qt" is
 	   present in the name. Make a little "trick" to display our desired
 	   name without seeing the "Qt" (by Andrea Russo) */
 	QString sTitle = "";
-
 #ifdef _MSC_VER
-# if QT_VERSION < 0x030000
 	sTitle.fill(' ', 10000);
 	sTitle += "Qt";
+#endif
+	pDlg->setCaption(sCap + sTitle);
+#else
+# if QT_VERSION < 0x040000
+	pDlg->setCaption(sCap);
+# else
+	pDlg->setWindowTitle(sCap);
 # endif
 #endif
-
-	pDlg->setCaption(sCap + sTitle);
 }
 
 class RemoteMenu : public QObject

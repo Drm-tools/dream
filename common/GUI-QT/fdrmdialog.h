@@ -42,6 +42,8 @@
 #if QT_VERSION < 0x040000
 # include <qpopupmenu.h>
 # include "fdrmdialogbase.h"
+# include "MultimediaDlg.h"
+# include "systemevalDlg.h"
 #else
 # include <QActionGroup>
 # include <QSignalMapper>
@@ -52,10 +54,10 @@
 # include <QCustomEvent>
 # include <QCloseEvent>
 # include "ui_DRMMainWindow.h"
+# include "EvaluationDlg.h"
 #endif
 
 #include "DialogUtil.h"
-#include "MultimediaDlg.h"
 #include "StationsDlg.h"
 #include "LiveScheduleDlg.h"
 #include "EPGDlg.h"
@@ -68,21 +70,13 @@
 #include "../util/Vector.h"
 #include "../datadecoding/DataDecoder.h"
 
-#if QT_VERSION >= 0x040000
-# include "EvaluationDlg.h"
-#else
-# include "systemevalDlg.h"
-#endif
-
-
 /* Classes ********************************************************************/
 #if QT_VERSION >= 0x040000
 class FDRMDialogBase : public QMainWindow, public Ui_DRMMainWindow
 {
 public:
-    FDRMDialogBase(QWidget* parent = 0, const char* name = 0,
-            bool modal = FALSE, Qt::WFlags f = 0):
-        QMainWindow(parent,name,f) {
+    FDRMDialogBase(QWidget* parent, const char*, bool, Qt::WFlags f):
+        QMainWindow(parent,f) {
         setupUi(this);
     }
     virtual ~FDRMDialogBase() {}
@@ -105,7 +99,11 @@ protected:
     vector<QLabel*>		serviceLabels;
 
     systemevalDlg*		pSysEvalDlg;
+#if QT_VERSION < 0x040000
     MultimediaDlg*		pMultiMediaDlg;
+#else
+    QMainWindow*		pMultiMediaDlg;
+#endif
     MultSettingsDlg*	pMultSettingsDlg;
     StationsDlg*		pStationsDlg;
     LiveScheduleDlg*	pLiveScheduleDlg;
@@ -128,7 +126,7 @@ protected:
 #endif
 
     void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-    virtual void	customEvent(QCustomEvent* Event);
+    virtual void	customEvent(QEvent* Event);
     virtual void	closeEvent(QCloseEvent* ce);
     virtual void	showEvent(QShowEvent* pEvent);
     void			hideEvent(QHideEvent* pEvent);

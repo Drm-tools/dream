@@ -16,7 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="Q3Frame" name="FrameMainDisplay">
+     <widget class="QFrame" name="FrameMainDisplay">
       <property name="sizePolicy">
        <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
         <horstretch>0</horstretch>
@@ -2518,7 +2518,7 @@
           <number>0</number>
          </property>
          <item>
-          <widget class="Q3Frame" name="FrameAudioDataParams">
+          <widget class="QFrame" name="FrameAudioDataParams">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
              <horstretch>0</horstretch>
@@ -6710,7 +6710,7 @@
           <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
          </property>
          <property name="wordWrap">
-          <bool>false</bool>
+          <bool>true</bool>
          </property>
         </widget>
        </item>
@@ -6718,7 +6718,7 @@
      </widget>
     </item>
     <item>
-     <widget class="Q3Frame" name="FrameServiceSelectors">
+     <widget class="QFrame" name="FrameServiceSelectors">
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
       </property>
@@ -7152,13 +7152,7 @@
   </action>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>Q3Frame</class>
-   <extends>QFrame</extends>
-   <header>Qt3Support/Q3Frame</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
+   <customwidget>
    <class>QwtThermo</class>
    <extends>QWidget</extends>
    <header location="global">qwt_thermo.h</header>

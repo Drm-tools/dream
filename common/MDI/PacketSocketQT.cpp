@@ -424,8 +424,8 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 			if(n == SOCKET_ERROR)
 				ok = false;
 #else
-			ok = pUdps->joinMulticastGroup(AddrGroup, GetInterface(AddrInterface));
-			//ok = pUdps->joinMulticastGroup(AddrGroup);
+			//ok = pUdps->joinMulticastGroup(AddrGroup, GetInterface(AddrInterface));
+			ok = pUdps->joinMulticastGroup(AddrGroup);
 #endif
 			if(!ok)
 			{

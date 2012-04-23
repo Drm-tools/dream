@@ -77,7 +77,7 @@ class CAMSSDlgBase : public QDialog, public Ui_CAMSSDlgBase
 public:
 	CAMSSDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		QDialog(parent,f){setupUi(this);}
 	virtual ~CAMSSDlgBase() {}
 };
 #endif
@@ -112,7 +112,7 @@ class AnalogDemDlgBase : public QMainWindow, public Ui_AMMainWindow
 public:
 	AnalogDemDlgBase(QWidget* parent = 0,
 		const char* name = 0, Qt::WFlags f = 0):
-		QMainWindow(parent,name,f){setupUi(this);}
+		QMainWindow(parent,f){setupUi(this);}
 	virtual ~AnalogDemDlgBase() {}
 };
 #endif

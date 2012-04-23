@@ -162,20 +162,20 @@ public:
 		iStopMinute = iStopTime - iStopHour * 100;
 	}
 
-	void SetDaysFlagString(const string strNewDaysFlags);
+	void SetDaysFlagString(const QString& strNewDaysFlags);
 
 	int		iStartHour;
 	int		iStartMinute;
 	int		iStopHour;
 	int		iStopMinute;
 	int		iFreq;
-	string	strName;
-	string	strTarget;
-	string	strLanguage;
-	string	strSite;
-	string	strCountry;
-	string	strDaysFlags;
-	string	strDaysShow;
+	QString	strName;
+	QString	strTarget;
+	QString	strLanguage;
+	QString	strSite;
+	QString	strCountry;
+	QString	strDaysFlags;
+	QString	strDaysShow;
 	_REAL	rPower;
 #if QT_VERSION < 0x040000
 	QListViewItem* item;
@@ -233,7 +233,7 @@ class CStationsDlgBase : public QMainWindow, public Ui_StationsDlgbase
 public:
 	CStationsDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QMainWindow(parent,name,f){}
+		QMainWindow(parent,f){}
 	virtual ~CStationsDlgBase() {}
 };
 #endif

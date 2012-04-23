@@ -168,14 +168,16 @@ main(int argc, char **argv)
 				rig.subscribe();
 			}
 #endif
-			FDRMDialog MainDlg(DRMReceiver, Settings, rig, NULL, NULL, FALSE, Qt::WStyle_MinMax);
+			FDRMDialog MainDlg(DRMReceiver, Settings, rig);
 
 			/* Start working thread */
 			CRx rx(DRMReceiver);
 			rx.start();
 
 			/* Set main window */
+#if QT_VERSION < 0x040000
 			app.setMainWidget(&MainDlg);
+#endif
 
 			app.exec();
 
@@ -190,10 +192,12 @@ main(int argc, char **argv)
 		}
 		else if(mode == "transmit")
 		{
-			TransmDialog MainDlg(Settings, 0, 0, FALSE, Qt::WStyle_MinMax);
+			TransmDialog MainDlg(Settings);
 
 			/* Set main window */
+#if QT_VERSION < 0x040000
 			app.setMainWidget(&MainDlg);
+#endif
 
 			/* Show dialog */
 			MainDlg.show();

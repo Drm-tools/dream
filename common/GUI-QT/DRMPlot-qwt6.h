@@ -319,8 +319,8 @@ public:
     void setCaption(const QString& s) {
         plot->setWindowTitle(s);
     }
-    void setIcon(const QPixmap& s) {
-        plot->setWindowIcon(QIcon(s));
+    void setIcon(const QIcon& s) {
+        plot->setWindowIcon(s);
     }
 
     bool isVisible() {

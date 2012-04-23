@@ -106,7 +106,7 @@ class TransmDlgBase : public QDialog, public Ui_TransmDlgBase
 public:
 	TransmDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		QDialog(parent,f){setupUi(this);}
 	virtual ~TransmDlgBase() {}
 };
 #endif

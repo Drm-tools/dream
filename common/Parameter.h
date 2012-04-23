@@ -327,6 +327,7 @@ public:
     }
 
     uint32_t iServiceID;
+    uint32_t iPacketID;
     ECACond eCAIndication;
     int iLanguage;
     ETyOServ eAudDataFlag;

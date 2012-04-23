@@ -48,7 +48,7 @@ class CGeneralSettingsDlgBase : public QDialog, public Ui_CGeneralSettingsDlgBas
 public:
 	CGeneralSettingsDlgBase(QWidget* parent = 0, const char* name = 0,
 		bool modal = FALSE, Qt::WFlags f = 0):
-		QDialog(parent,name,modal,f){setupUi(this);}
+		QDialog(parent,f){setupUi(this);}
 	virtual ~CGeneralSettingsDlgBase() {}
 };
 #endif
@@ -74,7 +74,7 @@ protected:
 
 	CParameter&		Parameters;
 	CSettings&		Settings;
-	string			host;
+	QString			host;
 	int				port;
 	_BOOLEAN		bUseGPS;
 

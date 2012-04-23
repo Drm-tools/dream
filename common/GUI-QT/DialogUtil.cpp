@@ -38,9 +38,7 @@
 # include <qwhatsthis.h>
 # include <qtextview.h>
 #else
-# include <QCustomEvent>
-# include <Q3WhatsThis>
-# include <Q3TextView>
+# include <QWhatsThis>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 #include "../Version.h"
@@ -269,8 +267,8 @@ QSignalMapper* CSoundCardSelMenu::Init(const QString& text, CSelectionInterface*
     {
         QString name(names[i].c_str());
         QAction* m = menu->addAction(name, map, SLOT(map()));
-	group->add(m);
-	map->setMapping(m, i);
+		group->addAction(m);
+		map->setMapping(m, i);
         if(i==iDefaultDev)
             menu->setActiveAction(m);
     }
@@ -347,6 +345,7 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
     :rigmenus(),specials(),rig(nrig)
 #endif
 {
+#if QT_VERSION < 0x040000
     pRemoteMenu = new QMenu(parent);
     CHECK_PTR(pRemoteMenu);
 
@@ -462,10 +461,14 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
     pRemoteMenu->setItemChecked(iModRigMenuID, rig.GetEnableModRigSettings());
 
 #endif
+#else
+//TODO
+#endif
 }
 
 void RemoteMenu::OnModRigMenu(int iID)
 {
+#if QT_VERSION < 0x040000
 #ifdef HAVE_LIBHAMLIB
     if (pRemoteMenu->isItemChecked(iID))
     {
@@ -478,10 +481,12 @@ void RemoteMenu::OnModRigMenu(int iID)
         rig.SetEnableModRigSettings(TRUE);
     }
 #endif
+#endif
 }
 
 void RemoteMenu::OnRemoteMenu(int iID)
 {
+#if QT_VERSION < 0x040000
 #ifdef HAVE_LIBHAMLIB
     // if an "others" rig was selected add it to the specials list
     for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
@@ -509,13 +514,13 @@ void RemoteMenu::OnRemoteMenu(int iID)
         }
     }
 
+
     /* Take care of check */
     // do this after others menu in case we added something
     for(size_t j=0; j<specials.size(); j++)
     {
         pRemoteMenu->setItemChecked(specials[j], specials[j]==iID);
     }
-
     // disable com port - if rig has changed
     //if(iID != Hamlib.GetHamlibModelID())
     //	agComPortSel->setChecked(false);
@@ -528,11 +533,14 @@ void RemoteMenu::OnRemoteMenu(int iID)
         emit SMeterAvailable();
     }
 #endif
+#else
+	//TODO
+#endif
 }
 
 void RemoteMenu::OnComPortMenu(QAction* action)
 {
 #ifdef HAVE_LIBHAMLIB
-    rig.SetComPort(action->text().latin1());
+    rig.SetComPort(toStdString(action->text()));
 #endif
 }

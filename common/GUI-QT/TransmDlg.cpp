@@ -36,18 +36,10 @@
 # include <qfiledialog.h>
 # include <qpopupmenu.h>
 # include <qprogressbar.h>
-# define Q3PopupMenu QPopupMenu
-# define Q3WhatsThis QWhatsThis
-# define Q3MultiLineEdit QMultiLineEdit
-# define Q3FileDialog QFileDialog
-# define Q3ListViewItem QListViewItem
-# define Q3ListViewItemIterator QListViewItemIterator
 #else
-# include <q3filedialog.h>
-# include <q3whatsthis.h>
-# include <QCustomEvent>
+# include <QWhatsThis>
+# include <QFileDialog>
 # include <QHideEvent>
-# include <Q3PopupMenu>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 
@@ -73,9 +65,13 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	AddWhatsThisHelp();
 
 	/* Set controls to custom behavior */
-	MultiLineEditTextMessage->setWordWrap(Q3MultiLineEdit::WidgetWidth);
+#if QT_VERSION < 0x040000
+	MultiLineEditTextMessage->setWordWrap(QMultiLineEdit::WidgetWidth);
 	MultiLineEditTextMessage->setEdited(FALSE);
 	ComboBoxTextMessage->insertItem(tr("new"), 0);
+#else
+	// TODO put in ui file
+#endif
 	UpdateMSCProtLevCombo();
 
 	/* Init controls with default settings */
@@ -94,10 +90,14 @@ TransmDialog::TransmDialog(CSettings& NSettings,
         QBrush alarmBrush(QColor(255, 0, 0));
         ProgrInputLevel->setAlarmBrush(alarmBrush);
 
-
 	/* Init progress bar for current transmitted picture */
+#if QT_VERSION < 0x040000
 	ProgressBarCurPict->setTotalSteps(100);
 	ProgressBarCurPict->setProgress(0);
+#else
+	ProgressBarCurPict->setRange(0,100);
+	ProgressBarCurPict->setValue(0);
+#endif
 	TextLabelCurPict->setText("");
 
 	/* Output mode (real valued, I / Q or E / P) */
@@ -175,6 +175,8 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 		break;
 	}
 
+
+#if QT_VERSION < 0x040000
 	/* Set button group IDs */
 	ButtonGroupBandwidth->insert(RadioButtonBandwidth45, 0);
 	ButtonGroupBandwidth->insert(RadioButtonBandwidth5, 1);
@@ -182,7 +184,6 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	ButtonGroupBandwidth->insert(RadioButtonBandwidth10, 3);
 	ButtonGroupBandwidth->insert(RadioButtonBandwidth18, 4);
 	ButtonGroupBandwidth->insert(RadioButtonBandwidth20, 5);
-
 	/* MSC interleaver mode */
 	ComboBoxMSCInterleaver->insertItem(tr("2 s (Long Interleaving)"), 0);
 	ComboBoxMSCInterleaver->insertItem(tr("400 ms (Short Interleaving)"), 1);
@@ -247,6 +248,9 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	case CS_3_HMMIX:
 		break;
 	}
+#else
+	// TODO
+#endif
 
 	/* Service parameters --------------------------------------------------- */
 	/* Service label */
@@ -256,6 +260,8 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 
 	/* Service ID */
 	LineEditServiceID->setText(QString().setNum((int) Service.iServiceID, 16));
+
+#if QT_VERSION < 0x040000
 
 	/* Language */
 	for (i = 0; i < LEN_TABLE_LANGUAGE_CODE; i++)
@@ -268,11 +274,15 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 		ComboBoxProgramType->insertItem(strTableProgTypCod[i].c_str(), i);
 
 	ComboBoxProgramType->setCurrentItem(Service.iServiceDescr);
+#else
+	// TODO
+#endif
 
 	/* Sound card IF */
 	LineEditSndCrdIF->setText(QString().number(
 		TransThread.DRMTransmitter.GetCarOffset(), 'f', 2));
 
+#if QT_VERSION < 0x040000
 	/* Clear list box for file names and set up columns */
 	ListViewFileNames->clear();
 
@@ -285,6 +295,9 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	TabWidgetServices->setTabEnabled(tabService2, FALSE);
 	TabWidgetServices->setTabEnabled(tabService3, FALSE);
 	TabWidgetServices->setTabEnabled(tabService4, FALSE);
+#else
+	// TODO
+#endif
 	CheckBoxEnableService->setChecked(TRUE);
 	CheckBoxEnableService->setEnabled(FALSE);
 
@@ -304,13 +317,17 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 
 	/* Add example text in internal container */
 	vecstrTextMessage.Add(
-		tr("Dream DRM Transmitter\x0B\x0AThis is a test transmission").latin1());
+		toStdString(tr("Dream DRM Transmitter\x0B\x0AThis is a test transmission")));
 
 	/* Insert item in combo box, display text and set item to our text */
+#if QT_VERSION < 0x040000
 	ComboBoxTextMessage->insertItem(QString().setNum(1), 1);
 	ComboBoxTextMessage->setCurrentItem(1);
-	iIDCurrentText = 1;
 	MultiLineEditTextMessage->insertLine(vecstrTextMessage[1].c_str());
+#else
+		// TODO
+#endif
+	iIDCurrentText = 1;
 
 	/* Now make sure that the text message flag is activated in global struct */
 	Service.AudioParam.bTextflag = TRUE;
@@ -322,14 +339,14 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 
 	/* Set Menu ***************************************************************/
 	/* Settings menu  ------------------------------------------------------- */
-	pSettingsMenu = new Q3PopupMenu(this);
+#if QT_VERSION < 0x040000
+	pSettingsMenu = new QPopupMenu(this);
 	CHECK_PTR(pSettingsMenu);
 	pSettingsMenu->insertItem(tr("&Sound Card Selection"),
 		new CSoundCardSelMenu(
 			TransThread.DRMTransmitter.GetSoundInInterface(),
 			TransThread.DRMTransmitter.GetSoundOutInterface(), this)
 	);
-
 	/* Main menu bar */
 	pMenu = new QMenuBar(this);
 	CHECK_PTR(pMenu);
@@ -338,7 +355,6 @@ TransmDialog::TransmDialog(CSettings& NSettings,
 	pMenu->setSeparator(QMenuBar::InWindowsStyle);
 
 	/* Now tell the layout about the menu */
-#if QT_VERSION < 0x040000
 	TransmDlgBaseLayout->setMenuBar(pMenu);
 #else
 //TODO
@@ -422,7 +438,7 @@ TransmDialog::~TransmDialog()
 
 void TransmDialog::OnHelpWhatsThis()
 {
-	Q3WhatsThis::enterWhatsThisMode();
+	QWhatsThis::enterWhatsThisMode();
 }
 
 void TransmDialog::OnTimer()
@@ -452,7 +468,11 @@ void TransmDialog::OnTimer()
 
 			/* Show current file name and percentage */
 			TextLabelCurPict->setText(FileInfo.fileName());
+#if QT_VERSION < 0x040000
 			ProgressBarCurPict->setProgress((int) (rCPercent * 100)); /* % */
+#else
+			ProgressBarCurPict->setValue((int) (rCPercent * 100)); /* % */
+#endif
 		}
 		else
 		{
@@ -490,10 +510,10 @@ void TransmDialog::OnButtonStartStop()
 
 		/* Set file names for data application */
 		TransThread.DRMTransmitter.GetAudSrcEnc()->ClearPicFileNames();
-
+#if QT_VERSION < 0x040000
 		/* Iteration through list view items. Code based on QT sample code for
 		   list view items */
-		Q3ListViewItemIterator it(ListViewFileNames);
+		QListViewItemIterator it(ListViewFileNames);
 
 		for (; it.current(); it++)
 		{
@@ -507,6 +527,7 @@ void TransmDialog::OnButtonStartStop()
 			TransThread.DRMTransmitter.GetAudSrcEnc()->
 				SetPicFileName(strFileName.latin1(), strFormat.latin1());
 		}
+#endif
 
 		TransThread.start();
 
@@ -533,7 +554,9 @@ void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
 	{
 		/* Enable text message controls */
 		ComboBoxTextMessage->setEnabled(TRUE);
+#if QT_VERSION < 0x040000
 		MultiLineEditTextMessage->setEnabled(TRUE);
+#endif
 		PushButtonAddText->setEnabled(TRUE);
 		PushButtonClearAllText->setEnabled(TRUE);
 
@@ -544,7 +567,9 @@ void TransmDialog::EnableTextMessage(const _BOOLEAN bFlag)
 	{
 		/* Disable text message controls */
 		ComboBoxTextMessage->setEnabled(FALSE);
+#if QT_VERSION < 0x040000
 		MultiLineEditTextMessage->setEnabled(FALSE);
+#endif
 		PushButtonAddText->setEnabled(FALSE);
 		PushButtonClearAllText->setEnabled(FALSE);
 
@@ -596,9 +621,12 @@ void TransmDialog::EnableAudio(const _BOOLEAN bFlag)
 		Parameters.Service[0].AudioParam.iStreamID = 0;
 
 		/* Programme Type code, get it from combo box */
+#if QT_VERSION < 0x040000
 		Parameters.Service[0].iServiceDescr
 				= ComboBoxProgramType->currentItem();
-
+#else
+		// TODO
+#endif
 		Parameters.Unlock();
 	}
 	else
@@ -632,7 +660,9 @@ void TransmDialog::EnableData(const _BOOLEAN bFlag)
 	if (bFlag == TRUE)
 	{
 		/* Enable data controls */
+#if QT_VERSION < 0x040000
 		ListViewFileNames->setEnabled(TRUE);
+#endif
 		PushButtonClearAllFileNames->setEnabled(TRUE);
 		PushButtonAddFile->setEnabled(TRUE);
 
@@ -664,7 +694,9 @@ void TransmDialog::EnableData(const _BOOLEAN bFlag)
 	else
 	{
 		/* Disable data controls */
+#if QT_VERSION < 0x040000
 		ListViewFileNames->setEnabled(FALSE);
+#endif
 		PushButtonClearAllFileNames->setEnabled(FALSE);
 		PushButtonAddFile->setEnabled(FALSE);
 	}
@@ -673,6 +705,7 @@ void TransmDialog::EnableData(const _BOOLEAN bFlag)
 _BOOLEAN TransmDialog::GetMessageText(const int iID)
 {
 	_BOOLEAN bTextIsNotEmpty = TRUE;
+#if QT_VERSION < 0x040000
 
 	/* Check if text control is not empty */
 	if (MultiLineEditTextMessage->edited())
@@ -682,9 +715,7 @@ _BOOLEAN TransmDialog::GetMessageText(const int iID)
 			vecstrTextMessage.Enlarge(1);
 
 		/* First line */
-		vecstrTextMessage[iID] =
-			MultiLineEditTextMessage->textLine(0).utf8().data();
-
+		vecstrTextMessage[iID] = MultiLineEditTextMessage->textLine(0).utf8().data();
 		/* Other lines */
 		const int iNumLines = MultiLineEditTextMessage->numLines();
 
@@ -701,6 +732,10 @@ _BOOLEAN TransmDialog::GetMessageText(const int iID)
 	else
 		bTextIsNotEmpty = FALSE;
 
+#else
+		// TODO
+#endif
+
 	return bTextIsNotEmpty;
 }
 
@@ -713,11 +748,14 @@ void TransmDialog::OnPushButtonAddText()
 		{
 			/* If text was not empty, add new text in combo box */
 			const int iNewID = vecstrTextMessage.Size() - 1;
+#if QT_VERSION < 0x040000
 			ComboBoxTextMessage->insertItem(QString().setNum(iNewID), iNewID);
-
 			/* Clear added text */
 			MultiLineEditTextMessage->clear();
 			MultiLineEditTextMessage->setEdited(FALSE);
+#else
+			// TODO
+#endif
 		}
 	}
 	else
@@ -735,18 +773,21 @@ void TransmDialog::OnButtonClearAllText()
 
 	/* Clear combo box */
 	ComboBoxTextMessage->clear();
+#if QT_VERSION < 0x040000
 	ComboBoxTextMessage->insertItem(tr("new"), 0);
-
 	/* Clear multi line edit */
 	MultiLineEditTextMessage->clear();
 	MultiLineEditTextMessage->setEdited(FALSE);
+#else
+	// TODO
+#endif
 }
 
 void TransmDialog::OnPushButtonAddFileName()
 {
 	/* Show "open file" dialog. Let the user select more than one file */
-	QStringList list = Q3FileDialog::getOpenFileNames(
-		tr("Image Files (*.png *.jpg *.jpeg *.jfif)"), NULL, this);
+#if QT_VERSION < 0x040000
+	QStringList list = QFileDialog::getOpenFileNames(tr("Image Files (*.png *.jpg *.jpeg *.jfif)"), NULL, this);
 
 	/* Check if user not hit the cancel button */
 	if (!list.isEmpty())
@@ -760,17 +801,22 @@ void TransmDialog::OnPushButtonAddFileName()
 			   automatically destroyed by QT when the parent
 			   ("ListViewFileNames") is destroyed */
 			ListViewFileNames->insertItem(
-				new Q3ListViewItem(ListViewFileNames, FileInfo.fileName(),
+				new QListViewItem(ListViewFileNames, FileInfo.fileName(),
 				QString().setNum((float) FileInfo.size() / 1000.0, 'f', 2),
 				FileInfo.filePath()));
 		}
 	}
+#else
+	// TODO
+#endif
 }
 
 void TransmDialog::OnButtonClearAllFileNames()
 {
 	/* Clear list box for file names */
+#if QT_VERSION < 0x040000
 	ListViewFileNames->clear();
+#endif
 }
 
 void TransmDialog::OnComboBoxTextMessageHighlighted(int iID)
@@ -778,13 +824,18 @@ void TransmDialog::OnComboBoxTextMessageHighlighted(int iID)
 	iIDCurrentText = iID;
 
 	/* Set text control with selected message */
+#if QT_VERSION < 0x040000
 	MultiLineEditTextMessage->clear();
 	MultiLineEditTextMessage->setEdited(FALSE);
-
+#endif
 	if (iID != 0)
 	{
 		/* Write stored text in multi line edit control */
+#if QT_VERSION < 0x040000
 		MultiLineEditTextMessage->insertLine(vecstrTextMessage[iID].c_str());
+#else
+		// TODO
+#endif
 	}
 }
 
@@ -816,6 +867,7 @@ void TransmDialog::OnTextChangedServiceID(const QString& strID)
 
 void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 {
+#if QT_VERSION < 0x040000
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 
 	Parameters.Lock();
@@ -823,6 +875,9 @@ void TransmDialog::OnTextChangedServiceLabel(const QString& strLabel)
 	   string is needed (done with .utf8() function of QT string) */
 	Parameters.Service[0].strLabel = strLabel.utf8().data();
 	Parameters.Unlock();
+#else
+	// TODO
+#endif
 }
 
 void TransmDialog::OnComboBoxMSCInterleaverHighlighted(int iID)
@@ -883,6 +938,7 @@ void TransmDialog::OnComboBoxMSCProtLevHighlighted(int iID)
 
 void TransmDialog::UpdateMSCProtLevCombo()
 {
+#if QT_VERSION < 0x040000
 	CParameter& Parameters = *TransThread.DRMTransmitter.GetParameters();
 	Parameters.Lock();
 	if (Parameters.eMSCCodingScheme == CS_2_SM)
@@ -906,6 +962,9 @@ void TransmDialog::UpdateMSCProtLevCombo()
 	ComboBoxMSCProtLev->setCurrentItem(1);
 	Parameters.MSCPrLe.iPartB = 1;
 	Parameters.Unlock();
+##else
+	// TODO
+#endif
 }
 
 void TransmDialog::OnComboBoxSDCConstellationHighlighted(int iID)
@@ -1100,8 +1159,9 @@ void TransmDialog::DisableAllControlsForSet()
 {
 	GroupBoxChanParam->setEnabled(FALSE);
 	TabWidgetServices->setEnabled(FALSE);
+#if QT_VERSION < 0x040000
 	ButtonGroupOutput->setEnabled(FALSE);
-
+#endif
 	GroupInput->setEnabled(TRUE); /* For run-mode */
 }
 
@@ -1109,18 +1169,26 @@ void TransmDialog::EnableAllControlsForSet()
 {
 	GroupBoxChanParam->setEnabled(TRUE);
 	TabWidgetServices->setEnabled(TRUE);
+#if QT_VERSION < 0x040000
 	ButtonGroupOutput->setEnabled(TRUE);
-
+#else
+	// TODO
+#endif
 	GroupInput->setEnabled(FALSE); /* For run-mode */
 
 	/* Reset status bars */
 	ProgrInputLevel->setValue(RET_VAL_LOG_0);
+#if QT_VERSION < 0x040000
 	ProgressBarCurPict->setProgress(0);
+#else
+	ProgressBarCurPict->setValue(0);
+#endif
 	TextLabelCurPict->setText("");
 }
 
 void TransmDialog::AddWhatsThisHelp()
 {
+#if QT_VERSION < 0x040000
 	/* Dream Logo */
 	Q3WhatsThis::add(PixmapLabelDreamLogo,
 		tr("<b>Dream Logo:</b> This is the official logo of "
@@ -1211,4 +1279,7 @@ void TransmDialog::AddWhatsThisHelp()
 
 	Q3WhatsThis::add(TextLabelInterleaver, strInterleaver);
 	Q3WhatsThis::add(ComboBoxMSCInterleaver, strInterleaver);
+#else
+	// TODO
+#endif
 }

@@ -19,8 +19,13 @@ contains(QT_VERSION, ^4\\..*) {
     VPATH += common/GUI-QT
     !console {
         HEADERS += common/GUI-QT/DRMPlot-qwt6.h common/GUI-QT/EvaluationDlg.h
+        HEADERS += common/GUI-QT/SlideShowViewer.h common/GUI-QT/JLViewer.h common/GUI-QT/BWSViewer.h
+	HEADERS += common/GUI-QT/bwsbrowser.h common/GUI-QT/jlbrowser.h
         SOURCES += common/GUI-QT/DRMPlot-qwt6.cpp common/GUI-QT/EvaluationDlg.cpp
+        SOURCES += common/GUI-QT/SlideShowViewer.cpp common/GUI-QT/JLViewer.cpp common/GUI-QT/BWSViewer.cpp
+	SOURCES += common/GUI-QT/bwsbrowser.cpp common/GUI-QT/jlbrowser.cpp
         FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
+        FORMS += JLViewer.ui BWSViewer.ui SlideShowViewer.ui
         unix {
             exists(/usr/include/qwt) {
                 INCLUDEPATH += /usr/include/qwt
@@ -58,9 +63,10 @@ count(QT_VERSION, 0) {
     CONFIG += old
     VPATH += common/GUI-QT/qt2
     !console {
-        HEADERS += common/GUI-QT/DRMPlot.h common/GUI-QT/systemevalDlg.h
-        SOURCES += common/GUI-QT/DRMPlot.cpp common/GUI-QT/systemevalDlg.cpp
+        HEADERS += common/GUI-QT/DRMPlot.h common/GUI-QT/systemevalDlg.h common/GUI-QT/MultimediaDlg.h
+        SOURCES += common/GUI-QT/DRMPlot.cpp common/GUI-QT/systemevalDlg.cpp common/GUI-QT/MultimediaDlg.cpp
         FORMS += fdrmdialogbase.ui fmdialogbase.ui AnalogDemDlgbase.ui LiveScheduleDlgbase.ui
+        FORMS += MultimediaDlgbase.ui
         LIBS += -lqwt
         unix {
             INCLUDEPATH += /usr/include/qwt-4.2.0
@@ -74,7 +80,6 @@ count(QT_VERSION, 0) {
     FORMS += TransmDlgbase.ui
     FORMS += AMSSDlgbase.ui \
     systemevalDlgbase.ui \
-    MultimediaDlgbase.ui \
     StationsDlgbase.ui \
     EPGDlgbase.ui
     FORMS += GeneralSettingsDlgbase.ui \
@@ -169,23 +174,23 @@ unix {
     LIBS += -lz \
             -ldl
     SOURCES += linux/source/Pacer.cpp
-HEADERS += linux/source/shmsoundin.h \
-  linux/source/pa_shm_ringbuffer.h
-  SOURCES += linux/source/shmsoundin.cpp \
+    HEADERS += linux/source/shmsoundin.h \
+        linux/source/pa_shm_ringbuffer.h
+    SOURCES += linux/source/shmsoundin.cpp \
 	  linux/source/pa_shm_ringbuffer.c
-	  DEFINES += HAVE_DLFCN_H \
-		  HAVE_MEMORY_H \
-					  HAVE_STDINT_H \
-                                                  HAVE_STDLIB_H
-                                                  DEFINES += HAVE_STRINGS_H \
-                                                          HAVE_STRING_H \
-                                                          STDC_HEADERS
-                                                          DEFINES += HAVE_INTTYPES_H \
-                                                                  HAVE_STDINT_H \
-                                                                  HAVE_SYS_STAT_H \
-                                                                  HAVE_SYS_TYPES_H \
-                                                                  HAVE_UNISTD_H
-                                                                  DEFINES += HAVE_LIBZ
+      DEFINES += HAVE_DLFCN_H \
+              HAVE_MEMORY_H \
+              HAVE_STDINT_H \
+              HAVE_STDLIB_H
+      DEFINES += HAVE_STRINGS_H \
+              HAVE_STRING_H \
+              STDC_HEADERS
+      DEFINES += HAVE_INTTYPES_H \
+              HAVE_STDINT_H \
+              HAVE_SYS_STAT_H \
+              HAVE_SYS_TYPES_H \
+              HAVE_UNISTD_H
+      DEFINES += HAVE_LIBZ
     !macx {
         MAKEFILE = Makefile
         INCLUDEPATH += linux
@@ -226,8 +231,8 @@ win32 {
     }
     else {
         exists(libs/fftw.h) {
-            DEFINES += HAVE_FFTW_H HAVE_RFFTW_H
-            LIBS += -lfftw -lrfftw
+            DEFINES += HAVE_FFTW_H
+            LIBS += -lfftw
         }
         else {
             error("no usable fftw version 2 or 3 found")
@@ -525,7 +530,6 @@ SOURCES += common/GPSData.cpp \
     common/GUI-QT/GeneralSettingsDlg.h \
     common/GUI-QT/LiveScheduleDlg.h \
     common/GUI-QT/MultColorLED.h \
-    common/GUI-QT/MultimediaDlg.h \
     common/GUI-QT/MultSettingsDlg.h \
     common/GUI-QT/StationsDlg.h \
     common/GUI-QT/TransmDlg.h
@@ -538,7 +542,6 @@ SOURCES += common/GPSData.cpp \
     common/GUI-QT/GeneralSettingsDlg.cpp \
     common/GUI-QT/LiveScheduleDlg.cpp \
     common/GUI-QT/MultColorLED.cpp \
-    common/GUI-QT/MultimediaDlg.cpp \
     common/GUI-QT/MultSettingsDlg.cpp \
     common/GUI-QT/StationsDlg.cpp \
     common/GUI-QT/TransmDlg.cpp

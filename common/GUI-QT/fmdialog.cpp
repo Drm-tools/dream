@@ -33,10 +33,8 @@
 #include <qwt_thermo.h>
 #if QT_VERSION < 0x040000
 # include <qwhatsthis.h>
-# define Q3WhatsThis QWhatsThis
 #else
-# include <q3whatsthis.h>
-# include <q3cstring.h>
+# include <QWhatsThis>
 # include <QShowEvent>
 # include <QHideEvent>
 # include <QCustomEvent>
@@ -174,7 +172,7 @@ void FMDialog::OnTune()
 {
 	bool ok;
 	double freq = double(DRMReceiver.GetFrequency())/1000.0;
-	double f = QInputDialog::getDouble(tr("Dream FM"),
+	double f = QInputDialog::getDouble(this, tr("Dream FM"),
 					tr("Frequency (MHz):"), freq, 86.0, 110.0, 2, &ok);
 	if (ok)
 	{
@@ -318,8 +316,7 @@ void FMDialog::UpdateDisplay()
 
 		if (iServiceID != 0)
 		{
-			LabelServiceID->setText("ID:" +
-				QString().setNum(iServiceID, 16).upper());
+			LabelServiceID->setText("ID:" + asHex(iServiceID));
 		}
 		else
 			LabelServiceID->setText("");
@@ -488,36 +485,6 @@ void FMDialog::closeEvent(QCloseEvent* ce)
 		ce->ignore();
 }
 
-void FMDialog::customEvent(QCustomEvent* Event)
-{
-	if (Event->type() == QEvent::User + 11)
-	{
-		int iMessType = ((DRMEvent*) Event)->iMessType;
-		int iStatus = ((DRMEvent*) Event)->iStatus;
-
-			switch(iMessType)
-			{
-			case MS_FAC_CRC:
-				CLED_FAC->SetLight(iStatus);
-				break;
-
-			case MS_SDC_CRC:
-				CLED_SDC->SetLight(iStatus);
-				break;
-
-			case MS_MSC_CRC:
-				CLED_MSC->SetLight(iStatus);
-				break;
-
-			case MS_RESET_ALL:
-				CLED_FAC->Reset();
-				CLED_SDC->Reset();
-				CLED_MSC->Reset();
-				break;
-			}
-	}
-}
-
 QString FMDialog::GetCodecString(const int iServiceID)
 {
 	QString strReturn;
@@ -629,6 +596,7 @@ void FMDialog::SetDisplayColor(const QColor newColor)
 		QPalette CurPal(vecpWidgets[i]->palette());
 
 		/* Change colors */
+#if QT_VERSION < 0x040000
 		CurPal.setColor(QPalette::Active, QColorGroup::Foreground, newColor);
 		CurPal.setColor(QPalette::Active, QColorGroup::Button, newColor);
 		CurPal.setColor(QPalette::Active, QColorGroup::Text, newColor);
@@ -640,7 +608,19 @@ void FMDialog::SetDisplayColor(const QColor newColor)
 		CurPal.setColor(QPalette::Inactive, QColorGroup::Text, newColor);
 		CurPal.setColor(QPalette::Inactive, QColorGroup::Light, newColor);
 		CurPal.setColor(QPalette::Inactive, QColorGroup::Dark, newColor);
+#else
+		CurPal.setColor(QPalette::Active, QPalette::Foreground, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Button, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Text, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Light, newColor);
+		CurPal.setColor(QPalette::Active, QPalette::Dark, newColor);
 
+		CurPal.setColor(QPalette::Inactive, QPalette::Foreground, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Button, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Text, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Light, newColor);
+		CurPal.setColor(QPalette::Inactive, QPalette::Dark, newColor);
+#endif
 		/* Set new palette */
 		vecpWidgets[i]->setPalette(CurPal);
 	}
@@ -660,18 +640,12 @@ void FMDialog::AddWhatsThisHelp()
 		"performance. Too low levels should be avoided too, since in this case "
 		"the Signal-to-Noise Ratio (SNR) degrades.");
 
-	Q3WhatsThis::add(TextLabelInputLevel, strInputLevel);
-	Q3WhatsThis::add(ProgrInputLevel, strInputLevel);
 
 	/* Status LEDs */
 	const QString strStatusLEDS =
 		tr("<b>Status LEDs:</b> The three status LEDs show "
 		"the current CRC status of the three logical channels of a DRM stream. "
 		"These LEDs are the same as the top LEDs on the Evaluation Dialog.");
-
-	Q3WhatsThis::add(CLED_MSC, strStatusLEDS);
-	Q3WhatsThis::add(CLED_SDC, strStatusLEDS);
-	Q3WhatsThis::add(CLED_FAC, strStatusLEDS);
 
 	/* Station Label and Info Display */
 	const QString strStationLabelOther =
@@ -696,14 +670,35 @@ void FMDialog::AddWhatsThisHelp()
 		"transmitted in a different logical channel of a DRM stream. On the "
 		"right, the ID number connected with this service is shown.");
 
-	Q3WhatsThis::add(LabelBitrate, strStationLabelOther);
-	Q3WhatsThis::add(LabelCodec, strStationLabelOther);
-	Q3WhatsThis::add(LabelStereoMono, strStationLabelOther);
-	Q3WhatsThis::add(LabelServiceLabel, strStationLabelOther);
-	Q3WhatsThis::add(LabelProgrType, strStationLabelOther);
-	Q3WhatsThis::add(LabelServiceID, strStationLabelOther);
-	Q3WhatsThis::add(LabelLanguage, strStationLabelOther);
-	Q3WhatsThis::add(LabelCountryCode, strStationLabelOther);
-	Q3WhatsThis::add(FrameAudioDataParams, strStationLabelOther);
-
+#if QT_VERSION < 0x040000
+	QWhatsThis::add(TextLabelInputLevel, strInputLevel);
+	QWhatsThis::add(ProgrInputLevel, strInputLevel);
+	QWhatsThis::add(CLED_MSC, strStatusLEDS);
+	QWhatsThis::add(CLED_SDC, strStatusLEDS);
+	QWhatsThis::add(CLED_FAC, strStatusLEDS);
+	QWhatsThis::add(LabelBitrate, strStationLabelOther);
+	QWhatsThis::add(LabelCodec, strStationLabelOther);
+	QWhatsThis::add(LabelStereoMono, strStationLabelOther);
+	QWhatsThis::add(LabelServiceLabel, strStationLabelOther);
+	QWhatsThis::add(LabelProgrType, strStationLabelOther);
+	QWhatsThis::add(LabelServiceID, strStationLabelOther);
+	QWhatsThis::add(LabelLanguage, strStationLabelOther);
+	QWhatsThis::add(LabelCountryCode, strStationLabelOther);
+	QWhatsThis::add(FrameAudioDataParams, strStationLabelOther);
+#else
+	TextLabelInputLevel->setWhatsThis(strInputLevel);
+	ProgrInputLevel->setWhatsThis(strInputLevel);
+	CLED_MSC->setWhatsThis(strStatusLEDS);
+	CLED_SDC->setWhatsThis(strStatusLEDS);
+	CLED_FAC->setWhatsThis(strStatusLEDS);
+	LabelBitrate->setWhatsThis(strStationLabelOther);
+	LabelCodec->setWhatsThis(strStationLabelOther);
+	LabelStereoMono->setWhatsThis(strStationLabelOther);
+	LabelServiceLabel->setWhatsThis(strStationLabelOther);
+	LabelProgrType->setWhatsThis(strStationLabelOther);
+	LabelServiceID->setWhatsThis(strStationLabelOther);
+	LabelLanguage->setWhatsThis(strStationLabelOther);
+	LabelCountryCode->setWhatsThis(strStationLabelOther);
+	FrameAudioDataParams->setWhatsThis(strStationLabelOther);
+#endif
 }

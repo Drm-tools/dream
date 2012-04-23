@@ -28,9 +28,8 @@
 #include "MultSettingsDlg.h"
 #if QT_VERSION < 0x040000
 # include <qfiledialog.h>
-# define Q3FileDialog QFileDialog
 #else
-# include <Q3FileDialog>
+# include <QFileDialog>
 # include <QShowEvent>
 # include <QHideEvent>
 #endif
@@ -109,18 +108,23 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 	{
 		dir.setFilter(QDir::Files | QDir::Dirs | QDir::NoSymLinks);
 
+#if QT_VERSION < 0x040000
 		/* Eventually apply the filter */
 		if (sFilter != "")
 			dir.setNameFilter(sFilter);
 
 		dir.setSorting( QDir::DirsFirst );
 
-#if QT_VERSION < 0x040000
 		const QFileInfoList *list = dir.entryInfoList();
 		QFileInfoListIterator it( *list ); /* create list iterator */
 		for(QFileInfo *fi; (fi=it.current()); ++it )
 		{
 #else
+		/* Eventually apply the filter */
+		if (sFilter != "")
+			dir.setNameFilters(QStringList(sFilter));
+
+		dir.setSorting( QDir::DirsFirst );
 		const QList<QFileInfo> list = dir.entryInfoList();
 		for(QList<QFileInfo>::const_iterator fi = list.begin(); fi!=list.end(); fi++)
 		{
@@ -150,17 +154,22 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 
 void MultSettingsDlg::OnbuttonChooseDir()
 {
-    QString strFileName = Q3FileDialog::getExistingDirectory(TextLabelDir->text(), this);
+#if QT_VERSION < 0x040000
+    QString strFileName = QFileDialog::getExistingDirectory(TextLabelDir->text(), this);
+#else
+    QString strFileName = QFileDialog::getExistingDirectory(this, TextLabelDir->text());
+#endif
     /* Check if user not hit the cancel button */
     if (!strFileName.isEmpty())
     {
         TextLabelDir->setText(strFileName);
 #if QT_VERSION < 0x040000
 	    QToolTip::add(TextLabelDir, strFileName);
+        Parameters.sDataFilesDirectory = (const char*)strFileName.utf8();
 #else
 		TextLabelDir->setToolTip(strFileName);
+        Parameters.sDataFilesDirectory = (const char*)strFileName.toUtf8();
 #endif
-        Parameters.sDataFilesDirectory = (const char*)strFileName.utf8();
     }
 }
 

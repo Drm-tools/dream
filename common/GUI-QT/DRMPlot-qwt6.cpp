@@ -386,7 +386,9 @@ void InpSpecWaterf::Setup()
            "different colors represent different levels."));
     canvas = new QPixmap(plot->canvas()->size());
     canvas->fill(Qt::black);
-    plot->canvas()->setBackgroundPixmap(*canvas);
+	QPalette palette;
+	palette.setBrush(plot->canvas()->backgroundRole(), QBrush(*canvas));
+	plot->canvas()->setPalette(palette); 
 }
 
 void InpSpecWaterf::Update()
@@ -410,7 +412,7 @@ void InpSpecWaterf::Update()
         }
     }
     // copy down one pixel
-    painter.drawImage(0, 1, *canvas, 0, 0, canvas->width(), canvas->height()-1);
+	painter.drawImage(0, 1, canvas->toImage(), 0, 0, canvas->width(), canvas->height()-1);
     for (int i = 0; i < vecrData.Size(); i++)
     {
         /* Translate dB-values in colors */
@@ -432,11 +434,13 @@ void InpSpecWaterf::Update()
         if(iCurSat>iMaxSat) iCurSat=iMaxSat;
 
         /* Generate pixel */
-        painter.setPen(QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv));
+        painter.setPen(QColor(iFinalCol, iCurSat, iCurSat));
         painter.drawPoint(i, 0); /* line 0 -> top line */
     }
     painter.end();
-    plot->canvas()->setBackgroundPixmap(*canvas);
+	QPalette palette;
+	palette.setBrush(plot->canvas()->backgroundRole(), QBrush(*canvas));
+	plot->canvas()->setPalette(palette); 
 }
 
 TranFct::TranFct(CDRMReceiver *pDRMRec, QwtPlot* p):Chart2(pDRMRec, p)

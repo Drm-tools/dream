@@ -68,7 +68,9 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     const int iYSize = 8;
 
     /* Create bitmaps */
+#if QT_VERSION < 0x040000
     BitmCubeGreen.resize(iXSize, iYSize);
+#endif
     BitmCubeGreen.fill(QColor(0, 255, 0));
 
     /* Connections ---------------------------------------------------------- */
@@ -184,12 +186,16 @@ void EPGDlg::OnTimer()
         /* today in UTC */
         QDate todayUTC = QDate(gmtCur.tm_year + 1900, gmtCur.tm_mon + 1, gmtCur.tm_mday);
 
+#if QT_VERSION < 0x040000
         if ((basic->text() == tr("no basic profile data"))
                 || (advanced->text() == tr("no advanced profile data")))
         {
             /* not all information is loaded */
             select();
         }
+#else
+		// TODO
+#endif
         next = NULL;
 
         next = NULL;
@@ -226,6 +232,7 @@ void EPGDlg::showEvent(QShowEvent *)
     channel->clear();
     int n = -1;
     sids.clear();
+#if QT_VERSION < 0x040000
     for (map < uint32_t, CServiceInformation >::const_iterator i = Parameters.ServiceInformation.begin();
             i != Parameters.ServiceInformation.end(); i++) {
         QString channel_label = QString().fromUtf8(i->second.label.begin()->c_str());
@@ -241,6 +248,9 @@ void EPGDlg::showEvent(QShowEvent *)
     if (n >= 0) {
         channel->setCurrentItem(n);
     }
+#else
+	// TODO
+#endif
     do_updates = true;
     setDate();
     epg.progs.clear ();
@@ -388,7 +398,11 @@ void EPGDlg::select()
     for (QMap < time_t, EPG::CProg >::Iterator i = epg.progs.begin();
             i != epg.progs.end(); i++)
     {
+#if QT_VERSION < 0x040000
         const EPG::CProg & p = i.data();
+#else
+		const EPG::CProg & p = i.value();
+#endif
         // TODO - let user choose time or actualTime if available, or show as tooltip
         time_t start;
         int duration;
@@ -533,8 +547,13 @@ _BOOLEAN EPGDlg::MyListViewItem::IsActive()
 
 static _BOOLEAN IsActive(const QString& start, const QString& duration, const tm& now)
 {
+#if QT_VERSION < 0x040000
     QStringList sl = QStringList::split(":", start);
     QStringList dl = QStringList::split(":", duration);
+#else
+    QStringList sl = start.split(":");
+    QStringList dl = duration.split(":");
+#endif
     int s = 60*sl[0].toInt()+sl[1].toInt();
     int e = s + 60*dl[0].toInt()+dl[1].toInt();
     int n = 60*now.tm_hour+now.tm_min;

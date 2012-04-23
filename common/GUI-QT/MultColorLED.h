@@ -60,8 +60,8 @@ public:
 	void Reset();
 
 
-protected:
 	enum ELightColor {RL_GREY, RL_RED, RL_GREEN, RL_YELLOW};
+protected:
 
 	ELightColor		eColorFlag;
 
