@@ -233,6 +233,10 @@ win32 {
         exists(libs/fftw.h) {
             DEFINES += HAVE_FFTW_H
             LIBS += -lfftw
+			exists(libs/rfftw.lib) {
+				DEFINES += HAVE_RFFTW_H
+				LIBS += -lrfftw
+			}
         }
         else {
             error("no usable fftw version 2 or 3 found")
