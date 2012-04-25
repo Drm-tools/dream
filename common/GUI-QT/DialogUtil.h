@@ -54,7 +54,7 @@ inline string toStdString(QString s)
 #if QT_VERSION < 0x040000
 	return s.latin1();
 #else
-	return s.toUtf8();
+	return s.toUtf8().constData();
 #endif
 }
 

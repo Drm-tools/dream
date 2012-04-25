@@ -30,7 +30,7 @@
 #define _SLIDESHOWVIEWER_H
 
 #include "ui_SlideShowViewer.h"
-#include "../DRMReceiver.h"
+#include "../DrmReceiver.h"
 class CSettings;
 
 class SlideShowViewer : public QMainWindow, Ui_SlideShowViewer

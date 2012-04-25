@@ -31,7 +31,7 @@
 
 #include <QTextDocument>
 #include "ui_JLViewer.h"
-#include "../DRMReceiver.h"
+#include "../DrmReceiver.h"
 #include <string>
 
 class CSettings;

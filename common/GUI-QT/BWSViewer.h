@@ -32,7 +32,7 @@
 #include "ui_BWSViewer.h"
 #include <string>
 
-#include "../DRMReceiver.h"
+#include "../DrmReceiver.h"
 
 class CSettings;
 

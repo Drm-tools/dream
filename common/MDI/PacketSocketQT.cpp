@@ -420,7 +420,7 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
 			struct ip_mreq mreq;
 			mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
 			mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
-			int n = setsockopt(pUdps->socketDescriptor, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,	sizeof(mreq));
+			int n = setsockopt(pUdps->socketDescriptor(), IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,	sizeof(mreq));
 			if(n == SOCKET_ERROR)
 				ok = false;
 #else

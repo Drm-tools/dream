@@ -39,6 +39,9 @@
 #else
 # include <QAbstractSocket>
 # include <QHostAddress>
+#  if QT_VERSION >= 0x040200
+# include <QNetworkInterface>
+#  endif
 #  if QT_VERSION >= 0x040800
 #   include <QNetworkAddressEntry>
 #  endif
@@ -81,7 +84,7 @@ public:
 private:
 	QStringList parseDest(const string & strNewAddr);
 	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int);
-#if QT_VERSION >= 0x040000
+#if QT_VERSION >= 0x040200
 	QNetworkInterface GetInterface(QHostAddress AddrInterface);
 #endif
 	CPacketSink *pPacketSink;
