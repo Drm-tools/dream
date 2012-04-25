@@ -40,12 +40,13 @@ class CPacketSourceFile : public QThread, public CPacketSource
 {
 public:
 	CPacketSourceFile();
-	virtual ~CPacketSourceFile();
+	~CPacketSourceFile();
 	// Set the sink which will receive the packets
-	virtual void SetPacketSink(CPacketSink *pSink);
+	void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink
-	virtual void ResetPacketSink(void);
-	virtual _BOOLEAN SetOrigin(const string& str);
+	void ResetPacketSink(void);
+	_BOOLEAN SetOrigin(const string& str);
+	void poll() {}
 
 protected:
 

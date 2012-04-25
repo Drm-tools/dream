@@ -615,6 +615,7 @@ void CUpstreamDI::InitInternal(CParameter&)
 void CUpstreamDI::ProcessDataInternal(CParameter&)
 {
 	vector<_BYTE> vecbydata;
+	source->poll();
 	queue.Get(vecbydata);
 	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
 	pvecOutputData->Init(iOutputBlockSize);

@@ -27,14 +27,14 @@ contains(QT_VERSION, ^4\\..*) {
         FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
         FORMS += JLViewer.ui BWSViewer.ui SlideShowViewer.ui
         unix {
-            exists(/usr/include/qwt) {
-                INCLUDEPATH += /usr/include/qwt
+            exists(/usr/local/qwt-6.0.1) {
+                INCLUDEPATH += /usr/local/qwt-6.0.1/include
                 exists(/usr/lib/libqwt6.so) {
 	          message("with qwt6")
                   LIBS += -lqwt6
                 }
 		else {
-                  LIBS += -lqwt
+                  LIBS += -L/usr/local/qwt-6.0.1/lib -lqwt
                 }
             }
             else {

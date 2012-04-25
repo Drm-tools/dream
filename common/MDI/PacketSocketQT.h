@@ -33,25 +33,15 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 
-#if QT_VERSION < 0x040000
-# include <qsocketdevice.h>
-# include <qsocketnotifier.h>
-#else
-# include <QAbstractSocket>
-# include <QHostAddress>
-#  if QT_VERSION >= 0x040200
-# include <QNetworkInterface>
-#  endif
-#  if QT_VERSION >= 0x040800
-#   include <QNetworkAddressEntry>
-#  endif
+#include <QAbstractSocket>
+#include <QUdpSocket>
+#include <QHostAddress>
+#include <QNetworkInterface>
+#if QT_VERSION >= 0x040800
+# include <QNetworkAddressEntry>
 #endif
-#include <qdatetime.h>
-# if QT_VERSION < 0x030000
-#  include <qthread.h>
-# else
-#  include <qmutex.h>
-# endif
+#include <QDateTime>
+#include <QMutex>
 
 /* Maximum number of bytes received from the network interface. Maximum data
    rate of DRM is approx. 80 kbps. One MDI packet must be sent each DRM frame
@@ -67,47 +57,38 @@ class CPacketSocketQT : public QObject, public CPacketSocket
 
 public:
 	CPacketSocketQT(bool udp=true);
-	virtual ~CPacketSocketQT();
+	~CPacketSocketQT();
 	// Set the sink which will receive the packets
-	virtual void SetPacketSink(CPacketSink *pSink);
+	void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink
-	virtual void ResetPacketSink(void);
+	void ResetPacketSink(void);
 
 	// Send packet to the socket
 	void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	virtual _BOOLEAN SetDestination(const string& str);
-	virtual _BOOLEAN SetOrigin(const string& str);
+	_BOOLEAN SetDestination(const string& str);
+	_BOOLEAN SetOrigin(const string& str);
 
-	virtual _BOOLEAN GetDestination(string& str);
+	_BOOLEAN GetDestination(string& str);
+
+	void poll();
 
 private:
 	QStringList parseDest(const string & strNewAddr);
 	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int, QHostAddress);
-#if QT_VERSION >= 0x040200
 	QNetworkInterface GetInterface(QHostAddress AddrInterface);
-#endif
 	CPacketSink *pPacketSink;
 
 	uint32_t	sourceAddr;
 	QHostAddress	HostAddrOut;
 	int		iHostPortOut;
 
-#if QT_VERSION < 0x040000
-	QSocketDevice	SocketDevice;
-	QSocketNotifier* pSocketNotivRead;
-	QSocketNotifier* pSocketNotivWrite;
-#else
-	QAbstractSocket* pSocket;
-#endif
+	QUdpSocket* pSocket;
 	QMutex		writeLock;
 	vector<_BYTE>	writeBuf;
 
 public slots:
 	void OnDataReceived();
-#if QT_VERSION < 0x040000
-	void OnWritePossible();
-#endif
 
 };
 
