@@ -33,15 +33,19 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 
-#include <QAbstractSocket>
-#include <QUdpSocket>
-#include <QHostAddress>
-#include <QNetworkInterface>
-#if QT_VERSION >= 0x040800
-# include <QNetworkAddressEntry>
+#if QT_VERSION < 0x040000
+# include <qsocketdevice.h>
+#else
+# include <QAbstractSocket>
+# include <QHostAddress>
+#  if QT_VERSION >= 0x040200
+# include <QNetworkInterface>
+#  endif
+#  if QT_VERSION >= 0x040800
+#   include <QNetworkAddressEntry>
+#  endif
 #endif
-#include <QDateTime>
-#include <QMutex>
+#include <qdatetime.h>
 
 /* Maximum number of bytes received from the network interface. Maximum data
    rate of DRM is approx. 80 kbps. One MDI packet must be sent each DRM frame
@@ -51,45 +55,48 @@
 
 #include "PacketInOut.h"
 
-class CPacketSocketQT : public QObject, public CPacketSocket
+class CPacketSocketQT : public CPacketSocket
 {
-	Q_OBJECT
-
 public:
-	CPacketSocketQT(bool udp=true);
-	~CPacketSocketQT();
+	CPacketSocketQT();
+	virtual ~CPacketSocketQT();
 	// Set the sink which will receive the packets
-	void SetPacketSink(CPacketSink *pSink);
+	virtual void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink
-	void ResetPacketSink(void);
+	virtual void ResetPacketSink(void);
 
 	// Send packet to the socket
 	void SendPacket(const vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	_BOOLEAN SetDestination(const string& str);
-	_BOOLEAN SetOrigin(const string& str);
+	virtual _BOOLEAN SetDestination(const string& str);
+	virtual _BOOLEAN SetOrigin(const string& str);
 
-	_BOOLEAN GetDestination(string& str);
+	virtual _BOOLEAN GetDestination(string& str);
 
 	void poll();
 
 private:
+	void pollStream();
+	void pollDatagram();
+
 	QStringList parseDest(const string & strNewAddr);
 	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int, QHostAddress);
+#if QT_VERSION >= 0x040200
 	QNetworkInterface GetInterface(QHostAddress AddrInterface);
+#endif
 	CPacketSink *pPacketSink;
 
 	uint32_t	sourceAddr;
 	QHostAddress	HostAddrOut;
 	int		iHostPortOut;
 
-	QUdpSocket* pSocket;
-	QMutex		writeLock;
+#if QT_VERSION < 0x040000
+	QSocketDevice*	 pSocketDevice;
+#else
+	QAbstractSocket* pSocket;
+#endif
 	vector<_BYTE>	writeBuf;
-
-public slots:
-	void OnDataReceived();
-
+	bool udp;
 };
 
 #endif

@@ -115,23 +115,16 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 _BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 {
 	string d = dest;
-	bool udp = true;
-	switch(d[0])
+	if(d[0] == 'P' || d[0] == 'p')
 	{
-		case 'P': case 'p':
-			SetPFTFragmentSize(800);
-			d.erase(0, 1);
-			break;
-		case 'T': case 't':
-			d.erase(0, 1);
-			udp = false;
-			break;
+		SetPFTFragmentSize(800);
+		d.erase(0, 1);
 	}
 	delete pSocket;
-	pSocket = new CPacketSocketQT(udp);
+	pSocket = new CPacketSocketQT();
 	pPacketSink = pSocket;
 	_BOOLEAN bOk = pSocket->SetDestination(d);
-	if(bOk && udp == false)
+	if(bOk)
 		pSocket->SetPacketSink(this);
 	return bOk;
 }

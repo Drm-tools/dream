@@ -36,7 +36,7 @@
 #include <qthread.h>
 #include <qdatetime.h>
 
-class CPacketSourceFile : public QThread, public CPacketSource
+class CPacketSourceFile : public CPacketSource
 {
 public:
 	CPacketSourceFile();
@@ -46,7 +46,7 @@ public:
 	// Stop sending packets to the sink
 	void ResetPacketSink(void);
 	_BOOLEAN SetOrigin(const string& str);
-	void poll() {}
+	void poll();
 
 protected:
 

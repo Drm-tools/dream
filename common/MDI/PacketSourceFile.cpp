@@ -64,11 +64,11 @@ CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
 {
 }
 
-void CPacketSourceFile::run()
+void CPacketSourceFile::poll()
 {
     vector<_BYTE> vecbydata (iMaxPacketSize);
     int interval;
-    while(pF)
+    if(pF)
     {
         vecbydata.resize(0); // in case we don't find anything
         switch(eFileType)
@@ -90,8 +90,6 @@ void CPacketSourceFile::run()
         /* Decode the incoming packet */
         if (pPacketSink != NULL)
             pPacketSink->SendPacket(vecbydata);
-
-        msleep(400);
     }
 }
 
@@ -125,7 +123,6 @@ CPacketSourceFile::SetOrigin(const string& origin)
         if(c=='A') eFileType = af;
         if(c=='P') eFileType = pf;
         if(c=='f') eFileType = ff;
-        start();
     }
     return pF != NULL;
 }
@@ -141,12 +138,6 @@ CPacketSourceFile::~CPacketSourceFile()
 #endif
     }
     pF = 0;
-#if QT_VERSION >= 0x040000
-    while(isRunning())
-#else
-    while(!finished())
-#endif
-        msleep(10);
 }
 
 // Set the sink which will receive the packets
@@ -269,7 +260,7 @@ CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
     n = fread(&vecbydata[0], 1, iAFPacketLen, (FILE *)pF);
 }
 
-// not robust against the sync charqacters appearing in the payload!!!!
+// not robust against the sync characters appearing in the payload!!!!
 void
 CPacketSourceFile::readRawPFT(vector<_BYTE>& vecbydata, int& interval)
 {
