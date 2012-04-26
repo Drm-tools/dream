@@ -61,9 +61,9 @@ inline string toStdString(QString s)
 inline QString asHex(long n)
 {
 #if QT_VERSION < 0x040000
-	return QString().setNum(n, 18).upper();
+	return QString().setNum(n, 16).upper();
 #else
-	return QString().setNum(n, 18).toUpper();
+	return QString().setNum(n, 16).toUpper();
 #endif
 }
 
