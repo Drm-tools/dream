@@ -59,13 +59,13 @@ typedef int SOCKET;
 #endif
 
 CPacketSocketQT::CPacketSocketQT():
-	pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
+    pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
 #if QT_VERSION < 0x040000
-	pSocketDevice(NULL),
+    pSocketDevice(NULL),
 #else
-	udpSocket(NULL), tcpSocket(NULL),
+    udpSocket(NULL), tcpSocket(NULL),
 #endif
-	writeBuf(),udp(true)
+    writeBuf(),udp(true)
 {
 }
 
@@ -77,49 +77,49 @@ CPacketSocketQT::~CPacketSocketQT()
 void
 CPacketSocketQT::SetPacketSink(CPacketSink * pSink)
 {
-	pPacketSink = pSink;
+    pPacketSink = pSink;
 }
 
 // Stop sending packets to the sink
 void
 CPacketSocketQT::ResetPacketSink(void)
 {
-	pPacketSink = NULL;
+    pPacketSink = NULL;
 }
 
 // Send packet to the socket
 void
 CPacketSocketQT::SendPacket(const vector < _BYTE > &vecbydata, uint32_t addr, uint16_t port)
 {
-	int bytes_written;
-	/* Send packet to network */
+    int bytes_written;
+    /* Send packet to network */
 
 #if QT_VERSION < 0x040000
-	if(pSocketDevice->type() == QSocketDevice::Datagram)
-	{
-		if(addr==0)
-			bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
-		else
-			bytes_written = SocketDevice.writeBlock((char*)&vecbydata[0], vecbydata.size(), QHostAddress(addr), port);
-		/* should we throw an exception or silently accept? */
-		/* the most likely cause is that we are sending unicast and no-one
-		   is listening, or the interface is down, there is no route */
-		if(bytes_written == -1)
-		{
-			QSocketDevice::Error x = SocketDevice.error();
-			if(x != QSocketDevice::NetworkFailure)
-				qDebug("error sending packet");
-		}
-	}
-	else
-	{
-		// TODO
-	}
+    if(pSocketDevice->type() == QSocketDevice::Datagram)
+    {
+        if(addr==0)
+            bytes_written = pSocketDevice->writeBlock((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
+        else
+            bytes_written = pSocketDevice->writeBlock((char*)&vecbydata[0], vecbydata.size(), QHostAddress(addr), port);
+        /* should we throw an exception or silently accept? */
+        /* the most likely cause is that we are sending unicast and no-one
+           is listening, or the interface is down, there is no route */
+        if(bytes_written == -1)
+        {
+            QSocketDevice::Error x = pSocketDevice->error();
+            if(x != QSocketDevice::NetworkFailure)
+                qDebug("error sending packet");
+        }
+    }
+    else
+    {
+        // TODO
+    }
 #else
-	if(udpSocket != NULL)
-		bytes_written = udpSocket->writeDatagram((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
-	else if(tcpSocket != NULL)
-		bytes_written = tcpSocket->write((char*)&vecbydata[0], vecbydata.size());
+    if(udpSocket != NULL)
+        bytes_written = udpSocket->writeDatagram((char*)&vecbydata[0], vecbydata.size(), HostAddrOut, iHostPortOut);
+    else if(tcpSocket != NULL)
+        bytes_written = tcpSocket->write((char*)&vecbydata[0], vecbydata.size());
 #endif
 }
 
@@ -127,372 +127,374 @@ QStringList
 CPacketSocketQT::parseDest(const string & strNewAddr)
 {
 #if QT_VERSION < 0x040000
-	return QStringList::split(":", strNewAddr.c_str(), TRUE);
+    return QStringList::split(":", strNewAddr.c_str(), TRUE);
 #else
-	return QString(strNewAddr.c_str()).split(":", QString::KeepEmptyParts);
+    return QString(strNewAddr.c_str()).split(":", QString::KeepEmptyParts);
 #endif
 }
 
 _BOOLEAN
 CPacketSocketQT::SetDestination(const string & strNewAddr)
 {
-	/* syntax
-	   1:  <port>                send to port on localhost
-	   2:  <ip>:<port>           send to port on host or port on m/c group
-	   3:  <ip>:<ip>:<port>      send to port on m/c group via interface
-	   prefix with "t" for tcp
-	 */
-	int ttl = 127;
-	_BOOLEAN bAddressOK = TRUE;
-	QHostAddress AddrInterface(QHostAddress::Any);
-	QStringList parts = parseDest(strNewAddr);
-	QString first = parts[0].toLower();
-	if(first.startsWith("t"))
-	{
-		udp = false;
-		parts[0] = first.right(1);
-		//qDebug("tcp: %s", first);
-	}
-
-	switch(parts.count())
-	{
-	case 1: // Just a port - send to ourselves
-		bAddressOK = HostAddrOut.setAddress("127.0.0.1");
-		iHostPortOut = parts[0].toUInt();
-		break;
-	case 2: // host and port, unicast
-		bAddressOK = HostAddrOut.setAddress(parts[0]);
-		iHostPortOut = parts[1].toUInt();
-		break;
-	case 3: // interface, host and port, usually multicast udp
-		AddrInterface.setAddress(parts[0]);
-		bAddressOK = HostAddrOut.setAddress(parts[1]);
-		iHostPortOut = parts[2].toUInt();
-		break;
-	default:
-		bAddressOK = FALSE;
-	}
+    /* syntax
+       1:  <port>                send to port on localhost
+       2:  <ip>:<port>           send to port on host or port on m/c group
+       3:  <ip>:<ip>:<port>      send to port on m/c group via interface
+       prefix with "t" for tcp
+     */
+    int ttl = 127;
+    _BOOLEAN bAddressOK = TRUE;
+    QHostAddress AddrInterface;
+    QStringList parts = parseDest(strNewAddr);
 #if QT_VERSION < 0x040000
-	if(udp)
-	{
-		ifpSocketDevice==NULL)
-			pSocketDevice = new pSocketDevice(QSocketDevice::DataGram);
-		const SOCKET s = SocketDevice.socket();
-		if(setsockopt(s, IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
-			bAddressOK = FALSE;
-# if QT_VERSION < 0x030000
-		uint32_t mc_if = htonl(AddrInterface.ip4Addr());
-# else
-		uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
-# endif
-		if(mc_if != 0)
-		{
-			if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
-						(char *) &mc_if, sizeof(mc_if)) == SOCKET_ERROR)
-				bAddressOK = FALSE;
-		}
-	}
-	else
-	{
-		ifpSocketDevice==NULL)
-			pSocketDevice = new pSocketDevice(QSocketDevice::Stream);
-		bool connected = pSocketDevice->connect(HostAddrOut, iHostPortOut);
-		if(!connected)
-		{
-			if(pSocketDevice->error()!=0)
-			{
-				cerr << int(pSocketDevice->error()) << endl;
-				bAddressOK = FALSE;
-			}
-		}
-	}
+    QString first = parts[0].lower();
 #else
-	if(udp)
-	{
-		if(udpSocket == NULL)
-			udpSocket = new QUdpSocket();
+    QString first = parts[0].toLower();
+#endif
+    if(first.startsWith("t"))
+    {
+        udp = false;
+        parts[0] = first.right(1);
+        //qDebug("tcp: %s", first);
+    }
+
+    switch(parts.count())
+    {
+    case 1: // Just a port - send to ourselves
+        bAddressOK = HostAddrOut.setAddress("127.0.0.1");
+        iHostPortOut = parts[0].toUInt();
+        break;
+    case 2: // host and port, unicast
+        bAddressOK = HostAddrOut.setAddress(parts[0]);
+        iHostPortOut = parts[1].toUInt();
+        break;
+    case 3: // interface, host and port, usually multicast udp
+        AddrInterface.setAddress(parts[0]);
+        bAddressOK = HostAddrOut.setAddress(parts[1]);
+        iHostPortOut = parts[2].toUInt();
+        break;
+    default:
+        bAddressOK = FALSE;
+    }
+#if QT_VERSION < 0x040000
+    if(udp)
+    {
+        if(pSocketDevice==NULL)
+            pSocketDevice = new QSocketDevice(QSocketDevice::Datagram);
+        const SOCKET s = pSocketDevice->socket();
+        if(setsockopt(s, IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
+            bAddressOK = FALSE;
+# if QT_VERSION < 0x030000
+        uint32_t mc_if = htonl(AddrInterface.ip4Addr());
+# else
+        uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
+# endif
+        if(mc_if != 0)
+        {
+            if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
+                          (char *) &mc_if, sizeof(mc_if)) == SOCKET_ERROR)
+                bAddressOK = FALSE;
+        }
+    }
+    else
+    {
+        if(pSocketDevice==NULL)
+            pSocketDevice = new QSocketDevice(QSocketDevice::Stream);
+        bool connected = pSocketDevice->connect(HostAddrOut, iHostPortOut);
+        if(!connected)
+        {
+            if(pSocketDevice->error()!=0)
+            {
+                cerr << int(pSocketDevice->error()) << endl;
+                bAddressOK = FALSE;
+            }
+        }
+    }
+#else
+    if(udp)
+    {
+        if(udpSocket == NULL)
+            udpSocket = new QUdpSocket();
 
 # if QT_VERSION < 0x040800
-		const SOCKET s = udpSocket->socketDescriptor();
-		if(setsockopt(s, IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
-			bAddressOK = FALSE;
-		uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
-		if(mc_if != 0)
-		{
-			if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
-						(char *) &mc_if, sizeof(mc_if)) == SOCKET_ERROR)
-				bAddressOK = FALSE;
-		}
+        const SOCKET s = udpSocket->socketDescriptor();
+        if(setsockopt(s, IPPROTO_IP, IP_TTL, (char*)&ttl, sizeof(ttl))==SOCKET_ERROR)
+            bAddressOK = FALSE;
+        uint32_t mc_if = htonl(AddrInterface.toIPv4Address());
+        if(mc_if != 0)
+        {
+            if(setsockopt(s, IPPROTO_IP, IP_MULTICAST_IF,
+                          (char *) &mc_if, sizeof(mc_if)) == SOCKET_ERROR)
+                bAddressOK = FALSE;
+        }
 # else
-		udpSocket->setSocketOption(QAbstractSocket::MulticastTtlOption, ttl);
-		if(AddrInterface != QHostAddress(QHostAddress::Any))
-            udpSocket->setMulticastInterface(GetInterface(AddrInterface));
+    udpSocket->setSocketOption(QAbstractSocket::MulticastTtlOption, ttl);
+    if(AddrInterface != QHostAddress(QHostAddress::Any))
+        udpSocket->setMulticastInterface(GetInterface(AddrInterface));
 # endif
-	}
-	else
-	{
-		if(tcpSocket == NULL)
-			tcpSocket = new QTcpSocket();
-		tcpSocket->connectToHost(HostAddrOut, iHostPortOut);
-		bAddressOK = tcpSocket->waitForConnected(5000);
-	}
+    }
+    else
+    {
+        if(tcpSocket == NULL)
+            tcpSocket = new QTcpSocket();
+        tcpSocket->connectToHost(HostAddrOut, iHostPortOut);
+        bAddressOK = tcpSocket->waitForConnected(5000);
+    }
 #endif
-	return bAddressOK;
+    return bAddressOK;
 }
 
 _BOOLEAN
 CPacketSocketQT::GetDestination(string & str)
 {
-	stringstream s;
+    stringstream s;
 #if QT_VERSION < 0x040000
-	s << HostAddrOut.toString().latin1() << ":" << iHostPortOut;
+    s << HostAddrOut.toString().latin1() << ":" << iHostPortOut;
 #else
-	s << HostAddrOut.toString().toLatin1().constData() << ":" << iHostPortOut;
+    s << HostAddrOut.toString().toLatin1().constData() << ":" << iHostPortOut;
 #endif
-	str = s.str();
-	return TRUE;
+    str = s.str();
+    return TRUE;
 }
 
 
 _BOOLEAN
 CPacketSocketQT::SetOrigin(const string & strNewAddr)
 {
-	/* syntax (unwanted fields can be empty, e.g. <source ip>::<group ip>:<port>
-	   1:  <port>
-	   2:  <group ip>:<port>
-	   3:  <interface ip>:<group ip>:<port>
-	   4:  <source ip>:<interface ip>:<group ip>:<port>
-	   5: - for TCP - no need to separately set origin
-	 */
+    /* syntax (unwanted fields can be empty, e.g. <source ip>::<group ip>:<port>
+       1:  <port>
+       2:  <group ip>:<port>
+       3:  <interface ip>:<group ip>:<port>
+       4:  <source ip>:<interface ip>:<group ip>:<port>
+       5: - for TCP - no need to separately set origin
+     */
 
-	if(strNewAddr == "-")
-	{
-		udp = false;
+    if(strNewAddr == "-")
+    {
+        udp = false;
 #if QT_VERSION < 0x040000
-		if(pSocketDevice == NULL)
-			pSocketDevice = new QSocketDevice(QSocketDevice::Stream);
+        if(pSocketDevice == NULL)
+            pSocketDevice = new QSocketDevice(QSocketDevice::Stream);
 #else
-		if(tcpSocket == NULL)
-			tcpSocket = new QTcpSocket();
+        if(tcpSocket == NULL)
+            tcpSocket = new QTcpSocket();
 #endif
-		return TRUE;
-	}
+        return TRUE;
+    }
 
 #if QT_VERSION < 0x040000
-		if(pSocketDevice == NULL)
-			pSocketDevice = new QSocketDevice(QSocketDevice::DataGram);
+    if(pSocketDevice == NULL)
+        pSocketDevice = new QSocketDevice(QSocketDevice::Datagram);
 #else
-		if(udpSocket == NULL)
-			udpSocket = new QUdpSocket();
+    if(udpSocket == NULL)
+        udpSocket = new QUdpSocket();
 #endif
 
-	int iPort=-1;
-	QHostAddress AddrGroup(QHostAddress::Any), 
-		AddrInterface(QHostAddress::Any), AddrSource(QHostAddress::Any);
-	QStringList parts = parseDest(strNewAddr);
-	bool ok=true;
-	switch(parts.count())
-	{
-	case 1:
-		iPort = parts[0].toUInt(&ok);
-		break;
-	case 2:
-		iPort = parts[1].toUInt(&ok);
-		ok &= AddrGroup.setAddress(parts[0]);
-		break;
-	case 3:
-		iPort = parts[2].toUInt(&ok);
-		if(parts[0].length() > 0)
-			ok &= AddrInterface.setAddress(parts[0]);
-		if(parts[1].length() > 0)
-			ok &= AddrGroup.setAddress(parts[1]);
-		break;
-	case 4:
-		iPort = parts[3].toUInt(&ok);
-		if(parts[0].length() > 0)
-			ok &= AddrSource.setAddress(parts[0]);
-		if(parts[1].length() > 0)
-			ok &= AddrInterface.setAddress(parts[1]);
-		if(parts[2].length() > 0)
-			ok &= AddrGroup.setAddress(parts[2]);
-		break;
-	default:
-		ok = false;
-	}
+    int iPort=-1;
+    QHostAddress AddrGroup, AddrInterface, AddrSource;
+    QStringList parts = parseDest(strNewAddr);
+    bool ok=true;
+    switch(parts.count())
+    {
+    case 1:
+        iPort = parts[0].toUInt(&ok);
+        break;
+    case 2:
+        iPort = parts[1].toUInt(&ok);
+        ok &= AddrGroup.setAddress(parts[0]);
+        break;
+    case 3:
+        iPort = parts[2].toUInt(&ok);
+        if(parts[0].length() > 0)
+            ok &= AddrInterface.setAddress(parts[0]);
+        if(parts[1].length() > 0)
+            ok &= AddrGroup.setAddress(parts[1]);
+        break;
+    case 4:
+        iPort = parts[3].toUInt(&ok);
+        if(parts[0].length() > 0)
+            ok &= AddrSource.setAddress(parts[0]);
+        if(parts[1].length() > 0)
+            ok &= AddrInterface.setAddress(parts[1]);
+        if(parts[2].length() > 0)
+            ok &= AddrGroup.setAddress(parts[2]);
+        break;
+    default:
+        ok = false;
+    }
 
-	if(ok)
-	{
-		return doSetSource(AddrGroup, AddrInterface, iPort, AddrSource);
-	}
-	return FALSE;
+    if(ok)
+    {
+        return doSetSource(AddrGroup, AddrInterface, iPort, AddrSource);
+    }
+    return FALSE;
 }
 
 #if QT_VERSION < 0x040000
 _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrInterface, int iPort, QHostAddress AddrSource)
 {
-	bool udp = SocketDevice.type() == QSocketDevice::Datagram;
+    bool udp = pSocketDevice->type() == QSocketDevice::Datagram;
 # if QT_VERSION < 0x030000
-		sourceAddr = AddrSource.ip4Addr();
-		uint32_t gp = AddrGroup.ip4Addr();
-		uint32_t ifc = AddrInterface.ip4Addr();
+    sourceAddr = AddrSource.ip4Addr();
+    uint32_t gp = AddrGroup.ip4Addr();
+    uint32_t ifc = AddrInterface.ip4Addr();
 # else
-		sourceAddr = AddrSource.toIPv4Address();
-		uint32_t gp = AddrGroup.toIPv4Address();
-		uint32_t ifc = AddrInterface.toIPv4Address();
+    sourceAddr = AddrSource.toIPv4Address();
+    uint32_t gp = AddrGroup.toIPv4Address();
+    uint32_t ifc = AddrInterface.toIPv4Address();
 # endif
-	AddrSource = source;
-	SOCKET s = SocketDevice.socket();
-	if(udp)
-	{
-		if(gp == 0) /* unicast */
-		{
-			/* Initialize the listening socket. */
-			pSocketDevice->bind(AddrInterface, iPort);
-		}
-		else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
-		{
-			pSocketDevice->setAddressReusable(true);
-			struct ip_mreq mreq;
-			/* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
-			bool ok = pSocketDevice->bind(QHostAddress(UINT32(0)), iPort);
-			if(ok == false)
-			{
-				//QSocketDevice::Error x = pSocketDevice->error();
-				throw CGenErr("Can't bind to port to receive packets");
-			}
-			mreq.imr_multiaddr.s_addr = htonl(gp);
-			mreq.imr_interface.s_addr = htonl(ifc);
-			int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,
-								sizeof(mreq));
-			if(n == SOCKET_ERROR)
-			{
-				throw
-					CGenErr(string
-							("Can't join multicast group to receive packets: ") +
-							strerror(errno));
-			}
-		}
-		else /* one address specified, but not multicast - listen on a specific interface */
-		{
-			/* Initialize the listening socket. */
-			pSocketDevice->bind(AddrGroup, iPort);
-		}
-	}
-	return TRUE;
+    SOCKET s = pSocketDevice->socket();
+    if(udp)
+    {
+        if(gp == 0) /* unicast */
+        {
+            /* Initialize the listening socket. */
+            pSocketDevice->bind(AddrInterface, iPort);
+        }
+        else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
+        {
+            pSocketDevice->setAddressReusable(true);
+            struct ip_mreq mreq;
+            /* Initialize the listening socket. Host address is 0 -> "INADDR_ANY" */
+            bool ok = pSocketDevice->bind(QHostAddress(UINT32(0)), iPort);
+            if(ok == false)
+            {
+                //QSocketDevice::Error x = pSocketDevice->error();
+                throw CGenErr("Can't bind to port to receive packets");
+            }
+            mreq.imr_multiaddr.s_addr = htonl(gp);
+            mreq.imr_interface.s_addr = htonl(ifc);
+            int n = setsockopt(s, IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,
+                               sizeof(mreq));
+            if(n == SOCKET_ERROR)
+            {
+                throw
+                CGenErr(string
+                        ("Can't join multicast group to receive packets: ") +
+                        strerror(errno));
+            }
+        }
+        else /* one address specified, but not multicast - listen on a specific interface */
+        {
+            /* Initialize the listening socket. */
+            pSocketDevice->bind(AddrGroup, iPort);
+        }
+    }
+    return TRUE;
 }
 #else
 _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrInterface, int iPort, QHostAddress AddrSource)
 {
-	if(udp)
-	{
-		if(AddrSource == QHostAddress(QHostAddress::Any))
-			sourceAddr = 0;
-		else
-			sourceAddr = AddrSource.toIPv4Address();
-		/* Multicast ? */
-		uint32_t gp = AddrGroup.toIPv4Address();
-		if(gp == 0)
-		{
-			/* Initialize the listening socket. */
-			udpSocket->bind(AddrInterface, iPort);
-		}
-		else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
-		{
-			bool ok = udpSocket->bind(iPort, QUdpSocket::ShareAddress);
-			if(ok == false)
-			{
-				throw CGenErr("Can't bind to port to receive packets");
-			}
+    if(udp)
+    {
+        if(AddrSource == QHostAddress(QHostAddress::Any))
+            sourceAddr = 0;
+        else
+            sourceAddr = AddrSource.toIPv4Address();
+        /* Multicast ? */
+        uint32_t gp = AddrGroup.toIPv4Address();
+        if(gp == 0)
+        {
+            /* Initialize the listening socket. */
+            udpSocket->bind(AddrInterface, iPort);
+        }
+        else if((gp & 0xe0000000) == 0xe0000000)	/* multicast! */
+        {
+            bool ok = udpSocket->bind(iPort, QUdpSocket::ShareAddress);
+            if(ok == false)
+            {
+                throw CGenErr("Can't bind to port to receive packets");
+            }
 #if QT_VERSION < 0x040800
-			struct ip_mreq mreq;
-			mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
-			mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
-			int n = setsockopt(udpSocket->socketDescriptor(), IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,	sizeof(mreq));
-			if(n == SOCKET_ERROR)
-				ok = false;
+            struct ip_mreq mreq;
+            mreq.imr_multiaddr.s_addr = htonl(AddrGroup.toIPv4Address());
+            mreq.imr_interface.s_addr = htonl(AddrInterface.toIPv4Address());
+            int n = setsockopt(udpSocket->socketDescriptor(), IPPROTO_IP, IP_ADD_MEMBERSHIP,(char *) &mreq,	sizeof(mreq));
+            if(n == SOCKET_ERROR)
+                ok = false;
 #else
-			if(AddrInterface == QHostAddress(QHostAddress::Any))
-				ok = udpSocket->joinMulticastGroup(AddrGroup);
-			else
-				ok = udpSocket->joinMulticastGroup(AddrGroup, GetInterface(AddrInterface));
+if(AddrInterface == QHostAddress(QHostAddress::Any))
+    ok = udpSocket->joinMulticastGroup(AddrGroup);
+else
+    ok = udpSocket->joinMulticastGroup(AddrGroup, GetInterface(AddrInterface));
 #endif
-			if(!ok)
-			{
-				qDebug("Can't join multicast group");
-				//throw CGenErr(string());
-			}
-		}
-		else /* one address specified, but not multicast - listen on a specific interface */
-		{
-			/* Initialize the listening socket. */
-			udpSocket->bind(AddrGroup, iPort);
-		}
-	}
-	return TRUE;
+            if(!ok)
+            {
+                qDebug("Can't join multicast group");
+                //throw CGenErr(string());
+            }
+        }
+        else /* one address specified, but not multicast - listen on a specific interface */
+        {
+            /* Initialize the listening socket. */
+            udpSocket->bind(AddrGroup, iPort);
+        }
+    }
+    return TRUE;
 }
 #endif
 
 #if QT_VERSION >= 0x040200
-QNetworkInterface 
+QNetworkInterface
 CPacketSocketQT::GetInterface(QHostAddress AddrInterface)
 {
-	QList<QNetworkInterface> l = QNetworkInterface::allInterfaces () ;
-	for(int i=0; i<l.size(); i++) {
-		QList<QHostAddress> h = l[i].allAddresses();
-		QString s;
-		for(int j=0; j<h.size(); j++) {
-			s += h[j].toString() + " ";
-			if(h[j].toIPv4Address() == AddrInterface.toIPv4Address()) {
-				return l[j];
-			}
-		}
-	}
-	return QNetworkInterface::allInterfaces().first();
+    QList<QNetworkInterface> l = QNetworkInterface::allInterfaces () ;
+    for(int i=0; i<l.size(); i++) {
+        QList<QHostAddress> h = l[i].allAddresses();
+        QString s;
+        for(int j=0; j<h.size(); j++) {
+            s += h[j].toString() + " ";
+            if(h[j].toIPv4Address() == AddrInterface.toIPv4Address()) {
+                return l[j];
+            }
+        }
+    }
+    return QNetworkInterface::allInterfaces().first();
 }
 #endif
 
 void
 CPacketSocketQT::poll()
 {
-	if(udp)
-		pollDatagram();
-	else
-		pollStream();
+    if(udp)
+        pollDatagram();
+    else
+        pollStream();
 }
 
 void
 CPacketSocketQT::pollStream()
 {
     vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
-	/* Read block from network interface */
+    /* Read block from network interface */
 #if QT_VERSION < 0x040000
-	int iNumBytesRead = SocketDevice.readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
+    int iNumBytesRead = pSocketDevice->readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
 #else
-	int iNumBytesRead = tcpSocket->read((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
+    int iNumBytesRead = tcpSocket->read((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
 #endif
-	if(iNumBytesRead > 0)
-	{
-		/* Decode the incoming packet */
-		if(pPacketSink != NULL)
-		{
-			vecbydata.resize(iNumBytesRead);
+    if(iNumBytesRead > 0)
+    {
+        /* Decode the incoming packet */
+        if(pPacketSink != NULL)
+        {
+            vecbydata.resize(iNumBytesRead);
 #if QT_VERSION < 0x040000
-			QHostAddress peer = SocketDevice.peerAddress();
+            QHostAddress peer = pSocketDevice->peerAddress();
 # if QT_VERSION < 0x030000
-			uint32_t addr = peer.ip4Addr();
+            uint32_t addr = peer.ip4Addr();
 # else
-			uint32_t addr = peer.toIPv4Address();
+            uint32_t addr = peer.toIPv4Address();
 # endif
-			int port = SocketDevice.peerPort();
+            int port = pSocketDevice->peerPort();
 #else
-			QHostAddress peer = tcpSocket->peerAddress();
-			uint32_t addr = peer.toIPv4Address();
-			int port = tcpSocket->peerPort();
+            QHostAddress peer = tcpSocket->peerAddress();
+            uint32_t addr = peer.toIPv4Address();
+            int port = tcpSocket->peerPort();
 #endif
-			if(sourceAddr == 0 || sourceAddr == addr) // optionally filter on source address
-				pPacketSink->SendPacket(vecbydata, addr, port);
-		}
-	}
+            if(sourceAddr == 0 || sourceAddr == addr) // optionally filter on source address
+                pPacketSink->SendPacket(vecbydata, addr, port);
+        }
+    }
 }
 
 #if QT_VERSION < 0x040000
@@ -500,43 +502,43 @@ void
 CPacketSocketQT::pollDatagram()
 {
     vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
-	/* Read block from network interface */
-	int iNumBytesRead = SocketDevice.readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
-	if(iNumBytesRead > 0)
-	{
-		/* Decode the incoming packet */
-		if(pPacketSink != NULL)
-		{
-			vecbydata.resize(iNumBytesRead);
-			QHostAddress peer = SocketDevice.peerAddress();
+    /* Read block from network interface */
+    int iNumBytesRead = pSocketDevice->readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
+    if(iNumBytesRead > 0)
+    {
+        /* Decode the incoming packet */
+        if(pPacketSink != NULL)
+        {
+            vecbydata.resize(iNumBytesRead);
+            QHostAddress peer = pSocketDevice->peerAddress();
 # if QT_VERSION < 0x030000
-			uint32_t addr = peer.ip4Addr();
+            uint32_t addr = peer.ip4Addr();
 # else
-			uint32_t addr = peer.toIPv4Address();
+            uint32_t addr = peer.toIPv4Address();
 # endif
-			int port = SocketDevice.peerPort();
-			if(sourceAddr == 0 || sourceAddr == addr) // optionally filter on source address
-				pPacketSink->SendPacket(vecbydata, addr, port);
-		}
-	}
+            int port = pSocketDevice->peerPort();
+            if(sourceAddr == 0 || sourceAddr == addr) // optionally filter on source address
+                pPacketSink->SendPacket(vecbydata, addr, port);
+        }
+    }
 }
 #else
 void
 CPacketSocketQT::pollDatagram()
 {
     vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
-     while (udpSocket->hasPendingDatagrams()) {
-         vecbydata.resize(udpSocket->pendingDatagramSize());
-         QHostAddress sender;
-         quint16 senderPort;
+    while (udpSocket->hasPendingDatagrams()) {
+        vecbydata.resize(udpSocket->pendingDatagramSize());
+        QHostAddress sender;
+        quint16 senderPort;
 
-         udpSocket->readDatagram((char*)&vecbydata[0], vecbydata.size(), &sender, &senderPort);
+        udpSocket->readDatagram((char*)&vecbydata[0], vecbydata.size(), &sender, &senderPort);
 
-         uint32_t addr = sender.toIPv4Address();
-		 if(sourceAddr == 0)
-	         pPacketSink->SendPacket(vecbydata, addr, senderPort);
-		 else if(sourceAddr == addr) // optionally filter on source address
-	         pPacketSink->SendPacket(vecbydata, addr, senderPort);
-     }
+        uint32_t addr = sender.toIPv4Address();
+        if(sourceAddr == 0)
+            pPacketSink->SendPacket(vecbydata, addr, senderPort);
+        else if(sourceAddr == addr) // optionally filter on source address
+            pPacketSink->SendPacket(vecbydata, addr, senderPort);
+    }
 }
 #endif

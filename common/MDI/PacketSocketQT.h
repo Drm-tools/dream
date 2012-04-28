@@ -35,6 +35,7 @@
 
 #if QT_VERSION < 0x040000
 # include <qsocketdevice.h>
+# include <qstringlist.h>
 #else
 # include <QUdpSocket>
 # include <QTcpSocket>
