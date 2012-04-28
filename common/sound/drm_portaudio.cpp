@@ -240,19 +240,22 @@ CPaCommon::ReInit()
                             framesPerBuffer, paNoFlag, captureCallback,
                             (void *) this);
 
-        if (err != paNoError)
-            throw string("PortAudio error: ") + Pa_GetErrorText(err);
+        if (err != paNoError) {
+            //throw string("PortAudio error: ") + Pa_GetErrorText(err);
+		}
         err = Pa_StartStream(stream);
-        if (err != paNoError)
-            throw string("PortAudio error: ") + Pa_GetErrorText(err);
+        if (err != paNoError) {
+            //throw string("PortAudio error: ") + Pa_GetErrorText(err);
+		}
     }
     else
     {
         err = Pa_OpenStream(&stream, NULL, &pParameters, srate,
                             framesPerBuffer, paNoFlag, playbackCallback,
                             (void *) this);
-        if (err != paNoError)
-            throw string("PortAudio error: ") + Pa_GetErrorText(err);
+        if (err != paNoError) {
+            //throw string("PortAudio error: ") + Pa_GetErrorText(err);
+		}
     }
 
     unsigned long n = 2;
@@ -335,8 +338,9 @@ CPaCommon::Write(CVector < short >&psData)
     if (Pa_IsStreamStopped( stream ))
     {
         int err = Pa_StartStream(stream);
-        if (err != paNoError)
-            throw string("PortAudio error: ") + Pa_GetErrorText(err);
+        if (err != paNoError) {
+            //throw string("PortAudio error: ") + Pa_GetErrorText(err);
+		}
     }
     if (xruns==0)
         return FALSE;

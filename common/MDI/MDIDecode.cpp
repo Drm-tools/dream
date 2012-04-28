@@ -37,7 +37,6 @@
 \******************************************************************************/
 
 #include "MDIDecode.h"
-#include <iostream>
 
 void CDecodeRSIMDI::ProcessDataInternal(CParameter& ReceiverParam)
 {

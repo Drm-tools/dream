@@ -60,7 +60,7 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	CCRC CRCObject;
 	// FIXME: is this length always the correct length? In the actual packet
 	// there is also a value for the length included!!!???!???
-	const int iLenAFPkt = vecbiAFPkt.Size();
+	int iLenAFPkt = vecbiAFPkt.Size();
 
 	/* We do the CRC check at the beginning no matter if it is used or not
 	   since we have to reset bit access for that */
@@ -72,7 +72,9 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 
 	/* "- 2": 16 bits for CRC at the end */
 	for (i = 0; i < iLenAFPkt / SIZEOF__BYTE - 2; i++)
+	{
 		CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE));
+	}
 
 	const _BOOLEAN bCRCOk = CRCObject.CheckCRC(vecbiAFPkt.Separate(16));
 
@@ -83,11 +85,8 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	string strSyncASCII = "";
 	for (i = 0; i < 2; i++)
 	{
-		_BYTE by = (_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE);
-		//strSyncASCII += (_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE);
-		strSyncASCII += by;
+		strSyncASCII += (_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE);
 	}
-
 	/* Check if string is correct */
 	if (strSyncASCII.compare("AF") != 0)
 	{
@@ -116,8 +115,6 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 			cerr << "AF SEQ: expected " << iSeqNumber << " got " << iCurSeqNum << endl;
 		iSeqNumber=iCurSeqNum;
 	}
-
-	// cerr << "frame " << iCurSeqNum << " crc " << (bCRCOk?"OK":"BAD") << endl;
 
 	/* AR: AF protocol Revision -
 	   a field combining the CF, MAJ and MIN fields */

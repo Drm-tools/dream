@@ -163,8 +163,13 @@ template<class TData> void CVector<TData>::Enqueue(uint32_t iInformation,
 	/* Enqueue bits in bit array */
 	for (int i = 0; i < iNumOfBits; i++)
 	{
-		/* We want to put the bits on the array with the MSB first */
-		operator[](iBitArrayCounter + iNumOfBits - i - 1) = _BINARY(iInformation & 1);
+		/* We want to put the bits on the array with the MSB first
+		 * - Visual Studio 2010 was getting this wrong
+		 */
+		if(iInformation & 1)
+			operator[](iBitArrayCounter + iNumOfBits - i - 1) = 1;
+		else
+			operator[](iBitArrayCounter + iNumOfBits - i - 1) = 0;
 
 		/* Shift one bit to mask next bit at LSB-position */
 		iInformation >>= 1;
