@@ -27,18 +27,20 @@ contains(QT_VERSION, ^4\\..*) {
         FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
         FORMS += JLViewer.ui BWSViewer.ui SlideShowViewer.ui
         unix {
-            exists(/usr/local/qwt-6.0.1) {
-                INCLUDEPATH += /usr/local/qwt-6.0.1/include
-                exists(/usr/lib/libqwt6.so) {
-	          message("with qwt6")
-                  LIBS += -lqwt6
-                }
-		else {
-                  LIBS += -L/usr/local/qwt-6.0.1/lib -lqwt
-                }
+            exists($$(QWT)) {
+	      message("with qwt6")
+              INCLUDEPATH += $$(QWT)/include
+              LIBS += $$(QWT)/lib/libqwt.so
             }
             else {
+              exists(/usr/lib/libqwt.so.6) {
+	        message("with qwt6")
+                INCLUDEPATH += /usr/include/qwt
+                LIBS += -lqwt
+              }
+              else {
                 error("no usable qwt version 6 found")
+              }
             }
         }
         win32 {
