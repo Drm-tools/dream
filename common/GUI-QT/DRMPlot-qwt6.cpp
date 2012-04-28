@@ -914,7 +914,7 @@ void InpPSD::Update()
     SetData(vecrData, vecrScale);
 }
 
-AnalogInpPSD::AnalogInpPSD(CDRMReceiver *pDRMRec, QwtPlot* p):InpPSD(pDRMRec, p)
+AnalogInpPSD::AnalogInpPSD(CDRMReceiver *pDRMRec, QwtPlot* p):InpPSD(pDRMRec, p),picker(NULL)
 {
     bw = new QwtPlotCurve("");
 }
@@ -923,6 +923,8 @@ void AnalogInpPSD::Setup()
 {
     InpPSD::Setup();
     bw->attach(plot);
+    picker = new QwtPlotPicker(plot->canvas());
+    connect(picker, SIGNAL(selected(const QPointF &)), this, SLOT(on_selected(const QPointF&)));
 }
 
 void AnalogInpPSD::Update()
@@ -936,6 +938,12 @@ void AnalogInpPSD::Update()
     SetBWMarker(rCenterFreq, receiver->GetAMDemod()->GetCurMixFreqOffs());
     SetData(vecrData, vecrScale);
 }
+
+void AnalogInpPSD::on_selected(const QPointF& pos)
+{
+     emit xAxisValSet(pos.x());
+}
+
 
 void AnalogInpPSD::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 {
@@ -1239,22 +1247,6 @@ void CDRMPlot::SetupChart(ECharType InitCharType)
         chart->Setup();
     }
 
-}
-
-void CDRMPlot::OnClicked(const QMouseEvent& e)
-{
-    /* Get frequency from current cursor position */
-    const double dFreq = plot->invTransform(QwtPlot::xBottom, e.x());
-
-    /* Send normalized frequency to receiver */
-    const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->upperBound();
-
-    /* Check if value is valid */
-    if (dMaxxBottom != (double) 0.0)
-    {
-        /* Emit signal containing normalized selected frequency */
-        emit xAxisValSet(dFreq / dMaxxBottom);
-    }
 }
 
 void CDRMPlot::SetPlotStyle(const int iNewStyleID)

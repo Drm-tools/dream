@@ -36,6 +36,7 @@
 #include <qwt_scale_draw.h>
 #include <qwt_symbol.h>
 #include <qwt_legend.h>
+#include <qwt_plot_picker.h>
 #include <qpainter.h>
 #include <qtimer.h>
 #include <qwhatsthis.h>
@@ -212,6 +213,7 @@ public:
 
 class AnalogInpPSD: public InpPSD
 {
+    Q_OBJECT
 public:
     AnalogInpPSD(CDRMReceiver *pDRMRec, QwtPlot* p);
     void Setup();
@@ -219,6 +221,11 @@ public:
 protected:
     void SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth);
     QwtPlotCurve* bw;
+    QwtPlotPicker*	picker;
+public slots:
+    void on_selected(const QPointF& pos);
+signals:
+    void xAxisValSet(double);
 };
 
 class ConstellationChart: public Chart
@@ -353,12 +360,7 @@ protected:
 
 
 public slots:
-    void OnClicked(const QMouseEvent& e);
-    void OnTimerChart();
-
-
-signals:
-    void xAxisValSet(double);
+	void OnTimerChart();
 };
 
 

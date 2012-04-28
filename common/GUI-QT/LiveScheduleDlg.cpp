@@ -391,11 +391,9 @@ redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":
     vecpListItems.resize(1);
     vecpListItems[0] =
         new MyListLiveViewItem(ListViewStations, "00000000000000000");
-#endif
 
-    connect(buttonOk,  SIGNAL(clicked()), this, SLOT(close()));
-
-#if QT_VERSION >= 0x040000
+    connect(ListViewStations->header(), SIGNAL(clicked(int)), this, SLOT(OnHeaderClicked(int)));
+#else
     connect(actionSave,  SIGNAL(triggered()), this, SLOT(OnSave()));
 
     previewMapper = new QSignalMapper(this);
@@ -424,6 +422,7 @@ redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":
     connect(previewMapper, SIGNAL(mapped(int)), this, SLOT(OnShowPreviewMenu(int)));
 #endif
 
+    connect(buttonOk,  SIGNAL(clicked()), this, SLOT(close()));
     //connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
     /* Init UTC time shown with a label control */
     SetUTCTimeLabel();
@@ -432,8 +431,6 @@ redCube(":/icons/redCube.png"),orangeCube(":/icons/organgeCube.png"),pinkCube(":
     connect(&TimerList, SIGNAL(timeout()), this, SLOT(OnTimerList()));
     connect(&TimerUTCLabel, SIGNAL(timeout()), this, SLOT(OnTimerUTCLabel()));
 
-    connect(ListViewStations->header(), SIGNAL(clicked(int)),
-            this, SLOT(OnHeaderClicked(int)));
 
     /* Check boxes */
     connect(CheckBoxFreeze, SIGNAL(clicked()), this, SLOT(OnCheckFreeze()));
