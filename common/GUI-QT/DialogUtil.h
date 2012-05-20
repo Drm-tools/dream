@@ -35,7 +35,6 @@
 #include<map>
 
 #include <qthread.h>
-#include <qevent.h>
 #if QT_VERSION < 0x040000
 # include <qaction.h>
 # include <qpopupmenu.h>
@@ -79,31 +78,6 @@ typedef int rig_model_t;
 	#define FONT_COURIER    "Courier"
 #endif
 /* Classes ********************************************************************/
-/* DRM events --------------------------------------------------------------- */
-#if QT_VERSION < 0x040000
-class DRMEvent : public QCustomEvent
-{
-public:
-	DRMEvent(const int iNewMeTy, const int iNewSt) :
-		QCustomEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
-
-	int iMessType;
-	int iStatus;
-};
-#else
-
-
-class DRMEvent : public QEvent
-{
-public:
-	DRMEvent(const int iNewMeTy, const int iNewSt) :
-	  QEvent(QEvent::Type(QEvent::User + 11)), iMessType(iNewMeTy), iStatus(iNewSt) {}
-
-	int iMessType;
-	int iStatus;
-};
-#endif
-
 
 /* About dialog ------------------------------------------------------------- */
 #if QT_VERSION >= 0x040000

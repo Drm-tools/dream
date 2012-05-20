@@ -34,7 +34,6 @@
 #include <qtimer.h>
 #include <qstring.h>
 #include <qmenubar.h>
-#include <qevent.h>
 #include <qlayout.h>
 #include <qpalette.h>
 #include <qcolordialog.h>
@@ -50,7 +49,6 @@
 # include <QMenu>
 # include <QShowEvent>
 # include <QHideEvent>
-# include <QCustomEvent>
 # include <QCloseEvent>
 # include "ui_DRMMainWindow.h"
 # include "EvaluationDlg.h"
@@ -135,7 +133,6 @@ protected:
 #endif
 
     void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-    virtual void	customEvent(QEvent* Event);
     virtual void	closeEvent(QCloseEvent* ce);
     virtual void	showEvent(QShowEvent* pEvent);
     void			hideEvent(QHideEvent* pEvent);

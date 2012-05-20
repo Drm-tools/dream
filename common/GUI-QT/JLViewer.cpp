@@ -196,19 +196,19 @@ void JLViewer::OnTimer()
 	switch(status)
 	{
 	case NOT_PRESENT:
-		LEDStatus->Reset(); /* GREY */
+		LEDStatus->Reset();
 		break;
 
 	case CRC_ERROR:
-		LEDStatus->SetLight(CMultColorLED::RL_RED); /* RED */
+		LEDStatus->SetLight(CMultColorLED::RL_RED);
 		break;
 
 	case DATA_ERROR:
-		LEDStatus->SetLight(CMultColorLED::RL_YELLOW); /* YELLOW */
+		LEDStatus->SetLight(CMultColorLED::RL_YELLOW);
 		break;
 
 	case RX_OK:
-		LEDStatus->SetLight(CMultColorLED::RL_GREEN); /* GREEN */
+		LEDStatus->SetLight(CMultColorLED::RL_GREEN);
 		break;
 	}
 

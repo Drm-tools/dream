@@ -561,45 +561,6 @@ CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
     return pNewChartWin;
 }
 
-void systemevalDlg::SetStatus(int MessID, int iMessPara)
-{
-    switch(MessID)
-    {
-    case MS_FAC_CRC:
-        LEDFAC->SetLight(iMessPara);
-        break;
-
-    case MS_SDC_CRC:
-        LEDSDC->SetLight(iMessPara);
-        break;
-
-    case MS_MSC_CRC:
-        LEDMSC->SetLight(iMessPara);
-        break;
-
-    case MS_FRAME_SYNC:
-        LEDFrameSync->SetLight(iMessPara);
-        break;
-
-    case MS_TIME_SYNC:
-        LEDTimeSync->SetLight(iMessPara);
-        break;
-
-    case MS_IOINTERFACE:
-        LEDIOInterface->SetLight(iMessPara);
-        break;
-
-    case MS_RESET_ALL:
-        LEDFAC->Reset();
-        LEDSDC->Reset();
-        LEDMSC->Reset();
-        LEDFrameSync->Reset();
-        LEDTimeSync->Reset();
-        LEDIOInterface->Reset();
-        break;
-    }
-}
-
 void systemevalDlg::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 {
     switch(state)
@@ -609,15 +570,15 @@ void systemevalDlg::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
         break;
 
     case CRC_ERROR:
-        LED->SetLight(2); /* RED */
+        LED->SetLight(CMultColorLED::RL_RED);
         break;
 
     case DATA_ERROR:
-        LED->SetLight(1); /* YELLOW */
+        LED->SetLight(CMultColorLED::RL_YELLOW);
         break;
 
     case RX_OK:
-        LED->SetLight(0); /* GREEN */
+        LED->SetLight(CMultColorLED::RL_GREEN);
         break;
     }
 }
@@ -630,6 +591,7 @@ void systemevalDlg::OnTimer()
 
     if (this->isVisible())
     {
+
         SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.Audio.GetStatus());
         SetStatus(LEDSDC, ReceiverParam.ReceiveStatus.SDC.GetStatus());
         SetStatus(LEDFAC, ReceiverParam.ReceiveStatus.FAC.GetStatus());
@@ -881,15 +843,15 @@ void systemevalDlg::OnTimer()
         switch (ReceiverParam.GPSData.GetStatus())
         {
         case CGPSData::GPS_RX_NOT_CONNECTED:
-            LEDGPS->SetLight(2); // Red
+            LEDGPS->SetLight(CMultColorLED::RL_RED);
             break;
 
         case CGPSData::GPS_RX_NO_DATA:
-            LEDGPS->SetLight(1); // Yellow
+            LEDGPS->SetLight(CMultColorLED::RL_YELLOW);
             break;
 
         case CGPSData::GPS_RX_DATA_AVAILABLE:
-            LEDGPS->SetLight(0); // Green
+            LEDGPS->SetLight(CMultColorLED::RL_GREEN);
             break;
         }
 

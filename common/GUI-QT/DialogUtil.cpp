@@ -27,7 +27,6 @@
 \******************************************************************************/
 
 #include <qmenubar.h>
-#include <qevent.h>
 #include <qlabel.h>
 #include <qaction.h>
 #ifdef _WIN32

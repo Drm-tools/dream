@@ -144,11 +144,11 @@ void CMultColorLED::UpdateColor()
 	}
 }
 
-void CMultColorLED::SetLight(int iNewStatus)
+void CMultColorLED::SetLight(ELightColor color)
 {
-	switch (iNewStatus)
+	switch (color)
 	{
-	case 0:
+	case RL_GREEN:
 		/* Green light */
 		bFlagGreenLi = true;
 #if QT_VERSION < 0x040000
@@ -158,7 +158,7 @@ void CMultColorLED::SetLight(int iNewStatus)
 #endif
 		break;
 
-	case 1:
+	case RL_YELLOW:
 		/* Yellow light */
 		bFlagYellowLi = true;
 #if QT_VERSION < 0x040000
@@ -168,7 +168,7 @@ void CMultColorLED::SetLight(int iNewStatus)
 #endif
 		break;
 
-	case 2:
+	case RL_RED:
 		/* Red light */
 		bFlagRedLi = true;
 #if QT_VERSION < 0x040000

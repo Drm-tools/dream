@@ -349,15 +349,15 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
         break;
 
     case CRC_ERROR:
-        LED->SetLight(2); /* RED */
+        LED->SetLight(CMultColorLED::RL_RED);
         break;
 
     case DATA_ERROR:
-        LED->SetLight(1); /* YELLOW */
+        LED->SetLight(CMultColorLED::RL_YELLOW);
         break;
 
     case RX_OK:
-        LED->SetLight(0); /* GREEN */
+        LED->SetLight(CMultColorLED::RL_GREEN);
         break;
     }
 }
@@ -974,49 +974,6 @@ void FDRMDialog::closeEvent(QCloseEvent* ce)
         /* now let QT close us */
         ce->accept();
         break;
-    }
-}
-
-void FDRMDialog::customEvent(QEvent* Event)
-{
-    if (Event->type() == QEvent::User + 11)
-    {
-        int iMessType = ((DRMEvent*) Event)->iMessType;
-        int iStatus = ((DRMEvent*) Event)->iStatus;
-
-        if (iMessType == MS_MOT_OBJ_STAT)
-		{
-#if QT_VERSION < 0x040000
-			pMultiMediaDlg->SetStatus(iMessType, iStatus);
-#else
-			// TODO
-#endif
-		}
-        else
-        {
-            pSysEvalDlg->SetStatus(iMessType, iStatus);
-
-            switch(iMessType)
-            {
-            case MS_FAC_CRC:
-                CLED_FAC->SetLight(iStatus);
-                break;
-
-            case MS_SDC_CRC:
-                CLED_SDC->SetLight(iStatus);
-                break;
-
-            case MS_MSC_CRC:
-                CLED_MSC->SetLight(iStatus);
-                break;
-
-            case MS_RESET_ALL:
-                CLED_FAC->Reset();
-                CLED_SDC->Reset();
-                CLED_MSC->Reset();
-                break;
-            }
-        }
     }
 }
 

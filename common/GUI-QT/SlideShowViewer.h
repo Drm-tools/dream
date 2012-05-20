@@ -33,13 +33,12 @@
 #include "../DrmReceiver.h"
 class CSettings;
 
-class SlideShowViewer : public QMainWindow, Ui_SlideShowViewer
+class SlideShowViewer : public QMainWindow
 {
 	Q_OBJECT
 
 public:
-	SlideShowViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, Qt::WFlags f = 0);
+	SlideShowViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0);
 	virtual ~SlideShowViewer();
 
 protected:
@@ -53,6 +52,7 @@ protected:
 	std::vector<QPixmap>    vecImages;
 	std::vector<QString>    vecImageNames;
 	int						iCurImagePos;
+	Ui_SlideShowViewer*		ui;
 
 public slots:
 	void OnTimer();
@@ -68,4 +68,3 @@ public slots:
 };
 
 #endif
-

@@ -192,15 +192,15 @@ void FMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 		break;
 
 	case CRC_ERROR:
-		LED->SetLight(2); /* RED */
+		LED->SetLight(CMultColorLED::RL_RED);
 		break;
 
 	case DATA_ERROR:
-		LED->SetLight(1); /* YELLOW */
+		LED->SetLight(CMultColorLED::RL_YELLOW);
 		break;
 
 	case RX_OK:
-		LED->SetLight(0); /* GREEN */
+		LED->SetLight(CMultColorLED::RL_GREEN);
 		break;
 	}
 }

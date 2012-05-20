@@ -52,15 +52,15 @@ class CMultColorLED : public QLabel
     Q_OBJECT
 
 public:
+	enum ELightColor {RL_GREY, RL_RED, RL_GREEN, RL_YELLOW};
+
 	CMultColorLED(QWidget* parent, const char * name = 0, Qt::WFlags f = 0);
 	virtual ~CMultColorLED() {}
 
-	void SetUpdateTime(int iNUTi);
-	void SetLight(int iNewStatus);
+	void SetUpdateTime(int);
+	void SetLight(ELightColor);
 	void Reset();
 
-
-	enum ELightColor {RL_GREY, RL_RED, RL_GREEN, RL_YELLOW};
 protected:
 
 	ELightColor		eColorFlag;

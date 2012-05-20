@@ -82,8 +82,7 @@ public:
 
 	virtual ~systemevalDlg();
 
-	void SetStatus(int MessID, int iMessPara);
-	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
+	void SetStatus(CMultColorLED*, ETypeRxStatus);
 	void StopLogTimers();
 
 protected:
