@@ -38,6 +38,7 @@
 #include <cctype>
 #include <cstring>
 #include <fstream>
+#include <iostream>
 #ifdef HAVE_LIBZ
 #include <zlib.h>
 #else

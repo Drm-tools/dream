@@ -35,7 +35,6 @@
 #include <time.h>
 #include <map>
 #include <queue>
-#include <iostream>
 #ifdef USE_QT_GUI
 # include <qwaitcondition.h>
 #endif
@@ -596,8 +595,10 @@ class CMOTDABDec
     CMOTDirectory MOTDirectory;
     map < TTransportID, CMOTObject > MOTCarousel;
     queue < TTransportID > qiNewObjects;
-	QMutex guard;
-	QWaitCondition blocker;
+#ifdef USE_QT_GUI
+    QMutex guard;
+    QWaitCondition blocker;
+#endif
 };
 
 #endif // !defined(DABMOT_H__3B0UBVE98732KJVEW363E7A0D31912__INCLUDED_)
