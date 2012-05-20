@@ -72,7 +72,7 @@ void SlideShowViewer::OnTimer()
 	Parameters.Lock();
 	ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
 	int shortID = Parameters.GetCurSelDataService();
-	int packetID = Parameters.Service[shortID].iPacketID;
+	CDataParam dp = Parameters.GetDataParam(shortID);
 	Parameters.Unlock();
 
 	switch(status)
@@ -94,11 +94,19 @@ void SlideShowViewer::OnTimer()
 		break;
 	}
 
-	CDataDecoder& DataDecoder = *receiver.GetDataDecoder();
-	CMOTDABDec *motdec = (CMOTDABDec*)DataDecoder.getApplication(packetID);
+	CDataDecoder* DataDecoder = receiver.GetDataDecoder();
+	if(DataDecoder == NULL)
+	{
+		qDebug("can't get data decoder from receiver");
+		return;
+	}
+	CMOTDABDec *motdec = DataDecoder->getApplication(dp.iPacketID);
 
 	if(motdec==NULL)
+	{
+		qDebug("can't get MOT decoder for short id %d, packetId %d", shortID, dp.iPacketID);
         return;
+	}
 
     /* Poll the data decoder module for new picture */
 #if 0

@@ -76,7 +76,7 @@ void BWSViewer::OnTimer()
     if(!decoderSet)
     {
         CDataDecoder* dec = receiver.GetDataDecoder();
-        CMOTDABDec *decoder = (CMOTDABDec*)dec->getApplication(service.iPacketID);
+        CMOTDABDec *decoder = (CMOTDABDec*)dec->getApplication(service.DataParam.iPacketID);
 
         if(decoder)
         {

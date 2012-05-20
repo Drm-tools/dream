@@ -607,16 +607,31 @@ CMOTDABDec::NewObjectAvailable()
 void
 CMOTDABDec::GetNextObject(CMOTObject & NewMOTObject)
 {
-	if (!qiNewObjects.empty())
+	TTransportID firstNew;
+#ifdef USE_QT_GUI
+	guard.lock();
+	if(qiNewObjects.empty())
 	{
-		TTransportID firstNew = qiNewObjects.front();
-		qiNewObjects.pop();
-		NewMOTObject = MOTCarousel[firstNew];
+		if(blocker.wait(&guard, 1000))
+		{
+			if(!qiNewObjects.empty())
+			{
+				firstNew = qiNewObjects.front();
+				qiNewObjects.pop();
+			}
+		}
 	}
 	else
 	{
-		//cerr << "GetObject called when queue empty" << endl;
+		firstNew = qiNewObjects.front();
+		qiNewObjects.pop();
 	}
+	guard.unlock();
+#else
+	firstNew = qiNewObjects.front();
+	qiNewObjects.pop();
+#endif
+	NewMOTObject = MOTCarousel[firstNew];
 }
 
 void
@@ -633,8 +648,12 @@ CMOTDABDec::DeliverIfReady(TTransportID TransportID)
 				o.strName = string(o.strName.c_str()) + ".gz";
 		}
 		//cerr << o << endl;;
+		ostringstream ss; ss << o << endl;
 #ifdef USE_QT_GUI
+		guard.lock();
 		qiNewObjects.push(TransportID);
+		blocker.wakeOne();
+		guard.unlock();
 #else
 		ofstream file;
 		file.open(o.strName.c_str());
@@ -746,7 +765,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 
 		vecbiNewData.Separate(iLenEndUserAddress);
 	}
-	//cerr << "MOT: new data unit, tid " << TransportID << " CRC " << bCRCOk << " DG" << iDataGroupType << endl;
+	cerr << "MOT: new data unit, tid " << TransportID << " CRC " << bCRCOk << " DG" << iDataGroupType << endl;
 
 	/* MSC data group data field -------------------------------------------- */
 	/* If CRC is not used enter if-block, if CRC flag is used, it must be ok to
@@ -1224,6 +1243,7 @@ CReassembler::AddSegment(CVector < _BYTE > &vecDataIn,
 		}
 		bReady = TRUE;
 	}
+	//qDebug("AddSegment %d last %d ready %d\n", iSegNum, bLast?1:0, bReady?1:0);
 }
 
 void

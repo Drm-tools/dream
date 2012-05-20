@@ -256,7 +256,7 @@ public:
         return *this;
     }
 
-    /* This function is needed for detection changes in the class */
+    /* This function is needed to detect changes in the data service */
     _BOOLEAN operator!=(const CDataParam DataParam)
     {
         if (iStreamID != DataParam.iStreamID)
@@ -327,7 +327,6 @@ public:
     }
 
     uint32_t iServiceID;
-    uint32_t iPacketID;
     ECACond eCAIndication;
     int iLanguage;
     ETyOServ eAudDataFlag;

@@ -720,13 +720,10 @@ CAudioParam CParameter::GetAudioParam(const int iShortID) const
 
 void CParameter::SetDataParam(const int iShortID, const CDataParam& NewDataParam)
 {
-    CDataParam& DataParam = Service[iShortID].DataParam;
-
     /* Apply changes only if parameters have changed */
-    if (DataParam != NewDataParam)
+    if (Service[iShortID].DataParam != NewDataParam)
     {
-        DataParam = NewDataParam;
-
+        Service[iShortID].DataParam = NewDataParam;
         /* Set init flags */
         if (pDRMRec) pDRMRec->InitsForDataParam();
     }
@@ -799,7 +796,6 @@ void CParameter::SetCurSelDataService(const int iNewService)
             (Service[iNewService].DataParam.iStreamID != STREAM_ID_NOT_USED))
     {
         iCurSelDataService = iNewService;
-cerr << "data service shortid " << iNewService << " stream " << Service[iNewService].DataParam.iStreamID << " packet id " << Service[iNewService].DataParam.iPacketID << endl;
         LastDataService.Reset();
 
         /* Set init flags */
