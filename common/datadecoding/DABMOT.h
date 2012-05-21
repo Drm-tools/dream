@@ -36,7 +36,16 @@
 #include <map>
 #include <queue>
 #ifdef USE_QT_GUI
-# include <qwaitcondition.h>
+# if QT_VERSION < 0x040000
+#  if QT_VERSION < 0x030000
+#   include <qthread.h>
+#  else
+#   include <qwaitcondition.h>
+#  endif
+# else
+#  include <QWaitCondition>
+#  include <QMutex>
+# endif
 #endif
 
 
