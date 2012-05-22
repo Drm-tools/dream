@@ -766,7 +766,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 
 		vecbiNewData.Separate(iLenEndUserAddress);
 	}
-	cerr << "MOT: new data unit, tid " << TransportID << " CRC " << bCRCOk << " DG" << iDataGroupType << endl;
+	//cerr << "MOT: new data unit, tid " << TransportID << " CRC " << bCRCOk << " DG" << iDataGroupType << endl;
 
 	/* MSC data group data field -------------------------------------------- */
 	/* If CRC is not used enter if-block, if CRC flag is used, it must be ok to

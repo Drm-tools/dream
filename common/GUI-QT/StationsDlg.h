@@ -252,7 +252,6 @@ public:
 
 	void LoadSchedule(CDRMSchedule::ESchedMode eNewSchM);
 	void SetCurrentSchedule(const CDRMSchedule::ESchedMode eNewSchM);
-	_BOOLEAN CheckFilter(const int iPos);
 
 
 	void LoadSettings(const CSettings&);
@@ -272,6 +271,7 @@ protected:
 	void			AddUpdateDateTime();
 	void			SetSortSettings(const CDRMSchedule::ESchedMode eNewSchM);
 	_BOOLEAN		showAll();
+	_BOOLEAN 		CheckFilter(const int iPos);
 	int			currentSortColumn();
 	_BOOLEAN		bCurrentSortAscending;
 #if QT_VERSION < 0x030000
