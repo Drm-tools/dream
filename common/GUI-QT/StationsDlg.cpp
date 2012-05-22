@@ -1049,14 +1049,14 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
     DRMSchedule.ListLanguages.sort();
 
 
+    int i;
 #if QT_VERSION < 0x040000
     ComboBoxFilterTarget->insertStringList(DRMSchedule.ListTargets);
     ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
     ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
 
-    size_t i;
     // delete all previous list items
-    for (i = 0; i < vecpListItems.size(); i++)
+    for (i = 0; i < int(vecpListItems.size()); i++)
     {
         if (vecpListItems[i] != NULL)
             delete vecpListItems[i];
@@ -1103,7 +1103,7 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 #if QT_VERSION < 0x040000
         vecpListItems[i] = item;
 #else
-	station.item = item;
+	DRMSchedule.GetItem(i).item = item;
 #endif
     }
 
