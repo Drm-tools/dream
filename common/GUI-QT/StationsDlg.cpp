@@ -1116,9 +1116,9 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 void StationsDlg::ClearStationsView()
 {
 #if QT_VERSION < 0x040000
-    ListViewStations->clear();
+    while(ListViewStations->childCount()>0)
+        ListViewStations->takeItem(ListViewStations->firstChild());
 #endif
-    ListItemsMutex.unlock();
 }
 
 void StationsDlg::SetStationsView()
@@ -1134,8 +1134,7 @@ void StationsDlg::SetStationsView()
     ListViewStations->setEnabled(FALSE);
     bool bListHastChanged = true; // TODO optimise if not changed
 
-    while(ListViewStations->childCount()>0)
-        ListViewStations->takeItem(ListViewStations->firstChild());
+    ClearStationsView();
 
     /* Add new item for each visible station in list view */
     for (size_t i = 0; i < vecpListItems.size(); i++)
