@@ -124,7 +124,7 @@ protected:
 	CGPSReceiver*		pGPSReceiver;
 
 public slots:
-	void UpdatePlotsStyle(int);
+	void UpdatePlotStyle(int);
 	void OnTimer();
 	void OnTimerInterDigit();
 	void OnTimerLogFileStart();

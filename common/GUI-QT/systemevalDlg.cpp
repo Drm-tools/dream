@@ -690,7 +690,7 @@ void systemevalDlg::OnFrequencyEdited ( const QString & )
     TimerInterDigit.changeInterval(100);
 }
 
-void systemevalDlg::UpdatePlotsStyle(int iPlotStyle)
+void systemevalDlg::UpdatePlotStyle(int iPlotStyle)
 {
     Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
     /* Update chart windows */
