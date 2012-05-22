@@ -1047,7 +1047,52 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
     DRMSchedule.ListLanguages.sort();
 
 
-#if QT_VERSION >= 0x040000
+#if QT_VERSION < 0x040000
+    ComboBoxFilterTarget->insertStringList(DRMSchedule.ListTargets);
+    ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
+    ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
+
+    int i;
+    // delete all previous list items
+    for (i = 0; i < vecpListItems.size(); i++)
+    {
+        if (vecpListItems[i] != NULL)
+            delete vecpListItems[i];
+    }
+    // fill the vector just once, then add and remove items from the View
+    vecpListItems.resize( DRMSchedule.GetStationNumber());
+    for (i = 0; i < DRMSchedule.GetStationNumber(); i++)
+    {
+	const CStationsItem& item = DRMSchedule.GetItem(i);
+
+        /* Get power of the station. We have to do a special treatment
+	 * here, because we want to avoid having a "0" in the list when
+	 * a "?" was in the schedule-ini-file */
+         const _REAL rPower = item.rPower;
+
+         QString strPower;
+         if (rPower == (_REAL) 0.0)
+             strPower = "?";
+         else
+             strPower.setNum(rPower);
+
+         /* Generate new list item with all necessary column entries */
+         vecpListItems[i] = new MyListViewItem(
+             ListViewStations,
+             item.strName     /* name */,
+             QString().sprintf("%04d-%04d", item.GetStartTimeNum(), item.GetStopTimeNum())   /* time */,
+             QString().setNum(item.iFreq) /* freq. */,
+             item.strTarget   /* target */,
+             strPower                                   /* power */,
+             item.strCountry  /* country */,
+             item.strSite     /* site */,
+             item.strLanguage /* language */
+         );
+
+         /* list of days */
+         vecpListItems[i]->setText(8, item.strDaysShow);
+    }
+#else
     ComboBoxFilterTarget->addItems(DRMSchedule.ListTargets);
     ComboBoxFilterCountry->addItems(DRMSchedule.ListCountries);
     ComboBoxFilterLanguage->addItems(DRMSchedule.ListLanguages);
@@ -1076,10 +1121,6 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
             item->setText(8, station.strDaysShow);
 	    station.item = item;
     }
-#else
-	ComboBoxFilterTarget->insertStringList(DRMSchedule.ListTargets);
-    ComboBoxFilterCountry->insertStringList(DRMSchedule.ListCountries);
-    ComboBoxFilterLanguage->insertStringList(DRMSchedule.ListLanguages);
 #endif
     /* Update list view */
     SetStationsView();
@@ -1091,20 +1132,8 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 
 void StationsDlg::ClearStationsView()
 {
-    /* Delete all old list view items (it is important that the vector
-       "vecpListItems" was initialized to 0 at creation of the global object
-       otherwise this may cause an segmentation fault) */
-    ListItemsMutex.lock();
-    /*
-    for (size_t i = 0; i < vecpListItems.size(); i++)
-    {
-    	if (vecpListItems[i] != NULL)
-    		delete vecpListItems[i];
-    }
-    */
 #if QT_VERSION < 0x040000
     ListViewStations->clear();
-    vecpListItems.clear();
 #endif
     ListItemsMutex.unlock();
 }
@@ -1122,108 +1151,39 @@ void StationsDlg::SetStationsView()
 
     ListViewStations->setUpdatesEnabled(FALSE);
     ListViewStations->setEnabled(FALSE);
+    ListViewStations->clear();
+    bListHastChanged = TRUE; // TODO optimise if not changed
 
-    /* Set lock because of list view items. These items could be changed
-       by another thread */
-
-    _BOOLEAN bListHastChanged = FALSE;
-
-    /* if the list got smaller, we need to free some memory */
-    for (i = iNumStations; i < vecpListItems.size(); i++)
-    {
-        if (vecpListItems[i] != NULL)
-            delete vecpListItems[i];
-    }
-    /* resize will leave all existing elements alone and add
-     * nulls in case the list needed to get bigger
-     */
-    vecpListItems.resize(iNumStations, (MyListViewItem*) NULL);
-
-    /* Add new item for each station in list view */
+    /* Add new item for each visible station in list view */
     for (i = 0; i < iNumStations; i++)
     {
+
+        MyListViewItem* item = vecpListItems[i];
+
+        /* Check, if station is currently transmitting. If yes, set special pixmap */
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
-
-        if (!(((showAll() == FALSE) &&
-                (iState == CDRMSchedule::IS_INACTIVE))
-                || (CheckFilter(i) == FALSE)))
+        switch (iState)
         {
-            /* Only insert item if it is not already in the list */
-            if (vecpListItems[i] == NULL)
-            {
-                /* Get power of the station. We have to do a special treatment
-                   here, because we want to avoid having a "0" in the list when
-                   a "?" was in the schedule-ini-file */
-                const _REAL rPower = DRMSchedule.GetItem(i).rPower;
-
-                QString strPower;
-                if (rPower == (_REAL) 0.0)
-                    strPower = "?";
-                else
-                    strPower.setNum(rPower);
-
-                /* Generate new list item with all necessary column entries */
-                vecpListItems[i] = new MyListViewItem(ListViewStations,
-                                                      DRMSchedule.GetItem(i).strName     /* name */,
-                                                      QString().sprintf("%04d-%04d",
-                                                              DRMSchedule.GetItem(i).GetStartTimeNum(),
-                                                              DRMSchedule.GetItem(i).GetStopTimeNum())   /* time */,
-                                                      QString().setNum(DRMSchedule.GetItem(i).iFreq) /* freq. */,
-                                                      DRMSchedule.GetItem(i).strTarget   /* target */,
-                                                      strPower                                   /* power */,
-                                                      DRMSchedule.GetItem(i).strCountry  /* country */,
-                                                      DRMSchedule.GetItem(i).strSite     /* site */,
-                                                      DRMSchedule.GetItem(i).strLanguage /* language */);
-
-                /* Show list of days */
-                vecpListItems[i]->setText(8,
-                                          DRMSchedule.GetItem(i).strDaysShow);
-
-                /* Insert this new item in list. The item object is destroyed by
-                   the list view control when this is destroyed */
-                ListViewStations->insertItem(vecpListItems[i]);
-
-                /* Set flag for sorting the list */
-                bListHastChanged = TRUE;
-            }
-
-            /* Check, if station is currently transmitting. If yes, set
-               special pixmap */
-            switch (iState)
-            {
-            case CDRMSchedule::IS_ACTIVE:
-                vecpListItems[i]->setPixmap(0, BitmCubeGreen);
-                break;
-            case CDRMSchedule::IS_PREVIEW:
-                vecpListItems[i]->setPixmap(0, BitmCubeOrange);
-                break;
-            case CDRMSchedule::IS_SOON_INACTIVE:
-                vecpListItems[i]->setPixmap(0, BitmCubePink);
-                break;
-            case CDRMSchedule::IS_INACTIVE:
-                vecpListItems[i]->setPixmap(0, BitmCubeRed);
-                break;
-            default:
-                vecpListItems[i]->setPixmap(0, BitmCubeRed);
-                break;
-            }
+        case CDRMSchedule::IS_ACTIVE:
+            item->setPixmap(0, BitmCubeGreen);
+            break;
+        case CDRMSchedule::IS_PREVIEW:
+            item->setPixmap(0, BitmCubeOrange);
+            break;
+        case CDRMSchedule::IS_SOON_INACTIVE:
+            item->setPixmap(0, BitmCubePink);
+            break;
+        case CDRMSchedule::IS_INACTIVE:
+            item->setPixmap(0, BitmCubeRed);
+            break;
+        default:
+            item->setPixmap(0, BitmCubeRed);
+            break;
         }
-        else
+
+	if(showAll() || ((CheckFilter(i) == FALSE) && (iState != CDRMSchedule::IS_INACTIVE)))
         {
-            /* Delete this item since it is not used anymore */
-            if (vecpListItems[i] != NULL)
-            {
-                /* If one deletes a item in QT list view, it is
-                   automaticall removed from the list and the list gets
-                   repainted */
-                delete vecpListItems[i];
-
-                /* Reset pointer so we can distinguish if it is used or not */
-                vecpListItems[i] = NULL;
-
-                /* Set flag for sorting the list */
-                bListHastChanged = TRUE;
-            }
+            ListViewStations->insertItem(item);
         }
     }
 
