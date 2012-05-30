@@ -144,9 +144,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
                 SLOT(OnMenuSetDisplayColor()));
         /* Plot style settings */
         pPlotStyleMenu = new QPopupMenu(this);
-        pPlotStyleMenu->insertItem(tr("&Blue / White"), this, SIGNAL(plotStyleChanged(int)), 0, 0);
-        pPlotStyleMenu->insertItem(tr("&Green / Black"), this, SIGNAL(plotStyleChanged(int)), 0, 1);
-        pPlotStyleMenu->insertItem(tr("B&lack / Grey"), this, SIGNAL(plotStyleChanged(int)), 0, 2);
+        pPlotStyleMenu->insertItem(tr("&Blue / White"), this, SLOT(OnMenuPlotStyle(int)), 0, 0);
+        pPlotStyleMenu->insertItem(tr("&Green / Black"), this, SLOT(OnMenuPlotStyle(int)), 0, 1);
+        pPlotStyleMenu->insertItem(tr("B&lack / Grey"), this, SLOT(OnMenuPlotStyle(int)), 0, 2);
         pSettingsMenu->insertItem(tr("&Plot Style"), pPlotStyleMenu);
 
         /* Set check */
@@ -329,6 +329,17 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 FDRMDialog::~FDRMDialog()
 {
 }
+
+#if QT_VERSION < 0x040000
+void FDRMDialog::OnMenuPlotStyle(int value)
+{
+	/* Set new plot style in other dialogs */
+	emit plotStyleChanged(value);
+	/* Taking care of the checks */
+	for (int i = 0; i < NUM_AVL_COLOR_SCHEMES_PLOT; i++)
+		pPlotStyleMenu->setItemChecked(i, i == value);
+}
+#endif
 
 void FDRMDialog::OnSwitchToFM()
 {

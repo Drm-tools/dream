@@ -537,9 +537,9 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
         /* Show "save file" dialog */
         QString strFileName =
 #if QT_VERSION < 0x040000
-            QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
+        QFileDialog::getSaveFileName("DreamOut.wav", "*.wav", this);
 #else
-			QFileDialog::getSaveFileName(this, tr("Save Audio"), "DreamOut.wav", tr("Wav (*.wav)"));
+	QFileDialog::getSaveFileName(this, tr("Save Audio"), "DreamOut.wav", tr("Wav (*.wav)"));
 #endif
         /* Check if user hit the cancel button */
         if (!strFileName.isEmpty())

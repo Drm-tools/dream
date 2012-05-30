@@ -163,6 +163,9 @@ public slots:
     void OnSwitchMode(int);
     void OnSwitchToFM();
     void OnSwitchToAM();
+#if QT_VERSION < 0x040000
+    void OnMenuPlotStyle(int);
+#endif
 signals:
     void plotStyleChanged(int);
 };
