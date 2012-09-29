@@ -438,7 +438,6 @@ protected:
     int						iBwUSB;
     int						iBwCW;
     int						iBwFM;
-    _BOOLEAN				bReadFromFile;
     time_t					time_keeper;
 #ifdef HAVE_LIBHAMLIB
     CRig*				pRig;
