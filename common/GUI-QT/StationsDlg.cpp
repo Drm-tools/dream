@@ -571,9 +571,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
             this, SLOT(OnFreqCntNewValue(double)));
 
-    connect(ComboBoxFilterTarget, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterTarget(const QString&)));
-    connect(ComboBoxFilterCountry, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterCountry(const QString&)));
-    connect(ComboBoxFilterLanguage, SIGNAL(activated(const QString&)), this, SLOT(on_ComboBoxFilterLanguage(const QString&)));
 	okMessage = tr("Update successful.");
 	badMessage = 
         tr("Update failed. The following things may caused the "
@@ -813,20 +810,23 @@ void StationsDlg::AddUpdateDateTime()
 #endif
 }
 
-void StationsDlg::on_ComboBoxFilterTarget(const QString& s)
+void StationsDlg::on_ComboBoxFilterTarget_activated(const QString& s)
 {
+    //qDebug("on_ComboBoxFilterTarget_activated %s", s.toUtf8().constData());
     DRMSchedule.SetTargetFilter(s);
     SetStationsView();
 }
 
-void StationsDlg::on_ComboBoxFilterCountry(const QString& s)
+void StationsDlg::on_ComboBoxFilterCountry_activated(const QString& s)
 {
+    //qDebug("on_ComboBoxFilterCountry_activated %s", s.toUtf8().constData());
     DRMSchedule.SetCountryFilter(s);
     SetStationsView();
 }
 
-void StationsDlg::on_ComboBoxFilterLanguage(const QString& s)
+void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 {
+    //qDebug("on_ComboBoxFilterLanguage_activated %s", s.toUtf8().constData());
     DRMSchedule.SetLanguageFilter(s);
     SetStationsView();
 }
