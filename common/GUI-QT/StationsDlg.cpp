@@ -883,10 +883,17 @@ void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 {
 	if(reply->error()==QNetworkReply::NoError)
 	{
-		/* Notify the user that update was successful */
-		QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
-		/* Read updated ini-file */
-		LoadSchedule(CDRMSchedule::SM_DRM);
+		QFile f(DRMSCHEDULE_INI_FILE_NAME);
+		if(f.open(QIODevice::WriteOnly)) {
+			f.write(reply->readAll());
+			f.close();
+			/* Notify the user that update was successful */
+			QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
+			/* Read updated ini-file */
+			LoadSchedule(CDRMSchedule::SM_DRM);
+		} else {
+	        QMessageBox::information(this, "Dream", tr("Can't save new schedule"), QMessageBox::Ok);
+		}
 	}
 	else
 	{
