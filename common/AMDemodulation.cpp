@@ -719,8 +719,49 @@ void CFreqOffsAcq::Start(const CReal rNewNormCenter)
 		Stoerunterdrueckung bei Sprachsignalen", PhD Thesis, Christian-
 		Albrechts-Universitaet zu Kiel, 1998
 */
+
+void CNoiseReduction::SetNoiRedDegree(const ENoiRedDegree eNND)
+{
+        eNoiRedDegree = eNND;
+#if USE_SPEEX_DENOISE
+		spx_int32_t SupressionLevel;
+		switch(eNoiRedDegree) {
+		case NR_LOW:
+			SupressionLevel = -10;
+			break;
+		case NR_MEDIUM:
+			SupressionLevel = -15;
+			break;
+		case NR_HIGH:
+			SupressionLevel = -20;
+			break;
+		}
+		speex_preprocess_ctl(preprocess_state, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &SupressionLevel);
+#endif
+}
+
 void CNoiseReduction::Process(CRealVector& vecrIn)
 {
+#if USE_SPEEX_DENOISE
+   static spx_int16_t* speexData = {NULL};
+         int i;
+         double* vectorData = &( vecrIn[0] );
+         int vectorSz = vecrIn.Size();
+         if (preprocess_state == NULL)
+         {
+                 preprocess_state = speex_preprocess_state_init(vectorSz, SOUNDCRD_SAMPLE_RATE);
+                 speexData = (spx_int16_t*)malloc(vectorSz*sizeof(spx_int16_t));
+         }
+         for (i=0; i<vectorSz; i++)
+        {
+	        speexData[i] = (spx_int16_t)vectorData[i]; 
+        }
+         speex_preprocess(preprocess_state, speexData, NULL);
+         for (i=0; i<vectorSz; i++)
+                 {
+                 vectorData[i] = (double)speexData[i];
+                 }
+#else
     /* Regular block (updates the noise estimate) --------------------------- */
     /* Update history of input signal */
     vecrLongSignal.Merge(vecrOldSignal, vecrIn);
@@ -770,6 +811,7 @@ void CNoiseReduction::Process(CRealVector& vecrIn)
 
     /* Overlap and add operation */
     vecrIn = vecrFiltResult + vecrOutSig1;
+#endif
 }
 
 CRealVector CNoiseReduction::OptimalFilter(const CComplexVector& veccSigFreq,

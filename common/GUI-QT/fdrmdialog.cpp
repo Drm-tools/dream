@@ -44,6 +44,8 @@
 # include "JLViewer.h"
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
+#include "../GPSReceiver.h"
+#include "Rig.h"
 
 inline QString str2qstr(const string& s) {
 #if QT_VERSION < 0x040000
@@ -58,7 +60,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
                        QWidget* parent, const char* name, bool modal, Qt::WFlags f)
     :
     FDRMDialogBase(parent, name, modal, f),
-    DRMReceiver(NDRMR),Settings(NSettings),Timer(),serviceLabels(4)
+    DRMReceiver(NDRMR),Settings(NSettings),
+	pGPSReceiver(NULL),pLogging(NULL),
+	Timer(),serviceLabels(4)
 {
     /* recover window size and position */
     CWinGeom s;
@@ -71,6 +75,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     AddWhatsThisHelp();
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
+
+	pLogging = new CLogging(Parameters, Settings);
 
 #if QT_VERSION < 0x040000
     /* Multimedia window */
@@ -285,6 +291,19 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     connect(pButtonGroup, SIGNAL(buttonClicked(int)), this, SLOT(OnSelectDataService(int)));
 
 #endif
+
+	connect(pStationsDlg, SIGNAL(subscribeRig()), &rig, SLOT(subscribe()));
+	connect(pStationsDlg, SIGNAL(unsubscribeRig()), &rig, SLOT(unsubscribe()));
+    connect(&rig, SIGNAL(sigstr(double)), pStationsDlg, SLOT(OnSigStr(double)));
+	connect(pLogging, SIGNAL(subscribeRig()), &rig, SLOT(subscribe()));
+	connect(pLogging, SIGNAL(unsubscribeRig()), &rig, SLOT(unsubscribe()));
+
+	connect(pSysEvalDlg, SIGNAL(startLogging()), pLogging, SLOT(start()));
+	connect(pSysEvalDlg, SIGNAL(stopLogging()), pLogging, SLOT(stop()));
+	bool enablelog = Settings.Get("Logfile", "enablelog", FALSE);
+	if(enablelog)
+		pLogging->start();
+
     ProgrInputLevel->setAlarmLevel(-12.5);
     QBrush fillBrush(QColor(0, 190, 0));
     ProgrInputLevel->setFillBrush(fillBrush);
@@ -308,8 +327,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-    connect(pGeneralSettingsDlg, SIGNAL(StartGPS()), pSysEvalDlg, SLOT(EnableGPS()));
-    connect(pGeneralSettingsDlg, SIGNAL(StopGPS()), pSysEvalDlg, SLOT(DisableGPS()));
+    connect(pGeneralSettingsDlg, SIGNAL(enableGPS()), this, SLOT(enableGPS()));
+    connect(pGeneralSettingsDlg, SIGNAL(disableGPS()), this, SLOT(disableGPS()));
 
     serviceLabels[0] = TextMiniService1;
     serviceLabels[1] = TextMiniService2;
@@ -328,6 +347,9 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 FDRMDialog::~FDRMDialog()
 {
+	delete pLogging;
+    if (pGPSReceiver)
+        delete pGPSReceiver;
 }
 
 #if QT_VERSION < 0x040000
@@ -802,7 +824,7 @@ void FDRMDialog::hideEvent(QHideEvent*)
 {
     /* Deactivate real-time timers */
     Timer.stop();
-    pSysEvalDlg->StopLogTimers();
+	pLogging->stop();
 
     /* remember the state of the windows */
     Settings.Put("DRM Dialog", "Live Schedule Dialog visible", pLiveScheduleDlg->isVisible());
@@ -810,6 +832,7 @@ void FDRMDialog::hideEvent(QHideEvent*)
 #if QT_VERSION < 0x040000
     Settings.Put("DRM Dialog", "MultiMedia Dialog visible", pMultiMediaDlg->isVisible());
     pMultiMediaDlg->hide();
+	pMultiMediaDlg->SaveSettings(Settings);
 #else
     Settings.Put("DRM Dialog", "BWS Dialog visible", pBWSDlg->isVisible());
     Settings.Put("DRM Dialog", "JL Dialog visible", pJLDlg->isVisible());
@@ -826,9 +849,6 @@ void FDRMDialog::hideEvent(QHideEvent*)
     pEPGDlg->hide();
     pStationsDlg->hide();
 
-#if QT_VERSION < 0x040000
-	pMultiMediaDlg->SaveSettings(Settings);
-#endif
     pLiveScheduleDlg->SaveSettings(Settings);
 
     CWinGeom s;
@@ -1199,6 +1219,17 @@ void FDRMDialog::SetDisplayColor(const QColor newColor)
         /* Set new palette */
         vecpWidgets[i]->setPalette(CurPal);
     }
+}
+
+void FDRMDialog::enableGPS()
+{
+	pGPSReceiver = new CGPSReceiver(*DRMReceiver.GetParameters(), Settings);
+}
+
+void FDRMDialog::disableGPS()
+{
+	delete pGPSReceiver;
+	pGPSReceiver = NULL;
 }
 
 void FDRMDialog::AddWhatsThisHelp()

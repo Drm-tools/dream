@@ -29,9 +29,9 @@
 #include "EvaluationDlg.h"
 #include "DialogUtil.h"
 #include "Rig.h"
-#include "../GPSReceiver.h"
 #include <qmessagebox.h>
 #include <qlayout.h>
+#include <qdatetime.h>
 #include <qfiledialog.h>
 #include <QHideEvent>
 #include <QShowEvent>
@@ -43,9 +43,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
     DRMReceiver(NDRMR),
     Settings(NSettings),
     Timer(), TimerInterDigit(), TimerChart(),
-    TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
-    shortLog(*NDRMR.GetParameters()), longLog(*NDRMR.GetParameters()),
-    iLogDelay(0), rig(nr), pGPSReceiver(NULL)
+    rig(nr)
 {
     /* Get window geometry data and apply it */
     CWinGeom s;
@@ -254,91 +252,17 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings
     connect(&TimerInterDigit, SIGNAL(timeout()),
             this, SLOT(OnTimerInterDigit()));
 
-    connect(&TimerLogFileLong, SIGNAL(timeout()),
-            this, SLOT(OnTimerLogFileLong()));
-    connect(&TimerLogFileShort, SIGNAL(timeout()),
-            this, SLOT(OnTimerLogFileShort()));
-    connect(&TimerLogFileStart, SIGNAL(timeout()),
-            this, SLOT(OnTimerLogFileStart()));
-
     connect(EdtFrequency, SIGNAL(textChanged ( const QString&)),
             this, SLOT(OnFrequencyEdited ( const QString &)));
 
-    //StopLogTimers();
-
-    /* Logfile -------------------------------------------------------------- */
-
-    /* log file flag for storing signal strength in long log */
-    _BOOLEAN logrxl = Settings.Get("Logfile", "enablerxl", FALSE);
-    shortLog.SetRxlEnabled(logrxl);
-    longLog.SetRxlEnabled(logrxl);
-    if(logrxl)
-    {
-    }
-
-    /* log file flag for storing lat/long in long log */
-    shortLog.SetPositionEnabled(Settings.Get("Logfile", "enablepositiondata", FALSE));
-    longLog.SetPositionEnabled(Settings.Get("Logfile", "enablepositiondata", FALSE));
-
-    /* logging delay value */
-    iLogDelay = Settings.Get("Logfile", "delay", 0);
-
     /* Start log file flag */
     CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
-
-    /* Activate log file start if necessary. */
-    if (CheckBoxWriteLog->isChecked())
-    {
-        /* One shot timer */
-        TimerLogFileStart.start(iLogDelay * 1000 /* ms */);
-    }
-
-    /* GPS */
-    _REAL latitude, longitude;
-    /* Latitude string for log file */
-    latitude = Settings.Get("Logfile", "latitude", 1000.0);
-    /* Longitude string for log file */
-    longitude = Settings.Get("Logfile", "longitude", 1000.0);
-
-    CParameter& Parameters = *DRMReceiver.GetParameters();
-    Parameters.Lock();
-
-    if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
-    {
-        Parameters.GPSData.SetPositionAvailable(TRUE);
-        Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-    }
-    else
-        Parameters.GPSData.SetPositionAvailable(FALSE);
-    Parameters.Unlock();
-
-    if (Settings.Get("GPS", "usegpsd", FALSE) == TRUE)
-        EnableGPS();
-    else
-        DisableGPS();
-
 }
 
 systemevalDlg::~systemevalDlg()
 {
     if(DRMReceiver.GetWriteData()->GetIsWriteWaveFile())
         DRMReceiver.GetWriteData()->StopWriteWaveFile();
-    if(longLog.GetLoggingActivated())
-        shortLog.Stop();
-    if(longLog.GetLoggingActivated())
-        longLog.Stop();
-
-    double latitude, longitude;
-    DRMReceiver.GetParameters()->GPSData.GetLatLongDegrees(latitude, longitude);
-    Settings.Put("Logfile", "delay", iLogDelay);
-    Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
-    Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
-    Settings.Put("Logfile", "enablelog", CheckBoxWriteLog->isChecked());
-    Settings.Put("Logfile", "latitude", latitude);
-    Settings.Put("Logfile", "longitude", longitude);
-
-    if (pGPSReceiver)
-        delete pGPSReceiver;
 }
 
 void systemevalDlg::UpdateControls()
@@ -838,7 +762,7 @@ void systemevalDlg::OnTimer()
         FACTimeDateL->setText(tr("Received time - date:")); /* Label */
         FACTimeDateV->setText(strFACInfo); /* Value */
 
-        //display GPS info
+        // display GPS info
 
         switch (ReceiverParam.GPSData.GetStatus())
         {
@@ -1043,60 +967,16 @@ void systemevalDlg::OnCheckSaveAudioWAV()
         DRMReceiver.GetWriteData()->StopWriteWaveFile();
 }
 
-void systemevalDlg::StopLogTimers()
-{
-    TimerLogFileStart.stop();
-    TimerLogFileShort.stop();
-    TimerLogFileLong.stop();
-}
-
-void systemevalDlg::OnTimerLogFileStart()
-{
-    /* Start logging (if not already done) */
-    if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
-    {
-        /* Activate log file timer for long and short log file */
-        TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
-        TimerLogFileLong.start(1000); /* Every second */
-
-        /* Open log file */
-        shortLog.Start("DreamLog.txt");
-        longLog.Start("DreamLogLong.csv");
-    }
-}
-
-void systemevalDlg::OnTimerLogFileShort()
-{
-    /* Write new parameters in log file (short version) */
-    shortLog.Update();
-}
-
-void systemevalDlg::OnTimerLogFileLong()
-{
-    /* Write new parameters in log file (long version) */
-    longLog.Update();
-}
 
 void systemevalDlg::OnCheckWriteLog()
 {
     if (CheckBoxWriteLog->isChecked())
     {
-        TimerLogFileStart.start(1);
-        if(longLog.GetRxlEnabled())
-        {
-            rig.subscribe();
-        }
+		emit startLogging();
     }
     else
     {
-        /* Deactivate log file timer */
-        StopLogTimers();
-        shortLog.Stop();
-        longLog.Stop();
-        if(longLog.GetRxlEnabled())
-        {
-            rig.unsubscribe();
-        }
+		emit stopLogging();
     }
 
     /* set the focus */
@@ -1575,33 +1455,4 @@ void systemevalDlg::AddWhatsThisHelp()
     GroupBoxInterfRej->setWhatsThis(strInterfRej);
     CheckBoxRecFilter->setWhatsThis(strInterfRej);
     CheckBoxModiMetric->setWhatsThis(strInterfRej);
-}
-
-void systemevalDlg::EnableGPS()
-{
-    if(pGPSReceiver)
-        return;
-
-    // let gps data come from RSCI
-    if(DRMReceiver.GetRSIIn()->GetInEnabled())
-        return;
-
-    CParameter& Parameters = *DRMReceiver.GetParameters();
-    Parameters.Lock();
-    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
-    Parameters.Unlock();
-    pGPSReceiver = new CGPSReceiver(Parameters, Settings);
-}
-
-void systemevalDlg::DisableGPS()
-{
-    if(pGPSReceiver)
-    {
-        delete pGPSReceiver;
-        pGPSReceiver = NULL;
-    }
-    CParameter& Parameters = *DRMReceiver.GetParameters();
-    Parameters.Lock();
-    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
-    Parameters.Unlock();
 }

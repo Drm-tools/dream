@@ -108,6 +108,7 @@ class CLongLog: public CReceptLog
 {
 public:
     CLongLog(CParameter& p):CReceptLog(p) {}
+	void GetPosition(double latitude, double longitude);
 protected:
     virtual void init();
     virtual void writeParameters();

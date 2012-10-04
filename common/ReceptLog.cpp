@@ -340,6 +340,14 @@ CLongLog::init()
 }
 
 void
+CLongLog::GetPosition(double latitude, double longitude)
+{
+    Parameters.Lock();
+    Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
+	Parameters.Unlock();
+}
+
+void
 CLongLog::writeParameters()
 {
 

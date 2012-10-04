@@ -31,14 +31,11 @@
 
 #include "../Parameter.h"
 #include "../util/Utilities.h"
-#include <qthread.h>
+#include <qtimer.h>
 #include <qobject.h>
 
 class CRig :
-#if QT_VERSION < 0x040000
-	public QObject,      // looks harmless as Qt2 & Qt3 see the whole thing and Qt4 is smart
-#endif
-	public QThread
+	public QObject
 {
 	Q_OBJECT
 public:
@@ -46,11 +43,9 @@ public:
 #ifdef HAVE_LIBHAMLIB
 	Hamlib(),
 #endif
+	timer(new QTimer()),
 	subscribers(0),pParameters(np)
 	{ }
-	void run();
-	void subscribe();
-	void unsubscribe();
 	void LoadSettings(CSettings&);
 	void SaveSettings(CSettings&);
 	void SetFrequency(int);
@@ -68,6 +63,7 @@ public:
 
 protected:
 	CHamlib Hamlib;
+	QTimer* timer;
 #endif
 protected:
 	int subscribers;
@@ -75,6 +71,10 @@ protected:
 
 signals:
     void sigstr(double);
+public slots:
+	void subscribe();
+	void unsubscribe();
+	void onTimer();
 };
 
 #endif

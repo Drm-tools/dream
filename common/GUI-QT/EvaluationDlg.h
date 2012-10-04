@@ -26,23 +26,9 @@
  *
 \******************************************************************************/
 
-#ifndef __EVALUATIONDLH_H
-#define __EVALUATIONDLH_H
+#ifndef __EVALUATIONDLG_H
+#define __EVALUATIONDLG_H
 
-#include <qtimer.h>
-#include <qstring.h>
-#include <qlabel.h>
-#include <qradiobutton.h>
-#include <qslider.h>
-#include <qpushbutton.h>
-#include <qcheckbox.h>
-#include <qdatetime.h>
-#include <qlineedit.h>
-#include <qtooltip.h>
-#include <qwt_thermo.h>
-#include <qpixmap.h>
-
-#include <QMenu>
 #include <QMainWindow>
 #include "ui_systemevalDlgbase.h"
 #include "DRMPlot-qwt6.h"
@@ -51,11 +37,7 @@
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../DrmReceiver.h"
-#include "../ReceptLog.h"
 #include "../util/Settings.h"
-
-class CGPSReceiver;
-class CRig;
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -63,6 +45,7 @@ class CRig;
 
 
 /* Classes ********************************************************************/
+
 class systemevalDlgBase : public QMainWindow, public Ui::SystemEvaluationWindow
 {
 public:
@@ -86,26 +69,18 @@ public:
 	void StopLogTimers();
 
 protected:
-	CDRMReceiver&		DRMReceiver;
+	CDRMReceiver&	DRMReceiver;
 	CSettings&		Settings;
 
 	QTimer			Timer;
 	QTimer			TimerInterDigit;
 	QTimer			TimerChart;
 
-	/* logging */
-	QTimer			TimerLogFileLong;
-	QTimer			TimerLogFileShort;
-	QTimer			TimerLogFileStart;
-
-	CShortLog		shortLog;
-	CLongLog		longLog;
-	int				iLogDelay;
 	CRig&			rig;
 	CDRMPlot*		MainPlot;
 
-	virtual void		showEvent(QShowEvent* pEvent);
-	virtual void		hideEvent(QHideEvent* pEvent);
+	virtual void	showEvent(QShowEvent* pEvent);
+	virtual void	hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
 	CDRMPlot*		OpenChartWin(CDRMPlot::ECharType eNewType);
@@ -116,14 +91,9 @@ protected:
 	QMenu*			pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
-	CGPSReceiver*		pGPSReceiver;
-
 public slots:
 	void OnTimer();
 	void OnTimerInterDigit();
-	void OnTimerLogFileStart();
-	void OnTimerLogFileShort();
-	void OnTimerLogFileLong();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
@@ -140,11 +110,12 @@ public slots:
 	void OnCheckRecFilter();
 	void OnCheckModiMetric();
 	void OnFrequencyEdited (const QString&);
-	void EnableGPS();
-	void DisableGPS();
 	void OnListSelChanged(QTreeWidgetItem*, QTreeWidgetItem*);
 	void OnOpenNewChart(QTreeWidgetItem*, int);
 	void UpdatePlotStyle(int);
+signals:
+	void startLogging();
+	void stopLogging();
 };
 
 #endif

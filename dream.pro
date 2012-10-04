@@ -427,7 +427,8 @@ HEADERS += common/GPSData.h \
    common/util/Settings.h \
    common/util/Utilities.h \
    common/util/Vector.h \
-    common/GUI-QT/Rig.h \
+   common/GUI-QT/Rig.h \
+   common/GUI-QT/Logging.h \
    common/Version.h
 SOURCES += common/GPSData.cpp \
       common/AMDemodulation.cpp \
@@ -524,7 +525,8 @@ SOURCES += common/GPSData.cpp \
       common/util/Settings.cpp \
       common/util/Utilities.cpp \
       common/Version.cpp \
-    common/GUI-QT/Rig.cpp \
+      common/GUI-QT/Rig.cpp \
+      common/GUI-QT/Logging.cpp \
       common/GUI-QT/main.cpp
 !console {
     HEADERS += common/GPSReceiver.h \

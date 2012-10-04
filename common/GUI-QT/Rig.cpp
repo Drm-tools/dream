@@ -38,13 +38,9 @@ void CRig::subscribe()
     }
 #endif
     subscribers++;
-    //cerr << "subscribe " << subscribers << endl;
-#if QT_VERSION < 0x040000
-    if((subscribers>0) && !running())
-#else
-    if((subscribers>0) && !isRunning())
-#endif
-        start();
+    cerr << "subscribe " << subscribers << endl;
+    if(subscribers>0)
+        timer->start(1000);
 }
 
 void CRig::unsubscribe()
@@ -59,29 +55,29 @@ void CRig::unsubscribe()
     if(subscribers>0)
     {
         subscribers--;
-        //cerr << "unsubscribe " << subscribers << endl;
+        cerr << "unsubscribe " << subscribers << endl;
     }
+	else
+    {
+		timer->stop();
+	}
 }
 
-void CRig::run()
+void CRig::onTimer()
 {
-    while (subscribers>0)
-    {
 #ifdef HAVE_LIBHAMLIB
-        _REAL r;
-        if (Hamlib.GetSMeter(r) == CHamlib::SS_VALID)
-        {
-            pParameters->Lock();
-            r += pParameters->rSigStrengthCorrection;
-            pParameters->SigStrstat.addSample(r);
-            pParameters->Unlock();
-            emit sigstr(r);
-        }
-        else
-            emit sigstr(0.0);
-#endif
-        msleep(400);
+    _REAL r;
+    if (Hamlib.GetSMeter(r) == CHamlib::SS_VALID)
+    {
+        pParameters->Lock();
+        r += pParameters->rSigStrengthCorrection;
+        pParameters->SigStrstat.addSample(r);
+        pParameters->Unlock();
+        emit sigstr(r);
     }
+    else
+        emit sigstr(0.0);
+#endif
 }
 
 void CRig::LoadSettings(CSettings& s)

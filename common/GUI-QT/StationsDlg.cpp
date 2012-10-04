@@ -399,7 +399,7 @@ void CStationsItem::SetDaysFlagString(const QString& strNewDaysFlags)
     }
 }
 
-StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
+StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
                          QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
     CStationsDlgBase(parent, name, modal, f),
     DRMReceiver(NDRMR),
@@ -410,8 +410,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     greenCube(":/icons/greenCube.png"),redCube(":/icons/redCube.png"),
     orangeCube(":/icons/organgeCube.png"),pinkCube(":/icons/pinkCube.png"),
 #endif
-    bReInitOnFrequencyChange(FALSE),
-    rig(nrig)
+    bReInitOnFrequencyChange(FALSE)
 {
     setupUi(this);
     /* Set help text for the controls */
@@ -515,9 +514,6 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& nrig,
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 #endif
     SetStationsView();
-#ifdef HAVE_LIBHAMLIB
-    connect(&rig, SIGNAL(sigstr(double)), this, SLOT(OnSigStr(double)));
-#endif
 
     /* Init progress bar for input s-meter */
 
@@ -829,11 +825,14 @@ void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
     SetStationsView();
 }
 
+
 void StationsDlg::on_actionGetUpdate_triggered()
 {
+	string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
+	Settings.Put("Stations Dialog", "DRM URL", url);
     if (QMessageBox::information(this, tr("Dream Schedule Update"),
                                  tr("Dream tries to download the newest DRM schedule\nfrom "
-                                    "www.drm-dx.de (powered by Klaus Schneider).\nYour computer "
+                                    "baseportal.com.\nYour computer "
                                     "must be connected to the internet.\n\nThe current file "
                                     "DRMSchedule.ini will be overwritten.\nDo you want to "
                                     "continue?"),
@@ -842,10 +841,10 @@ void StationsDlg::on_actionGetUpdate_triggered()
         /* Try to download the current schedule. Copy the file to the
            current working directory (which is "QDir().absFilePath(NULL)") */
 #if QT_VERSION < 0x040000
-        UrlUpdateSchedule.copy(QString(DRM_SCHEDULE_UPDATE_FILE),
+        UrlUpdateSchedule.copy(QString(url),
                                QString(QDir().absFilePath(NULL)));
 #else
-		manager->get(QNetworkRequest(QUrl(DRM_SCHEDULE_UPDATE_FILE)));
+		manager->get(QNetworkRequest(QUrl(url.c_str())));
 #endif
     }
 }
@@ -972,21 +971,16 @@ void StationsDlg::showEvent(QShowEvent*)
     TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 
     /* S-meter settings */
-    bool b;
     if(Settings.Get("Hamlib", "ensmeter", int(0)))
     {
-        b=true;
         EnableSMeter();
     }
     else
     {
-        b=false;
         DisableSMeter();
     }
 #if QT_VERSION < 0x040000
     if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, b);
-#else
-    // TODO QT4
 #endif
     /* add last update information on menu item */
     AddUpdateDateTime();
@@ -1366,18 +1360,16 @@ void StationsDlg::EnableSMeter()
     ProgrSigStrength->setEnabled(TRUE);
     TextLabelSMeter->setEnabled(TRUE);
     ProgrSigStrength->show();
-#ifdef HAVE_LIBHAMLIB
-    rig.subscribe();
-#endif
+	qDebug("StationsDlg::EnableSMeter");
+    emit subscribeRig();
     Settings.Put("Hamlib", "ensmeter", 1);
 }
 
 void StationsDlg::DisableSMeter()
 {
     ProgrSigStrength->hide();
-#ifdef HAVE_LIBHAMLIB
-    rig.unsubscribe();
-#endif
+	qDebug("StationsDlg::DisableSMeter");
+    emit unsubscribeRig();
     Settings.Put("Hamlib", "ensmeter", 0);
 }
 

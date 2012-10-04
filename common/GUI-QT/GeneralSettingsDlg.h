@@ -79,9 +79,8 @@ protected:
 	_BOOLEAN		bUseGPS;
 
 signals:
-	void StartGPS();
-	void StopGPS();
-
+	void enableGPS();
+	void disableGPS();
 public slots:
 	void CheckSN(const QString& NewText);
 	void CheckEW(const QString& NewText);

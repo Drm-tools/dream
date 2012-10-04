@@ -54,6 +54,24 @@ GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
 	EdtLatitudeMinutes->setValidator(new QIntValidator(0, 59, EdtLatitudeMinutes));
 	EdtLongitudeMinutes->setValidator(new QIntValidator(0, 59, EdtLongitudeMinutes));
 
+    /* GPS */
+    _REAL latitude, longitude;
+    /* Latitude string for log file */
+    latitude = Settings.Get("Logfile", "latitude", 1000.0);
+    /* Longitude string for log file */
+    longitude = Settings.Get("Logfile", "longitude", 1000.0);
+
+    Parameters.Lock();
+
+    if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
+    {
+        Parameters.GPSData.SetPositionAvailable(TRUE);
+        Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
+    }
+    else
+        Parameters.GPSData.SetPositionAvailable(FALSE);
+    Parameters.Unlock();
+
 	/* Connections */
 
 	connect(buttonOk, SIGNAL(clicked()), SLOT(ButtonOkClicked()) );
@@ -129,10 +147,16 @@ void GeneralSettingsDlg::OnCheckBoxUseGPS()
 	//QMessageBox::information( this, "Dream", "Don't enable GPS unless you have gpsd running." );
 #endif
 	bUseGPS = CheckBoxUseGPS->isChecked();
-	if(bUseGPS)
-		emit StartGPS();
-	else
-		emit StopGPS();
+	Parameters.Lock();
+	if(bUseGPS) {
+		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
+		emit enableGPS();
+	}
+	else {
+		Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
+		emit disableGPS();
+	}
+	Parameters.Unlock();
 }
 
 void GeneralSettingsDlg::ButtonOkClicked()

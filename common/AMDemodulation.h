@@ -34,6 +34,9 @@
 #include "util/Vector.h"
 #include "matlib/Matlib.h"
 #include "resample/Resample.h"
+#ifdef USE_SPEEX_DENOISE
+ #include <speex/speex_preprocess.h>
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -93,7 +96,12 @@
 class CNoiseReduction
 {
 public:
-    CNoiseReduction() : eNoiRedDegree(NR_MEDIUM) {}
+    CNoiseReduction() : eNoiRedDegree(NR_MEDIUM)
+#ifdef USE_SPEEX_DENOISE
+	 ,preprocess_state(NULL)
+#endif
+	{
+	}
     virtual ~CNoiseReduction() {}
 
     enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
@@ -101,10 +109,9 @@ public:
     void Init(const int iNewBlockLen);
     void Process(CRealVector& vecrIn /* in/out */);
 
-    void SetNoiRedDegree(const ENoiRedDegree eNND) {
-        eNoiRedDegree = eNND;
-    }
-    ENoiRedDegree GetNoiRedDegree() {
+    void SetNoiRedDegree(const ENoiRedDegree eNND);
+
+	ENoiRedDegree GetNoiRedDegree() {
         return eNoiRedDegree;
     }
 
@@ -137,6 +144,9 @@ protected:
     CRealVector		vecrFiltResult;
 
     ENoiRedDegree	eNoiRedDegree;
+#ifdef USE_SPEEX_DENOISE
+	SpeexPreprocessState *preprocess_state;
+#endif
 };
 
 
