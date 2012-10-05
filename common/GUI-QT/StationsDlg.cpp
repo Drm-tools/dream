@@ -33,6 +33,7 @@
 #if QT_VERSION < 0x040000
 # include <qheader.h>
 # include <qftp.h>
+# include <qhttp.h>
 # include <qwhatsthis.h>
 # ifdef HAVE_LIBHAMLIB
 #  include "Rig.h"
@@ -539,8 +540,9 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     ProgrSigStrength->setFillBrush(fillBrush);
 
 #if QT_VERSION < 0x040000
-    /* Register the network protokol (ftp). This is needed for the DRMSchedule
+    /* Register the network protocols (ftp,http). This is needed for the DRMSchedule
        download */
+    QNetworkProtocol::registerNetworkProtocol("http", new QNetworkProtocolFactory<QHttp>);
     QNetworkProtocol::registerNetworkProtocol("ftp", new QNetworkProtocolFactory<QFtp>);
 #else
 	manager = new QNetworkAccessManager(this);
@@ -562,10 +564,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
             this, SLOT(OnUrlFinished(QNetworkOperation*)));
     connect(ListViewStations->header(), SIGNAL(clicked(int)),
             this, SLOT(OnHeaderClicked(int)));
-#else
-// TODO - which bits are needed?
 #endif
-
 
     connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
             this, SLOT(OnFreqCntNewValue(double)));
