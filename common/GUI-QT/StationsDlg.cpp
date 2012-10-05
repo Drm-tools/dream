@@ -32,6 +32,7 @@
 #include "DialogUtil.h"
 #if QT_VERSION < 0x040000
 # include <qheader.h>
+# include <qdir.h>
 # include <qftp.h>
 # include <qhttp.h>
 # include <qwhatsthis.h>
@@ -842,8 +843,7 @@ void StationsDlg::on_actionGetUpdate_triggered()
         /* Try to download the current schedule. Copy the file to the
            current working directory (which is "QDir().absFilePath(NULL)") */
 #if QT_VERSION < 0x040000
-        UrlUpdateSchedule.copy(QString(url.c_str()),
-                               QString(QDir().absFilePath(NULL)));
+        UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
 #else
 		manager->get(QNetworkRequest(QUrl(url.c_str())));
 #endif
@@ -870,6 +870,12 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
         {
             if (pNetwOp->state() == QNetworkProtocol::StDone)
             {
+		string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
+		QString f = QUrl(url.c_str()).fileName();
+qDebug("%s", f.latin1());
+		QDir d;
+		d.remove(DRMSCHEDULE_INI_FILE_NAME);
+		d.rename(f, DRMSCHEDULE_INI_FILE_NAME);
                 /* Notify the user that update was successful */
                 QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
                 /* Read updated ini-file */
