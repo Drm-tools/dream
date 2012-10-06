@@ -66,16 +66,6 @@ class CRig;
 
 
 /* Classes ********************************************************************/
-#if QT_VERSION >= 0x040000
-class systemevalDlgBase : public QMainWindow, public Ui::SystemEvaluationWindow
-{
-public:
-	systemevalDlgBase(QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WFlags f = 0):
-		QMainWindow(parent,f){(void)name;(void)modal;setupUi(this);}
-	virtual ~systemevalDlgBase() {}
-};
-#endif
 class systemevalDlg : public systemevalDlgBase
 {
 	Q_OBJECT
@@ -96,19 +86,6 @@ protected:
 	QTimer			Timer;
 	QTimer			TimerInterDigit;
 
-	/* logging */
-	QTimer			TimerLogFileLong;
-	QTimer			TimerLogFileShort;
-	QTimer			TimerLogFileStart;
-
-	CShortLog		shortLog;
-	CLongLog		longLog;
-	int				iLogDelay;
-	CRig&			rig;
-#if QT_VERSION >= 0x040000
-	CDRMPlot*		MainPlot;
-#endif
-
 	virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
 	void			UpdateControls();
@@ -121,15 +98,10 @@ protected:
 	QPopupMenu*		pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
-	CGPSReceiver*		pGPSReceiver;
-
 public slots:
 	void UpdatePlotStyle(int);
 	void OnTimer();
 	void OnTimerInterDigit();
-	void OnTimerLogFileStart();
-	void OnTimerLogFileShort();
-	void OnTimerLogFileLong();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
@@ -147,15 +119,10 @@ public slots:
 	void OnCheckModiMetric();
 	void OnListViContMenu();
 	void OnFrequencyEdited (const QString&);
-	void EnableGPS();
-	void DisableGPS();
-#if QT_VERSION < 0x040000
 	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
-#else
-	void OnListSelChanged(QListViewItem* NewSelIt);
-	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
-#endif
+signals:
+        void startLogging();
+        void stopLogging();
 };
-
 #endif

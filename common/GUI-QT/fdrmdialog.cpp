@@ -290,8 +290,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     connect(pButtonGroup, SIGNAL(buttonClicked(int)), this, SLOT(OnSelectAudioService(int)));
     connect(pButtonGroup, SIGNAL(buttonClicked(int)), this, SLOT(OnSelectDataService(int)));
 
-    connect(pSysEvalDlg, SIGNAL(startLogging()), pLogging, SLOT(start()));
-    connect(pSysEvalDlg, SIGNAL(stopLogging()), pLogging, SLOT(stop()));
 #endif
 
 	connect(pStationsDlg, SIGNAL(subscribeRig()), &rig, SLOT(subscribe()));
@@ -299,6 +297,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	connect(&rig, SIGNAL(sigstr(double)), pStationsDlg, SLOT(OnSigStr(double)));
 	connect(pLogging, SIGNAL(subscribeRig()), &rig, SLOT(subscribe()));
 	connect(pLogging, SIGNAL(unsubscribeRig()), &rig, SLOT(unsubscribe()));
+	connect(pSysEvalDlg, SIGNAL(startLogging()), pLogging, SLOT(start()));
+	connect(pSysEvalDlg, SIGNAL(stopLogging()), pLogging, SLOT(stop()));
 
 	bool enablelog = Settings.Get("Logfile", "enablelog", FALSE);
 	if(enablelog)
