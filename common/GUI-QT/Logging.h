@@ -44,8 +44,9 @@ class CLogging: public QObject
 	Q_OBJECT
 
 public:
-	CLogging(CParameter&, CSettings&);
+	CLogging(CParameter&);
 	virtual ~CLogging() {}
+	void LoadSettings(CSettings&);
 	void SaveSettings(CSettings&);
 
 protected:
@@ -55,8 +56,7 @@ protected:
 
 	CShortLog		shortLog;
 	CLongLog		longLog;
-	int				iLogDelay;
-	_BOOLEAN		running;
+	bool			enabled;
 
 signals:
 	void subscribeRig();
@@ -64,7 +64,6 @@ signals:
 public slots:
 	void start();
 	void stop();
-	void OnTimerLogFileStart();
 	void OnTimerLogFileShort();
 	void OnTimerLogFileLong();
 };

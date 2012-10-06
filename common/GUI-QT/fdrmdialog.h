@@ -102,11 +102,11 @@ public:
 protected:
     CDRMReceiver&		DRMReceiver;
     CSettings&			Settings;
-    QTimer				Timer;
+    QTimer			Timer;
     vector<QLabel*>		serviceLabels;
 
-	CGPSReceiver*		pGPSReceiver;
-	CLogging*			pLogging;
+    CGPSReceiver*		pGPSReceiver;
+    CLogging*			pLogging;
     systemevalDlg*		pSysEvalDlg;
 #if QT_VERSION < 0x040000
     MultimediaDlg*		pMultiMediaDlg;

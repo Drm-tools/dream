@@ -30,10 +30,10 @@
 #include "../util/Settings.h"
 
 /* Implementation *************************************************************/
-CLogging::CLogging(CParameter& Parameters, CSettings& Settings) : QObject(),
+CLogging::CLogging(CParameter& Parameters) : QObject(),
     TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
     shortLog(Parameters), longLog(Parameters),
-    iLogDelay(0), running(false)
+    enabled(false)
 {
 #if QT_VERSION >= 0x040000
 	TimerLogFileStart.setSingleShot(true);
@@ -43,10 +43,11 @@ CLogging::CLogging(CParameter& Parameters, CSettings& Settings) : QObject(),
     connect(&TimerLogFileShort, SIGNAL(timeout()),
             this, SLOT(OnTimerLogFileShort()));
     connect(&TimerLogFileStart, SIGNAL(timeout()),
-            this, SLOT(OnTimerLogFileStart()));
-	
-    /* Logfile -------------------------------------------------------------- */
+            this, SLOT(start()));
+}
 
+void CLogging::LoadSettings(CSettings& Settings)
+{
     /* log file flag for storing signal strength in long log */
     _BOOLEAN logrxl = Settings.Get("Logfile", "enablerxl", FALSE);
     shortLog.SetRxlEnabled(logrxl);
@@ -57,54 +58,29 @@ CLogging::CLogging(CParameter& Parameters, CSettings& Settings) : QObject(),
     shortLog.SetPositionEnabled(enablepositiondata);
     longLog.SetPositionEnabled(enablepositiondata);
 
-    /* logging delay value */
-    iLogDelay = Settings.Get("Logfile", "delay", 0);
-	bool logEnabled = Settings.Get("Logfile", "enablelog", false);
+    enabled = Settings.Get("Logfile", "enablelog", false);
 
     /* Activate log file start if necessary. */
-    if (logEnabled)
+    if (enabled)
     {
         /* One shot timer */
+	int iLogDelay = Settings.Get("Logfile", "delay", 0);
         TimerLogFileStart.start(iLogDelay * 1000 /* ms */);
+	// initialise ini file if never set
+        Settings.Put("Logfile", "delay", iLogDelay);
     }
-
-    /* GPS */
-    /* Latitude string for log file */
-	double latitude, longitude;
-    latitude = Settings.Get("Logfile", "latitude", 1000.0);
-    /* Longitude string for log file */
-    longitude = Settings.Get("Logfile", "longitude", 1000.0);
-    Parameters.Lock();
-    Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
-	Parameters.Unlock();
 }
 
 void CLogging::SaveSettings(CSettings& Settings)
 {
-	double latitude=0.0, longitude=0.0;
-	longLog.GetPosition(latitude, longitude);
+    double latitude=0.0, longitude=0.0;
+    longLog.GetPosition(latitude, longitude);
 
-    Settings.Put("Logfile", "delay", iLogDelay);
     Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
     Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
     Settings.Put("Logfile", "latitude", latitude);
     Settings.Put("Logfile", "longitude", longitude);
-    Settings.Put("Logfile", "enablelog", running);
-}
-
-void CLogging::OnTimerLogFileStart()
-{
-    /* Start logging (if not already done) */
-    if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
-    {
-        /* Activate log file timer for long and short log file */
-        TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
-        TimerLogFileLong.start(1000); /* Every second */
-
-        /* Open log file */
-        shortLog.Start("DreamLog.txt");
-        longLog.Start("DreamLogLong.csv");
-    }
+    Settings.Put("Logfile", "enablelog", enabled);
 }
 
 void CLogging::OnTimerLogFileShort()
@@ -121,7 +97,17 @@ void CLogging::OnTimerLogFileLong()
 
 void CLogging::start()
 {
-    TimerLogFileStart.start(iLogDelay * 1000 /* ms */);
+    /* Start logging (if not already done) */
+    if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
+    {
+        /* Activate log file timer for long and short log file */
+        TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
+        TimerLogFileLong.start(1000); /* Every second */
+
+        /* Open log file */
+        shortLog.Start("DreamLog.txt");
+        longLog.Start("DreamLogLong.csv");
+    }
     if(longLog.GetRxlEnabled())
     {
         emit subscribeRig();

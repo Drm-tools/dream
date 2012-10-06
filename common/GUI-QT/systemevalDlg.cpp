@@ -60,7 +60,7 @@ protected:
 };
 
 /* Implementation *************************************************************/
-systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings,
+systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
                              QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
     systemevalDlgBase(parent, name, modal, f),
     DRMReceiver(NDRMR),
@@ -1155,9 +1155,9 @@ void systemevalDlg::OnCheckWriteLog()
     }
 
     /* set the focus */
-    if (CheckBoxWriteLog->isEnabled())
+    if(EdtFrequency->isEnabled())
     {
-        CheckBoxWriteLog->setFocus();
+        EdtFrequency->setFocus();
     }
 }
 

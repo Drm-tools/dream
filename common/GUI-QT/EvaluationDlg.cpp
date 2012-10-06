@@ -37,13 +37,12 @@
 #include <QShowEvent>
 
 /* Implementation *************************************************************/
-systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CRig& nr, CSettings& NSettings,
+systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
                              QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
     systemevalDlgBase(parent, name, modal, f),
     DRMReceiver(NDRMR),
     Settings(NSettings),
-    Timer(), TimerInterDigit(), TimerChart(),
-    rig(nr)
+    Timer(), TimerInterDigit(), TimerChart()
 {
     /* Get window geometry data and apply it */
     CWinGeom s;
@@ -980,9 +979,9 @@ void systemevalDlg::OnCheckWriteLog()
     }
 
     /* set the focus */
-    if (CheckBoxWriteLog->isEnabled())
+    if (EdtFrequency->isEnabled())
     {
-        CheckBoxWriteLog->setFocus();
+        EdtFrequency->setFocus();
     }
 }
 

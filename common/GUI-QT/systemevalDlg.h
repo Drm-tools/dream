@@ -58,7 +58,6 @@
 #include "../util/Settings.h"
 
 class CGPSReceiver;
-class CRig;
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -71,7 +70,7 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	systemevalDlg(CDRMReceiver&, CRig&, CSettings&, QWidget* parent = 0,
+	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
 	virtual ~systemevalDlg();

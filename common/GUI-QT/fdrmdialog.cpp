@@ -61,8 +61,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     :
     FDRMDialogBase(parent, name, modal, f),
     DRMReceiver(NDRMR),Settings(NSettings),
-	pGPSReceiver(NULL),pLogging(NULL),
-	Timer(),serviceLabels(4)
+	Timer(),serviceLabels(4),
+	pGPSReceiver(NULL),pLogging(NULL)
 {
     /* recover window size and position */
     CWinGeom s;
@@ -76,7 +76,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 	CParameter& Parameters = *DRMReceiver.GetParameters();
 
-	pLogging = new CLogging(Parameters, Settings);
+	pLogging = new CLogging(Parameters);
+	pLogging->LoadSettings(Settings);
 
 #if QT_VERSION < 0x040000
     /* Multimedia window */
@@ -95,7 +96,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     SetDialogCaption(pEPGDlg, tr("Programme Guide"));
 
     /* Evaluation window */
-    pSysEvalDlg = new systemevalDlg(DRMReceiver, rig, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+    pSysEvalDlg = new systemevalDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
 
 	/* Analog demodulation window */
     pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "Analog Demodulation", Qt::WStyle_MinMax);
@@ -850,6 +851,7 @@ void FDRMDialog::hideEvent(QHideEvent*)
     pStationsDlg->hide();
 
     pLiveScheduleDlg->SaveSettings(Settings);
+    pLogging->SaveSettings(Settings);
 
     CWinGeom s;
     QRect WinGeom = geometry();

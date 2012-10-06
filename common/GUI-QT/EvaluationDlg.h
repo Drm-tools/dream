@@ -60,7 +60,7 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	systemevalDlg(CDRMReceiver&, CRig&, CSettings&, QWidget* parent = 0,
+	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
 	virtual ~systemevalDlg();
@@ -76,7 +76,6 @@ protected:
 	QTimer			TimerInterDigit;
 	QTimer			TimerChart;
 
-	CRig&			rig;
 	CDRMPlot*		MainPlot;
 
 	virtual void	showEvent(QShowEvent* pEvent);
