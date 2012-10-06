@@ -126,13 +126,13 @@ CShortLog::writeHeader()
     ESpecOcc SpecOcc=SO_5;
     _REAL bitrate = 0.0;
 
-	iFrequency = Parameters.GetFrequency();
     Parameters.Lock();
+    iFrequency = Parameters.GetFrequency();
 
-    const CGPSData & GPSData = Parameters.GPSData;
-    if (GPSData.GetPositionAvailable())
+    if (Parameters.gps_data.status&LATLON_SET)
     {
-        GPSData.asDM(latitude, longitude);
+        asDM(latitude, Parameters.gps_data.fix.latitude, 'S', 'N');
+        asDM(longitude, Parameters.gps_data.fix.longitude, 'W', 'E');
     }
     int iCurSelServ = Parameters.GetCurSelAudioService();
 
@@ -340,14 +340,6 @@ CLongLog::init()
 }
 
 void
-CLongLog::GetPosition(double latitude, double longitude)
-{
-    Parameters.Lock();
-    Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
-	Parameters.Unlock();
-}
-
-void
 CLongLog::writeParameters()
 {
 
@@ -410,9 +402,10 @@ CLongLog::writeParameters()
     Parameters.ReceiveStatus.LLAudio.ResetCounts();
 
     double latitude=0.0, longitude=0.0;
-    if (bPositionEnabled)
+    if (bPositionEnabled && (Parameters.gps_data.status&LATLON_SET))
     {
-        Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
+        latitude = Parameters.gps_data.fix.latitude;
+        longitude = Parameters.gps_data.fix.longitude;
     }
 
     Parameters.Unlock();
@@ -493,4 +486,29 @@ string CReceptLog::strtime(time_t t)
     s << setfill('0')
     << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
     return s.str();
+}
+
+void
+CReceptLog::asDM(string& pos, double d, char n, char p) const
+{
+    stringstream s;
+    char np;
+    int ideg;
+    double dmin;
+    if (d<0.0)
+    {
+        np = n;
+        ideg = 0 - int(d);
+        dmin = 0.0 - d;
+    }
+    else
+    {
+        np = p;
+        ideg = int(d);
+        dmin = d;
+    }
+    int degrees = (unsigned int) dmin;
+    uint16_t minutes = (unsigned int) (((floor((dmin - degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
+    s << ideg << '\xb0' << setw(2) << setfill('0') << minutes << "'" << np;
+    pos = s.str();
 }

@@ -78,6 +78,8 @@ protected:
     virtual void writeHeader() = 0;
     virtual void writeTrailer() = 0;
     char GetRobModeStr();
+    void asDM(string& pos, double d, char n, char p) const;
+
 
     string strdate(time_t);
     string strtime(time_t);
@@ -108,7 +110,6 @@ class CLongLog: public CReceptLog
 {
 public:
     CLongLog(CParameter& p):CReceptLog(p) {}
-	void GetPosition(double latitude, double longitude);
 protected:
     virtual void init();
     virtual void writeParameters();

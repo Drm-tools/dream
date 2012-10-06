@@ -56,6 +56,7 @@ CGPSReceiver::~CGPSReceiver()
 void CGPSReceiver::open()
 {
     Parameters.Lock();
+    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
     Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
     Parameters.Unlock();
     if (m_pSocket == NULL)
@@ -82,6 +83,7 @@ void CGPSReceiver::close()
         return;
 
     Parameters.Lock();
+    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
     Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
     Parameters.Unlock();
 
@@ -95,6 +97,7 @@ void CGPSReceiver::close()
 
 void CGPSReceiver::DecodeGPSDReply(string Reply)
 {
+qDebug("DecodeGPSDReply");
     string TotalReply;
 
     TotalReply = Reply;
@@ -104,7 +107,6 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
 
     size_t GPSDPos=0;
 
-    Parameters.Lock();
     while ((GPSDPos = TotalReply.find("GPSD",0)) != string::npos)
     {
         TotalReply=TotalReply.substr(GPSDPos+5,TotalReply.length()-(5+GPSDPos));
@@ -134,7 +136,6 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
             }
         }
     }
-    Parameters.Unlock();
 }
 
 //decode gpsd strings
@@ -158,6 +159,7 @@ void CGPSReceiver::DecodeString(char Command, string Value)
 
 void CGPSReceiver::DecodeO(string Value)
 {
+    Parameters.Lock();
     if (Value[0] == '?')
     {
         Parameters.GPSData.SetPositionAvailable(FALSE);
@@ -165,6 +167,7 @@ void CGPSReceiver::DecodeO(string Value)
         Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
         Parameters.GPSData.SetHeadingAvailable(FALSE);
         Parameters.GPSData.SetSpeedAvailable(FALSE);
+	Parameters.Unlock();
         return;
     }
 
@@ -220,15 +223,18 @@ void CGPSReceiver::DecodeO(string Value)
     }
     else
         Parameters.GPSData.SetSpeedAvailable(FALSE);
+    Parameters.Unlock();
 
 }
 
 void CGPSReceiver::DecodeY(string Value)
 {
+    Parameters.Lock();
     if (Value[0] == '?')
     {
         Parameters.GPSData.SetSatellitesVisibleAvailable(FALSE);
         Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
+	Parameters.Unlock();
         return;
     }
 
@@ -243,10 +249,12 @@ void CGPSReceiver::DecodeY(string Value)
 
     //todo - timestamp//
 
+    Parameters.Unlock();
 }
 
 void CGPSReceiver::slotInit()
 {
+qDebug("slotInit");
     close();
     //disconnect(m_pTimer);
     m_pTimer->stop();
@@ -255,6 +263,7 @@ void CGPSReceiver::slotInit()
 
 void CGPSReceiver::slotConnected()
 {
+qDebug("slotConnected");
     m_iCounter = 0;
     Parameters.Lock();
     Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
@@ -275,6 +284,7 @@ void CGPSReceiver::slotConnected()
 
 void CGPSReceiver::slotTimeout()
 {
+qDebug("slotTimeout");
     m_iCounter--;
 
     if (m_iCounter<=0)
@@ -297,6 +307,7 @@ void CGPSReceiver::slotTimeout()
 
 void CGPSReceiver::slotReadyRead()
 {
+qDebug("slotReadyRead");
     m_iCounter = c_usReconnectIntervalSeconds/5;
     Parameters.Lock();
     Parameters.GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
@@ -308,6 +319,7 @@ void CGPSReceiver::slotReadyRead()
 
 void CGPSReceiver::slotSocketError(int)
 {
+qDebug("slotSocketError");
 //	close()
     disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
     connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );

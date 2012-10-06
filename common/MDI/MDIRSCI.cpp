@@ -132,7 +132,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
 	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.gps_data);	// rgps
 
 	GenDIPacket();
 }
@@ -177,7 +177,7 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
 	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.gps_data);	/* rgps */
 
 	GenDIPacket();
 }
@@ -225,7 +225,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
 	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.gps_data);	/* rgps */
 
 	GenDIPacket();
 }

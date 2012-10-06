@@ -30,7 +30,6 @@
 #define SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../GPSData.h"
 #include <map>
 #include <string>
 

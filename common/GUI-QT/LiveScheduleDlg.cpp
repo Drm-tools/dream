@@ -711,11 +711,10 @@ LiveScheduleDlg::OnTimerList()
 
     Parameters.Lock();
     /* Get current receiver latitude and longitude if defined */
-    if (Parameters.GPSData.GetPositionAvailable())
+    if (Parameters.gps_data.set&LATLON_SET)
     {
-        double latitude, longitude;
-        Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
-        DRMSchedule.SetReceiverCoordinates(latitude, longitude);
+        DRMSchedule.SetReceiverCoordinates(
+		Parameters.gps_data.fix.latitude, Parameters.gps_data.fix.longitude);
     }
     Parameters.Unlock();
 

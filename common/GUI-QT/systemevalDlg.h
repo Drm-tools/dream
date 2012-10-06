@@ -87,6 +87,7 @@ protected:
 
 	virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
+	void			UpdateGPS(CParameter&);
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
 	CDRMPlot*		OpenChartWin(CDRMPlot::ECharType eNewType);

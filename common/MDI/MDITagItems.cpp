@@ -37,6 +37,7 @@
  *
 \******************************************************************************/
 
+#include <time.h>
 #include "MDITagItems.h"
 #include <iostream>
 #include <fstream>
@@ -996,7 +997,7 @@ CTagItemGenerator::Enqueue(uint32_t iInformation, int iNumOfBits)
 
 //andrewm - 2006-12-08
 void
-CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData & GPSData)	// Long/Lat in degrees
+CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, gps_data_t& gps_data)	// Long/Lat in degrees
 {
 	if (bIsValid == FALSE)
 	{
@@ -1004,40 +1005,27 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData & GPSData)	// Long/Lat 
 	}
 	else
 	{
+		uint32_t source = 0xff; // GPS_SOURCE_NOT_AVAILABLE
 		PrepareTag(26 * SIZEOF__BYTE);
-
-		switch (GPSData.GetGPSSource())
-		{
-		case CGPSData::GPS_SOURCE_INVALID:
-			Enqueue((uint32_t) 0x00, SIZEOF__BYTE);
-			break;
-		case CGPSData::GPS_SOURCE_GPS_RECEIVER:
-			Enqueue((uint32_t) 0x01, SIZEOF__BYTE);
-			break;
-		case CGPSData::GPS_SOURCE_DIFFERENTIAL_GPS_RECEIVER:
-			Enqueue((uint32_t) 0x02, SIZEOF__BYTE);
-			break;
-		case CGPSData::GPS_SOURCE_MANUAL_ENTRY:
-			Enqueue((uint32_t) 0x03, SIZEOF__BYTE);
-			break;
-		case CGPSData::GPS_SOURCE_NOT_AVAILABLE:
-			Enqueue((uint32_t) 0xFF, SIZEOF__BYTE);
-			break;
-		default:
-			Enqueue((uint32_t) 0xFF, SIZEOF__BYTE);
-			break;
+		if(gps_data.set&STATUS_SET) {
+			switch(gps_data.status) {
+			case 0: source = 3; break; // manual
+			case 1: source = 1; break; // gps
+			case 2: source = 2; break; // differential
+			}
 		}
+		Enqueue(source, SIZEOF__BYTE);
 
-		if (GPSData.GetSatellitesVisibleAvailable())
+		if (gps_data.set&SATELLITE_SET)
 		{
-			Enqueue((uint32_t) GPSData.GetSatellitesVisible(), SIZEOF__BYTE);
+			Enqueue((uint32_t) gps_data.satellites_used, SIZEOF__BYTE);
 		}
 		else
 		{
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetPositionAvailable())
+		if (gps_data.set&LATLON_SET)
 		{
 			double latitude, longitude;
 			int iLatitudeDegrees;
@@ -1048,7 +1036,8 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData & GPSData)	// Long/Lat 
 			uint8_t uiLongitudeMinutes;
 			uint16_t uiLongitudeMinuteFractions;
 
-			GPSData.GetLatLongDegrees(latitude, longitude);
+			latitude = gps_data.fix.latitude;
+			longitude = gps_data.fix.longitude;
 
 			if (latitude >= 0)
 				iLatitudeDegrees = (int) latitude;
@@ -1089,17 +1078,18 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData & GPSData)	// Long/Lat 
 			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetAltitudeAvailable())
+		if (gps_data.set&ALTITUDE_SET)
 		{
+			double altitude = gps_data.fix.altitude;
 			int iAltitudeMetres;
 			uint8_t uiAltitudeMetreFractions;
 
-			if (GPSData.GetAltitudeMetres() >= 0)
-				iAltitudeMetres = (int) GPSData.GetAltitudeMetres();
+			if (altitude >= 0)
+				iAltitudeMetres = (int) altitude;
 			else
-				iAltitudeMetres = (int) (GPSData.GetAltitudeMetres() - 1);
+				iAltitudeMetres = (int) (altitude - 1);
 
-			uiAltitudeMetreFractions = (uint8_t) (256.0 * (GPSData.GetAltitudeMetres() - iAltitudeMetres));
+			uiAltitudeMetreFractions = (uint8_t) (256.0 * (altitude - iAltitudeMetres));
 
 			Enqueue((uint32_t) iAltitudeMetres, 2 * SIZEOF__BYTE);
 			Enqueue((uint32_t) uiAltitudeMetreFractions, SIZEOF__BYTE);
@@ -1110,17 +1100,17 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData & GPSData)	// Long/Lat 
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetTimeAndDateAvailable())
+		if (gps_data.set&TIME_SET)
 		{
-			uint32_t year;
-			uint8_t month, day, hour, minute, second;
-			GPSData.GetTimeDate(year, month, day, hour, minute, second);
-			Enqueue((uint32_t) hour, SIZEOF__BYTE);
-			Enqueue((uint32_t) minute, SIZEOF__BYTE);
-			Enqueue((uint32_t) second, SIZEOF__BYTE);
-			Enqueue(year, 2*SIZEOF__BYTE);
-			Enqueue((uint32_t) month, SIZEOF__BYTE);
-			Enqueue((uint32_t) day, SIZEOF__BYTE);
+			time_t time = (time_t)gps_data.fix.time;
+			struct tm * ptm;
+			ptm = gmtime ( &time );
+			Enqueue((uint32_t) ptm->tm_hour, SIZEOF__BYTE);
+			Enqueue((uint32_t) ptm->tm_min, SIZEOF__BYTE);
+			Enqueue((uint32_t) ptm->tm_sec, SIZEOF__BYTE);
+			Enqueue(1900+ptm->tm_year, 2*SIZEOF__BYTE);
+			Enqueue((uint32_t) ptm->tm_mon+1, SIZEOF__BYTE);
+			Enqueue((uint32_t) ptm->tm_mday, SIZEOF__BYTE);
 		}
 		else
 		{
@@ -1132,18 +1122,18 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, CGPSData & GPSData)	// Long/Lat 
 			Enqueue((uint32_t) 0xff, SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetSpeedAvailable())
+		if (gps_data.set&SPEED_SET)
 		{
-			Enqueue((uint32_t) (GPSData.GetSpeedMetresPerSecond() * 10.0), 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) (gps_data.fix.speed * 10.0), 2 * SIZEOF__BYTE);
 		}
 		else
 		{
 			Enqueue((uint32_t) 0xffff, 2 * SIZEOF__BYTE);
 		}
 
-		if (GPSData.GetHeadingAvailable())
+		if (gps_data.set&TRACK_SET)
 		{
-			Enqueue((uint32_t) GPSData.GetHeadingDegrees(), 2 * SIZEOF__BYTE);
+			Enqueue((uint32_t) gps_data.fix.track, 2 * SIZEOF__BYTE);
 		}
 		else
 		{

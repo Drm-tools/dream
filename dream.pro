@@ -147,6 +147,10 @@ unix {
         CONFIG += hamlib
                   message("with hamlib")
               }
+    exists(/usr/include/gps.h) {
+        CONFIG += gps
+                  message("with gps")
+              }
     exists(/usr/include/pcap.h) {
         CONFIG += pcap
                   message("with pcap")
@@ -283,6 +287,10 @@ sndfile {
     unix:LIBS += -lsndfile
     win32:LIBS += libsndfile-1.lib
 }
+gps {
+    DEFINES += HAVE_LIBGPS
+    unix:LIBS += -lgps
+}
 pcap {
     DEFINES += HAVE_LIBPCAP
     unix:LIBS += -lpcap
@@ -316,8 +324,7 @@ portaudio {
     common/sound/pa_ringbuffer.c
     LIBS += -lportaudio
 }
-HEADERS += common/GPSData.h \
-   common/AMDemodulation.h \
+HEADERS += common/AMDemodulation.h \
    common/AMSSDemodulation.h \
    common/audiofilein.h \
    common/chanest/ChanEstTime.h \
@@ -430,8 +437,7 @@ HEADERS += common/GPSData.h \
    common/GUI-QT/Rig.h \
    common/GUI-QT/Logging.h \
    common/Version.h
-SOURCES += common/GPSData.cpp \
-      common/AMDemodulation.cpp \
+SOURCES += common/AMDemodulation.cpp \
       common/AMSSDemodulation.cpp \
       common/audiofilein.cpp \
       common/chanest/ChanEstTime.cpp \
@@ -529,8 +535,7 @@ SOURCES += common/GPSData.cpp \
       common/GUI-QT/Logging.cpp \
       common/GUI-QT/main.cpp
 !console {
-    HEADERS += common/GPSReceiver.h \
-    common/GUI-QT/AnalogDemDlg.h \
+    HEADERS += common/GUI-QT/AnalogDemDlg.h \
     common/GUI-QT/DialogUtil.h \
     common/GUI-QT/EPGDlg.h \
     common/GUI-QT/fdrmdialog.h \
@@ -541,8 +546,7 @@ SOURCES += common/GPSData.cpp \
     common/GUI-QT/MultSettingsDlg.h \
     common/GUI-QT/StationsDlg.h \
     common/GUI-QT/TransmDlg.h
-    SOURCES += common/GPSReceiver.cpp \
-    common/GUI-QT/AnalogDemDlg.cpp \
+    SOURCES += common/GUI-QT/AnalogDemDlg.cpp \
     common/GUI-QT/DialogUtil.cpp \
     common/GUI-QT/EPGDlg.cpp \
     common/GUI-QT/fmdialog.cpp \

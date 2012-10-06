@@ -44,7 +44,6 @@
 # include "JLViewer.h"
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
-#include "../GPSReceiver.h"
 #include "Rig.h"
 
 inline QString str2qstr(const string& s) {
@@ -61,8 +60,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     :
     FDRMDialogBase(parent, name, modal, f),
     DRMReceiver(NDRMR),Settings(NSettings),
-	Timer(),serviceLabels(4),
-	pGPSReceiver(NULL),pLogging(NULL)
+	Timer(),serviceLabels(4),pLogging(NULL)
 {
     /* recover window size and position */
     CWinGeom s;
@@ -328,9 +326,6 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
     connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
-    connect(pGeneralSettingsDlg, SIGNAL(enableGPS()), this, SLOT(enableGPS()));
-    connect(pGeneralSettingsDlg, SIGNAL(disableGPS()), this, SLOT(disableGPS()));
-
     serviceLabels[0] = TextMiniService1;
     serviceLabels[1] = TextMiniService2;
     serviceLabels[2] = TextMiniService3;
@@ -348,9 +343,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 
 FDRMDialog::~FDRMDialog()
 {
-	delete pLogging;
-    if (pGPSReceiver)
-        delete pGPSReceiver;
+    delete pLogging;
 }
 
 #if QT_VERSION < 0x040000
@@ -1221,17 +1214,6 @@ void FDRMDialog::SetDisplayColor(const QColor newColor)
         /* Set new palette */
         vecpWidgets[i]->setPalette(CurPal);
     }
-}
-
-void FDRMDialog::enableGPS()
-{
-	pGPSReceiver = new CGPSReceiver(*DRMReceiver.GetParameters(), Settings);
-}
-
-void FDRMDialog::disableGPS()
-{
-	delete pGPSReceiver;
-	pGPSReceiver = NULL;
 }
 
 void FDRMDialog::AddWhatsThisHelp()

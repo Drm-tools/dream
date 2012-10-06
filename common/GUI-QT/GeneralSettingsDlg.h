@@ -74,13 +74,7 @@ protected:
 
 	CParameter&		Parameters;
 	CSettings&		Settings;
-	QString			host;
-	int				port;
-	_BOOLEAN		bUseGPS;
 
-signals:
-	void enableGPS();
-	void disableGPS();
 public slots:
 	void CheckSN(const QString& NewText);
 	void CheckEW(const QString& NewText);

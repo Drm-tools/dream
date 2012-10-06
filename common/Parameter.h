@@ -43,10 +43,34 @@
 #include "ofdmcellmapping/CellMappingTable.h"
 #include "matlib/Matlib.h"
 #include <time.h>
-#include "GPSData.h"
 #include "ServiceInformation.h"
 #include <map>
 #include <iostream>
+#ifdef HAVE_LIBGPS
+# include <gps.h>
+#else
+    struct gps_fix_t {
+	double time;
+	double latitude;
+	double longitude;
+	double altitude;
+	double speed;
+	double track;
+    };
+    struct gps_data_t {
+	uint32_t set;
+#define TIME_SET        0x00000002u
+#define LATLON_SET      0x00000008u
+#define ALTITUDE_SET    0x00000010u
+#define SPEED_SET       0x00000020u
+#define TRACK_SET       0x00000040u
+#define STATUS_SET      0x00000100u
+#define SATELLITE_SET   0x00010000u
+	gps_fix_t fix;
+	int    status; 
+	int satellites_used;
+    };
+#endif
 
 class CDRMReceiver;
 
@@ -1189,10 +1213,13 @@ public:
 
     CCellMappingTable CellMappingTable;
 
-    CGPSData GPSData;
     CMinMaxMean SNRstat, SigStrstat;
 
     string audioencoder, audiodecoder;
+    gps_data_t gps_data;
+    bool use_gpsd;
+    bool restart_gpsd;
+    string gps_host; string gps_port;
 
 protected:
 

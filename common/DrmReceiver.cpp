@@ -161,6 +161,24 @@ CDRMReceiver::Run()
 
     CParameter & ReceiverParam = *pReceiverParam;
 
+#ifdef HAVE_LIBGPS
+//TODO locking
+    gps_data_t* gps_data = &ReceiverParam.gps_data;
+    int result=0;
+    if(ReceiverParam.restart_gpsd)
+    {
+	stringstream s; s <<  ReceiverParam.gps_port;
+	gps_close(gps_data);
+        result = gps_open_r(ReceiverParam.gps_host.c_str(), s.str().c_str(), gps_data);
+	result = gps_stream(gps_data, WATCH_ENABLE|POLL_NONBLOCK, NULL);
+	ReceiverParam.restart_gpsd = false;
+    }
+    if(ReceiverParam.use_gpsd)
+	result = gps_poll(gps_data);
+    else
+	result = gps_close(gps_data);
+#endif
+
     if (bRestartFlag) /* new acquisition requested by GUI */
     {
         bRestartFlag = FALSE;
@@ -558,12 +576,12 @@ void CDRMReceiver::DemodulateFM(_BOOLEAN& bEnoughData)
 
 void CDRMReceiver::DecodeFM(_BOOLEAN& bEnoughData)
 {
-	(void)bEnoughData;
+    (void)bEnoughData;
 }
 
 void CDRMReceiver::UtilizeFM(_BOOLEAN& bEnoughData)
 {
-	(void)bEnoughData;
+    (void)bEnoughData;
 }
 
 void
@@ -663,7 +681,8 @@ CDRMReceiver::InitReceiverMode()
                 pAMParam->bMeasurePSDAlways = pDRMParam->bMeasurePSDAlways;
                 pAMParam->bMeasureInterference = pDRMParam->bMeasureInterference;
                 pAMParam->FrontEndParameters = pDRMParam->FrontEndParameters;
-                pAMParam->GPSData = pDRMParam->GPSData;
+                pAMParam->gps_data = pDRMParam->gps_data;
+                pAMParam->use_gpsd = pDRMParam->use_gpsd;
                 pAMParam->sSerialNumber = pDRMParam->sSerialNumber;
                 pAMParam->sReceiverID  = pDRMParam->sReceiverID;
                 pAMParam->sDataFilesDirectory = pDRMParam->sDataFilesDirectory;
@@ -722,7 +741,8 @@ CDRMReceiver::InitReceiverMode()
                 pDRMParam->bMeasurePSDAlways = pAMParam->bMeasurePSDAlways;
                 pDRMParam->bMeasureInterference = pAMParam->bMeasureInterference;
                 pDRMParam->FrontEndParameters = pAMParam->FrontEndParameters;
-                pDRMParam->GPSData = pAMParam->GPSData;
+                pDRMParam->gps_data = pAMParam->gps_data;
+                pDRMParam->use_gpsd = pAMParam->use_gpsd;
                 pDRMParam->sSerialNumber = pAMParam->sSerialNumber;
                 pDRMParam->sReceiverID  = pAMParam->sReceiverID;
                 pDRMParam->sDataFilesDirectory = pAMParam->sDataFilesDirectory;
@@ -1363,7 +1383,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
             {
                 pSoundInInterface = new CSoundIn;
             }
-	    else
+            else
             {
 #ifdef __linux__
                 CShmSoundIn* ShmSoundIn = new CShmSoundIn;
@@ -1530,11 +1550,20 @@ CDRMReceiver::LoadSettings(CSettings& s)
     pReceiverParam->Lock();
     if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
     {
-        pReceiverParam->GPSData.SetPositionAvailable(TRUE);
-        pReceiverParam->GPSData.SetLatLongDegrees(latitude, longitude);
+        pReceiverParam->gps_data.set = LATLON_SET;
+        pReceiverParam->gps_data.fix.latitude = latitude;
+        pReceiverParam->gps_data.fix.longitude = longitude;
     }
-    else
-        pReceiverParam->GPSData.SetPositionAvailable(FALSE);
+    else {
+        pReceiverParam->gps_data.set = 0;
+    }
+    bool use_gpsd = s.Get("GPS", "usegpsd", false);
+    pReceiverParam->use_gpsd=use_gpsd;
+    string host = s.Get("GPS", "host", string("localhost"));
+    pReceiverParam->gps_host = host;
+    pReceiverParam->gps_port = s.Get("GPS", "port", string("2947"));
+    if(use_gpsd)
+        pReceiverParam->restart_gpsd=true;
     pReceiverParam->Unlock();
 }
 

@@ -76,7 +76,6 @@ class BWSViewer;
 class JLViewer;
 class SlideShowViewer;
 #endif
-class CGPSReceiver;
 
 #if QT_VERSION >= 0x040000
 class FDRMDialogBase : public QMainWindow, public Ui_DRMMainWindow
@@ -105,7 +104,6 @@ protected:
     QTimer			Timer;
     vector<QLabel*>		serviceLabels;
 
-    CGPSReceiver*		pGPSReceiver;
     CLogging*			pLogging;
     systemevalDlg*		pSysEvalDlg;
 #if QT_VERSION < 0x040000
@@ -167,8 +165,6 @@ public slots:
     void OnSwitchMode(int);
     void OnSwitchToFM();
     void OnSwitchToAM();
-	void enableGPS();
-	void disableGPS();
 #if QT_VERSION < 0x040000
     void OnMenuPlotStyle(int);
 #endif

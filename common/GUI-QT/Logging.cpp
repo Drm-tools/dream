@@ -73,13 +73,8 @@ void CLogging::LoadSettings(CSettings& Settings)
 
 void CLogging::SaveSettings(CSettings& Settings)
 {
-    double latitude=0.0, longitude=0.0;
-    longLog.GetPosition(latitude, longitude);
-
     Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
     Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
-    Settings.Put("Logfile", "latitude", latitude);
-    Settings.Put("Logfile", "longitude", longitude);
     Settings.Put("Logfile", "enablelog", enabled);
 }
 
