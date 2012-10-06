@@ -213,7 +213,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     pEPGDlg = new EPGDlg(DRMReceiver, Settings, this);
 
     /* Evaluation window */
-    pSysEvalDlg = new systemevalDlg(DRMReceiver, rig, Settings, this);
+    pSysEvalDlg = new systemevalDlg(DRMReceiver, Settings, this);
 
     /* Analog demodulation window */
     pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings);
