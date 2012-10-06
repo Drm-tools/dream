@@ -31,7 +31,6 @@
 
 #include "RigDlg.h"
 #include <QTreeWidgetItem>
-#include <QMessageBox>
 
 /* Implementation *************************************************************/
 
@@ -152,7 +151,6 @@ RigDlg::on_buttonBox_accepted()
 	rig.SetHamlibModelID(rigTypes->currentItem()->data(0, Qt::UserRole).toInt());
 	rig.unsubscribe();
 	close();
-	QMessageBox::information(this, "Dream", QString("accepted prev=%1 cur=%2").arg(prev_rig_model).arg(rig.GetHamlibModelID()));
 }
 
 void

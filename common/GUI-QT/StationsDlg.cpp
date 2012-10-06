@@ -978,19 +978,15 @@ void StationsDlg::showEvent(QShowEvent*)
     TimerUTCLabel.start(GUI_TIMER_UTC_TIME_LABEL);
 
     /* S-meter settings */
-	int smeter = Settings.Get("Hamlib", "ensmeter", int(0));
-    if(smeter!=0)
-    {
+    bool ensmeter = Settings.Get("Hamlib", "ensmeter", false);
+    if(ensmeter)
         EnableSMeter();
-    }
     else
-    {
         DisableSMeter();
-    }
 #if QT_VERSION < 0x040000
-    if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, smeter);
+    if(pRemoteMenu) pRemoteMenu->menu()->setItemChecked(SMETER_MENU_ID, ensmeter);
 #else
-	actionEnable_S_Meter->setChecked(smeter!=0);
+    actionEnable_S_Meter->setChecked(ensmeter);
 #endif
     /* add last update information on menu item */
     AddUpdateDateTime();
@@ -1371,14 +1367,14 @@ void StationsDlg::EnableSMeter()
     TextLabelSMeter->setEnabled(TRUE);
     ProgrSigStrength->show();
     emit subscribeRig();
-    Settings.Put("Hamlib", "ensmeter", 1);
+    Settings.Put("Hamlib", "ensmeter", true);
 }
 
 void StationsDlg::DisableSMeter()
 {
     ProgrSigStrength->hide();
     emit unsubscribeRig();
-    Settings.Put("Hamlib", "ensmeter", 0);
+    Settings.Put("Hamlib", "ensmeter", false);
 }
 
 void StationsDlg::OnSigStr(double rCurSigStr)

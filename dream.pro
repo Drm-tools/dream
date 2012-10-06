@@ -170,10 +170,12 @@ unix {
             exists(/opt/local/include/dfftw.h) {
             DEFINES += HAVE_DFFTW_H
             LIBS += -ldfftw
+	   message("with fftw2")
         }
         exists(/opt/local/include/drfftw.h) {
             DEFINES += HAVE_DRFFTW_H
             LIBS += -ldrfftw
+	   message("with fftw2")
         }
         DEFINES += HAVE_FFTW_H HAVE_RFFTW_H
     }
@@ -243,6 +245,7 @@ win32 {
 				DEFINES += HAVE_RFFTW_H
 				LIBS += -lrfftw
 			}
+        message("with fftw2")
         }
         else {
             error("no usable fftw version 2 or 3 found")

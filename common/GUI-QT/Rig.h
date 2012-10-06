@@ -39,13 +39,7 @@ class CRig :
 {
 	Q_OBJECT
 public:
-	CRig(CParameter* np):
-#ifdef HAVE_LIBHAMLIB
-	Hamlib(),
-#endif
-	timer(new QTimer()),
-	subscribers(0),pParameters(np)
-	{ }
+	CRig(CParameter* np);
 	void LoadSettings(CSettings&);
 	void SaveSettings(CSettings&);
 	void SetFrequency(int);

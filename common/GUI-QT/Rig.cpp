@@ -28,6 +28,16 @@
 
 #include "Rig.h"
 
+CRig::CRig(CParameter* np):
+#ifdef HAVE_LIBHAMLIB
+    Hamlib(),
+#endif
+    timer(new QTimer()),
+    subscribers(0),pParameters(np)
+{
+    connect(timer, SIGNAL(timeout()), this, SLOT(onTimer()));
+}
+
 void CRig::subscribe()
 {
 #ifdef HAVE_LIBHAMLIB
@@ -38,7 +48,6 @@ void CRig::subscribe()
     }
 #endif
     subscribers++;
-    cerr << "subscribe " << subscribers << endl;
     if(subscribers>0)
         timer->start(1000);
 }
@@ -57,10 +66,10 @@ void CRig::unsubscribe()
         subscribers--;
         cerr << "unsubscribe " << subscribers << endl;
     }
-	else
+    if(subscribers<=0)
     {
-		timer->stop();
-	}
+        timer->stop();
+    }
 }
 
 void CRig::onTimer()
