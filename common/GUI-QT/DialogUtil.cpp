@@ -196,6 +196,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
         "<p>Peca, Marek</p>"
         "<p>Richard, Doyle</p>"
         "<p>Russo, Andrea</p>"
+        "<p>Turnbull, Robert</p>"
         "</center>"
         "<p>If your name should be in the above list and its missing, please let us know.</p>"
         "<br><b>Parts of Dream are based on code by</b>"

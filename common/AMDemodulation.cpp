@@ -33,20 +33,20 @@
 /* Implementation *************************************************************/
 
 CAMDemodulation::CAMDemodulation() :
-        cvecBReal(), cvecBImag(), rvecZReal(), rvecZImag(),
-        cvecBAMAfterDem(), rvecZAMAfterDem(), rvecInpTmp(),
-        cvecHilbert(),
-        iHilFiltBlLen(0),
-        FftPlansHilFilt(),
-        rBPNormBW((CReal) 10000.0 / SOUNDCRD_SAMPLE_RATE),
-        rNormCurMixFreqOffs((CReal) 0.0),
-        rBPNormCentOffsTot(0.0),
-        rvecZAM(), rvecADC(), rvecBDC(), rvecZFM(), rvecAFM(), rvecBFM(),
-        iSymbolBlockSize(0),
-        bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(TRUE), eDemodType(DT_AM),
-        cOldVal(),
-        PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(), NoiRedType(NR_OFF),
-        iFreeSymbolCounter()
+    cvecBReal(), cvecBImag(), rvecZReal(), rvecZImag(),
+    cvecBAMAfterDem(), rvecZAMAfterDem(), rvecInpTmp(),
+    cvecHilbert(),
+    iHilFiltBlLen(0),
+    FftPlansHilFilt(),
+    rBPNormBW((CReal) 10000.0 / SOUNDCRD_SAMPLE_RATE),
+    rNormCurMixFreqOffs((CReal) 0.0),
+    rBPNormCentOffsTot(0.0),
+    rvecZAM(), rvecADC(), rvecBDC(), rvecZFM(), rvecAFM(), rvecBFM(),
+    iSymbolBlockSize(0),
+    bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(TRUE), eDemodType(DT_AM),
+    cOldVal(),
+    PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(), NoiRedType(NR_OFF),
+    iFreeSymbolCounter()
 {
 }
 
@@ -404,14 +404,32 @@ void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
         switch (NoiRedType)
         {
         case NR_LOW:
+            NoiseReduction.SetNoiRedSpeex(false);
             NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_LOW);
             break;
 
         case NR_MEDIUM:
+            NoiseReduction.SetNoiRedSpeex(false);
             NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
             break;
 
         case NR_HIGH:
+            NoiseReduction.SetNoiRedSpeex(false);
+            NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
+            break;
+
+        case NR_SPEEX_LOW:
+            NoiseReduction.SetNoiRedSpeex(true);
+            NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
+            break;
+
+        case NR_SPEEX_MEDIUM:
+            NoiseReduction.SetNoiRedSpeex(true);
+            NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
+            break;
+
+        case NR_SPEEX_HIGH:
+            NoiseReduction.SetNoiRedSpeex(true);
             NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
             break;
 
@@ -710,7 +728,7 @@ void CFreqOffsAcq::Start(const CReal rNewNormCenter)
 * Noise reduction                                                              *
 \******************************************************************************/
 /*
-	The noise reduction algorithms is based on optimal filters, whereas the
+	The original Dream noise reduction algorithm is based on optimal filters, whereas the
 	PDS of the noise is estimated with a minimum statistic.
 	We use an overlap and add method to avoid clicks caused by fast changing
 	optimal filters between successive blocks.
@@ -718,99 +736,116 @@ void CFreqOffsAcq::Start(const CReal rNewNormCenter)
 	[Ref] A. Engel: "Transformationsbasierte Systeme zur einkanaligen
 		Stoerunterdrueckung bei Sprachsignalen", PhD Thesis, Christian-
 		Albrechts-Universitaet zu Kiel, 1998
+
+	Robert Turnbull added the capability to use the one from the SPEEX codec
 */
+
+void CNoiseReduction::SetNoiRedSpeex(bool b)
+{
+#if HAVE_SPEEX
+    use_speex_denoise = b;
+#else
+    (void)b;
+#endif
+}
 
 void CNoiseReduction::SetNoiRedDegree(const ENoiRedDegree eNND)
 {
-        eNoiRedDegree = eNND;
-#if USE_SPEEX_DENOISE
-		spx_int32_t SupressionLevel;
-		switch(eNoiRedDegree) {
-		case NR_LOW:
-			SupressionLevel = -10;
-			break;
-		case NR_MEDIUM:
-			SupressionLevel = -15;
-			break;
-		case NR_HIGH:
-			SupressionLevel = -20;
-			break;
-		}
-		speex_preprocess_ctl(preprocess_state, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &SupressionLevel);
+    eNoiRedDegree = eNND;
+#if HAVE_SPEEX
+    if(use_speex_denoise) {
+        spx_int32_t supressionLevel;
+        switch(eNoiRedDegree) {
+        case NR_LOW:
+            supressionLevel = -10;
+            break;
+        case NR_MEDIUM:
+            supressionLevel = -15;
+            break;
+        case NR_HIGH:
+            supressionLevel = -20;
+            break;
+        }
+        speex_preprocess_ctl(preprocess_state, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &supressionLevel);
+    }
 #endif
 }
 
 void CNoiseReduction::Process(CRealVector& vecrIn)
 {
-#if USE_SPEEX_DENOISE
-   static spx_int16_t* speexData = {NULL};
-         int i;
-         double* vectorData = &( vecrIn[0] );
-         int vectorSz = vecrIn.Size();
-         if (preprocess_state == NULL)
-         {
-                 preprocess_state = speex_preprocess_state_init(vectorSz, SOUNDCRD_SAMPLE_RATE);
-                 speexData = (spx_int16_t*)malloc(vectorSz*sizeof(spx_int16_t));
-         }
-         for (i=0; i<vectorSz; i++)
+#if HAVE_SPEEX
+    if(use_speex_denoise) {
+        static spx_int16_t* speexData = {NULL};
+        int i;
+        double* vectorData = &( vecrIn[0] );
+        int vectorSz = vecrIn.Size();
+        if (preprocess_state == NULL)
         {
-	        speexData[i] = (spx_int16_t)vectorData[i]; 
+            preprocess_state = speex_preprocess_state_init(vectorSz, SOUNDCRD_SAMPLE_RATE);
+            speexData = (spx_int16_t*)malloc(vectorSz*sizeof(spx_int16_t));
         }
-         speex_preprocess(preprocess_state, speexData, NULL);
-         for (i=0; i<vectorSz; i++)
-                 {
-                 vectorData[i] = (double)speexData[i];
-                 }
-#else
-    /* Regular block (updates the noise estimate) --------------------------- */
-    /* Update history of input signal */
-    vecrLongSignal.Merge(vecrOldSignal, vecrIn);
+        for (i=0; i<vectorSz; i++)
+        {
+            speexData[i] = (spx_int16_t)vectorData[i];
+        }
+        speex_preprocess(preprocess_state, speexData, NULL);
+        for (i=0; i<vectorSz; i++)
+        {
+            vectorData[i] = (double)speexData[i];
+        }
+    } else {
+#endif
+        /* Regular block (updates the noise estimate) --------------------------- */
+        /* Update history of input signal */
+        vecrLongSignal.Merge(vecrOldSignal, vecrIn);
 
-    /* Update signal PSD estimation */
-    veccSigFreq = rfft(vecrLongSignal, FftPlan);
-    vecrSqMagSigFreq = SqMag(veccSigFreq);
+        /* Update signal PSD estimation */
+        veccSigFreq = rfft(vecrLongSignal, FftPlan);
+        vecrSqMagSigFreq = SqMag(veccSigFreq);
 
-    /* Update minimum statistic for noise PSD estimation. This update is made
-       only once a regular (non-shited) block */
-    UpdateNoiseEst(vecrNoisePSD, vecrSqMagSigFreq, eNoiRedDegree);
+        /* Update minimum statistic for noise PSD estimation. This update is made
+           only once a regular (non-shited) block */
+        UpdateNoiseEst(vecrNoisePSD, vecrSqMagSigFreq, eNoiRedDegree);
 
-    /* Actual noise reducation filtering based on the noise PSD estimation and
-       the current squared magnitude of the input signal */
-    vecrFiltResult = OptimalFilter(veccSigFreq, vecrSqMagSigFreq, vecrNoisePSD);
+        /* Actual noise reducation filtering based on the noise PSD estimation and
+           the current squared magnitude of the input signal */
+        vecrFiltResult = OptimalFilter(veccSigFreq, vecrSqMagSigFreq, vecrNoisePSD);
 
-    /* Apply windowing */
-    vecrFiltResult *= vecrTriangWin;
+        /* Apply windowing */
+        vecrFiltResult *= vecrTriangWin;
 
-    /* Build output signal vector with old half and new half */
-    vecrOutSig1.Merge(vecrOldOutSignal, vecrFiltResult(1, iHalfBlockLen));
+        /* Build output signal vector with old half and new half */
+        vecrOutSig1.Merge(vecrOldOutSignal, vecrFiltResult(1, iHalfBlockLen));
 
-    /* Save second half of output signal for next block (for overlap and add) */
-    vecrOldOutSignal = vecrFiltResult(iHalfBlockLen + 1, iBlockLen);
+        /* Save second half of output signal for next block (for overlap and add) */
+        vecrOldOutSignal = vecrFiltResult(iHalfBlockLen + 1, iBlockLen);
 
 
-    /* "Half-shifted" block for overlap and add ----------------------------- */
-    /* Build input vector for filtering the "half-shifted" blocks. It is the
-       second half of the very old signal plus the complete old signal and the
-       first half of the current signal */
-    vecrLongSignal.Merge(vecrVeryOldSignal(iHalfBlockLen + 1, iBlockLen),
-                         vecrOldSignal, vecrIn(1, iHalfBlockLen));
+        /* "Half-shifted" block for overlap and add ----------------------------- */
+        /* Build input vector for filtering the "half-shifted" blocks. It is the
+           second half of the very old signal plus the complete old signal and the
+           first half of the current signal */
+        vecrLongSignal.Merge(vecrVeryOldSignal(iHalfBlockLen + 1, iBlockLen),
+                             vecrOldSignal, vecrIn(1, iHalfBlockLen));
 
-    /* Store old input signal blocks */
-    vecrVeryOldSignal = vecrOldSignal;
-    vecrOldSignal = vecrIn;
+        /* Store old input signal blocks */
+        vecrVeryOldSignal = vecrOldSignal;
+        vecrOldSignal = vecrIn;
 
-    /* Update signal PSD estimation for "half-shifted" block and calculate
-       optimal filter */
-    veccSigFreq = rfft(vecrLongSignal, FftPlan);
-    vecrSqMagSigFreq = SqMag(veccSigFreq);
+        /* Update signal PSD estimation for "half-shifted" block and calculate
+           optimal filter */
+        veccSigFreq = rfft(vecrLongSignal, FftPlan);
+        vecrSqMagSigFreq = SqMag(veccSigFreq);
 
-    vecrFiltResult = OptimalFilter(veccSigFreq, vecrSqMagSigFreq, vecrNoisePSD);
+        vecrFiltResult = OptimalFilter(veccSigFreq, vecrSqMagSigFreq, vecrNoisePSD);
 
-    /* Apply windowing */
-    vecrFiltResult *= vecrTriangWin;
+        /* Apply windowing */
+        vecrFiltResult *= vecrTriangWin;
 
-    /* Overlap and add operation */
-    vecrIn = vecrFiltResult + vecrOutSig1;
+        /* Overlap and add operation */
+        vecrIn = vecrFiltResult + vecrOutSig1;
+#if HAVE_SPEEX
+    }
 #endif
 }
 
