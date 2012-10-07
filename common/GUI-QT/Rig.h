@@ -31,7 +31,6 @@
 
 #include "../Parameter.h"
 #include "../util/Utilities.h"
-#include <qtimer.h>
 #include <qobject.h>
 
 class CRig :
