@@ -54,6 +54,7 @@ CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0),iSeqNumber(0xfff
 CTagPacketDecoder::Error
 CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 {
+
 	int i;
 
 	/* CRC check ------------------------------------------------------------ */

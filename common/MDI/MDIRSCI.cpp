@@ -164,7 +164,7 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
-    TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
+	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
 
 	TagItemGeneratorPilots.GenEmptyTag();
 
@@ -209,7 +209,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
-    TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
+	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
 
 	TagItemGeneratorPilots.GenEmptyTag();
 
@@ -305,7 +305,7 @@ void CDownstreamDI::GenDIPacket()
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorReceiverStatus);
 
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerSpectralDensity);
-    TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerImpulseResponse);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerImpulseResponse);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPilots);
 
 

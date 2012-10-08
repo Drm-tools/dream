@@ -81,6 +81,10 @@ void CRSISubscriber::TransmitPacket(CTagPacketGenerator& Generator)
 		}
 		else
 			pPacketSink->SendPacket(packet);
+
+		/* if subscriber is a socket, poll for incoming packets */
+		CPacketSocket* pSocket = dynamic_cast<CPacketSocket*>(pPacketSink);
+		if(pSocket!=NULL) pSocket->poll();
 	}
 }
 

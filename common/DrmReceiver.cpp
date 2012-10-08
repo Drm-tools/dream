@@ -167,16 +167,17 @@ CDRMReceiver::Run()
     int result=0;
     if(ReceiverParam.restart_gpsd)
     {
-	stringstream s; s <<  ReceiverParam.gps_port;
-	gps_close(gps_data);
+        stringstream s;
+        s <<  ReceiverParam.gps_port;
+        gps_close(gps_data);
         result = gps_open_r(ReceiverParam.gps_host.c_str(), s.str().c_str(), gps_data);
-	result = gps_stream(gps_data, WATCH_ENABLE|POLL_NONBLOCK, NULL);
-	ReceiverParam.restart_gpsd = false;
+        result = gps_stream(gps_data, WATCH_ENABLE|POLL_NONBLOCK, NULL);
+        ReceiverParam.restart_gpsd = false;
     }
     if(ReceiverParam.use_gpsd)
-	result = gps_poll(gps_data);
+        result = gps_poll(gps_data);
     else
-	result = gps_close(gps_data);
+        result = gps_close(gps_data);
 #endif
 
     if (bRestartFlag) /* new acquisition requested by GUI */
@@ -1472,14 +1473,18 @@ CDRMReceiver::LoadSettings(CSettings& s)
         stringstream ss;
         ss << "rsiout" << i;
         str = s.Get("command", ss.str());
-        if (str != "")
+        ss.str("");
+        ss << "rsioutprofile" << i;
+        string profile = s.Get("command", ss.str(), string("A"));
+        ss.str("");
+        ss << "rciin" << i;
+        string origin = s.Get("command", ss.str());
+        if (str == "")
         {
-            ss.str("");
-            ss << "rsioutprofile" << i;
-            string profile = s.Get("command", ss.str(), string("A"));
-            ss.str("");
-            ss << "rciin" << i;
-            string origin = s.Get("command", ss.str());
+// TODO allow control without status
+        }
+        else
+        {
             downstreamRSCI.AddSubscriber(str, origin, profile[0]);
         }
     }
