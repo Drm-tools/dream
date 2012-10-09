@@ -32,6 +32,7 @@
 #include "../Parameter.h"
 #include "../util/Utilities.h"
 #include <qobject.h>
+class QTimer;
 
 class CRig :
 	public QObject
