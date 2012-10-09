@@ -203,6 +203,7 @@ public:
 	CStationsItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	StationState CheckState(const int iPos);
 	bool CheckFilter(const int iPos);
+	void clear() { StationsTable.clear(); }
 
 	void SetSecondsPreview(int iSec) {iSecondsPreview = iSec;}
 	int GetSecondsPreview() {return iSecondsPreview;}
