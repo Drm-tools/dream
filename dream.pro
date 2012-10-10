@@ -44,7 +44,13 @@ contains(QT_VERSION, ^4\\..*) {
             }
         }
         win32 {
-            exists(libs/qwt) {
+            exists($$(QWT)) {
+	      message("with qwt6")
+              INCLUDEPATH += $$(QWT)/include
+              LIBS += $$(QWT)/lib/libqwt.so
+            }
+            else {
+              exists(libs/qwt) {
                 INCLUDEPATH += libs/qwt
                 CONFIG( debug, debug|release ) {
                     # debug
@@ -53,9 +59,10 @@ contains(QT_VERSION, ^4\\..*) {
                     # release
                     LIBS += -lqwt
                 }
-            }
-            else {
+              }
+              else {
                 error("no usable qwt version found")
+              }
             }
         }
     }
@@ -69,9 +76,15 @@ count(QT_VERSION, 0) {
         SOURCES += common/GUI-QT/DRMPlot.cpp common/GUI-QT/systemevalDlg.cpp common/GUI-QT/MultimediaDlg.cpp
         FORMS += fdrmdialogbase.ui fmdialogbase.ui AnalogDemDlgbase.ui LiveScheduleDlgbase.ui
         FORMS += MultimediaDlgbase.ui
-        LIBS += -lqwt
         unix {
-            INCLUDEPATH += /usr/include/qwt-4.2.0
+              exists(/usr/lib/libqwt.so.4) {
+	        message("with qwt4")
+                INCLUDEPATH += /usr/include/qwt
+                LIBS += -lqwt
+              }
+              else {
+                error("no usable qwt version found")
+              }
         }
         win32 {
             INCLUDEPATH += libs/qwt
