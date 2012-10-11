@@ -27,6 +27,17 @@ contains(QT_VERSION, ^4\\..*) {
         FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
         FORMS += JLViewer.ui BWSViewer.ui SlideShowViewer.ui
         unix {
+	  macx {
+            exists(libs/qwt.framework) {
+	      message("with qwt6")
+              INCLUDEPATH += libs/qwt
+              LIBS += -framework qwt
+            }
+            else {
+              error("no usable qwt version 6 found")
+            }
+          }
+          else {
             exists($$(QWT)) {
 	      message("with qwt6")
               INCLUDEPATH += $$(QWT)/include
@@ -42,6 +53,7 @@ contains(QT_VERSION, ^4\\..*) {
                 error("no usable qwt version 6 found")
               }
             }
+          }
         }
         win32 {
             exists($$(QWT)) {
@@ -104,20 +116,10 @@ count(QT_VERSION, 0) {
 macx {
     OBJECTS_DIR = darwin
     INCLUDEPATH += darwin
-    INCLUDEPATH += /Developer/dream/include \
-    /opt/local/include
-    LIBS += -L/Developer/dream/lib \
-    -L/opt/local/lib
-    LIBS += -framework \
-    CoreFoundation \
-    -framework \
-    CoreServices
-    LIBS += -framework \
-    CoreAudio \
-    -framework \
-    AudioToolbox \
-    -framework \
-    AudioUnit
+    INCLUDEPATH += /Developer/dream/include /opt/local/include
+    LIBS += -L/Developer/dream/lib -L/opt/local/lib
+    LIBS += -framework CoreFoundation -framework CoreServices
+    LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit
     UI_DIR = darwin/moc
     MOC_DIR = darwin/moc
     RC_FILE = common/GUI-QT/res/macicons.icns
@@ -126,22 +128,10 @@ exists(libs/faac.h) {
     CONFIG += faac
               message("with FAAC")
           }
-exists(../usr/local/include/faac.h) {
-    CONFIG += faac
-              message("with FAAC")
-          }
 exists(libs/neaacdec.h) {
     CONFIG += faad
               message("with FAAD2")
           }
-exists(../usr/local/include/neaacdec.h) {
-    CONFIG += faad
-              message("with FAAD2")
-          }
-exists(../usr/local) {
-    INCLUDEPATH += ../usr/local/include
-                   LIBS += -L../usr/local/lib
-                       }
 unix {
     target.path = /usr/bin
     INSTALLS += target
@@ -150,7 +140,13 @@ unix {
         message("with portaudio")
     }
     else {
+      exists(/opt/local/include/portaudio.h) {
+        CONFIG += portaudio
+        message("with portaudio")
+      }  
+      else {
         error("no usable sound library found - install portaudio dev package")
+      }
     }
     exists(/usr/include/hamlib/rig.h) {
         CONFIG += hamlib
@@ -172,6 +168,10 @@ unix {
         CONFIG += sndfile
                   message("with libsndfile")
               }
+    exists(/opt/local/include/sndfile.h) {
+        CONFIG += sndfile
+                  message("with libsndfile")
+              }
     exists(/usr/include/fftw3.h) {
         DEFINES += HAVE_FFTW3_H
                    LIBS += -lfftw3
@@ -179,15 +179,15 @@ unix {
                        }
     else {
         exists(/usr/include/fftw.h):LIBS += -lfftw
-            exists(/usr/include/rfftw.h):LIBS += -lrfftw
-            exists(/opt/local/include/dfftw.h) {
+        exists(/usr/include/rfftw.h):LIBS += -lrfftw
+        exists(/opt/local/include/dfftw.h) {
             DEFINES += HAVE_DFFTW_H
             LIBS += -ldfftw
 	   message("with fftw2")
         }
         exists(/opt/local/include/drfftw.h) {
-            DEFINES += HAVE_DRFFTW_H
-            LIBS += -ldrfftw
+           DEFINES += HAVE_DRFFTW_H
+           LIBS += -ldrfftw
 	   message("with fftw2")
         }
         DEFINES += HAVE_FFTW_H HAVE_RFFTW_H
