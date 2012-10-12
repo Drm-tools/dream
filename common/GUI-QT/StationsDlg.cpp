@@ -1204,11 +1204,7 @@ void StationsDlg::ClearStationsView()
     while(ListViewStations->childCount()>0)
         ListViewStations->takeItem(ListViewStations->firstChild());
 #else
-    for (int i = 0; i < DRMSchedule.GetStationNumber(); i++)
-    {
-	QTreeWidgetItem* item = DRMSchedule.GetItem(i).item;
-	item->takeChildren();
-    }
+    ListViewStations->clear();
     DRMSchedule.clear();
 #endif
 }
