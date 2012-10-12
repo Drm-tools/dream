@@ -47,8 +47,13 @@ contains(QT_VERSION, ^4\\..*) {
             else {
               exists(/usr/lib/libqwt.so.6) {
 	        message("with qwt6")
-                INCLUDEPATH += /usr/include/qwt
-                LIBS += -lqwt
+                LIBS += /usr/lib/libqwt.so.6
+                exists(libs/qwt) {
+                  INCLUDEPATH += libs/qwt
+                }
+                else {
+                  INCLUDEPATH += /usr/include/qwt
+                }
               }
               else {
                 error("no usable qwt version 6 found")
