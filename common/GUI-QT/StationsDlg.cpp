@@ -1073,6 +1073,7 @@ void StationsDlg::showEvent(QShowEvent*)
     /* add last update information on menu item */
     AddUpdateDateTime();
 
+#if QT_VERSION >= 0x030000
     if(targetFilter!="") {
 	for(int i=0; i<ComboBoxFilterTarget->count(); i++) {
 #if QT_VERSION < 0x040000
@@ -1103,6 +1104,7 @@ void StationsDlg::showEvent(QShowEvent*)
 #else
 	    if(ComboBoxFilterLanguage->itemText(i) == languageFilter)
 		ComboBoxFilterLanguage->setCurrentIndex(i);
+#endif
 #endif
 	}
     }
