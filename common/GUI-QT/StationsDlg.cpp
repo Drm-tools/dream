@@ -544,8 +544,8 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     /* Register the network protocol (ftp). This is needed for the DRMSchedule download */
     QNetworkProtocol::registerNetworkProtocol("ftp", new QNetworkProtocolFactory<QFtp>);
 #else
-	manager = new QNetworkAccessManager(this);
-	connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(OnUrlFinished(QNetworkReply*)));
+    manager = new QNetworkAccessManager(this);
+    connect(manager, SIGNAL(finished(QNetworkReply*)), this, SLOT(OnUrlFinished(QNetworkReply*)));
 #endif
     /* Connections ---------------------------------------------------------- */
 
@@ -568,13 +568,13 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     connect(QwtCounterFrequency, SIGNAL(valueChanged(double)),
             this, SLOT(OnFreqCntNewValue(double)));
 
-	okMessage = tr("Update successful.");
-	badMessage = 
+    okMessage = tr("Update successful.");
+    badMessage =
         tr("Update failed. The following things may caused the "
-        "failure:\n"
-        "\t- the internet connection was not set up properly\n"
-        "\t- the server is currently not available\n"
-        "\t- the file 'DRMSchedule.ini' could not be written"); 
+           "failure:\n"
+           "\t- the internet connection was not set up properly\n"
+           "\t- the server is currently not available\n"
+           "\t- the file 'DRMSchedule.ini' could not be written");
 }
 
 #if QT_VERSION < 0x040000
@@ -827,9 +827,10 @@ void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 #if QT_VERSION < 0x040000
 void StationsDlg::httpConnected()
 {
-	char buf[1000];
-	int n = sprintf(buf,"GET %s HTTP/1.0\n\n", qurl->path());
-	httpSocket->writeBlock(buf, n);
+    char buf[1000];
+    int n = sprintf(buf,"GET %s HTTP/1.0\n\n", qurl->path().utf8().data());
+    qDebug("GET is %s", buf);
+    httpSocket->writeBlock(buf, n);
 }
 #endif
 
@@ -843,39 +844,51 @@ void StationsDlg::httpDisconnected()
 #if QT_VERSION < 0x040000
 void StationsDlg::httpRead()
 {
-	if(httpSocket->atEnd()) {
-		disconnect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
-		disconnect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
-		disconnect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
-		disconnect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead())); 
-		httpSocket->close();
-		schedFile->close();
+    if(httpSocket->atEnd()) {
+        disconnect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
+        disconnect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
+        disconnect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
+        disconnect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead()));
+        httpSocket->close();
+        schedFile->close();
         /* Notify the user that update was successful */
         QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
         /* Read updated ini-file */
         LoadSchedule(CDRMSchedule::SM_DRM);
-	}
-	else {
-		char buf[8000];
-		while(httpSocket->bytesAvailable()>0) {
-			int n = httpSocket->readBlock(buf, sizeof(buf));
-			schedFile->writeBlock(buf, n);
-		}
-	}
+    }
+    else {
+        char buf[8000];
+        /* TODO skip header
+        	while(Recv(s,buf,1)==1){
+        		if((c = buf[0])=='\n'){
+        			if(sol)
+        				break;  // last byte of header
+        			sol = 1;
+        		}else if(c!='\r'){
+        			sol = 0;
+        		}
+        	}
+        */
+        while(httpSocket->bytesAvailable()>0) {
+            int n = httpSocket->readBlock(buf, sizeof(buf));
+            schedFile->writeBlock(buf, n);
+        }
+    }
 }
 #endif
 
 #if QT_VERSION < 0x040000
-void StationsDlg::httpError(int)
+void StationsDlg::httpError(int n)
 {
+    qDebug("http error %d", n);
     QMessageBox::information(this, "Dream", "http error", QMessageBox::Ok);
 }
 #endif
 
 void StationsDlg::on_actionGetUpdate_triggered()
 {
-	string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
-	Settings.Put("Stations Dialog", "DRM URL", url);
+    string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
+    Settings.Put("Stations Dialog", "DRM URL", url);
     if (QMessageBox::information(this, tr("Dream Schedule Update"),
                                  tr("Dream tries to download the newest DRM schedule\nfrom "
                                     "baseportal.com.\nYour computer "
@@ -888,30 +901,36 @@ void StationsDlg::on_actionGetUpdate_triggered()
            current working directory (which is "QDir().absFilePath(NULL)") */
 #if QT_VERSION < 0x040000
 //# if QT_VERSION < 0x030000
-	if(url.find("ftp")==string::npos) {
-	    UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
-	}
-	else
-	{
-		schedFile = new QFile(DRMSCHEDULE_INI_FILE_NAME);
-		if(schedFile->open(IO_WriteOnly)) {
-			httpSocket = new QSocket(this);
-			qurl = new QUrl(url.c_str());
-			connect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
-			connect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
-			connect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
-			connect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead())); 
-			httpSocket->connectToHost(qurl->host(), qurl->port());
-		}
-		else {
+        if(url.find("ftp")!=string::npos) {
+            qDebug("fetching %s using ftp", url.c_str());
+            UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
+        }
+        else
+        {
+            qDebug("fetching %s using QSocket", url.c_str());
+            schedFile = new QFile(DRMSCHEDULE_INI_FILE_NAME);
+            if(schedFile->open(IO_WriteOnly)) {
+                httpSocket = new QSocket(this);
+                qurl = new QUrl(url.c_str());
+                connect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
+                connect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
+                connect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
+                connect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead()));
+                int port = qurl->port();
+                if(port == -1)
+                    port = 80;
+                qDebug("host %s port %d", qurl->host().utf8().data(), port);
+                httpSocket->connectToHost(qurl->host().utf8().data(), port);
+        }
+        else {
             QMessageBox::information(this, "Dream", "can't open schedule file for writing", QMessageBox::Ok);
-		}
-	}
+            }
+        }
 //# else
 //        UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
 //# endif
 #else
-	manager->get(QNetworkRequest(QUrl(url.c_str())));
+        manager->get(QNetworkRequest(QUrl(url.c_str())));
 #endif
     }
 }
@@ -936,11 +955,11 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
         {
             if (pNetwOp->state() == QNetworkProtocol::StDone)
             {
-				string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
-				QString f = QUrl(url.c_str()).fileName();
-				QDir d;
-				d.remove(DRMSCHEDULE_INI_FILE_NAME);
-				d.rename(f, DRMSCHEDULE_INI_FILE_NAME);
+                string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
+                QString f = QUrl(url.c_str()).fileName();
+                QDir d;
+                d.remove(DRMSCHEDULE_INI_FILE_NAME);
+                d.rename(f, DRMSCHEDULE_INI_FILE_NAME);
                 /* Notify the user that update was successful */
                 QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
                 /* Read updated ini-file */
@@ -952,24 +971,24 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
 #else
 void StationsDlg::OnUrlFinished(QNetworkReply* reply)
 {
-	if(reply->error()==QNetworkReply::NoError)
-	{
-		QFile f(DRMSCHEDULE_INI_FILE_NAME);
-		if(f.open(QIODevice::WriteOnly)) {
-			f.write(reply->readAll());
-			f.close();
-			/* Notify the user that update was successful */
-			QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
-			/* Read updated ini-file */
-			LoadSchedule(CDRMSchedule::SM_DRM);
-		} else {
-	        QMessageBox::information(this, "Dream", tr("Can't save new schedule"), QMessageBox::Ok);
-		}
-	}
-	else
-	{
+    if(reply->error()==QNetworkReply::NoError)
+    {
+        QFile f(DRMSCHEDULE_INI_FILE_NAME);
+        if(f.open(QIODevice::WriteOnly)) {
+            f.write(reply->readAll());
+            f.close();
+            /* Notify the user that update was successful */
+            QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
+            /* Read updated ini-file */
+            LoadSchedule(CDRMSchedule::SM_DRM);
+        } else {
+            QMessageBox::information(this, "Dream", tr("Can't save new schedule"), QMessageBox::Ok);
+        }
+    }
+    else
+    {
         QMessageBox::information(this, "Dream", badMessage, QMessageBox::Ok);
-	}
+    }
 }
 #endif
 
@@ -1171,22 +1190,22 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 #endif
     for (i = 0; i < DRMSchedule.GetStationNumber(); i++)
     {
-	const CStationsItem& station = DRMSchedule.GetItem(i);
+        const CStationsItem& station = DRMSchedule.GetItem(i);
 
         /* Get power of the station. We have to do a special treatment
-	 * here, because we want to avoid having a "0" in the list when
-	 * a "?" was in the schedule-ini-file */
-         const _REAL rPower = station.rPower;
+        	 * here, because we want to avoid having a "0" in the list when
+        	 * a "?" was in the schedule-ini-file */
+        const _REAL rPower = station.rPower;
 
-         QString strPower;
-         if (rPower == (_REAL) 0.0)
-             strPower = "?";
-         else
-             strPower.setNum(rPower);
+        QString strPower;
+        if (rPower == (_REAL) 0.0)
+            strPower = "?";
+        else
+            strPower.setNum(rPower);
 
-         /* Generate new list station with all necessary column entries */
+        /* Generate new list station with all necessary column entries */
 #if QT_VERSION < 0x040000
-	MyListViewItem* item = new MyListViewItem(ListViewStations);
+        MyListViewItem* item = new MyListViewItem(ListViewStations);
 #else
         QTreeWidgetItem* item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
 #endif
@@ -1202,7 +1221,7 @@ void StationsDlg::LoadSchedule(CDRMSchedule::ESchedMode eNewSchM)
 #if QT_VERSION < 0x040000
         vecpListItems[i] = item;
 #else
-	DRMSchedule.GetItem(i).item = item;
+        DRMSchedule.GetItem(i).item = item;
 #endif
     }
 
@@ -1269,9 +1288,9 @@ void StationsDlg::SetStationsView()
             break;
         }
 
-	if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
-	{
-	    ListViewStations->insertItem(item);
+        if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
+        {
+            ListViewStations->insertItem(item);
         }
     }
 
@@ -1295,34 +1314,34 @@ void StationsDlg::SetStationsView()
     for (int i = 0; i < DRMSchedule.GetStationNumber(); i++)
     {
         CDRMSchedule::StationState iState = DRMSchedule.CheckState(i);
-	QTreeWidgetItem* item = DRMSchedule.GetItem(i).item; //ListViewStations->topLevelItem(i);
+        QTreeWidgetItem* item = DRMSchedule.GetItem(i).item; //ListViewStations->topLevelItem(i);
 
         switch (iState)
         {
         case CDRMSchedule::IS_ACTIVE:
-	    item->setIcon(0, greenCube);
+            item->setIcon(0, greenCube);
             break;
         case CDRMSchedule::IS_PREVIEW:
-	    item->setIcon(0, orangeCube);
+            item->setIcon(0, orangeCube);
             break;
         case CDRMSchedule::IS_SOON_INACTIVE:
-	    item->setIcon(0, pinkCube);
+            item->setIcon(0, pinkCube);
             break;
         case CDRMSchedule::IS_INACTIVE:
-	    item->setIcon(0, redCube);
+            item->setIcon(0, redCube);
             break;
         default:
-	    item->setIcon(0, redCube);
+            item->setIcon(0, redCube);
             break;
         }
-	if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
-	{
-	    item->setHidden(false);
+        if(DRMSchedule.CheckFilter(i) && (bShowAll || (iState != CDRMSchedule::IS_INACTIVE)))
+        {
+            item->setHidden(false);
         }
-	else
-	{
-	    item->setHidden(true);
-	}
+        else
+        {
+            item->setHidden(true);
+        }
     }
     ListViewStations->setSortingEnabled(true);
     ListViewStations->sortItems(ListViewStations->sortColumn(), bCurrentSortAscending?Qt::AscendingOrder:Qt::DescendingOrder);
@@ -1350,29 +1369,29 @@ void StationsDlg::OnHeaderClicked(int c)
 
 void StationsDlg::SetFrequencyFromGUI(int iFreq)
 {
-        QwtCounterFrequency->setValue(iFreq);
+    QwtCounterFrequency->setValue(iFreq);
 
-        /* If the mode has changed re-initialise the receiver */
-        ERecMode eCurrentMode = DRMReceiver.GetReceiverMode();
+    /* If the mode has changed re-initialise the receiver */
+    ERecMode eCurrentMode = DRMReceiver.GetReceiverMode();
 
-        /* if "bReInitOnFrequencyChange" is not true, initiate a reinit when
-         schedule mode is different from receiver mode */
-        switch (DRMSchedule.GetSchedMode())
-        {
-        case CDRMSchedule::SM_DRM:
-            if (eCurrentMode != RM_DRM)
-                DRMReceiver.SetReceiverMode(RM_DRM);
-            if (bReInitOnFrequencyChange)
-                DRMReceiver.RequestNewAcquisition();
-            break;
+    /* if "bReInitOnFrequencyChange" is not true, initiate a reinit when
+     schedule mode is different from receiver mode */
+    switch (DRMSchedule.GetSchedMode())
+    {
+    case CDRMSchedule::SM_DRM:
+        if (eCurrentMode != RM_DRM)
+            DRMReceiver.SetReceiverMode(RM_DRM);
+        if (bReInitOnFrequencyChange)
+            DRMReceiver.RequestNewAcquisition();
+        break;
 
-        case CDRMSchedule::SM_ANALOG:
-            if (eCurrentMode != RM_AM)
-                DRMReceiver.SetReceiverMode(RM_AM);
-            if (bReInitOnFrequencyChange)
-                DRMReceiver.RequestNewAcquisition();
-            break;
-        }
+    case CDRMSchedule::SM_ANALOG:
+        if (eCurrentMode != RM_AM)
+            DRMReceiver.SetReceiverMode(RM_AM);
+        if (bReInitOnFrequencyChange)
+            DRMReceiver.RequestNewAcquisition();
+        break;
+    }
 }
 
 #if QT_VERSION < 0x040000
@@ -1385,7 +1404,7 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
            Set value in frequency counter control QWT. Setting this parameter
            will emit a "value changed" signal which sets the new frequency.
            Therefore, here is no call to "SetFrequency()" needed.*/
-	SetFrequencyFromGUI(QString(item->text(2)).toInt());
+        SetFrequencyFromGUI(QString(item->text(2)).toInt());
     }
 }
 #endif
@@ -1393,11 +1412,11 @@ void StationsDlg::OnListItemClicked(QListViewItem* item)
 void StationsDlg::on_ListViewStations_itemSelectionChanged()
 {
 #if QT_VERSION >= 0x040000
-	QList<QTreeWidgetItem *> items =  ListViewStations->selectedItems();
-	if(items.size()==1)
-	{
-		SetFrequencyFromGUI(QString(items.first()->text(2)).toInt());
-	}
+    QList<QTreeWidgetItem *> items =  ListViewStations->selectedItems();
+    if(items.size()==1)
+    {
+        SetFrequencyFromGUI(QString(items.first()->text(2)).toInt());
+    }
 #endif
 }
 
@@ -1455,39 +1474,39 @@ void StationsDlg::OnSigStr(double rCurSigStr)
 void StationsDlg::AddWhatsThisHelp()
 {
     /* Stations List */
-	QString strList =
-                     tr("<b>Stations List:</b> In the stations list "
-                        "view all DRM stations which are stored in the DRMSchedule.ini file "
-                        "are shown. It is possible to show only active stations by changing a "
-                        "setting in the 'view' menu. The color of the cube on the left of a "
-                        "menu item shows the current status of the DRM transmission. A green "
-                        "box shows that the transmission takes place right now, a "
-                        "yellow cube shows that this is a test transmission and with a "
-                        "red cube it is shown that the transmission is offline, "
-                        "a pink cube shown that the transmission soon will be offline.<br>"
-                        "If the stations preview is active an orange box shows the stations "
-                        "that will be active.<br>"
-                        "The list can be sorted by clicking on the headline of the "
-                        "column.<br>By clicking on a menu item, a remote front-end can "
-                        "be automatically switched to the current frequency and the "
-                        "Dream software is reset to a new acquisition (to speed up the "
-                        "synchronization process). Also, the log-file frequency edit "
-                        "is automatically updated.");
+    QString strList =
+        tr("<b>Stations List:</b> In the stations list "
+           "view all DRM stations which are stored in the DRMSchedule.ini file "
+           "are shown. It is possible to show only active stations by changing a "
+           "setting in the 'view' menu. The color of the cube on the left of a "
+           "menu item shows the current status of the DRM transmission. A green "
+           "box shows that the transmission takes place right now, a "
+           "yellow cube shows that this is a test transmission and with a "
+           "red cube it is shown that the transmission is offline, "
+           "a pink cube shown that the transmission soon will be offline.<br>"
+           "If the stations preview is active an orange box shows the stations "
+           "that will be active.<br>"
+           "The list can be sorted by clicking on the headline of the "
+           "column.<br>By clicking on a menu item, a remote front-end can "
+           "be automatically switched to the current frequency and the "
+           "Dream software is reset to a new acquisition (to speed up the "
+           "synchronization process). Also, the log-file frequency edit "
+           "is automatically updated.");
 
     /* Frequency Counter */
-	QString strCounter =
-                     tr("<b>Frequency Counter:</b> The current frequency "
-                        "value can be changed by using this counter. The tuning steps are "
-                        "100 kHz for the  buttons with three arrows, 10 kHz for the "
-                        "buttons with two arrows and 1 kHz for the buttons having only "
-                        "one arrow. By keeping the button pressed, the values are "
-                        "increased / decreased automatically.");
+    QString strCounter =
+        tr("<b>Frequency Counter:</b> The current frequency "
+           "value can be changed by using this counter. The tuning steps are "
+           "100 kHz for the  buttons with three arrows, 10 kHz for the "
+           "buttons with two arrows and 1 kHz for the buttons having only "
+           "one arrow. By keeping the button pressed, the values are "
+           "increased / decreased automatically.");
 
     /* UTC time label */
-	QString strTime =
-                     tr("<b>UTC Time:</b> Shows the current Coordinated "
-                        "Universal Time (UTC) which is also known as Greenwich Mean Time "
-                        "(GMT).");
+    QString strTime =
+        tr("<b>UTC Time:</b> Shows the current Coordinated "
+           "Universal Time (UTC) which is also known as Greenwich Mean Time "
+           "(GMT).");
 
     /* S-meter */
     const QString strSMeter =
@@ -1514,17 +1533,17 @@ void StationsDlg::AddWhatsThisHelp()
 int StationsDlg::currentSortColumn()
 {
 #if QT_VERSION < 0x030000
-	return iSortColumn;
+    return iSortColumn;
 #else
-	return ListViewStations->sortColumn();
+    return ListViewStations->sortColumn();
 #endif
 }
 
 _BOOLEAN StationsDlg::showAll()
 {
 #if QT_VERSION < 0x040000
-	return pViewMenu->isItemChecked(1);
+    return pViewMenu->isItemChecked(1);
 #else
-	return actionShowAllStations->isChecked();
+    return actionShowAllStations->isChecked();
 #endif
 }
