@@ -34,13 +34,7 @@
 # include <qheader.h>
 # include <qdir.h>
 # include <qftp.h>
-# if QT_VERSION	< 0x030000
-#  ifdef _WIN32
-#   include <windows.h>
-#  endif
-# else
-#  include <qhttp.h>
-# endif
+# include <qsocket.h>
 # include <qwhatsthis.h>
 # ifdef HAVE_LIBHAMLIB
 #  include "Rig.h"
@@ -547,13 +541,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     ProgrSigStrength->setFillBrush(fillBrush);
 
 #if QT_VERSION < 0x040000
-    /* Register the network protocols (ftp,http). This is needed for the DRMSchedule
-       download */
-#if QT_VERSION < 0x030000
-	// TODO
-#else
-    QNetworkProtocol::registerNetworkProtocol("http", new QNetworkProtocolFactory<QHttp>);
-#endif
+    /* Register the network protocol (ftp). This is needed for the DRMSchedule download */
     QNetworkProtocol::registerNetworkProtocol("ftp", new QNetworkProtocolFactory<QFtp>);
 #else
 	manager = new QNetworkAccessManager(this);
@@ -836,37 +824,53 @@ void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
     SetStationsView();
 }
 
-
-void StationsDlg::downloadUsingOS(const string& url)
+#if QT_VERSION < 0x040000
+void StationsDlg::httpConnected()
 {
-#if QT_VERSION < 0x030000
-#  ifdef _WIN32
-	string script =
-"strFileURL = \""+url+"\"\n"
-+"strHDLocation = \"DRMSchedule.ini\"\n"
-+"Set objXMLHTTP = CreateObject(\"MSXML2.XMLHTTP\")\n"
-+"objXMLHTTP.open \"GET\", strFileURL, false\n"
-+"objXMLHTTP.send()\n"
-+"If objXMLHTTP.Status = 200 Then\n"
-+"Set objADOStream = CreateObject(\"ADODB.Stream\")\n"
-+"objADOStream.Open\n"
-+"objADOStream.Type = 1 'adTypeBinary\n"
-+"objADOStream.Write objXMLHTTP.ResponseBody\n"
-+"objADOStream.Position = 0    'Set the stream position to the start\n"
-+"Set objFSO = Createobject(\"Scripting.FileSystemObject\")\n"
-+"If objFSO.Fileexists(strHDLocation) Then objFSO.DeleteFile strHDLocation\n"
-+"Set objFSO = Nothing\n"
-+"objADOStream.SaveToFile strHDLocation\n"
-+"objADOStream.Close\n"
-+"Set objADOStream = Nothing\n"
-+"End if\n"
-+"Set objXMLHTTP = Nothing\n";
-// TODO - write the script to a file and execute
-# else
-// TODO use wget
-# endif
-#endif
+	char buf[1000];
+	int n = sprintf(buf,"GET %s HTTP/1.0\n\n", qurl->path());
+	httpSocket->writeBlock(buf, n);
 }
+#endif
+
+#if QT_VERSION < 0x040000
+void StationsDlg::httpDisconnected()
+{
+//    QMessageBox::information(this, "Dream", "http disconnected", QMessageBox::Ok);
+}
+#endif
+
+#if QT_VERSION < 0x040000
+void StationsDlg::httpRead()
+{
+	if(httpSocket->atEnd()) {
+		disconnect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
+		disconnect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
+		disconnect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
+		disconnect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead())); 
+		httpSocket->close();
+		schedFile->close();
+        /* Notify the user that update was successful */
+        QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
+        /* Read updated ini-file */
+        LoadSchedule(CDRMSchedule::SM_DRM);
+	}
+	else {
+		char buf[8000];
+		while(httpSocket->bytesAvailable()>0) {
+			int n = httpSocket->readBlock(buf, sizeof(buf));
+			schedFile->writeBlock(buf, n);
+		}
+	}
+}
+#endif
+
+#if QT_VERSION < 0x040000
+void StationsDlg::httpError(int)
+{
+    QMessageBox::information(this, "Dream", "http error", QMessageBox::Ok);
+}
+#endif
 
 void StationsDlg::on_actionGetUpdate_triggered()
 {
@@ -883,17 +887,29 @@ void StationsDlg::on_actionGetUpdate_triggered()
         /* Try to download the current schedule. Copy the file to the
            current working directory (which is "QDir().absFilePath(NULL)") */
 #if QT_VERSION < 0x040000
-# if QT_VERSION < 0x030000
+//# if QT_VERSION < 0x030000
 	if(url.find("ftp")==string::npos) {
 	    UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
 	}
 	else
 	{
-	    downloadUsingOS(url);
+		schedFile = new QFile(DRMSCHEDULE_INI_FILE_NAME);
+		if(schedFile->open(IO_WriteOnly)) {
+			httpSocket = new QSocket(this);
+			qurl = new QUrl(url.c_str());
+			connect(httpSocket, SIGNAL(connected()), this, SLOT(httpConnected()));
+			connect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
+			connect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
+			connect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead())); 
+			httpSocket->connectToHost(qurl->host(), qurl->port());
+		}
+		else {
+            QMessageBox::information(this, "Dream", "can't open schedule file for writing", QMessageBox::Ok);
+		}
 	}
-# else
-        UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
-# endif
+//# else
+//        UrlUpdateSchedule.copy(QString(url.c_str()), QDir().absFilePath(NULL));
+//# endif
 #else
 	manager->get(QNetworkRequest(QUrl(url.c_str())));
 #endif
@@ -920,11 +936,11 @@ void StationsDlg::OnUrlFinished(QNetworkOperation* pNetwOp)
         {
             if (pNetwOp->state() == QNetworkProtocol::StDone)
             {
-		string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
-		QString f = QUrl(url.c_str()).fileName();
-		QDir d;
-		d.remove(DRMSCHEDULE_INI_FILE_NAME);
-		d.rename(f, DRMSCHEDULE_INI_FILE_NAME);
+				string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
+				QString f = QUrl(url.c_str()).fileName();
+				QDir d;
+				d.remove(DRMSCHEDULE_INI_FILE_NAME);
+				d.rename(f, DRMSCHEDULE_INI_FILE_NAME);
                 /* Notify the user that update was successful */
                 QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
                 /* Read updated ini-file */

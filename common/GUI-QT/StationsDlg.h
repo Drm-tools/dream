@@ -231,6 +231,7 @@ protected:
 
 
 class RemoteMenu;
+class QSocket;
 
 #if QT_VERSION >= 0x040000
 class CStationsDlgBase : public QMainWindow, public Ui_StationsDlgbase
@@ -294,6 +295,9 @@ protected:
 	QPopupMenu*		pUpdateMenu;
 	vector<MyListViewItem*>	vecpListItems;
 	QUrlOperator	UrlUpdateSchedule;
+	QFile *schedFile;
+	QUrl *qurl;
+	QSocket *httpSocket;
 #else
 	QIcon			greenCube;
 	QIcon			redCube;
@@ -323,8 +327,11 @@ public slots:
 	void OnTimerUTCLabel();
 	void OnSMeterMenu(int iID);
 	void OnSMeterMenu();
-	void downloadUsingOS(const std::string&);// qt2 only really
 #if QT_VERSION < 0x040000
+	void httpConnected();
+	void httpDisconnected();
+	void httpRead();
+	void httpError(int);
 	void OnListItemClicked(QListViewItem* item);
 	void OnUrlFinished(QNetworkOperation* pNetwOp);
 #else
