@@ -1100,7 +1100,7 @@ void StationsDlg::showEvent(QShowEvent*)
     if(targetFilter!="") {
 	for(int i=0; i<ComboBoxFilterLanguage->count(); i++) {
 #if QT_VERSION < 0x040000
-	    if(ComboBoxFilterLanguage->itemText(i) == targetFilter)
+	    if(ComboBoxFilterLanguage->text(i) == targetFilter)
 		ComboBoxFilterLanguage->setCurrentItem(i);
 #else
 	    if(ComboBoxFilterLanguage->itemText(i) == targetFilter)
