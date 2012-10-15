@@ -39,6 +39,7 @@
 # include <QShowEvent>
 # include <QHideEvent>
 # include <QPixmap>
+# include <QUdpSocket>
 #endif
 #include <set>
 
@@ -157,8 +158,8 @@ void EPGDlg::sendNowNext(QString s)
     a.setAddress(addr.c_str());
     sock.writeBlock(s.utf8(), s.length(), a, port);
 #else
-    // TODO QT4
-    (void)s;
+    QUdpSocket sock;
+    sock.writeDatagram(s.toUtf8().data(), QHostAddress(addr.c_str()), port);
 #endif
 }
 
