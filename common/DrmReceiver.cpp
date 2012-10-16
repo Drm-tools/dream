@@ -1534,7 +1534,7 @@ CDRMReceiver::LoadSettings(CSettings& s)
     SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
 
     /* Tuned Frequency */
-    pReceiverParam->SetFrequency(s.Get("Receiver", "frequency", -1));
+    pReceiverParam->SetFrequency(s.Get("Receiver", "frequency", 0));
 
     /* Front-end - combine into Hamlib? */
     CFrontEndParameters& FrontEndParameters = pReceiverParam->FrontEndParameters;
@@ -1556,9 +1556,9 @@ CDRMReceiver::LoadSettings(CSettings& s)
 
     /* Latitude string for log file */
     double latitude, longitude;
-    latitude = s.Get("Logfile", "latitude", 1000.0);
+    latitude = s.Get("GPS", "latitude", 1000.0);
     /* Longitude string for log file */
-    longitude = s.Get("Logfile", "longitude", 1000.0);
+    longitude = s.Get("GPS", "longitude", 1000.0);
     pReceiverParam->Lock();
     if(-90.0 <= latitude && latitude <= 90.0 && -180.0 <= longitude  && longitude <= 180.0)
     {
@@ -1660,6 +1660,14 @@ CDRMReceiver::SaveSettings(CSettings& s)
 
     s.Put("Receiver", "datafilesdirectory", pReceiverParam->sDataFilesDirectory);
 
+    /* GPS */
+    if(pReceiverParam->gps_data.set & LATLON_SET) {
+	s.Put("GPS", "latitude", pReceiverParam->gps_data.fix.latitude);
+	s.Put("GPS", "longitude", pReceiverParam->gps_data.fix.longitude);
+    }
+    s.Put("GPS", "usegpsd", pReceiverParam->use_gpsd);
+    s.Put("GPS", "host", pReceiverParam->gps_host);
+    s.Put("GPS", "port", pReceiverParam->gps_port);
 }
 
 void CConvertAudio::InitInternal(CParameter& Parameter)

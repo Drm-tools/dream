@@ -35,11 +35,7 @@
 class CReceptLog
 {
 public:
-    CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALSE),
-            bRxlEnabled(FALSE), bPositionEnabled(FALSE),
-            iSecDelLogStart(0), iFrequency(0)
-    {
-    }
+    CReceptLog(CParameter & p);
     virtual ~CReceptLog()
     {
     }
@@ -92,6 +88,7 @@ protected:
     _BOOLEAN bPositionEnabled;
     int iSecDelLogStart;
     int iFrequency;
+    double latitude,longitude;
 };
 
 class CShortLog: public CReceptLog

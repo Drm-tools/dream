@@ -807,8 +807,15 @@ CAMSSDlg::CAMSSDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
 
 }
 
+void CAMSSDlg::closeEvent(QCloseEvent* ce)
+{
+qDebug("CAMSSDlg::closeEvent");
+        ce->accept();
+}
+
 void CAMSSDlg::hideEvent(QHideEvent*)
 {
+qDebug("CAMSSDlg::hideEvent");
     /* stop real-time timers */
     Timer.stop();
     TimerPLLPhaseDial.stop();
@@ -906,6 +913,7 @@ void CAMSSDlg::OnTimer()
 #if QT_VERSION < 0x040000
         ListBoxAMSSAFSList->insertItem(QString().setNum((long) iNumAltServices), 10);
 #else
+// TODO Qt4
 #endif
 
         ListBoxAMSSAFSList->clear();
@@ -1053,6 +1061,7 @@ void CAMSSDlg::OnTimer()
 #if QT_VERSION < 0x040000
             ListBoxAMSSAFSList->insertItem(freqEntry, 0);
 #else
+// TODO Qt4
 #endif
         }
     }

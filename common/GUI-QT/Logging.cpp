@@ -65,7 +65,11 @@ void CLogging::LoadSettings(CSettings& Settings)
     {
         /* One shot timer */
 	int iLogDelay = Settings.Get("Logfile", "delay", 0);
+#if QT_VERSION < 0x040000
+        TimerLogFileStart.start(iLogDelay * 1000 /* ms */, true);
+#else
         TimerLogFileStart.start(iLogDelay * 1000 /* ms */);
+#endif
 	// initialise ini file if never set
         Settings.Put("Logfile", "delay", iLogDelay);
     }
@@ -93,7 +97,7 @@ void CLogging::OnTimerLogFileLong()
 void CLogging::start()
 {
     /* Start logging (if not already done) */
-    if(!longLog.GetLoggingActivated() || !longLog.GetLoggingActivated())
+    if(!longLog.GetLoggingActivated())
     {
         /* Activate log file timer for long and short log file */
         TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */

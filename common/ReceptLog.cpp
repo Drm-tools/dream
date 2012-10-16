@@ -33,6 +33,15 @@
 
 /* implementation --------------------------------------------- */
 
+CReceptLog::CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALSE),
+            bRxlEnabled(FALSE), bPositionEnabled(FALSE),
+            iSecDelLogStart(0)
+{
+    iFrequency = Parameters.GetFrequency();
+    latitude = Parameters.gps_data.fix.latitude;
+    longitude = Parameters.gps_data.fix.longitude;
+}
+
 void
 CReceptLog::Start(const string & filename)
 {
@@ -61,13 +70,20 @@ CReceptLog::Update()
     if (!bLogActivated)
         return;
     int iCurrentFrequency = Parameters.GetFrequency();
-    if (iCurrentFrequency != iFrequency)
+    double currentLatitude = Parameters.gps_data.fix.latitude;
+    double currentLongitude = Parameters.gps_data.fix.longitude;
+    if((iCurrentFrequency != iFrequency)
+    || (bPositionEnabled && int(currentLatitude) != int(latitude))
+    || (bPositionEnabled && int(currentLongitude) != int(longitude))
+    )
     {
-        // Frequency has changed
+        // Frequency or position has changed
         if (bLogActivated)
         {
             writeTrailer();
             iFrequency = iCurrentFrequency;
+	    latitude = currentLatitude;
+	    longitude = currentLongitude;
             writeHeader();
         }
         else
