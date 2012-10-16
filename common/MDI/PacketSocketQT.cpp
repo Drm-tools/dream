@@ -60,12 +60,12 @@ typedef int SOCKET;
 
 CPacketSocketQT::CPacketSocketQT():
     pPacketSink(NULL), HostAddrOut(), iHostPortOut(-1),
+    writeBuf(),udp(true),
 #if QT_VERSION < 0x040000
-    pSocketDevice(NULL),
+    pSocketDevice(NULL),pSn(NULL)
 #else
-    udpSocket(NULL), tcpSocket(NULL),
+    udpSocket(NULL), tcpSocket(NULL)
 #endif
-    writeBuf(),udp(true)
 {
 }
 
@@ -381,6 +381,9 @@ _BOOLEAN CPacketSocketQT::doSetSource(QHostAddress AddrGroup, QHostAddress AddrI
             pSocketDevice->bind(AddrGroup, iPort);
         }
     }
+    pSn = new QSocketNotifier(s, QSocketNotifier::Read);
+    connect(pSn, SIGNAL(activated(int)), this, SLOT(OnActivated()) );
+qDebug("CPacketSocketQT socket %d connected", s);
     return TRUE;
 }
 #else
@@ -502,12 +505,16 @@ CPacketSocketQT::pollStream()
 void
 CPacketSocketQT::pollDatagram()
 {
+}
+
+void CPacketSocketQT::OnActivated()
+{
     vector < _BYTE > vecbydata(MAX_SIZE_BYTES_NETW_BUF);
     /* Read block from network interface */
-if(pSocketDevice==NULL){
-cerr << "PacketSocketQT datagram socket is null" << endl;
-return;
-}
+    if(pSocketDevice==NULL){
+	cerr << "PacketSocketQT datagram socket is null" << endl;
+	return;
+    }
     int iNumBytesRead = pSocketDevice->readBlock((char *) &vecbydata[0], MAX_SIZE_BYTES_NETW_BUF);
     if(iNumBytesRead > 0)
     {

@@ -35,6 +35,7 @@
 
 #if QT_VERSION < 0x040000
 # include <qsocketdevice.h>
+# include <qsocketnotifier.h> 
 # include <qstringlist.h>
 #else
 # include <QUdpSocket>
@@ -57,8 +58,15 @@
 
 #include "PacketInOut.h"
 
-class CPacketSocketQT : public CPacketSocket
+class CPacketSocketQT :
+#if QT_VERSION < 0x040000
+	public QObject,
+#endif
+	public CPacketSocket
 {
+#if QT_VERSION < 0x040000
+	Q_OBJECT
+#endif
 public:
 	CPacketSocketQT();
 	virtual ~CPacketSocketQT();
@@ -91,15 +99,18 @@ private:
 	uint32_t	sourceAddr;
 	QHostAddress	HostAddrOut;
 	int		iHostPortOut;
+	vector<_BYTE>	writeBuf;
+	bool udp;
 
 #if QT_VERSION < 0x040000
-	QSocketDevice*	 pSocketDevice;
+	QSocketDevice* pSocketDevice;
+	QSocketNotifier* pSn;
+private slots:
+	void OnActivated();
 #else
 	QUdpSocket* udpSocket;
 	QTcpSocket* tcpSocket;
 #endif
-	vector<_BYTE>	writeBuf;
-	bool udp;
 };
 
 #endif
