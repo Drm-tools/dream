@@ -145,7 +145,7 @@ CShortLog::writeHeader()
     Parameters.Lock();
     iFrequency = Parameters.GetFrequency();
 
-    if (Parameters.gps_data.status&LATLON_SET)
+    if (Parameters.gps_data.set & LATLON_SET)
     {
         asDM(latitude, Parameters.gps_data.fix.latitude, 'S', 'N');
         asDM(longitude, Parameters.gps_data.fix.longitude, 'W', 'E');
@@ -410,7 +410,7 @@ CLongLog::writeParameters()
     Parameters.ReceiveStatus.LLAudio.ResetCounts();
 
     double latitude=0.0, longitude=0.0;
-    if (bPositionEnabled && (Parameters.gps_data.status&LATLON_SET))
+    if (bPositionEnabled && (Parameters.gps_data.set & LATLON_SET))
     {
         latitude = Parameters.gps_data.fix.latitude;
         longitude = Parameters.gps_data.fix.longitude;
