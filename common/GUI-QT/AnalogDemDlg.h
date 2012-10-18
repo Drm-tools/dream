@@ -29,23 +29,8 @@
  *
 \******************************************************************************/
 
-#ifndef __ANALOGDEMDLG_H
-#define __ANALOGDEMDLG_H
 
 #include <qtimer.h>
-#include <qstring.h>
-#include <qlabel.h>
-#include <qradiobutton.h>
-#include <qcheckbox.h>
-#include <qtooltip.h>
-#include <qpushbutton.h>
-#include <qcheckbox.h>
-#include <qslider.h>
-#include <qlayout.h>
-#include <qcombobox.h>
-/* This include is for setting the progress bar style */
-#include <qmotifstyle.h>
-
 #if QT_VERSION < 0x040000
 # include "AnalogDemDlgbase.h"
 # include "AMSSDlgbase.h"
@@ -55,11 +40,13 @@
 # include <QDialog>
 # include <QButtonGroup>
 #endif
+
 #include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
 #include "../tables/TableAMSS.h"
+
 
 /* Definitions ****************************************************************/
 /* Update time of PLL phase dial control */
@@ -67,10 +54,8 @@
 
 
 /* Classes ********************************************************************/
-
 class CDRMPlot;
 
-/* AMSS dialog -------------------------------------------------------------- */
 #if QT_VERSION >= 0x040000
 class CAMSSDlgBase : public QDialog, public Ui_CAMSSDlgBase
 {
@@ -81,98 +66,98 @@ public:
     }
     virtual ~CAMSSDlgBase() {}
 };
-#endif
-class CAMSSDlg : public CAMSSDlgBase
-{
-    Q_OBJECT
 
-public:
-    CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
-             bool modal = FALSE, Qt::WFlags f = 0);
-
-protected:
-    CDRMReceiver&	DRMReceiver;
-    CSettings&		Settings;
-
-    QTimer		Timer;
-    QTimer		TimerPLLPhaseDial;
-    void		AddWhatsThisHelp();
-    void		hideEvent(QHideEvent* pEvent);
-    void		showEvent(QShowEvent* pEvent);
-    void		closeEvent(QCloseEvent* pEvent);
-
-public slots:
-    void OnTimer();
-    void OnTimerPLLPhaseDial();
-};
-
-
-/* Analog demodulation dialog ----------------------------------------------- */
-#if QT_VERSION >= 0x040000
 class AnalogDemDlgBase : public QMainWindow, public Ui_AMMainWindow
 {
 public:
     AnalogDemDlgBase(QWidget* parent = 0,
-                     const char* name = 0, Qt::WFlags f = 0):
-        QMainWindow(parent,f) {
+                     const char* name = 0, bool modal=false, Qt::WFlags f = 0):
+        QMainWindow(parent,f), MainPlot(NULL),
+	ButtonGroupDemodulation(), ButtonGroupAGC(), ButtonGroupNoiseReduction()
+    {
         (void)name;
+        (void)modal;
         setupUi(this);
     }
     virtual ~AnalogDemDlgBase() {}
+protected:
+    CDRMPlot*           MainPlot;
+    QButtonGroup        ButtonGroupDemodulation, ButtonGroupAGC, ButtonGroupNoiseReduction;
 };
 #endif
-class AnalogDemDlg : public AnalogDemDlgBase
+
+
+/* AMSS dialog -------------------------------------------------------------- */
+class CAMSSDlg : public CAMSSDlgBase
 {
-    Q_OBJECT
+	Q_OBJECT
 
 public:
-    AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-                 const char* name = 0, Qt::WFlags f = 0);
+	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0);
+
+protected:
+	CDRMReceiver&	DRMReceiver;
+	CSettings&		Settings;
+
+	QTimer			Timer;
+	QTimer			TimerPLLPhaseDial;
+	void			AddWhatsThisHelp();
+	virtual void	hideEvent(QHideEvent* pEvent);
+    virtual void	showEvent(QShowEvent* pEvent);
+
+public slots:
+	void OnTimer();
+	void OnTimerPLLPhaseDial();
+};
+
+
+/* Analog demodulation dialog ----------------------------------------------- */
+class AnalogDemDlg : public AnalogDemDlgBase
+{
+	Q_OBJECT
+
+public:
+	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
 
 protected:
-    CDRMReceiver&	DRMReceiver;
-    CSettings&		Settings;
-    CAMSSDlg		AMSSDlg;
+	CDRMReceiver&	DRMReceiver;
+	CSettings&		Settings;
 
-#if QT_VERSION >= 0x040000
-    CDRMPlot*		MainPlot;
-    QButtonGroup	ButtonGroupDemodulation, ButtonGroupAGC, ButtonGroupNoiseReduction;
-#endif
+	QTimer			Timer;
+	QTimer			TimerPLLPhaseDial;
+	CAMSSDlg		AMSSDlg;
 
-    QTimer		Timer;
-    QTimer		TimerPLLPhaseDial;
-
-    void		UpdateControls();
-    void		AddWhatsThisHelp();
-    void		showEvent(QShowEvent* pEvent);
-    void		hideEvent(QHideEvent* pEvent);
-    void		closeEvent(QCloseEvent* pEvent);
+	void			UpdateControls();
+	void			AddWhatsThisHelp();
+    virtual void	showEvent(QShowEvent* pEvent);
+	virtual void	hideEvent(QHideEvent* pEvent);
+	virtual void	closeEvent(QCloseEvent* pEvent);
 
 public slots:
-    void UpdatePlotStyle(int);
-    void OnTimer();
-    void OnTimerPLLPhaseDial();
-    void OnRadioDemodulation(int iID);
-    void OnRadioAGC(int iID);
-    void OnCheckBoxMuteAudio();
-    void OnCheckSaveAudioWAV();
-    void OnCheckAutoFreqAcq();
-    void OnCheckPLL();
-    void OnChartxAxisValSet(double dVal);
-    void OnSliderBWChange(int value);
-    void OnRadioNoiRed(int iID);
-    void OnButtonWaterfall();
-    void OnButtonAMSS();
-    void OnSwitchToDRM();
-    void OnSwitchToFM();
+	void UpdatePlotStyle(int);
+	void OnTimer();
+	void OnTimerPLLPhaseDial();
+	void OnRadioDemodulation(int iID);
+	void OnRadioAGC(int iID);
+	void OnCheckBoxMuteAudio();
+	void OnCheckSaveAudioWAV();
+	void OnCheckAutoFreqAcq();
+	void OnCheckPLL();
+	void OnChartxAxisValSet(double dVal);
+	void OnSliderBWChange(int value);
+	void OnRadioNoiRed(int iID);
+	void OnButtonWaterfall();
+	void OnButtonAMSS();
+	void OnSwitchToDRM();
+	void OnSwitchToFM();
 
 signals:
-    void SwitchMode(int);
-    void NewAMAcquisition();
-    void ViewStationsDlg();
-    void ViewLiveScheduleDlg();
-    void Closed();
+	void SwitchMode(int);
+	void NewAMAcquisition();
+	void ViewStationsDlg();
+	void ViewLiveScheduleDlg();
+	void Closed();
 };
-
-#endif
