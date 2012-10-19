@@ -98,13 +98,13 @@ public:
 
 protected:
 	CDRMReceiver&	DRMReceiver;
-	CSettings&		Settings;
+	CSettings&	Settings;
 
-	QTimer			Timer;
-	QTimer			TimerPLLPhaseDial;
-	void			AddWhatsThisHelp();
-	virtual void	hideEvent(QHideEvent* pEvent);
-    virtual void	showEvent(QShowEvent* pEvent);
+	QTimer	Timer;
+	QTimer	TimerPLLPhaseDial;
+	void	AddWhatsThisHelp();
+	void	showEvent(QShowEvent*);
+	void	hideEvent(QHideEvent*);
 
 public slots:
 	void OnTimer();
@@ -130,13 +130,13 @@ protected:
 	QTimer			TimerPLLPhaseDial;
 	CAMSSDlg		AMSSDlg;
 
-	void			UpdateControls();
-	void			AddWhatsThisHelp();
-    virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
-	virtual void	closeEvent(QCloseEvent* pEvent);
+	void UpdateControls();
+	void AddWhatsThisHelp();
+        void showEvent(QShowEvent* pEvent);
+	void hideEvent(QHideEvent* pEvent);
 
 public slots:
+	void closeEvent(QCloseEvent* pEvent);
 	void UpdatePlotStyle(int);
 	void OnTimer();
 	void OnTimerPLLPhaseDial();

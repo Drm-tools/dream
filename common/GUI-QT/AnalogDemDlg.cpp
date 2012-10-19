@@ -245,16 +245,17 @@ void AnalogDemDlg::showEvent(QShowEvent*)
 	Timer.start(GUI_CONTROL_UPDATE_TIME);
 	TimerPLLPhaseDial.start(PLL_PHASE_DIAL_UPDATE_TIME);
 
+	if(Settings.Get("AM Dialog", "Stations Dialog visible", FALSE))
+		emit ViewStationsDlg();
+
+	UpdateControls();
+
 	/* Open AMSS window */
 	if (Settings.Get("AMSS Dialog", "visible", FALSE) == TRUE)
 		AMSSDlg.show();
 	else
 		AMSSDlg.hide();
 
-	if(Settings.Get("AM Dialog", "Stations Dialog visible", FALSE))
-		emit ViewStationsDlg();
-
-	UpdateControls();
 }
 
 void AnalogDemDlg::hideEvent(QHideEvent*)
@@ -283,7 +284,10 @@ void AnalogDemDlg::closeEvent(QCloseEvent* ce)
 	emit Closed();
 	// stay open until working thread is done
 	if(DRMReceiver.GetParameters()->eRunState==CParameter::STOPPED)
+	{
+		hide();
 		ce->accept();
+	}
 	else
 		ce->ignore();
 }
