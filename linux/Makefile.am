@@ -5,7 +5,6 @@ drmwithoutqt_SOURCES = \
 	../common/Version.cpp \
 	../common/PlotManager.cpp \
 	../common/ReceptLog.cpp \
-	../common/GPSData.cpp \
 	../common/SimulationParameters.cpp \
 	../common/DRMSignalIO.cpp \
 	../common/DataIO.cpp \
@@ -102,7 +101,6 @@ drmwithoutqt_SOURCES = \
 	../common/Version.h \
 	../common/ReceptLog.h \
 	../common/PlotManager.h \
-	../common/GPSData.h \
 	../common/DRMSignalIO.h \
 	../common/DataIO.h \
 	../common/DrmReceiver.h \
@@ -244,7 +242,6 @@ endif
 if USE_QT
 
 drmqtonly_SOURCES = \
-	../common/GPSReceiver.cpp \
 	../common/GUI-QT/DialogUtil.cpp \
 	../common/GUI-QT/DRMPlot.cpp \
 	../common/GUI-QT/fdrmdialog.cpp \
@@ -259,6 +256,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/GeneralSettingsDlg.cpp \
 	../common/GUI-QT/EPGDlg.cpp \
 	../common/GUI-QT/AnalogDemDlg.cpp \
+	../common/GUI-QT/Logging.cpp \
 	../common/MDI/PacketSourceFile.cpp \
 	../common/MDI/PacketSocketQT.cpp \
 	../common/GUI-QT/qt2/fdrmdialogbase.ui \
@@ -274,7 +272,6 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/qt2/EPGDlgbase.ui \
 	../common/GUI-QT/qt2/AnalogDemDlgbase.ui \
 	../common/GUI-QT/qt2/AMSSDlgbase.ui \
-	../common/GPSReceiver.h \
 	../common/GUI-QT/MultimediaDlg.h \
 	../common/GUI-QT/fdrmdialog.h \
 	../common/GUI-QT/fmdialog.h \
@@ -289,6 +286,7 @@ drmqtonly_SOURCES = \
 	../common/GUI-QT/GeneralSettingsDlg.h \
 	../common/GUI-QT/EPGDlg.h \
 	../common/GUI-QT/AnalogDemDlg.h \
+	../common/GUI-QT/Logging.h \
 	../common/MDI/PacketSourceFile.h \
 	../common/MDI/PacketSocketQT.h \
 	../common/MDI/PacketSinkFile.h \
@@ -319,7 +317,7 @@ BUILT_SOURCES=moc/moc_MultColorLED.cpp \
 	moc/moc_AnalogDemDlg.cpp moc/moc_AnalogDemDlgbase.cpp moc/AnalogDemDlgbase.h moc/AnalogDemDlgbase.cpp \
 	moc/moc_AboutDlgbase.cpp moc/AboutDlgbase.h moc/AboutDlgbase.cpp \
 	moc/moc_AMSSDlgbase.cpp moc/AMSSDlgbase.h moc/AMSSDlgbase.cpp \
-	moc/moc_PacketSourceFile.cpp moc/moc_PacketSocketQT.cpp moc/moc_GPSReceiver.cpp
+	moc/moc_PacketSourceFile.cpp moc/moc_PacketSocketQT.cpp moc/moc_Logging.cpp moc/moc_Rig.cpp
 
 # and should be cleaned by make clean
 
@@ -344,8 +342,11 @@ moc/moc_PacketSourceFile.cpp: ../common/MDI/PacketSourceFile.h
 moc/moc_PacketSocketQT.cpp: ../common/MDI/PacketSocketQT.h
 	$(MOC) ../common/MDI/PacketSocketQT.h -o moc/moc_PacketSocketQT.cpp
 
-moc/moc_GPSReceiver.cpp: ../common/GPSReceiver.h
-	$(MOC) ../common/GPSReceiver.h -o moc/moc_GPSReceiver.cpp
+moc/moc_Logging.cpp: ../common/GUI-QT/Logging.h
+	$(MOC) ../common/GUI-QT/Logging.h -o moc/moc_Logging.cpp
+
+moc/moc_Rig.cpp: ../common/GUI-QT/Rig.h
+	$(MOC) ../common/GUI-QT/Rig.h -o moc/moc_Rig.cpp
 
 moc/moc_AboutDlgbase.cpp: moc/AboutDlgbase.h
 	$(MOC) moc/AboutDlgbase.h -o moc/moc_AboutDlgbase.cpp
@@ -356,7 +357,6 @@ moc/AboutDlgbase.h: ../common/GUI-QT/qt2/AboutDlgbase.ui
 moc/AboutDlgbase.cpp: ../common/GUI-QT/qt2/AboutDlgbase.ui moc/AboutDlgbase.h
 	$(UIC) ../common/GUI-QT/qt2/AboutDlgbase.ui -i moc/AboutDlgbase.h -o moc/AboutDlgbase.cpp	
 
-	
 moc/moc_fdrmdialog.cpp: ../common/GUI-QT/fdrmdialog.h
 	$(MOC) ../common/GUI-QT/fdrmdialog.h -o moc/moc_fdrmdialog.cpp
 	
