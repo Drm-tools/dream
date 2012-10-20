@@ -32,8 +32,6 @@
 #include <iostream>
 #include <cstdlib>
 #include <cerrno>
-#include <qtimer.h>
-#include <qstringlist.h>
 
 #ifdef _WIN32
 /* Always include winsock2.h before windows.h */
@@ -59,7 +57,7 @@ const size_t iAFHeaderLen = 10;
 const size_t iAFCRCLen = 2;
 
 CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
-    timeKeeper(), last_packet_time(0),
+    last_packet_time(0),
     pF(NULL), wanted_dest_port(-1), eFileType(pcap)
 {
 }

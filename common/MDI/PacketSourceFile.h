@@ -62,7 +62,6 @@ private:
     void readTagPacketHeader(string& tag, uint32_t& len);
 
 	CPacketSink		*pPacketSink;
-	QTime			timeKeeper;
 	uint64_t		last_packet_time;
 	void*			pF;
 	int 			wanted_dest_port;
