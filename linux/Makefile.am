@@ -92,6 +92,7 @@ drmwithoutqt_SOURCES = \
 	../common/sync/TimeSyncFilter.cpp \
 	../common/tables/TableFAC.cpp \
 	../common/tables/TableCarMap.cpp \
+	../common/tables/TableStations.cpp \
 	../common/GUI-QT/main.cpp \
 	../common/GUI-QT/Rig.cpp \
 	source/Pacer.cpp \
@@ -199,6 +200,7 @@ drmwithoutqt_SOURCES = \
 	../common/tables/TableFAC.h \
 	../common/tables/TableMLC.h \
 	../common/tables/TableQAMMapping.h \
+	../common/tables/TableStations.h \
 	../common/selectioninterface.h \
 	../common/soundinterface.h \
 	../common/soundnull.h \
