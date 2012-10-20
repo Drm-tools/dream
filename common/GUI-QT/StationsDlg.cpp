@@ -29,6 +29,7 @@
 \******************************************************************************/
 
 #include "StationsDlg.h"
+#include "../tables/TableStations.h"
 #include "DialogUtil.h"
 #if QT_VERSION < 0x040000
 # include <qheader.h>
@@ -242,6 +243,206 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
     fclose(pFile);
 }
 
+void CDRMSchedule ::ReadCSVFile(FILE* pFile)
+{
+#if QT_VERSION >= 0x040000
+	const int	iMaxLenRow = 1024;
+	char		cRow[iMaxLenRow];
+        CStationData data;
+
+	StationsTable.clear();
+
+	do {
+		CStationsItem StationsItem;
+
+		fgets(cRow, iMaxLenRow, pFile);
+		QStringList fields;
+		stringstream ss(cRow);
+		do {
+			string s;
+			getline(ss, s, ';');
+			fields.push_back(s.c_str());
+		} while(!ss.eof());
+
+		StationsItem.iFreq = fields[0].toInt();
+
+		if(fields[1] == "")
+		{
+			StationsItem.SetStartTime(0);
+			StationsItem.SetStopTime(2400);
+		}
+		else
+		{
+			QStringList times = fields[1].split("-");
+			StationsItem.SetStartTime(times[0].toInt());
+			StationsItem.SetStopTime(times[1].toInt());
+		}
+
+		if(fields[2].length()>0)
+		{
+			stringstream ss(fields[2].toStdString());
+			char c;
+			enum Days { Sunday=0, Monday=1, Tuesday=2, Wednesday=3,
+						Thursday=4, Friday=5, Saturday=6 };
+			Days first=Sunday, last=Sunday;
+			enum { no, in, done } range_state = no;
+			// Days[SMTWTFS]=1111111
+			QString strDays = "0000000";
+			while(!ss.eof())
+			{
+				ss >> c;
+				switch(c)
+				{
+					case '-':
+						range_state = in;
+						break;
+					case 'M':
+						ss >> c;
+						last = Monday;
+						break;
+					case 'T':
+						ss >> c;
+						last = (c=='u')?Tuesday:Thursday;
+						break;
+					case 'W':
+						ss >> c;
+						last = Wednesday;
+						break;
+					case 'F':
+						ss >> c;
+						last = Friday;
+						break;
+					case 'S':
+						ss >> c;
+						last = (c=='u')?Sunday:Saturday;
+						break;
+				}
+				switch(range_state)
+				{
+					case no:
+						strDays[last] = '1';
+						break;
+					case in:
+						first = last;
+						range_state = done;
+						break;
+					case done:
+						if(first<last)
+						{
+							for(int d=first; d<=last; d++)
+								strDays[d] = '1';
+						}
+						range_state = no;
+						break;
+				}
+			}
+			StationsItem.SetDaysFlagString(strDays);
+		}
+		else
+			StationsItem.SetDaysFlagString("1111111");
+
+		//StationsItem.rPower = 0.0;
+//0   ;1        ;2    ;3  ;4               ;5;6;7;8;9;10
+//1170;1600-1700;Mo-Fr;USA;Voice of America;E; ; ;0; ;
+		string homecountry;
+		if(fields.size()>3)
+		{
+			homecountry = fields[3].toStdString();
+			string c = data.itu_r_country(homecountry);
+			if(c == "")
+				c = homecountry;
+			StationsItem.strCountry = QString(c.c_str());
+		}
+
+		if(fields.size()>4)
+			StationsItem.strName = fields[4];
+
+		if(fields.size()>5)
+		{
+			string l = data.eibi_language(fields[5].toStdString());
+			StationsItem.strLanguage = QString(l.c_str());
+		}
+
+		if(fields.size()>6)
+		{
+			string s = fields[6].toStdString();
+			string t = data.eibi_target(s);
+			if(t == "")
+			{
+				string c = data.itu_r_country(s);
+				if(c == "")
+					StationsItem.strTarget = QString(s.c_str());
+				else
+					StationsItem.strTarget = QString(c.c_str());
+			}
+			else
+			{
+				StationsItem.strTarget = QString(t.c_str());
+			}
+		}
+		string country;
+		string stn;
+		if(fields.size()>7)
+		{
+			StationsItem.strSite = fields[7];
+			string s  = fields[7].toStdString();
+			if(s=="") // unknown or main Tx site of the home country
+			{
+				country = homecountry;
+			}
+			else
+			{
+				size_t i=0;
+				s += '-';
+				if(s[0]=='/') // transmitted from another country
+					i++;
+				string a,b;
+				while(s[i]!='-')
+					a += s[i++];
+				i++;
+				if(i<s.length())
+					while(s[i]!='-')
+						b += s[i++];
+				if(s[0]=='/')
+				{
+					country = a;
+					stn = b;
+				}
+				else
+				{
+					if(a.length()==3)
+					{
+						country = a;
+						stn = b;
+					}
+					else
+					{
+						country = homecountry;
+						stn = a;
+					}
+				}
+			}
+		}
+		else
+		{
+			country = homecountry;
+		}
+		QString site = QString(data.eibi_station(country, stn).c_str());
+		if(site == "")
+		{
+			//cout << StationsItem.iFreq << " [" << StationsItem.strSite << "] [" << country << "] [" << stn << "]" << endl;
+		}
+		else
+		{
+			StationsItem.strSite = site;
+		}
+
+		/* Add new item in table */
+		StationsTable.push_back(StationsItem);
+
+	} while(!feof(pFile));
+#endif
+}
 CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 {
     /* Get system time */
@@ -890,6 +1091,29 @@ void StationsDlg::httpError(int n)
 
 void StationsDlg::on_actionGetUpdate_triggered()
 {
+    if(false) // TODO AM
+    {
+        QDate d = QDate::currentDate();
+        int wk = d.weekNumber();
+        int yr = d.year();
+        QString y,w;
+        if(wk <= 13)
+        {
+                w = "b";
+                y = QString::number(yr-1);
+        }
+        else if(wk <= 43)
+        {
+                w = "a";
+                y = QString::number(yr);
+        }
+        else
+        {
+                w = "b";
+                y = QString::number(yr);
+        }
+        QString path = QString("http://eibispace.de/dx/sked-%1%2.csv").arg(w, y.right(2));
+    }
     string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
     Settings.Put("Stations Dialog", "DRM URL", url);
     if (QMessageBox::information(this, tr("Dream Schedule Update"),

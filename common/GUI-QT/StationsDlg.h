@@ -199,6 +199,7 @@ public:
 	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
 
 	void ReadStatTabFromFile(const ESchedMode eNewSchM);
+	void ReadCSVFile(FILE* pFile);
 	ESchedMode GetSchedMode() {return eSchedMode;}
 	void SetSchedMode(const ESchedMode eNewSchM) {eSchedMode = eNewSchM; StationsTable.clear();};
 

@@ -48,12 +48,12 @@ contains(QT_VERSION, ^4\\..*) {
               exists(/usr/lib/libqwt.so.6) {
 	        message("with qwt6")
                 LIBS += /usr/lib/libqwt.so.6
-                exists(libs/qwt) {
-                  INCLUDEPATH += libs/qwt
+                exists(/usr/include/qwt6) {
+                  INCLUDEPATH += /usr/include/qwt6
                 }
                 else {
-                  exists(/usr/include/qwt6) {
-                    INCLUDEPATH += /usr/include/qwt6
+                  exists(libs/qwt) {
+                    INCLUDEPATH += libs/qwt
                   } else {
                     INCLUDEPATH += /usr/include/qwt
                   }
@@ -449,6 +449,7 @@ HEADERS += common/AMDemodulation.h \
    common/tables/TableFAC.h \
    common/tables/TableMLC.h \
    common/tables/TableQAMMapping.h \
+   common/tables/TableStations.h \
    common/TextMessage.h \
    common/util/AudioFile.h \
    common/util/Buffer.h \
@@ -550,6 +551,7 @@ SOURCES += common/AMDemodulation.cpp \
       common/sync/TimeSyncTrack.cpp \
       common/tables/TableCarMap.cpp \
       common/tables/TableFAC.cpp \
+      common/tables/TableStations.cpp \
       common/TextMessage.cpp \
       common/util/CRC.cpp \
       common/util/LogPrint.cpp \
