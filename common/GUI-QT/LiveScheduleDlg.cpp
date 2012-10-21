@@ -451,9 +451,9 @@ LiveScheduleDlg::setupUi(QWidget*)
     /* View menu ------------------------------------------------------------ */
     pViewMenu = new QPopupMenu(this);
     CHECK_PTR(pViewMenu);
-    pViewMenu->insertItem(tr("Show &only active stations"), this,
+    showActiveViewMenuItem = pViewMenu->insertItem(tr("Show &only active stations"), this,
                           SLOT(OnShowStationsMenu(int)), 0, 0);
-    pViewMenu->insertItem(tr("Show &all stations"), this,
+    showAllViewMenuItem = pViewMenu->insertItem(tr("Show &all stations"), this,
                           SLOT(OnShowStationsMenu(int)), 0, 1);
 
     /* Stations Preview menu ------------------------------------------------ */
@@ -518,14 +518,14 @@ LiveScheduleDlg::LoadSettings(const CSettings& Settings)
         QDir().mkdir(strCurrentSavePath);
 
     /* Set stations in list view which are active right now */
-    bShowAll = Settings.Get("Live Schedule Dialog", "showall", FALSE);
+    bool bShowAll = Settings.Get("Live Schedule Dialog", "showall", false);
     int iPrevSecs = Settings.Get("Live Schedule Dialog", "preview", 0);
 
 #if QT_VERSION < 0x040000
     if (bShowAll)
-        pViewMenu->setItemChecked(1, TRUE);
+        pViewMenu->setItemChecked(showAllViewMenuItem, TRUE);
     else
-        pViewMenu->setItemChecked(0, TRUE);
+        pViewMenu->setItemChecked(showActiveViewMenuItem, TRUE);
 
     /* Set stations preview */
     switch (iPrevSecs)
@@ -626,7 +626,7 @@ int LiveScheduleDlg::currentSortColumn()
 _BOOLEAN LiveScheduleDlg::showAll()
 {
 #if QT_VERSION < 0x040000
-	return pViewMenu->isItemChecked(0);
+	return pViewMenu->isItemChecked(showAllViewMenuItem);
 #else
 	return actionShowAllStations->isChecked();
 #endif
@@ -652,19 +652,12 @@ LiveScheduleDlg::SetUTCTimeLabel()
 void
 LiveScheduleDlg::OnShowStationsMenu(int iID)
 {
-    /* Show only active stations if ID is 0, else show all */
-    if (iID == 0)
-        bShowAll = FALSE;
-    else
-        bShowAll = TRUE;
-
     /* Update list view */
     SetStationsView();
-
 #if QT_VERSION < 0x040000
     /* Taking care of checks in the menu */
-    pViewMenu->setItemChecked(0, 0 == iID);
-    pViewMenu->setItemChecked(1, 1 == iID);
+    pViewMenu->setItemChecked(showActiveViewMenuItem, showActiveViewMenuItem == iID);
+    pViewMenu->setItemChecked(showAllViewMenuItem, showAllViewMenuItem == iID);
 #endif
 }
 

@@ -185,42 +185,43 @@ public:
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
 
-	int				iCurrentSortColumn;
+	int			iCurrentSortColumn;
 	_BOOLEAN		bCurrentSortAscending;
 
 protected:
 	void			SetStationsView();
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
-	virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
+	void			showEvent(QShowEvent* pEvent);
+	void			hideEvent(QHideEvent* pEvent);
 	QString			ExtractDaysFlagString(const int iDayCode);
 	QString			ExtractTime(const CAltFreqSched& schedule);
 	_BOOLEAN		showAll();
 	int			currentSortColumn();
 
-	CDRMReceiver&				DRMReceiver;
-	CDRMLiveSchedule			DRMSchedule;
-	QTimer						TimerList;
-	QTimer						TimerUTCLabel;
-	_BOOLEAN					bShowAll;
+	CDRMReceiver&		DRMReceiver;
+	CDRMLiveSchedule	DRMSchedule;
+	QTimer			TimerList;
+	QTimer			TimerUTCLabel;
 #if QT_VERSION < 0x040000
-	QPixmap						BitmCubeGreen;
-	QPixmap						BitmCubeGreenLittle;
-	QPixmap						BitmCubeYellow;
-	QPixmap						BitmCubeRed;
-	QPixmap						BitmCubeOrange;
-	QPixmap						BitmCubePink;
-	QPopupMenu*					pViewMenu;
-	QPopupMenu*					pPreviewMenu;
-	QPopupMenu*					pFileMenu;
+	QPixmap			BitmCubeGreen;
+	QPixmap			BitmCubeGreenLittle;
+	QPixmap			BitmCubeYellow;
+	QPixmap			BitmCubeRed;
+	QPixmap			BitmCubeOrange;
+	QPixmap			BitmCubePink;
+	QPopupMenu*		pViewMenu;
+	QPopupMenu*		pPreviewMenu;
+	QPopupMenu*		pFileMenu;
+	int			showActiveViewMenuItem;
+	int			showAllViewMenuItem;
 	void setupUi(QWidget*);
 #else
-	QIcon			smallGreenCube;
-	QIcon			greenCube;
-	QIcon			redCube;
-	QIcon			orangeCube;
-	QIcon			pinkCube;
+	QIcon	smallGreenCube;
+	QIcon	greenCube;
+	QIcon	redCube;
+	QIcon	orangeCube;
+	QIcon	pinkCube;
 	QSignalMapper* previewMapper;
 	QActionGroup* previewGroup;
 	QSignalMapper* showMapper;
@@ -228,10 +229,10 @@ protected:
 #endif
 
 	vector<MyListLiveViewItem*>	vecpListItems;
-	QMutex						ListItemsMutex;
-	QString						strCurrentSavePath;
-	int							iColStationID;
-	int							iWidthColStationID;
+	QMutex		ListItemsMutex;
+	QString		strCurrentSavePath;
+	int		iColStationID;
+	int		iWidthColStationID;
 
 public slots:
 	void OnTimerList();
