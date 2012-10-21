@@ -91,6 +91,7 @@ typedef QNetworkOperation QNetworkReply; // needed to keep moc happy
    that you also change the strings and help texts!  */
 #define DRMSCHEDULE_INI_FILE_NAME		"DRMSchedule.ini"
 #define AMSCHEDULE_INI_FILE_NAME		"AMSchedule.ini"
+#define AMSCHEDULE_CSV_FILE_NAME		"AMSchedule.csv"
 
 /* Time definitions for preview */
 #define NUM_SECONDS_PREV_5MIN			300
@@ -199,6 +200,7 @@ public:
 	enum StationState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
 
 	void ReadStatTabFromFile(const ESchedMode eNewSchM);
+	void ReadINIFile(FILE* pFile);
 	void ReadCSVFile(FILE* pFile);
 	ESchedMode GetSchedMode() {return eSchedMode;}
 	void SetSchedMode(const ESchedMode eNewSchM) {eSchedMode = eNewSchM; StationsTable.clear();};

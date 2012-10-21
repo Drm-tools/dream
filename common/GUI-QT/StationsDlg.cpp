@@ -116,11 +116,7 @@ void CDRMSchedule::UpdateStringListForFilter(const CStationsItem& StationsItem)
 
 void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
 {
-    const int	iMaxLenName = 256;
-    char		cName[iMaxLenName];
-    int			iFileStat;
-    _BOOLEAN	bReadOK = TRUE;
-    FILE*		pFile = NULL;
+    FILE* pFile = NULL;
 
     /* Save new mode */
     SetSchedMode(eNewSchM);
@@ -132,16 +128,36 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
     {
     case SM_DRM:
         pFile = fopen(DRMSCHEDULE_INI_FILE_NAME, "r");
+	if(pFile) {
+	    ReadINIFile(pFile);
+	    fclose(pFile);
+ 	}
         break;
 
     case SM_ANALOG:
         pFile = fopen(AMSCHEDULE_INI_FILE_NAME, "r");
+	if(pFile) {
+	    ReadINIFile(pFile);
+	    fclose(pFile);
+ 	}
+	else
+	{
+        pFile = fopen(AMSCHEDULE_CSV_FILE_NAME, "r");
+	if(pFile) {
+	    ReadCSVFile(pFile);
+	    fclose(pFile);
+ 	}
+	}
         break;
     }
+}
 
-    /* Check if opening of file was successful */
-    if (pFile == 0)
-        return;
+void CDRMSchedule::ReadINIFile(FILE* pFile)
+{
+    const int	iMaxLenName = 256;
+    char	cName[iMaxLenName];
+    int		iFileStat;
+    _BOOLEAN	bReadOK = TRUE;
 
     fgets(cName, iMaxLenName, pFile); /* Remove "[DRMSchedule]" */
     do
@@ -240,12 +256,10 @@ void CDRMSchedule::ReadStatTabFromFile(const ESchedMode eNewSchM)
         }
     } while (!((iFileStat == EOF) || (bReadOK == FALSE)));
 
-    fclose(pFile);
 }
 
-void CDRMSchedule ::ReadCSVFile(FILE* pFile)
+void CDRMSchedule::ReadCSVFile(FILE* pFile)
 {
-#if QT_VERSION >= 0x040000
 	const int	iMaxLenRow = 1024;
 	char		cRow[iMaxLenRow];
         CStationData data;
@@ -261,7 +275,11 @@ void CDRMSchedule ::ReadCSVFile(FILE* pFile)
 		do {
 			string s;
 			getline(ss, s, ';');
+#if QT_VERSION < 0x030000
+			fields.append(s.c_str());
+#else
 			fields.push_back(s.c_str());
+#endif
 		} while(!ss.eof());
 
 		StationsItem.iFreq = fields[0].toInt();
@@ -273,14 +291,22 @@ void CDRMSchedule ::ReadCSVFile(FILE* pFile)
 		}
 		else
 		{
+#if QT_VERSION < 0x040000
+			QStringList times = QStringList::split("-", fields[1]);
+#else
 			QStringList times = fields[1].split("-");
+#endif
 			StationsItem.SetStartTime(times[0].toInt());
 			StationsItem.SetStopTime(times[1].toInt());
 		}
 
 		if(fields[2].length()>0)
 		{
+#if QT_VERSION < 0x040000
+			stringstream ss(fields[2].utf8().data());
+#else
 			stringstream ss(fields[2].toStdString());
+#endif
 			char c;
 			enum Days { Sunday=0, Monday=1, Tuesday=2, Wednesday=3,
 						Thursday=4, Friday=5, Saturday=6 };
@@ -345,27 +371,44 @@ void CDRMSchedule ::ReadCSVFile(FILE* pFile)
 //0   ;1        ;2    ;3  ;4               ;5;6;7;8;9;10
 //1170;1600-1700;Mo-Fr;USA;Voice of America;E; ; ;0; ;
 		string homecountry;
-		if(fields.size()>3)
+#if QT_VERSION < 0x030000
+		int fieldcount = fields.count();
+#else
+		int fieldcount = fields.size();
+#endif
+		if(fieldcount>3)
 		{
+#if QT_VERSION < 0x040000
+			homecountry = fields[3].utf8().data();
+#else
 			homecountry = fields[3].toStdString();
+#endif
 			string c = data.itu_r_country(homecountry);
 			if(c == "")
 				c = homecountry;
 			StationsItem.strCountry = QString(c.c_str());
 		}
 
-		if(fields.size()>4)
+		if(fieldcount>4)
 			StationsItem.strName = fields[4];
 
-		if(fields.size()>5)
+		if(fieldcount>5)
 		{
+#if QT_VERSION < 0x040000
+			string l = data.eibi_language(fields[5].utf8().data());
+#else
 			string l = data.eibi_language(fields[5].toStdString());
+#endif
 			StationsItem.strLanguage = QString(l.c_str());
 		}
 
-		if(fields.size()>6)
+		if(fieldcount>6)
 		{
+#if QT_VERSION < 0x040000
+			string s = fields[6].utf8().data();
+#else
 			string s = fields[6].toStdString();
+#endif
 			string t = data.eibi_target(s);
 			if(t == "")
 			{
@@ -382,10 +425,14 @@ void CDRMSchedule ::ReadCSVFile(FILE* pFile)
 		}
 		string country;
 		string stn;
-		if(fields.size()>7)
+		if(fieldcount>7)
 		{
 			StationsItem.strSite = fields[7];
+#if QT_VERSION < 0x040000
+			string s  = fields[7].utf8().data();
+#else
 			string s  = fields[7].toStdString();
+#endif
 			if(s=="") // unknown or main Tx site of the home country
 			{
 				country = homecountry;
@@ -441,8 +488,8 @@ void CDRMSchedule ::ReadCSVFile(FILE* pFile)
 		StationsTable.push_back(StationsItem);
 
 	} while(!feof(pFile));
-#endif
 }
+
 CDRMSchedule::StationState CDRMSchedule::CheckState(const int iPos)
 {
     /* Get system time */

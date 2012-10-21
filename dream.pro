@@ -147,13 +147,8 @@ unix {
     INSTALLS += target
     CONFIG += link_pkgconfig
     #packagesExist(portaudio-2.0) {
-    true {
       CONFIG += portaudio
       PKGCONFIG += portaudio-2.0
-    }
-    else {
-        error("no usable sound library found - install portaudio dev package")
-    }
     exists(/usr/include/hamlib/rig.h) {
         CONFIG += hamlib
                   message("with hamlib")
