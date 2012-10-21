@@ -472,7 +472,7 @@ CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
 
     /* Set correct icon (use the same as this dialog) */
     const QIcon& icon = this->windowIcon();
-	pNewChartWin->setIcon(icon);
+    pNewChartWin->setIcon(icon);
 
     /* Set receiver object and correct chart type */
     pNewChartWin->SetRecObj(&DRMReceiver);
