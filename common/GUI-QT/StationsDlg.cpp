@@ -1094,7 +1094,11 @@ void StationsDlg::on_actionGetUpdate_triggered()
     if(false) // TODO AM
     {
         QDate d = QDate::currentDate();
+#if QT_VERSION < 0x030000
+	int wk = d.dayOfYear() % 7;
+#else
         int wk = d.weekNumber();
+#endif
         int yr = d.year();
         QString y,w;
         if(wk <= 13)
@@ -1112,7 +1116,7 @@ void StationsDlg::on_actionGetUpdate_triggered()
                 w = "b";
                 y = QString::number(yr);
         }
-        QString path = QString("http://eibispace.de/dx/sked-%1%2.csv").arg(w, y.right(2));
+        QString path = QString("http://eibispace.de/dx/sked-%1%2.csv").arg(w).arg(y.right(2));
     }
     string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
     Settings.Put("Stations Dialog", "DRM URL", url);
