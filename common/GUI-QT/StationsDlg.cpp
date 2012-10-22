@@ -52,6 +52,7 @@
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
 #include <qapplication.h> 
+#include <cmath> 
 
 /* Implementation *************************************************************/
 #if QT_VERSION < 0x040000
@@ -288,7 +289,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 #endif
         } while(!ss.eof());
 
-        StationsItem.iFreq = fields[0].toInt();
+        StationsItem.iFreq = floor(fields[0].toFloat());
 
         if(fields[1] == "")
         {
