@@ -1097,7 +1097,7 @@ void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 #if QT_VERSION < 0x040000
 void StationsDlg::httpConnected()
 {
-    QCString s = QString("GET %1 HTTP/1.1\r\nHost: %2\r\n\r\n")
+    QCString s = QString("GET %1 HTTP/1.0\r\nHost: %2\r\n\r\n")
                  .arg(qurl->encodedPathAndQuery()).arg(qurl->host()).utf8();
     httpSocket->writeBlock(s.data(), s.length());
     httpHeader=true;
@@ -1113,6 +1113,7 @@ void StationsDlg::httpDisconnected()
     disconnect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead()));
     httpSocket->close();
     schedFile->close();
+    QApplication::restoreOverrideCursor();
     /* Notify the user that update was successful */
     QMessageBox::information(this, "Dream", okMessage, QMessageBox::Ok);
     /* Read updated ini-file */
@@ -1139,6 +1140,7 @@ void StationsDlg::httpRead()
         schedFile = new QFile(schedFileName);
         if(!schedFile->open(IO_WriteOnly)) {
             QMessageBox::information(this, "Dream", "can't open schedule file for writing", QMessageBox::Ok);
+            httpSocket->close();
             return;
         }
     }
@@ -1154,6 +1156,7 @@ void StationsDlg::httpError(int n)
 {
     qDebug("http error %d", n);
     QMessageBox::information(this, "Dream", "http error", QMessageBox::Ok);
+    QApplication::restoreOverrideCursor();
 }
 #endif
 
