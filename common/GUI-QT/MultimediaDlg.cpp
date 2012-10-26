@@ -631,11 +631,11 @@ void MultimediaDlg::OnButtonJumpEnd()
 
 QImage* JL2Image(CVector<_BYTE>& imagedata)
 {
-    QPixmap		NewImage;
-    if(NewImage.loadFromData(&imagedata[0], imagedata.size()))
-		return &NewImage.convertToImage();
-	else
-		return NULL;
+    QImage* pNewImage = new QImage();
+    if(pNewImage->loadFromData(&imagedata[0], imagedata.size()))
+        return pNewImage;
+    else
+        return NULL;
 }
 
 void MultimediaDlg::SetSlideShowPicture()
@@ -649,12 +649,12 @@ void MultimediaDlg::SetSlideShowPicture()
     /* The standard version of QT2 does not have jpeg support, if FreeImage
        library is installed, the following routine converts the picture to
        png which can be displayed */
-	if (imageformat.compare("jpeg") == 0)
-	    JpgToPng(motObject);
+    if (imageformat.compare("jpeg") == 0)
+        JpgToPng(motObject);
 
-	QImage *pImage = JL2Image(motObject.Body.vecData);
+    QImage *pImage = JL2Image(motObject.Body.vecData);
 
-	if(pImage)
+    if(pImage)
     {
         /* The slideshow pictures are not
            updated correctly without this line: */
@@ -790,7 +790,7 @@ void MultimediaDlg::OnSave()
 
         strFileName =
             QFileDialog::getSaveFileName(strCurrentSavePath + "/" + strDefFileName,
-                                          strFilter, this);
+                                         strFilter, this);
 
         /* Check if user not hit the cancel button */
         if (!strFileName.isEmpty())
