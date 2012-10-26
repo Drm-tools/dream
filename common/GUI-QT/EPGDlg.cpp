@@ -113,32 +113,38 @@ void EPGDlg::setActive(QListViewItem* myItem)
 #else
     MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
 #endif
-    if(item->IsActive())
+    if(item)
     {
-        item->setPixmap(COL_START, BitmCubeGreen);
-        Data->ensureItemVisible(myItem);
-        emit NowNext(item->text(COL_NAME));
-        next = item->itemBelow();
-    }
-    else
-    {
-        item->setPixmap(COL_START,QPixmap()); /* no pixmap */
+        if(item->IsActive())
+        {
+            item->setPixmap(COL_START, BitmCubeGreen);
+            Data->ensureItemVisible(myItem);
+            emit NowNext(item->text(COL_NAME));
+            next = item->itemBelow();
+        }
+        else
+        {
+            item->setPixmap(COL_START,QPixmap()); /* no pixmap */
+        }
     }
 }
 #else
 void EPGDlg::setActive(QTreeWidgetItem* myItem)
 {
     MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
-    if(item->IsActive())
+    if(item)
     {
-        item->setIcon(COL_START, greenCube);
-        Data->scrollToItem(myItem);
-        emit NowNext(item->text(COL_NAME));
-        next = Data->itemBelow(item);
-    }
-    else
-    {
-        item->setIcon(COL_START, QPixmap()); /* no pixmap */
+        if(item->IsActive())
+        {
+            item->setIcon(COL_START, greenCube);
+            Data->scrollToItem(myItem);
+            emit NowNext(item->text(COL_NAME));
+            next = Data->itemBelow(item);
+        }
+        else
+        {
+            item->setIcon(COL_START, QPixmap()); /* no pixmap */
+        }
     }
 }
 #endif
