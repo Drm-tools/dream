@@ -29,19 +29,17 @@
 
 #include "EPGDlg.h"
 #include "../datadecoding/epg/epgutil.h"
+#include <set>
 #include <qregexp.h>
 #include <qfile.h>
 #if QT_VERSION < 0x040000
 # include <qtextbrowser.h>
-# include <qsocketdevice.h>
-# define Q3SocketDevice QSocketDevice
 #else
 # include <QShowEvent>
 # include <QHideEvent>
 # include <QPixmap>
-# include <QUdpSocket>
+# include <QMetaObject>
 #endif
-#include <set>
 
 EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
                const char* name, bool modal, Qt::WFlags f):
@@ -89,11 +87,9 @@ EPGDlg::EPGDlg(CDRMReceiver& NDRMR, CSettings& NSettings, QWidget* parent,
     year->setMinValue(0000);
     year->setMaxValue(3000);
 #else
-    connect(dateEdit, SIGNAL(dateChanged(const QDate&)), this, SLOT(onDateChanged(const QDate&))); // TODO is this autowired ?
     dateEdit->setDate(QDate::currentDate());
 #endif
     connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
-    connect(this, SIGNAL(NowNext(QString)), this, SLOT(sendNowNext(QString)));
 
     /* Deactivate real-time timer */
     Timer.stop();
@@ -106,68 +102,36 @@ EPGDlg::~EPGDlg()
 }
 
 #if QT_VERSION < 0x040000
-void EPGDlg::setActive(QListViewItem* myItem)
+void EPGDlg::setActive(QListViewItem* item)
 {
-#if defined(_MSC_VER) && (_MSC_VER < 1400)
-    MyListViewItem* item = (MyListViewItem*)(myItem);
-#else
-    MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
-#endif
-    if(item)
+    if(((EPGListViewItem*)item)->IsActive())
     {
-        if(item->IsActive())
-        {
-            item->setPixmap(COL_START, BitmCubeGreen);
-            Data->ensureItemVisible(myItem);
-            emit NowNext(item->text(COL_NAME));
-            next = item->itemBelow();
-        }
-        else
-        {
-            item->setPixmap(COL_START,QPixmap()); /* no pixmap */
-        }
+        item->setPixmap(COL_START, BitmCubeGreen);
+        Data->ensureItemVisible(item);
+        emit NowNext(item->text(COL_NAME));
+        next = item->itemBelow();
+    }
+    else
+    {
+        item->setPixmap(COL_START,QPixmap()); /* no pixmap */
     }
 }
 #else
-void EPGDlg::setActive(QTreeWidgetItem* myItem)
+void EPGDlg::setActive(QTreeWidgetItem* item)
 {
-    MyListViewItem* item = dynamic_cast<MyListViewItem*>(myItem);
-    if(item)
+    if(isActive(item))
     {
-        if(item->IsActive())
-        {
-            item->setIcon(COL_START, greenCube);
-            Data->scrollToItem(myItem);
-            emit NowNext(item->text(COL_NAME));
-            next = Data->itemBelow(item);
-        }
-        else
-        {
-            item->setIcon(COL_START, QPixmap()); /* no pixmap */
-        }
+        item->setIcon(COL_START, greenCube);
+        Data->scrollToItem(item);
+        emit NowNext(item->text(COL_NAME));
+        next = Data->itemBelow(item);
+    }
+    else
+    {
+        item->setIcon(COL_START, QPixmap()); /* no pixmap */
     }
 }
 #endif
-
-void EPGDlg::sendNowNext(QString s)
-{
-    int port = -1; // disable the facility - edit Dream.ini to enable
-    string addr = Settings.Get("NowNext", "address", string("127.0.0.1"));
-    port = Settings.Get("NowNext", "port", port);
-    if(port==-1)
-        return;
-    Settings.Put("NowNext", "address", addr);
-    Settings.Put("NowNext", "port", port);
-#if QT_VERSION < 0x040000
-    QSocketDevice sock(QSocketDevice::Datagram);
-    QHostAddress a;
-    a.setAddress(addr.c_str());
-    sock.writeBlock(s.utf8(), s.length(), a, port);
-#else
-    QUdpSocket sock;
-    sock.writeDatagram(s.toUtf8().data(), QHostAddress(addr.c_str()), port);
-#endif
-}
 
 void EPGDlg::OnTimer()
 {
@@ -175,19 +139,6 @@ void EPGDlg::OnTimer()
     time_t ltime;
     time(&ltime);
     tm gmtCur = *gmtime(&ltime);
-#if QT_VERSION < 0x040000
-    static QListViewItem* next = NULL;
-#else
-    static QTreeWidgetItem* next = NULL;
-#endif
-
-    if(gmtCur.tm_sec==30) // 1/2 minute boundary
-    {
-        if(next)
-        {
-            emit NowNext(QString("next: ")+next->text(COL_NAME));
-        }
-    }
     if(gmtCur.tm_sec==0) // minute boundary
     {
         /* today in UTC */
@@ -200,15 +151,7 @@ void EPGDlg::OnTimer()
             /* not all information is loaded */
             select();
         }
-#else
-        // TODO
-#endif
-        next = NULL;
-
-        next = NULL;
-
         /* Check the items now on line. */
-#if QT_VERSION < 0x040000
         if (date == todayUTC) /* if today */
         {
             for(QListViewItem * myItem = Data->firstChild();
@@ -220,6 +163,13 @@ void EPGDlg::OnTimer()
             }
         }
 #else
+        if ((basic->toPlainText() == tr("no basic profile data"))
+                || (advanced->toPlainText() == tr("no advanced profile data")))
+        {
+            /* not all information is loaded */
+            select();
+        }
+        /* Check the items now on line. */
         if (dateEdit->date() == todayUTC) /* if today */
         {
             for(int i=0; i<Data->topLevelItemCount(); i++)
@@ -342,8 +292,9 @@ void EPGDlg::setYear(int n)
 }
 #endif
 
-void EPGDlg::onDateChanged(const QDate&)
+void EPGDlg::on_dateChanged(const QDate&)
 {
+qDebug("on_dateChanged");
     select();
 }
 
@@ -488,14 +439,21 @@ void EPGDlg::select()
                 sep = ", ";
             }
         }
-        MyListViewItem* CurrItem = new MyListViewItem(Data, s_start, name, genre, description, s_duration,
-                start, duration);
-        /* Check, if the programme is now on line. If yes, set
-        special pixmap */
+#if QT_VERSION < 0x040000
+        EPGListViewItem* CurrItem = new EPGListViewItem(Data, s_start, name, genre, description, s_duration, start, duration);
         if (CurrItem->IsActive())
-        {
             CurrActiveItem = CurrItem;
-        }
+#else
+        QStringList l;
+        l << s_start << name << genre << description << s_duration;
+        QTreeWidgetItem* CurrItem = new QTreeWidgetItem(Data, l);
+        QDateTime dt;
+        dt.setTime_t(start);
+        CurrItem->setData(COL_START, Qt::UserRole, dt);
+        CurrItem->setData(COL_DURATION, Qt::UserRole, duration);
+        if (isActive(CurrItem))
+            CurrActiveItem = CurrItem;
+#endif
     }
     if (CurrActiveItem) /* programme is now on line */
         setActive(CurrActiveItem);
@@ -558,7 +516,8 @@ EPGDlg::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
     return getFile(getFileName_etsi(date, sid, bAdvanced));
 }
 
-_BOOLEAN EPGDlg::MyListViewItem::IsActive()
+# if QT_VERSION < 0x040000
+_BOOLEAN EPGListViewItem::IsActive()
 {
     time_t now = time(NULL);
     if(now<start)
@@ -567,3 +526,17 @@ _BOOLEAN EPGDlg::MyListViewItem::IsActive()
         return false;
     return true;
 }
+#else
+bool EPGDlg::isActive(QTreeWidgetItem* item)
+{
+    QDateTime start = item->data(COL_START, Qt::UserRole).toDateTime();
+    int duration = item->data(COL_DURATION, Qt::UserRole).toInt();
+    QDateTime end = start.addSecs(duration);
+    QDateTime now = QDateTime::currentDateTime();
+    if(now<start)
+        return false;
+    if(now>=end)
+        return false;
+    return true;
+}
+#endif

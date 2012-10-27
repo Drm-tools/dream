@@ -68,6 +68,19 @@
 #define COL_DURATION	4
 
 /* Classes ********************************************************************/
+#if QT_VERSION < 0x040000
+class EPGListViewItem : public QListViewItem
+{
+    public:
+        EPGListViewItem(QListView * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
+            QListViewItem(parent,a,b,c,d,e),start(s),duration(dr) {}
+        _BOOLEAN IsActive();
+
+        time_t start;
+        int duration;
+};
+#endif
+
 #if QT_VERSION >= 0x040000
 class CEPGDlgbase : public QDialog, public Ui_CEPGDlgbase
 {
@@ -99,43 +112,19 @@ public:
 
 protected:
 
-    virtual	void showEvent(QShowEvent *e);
+    virtual void showEvent(QShowEvent *e);
     virtual void hideEvent(QHideEvent* pEvent);
 #if QT_VERSION < 0x040000
-    virtual void setActive(QListViewItem*);
+    void setActive(QListViewItem*);
 #else
-    virtual void setActive(QTreeWidgetItem*);
+    void setActive(QTreeWidgetItem*);
+    bool isActive(QTreeWidgetItem*);
 #endif
 
     virtual QString getFileName(const QDate& date, uint32_t sid, bool bAdvanced);
     virtual QString getFileName_etsi(const QDate& date, uint32_t sid, bool bAdvanced);
     virtual QDomDocument* getFile (const QString&);
     virtual QDomDocument* getFile (const QDate& date, uint32_t sid, bool bAdvanced);
-
-    class MyListViewItem : public
-#if QT_VERSION < 0x040000
-        QListViewItem
-#else
-        QTreeWidgetItem
-#endif
-    {
-    public:
-
-#if QT_VERSION < 0x040000
-        MyListViewItem(QListView * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
-            QListViewItem(parent,a,b,c,d,e),start(s),duration(dr) {}
-#else
-        MyListViewItem(QTreeWidget * parent, QString a, QString b, QString c, QString d, QString e, time_t s, int dr):
-            QTreeWidgetItem(parent, QStringList() << a << b << c << d << e),start(s),duration(dr)
-        {
-        }
-#endif
-
-        _BOOLEAN IsActive();
-
-        time_t start;
-        int duration;
-    };
 
     bool do_updates;
     EPG epg;
@@ -159,7 +148,6 @@ signals:
 public slots:
     void selectChannel(const QString&);
     void OnTimer();
-    void sendNowNext(QString);
 #if QT_VERSION < 0x040000
     void nextDay();
     void previousDay();
@@ -167,7 +155,7 @@ public slots:
     void setMonth(int);
     void setYear(int);
 #endif
-    void onDateChanged(const QDate&);
+    void on_dateChanged(const QDate&);
 };
 
 #endif
