@@ -116,8 +116,9 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     connect(actionAM, SIGNAL(triggered()), this, SIGNAL(NewAMAcquisition()));
     connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
     connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
-    menu_Settings->addMenu(new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
-    menubar->addMenu(new CDreamHelpMenu(this));
+//TODO Qt4
+    //menu_Settings->addMenu(new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
+    //menubar->addMenu(new CDreamHelpMenu(this));
     SliderBandwidth->setTickPosition(QSlider::TicksBothSides);
     MainPlot = new CDRMPlot(new QwtPlot(this));
 #endif

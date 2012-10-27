@@ -9,7 +9,7 @@ else {
 }
 TEMPLATE = app
 TARGET = dream
-CONFIG += qt warn_on debug thread
+CONFIG += qt warn_on debug thread qt3support
 INCLUDEPATH += common/GUI-QT
 INCLUDEPATH += libs
 #LIBS += -L$$PWD/libs

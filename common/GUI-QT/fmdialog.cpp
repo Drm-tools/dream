@@ -108,6 +108,8 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
 	connect(actionDisplayColor, SIGNAL(triggered()), this, SLOT(OnMenuSetDisplayColor()));
 
+#if 0
+// TODO Qt4
 	menu_Settings->addMenu(
 		new CSoundCardSelMenu(
 			DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this
@@ -115,6 +117,7 @@ FMDialog::FMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
 	);
 	//menu_Settings->addMenu(pRemoteMenu->menu());
 	menubar->addMenu(new CDreamHelpMenu(this));
+#endif
 #endif
 
 	/* Digi controls */
@@ -322,7 +325,7 @@ void FMDialog::UpdateDisplay()
 
 		if (iServiceID != 0)
 		{
-			LabelServiceID->setText("ID:" + asHex(iServiceID));
+			LabelServiceID->setText(QString("ID:%1").arg(iServiceID,4,16));
 		}
 		else
 			LabelServiceID->setText("");
