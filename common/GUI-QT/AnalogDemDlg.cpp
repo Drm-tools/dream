@@ -54,6 +54,7 @@
 # include <qmotifstyle.h>
 #else
 # include "DRMPlot-qwt6.h"
+# include "CSoundCardSelMenu.h"
 # include <QDateTime>
 # include <QCloseEvent>
 # include <qwt_plot_layout.h>
@@ -116,7 +117,10 @@ AnalogDemDlg::AnalogDemDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     connect(actionAM, SIGNAL(triggered()), this, SIGNAL(NewAMAcquisition()));
     connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
     connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
-    //menu_Settings->addMenu(new CSoundCardSelMenu(DRMReceiver.GetSoundInInterface(), DRMReceiver.GetSoundOutInterface(), this));
+    menu_Settings->addMenu( new CSoundCardSelMenu(
+		DRMReceiver.GetSoundInInterface(),
+		DRMReceiver.GetSoundOutInterface(),
+	this));
     connect(actionAbout_Dream, SIGNAL(triggered()), &AboutDlg, SLOT(show()));
     connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(on_actionWhats_This()));
     SliderBandwidth->setTickPosition(QSlider::TicksBothSides);

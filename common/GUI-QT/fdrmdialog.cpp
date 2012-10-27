@@ -39,6 +39,7 @@
 # include <QEvent>
 # include <QShowEvent>
 # include <QCloseEvent>
+# include "CSoundCardSelMenu.h"
 # include "BWSViewer.h"
 # include "SlideShowViewer.h"
 # include "JLViewer.h"
@@ -233,12 +234,10 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
     action_Multimedia_Dialog->setEnabled(false); // and don't connect slots until app type decoded
     action_Programme_Guide_Dialog->setEnabled(false);
 
-#if 0
     menu_Settings->addMenu( new CSoundCardSelMenu(
 		DRMReceiver.GetSoundInInterface(),
 		DRMReceiver.GetSoundOutInterface(),
     this));
-#endif
 
     connect(actionMultimediaSettings, SIGNAL(triggered()), pMultSettingsDlg, SLOT(show()));
     connect(actionGeneralSettings, SIGNAL(triggered()), pGeneralSettingsDlg, SLOT(show()));
