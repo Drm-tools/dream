@@ -49,12 +49,10 @@ qt4 {
     VPATH += src/GUI-QT
     unix {
         macx {
-            exists(libs/qwt.framework) {
-                message("with qwt")
-                INCLUDEPATH += libs/qwt
-                LIBS += -framework qwt
-                CONFIG += qwt
-            }
+            message("with qwt")
+            INCLUDEPATH += /opt/local/Library/Frameworks/qwt.framework/Versions/6/Headers
+            LIBS += -framework qwt
+            CONFIG += qwt
         }
         else {
             exists(/usr/local/include/qwt.h) {
@@ -106,8 +104,7 @@ qt4 {
     }
 }
 qt5 {
-    QT += network xml widgets
-    !android:QT += webkitwidgets
+    QT += network xml widgets #webkitwidgets
     VPATH += src/GUI-QT
     exists(libs/qwt/qwt.h) {
         message("with qwt")
@@ -196,6 +193,7 @@ unix {
       CONFIG += speexdsp
      }
      exists(/usr/include/fftw3.h) | \
+     exists(libs/fftw3.h) | \
      exists(/usr/local/include/fftw3.h) {
       CONFIG += fftw3
      }
@@ -235,7 +233,7 @@ unix {
      DEFINES += HAVE_LIBZ
      !macx {
       MAKEFILE = Makefile
-      !contains(UNAME, OpenBSD) : LIBS += -lrt
+      #!contains(UNAME, OpenBSD) : LIBS += -lrt
       UI_DIR = moc
       MOC_DIR = moc
      }
@@ -292,14 +290,19 @@ win32 {
      }
      UI_DIR = moc
      MOC_DIR = moc
-     LIBS += -lsetupapi -lwsock32 -lws2_32 -lzdll
+     LIBS += -lsetupapi -lwsock32 -lws2_32 -lzdll -ladvapi32 -luser32
      DEFINES += HAVE_SETUPAPI \
      HAVE_LIBZ _CRT_SECURE_NO_WARNINGS
      DEFINES -= UNICODE
-     SOURCES += src/windows/Pacer.cpp
+     SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
+     HEADERS += src/windows/platform_util.h
 }
 android {
     CONFIG += openSL fftw3
+    SOURCES += src/android/platform_util.cpp
+    HEADERS += src/android/platform_util.h
+    LIBS -= -lrt
+    QT -= webkitwidgets
 }
 faad {
      DEFINES += HAVE_LIBFAAD \
@@ -645,7 +648,7 @@ SOURCES += \
     src/util-QT/Util.cpp
 }
 !console:!qtconsole {
-    webkitwidgets|webkit {
+    contains(QT, webkitwidgets)|contains(QT,webkit) {
         FORMS += BWSViewer.ui
         HEADERS += src/GUI-QT/BWSViewer.h
         SOURCES += src/GUI-QT/BWSViewer.cpp
@@ -710,7 +713,7 @@ SOURCES += \
     src/GUI-QT/TransmDlg.cpp
 }
 !sound {
-    error("no usable audio interface found - install pulseaudio or portaudio dev package")
+    #error("no usable audio interface found - install pulseaudio or portaudio dev package")
 }
 !fftw {
     error("no usable fftw library found - install fftw dev package")

@@ -156,10 +156,11 @@ main(int argc, char **argv)
 			{
 				rig.subscribe();
 			}
-			FDRMDialog MainDlg(DRMReceiver, Settings, rig);
+			FDRMDialog *pMainDlg = new FDRMDialog(DRMReceiver, Settings, rig);
 #else
-			FDRMDialog MainDlg(DRMReceiver, Settings);
+			FDRMDialog *pMainDlg = new FDRMDialog(DRMReceiver, Settings);
 #endif
+			(void)pMainDlg;
 
 			/* Start working thread */
 			CRx rx(DRMReceiver);
