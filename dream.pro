@@ -104,7 +104,7 @@ qt4 {
     }
 }
 qt5 {
-    QT += network xml widgets #webkitwidgets
+    QT += network xml widgets webkitwidgets
     VPATH += src/GUI-QT
     exists(libs/qwt/qwt.h) {
         message("with qwt")
@@ -147,6 +147,15 @@ exists(libs/faac.h) {
 }
 exists(libs/neaacdec.h) {
     CONFIG += faad
+}
+linux-* {
+    LIBS -= -ldl -lrt
+}
+android {
+    CONFIG += openSL fftw3
+    SOURCES += src/android/platform_util.cpp
+    HEADERS += src/android/platform_util.h
+    QT -= webkitwidgets
 }
 unix {
 # packagesExist() not available on Qt 4.6 (e.g. Debian Squeeze)
@@ -193,7 +202,6 @@ unix {
       CONFIG += speexdsp
      }
      exists(/usr/include/fftw3.h) | \
-     exists(libs/fftw3.h) | \
      exists(/usr/local/include/fftw3.h) {
       CONFIG += fftw3
      }
@@ -215,7 +223,6 @@ unix {
      tui:console {
       CONFIG += consoleio
      }
-     !contains(UNAME, .*BSD) : LIBS += -ldl
      LIBS += -lz
      SOURCES += src/linux/Pacer.cpp
      DEFINES += HAVE_DLFCN_H \
@@ -233,7 +240,6 @@ unix {
      DEFINES += HAVE_LIBZ
      !macx {
       MAKEFILE = Makefile
-      #!contains(UNAME, OpenBSD) : LIBS += -lrt
       UI_DIR = moc
       MOC_DIR = moc
      }
@@ -296,13 +302,6 @@ win32 {
      DEFINES -= UNICODE
      SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
      HEADERS += src/windows/platform_util.h
-}
-android {
-    CONFIG += openSL fftw3
-    SOURCES += src/android/platform_util.cpp
-    HEADERS += src/android/platform_util.h
-    LIBS -= -lrt
-    QT -= webkitwidgets
 }
 faad {
      DEFINES += HAVE_LIBFAAD \
@@ -713,7 +712,7 @@ SOURCES += \
     src/GUI-QT/TransmDlg.cpp
 }
 !sound {
-    #error("no usable audio interface found - install pulseaudio or portaudio dev package")
+    error("no usable audio interface found - install pulseaudio or portaudio dev package")
 }
 !fftw {
     error("no usable fftw library found - install fftw dev package")
