@@ -46,12 +46,11 @@ public:
 	// Stop sending packets to the sink
 	void ResetPacketSink(void);
 	_BOOLEAN SetOrigin(const string& str);
-	bool GetOrigin(string& str) { (void)str; return false; }
 	void poll();
 
 private:
 
-    int readRawAF(vector<_BYTE>& vecbydata, int& interval);
+    void readRawAF(vector<_BYTE>& vecbydata, int& interval);
     void readRawPFT(vector<_BYTE>& vecbydata, int& interval);
     void readFF(vector<_BYTE>& vecbydata, int& interval);
 

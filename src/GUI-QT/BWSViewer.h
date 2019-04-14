@@ -30,18 +30,19 @@
 #define _BWSVIEWER_H
 
 #include "ui_BWSViewer.h"
-#include "DialogUtil.h"
-#include "CWindow.h"
+#include <string>
+
 #include "../util/Utilities.h"
+#include "DialogUtil.h"
 #include <QMutex>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 #include <QNetworkRequest>
-#include <string>
 
 
 class CMOTObject;
 class CDRMReceiver;
+class CSettings;
 class CDataDecoder;
 
 
@@ -134,18 +135,19 @@ protected:
 };
 
 
-class BWSViewer : public CWindow, public Ui_BWSViewer
+class BWSViewer : public QDialog, Ui_BWSViewer
 {
     Q_OBJECT
 
 public:
-    BWSViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0);
+    BWSViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0, Qt::WFlags f = 0);
     virtual ~BWSViewer();
 
 protected:
     CNetworkAccessManager nam;
     QTimer          Timer;
     CDRMReceiver&   receiver;
+    CSettings&      settings;
     CDataDecoder*   decoder;
     CWebsiteCache   cache;
     bool            bHomeSet;
@@ -163,6 +165,7 @@ protected:
     bool            bLastServiceValid;
     uint32_t        iLastValidServiceID;
     QString         strLastLabel;
+    CEventFilter    ef;
 
     bool Changed();
     void SaveMOTObject(const QString& strObjName, const CMOTObject& obj);
@@ -173,8 +176,6 @@ protected:
     void UpdateWindowTitle(const uint32_t iServiceID, const bool bServiceValid, QString strLabel);
     QString ObjectStr(unsigned int count);
     void GetServiceParams(uint32_t* iServiceID=NULL, bool* bServiceValid=NULL, QString* strLabel=NULL, ETypeRxStatus* eStatus=NULL);
-    virtual void eventShow(QShowEvent*);
-    virtual void eventHide(QHideEvent*);
 
 public slots:
     void OnTimer();
@@ -191,6 +192,8 @@ public slots:
     void OnWebViewLoadFinished(bool ok);
     void OnWebViewTitleChanged(const QString& title);
     void Update();
+    void showEvent(QShowEvent*);
+    void hideEvent(QHideEvent*);
 };
 
 #endif

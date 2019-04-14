@@ -35,26 +35,14 @@
 #include "DrmReceiver.h"
 #include "util/Settings.h"
 #include "util/Utilities.h"
-#include "util/FileTyper.h"
 
 #include "sound/sound.h"
 #include "sound/soundnull.h"
 #include "sound/audiofilein.h"
-#ifdef QT_MULTIMEDIA_LIB
-#include <QAudioFormat>
-#include <QIODevice>
+#ifndef USE_NO_QT // TODO should not have dependency to qt here
+# include "GUI-QT/Rig.h"
 #endif
-#ifdef HAVE_LIBHAMLIB
-# ifdef QT_CORE_LIB // TODO should not have dependency to qt here
-#  include "util-QT/Rig.h"
-# endif
-#endif
-#ifdef USE_CONSOLEIO
-# include "linux/ConsoleIO.h"
-#endif
-#if 0
-#include <fcd.h>
-#endif
+
 const int
 CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
@@ -79,17 +67,10 @@ CDRMReceiver::CDRMReceiver(CSettings* pSettings) : CDRMTransceiver(pSettings, ne
     pRig(NULL),
 #endif
     PlotManager(), iPrevSigSampleRate(0)
-#ifdef QT_MULTIMEDIA_LIB
-  ,pAudioInput(NULL),pAudioOutput(NULL)
-#endif
-
 {
     Parameters.SetReceiver(this);
     downstreamRSCI.SetReceiver(this);
     PlotManager.SetReceiver(this);
-#ifdef HAVE_LIBGPS
-    Parameters.gps_data.gps_fd = -1;
-#endif
 }
 
 CDRMReceiver::~CDRMReceiver()
@@ -186,28 +167,21 @@ CDRMReceiver::Run()
         if(gps_data->gps_fd != -1) (void)gps_close(gps_data);
 # if GPSD_API_MAJOR_VERSION < 5
         result = gps_open_r(Parameters.gps_host.c_str(), s.str().c_str(), gps_data);
-        if(!result) (void)gps_stream(gps_data, WATCH_ENABLE|POLL_NONBLOCK, NULL);
+        result = gps_stream(gps_data, WATCH_ENABLE|POLL_NONBLOCK, NULL);
 # else
         result = gps_open(Parameters.gps_host.c_str(), s.str().c_str(), gps_data);
-        if(!result) (void)gps_stream(gps_data, WATCH_ENABLE, NULL);
+        result = gps_stream(gps_data, WATCH_ENABLE, NULL);
 # endif
-        if(result) gps_data->gps_fd = -1;
         Parameters.restart_gpsd = false;
     }
-    if(gps_data->gps_fd != -1)
-    {
-        if(Parameters.use_gpsd)
+    if(Parameters.use_gpsd)
 # if GPSD_API_MAJOR_VERSION < 5
-            result = gps_poll(gps_data);
+        result = gps_poll(gps_data);
 # else
-            result = gps_read(gps_data);
+        result = gps_read(gps_data);
 # endif
-        else
-        {
-            (void)gps_close(gps_data);
-            gps_data->gps_fd = -1;
-        }
-    }
+    else
+        if(gps_data->gps_fd != -1) (void)gps_close(gps_data);
 	(void)result;
 #endif
 
@@ -240,7 +214,8 @@ CDRMReceiver::Run()
                 Parameters.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
                 Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
                 Parameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
-                Parameters.ReceiveStatus.SLAudio.SetStatus(NOT_PRESENT);
+                Parameters.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+                Parameters.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
             }
         }
     }
@@ -398,48 +373,6 @@ CDRMReceiver::Run()
     }
 }
 
-#ifdef QT_MULTIMEDIA_LIB
-void
-CDRMReceiver::SetInputDevice(const QAudioDeviceInfo& di)
-{
-    QAudioFormat format;
-    format.setSampleRate(Parameters.GetSoundCardSigSampleRate());
-    format.setSampleSize(16);
-    format.setSampleType(QAudioFormat::SignedInt);
-    format.setChannelCount(2); // TODO
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setCodec("audio/pcm");
-    QAudioFormat nearestFormat = di.nearestFormat(format);
-    pAudioInput = new QAudioInput(di, nearestFormat);
-    ReceiveData.SetSoundInterface(pAudioInput);
-}
-
-void
-CDRMReceiver::SetOutputDevice(const QAudioDeviceInfo& di)
-{
-    QAudioFormat format;
-    format.setSampleRate(Parameters.GetAudSampleRate());
-    format.setSampleSize(16);
-    format.setSampleType(QAudioFormat::SignedInt);
-    format.setChannelCount(2); // TODO
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setCodec("audio/pcm");
-    QAudioFormat nearestFormat = di.nearestFormat(format);
-    pAudioOutput = new QAudioOutput(di, nearestFormat);
-    pAudioOutput->setBufferSize(1000000);
-    QIODevice* pIODevice = pAudioOutput->start();
-    int n = pAudioOutput->bufferSize();
-    if(pAudioOutput->error()==QAudio::NoError)
-    {
-        WriteData.SetSoundInterface(pIODevice);
-    }
-    else
-    {
-        qDebug("Can't open audio output");
-    }
-}
-#endif
-
 void
 CDRMReceiver::SetInput()
 {
@@ -478,12 +411,12 @@ CDRMReceiver::SetInput()
             {
                 /* Save sample rate */
                 if (iPrevSigSampleRate == 0)
-                    iPrevSigSampleRate = Parameters.GetSoundCardSigSampleRate();
+                    iPrevSigSampleRate = Parameters.GetSigSampleRate();
                 /* Open sound file interface */
                 CAudioFileIn* AudioFileIn = new CAudioFileIn();
                 AudioFileIn->SetFileName(sSoundFile);
                 const int iSampleRate = AudioFileIn->GetSampleRate();
-                Parameters.SetSoundCardSigSampleRate(iSampleRate);
+                Parameters.SetSigSampleRate(iSampleRate);
                 pSoundInInterface = AudioFileIn;
             }
             else
@@ -501,7 +434,7 @@ CDRMReceiver::ResetInput()
 {
     if (iPrevSigSampleRate != 0)
     {
-        Parameters.SetSoundCardSigSampleRate(iPrevSigSampleRate);
+        Parameters.SetSigSampleRate(iPrevSigSampleRate);
         iPrevSigSampleRate = 0;
     }
 }
@@ -541,8 +474,11 @@ CDRMReceiver::ClearSoundFile()
 void
 CDRMReceiver::SetInputFile(const string& inputFile)
 {
-    FileTyper::type t = FileTyper::resolve(inputFile);
-    if(FileTyper::is_rxstat(t))
+    string ext;
+    size_t p = inputFile.rfind('.');
+    if (p != string::npos)
+    ext = inputFile.substr(p + 1);
+    if (ext.substr(0,2) == "RS" || ext.substr(0,2) == "rs" || ext.substr(0,4) == "pcap")
     {
         SetRsciInput(inputFile);
         ClearSoundFile();
@@ -572,16 +508,6 @@ CDRMReceiver::GetInputStatus()
             eStatus = SF_SNDFILEIN;
     Parameters.Unlock();
     return eStatus;
-}
-
-string
-CDRMReceiver::GetInputFileName()
-{
-    string fileName;
-    Parameters.Lock();
-        fileName = rsiOrigin != "" ? rsiOrigin : sSoundFile;
-    Parameters.Unlock();
-    return fileName;
 }
 
 void
@@ -699,10 +625,10 @@ CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
         /* Use information of FAC CRC for detecting the acquisition
            requirement */
         DetectAcquiFAC();
-    }
 #if 0
         saveSDCtoFile();
 #endif
+    }
 
     if (UtilizeSDCData.WriteData(Parameters, SDCUseBuf))
     {
@@ -720,22 +646,6 @@ CDRMReceiver::UtilizeDRM(_BOOLEAN& bEnoughData)
     {
         if (AudioSourceDecoder.ProcessData(Parameters,
                                            MSCUseBuf[iAudioStreamID],
-                                           AudSoDecBuf))
-        {
-            bEnoughData = TRUE;
-
-            /* Store the number of correctly decoded audio blocks for
-             *                            the history */
-            PlotManager.SetCurrentCDAud(AudioSourceDecoder.GetNumCorDecAudio());
-        }
-    }
-    if( (iDataStreamID == STREAM_ID_NOT_USED)
-       &&
-         (iAudioStreamID == STREAM_ID_NOT_USED)
-    ) // try and decode stream 0 as audio anyway
-    {
-        if (AudioSourceDecoder.ProcessData(Parameters,
-                                           MSCUseBuf[0],
                                            AudSoDecBuf))
         {
             bEnoughData = TRUE;
@@ -945,12 +855,20 @@ CDRMReceiver::InitReceiverMode()
         UtilizeSDCData.GetSDCReceive()->SetSDCType(CSDCReceive::SDC_AMSS);
 
         /* Set the receive status - this affects the RSI output */
+/*
+        pAMParam->ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
+        pAMParam->ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
+        pAMParam->ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
+        pAMParam->ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
+        pAMParam->ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+        pAMParam->ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
+*/
         Parameters.ReceiveStatus.TSync.SetStatus(NOT_PRESENT);
         Parameters.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
         Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
         Parameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
-        Parameters.ReceiveStatus.SLAudio.SetStatus(NOT_PRESENT);
-        Parameters.ReceiveStatus.LLAudio.SetStatus(NOT_PRESENT);
+        Parameters.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+        Parameters.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
         break;
     case RM_DRM:
 #if 0
@@ -1034,10 +952,6 @@ CDRMReceiver::Start()
     if (iFreqkHz != -1)
         SetFrequency(iFreqkHz);
 
-#ifdef USE_CONSOLEIO
-    CConsoleIO::Enter(this);
-#endif
-
     /* Set restart flag */
     Parameters.eRunState = CParameter::RESTART;
     do
@@ -1048,7 +962,7 @@ CDRMReceiver::Start()
         /* Set new acquisition flag */
         RequestNewAcquisition();
 
-        /* Initialisation pass */
+        /* Initilization pass */
         Run();
 
         /* Set run flag so that the thread can work */
@@ -1056,9 +970,6 @@ CDRMReceiver::Start()
         do
         {
             Run();
-#ifdef USE_CONSOLEIO
-            CConsoleIO::Update();
-#endif
         }
         while (Parameters.eRunState == CParameter::RUNNING);
 
@@ -1069,22 +980,7 @@ CDRMReceiver::Start()
 
     CloseSoundInterfaces();
 
-#ifdef USE_CONSOLEIO
-    CConsoleIO::Leave();
-#endif
-
     Parameters.eRunState = CParameter::STOPPED;
-}
-
-void
-CDRMReceiver::CloseSoundInterfaces()
-{
-    pSoundInInterface->Close();
-    pSoundOutInterface->Close();
-#ifdef QT_MULTIMEDIA_LIB
-    if(pAudioInput) pAudioInput->stop();
-    if(pAudioOutput) pAudioOutput->stop();
-#endif
 }
 
 void
@@ -1184,8 +1080,8 @@ CDRMReceiver::SetInStartMode()
     Parameters.ReceiveStatus.FSync.SetStatus(NOT_PRESENT);
     Parameters.ReceiveStatus.FAC.SetStatus(NOT_PRESENT);
     Parameters.ReceiveStatus.SDC.SetStatus(NOT_PRESENT);
-    Parameters.ReceiveStatus.SLAudio.SetStatus(NOT_PRESENT);
-    Parameters.ReceiveStatus.LLAudio.SetStatus(NOT_PRESENT);
+    Parameters.ReceiveStatus.Audio.SetStatus(NOT_PRESENT);
+    Parameters.ReceiveStatus.MOT.SetStatus(NOT_PRESENT);
 
     /* Clear audio decoder string */
     Parameters.audiodecoder = "";
@@ -1527,31 +1423,12 @@ void CDRMReceiver::SetFrequency(int iNewFreqkHz)
     }
 
 #ifdef HAVE_LIBHAMLIB
-# ifdef QT_CORE_LIB // TODO should not have dependency to qt here
+# ifndef USE_NO_QT // TODO should not have dependency to qt here
     if(pRig)
         pRig->SetFrequency(iNewFreqkHz);
 # endif
 #endif
-#if 0
-	{
-		FCD_MODE_ENUM fme;
-		unsigned int uFreq, rFreq;
-		int lnbOffset = 6;
-		double d = (double) (iNewFreqkHz-lnbOffset);
 
-		//d *= 1.0 + n/1000000.0;
-		uFreq = (unsigned int) d;
-
-		fme = fcdAppSetFreq(uFreq, &rFreq);
-
-		if ((fme != FCD_MODE_APP) || (uFreq != rFreq))
-		{
-			stringstream ss;
-			ss << "Error in" << __FUNCTION__ << "set:" << uFreq << "read:" << rFreq;
-			qDebug(ss.str().c_str()); 
-		}
-	}
-#endif
     if (downstreamRSCI.GetOutEnabled() == TRUE)
         downstreamRSCI.NewFrequency(Parameters);
 
@@ -1637,9 +1514,6 @@ CDRMReceiver::LoadSettings()
     /* Sound card signal sample rate, some settings below depends on this one */
     Parameters.SetNewSigSampleRate(s.Get("Receiver", "sampleratesig", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
 
-    /* Signal upscale ratio */
-    Parameters.SetNewSigUpscaleRatio(s.Get("Receiver", "sigupratio", int(1)));
-
     /* Fetch new sample rate if any */
     Parameters.FetchNewSampleRate();
 
@@ -1682,11 +1556,6 @@ CDRMReceiver::LoadSettings()
     /* noise reduction */
     AMDemodulation.SetNoiRedType((CAMDemodulation::ENoiRedType)s.Get("AM Demodulation", "noisered", 0));
 
-#ifdef HAVE_SPEEX
-    /* noise reduction level */
-    AMDemodulation.SetNoiRedLevel(s.Get("AM Demodulation", "noiseredlvl", -12));
-#endif
-
     /* pll enabled/disabled */
     AMDemodulation.EnablePLL(s.Get("AM Demodulation", "enablepll", 0));
 
@@ -1716,34 +1585,27 @@ CDRMReceiver::LoadSettings()
         pUpstreamRSCI->SetDestination(str);
 
     /* downstream RSCI */
-	string rsiout = s.Get("command", "rsiout", string(""));
-	string rciin = s.Get("command", "rciin", string(""));
-	if(rsiout != "" || rciin != "")
-	{
-		istringstream cc(rciin);
-		vector<string> rci;
-		while(cc >> str)
-		{
-			rci.push_back(str);
-		}
-		istringstream ss(rsiout);
-		size_t n=0;
-		while(ss >> str)
-		{
-			char profile = str[0];
-			string dest = str.substr(2);
-			if(rci.size()>n)
-			{
-				downstreamRSCI.AddSubscriber(dest, profile, rci[n]);
-				n++;
-			}
-			else
-			{
-				downstreamRSCI.AddSubscriber(dest, profile);
-			}
-		}
-		for(;n<rci.size(); n++)
-			downstreamRSCI.AddSubscriber("", ' ', rci[n]);
+    for (int i = 0; i<MAX_NUM_RSI_SUBSCRIBERS; i++)
+    {
+        stringstream ss;
+        ss << "rsiout" << i;
+        str = s.Get("command", ss.str());
+        ss.str("");
+        ss << "rsioutprofile" << i;
+        string profile = s.Get("command", ss.str(), string("A"));
+        ss.str("");
+        ss << "rciin" << i;
+        string origin = s.Get("command", ss.str());
+        if (str == "")
+        {
+	    // allow control without status
+	    if(origin != "")
+		    downstreamRSCI.AddSubscriber("", origin, ' ');
+        }
+        else
+        {
+            downstreamRSCI.AddSubscriber(str, origin, profile[0]);
+        }
     }
     /* RSCI File Recording */
     str = s.Get("command", "rsirecordprofile");
@@ -1761,10 +1623,7 @@ CDRMReceiver::LoadSettings()
     /* Output to File */
     str = s.Get("command", "writewav");
     if (str != "")
-    {
-        WriteData.Init(Parameters); /* Needed for iAudSampleRate initialization */
         WriteData.StartWriteWaveFile(str);
-    }
 
     /* Reverberation flag */
     AudioSourceDecoder.SetReverbEffect(s.Get("Receiver", "reverb", TRUE));
@@ -1781,7 +1640,7 @@ CDRMReceiver::LoadSettings()
     ChannelEstimation.SetIntCons(s.Get("Receiver", "modmetric", FALSE));
 
     /* Number of iterations for MLC setting */
-    MSCMLCDecoder.SetNumIterations(s.Get("Receiver", "mlciter", 1));
+    MSCMLCDecoder.SetNumIterations(s.Get("Receiver", "mlciter", 0));
 
     /* Receiver mode (DRM, AM, FM) */
     SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
@@ -1829,10 +1688,6 @@ CDRMReceiver::LoadSettings()
     Parameters.gps_port = s.Get("GPS", "port", string("2947"));
     if(use_gpsd)
         Parameters.restart_gpsd=true;
-
-    bool permissive = s.Get("command", "permissive", false);
-    Parameters.lenient_RSCI = permissive;
-
     Parameters.Unlock();
 }
 
@@ -1853,10 +1708,7 @@ CDRMReceiver::SaveSettings()
     s.Put("Receiver", "samplerateaud", Parameters.GetAudSampleRate());
 
     /* Sound card signal sample rate */
-    s.Put("Receiver", "sampleratesig", Parameters.GetSoundCardSigSampleRate());
-
-    /* Signal upscale ratio */
-    s.Put("Receiver", "sigupratio", Parameters.GetSigUpscaleRatio());
+    s.Put("Receiver", "sampleratesig", Parameters.GetSigSampleRate());
 
     /* if 0 then only measure PSD when RSCI in use otherwise always measure it */
     s.Put("Receiver", "measurepsdalways", Parameters.bMeasurePSDAlways);
@@ -1910,11 +1762,6 @@ CDRMReceiver::SaveSettings()
 
     /* noise reduction */
     s.Put("AM Demodulation", "noisered", AMDemodulation.GetNoiRedType());
-
-#ifdef HAVE_SPEEX
-    /* noise reduction level */
-    s.Put("AM Demodulation", "noiseredlvl", AMDemodulation.GetNoiRedLevel());
-#endif
 
     /* pll enabled/disabled */
     s.Put("AM Demodulation", "enablepll", AMDemodulation.PLLEnabled());

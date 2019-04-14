@@ -107,7 +107,7 @@ public:
 class CTextMessageDecoder
 {
 public:
-    CTextMessageDecoder(bool b):decodeSpecial(b) {}
+    CTextMessageDecoder() {}
     virtual ~CTextMessageDecoder() {}
 
     void Decode(CVector<_BINARY>& pData);
@@ -121,26 +121,24 @@ protected:
 
     CVector<_BINARY>	biStreamBuffer;
 
-    bool		decodeSpecial;
+    string*				pstrText;
 
-    string*		pstrText;
+    _BINARY				biCommandFlag;
 
-    _BINARY		biCommandFlag;
+    _BINARY				biFirstFlag;
+    _BINARY				biLastFlag;
+    _BYTE				byCommand;
+    _BYTE				bySegmentID;
+    _BINARY				biToggleBit;
+    _BYTE				byLengthBody;
+    int					iBitCount;
+    int					iNumSegments;
 
-    _BINARY		biFirstFlag;
-    _BINARY		biLastFlag;
-    _BYTE		byCommand;
-    _BYTE		bySegmentID;
-    _BINARY		biToggleBit;
-    _BYTE		byLengthBody;
-    int			iBitCount;
-    int			iNumSegments;
-
-    _BINARY		biOldToggleBit;
+    _BINARY				biOldToggleBit;
 
     CTextMessSegment	Segment[MAX_NUM_SEG_TEXT_MESSAGE];
 
-    CCRC		CRCObject;
+    CCRC				CRCObject;
 };
 
 

@@ -33,11 +33,7 @@
 #include "SoundCardSelMenu.h"
 #include "DialogUtil.h"
 #include <QFileDialog>
-#include "../util-QT/Util.h"
 
-#ifdef QT_MULTIMEDIA_LIB
-# include <QAudioDeviceInfo>
-#endif
 
 #ifdef HAVE_LIBPCAP
 # define PCAP_FILES " *.pcap"
@@ -83,7 +79,7 @@ static const CHANSEL OutputChannelTable[] =
 
 static const int AudioSampleRateTable[] =
 {
-    11025, 22050, 24000, 44100, 48000, 96000, 192000, 0
+    8000, 11025, 16000, 22050, 24000, 32000, 44100, 48000, 96000, 192000, 0
 };
 
 static const int SignalSampleRateTable[] =
@@ -113,13 +109,9 @@ CSoundCardSelMenu::CSoundCardSelMenu(CDRMTransceiver& DRMTransceiver,
             connect(InitDevice(NULL, menuAudOutput, tr("Device"), false), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutDevice(QAction*)));
             connect(InitChannel(menuSigInput, tr("Channel"), (int)((CDRMReceiver&)DRMTransceiver).GetReceiveData()->GetInChanSel(), InputChannelTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInChannel(QAction*)));
             connect(InitChannel(menuAudOutput, tr("Channel"), (int)((CDRMReceiver&)DRMTransceiver).GetWriteData()->GetOutChanSel(), OutputChannelTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutChannel(QAction*)));
-            menuSigSampleRate = InitSampleRate(menuSigInput, tr("Sample Rate"), Parameters.GetSoundCardSigSampleRate(), SignalSampleRateTable);
+            menuSigSampleRate = InitSampleRate(menuSigInput, tr("Sample Rate"), Parameters.GetSigSampleRate(), SignalSampleRateTable);
             connect(menuSigSampleRate, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundSampleRate(QAction*)));
             connect(InitSampleRate(menuAudOutput, tr("Sample Rate"), Parameters.GetAudSampleRate(), AudioSampleRateTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundSampleRate(QAction*)));
-            QAction *actionUpscale = menuSigInput->addAction(tr("2:1 upscale"));
-            actionUpscale->setCheckable(true);
-            actionUpscale->setChecked(Parameters.GetSigUpscaleRatio() == 2);
-            connect(actionUpscale, SIGNAL(toggled(bool)), this, SLOT(OnSoundSignalUpscale(bool)));
         Parameters.Unlock();
         if (pFileMenu != NULL)
             connect(pFileMenu, SIGNAL(soundFileChanged(CDRMReceiver::ESFStatus)), this, SLOT(OnSoundFileChanged(CDRMReceiver::ESFStatus)));
@@ -138,37 +130,16 @@ CSoundCardSelMenu::CSoundCardSelMenu(CDRMTransceiver& DRMTransceiver,
 void CSoundCardSelMenu::OnSoundInDevice(QAction* action)
 {
     Parameters.Lock();
-    QString inputName;
-#ifdef QT_MULTIMEDIA_LIB
-    QString device = action->data().toString();
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
-    {
-        QString name = di.deviceName();
-        if(name==device)
-            DRMTransceiver.SetInputDevice(di);
-    }
-#else
         CSelectionInterface* pSoundInIF = DRMTransceiver.GetSoundInInterface();
-        pSoundInIF->SetDev(action->data().toString().toLocal8Bit().constData());
-#endif
+        pSoundInIF->SetDev(action->data().toString().toLocal8Bit().data());
     Parameters.Unlock();
 }
 
 void CSoundCardSelMenu::OnSoundOutDevice(QAction* action)
 {
     Parameters.Lock();
-#ifdef QT_MULTIMEDIA_LIB
-    QString device = action->data().toString();
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
-    {
-        QString name = di.deviceName();
-        if(name==device)
-            DRMTransceiver.SetOutputDevice(di);
-    }
-#else
         CSelectionInterface* pSoundOutIF = DRMTransceiver.GetSoundOutInterface();
-        pSoundOutIF->SetDev(action->data().toString().toLocal8Bit().constData());
-#endif
+        pSoundOutIF->SetDev(action->data().toString().toLocal8Bit().data());
     Parameters.Unlock();
 }
 
@@ -207,46 +178,13 @@ void CSoundCardSelMenu::OnSoundSampleRate(QAction* action)
     emit sampleRateChanged();
 }
 
-void CSoundCardSelMenu::OnSoundSignalUpscale(bool bChecked)
-{
-    Parameters.Lock();  
-        Parameters.SetNewSigSampleRate(Parameters.GetSoundCardSigSampleRate());
-        Parameters.SetNewSigUpscaleRatio(bChecked ? 2 : 1);
-    Parameters.Unlock();
-    RestartTransceiver(&DRMTransceiver);
-    emit sampleRateChanged();
-}
-
 QMenu* CSoundCardSelMenu::InitDevice(QMenu* self, QMenu* parent, const QString& text, bool bInput)
 {
+//printf("CSoundCardSelMenu::InitDevice(%i)\n", bInput);
+    CSelectionInterface* intf = bInput ? (CSelectionInterface*)DRMTransceiver.GetSoundInInterface() : (CSelectionInterface*)DRMTransceiver.GetSoundOutInterface();
     QMenu* menu = self != NULL ? self : parent->addMenu(text);
     menu->clear();
     QActionGroup* group = NULL;
-#ifdef QT_MULTIMEDIA_LIB
-    QAudio::Mode m;
-    QAudioDeviceInfo def;
-    if(bInput) {
-        m = QAudio::AudioInput;
-        def = QAudioDeviceInfo::defaultInputDevice();
-
-    } else {
-        m = QAudio::AudioOutput;
-        def = QAudioDeviceInfo::defaultOutputDevice();
-    }
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(m))
-    {
-        QString name = di.deviceName();
-        QAction* m = menu->addAction(name);
-        m->setData(name);
-        m->setCheckable(true);
-        if (name == def.deviceName())
-            m->setChecked(true);
-        if (group == NULL)
-            group = new QActionGroup(m);
-        group->addAction(m);
-    }
-#else
-    CSelectionInterface* intf = bInput ? (CSelectionInterface*)DRMTransceiver.GetSoundInInterface() : (CSelectionInterface*)DRMTransceiver.GetSoundOutInterface();
     vector<string> names;
     vector<string> descriptions;
     intf->Enumerate(names, descriptions);
@@ -267,9 +205,8 @@ QMenu* CSoundCardSelMenu::InitDevice(QMenu* self, QMenu* parent, const QString& 
         if (group == NULL)
             group = new QActionGroup(m);
         group->addAction(m);
-//printf("CSoundCardSelMenu::InitDevice() %s\n", name.toUtf8().constData());
+//printf("CSoundCardSelMenu::InitDevice() %s\n", name.toUtf8().data());
     }
-#endif
     return menu;
 }
 
@@ -339,22 +276,35 @@ void CSoundCardSelMenu::OnSoundFileChanged(CDRMReceiver::ESFStatus eStatus)
 // TODO DRMTransmitter
 
 CFileMenu::CFileMenu(CDRMTransceiver& DRMTransceiver, QMainWindow* parent,
-    QMenu* menuInsertBefore)
+    QMenu* menuInsertBefore, bool bSignal)
     : QMenu(parent), DRMTransceiver(DRMTransceiver), bReceiver(DRMTransceiver.IsReceiver())
 {
     setTitle(tr("&File"));
     if (bReceiver)
     {
+#ifdef FILE_MENU_UNIFIED_OPEN_FILE
+        (void)bSignal;
         QString openFile(tr("&Open File..."));
         QString closeFile(tr("&Close File"));
         actionOpenFile = addAction(openFile, this, SLOT(OnOpenFile()), QKeySequence(tr("Alt+O")));
         actionCloseFile = addAction(closeFile, this, SLOT(OnCloseFile()), QKeySequence(tr("Alt+C")));
+#else
+        QString openFile(tr(bSignal ? "&Open Signal File..." : "&Open Audio File..."));
+        QString closeFile(tr(bSignal ? "&Close Signal File" : "&Close Audio File"));
+        actionOpenSignalFile = addAction(openFile, this, SLOT(OnOpenSignalFile()), QKeySequence(tr("Alt+O")));
+        actionCloseSignalFile = addAction(closeFile, this, SLOT(OnCloseSignalFile()), QKeySequence(tr("Alt+C")));
+        addSeparator();
+        actionOpenRsciFile = addAction(tr("Open MDI/RSCI File..."), this, SLOT(OnOpenRsciFile())/*, QKeySequence(tr("Alt+O"))*/);
+        actionCloseRsciFile = addAction(tr("Close MDI/RSCI File"), this, SLOT(OnCloseRsciFile())/*, QKeySequence(tr("Alt+C"))*/);
+#endif
         addSeparator();
     }
     addAction(tr("&Exit"), parent, SLOT(close()), QKeySequence(tr("Alt+X")));
     parent->menuBar()->insertMenu(menuInsertBefore->menuAction(), this);
 }
 
+
+#ifdef FILE_MENU_UNIFIED_OPEN_FILE
 
 void CFileMenu::OnOpenFile()
 {
@@ -373,7 +323,7 @@ void CFileMenu::OnOpenFile()
 	    if (!filename.isEmpty())
 	    {
 			strLastSoundPath = filename;
-		    ((CDRMReceiver&)DRMTransceiver).SetInputFile(string(filename.toLocal8Bit().constData()));
+		    ((CDRMReceiver&)DRMTransceiver).SetInputFile(string(filename.toLocal8Bit().data()));
 		    RestartTransceiver(&DRMTransceiver);
             UpdateMenu();
 	    }
@@ -390,6 +340,67 @@ void CFileMenu::OnCloseFile()
     }
 }
 
+#else
+
+void CFileMenu::OnOpenSignalFile()
+{
+#define AUDIO_FILE_FILTER "Sound Files (" SND_FILES ");;All Files (*)"
+    if (bReceiver)
+    {
+        QString filename = QFileDialog::getOpenFileName(this, tr("Open Sound File"),
+            strLastSoundPath, tr(AUDIO_FILE_FILTER));
+        /* Check if user not hit the cancel button */
+        if (!filename.isEmpty())
+        {
+            strLastSoundPath = filename;
+            ((CDRMReceiver&)DRMTransceiver).SetSoundFile(string(filename.toLocal8Bit().data()));
+            RestartTransceiver(&DRMTransceiver);
+            UpdateMenu();
+        }
+    }
+}
+
+void CFileMenu::OnCloseSignalFile()
+{
+    if (bReceiver)
+    {
+	    ((CDRMReceiver&)DRMTransceiver).ClearSoundFile();
+	    RestartTransceiver(&DRMTransceiver);
+        UpdateMenu();
+    }
+}
+
+void CFileMenu::OnOpenRsciFile()
+{
+#define RSCI_FILE_FILTER "MDI/RSCI Files (" RSCI_FILES ");;All Files (*)"
+    if (bReceiver)
+    {
+        QString filename = QFileDialog::getOpenFileName(this, tr("Open MDI/RSCI File"),
+            strLastRsciPath, tr(RSCI_FILE_FILTER));
+        /* Check if user not hit the cancel button */
+        if (!filename.isEmpty())
+        {
+			strLastRsciPath = filename;
+            ((CDRMReceiver&)DRMTransceiver).SetRsciInput(string(filename.toLocal8Bit().data()));
+            RestartTransceiver(&DRMTransceiver);
+            UpdateMenu();
+        }
+    }
+}
+
+void CFileMenu::OnCloseRsciFile()
+{
+    if (bReceiver)
+    {
+        ((CDRMReceiver&)DRMTransceiver).ClearRsciInput();
+        RestartTransceiver(&DRMTransceiver);
+        UpdateMenu();
+    }
+}
+
+#endif
+
+
 void CFileMenu::UpdateMenu()
 {
     if (bReceiver)
@@ -398,9 +409,20 @@ void CFileMenu::UpdateMenu()
         const bool bSoundFile = eStatus == CDRMReceiver::SF_SNDFILEIN;
         const bool bRsciMdiIn = eStatus == CDRMReceiver::SF_RSCIMDIIN;
 
+#ifdef FILE_MENU_UNIFIED_OPEN_FILE
         const bool bInputFile = bSoundFile | bRsciMdiIn;
         if (bInputFile != actionCloseFile->isEnabled())
             actionCloseFile->setEnabled(bInputFile);
+#else
+        if (bRsciMdiIn == actionOpenSignalFile->isEnabled())
+            actionOpenSignalFile->setEnabled(!bRsciMdiIn);
+
+        if (bSoundFile != actionCloseSignalFile->isEnabled())
+            actionCloseSignalFile->setEnabled(bSoundFile);
+
+        if (bRsciMdiIn != actionCloseRsciFile->isEnabled())
+            actionCloseRsciFile->setEnabled(bRsciMdiIn);
+#endif
 
         emit soundFileChanged(eStatus);
     }

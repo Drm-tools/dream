@@ -30,10 +30,14 @@
  *
 \******************************************************************************/
 
-#include "PacketSocket.h"
 #include "RSISubscriber.h"
 #include "../DrmReceiver.h"
 #include "TagPacketGenerator.h"
+#ifndef USE_NO_QT
+# include "PacketSocketQT.h"
+#else
+# include "PacketSocketNull.h"
+#endif
 
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
@@ -103,7 +107,11 @@ void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16
 CRSISubscriberSocket::CRSISubscriberSocket(CPacketSink *pSink):CRSISubscriber(pSink),pSocket(NULL)
 ,uIf(0),uAddr(0),uPort(0)
 {
-	pSocket = new CPacketSocketNative;
+#ifndef USE_NO_QT
+	pSocket = new CPacketSocketQT;
+#else
+	pSocket = new CPacketSocketNull;
+#endif
 	pPacketSink = pSocket;
 }
 
@@ -153,16 +161,6 @@ _BOOLEAN CRSISubscriberSocket::SetOrigin(const string& str)
 		return bOK;
 	}
 	return FALSE;
-}
-
-bool CRSISubscriberSocket::GetOrigin(string& str)
-{
-	if(pSocket==NULL)
-	{
-		return FALSE;
-	}
-	// Delegate to socket
-	return pSocket->GetOrigin(str);
 }
 
 /* poll for incoming packets */

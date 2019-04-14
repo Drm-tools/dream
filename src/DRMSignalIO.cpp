@@ -27,14 +27,7 @@
 \******************************************************************************/
 
 #include "DRMSignalIO.h"
-#include "UpsampleFilter.h"
 #include <iostream>
-#ifdef QT_MULTIMEDIA_LIB
-#include <QBuffer>
-#endif
-
-
-const static int SineTable[] = { 0, 1, 0, -1, 0 };
 
 
 /* Implementation *************************************************************/
@@ -247,24 +240,6 @@ void CTransmitData::HilbertFilt(_COMPLEX& vecData)
 //inline _REAL sample2real(_SAMPLE s) { return _REAL(s)/32768.0; }
 inline _REAL sample2real(_SAMPLE s) { return _REAL(s); }
 
-#ifdef QT_MULTIMEDIA_LIB
-void
-CReceiveData::SetSoundInterface(QAudioInput *p)
-{
-    pAudioInput = p;
-    pIODevice = pAudioInput->start();
-    if(pAudioInput->error()==QAudio::NoError)
-    {
-        pIODevice->open(QIODevice::ReadOnly);
-        qDebug("audio input open");
-    }
-    else
-    {
-        qDebug("Can't open audio input");
-    }
-}
-#endif
-
 void CReceiveData::ProcessDataInternal(CParameter& Parameters)
 {
     int i;
@@ -284,260 +259,128 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
     }
     Parameters.Unlock();
 
+    if (pSound == NULL)
+        return;
 
     /* Get data from sound interface. The read function must be a
        blocking function! */
-    bool bBad = true;
-    if (pSound == NULL)
-    {
-#ifdef QT_MULTIMEDIA_LIB
-        if(pIODevice)
-        {
-            qint64 n = 2*vecsSoundBuffer.Size();
-            int m = pIODevice->read((char*)&vecsSoundBuffer[0], n);
-            if(m==n)
-                bBad = false;
-        }
-        else
-            return;
-#else
-        return;
-#endif
-    }
-    else
-    {
-        bBad = pSound->Read(vecsSoundBuffer);
-    }
+    const _BOOLEAN bBad = pSound->Read(vecsSoundBuffer);
     Parameters.Lock();
     Parameters.ReceiveStatus.InterfaceI.SetStatus(bBad ? CRC_ERROR : RX_OK); /* Red light */
+    const int iSigSampleRate = Parameters.GetSigSampleRate();
     Parameters.Unlock();
 
-    /* Upscale if ratio greater than one */
-    if (iUpscaleRatio > 1)
-    {
-        /* The actual upscaling, currently only 2X is supported */
-        InterpFIR_2X(2, &vecsSoundBuffer[0], vecf_ZL, vecf_YL, vecf_B);
-        InterpFIR_2X(2, &vecsSoundBuffer[1], vecf_ZR, vecf_YR, vecf_B);
-
-        /* Write data to output buffer. Do not set the switch command inside
-           the for-loop for efficiency reasons */
-        switch (eInChanSelection)
-        {
-        case CS_LEFT_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-                (*pvecOutputData)[i] = vecf_YL[i];
-            break;
-
-        case CS_RIGHT_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-                (*pvecOutputData)[i] = vecf_YR[i];
-            break;
-
-        case CS_MIX_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Mix left and right channel together */
-                (*pvecOutputData)[i] = (vecf_YL[i] + vecf_YR[i]) / 2;
-            }
-            break;
-
-        case CS_SUB_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Subtract right channel from left */
-                (*pvecOutputData)[i] = (vecf_YL[i] - vecf_YR[i]) / 2;
-            }
-            break;
-
-            /* I / Q input */
-        case CS_IQ_POS:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                (*pvecOutputData)[i] =
-                    HilbertFilt(vecf_YL[i], vecf_YR[i]);
-            }
-            break;
-
-        case CS_IQ_NEG:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                (*pvecOutputData)[i] =
-                    HilbertFilt(vecf_YR[i], vecf_YL[i]);
-            }
-            break;
-
-        case CS_IQ_POS_ZERO:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Shift signal to vitual intermediate frequency before applying
-                   the Hilbert filtering */
-                _COMPLEX cCurSig = _COMPLEX(vecf_YL[i], vecf_YR[i]);
-
-                cCurSig *= cCurExp;
-
-                /* Rotate exp-pointer on step further by complex multiplication
-                   with precalculated rotation vector cExpStep */
-                cCurExp *= cExpStep;
-
-                (*pvecOutputData)[i] =
-                    HilbertFilt(cCurSig.real(), cCurSig.imag());
-            }
-            break;
-
-        case CS_IQ_NEG_ZERO:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Shift signal to vitual intermediate frequency before applying
-                   the Hilbert filtering */
-                _COMPLEX cCurSig = _COMPLEX(vecf_YR[i], vecf_YL[i]);
-
-                cCurSig *= cCurExp;
-
-                /* Rotate exp-pointer on step further by complex multiplication
-                   with precalculated rotation vector cExpStep */
-                cCurExp *= cExpStep;
-
-                (*pvecOutputData)[i] =
-                    HilbertFilt(cCurSig.real(), cCurSig.imag());
-            }
-            break;
-
-        case CS_IQ_POS_SPLIT:
-            for (i = 0; i < iOutputBlockSize; i += 4)
-            {
-                (*pvecOutputData)[i + 0] =  vecf_YL[i + 0];
-                (*pvecOutputData)[i + 1] = -vecf_YR[i + 1];
-                (*pvecOutputData)[i + 2] = -vecf_YL[i + 2];
-                (*pvecOutputData)[i + 3] =  vecf_YR[i + 3];
-            }
-            break;
-
-        case CS_IQ_NEG_SPLIT:
-            for (i = 0; i < iOutputBlockSize; i += 4)
-            {
-                (*pvecOutputData)[i + 0] =  vecf_YR[i + 0];
-                (*pvecOutputData)[i + 1] = -vecf_YL[i + 1];
-                (*pvecOutputData)[i + 2] = -vecf_YR[i + 2];
-                (*pvecOutputData)[i + 3] =  vecf_YL[i + 3];
-            }
-            break;
-        }
-    }
-
-    /* Upscale ratio equal to one */
-	else {
     /* Write data to output buffer. Do not set the switch command inside
        the for-loop for efficiency reasons */
-        switch (eInChanSelection)
+    switch (eInChanSelection)
+    {
+    case CS_LEFT_CHAN:
+        for (i = 0; i < iOutputBlockSize; i++)
+            (*pvecOutputData)[i] = sample2real(vecsSoundBuffer[2 * i]);
+        break;
+
+    case CS_RIGHT_CHAN:
+        for (i = 0; i < iOutputBlockSize; i++)
+            (*pvecOutputData)[i] = sample2real(vecsSoundBuffer[2 * i + 1]);
+        break;
+
+    case CS_MIX_CHAN:
+        for (i = 0; i < iOutputBlockSize; i++)
         {
-        case CS_LEFT_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-                (*pvecOutputData)[i] = sample2real(vecsSoundBuffer[2 * i]);
-            break;
-
-        case CS_RIGHT_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-                (*pvecOutputData)[i] = sample2real(vecsSoundBuffer[2 * i + 1]);
-            break;
-
-        case CS_MIX_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Mix left and right channel together */
-                const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
-                const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
-                (*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
-            }
-            break;
-
-        case CS_SUB_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Subtract right channel from left */
-                const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
-                const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
-                (*pvecOutputData)[i] = (rLeftChan - rRightChan) / 2;
-            }
-            break;
-
-            /* I / Q input */
-        case CS_IQ_POS:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                (*pvecOutputData)[i] =
-                    HilbertFilt(sample2real(vecsSoundBuffer[2 * i]),
-                                sample2real(vecsSoundBuffer[2 * i + 1]));
-            }
-            break;
-
-        case CS_IQ_NEG:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                (*pvecOutputData)[i] =
-                    HilbertFilt(sample2real(vecsSoundBuffer[2 * i + 1]),
-                                sample2real(vecsSoundBuffer[2 * i]));
-            }
-            break;
-
-        case CS_IQ_POS_ZERO:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Shift signal to vitual intermediate frequency before applying
-                   the Hilbert filtering */
-                _COMPLEX cCurSig = _COMPLEX(sample2real(vecsSoundBuffer[2 * i]),
-                                            sample2real(vecsSoundBuffer[2 * i + 1]));
-
-                cCurSig *= cCurExp;
-
-                /* Rotate exp-pointer on step further by complex multiplication
-                   with precalculated rotation vector cExpStep */
-                cCurExp *= cExpStep;
-
-                (*pvecOutputData)[i] =
-                    HilbertFilt(cCurSig.real(), cCurSig.imag());
-            }
-            break;
-
-        case CS_IQ_NEG_ZERO:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Shift signal to vitual intermediate frequency before applying
-                   the Hilbert filtering */
-                _COMPLEX cCurSig = _COMPLEX(sample2real(vecsSoundBuffer[2 * i + 1]),
-                                            sample2real(vecsSoundBuffer[2 * i]));
-
-                cCurSig *= cCurExp;
-
-                /* Rotate exp-pointer on step further by complex multiplication
-                   with precalculated rotation vector cExpStep */
-                cCurExp *= cExpStep;
-
-                (*pvecOutputData)[i] =
-                    HilbertFilt(cCurSig.real(), cCurSig.imag());
-            }
-            break;
-
-        case CS_IQ_POS_SPLIT: /* Require twice the bandwidth */
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                iPhase = (iPhase + 1) & 3;
-                _REAL rValue = vecsSoundBuffer[2 * i]     * /*COS*/SineTable[iPhase + 1] -
-                               vecsSoundBuffer[2 * i + 1] * /*SIN*/SineTable[iPhase];
-                (*pvecOutputData)[i] = sample2real(rValue);
-            }
-            break;
-
-        case CS_IQ_NEG_SPLIT: /* Require twice the bandwidth */
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                iPhase = (iPhase + 1) & 3;
-                _REAL rValue = vecsSoundBuffer[2 * i + 1] * /*COS*/SineTable[iPhase + 1] -
-                               vecsSoundBuffer[2 * i]     * /*SIN*/SineTable[iPhase];
-                (*pvecOutputData)[i] = sample2real(rValue);
-            }
-            break;
+            /* Mix left and right channel together */
+            const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
+            const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
+            (*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
         }
-	}
+        break;
+
+    case CS_SUB_CHAN:
+        for (i = 0; i < iOutputBlockSize; i++)
+        {
+            /* Subtract right channel from left */
+            const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
+            const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
+            (*pvecOutputData)[i] = (rLeftChan - rRightChan) / 2;
+        }
+        break;
+
+        /* I / Q input */
+    case CS_IQ_POS:
+        for (i = 0; i < iOutputBlockSize; i++)
+        {
+            (*pvecOutputData)[i] =
+                HilbertFilt(sample2real(vecsSoundBuffer[2 * i]),
+                            sample2real(vecsSoundBuffer[2 * i + 1]));
+        }
+        break;
+
+    case CS_IQ_NEG:
+        for (i = 0; i < iOutputBlockSize; i++)
+        {
+            (*pvecOutputData)[i] =
+                HilbertFilt(sample2real(vecsSoundBuffer[2 * i + 1]),
+                            sample2real(vecsSoundBuffer[2 * i]));
+        }
+        break;
+
+    case CS_IQ_POS_ZERO:
+        for (i = 0; i < iOutputBlockSize; i++)
+        {
+            /* Shift signal to vitual intermediate frequency before applying
+               the Hilbert filtering */
+            _COMPLEX cCurSig = _COMPLEX(sample2real(vecsSoundBuffer[2 * i]),
+                                        sample2real(vecsSoundBuffer[2 * i + 1]));
+
+            cCurSig *= cCurExp;
+
+            /* Rotate exp-pointer on step further by complex multiplication
+               with precalculated rotation vector cExpStep */
+            cCurExp *= cExpStep;
+
+            (*pvecOutputData)[i] =
+                HilbertFilt(cCurSig.real(), cCurSig.imag());
+        }
+        break;
+
+    case CS_IQ_NEG_ZERO:
+        for (i = 0; i < iOutputBlockSize; i++)
+        {
+            /* Shift signal to vitual intermediate frequency before applying
+               the Hilbert filtering */
+            _COMPLEX cCurSig = _COMPLEX(sample2real(vecsSoundBuffer[2 * i + 1]),
+                                        sample2real(vecsSoundBuffer[2 * i]));
+
+            cCurSig *= cCurExp;
+
+            /* Rotate exp-pointer on step further by complex multiplication
+               with precalculated rotation vector cExpStep */
+            cCurExp *= cExpStep;
+
+            (*pvecOutputData)[i] =
+                HilbertFilt(cCurSig.real(), cCurSig.imag());
+        }
+        break;
+
+    case CS_IQ_POS_SPLIT: /* Require twice the bandwidth */
+        iPhase %= iSigSampleRate;
+        for (i = 0; i < iOutputBlockSize; i++, iPhase++)
+        {
+            _REAL rPhase = crPi * 0.5 * iPhase;
+            _REAL rValue = Cos(rPhase) * vecsSoundBuffer[2 * i] - Sin(rPhase) * vecsSoundBuffer[2 * i + 1];
+            (*pvecOutputData)[i] = sample2real(rValue);
+        }
+        break;
+
+    case CS_IQ_NEG_SPLIT: /* Require twice the bandwidth */
+        iPhase %= iSigSampleRate;
+        for (i = 0; i < iOutputBlockSize; i++, iPhase++)
+        {
+            _REAL rPhase = crPi * 0.5 * iPhase;
+            _REAL rValue = Cos(rPhase) * vecsSoundBuffer[2 * i + 1] - Sin(rPhase) * vecsSoundBuffer[2 * i];
+            (*pvecOutputData)[i] = sample2real(rValue);
+        }
+        break;
+    }
 
     /* Flip spectrum if necessary ------------------------------------------- */
     if (bFippedSpectrum == TRUE)
@@ -553,9 +396,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
     }
 
     /* Copy data in buffer for spectrum calculation */
-    mutexInpData.Lock();
     vecrInpData.AddEnd((*pvecOutputData), iOutputBlockSize);
-    mutexInpData.Unlock();
 
     /* Update level meter */
     SignalLevelMeter.Update((*pvecOutputData));
@@ -584,48 +425,17 @@ void CReceiveData::InitInternal(CParameter& Parameters)
     iMaxOutputBlockSize = iOutputBlockSize * 2;
     /* Get signal sample rate */
     iSampleRate = Parameters.GetSigSampleRate();
-    iUpscaleRatio = Parameters.GetSigUpscaleRatio();
     Parameters.Unlock();
 
-    const int iOutputBlockAlignment = iOutputBlockSize & 3;
-    if (iOutputBlockAlignment)
-        fprintf(stderr, "CReceiveData::InitInternal(): iOutputBlockAlignment = %i\n", iOutputBlockAlignment);
-
 	try {
-		const _BOOLEAN bChanged = pSound->Init(iSampleRate / iUpscaleRatio, iOutputBlockSize * 2 / iUpscaleRatio, TRUE);
+		const _BOOLEAN bChanged = pSound->Init(iSampleRate, iOutputBlockSize * 2, TRUE);
 
-		/* Clear input data buffer on change samplerate change */
+		/* Clear input data buffer on change */
 		if (bChanged)
 			ClearInputData();
 
-		/* Init 2X upscaler if enabled */
-		if (iUpscaleRatio > 1)
-		{
-			const int taps = (NUM_TAPS_UPSAMPLE_FILT + 3) & ~3;
-			vecf_B.resize(taps, 0.0f);
-			for (int i = 0; i < NUM_TAPS_UPSAMPLE_FILT; i++)
-				vecf_B[i] = dUpsampleFilt[i] * iUpscaleRatio;
-			if (bChanged)
-			{
-				vecf_ZL.resize(0);
-				vecf_ZR.resize(0);
-			}
-			vecf_ZL.resize((iOutputBlockSize + taps) / 2, 0.0f);
-			vecf_ZR.resize((iOutputBlockSize + taps) / 2, 0.0f);
-			vecf_YL.resize(iOutputBlockSize);
-			vecf_YR.resize(iOutputBlockSize);
-		}
-		else
-		{
-			vecf_B.resize(0);
-			vecf_YL.resize(0);
-			vecf_YR.resize(0);
-			vecf_ZL.resize(0);
-			vecf_ZR.resize(0);
-		}
-
 		/* Init buffer size for taking stereo input */
-		vecsSoundBuffer.Init(iOutputBlockSize * 2 / iUpscaleRatio);
+		vecsSoundBuffer.Init(iOutputBlockSize * 2);
 
 		/* Init signal meter */
 		SignalLevelMeter.Init(0);
@@ -689,77 +499,8 @@ _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)
     return (rSum + vecrReHist[IQ_INP_HIL_FILT_DELAY]) / 2;
 }
 
-void CReceiveData::InterpFIR_2X(const int channels, _SAMPLE* X, vector<float>& Z, vector<float>& Y, vector<float>& B)
-{
-	/*
-	    2X interpolating filter. When combined with CS_IQ_POS_SPLIT or CS_IQ_NEG_SPLIT
-	    input data mode, convert I/Q input to full bandwidth, code by David Flamand
-	*/
-	int i, j;
-	const int B_len = B.size();
-	const int Z_len = Z.size();
-	const int Y_len = Y.size();
-	const int Y_len_2 = Y_len / 2;
-	float *B_beg_ptr = &B[0];
-	float *Z_beg_ptr = &Z[0];
-	float *Y_ptr = &Y[0];
-	float *B_end_ptr, *B_ptr, *Z_ptr;
-	float y0, y1, y2, y3;
-
-	/* Check for size and alignment requirement */
-	if ((B_len & 3) || (Z_len != (B_len/2 + Y_len_2)) || (Y_len & 1))
-		return;
-
-	/* Copy the old history at the end */
-	for (i = B_len/2-1; i >= 0; i--)
-		Z_beg_ptr[Y_len_2 + i] = Z_beg_ptr[i];
-
-	/* Copy the new sample at the beginning of the history */
-	for (i = 0, j = 0; i < Y_len_2; i++, j+=channels)
-		Z_beg_ptr[Y_len_2 - i - 1] = X[j];
-
-	/* The actual lowpass filtering using FIR */
-	for (i = Y_len_2-1; i >= 0; i--)
-	{
-		B_end_ptr  = B_beg_ptr + B_len;
-		B_ptr      = B_beg_ptr;
-		Z_ptr      = Z_beg_ptr + i;
-		y0 = y1 = y2 = y3 = 0.0f;
-		while (B_ptr != B_end_ptr)
-		{
-			y0 = y0 + B_ptr[0] * Z_ptr[0];
-			y1 = y1 + B_ptr[1] * Z_ptr[0];
-			y2 = y2 + B_ptr[2] * Z_ptr[1];
-			y3 = y3 + B_ptr[3] * Z_ptr[1];
-			B_ptr += 4;
-			Z_ptr += 2;
-		}
-		*Y_ptr++ = y0 + y2;
-		*Y_ptr++ = y1 + y3;
-	}
-}
-
 CReceiveData::~CReceiveData()
 {
-}
-
-/*
-    Convert Real to I/Q frequency when bInvert is FALSE
-    Convert I/Q to Real frequency when bInvert is TRUE
-*/
-_REAL CReceiveData::ConvertFrequency(_REAL rFrequency, _BOOLEAN bInvert) const
-{
-    const int iInvert = bInvert ? -1 : 1;
-
-    if (eInChanSelection == CReceiveData::CS_IQ_POS_SPLIT ||
-        eInChanSelection == CReceiveData::CS_IQ_NEG_SPLIT)
-        rFrequency -= iSampleRate / 4 * iInvert;
-    else
-        if (eInChanSelection == CReceiveData::CS_IQ_POS_ZERO ||
-            eInChanSelection == CReceiveData::CS_IQ_NEG_ZERO)
-            rFrequency -= VIRTUAL_INTERMED_FREQ * iInvert;
-
-    return rFrequency;
 }
 
 void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
@@ -774,56 +515,41 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData,
     vecrData.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
     vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
 
+    /* Lock resources */
+    Lock();
+
     /* Init the constants for scale and normalization */
-    const _BOOLEAN bNegativeFreq = 
-        eInChanSelection == CReceiveData::CS_IQ_POS_SPLIT ||
-		eInChanSelection == CReceiveData::CS_IQ_NEG_SPLIT;
-
-    const _BOOLEAN bOffsetFreq = 
-        eInChanSelection == CReceiveData::CS_IQ_POS_ZERO ||
-		eInChanSelection == CReceiveData::CS_IQ_NEG_ZERO;
-
-    const int iOffsetScale =
-        bNegativeFreq ? iLenSpecWithNyFreq / 2 :
-        (bOffsetFreq ? iLenSpecWithNyFreq * VIRTUAL_INTERMED_FREQ
-            / (iSampleRate / 2) : 0);
-
     const _REAL rFactorScale =
         (_REAL) iSampleRate / iLenSpecWithNyFreq / 2000;
 
-    /* The calibration factor was determined experimentaly,
-       give 0 dB for a full scale sine wave input (0 dBFS) */
-    const _REAL rDataCalibrationFactor = 18.49;
-
-    const _REAL rNormData = rDataCalibrationFactor /
-                            ((_REAL) _MAXSHORT * _MAXSHORT *
-                            NUM_SMPLS_4_INPUT_SPECTRUM *
-                            NUM_SMPLS_4_INPUT_SPECTRUM);
+    const _REAL rNormData = (_REAL) _MAXSHORT * _MAXSHORT *
+                            NUM_SMPLS_4_INPUT_SPECTRUM * NUM_SMPLS_4_INPUT_SPECTRUM;
 
     /* Copy data from shift register in Matlib vector */
     CRealVector vecrFFTInput(NUM_SMPLS_4_INPUT_SPECTRUM);
-    mutexInpData.Lock();
     for (i = 0; i < NUM_SMPLS_4_INPUT_SPECTRUM; i++)
         vecrFFTInput[i] = vecrInpData[i];
-    mutexInpData.Unlock();
+
+    /* Release resources */
+    Unlock();
 
     /* Get squared magnitude of spectrum */
     CRealVector vecrSqMagSpect(iLenSpecWithNyFreq);
-    CFftPlans FftPlans;
+    CFftPlans FftPlans; // TODO remove from stack
     vecrSqMagSpect =
         SqMag(rfft(vecrFFTInput * Hann(NUM_SMPLS_4_INPUT_SPECTRUM), FftPlans));
 
     /* Log power spectrum data */
     for (i = 0; i < iLenSpecWithNyFreq; i++)
     {
-        const _REAL rNormSqMag = vecrSqMagSpect[i] * rNormData;
+        const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
 
         if (rNormSqMag > 0)
             vecrData[i] = (_REAL) 10.0 * log10(rNormSqMag);
         else
             vecrData[i] = RET_VAL_LOG_0;
 
-        vecrScale[i] = (_REAL) (i - iOffsetScale) * rFactorScale;
+        vecrScale[i] = (_REAL) i * rFactorScale;
     }
 
 }
@@ -834,7 +560,12 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData,
                                const int iNumAvBlocksPSD,
                                const int iPSDOverlap)
 {
+
+    /* Lock resources */
+    Lock();
     CalculatePSD(vecrData, vecrScale, iLenPSDAvEachBlock,iNumAvBlocksPSD,iPSDOverlap);
+    /* Release resources */
+    Unlock();
 }
 
 void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
@@ -851,19 +582,6 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
     vecrScale.Init(iLenSpecWithNyFreq, (_REAL) 0.0);
 
     /* Init the constants for scale and normalization */
-    const _BOOLEAN bNegativeFreq = 
-        eInChanSelection == CReceiveData::CS_IQ_POS_SPLIT ||
-		eInChanSelection == CReceiveData::CS_IQ_NEG_SPLIT;
-
-    const _BOOLEAN bOffsetFreq = 
-        eInChanSelection == CReceiveData::CS_IQ_POS_ZERO ||
-		eInChanSelection == CReceiveData::CS_IQ_NEG_ZERO;
-
-    const int iOffsetScale =
-        bNegativeFreq ? iLenSpecWithNyFreq / 2 :
-        (bOffsetFreq ? iLenSpecWithNyFreq * VIRTUAL_INTERMED_FREQ
-            / (iSampleRate / 2) : 0);
-
     const _REAL rFactorScale =
         (_REAL) iSampleRate / iLenSpecWithNyFreq / 2000;
 
@@ -880,8 +598,9 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
 
     /* Calculate FFT of each small block and average results (estimation
        of PSD of input signal) */
-    CFftPlans FftPlans; int i;
-    mutexInpData.Lock();
+
+    CFftPlans FftPlans; // TODO remove from stack
+    int i;
     for (i = 0; i < iNumAvBlocksPSD; i++)
     {
         /* Copy data from shift register in Matlib vector */
@@ -894,7 +613,6 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
         /* Calculate squared magnitude of spectrum and average results */
         vecrAvSqMagSpect += SqMag(rfft(vecrFFTInput, FftPlans));
     }
-    mutexInpData.Unlock();
 
     /* Log power spectrum data */
     for (i = 0; i <iLenSpecWithNyFreq; i++)
@@ -906,7 +624,7 @@ void CReceiveData::CalculatePSD(CVector<_REAL>& vecrData,
         else
             vecrData[i] = RET_VAL_LOG_0;
 
-        vecrScale[i] = (_REAL) (i - iOffsetScale) * rFactorScale;
+        vecrScale[i] = (_REAL) i * rFactorScale;
     }
 }
 

@@ -106,7 +106,7 @@ class CAudioParam
 public:
 
     /* AC: Audio Coding */
-    enum EAudCod { AC_NONE, AC_AAC, AC_CELP, AC_HVXC, AC_OPUS };
+    enum EAudCod { AC_AAC, AC_CELP, AC_HVXC };
 
     /* SB: SBR */
     enum ESBRFlag { SB_NOT_USED, SB_USED };
@@ -118,31 +118,12 @@ public:
     enum EHVXCRate { HR_2_KBIT, HR_4_KBIT };
 
     /* AS: Audio Sampling rate */
-    enum EAudSamRat { AS_8_KHZ, AS_12KHZ, AS_16KHZ, AS_24KHZ, AS_48KHZ };
-
-    /* OB: Opus Audio Bandwidth, coded in audio data stream */
-    enum EOPUSBandwidth { OB_NB, OB_MB, OB_WB, OB_SWB, OB_FB };
-
-    /* OS: Opus Audio Sub Codec, coded in audio data stream */
-    enum EOPUSSubCod { OS_SILK, OS_HYBRID, OS_CELT };
-
-    /* OC: Opus Audio Channels, coded in audio data stream */
-    enum EOPUSChan { OC_MONO, OC_STEREO };
-
-    /* OG: Opus encoder signal type, for encoder only */
-    enum EOPUSSignal { OG_VOICE, OG_MUSIC };
-
-    /* OA: Opus encoder intended application, for encoder only */
-    enum EOPUSApplication { OA_VOIP, OA_AUDIO };
+    enum EAudSamRat { AS_8_KHZ, AS_12KHZ, AS_16KHZ, AS_24KHZ };
 
     CAudioParam(): strTextMessage(), iStreamID(STREAM_ID_NOT_USED),
-            eAudioCoding(AC_NONE), eSBRFlag(SB_NOT_USED), eAudioSamplRate(AS_24KHZ),
+            eAudioCoding(AC_AAC), eSBRFlag(SB_NOT_USED), eAudioSamplRate(AS_24KHZ),
             bTextflag(FALSE), bEnhanceFlag(FALSE), eAudioMode(AM_MONO),
-            iCELPIndex(0), bCELPCRC(FALSE), eHVXCRate(HR_2_KBIT), bHVXCCRC(FALSE),
-            eOPUSBandwidth(OB_FB), eOPUSSubCod(OS_SILK), eOPUSChan(OC_STEREO),
-            eOPUSSignal(OG_MUSIC), eOPUSApplication(OA_AUDIO),
-            bOPUSForwardErrorCorrection(FALSE), bOPUSRequestReset(FALSE),
-            bParamChanged(FALSE)
+            iCELPIndex(0), bCELPCRC(FALSE), eHVXCRate(HR_2_KBIT), bHVXCCRC(FALSE)
     {
     }
     CAudioParam(const CAudioParam& ap):
@@ -157,15 +138,7 @@ public:
             iCELPIndex(ap.iCELPIndex),
             bCELPCRC(ap.bCELPCRC),
             eHVXCRate(ap.eHVXCRate),
-            bHVXCCRC(ap.bHVXCCRC),
-            eOPUSBandwidth(ap.eOPUSBandwidth),
-            eOPUSSubCod(ap.eOPUSSubCod),
-            eOPUSChan(ap.eOPUSChan),
-            eOPUSSignal(ap.eOPUSSignal),
-            eOPUSApplication(ap.eOPUSApplication),
-            bOPUSForwardErrorCorrection(ap.bOPUSForwardErrorCorrection),
-            bOPUSRequestReset(ap.bOPUSRequestReset),
-            bParamChanged(ap.bParamChanged)
+            bHVXCCRC(ap.bHVXCCRC)
     {
     }
     CAudioParam& operator=(const CAudioParam& ap)
@@ -182,14 +155,6 @@ public:
         bCELPCRC = ap.bCELPCRC;
         eHVXCRate = ap.eHVXCRate;
         bHVXCCRC = ap.bHVXCCRC;
-        eOPUSBandwidth = ap.eOPUSBandwidth;
-        eOPUSSubCod = ap.eOPUSSubCod;
-        eOPUSChan = ap.eOPUSChan;
-        eOPUSSignal = ap.eOPUSSignal;
-        eOPUSApplication = ap.eOPUSApplication;
-        bOPUSForwardErrorCorrection = ap.bOPUSForwardErrorCorrection;
-        bOPUSRequestReset = ap.bOPUSRequestReset;
-        bParamChanged = ap.bParamChanged;
         return *this;
     }
 
@@ -215,17 +180,6 @@ public:
     EHVXCRate eHVXCRate;	/* This field indicates the rate of the HVXC */
     _BOOLEAN bHVXCCRC;		/* This field indicates whether the CRC is used or not */
 
-    /* For OPUS --------------------------------------------------------- */
-    EOPUSBandwidth eOPUSBandwidth; /* Audio bandwidth */
-    EOPUSSubCod eOPUSSubCod; /* Audio sub codec */
-    EOPUSChan eOPUSChan;	/* Audio channels */
-    EOPUSSignal eOPUSSignal; /* Encoder signal type */
-    EOPUSApplication eOPUSApplication; /* Encoder intended application */
-    _BOOLEAN bOPUSForwardErrorCorrection; /* Encoder Forward Error Correction enabled */
-    _BOOLEAN bOPUSRequestReset; /* Request encoder reset */
-
-    /* CAudioParam has changed */
-    _BOOLEAN bParamChanged;
 
     /* This function is needed for detection changes in the class */
     _BOOLEAN operator!=(const CAudioParam AudioParam)
@@ -262,10 +216,6 @@ public:
                 return TRUE;
             if (bHVXCCRC != AudioParam.bHVXCCRC)
                 return TRUE;
-            break;
-
-        case AC_NONE:
-        case AC_OPUS:
             break;
         }
         return FALSE;
@@ -873,12 +823,12 @@ class CReceiveStatus
 {
 public:
     CReceiveStatus():FSync(),TSync(),InterfaceI(),InterfaceO(),
-            FAC(),SDC(),SLAudio(),LLAudio()
+            FAC(),SDC(),Audio(),LLAudio(),MOT()
     {
     }
     CReceiveStatus(const CReceiveStatus& s):FSync(s.FSync), TSync(s.TSync),
             InterfaceI(s.InterfaceI), InterfaceO(s.InterfaceO), FAC(s.FAC), SDC(s.SDC),
-            SLAudio(s.SLAudio),LLAudio(s.LLAudio)
+            Audio(s.Audio),LLAudio(s.LLAudio),MOT(s.MOT)
     {
     }
     CReceiveStatus& operator=(const CReceiveStatus& s)
@@ -889,8 +839,9 @@ public:
         InterfaceO = s.InterfaceO;
         FAC = s.FAC;
         SDC = s.SDC;
-        SLAudio = s.SLAudio;
+        Audio = s.Audio;
         LLAudio = s.LLAudio;
+        MOT = s.MOT;
         return *this;
     }
 
@@ -900,8 +851,9 @@ public:
     CRxStatus InterfaceO;
     CRxStatus FAC;
     CRxStatus SDC;
-    CRxStatus SLAudio;
+    CRxStatus Audio;
     CRxStatus LLAudio;
+    CRxStatus MOT;
 };
 
 
@@ -1062,9 +1014,6 @@ public:
         iCurSelDataService = 0;
     }
 
-    /*
-       Sample rate related getters/setters
-    */
     int GetAudSampleRate() const
     {
         return iAudSampleRate;
@@ -1073,17 +1022,10 @@ public:
     {
         return iSigSampleRate;
     }
-    int GetSigUpscaleRatio() const
+    /* Used internaly by DrmReceiver.cpp TODO */
+    void SetSigSampleRate(int sr)
     {
-        return iSigUpscaleRatio;
-    }
-    int GetSoundCardSigSampleRate() const
-    {
-        return iSigSampleRate / iSigUpscaleRatio;
-    }
-    void SetSoundCardSigSampleRate(int sr)
-    {
-        iSigSampleRate = sr * iSigUpscaleRatio;
+        iSigSampleRate = sr;
     }
     void SetNewAudSampleRate(int sr)
     {
@@ -1106,18 +1048,9 @@ public:
         else                  sr = 192000;
         iNewSigSampleRate = sr;
     }
-    void SetNewSigUpscaleRatio(int ratio)
-    {
-        iNewSigUpscaleRatio = ratio < 2 ? 1 : 2;
-    }
-    /* New sample rate are fetched at init and restart */
+    /* New sample rate are fetched at init (restart) */
     void FetchNewSampleRate()
     {
-        if (iNewSigUpscaleRatio != 0)
-        {
-            iSigUpscaleRatio = iNewSigUpscaleRatio;
-            iNewSigUpscaleRatio = 0;
-        }
         if (iNewAudSampleRate != 0)
         {
             iAudSampleRate = iNewAudSampleRate;
@@ -1125,7 +1058,7 @@ public:
         }
         if (iNewSigSampleRate != 0)
         {
-            iSigSampleRate = iNewSigSampleRate * iSigUpscaleRatio;
+            iSigSampleRate = iNewSigSampleRate;
             iNewSigSampleRate = 0;
         }
     }
@@ -1204,8 +1137,6 @@ public:
 
     vector<CStream> Stream;
     vector<CService> Service;
-    vector<CRxStatus> AudioComponentStatus;
-    vector<CRxStatus> DataComponentStatus;
 
     /* information about services gathered from SDC, EPG and web schedules */
     map<uint32_t,CServiceInformation> ServiceInformation;
@@ -1354,10 +1285,8 @@ protected:
 
     int iAudSampleRate;
     int iSigSampleRate;
-    int iSigUpscaleRatio;
     int iNewAudSampleRate;
     int iNewSigSampleRate;
-    int iNewSigUpscaleRatio;
 
     _REAL rSysSimSNRdB;
 
@@ -1378,8 +1307,6 @@ protected:
     CLastService LastDataService;
 
     CMutex Mutex;
-public:
-    bool lenient_RSCI;
 };
 
 #endif // !defined(PARAMETER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

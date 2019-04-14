@@ -67,15 +67,6 @@ void CReadData::InitInternal(CParameter& Parameters)
 }
 
 /* Receiver ----------------------------------------------------------------- */
-#ifdef QT_MULTIMEDIA_LIB
-void
-CWriteData::SetSoundInterface(QIODevice* p)
-{
-    pIODevice = p;
-}
-#endif
-
-
 void CWriteData::ProcessDataInternal(CParameter& Parameters)
 {
     int i;
@@ -150,19 +141,7 @@ void CWriteData::ProcessDataInternal(CParameter& Parameters)
     }
 
     /* Put data to sound card interface. Show sound card state on GUI */
-
-#ifdef QT_MULTIMEDIA_LIB
-    bool bBad = true;
-    if(pIODevice)
-    {
-        qint64 n = 2*vecsTmpAudData.Size();
-        int m = pIODevice->write((char*)&vecsTmpAudData[0], n);
-        if(m==n)
-            bBad = false;
-    }
-#else
     const _BOOLEAN bBad = pSound->Write(vecsTmpAudData);
-#endif
     Parameters.Lock();
     Parameters.ReceiveStatus.InterfaceO.SetStatus(bBad ? DATA_ERROR : RX_OK); /* Yellow light */
     Parameters.Unlock();
@@ -242,11 +221,7 @@ void CWriteData::InitInternal(CParameter& Parameters)
     iInputBlockSize = iAudFrameSize * 2 /* stereo */;
 }
 
-CWriteData::CWriteData(CSoundOutInterface* pNS) :
-#ifdef QT_MULTIMEDIA_LIB
-        pIODevice(NULL),
-#endif
-        pSound(pNS), /* Sound interface */
+CWriteData::CWriteData(CSoundOutInterface* pNS) : pSound(pNS), /* Sound interface */
         bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
         bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
         eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
@@ -387,7 +362,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
                 fprintf(pFileCurPos,
                         "%d / %d (%ld min elapsed, estimated time remaining: %ld min)",
                         iCounter, iNumSimBlocks,
-                        (long int)tiElTi / 60, lReTi / 60);
+                        tiElTi / 60, lReTi / 60);
 
                 /* Write current paramter value */
                 _REAL rCurParamVal;
@@ -443,7 +418,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
                 {
                     fprintf(pFileCurPos,
                             "%d / %d (%ld min elapsed, estimated time remaining: %ld min [%.1f days])",
-                            TransmParam.iNumBitErrors, iNumErrors, (long int)tiElTi / 60,
+                            TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
                             lReTi / 60, rReDays);
 
                     /* Add current value of BER */
@@ -465,14 +440,14 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
                     fprintf(pFileCurPos,
                             "%d / %d (%ld min elapsed, estimated minimum"
                             " time remaining: %ld min)\n",
-                            iCounter, iMinNumBlocks, (long int)tiElTi / 60, lReTi / 60);
+                            iCounter, iMinNumBlocks, tiElTi / 60, lReTi / 60);
 
                     lReTi = (long int)
                             (((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
                              TransmParam.iNumBitErrors * tiElTi);
                     fprintf(pFileCurPos,
                             "%d / %d (%ld min elapsed, estimated time remaining: %ld min)",
-                            TransmParam.iNumBitErrors, iNumErrors, (long int)tiElTi / 60,
+                            TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
                             lReTi / 60);
 
                     /* Add current value of BER */

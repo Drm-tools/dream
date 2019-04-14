@@ -30,17 +30,12 @@
 #define DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_
 
 #include "sound/soundinterface.h"
-#ifdef QT_MULTIMEDIA_LIB
-#include <QAudioInput>
-#include <QIODevice>
-#endif
 #include "Parameter.h"
+#include <math.h>
 #include "matlib/Matlib.h"
 #include "IQInputFilter.h"
 #include "util/Modul.h"
 #include "util/Utilities.h"
-#include <math.h>
-#include <vector>
 
 /* Definitions ****************************************************************/
 /* Number of FFT blocks used for averaging. See next definition
@@ -159,17 +154,11 @@ public:
                      CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_IQ_POS_SPLIT, CS_IQ_NEG_SPLIT
                     };
 
-    CReceiveData() :
-#ifdef QT_MULTIMEDIA_LIB
-        pIODevice(NULL),
-#endif
-        pSound(NULL),
-        vecrInpData(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0),
+    CReceiveData() : pSound(NULL),
+            vecrInpData(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0),
             bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN), iPhase(0)
     {}
     virtual ~CReceiveData();
-
-    _REAL ConvertFrequency(_REAL rFrequency, _BOOLEAN bInvert=FALSE) const;
 
     void GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
     void GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
@@ -185,17 +174,12 @@ public:
     }
 
     void ClearInputData() {
-        mutexInpData.Lock();
         vecrInpData.Init(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0);
-        mutexInpData.Unlock();
     }
 
     void SetSoundInterface(CSoundInInterface* pS) {
         pSound = pS;
     }
-#ifdef QT_MULTIMEDIA_LIB
-    void SetSoundInterface(QAudioInput *);
-#endif
     void SetInChanSel(const EInChanSel eNS) {
         eInChanSelection = eNS;
     }
@@ -206,23 +190,13 @@ public:
 protected:
     CSignalLevelMeter		SignalLevelMeter;
 
-#ifdef QT_MULTIMEDIA_LIB
-    QAudioInput*            pAudioInput;
-    QIODevice*              pIODevice;
-#endif
     CSoundInInterface*		pSound;
     CVector<_SAMPLE>		vecsSoundBuffer;
 
-    /* Access to vecrInpData buffer must be done 
-       inside mutexInpData mutex */
     CShiftRegister<_REAL>	vecrInpData;
-    CMutex                  mutexInpData;
 
-    int					iSampleRate;
+    int				iSampleRate;
     _BOOLEAN			bFippedSpectrum;
-
-    int					iUpscaleRatio;
-    vector<float>		vecf_B, vecf_YL, vecf_YR, vecf_ZL, vecf_ZR;
 
     EInChanSel			eInChanSelection;
 
@@ -253,7 +227,6 @@ protected:
     int FreqToBin(_REAL rFreq);
     _REAL CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin);
 
-    void InterpFIR_2X(const int channels, _SAMPLE* X, vector<float>& Z, vector<float>& Y, vector<float>& B);
 };
 
 

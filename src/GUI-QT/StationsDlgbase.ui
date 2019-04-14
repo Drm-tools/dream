@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>StationsDlgbase</class>
- <widget class="QMainWindow" name="StationsDlgbase">
+ <widget class="QDialog" name="StationsDlgbase">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -15,10 +15,74 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res/icons.qrc">
-    <normaloff>:/icons/MainIcon.svg</normaloff>:/icons/MainIcon.svg</iconset>
+    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
   </property>
-  <widget class="QWidget" name="centralwidget">
-    <layout class="QVBoxLayout" name="verticalLayout">
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
+  </property>
+  <layout class="QVBoxLayout" name="verticalLayout_4">
+   <property name="spacing">
+    <number>0</number>
+   </property>
+   <property name="margin">
+    <number>0</number>
+   </property>
+   <item>
+    <widget class="QMenuBar" name="menubar">
+     <widget class="QMenu" name="menuView">
+      <property name="title">
+       <string>&amp;View</string>
+      </property>
+      <widget class="QMenu" name="menuStations_preview">
+       <property name="title">
+        <string>Stations &amp;preview</string>
+       </property>
+       <addaction name="actionDisabled"/>
+       <addaction name="action5minutes"/>
+       <addaction name="action15minutes"/>
+       <addaction name="action30minutes"/>
+      </widget>
+      <addaction name="actionShowOnlyActiveStations"/>
+      <addaction name="actionShowAllStations"/>
+      <addaction name="menuStations_preview"/>
+      <addaction name="separator"/>
+      <addaction name="actionClose"/>
+     </widget>
+     <widget class="QMenu" name="menuRemote">
+      <property name="title">
+       <string>&amp;Remote</string>
+      </property>
+      <addaction name="actionChooseRig"/>
+      <addaction name="actionEnable_S_Meter"/>
+     </widget>
+     <widget class="QMenu" name="menuUpdate">
+      <property name="title">
+       <string>&amp;Update</string>
+      </property>
+      <addaction name="actionGetUpdate"/>
+     </widget>
+     <addaction name="menuView"/>
+     <addaction name="menuRemote"/>
+     <addaction name="menuUpdate"/>
+    </widget>
+   </item>
+   <item>
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <property name="spacing">
+      <number>6</number>
+     </property>
+     <property name="leftMargin">
+      <number>11</number>
+     </property>
+     <property name="topMargin">
+      <number>9</number>
+     </property>
+     <property name="rightMargin">
+      <number>11</number>
+     </property>
+     <property name="bottomMargin">
+      <number>11</number>
+     </property>
      <item>
       <widget class="QTreeWidget" name="ListViewStations">
        <property name="rootIsDecorated">
@@ -236,6 +300,9 @@
            <height>0</height>
           </size>
          </property>
+         <property name="scalePosition">
+          <enum>QwtThermo::TopScale</enum>
+         </property>
         </widget>
        </item>
        <item>
@@ -255,7 +322,7 @@
         </spacer>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_1">
+        <layout class="QVBoxLayout" name="verticalLayout">
          <property name="spacing">
           <number>0</number>
          </property>
@@ -293,44 +360,8 @@
       </layout>
      </item>
     </layout>
-  </widget>
-    <widget class="QMenuBar" name="menubar">
-     <widget class="QMenu" name="menuView">
-      <property name="title">
-       <string>&amp;View</string>
-      </property>
-      <widget class="QMenu" name="menuStations_preview">
-       <property name="title">
-        <string>Stations &amp;preview</string>
-       </property>
-       <addaction name="actionDisabled"/>
-       <addaction name="action5minutes"/>
-       <addaction name="action15minutes"/>
-       <addaction name="action30minutes"/>
-      </widget>
-      <addaction name="actionShowOnlyActiveStations"/>
-      <addaction name="actionShowAllStations"/>
-      <addaction name="menuStations_preview"/>
-      <addaction name="separator"/>
-      <addaction name="actionClose"/>
-     </widget>
-     <widget class="QMenu" name="menuRemote">
-      <property name="title">
-       <string>&amp;Remote</string>
-      </property>
-      <addaction name="actionChooseRig"/>
-      <addaction name="actionEnable_S_Meter"/>
-     </widget>
-     <widget class="QMenu" name="menuUpdate">
-      <property name="title">
-       <string>&amp;Update</string>
-      </property>
-      <addaction name="actionGetUpdate"/>
-     </widget>
-     <addaction name="menuView"/>
-     <addaction name="menuRemote"/>
-     <addaction name="menuUpdate"/>
-    </widget>
+   </item>
+  </layout>
   <action name="actionShowOnlyActiveStations">
    <property name="checkable">
     <bool>true</bool>

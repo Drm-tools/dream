@@ -30,8 +30,8 @@
 #ifndef LOG_PRINT_H_INCLUDED
 #define LOG_PRINT_H_INCLUDED
 
-#include <cstdlib>
-#include <cstdio>
+#include <stdlib.h>
+#include <stdio.h>
 
 void logStatus(char *format, ...);
 void logWarning(char *format, ...);

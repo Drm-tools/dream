@@ -28,13 +28,18 @@
 
 #include "JLViewer.h"
 #include "jlbrowser.h"
-#include "../datadecoding/DataDecoder.h"
+#include "../util/Settings.h"
+#include <../datadecoding/DataDecoder.h>
 #include <QFontDialog>
 
-JLViewer::JLViewer(CDRMReceiver& rec, CSettings& Settings, QWidget* parent):
-    CWindow(parent, Settings, "Journaline"),
-    receiver(rec), decoderSet(false)
+JLViewer::JLViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent,
+                   const char*, Qt::WFlags):
+    QDialog(parent), Ui_JLViewer(),
+    receiver(rec), settings(s), decoderSet(false)
 {
+    /* Enable minimize and maximize box for QDialog */
+	setWindowFlags(Qt::Window);
+
     setupUi(this);
 
     connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
@@ -61,21 +66,31 @@ JLViewer::~JLViewer()
 {
 }
 
-void JLViewer::eventShow(QShowEvent*)
+void JLViewer::showEvent(QShowEvent* e)
 {
+	EVENT_FILTER(e);
+
+    /* Get window geometry data and apply it */
+    CWinGeom g;
+    settings.Get("Journaline", g);
+    const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
+
+    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+        setGeometry(WinGeom);
+
 //    strCurrentSavePath = QString::fromUtf8(Parameters.GetDataDirectory("Journaline").c_str());
 
     /* Store the default font */
     QFont fontDefault = textBrowser->font();
 
     /* Retrieve the font setting saved into the .ini file */
-    const QString strFontFamily = getSetting("fontfamily", QString());
+    string strFontFamily = settings.Get("Journaline", "fontfamily");
     if (strFontFamily != "")
     {
-        QFont fontTextBrowser = QFont(strFontFamily,
-                                      getSetting("fontpointsize", 0),
-                                      getSetting("fontweight", 0),
-                                      getSetting("fontitalic", false));
+        QFont fontTextBrowser = QFont(QString(strFontFamily.c_str()),
+                                      settings.Get("Journaline", "fontpointsize", 0),
+                                      settings.Get("Journaline", "fontweight", 0),
+                                      settings.Get("Journaline", "fontitalic", 0));
         textBrowser->setFont(fontTextBrowser);
     }
 
@@ -132,28 +147,40 @@ void JLViewer::eventShow(QShowEvent*)
     Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void JLViewer::eventHide(QHideEvent*)
+void JLViewer::hideEvent(QHideEvent* e)
 {
+	EVENT_FILTER(e);
+
     /* Deactivate real-time timer so that it does not get new pictures */
     Timer.stop();
 
-    /* Store current textBrowser font */
+    /* Save window geometry data */
+    QRect WinGeom = geometry();
+
+    CWinGeom c;
+    c.iXPos = WinGeom.x();
+    c.iYPos = WinGeom.y();
+    c.iHSize = WinGeom.height();
+    c.iWSize = WinGeom.width();
+    settings.Put("Journaline", c);
+
     QFont fontTextBrowser = textBrowser->currentFont();
-    putSetting("fontfamily", fontTextBrowser.family());
-    putSetting("fontpointsize", fontTextBrowser.pointSize());
-    putSetting("fontweight", fontTextBrowser.weight());
-    putSetting("fontitalic", fontTextBrowser.italic());
+    /* Store current textBrowser font */
+    settings.Put("Journaline","fontfamily", fontTextBrowser.family().toStdString());
+    settings.Put("Journaline","fontpointsize", fontTextBrowser.pointSize());
+    settings.Put("Journaline","fontweight", fontTextBrowser.weight());
+    settings.Put("Journaline","fontitalic", fontTextBrowser.italic());
 }
 
 void JLViewer::OnTimer()
 {
     CParameter& Parameters = *receiver.GetParameters();
     Parameters.Lock();
+    ETypeRxStatus status = Parameters.ReceiveStatus.MOT.GetStatus();
 
     /* Get current data service */
     int shortID = Parameters.GetCurSelDataService();
     CService service = Parameters.Service[shortID];
-    ETypeRxStatus status = Parameters.DataComponentStatus[shortID].GetStatus();
     Parameters.Unlock();
 
     if(!decoderSet)

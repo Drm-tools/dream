@@ -44,7 +44,7 @@
 #define MAX_NUM_MLC_IT				4
 
 /* Maximum value of input/output channel selection */
-#define MAX_VAL_IN_CHAN_SEL			9
+#define MAX_VAL_IN_CHAN_SEL			6
 #define MAX_VAL_OUT_CHAN_SEL		4
 
 /* Minimum and maximum of initial sample rate offset parameter */
@@ -52,13 +52,13 @@
 #define MAX_SAM_OFFS_INI			200
 
 /* Maximum for frequency acqisition search window size and center frequency */
-#define MAX_FREQ_AQC_SE_WIN_SZ		(+1e6)
-#define MAX_FREQ_AQC_SE_WIN_CT		(+1e6)
+#define MAX_FREQ_AQC_SE_WIN_SZ		(_REAL(DEFAULT_SOUNDCRD_SAMPLE_RATE) / 2)
+#define MAX_FREQ_AQC_SE_WIN_CT		(_REAL(DEFAULT_SOUNDCRD_SAMPLE_RATE) / 4)
 
 /* Maximum carrier frequency  */
 # define MAX_RF_FREQ				30000 /* kHz */
 
-#ifdef QT_CORE_LIB
+#ifdef USE_QT_GUI
 /* Maximum minutes for delayed log file start */
 # define MAX_SEC_LOG_FI_START		3600 /* seconds */
 

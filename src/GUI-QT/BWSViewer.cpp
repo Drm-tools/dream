@@ -28,11 +28,11 @@
 
 #include "BWSViewer.h"
 #include "../DrmReceiver.h"
-#include "../util-QT/Util.h"
+#include "../util/Settings.h"
 #include "../datadecoding/DataDecoder.h"
+
 #include <QDir>
 #include <QFile>
-#include <QMessageBox>
 #include <QWebHistory>
 
 
@@ -45,15 +45,18 @@
 #define ENABLE_HACK /* Do we really need these hack unless for vtc trial sample? */
 
 
-BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& Settings, QWidget* parent):
-    CWindow(parent, Settings, "BWS"),
+BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent, Qt::WFlags):
+    QDialog(parent), Ui_BWSViewer(),
     nam(this, cache, waitobjs, bAllowExternalContent, strCacheHost),
-    receiver(rec), decoder(NULL), bHomeSet(false), bPageLoading(false),
+    receiver(rec), settings(s), decoder(NULL), bHomeSet(false), bPageLoading(false),
     bSaveFileToDisk(false), bRestrictedProfile(false), bAllowExternalContent(true),
     bClearCacheOnNewService(true), bDirectoryIndexChanged(false),
     iLastAwaitingOjects(0), strCacheHost(CACHE_HOST),
     iLastServiceID(0), iCurrentDataServiceID(0), bLastServiceValid(false), iLastValidServiceID(0)
 {
+    /* Enable minimize and maximize box for QDialog */
+	setWindowFlags(Qt::Window);
+
     setupUi(this);
 
     /* Setup webView */
@@ -308,18 +311,27 @@ void BWSViewer::OnClearCacheOnNewService(bool isChecked)
     bClearCacheOnNewService = isChecked;
 }
 
-void BWSViewer::eventShow(QShowEvent*)
+void BWSViewer::showEvent(QShowEvent* e)
 {
-    bAllowExternalContent = getSetting("allowexternalcontent", bAllowExternalContent);
+	EVENT_FILTER(e);
+    /* Get window geometry data and apply it */
+    CWinGeom g;
+    settings.Get("BWS", g);
+    const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
+
+    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+        setGeometry(WinGeom);
+
+    bAllowExternalContent = settings.Get("BWS", "allowexternalcontent", bAllowExternalContent);
     actionAllow_External_Content->setChecked(bAllowExternalContent);
 
-    bSaveFileToDisk = getSetting("savefiletodisk", bSaveFileToDisk);
+    bSaveFileToDisk = settings.Get("BWS", "savefiletodisk", bSaveFileToDisk);
     actionSave_File_to_Disk->setChecked(bSaveFileToDisk);
 
-    bRestrictedProfile = getSetting("restrictedprofile", bRestrictedProfile);
+    bRestrictedProfile = settings.Get("BWS", "restrictedprofile", bRestrictedProfile);
     actionRestricted_Profile_Only->setChecked(bRestrictedProfile);
 
-    bClearCacheOnNewService = getSetting("clearcacheonnewservice", bClearCacheOnNewService);
+    bClearCacheOnNewService = settings.Get("BWS", "clearcacheonnewservice", bClearCacheOnNewService);
     actionClear_Cache_on_New_Service->setChecked(bClearCacheOnNewService);
 
     /* Update window title */
@@ -334,18 +346,29 @@ void BWSViewer::eventShow(QShowEvent*)
     Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void BWSViewer::eventHide(QHideEvent*)
+void BWSViewer::hideEvent(QHideEvent* e)
 {
+	EVENT_FILTER(e);
     /* Deactivate real-time timer so that it does not get new pictures */
     Timer.stop();
 
-    putSetting("savefiletodisk", bSaveFileToDisk);
+    /* Save window geometry data */
+    QRect WinGeom = geometry();
 
-    putSetting("restrictedprofile", bRestrictedProfile);
+    CWinGeom c;
+    c.iXPos = WinGeom.x();
+    c.iYPos = WinGeom.y();
+    c.iHSize = WinGeom.height();
+    c.iWSize = WinGeom.width();
+    settings.Put("BWS", c);
 
-    putSetting("allowexternalcontent", bAllowExternalContent);
+    settings.Put("BWS", "savefiletodisk", bSaveFileToDisk);
 
-    putSetting("clearcacheonnewservice", bClearCacheOnNewService);
+    settings.Put("BWS", "restrictedprofile", bRestrictedProfile);
+
+    settings.Put("BWS", "allowexternalcontent", bAllowExternalContent);
+
+    settings.Put("BWS", "clearcacheonnewservice", bClearCacheOnNewService);
 }
 
 bool BWSViewer::Changed()
@@ -426,7 +449,7 @@ void BWSViewer::SaveMOTObject(const QString& strObjName,
 
     /* Open file */
     QFile file(strFileName);
-    if (file.open(QIODevice::WriteOnly))// | QIODevice::Truncate))
+    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
     {
         int i, written, size;
         size = vecbRawData.Size();
@@ -438,10 +461,6 @@ void BWSViewer::SaveMOTObject(const QString& strObjName,
         /* Close the file afterwards */
         file.close();
     }
-	else
-	{
-		QMessageBox::information(this, file.errorString(), strFileName);
-	}
 }
 
 void BWSViewer::SetupSavePath(QString& strSavePath)
@@ -458,7 +477,7 @@ void BWSViewer::GetServiceParams(uint32_t* iServiceID, bool* bServiceValid, QStr
         const int iCurSelDataServ = Parameters.GetCurSelDataService();
         const CService service = Parameters.Service[iCurSelDataServ];
         if (eStatus)
-            *eStatus = Parameters.DataComponentStatus[iCurSelDataServ].GetStatus();
+            *eStatus = Parameters.ReceiveStatus.MOT.GetStatus();
     Parameters.Unlock();
     if (iServiceID)
         *iServiceID = service.iServiceID;
@@ -651,7 +670,7 @@ void CNetworkReplyCache::CheckObject(QString strObjName)
         if (new_id)
         {
             id = new_id;
-            setRawHeader(QByteArray("Content-Type"), strContentType.toUtf8());
+            setRawHeader(QByteArray("Content-Type"), QByteArray(strContentType.toUtf8().constData()));
             emitted = true;
             emit readyRead(); /* needed for Qt 4.6 */
             emit finished();

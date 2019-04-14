@@ -62,9 +62,8 @@ public:
 	// Set the sink which will receive the packets
 	virtual void SetPacketSink(CPacketSink *pSink) = 0;
 	// Stop sending packets to the sink
-	virtual void ResetPacketSink() = 0;
+	virtual void ResetPacketSink(void) = 0;
 	virtual _BOOLEAN SetOrigin(const string& str) = 0;
-	virtual _BOOLEAN GetOrigin(string& str) = 0;
 	virtual void poll() = 0;
 };
 

@@ -264,8 +264,13 @@ void CSoundIn::OpenDevice()
     /* Get device ID */
 	UINT mmdev = FindDevice(vecstrDevices, sCurDev);
 
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+    MMRESULT result = waveInOpen(&m_WaveIn, mmdev, &sWaveFormatEx,
+                                 (DWORD) m_WaveEvent, 0, CALLBACK_EVENT);
+#else
     MMRESULT result = waveInOpen(&m_WaveIn, mmdev, &sWaveFormatEx,
                                  (DWORD_PTR) m_WaveEvent, 0, CALLBACK_EVENT);
+#endif
     if (result != MMSYSERR_NOERROR)
         throw CGenErr("Sound Interface Start, waveInOpen() failed. This error "
                       "usually occurs if another application blocks the sound in.");
@@ -578,8 +583,13 @@ void CSoundOut::OpenDevice()
     /* Get device ID */
 	UINT mmdev = FindDevice(vecstrDevices, sCurDev);
 
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+    MMRESULT result = waveOutOpen(&m_WaveOut, mmdev, &sWaveFormatEx,
+                                  (DWORD) m_WaveEvent, 0, CALLBACK_EVENT);
+#else
     MMRESULT result = waveOutOpen(&m_WaveOut, mmdev, &sWaveFormatEx,
                                   (DWORD_PTR) m_WaveEvent, 0, CALLBACK_EVENT);
+#endif
     if (result != MMSYSERR_NOERROR)
         throw CGenErr("Sound Interface Start, waveOutOpen() failed.");
 }

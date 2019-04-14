@@ -99,9 +99,13 @@ CMOTDABEnc::SetMOTObject(CMOTObject & NewMOTObject)
 	/* Get ending string which declares the type of the file. Make lowercase */
 
 	string strFormat;
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+	strFormat = _strlwr(_strdup(NewMOTObject.strFormat.c_str()));
+#else
 	strFormat.resize(NewMOTObject.strFormat.size());
 	transform(NewMOTObject.strFormat.begin(), NewMOTObject.strFormat.end(),
 			  strFormat.begin(), (int (*)(int)) tolower);
+#endif
 
 	/* gif: 0, image: 2 */
 	if (strFormat.compare("gif") == 0)
@@ -606,7 +610,7 @@ void
 CMOTDABDec::GetNextObject(CMOTObject & NewMOTObject)
 {
 	TTransportID firstNew;
-#ifdef QT_CORE_LIB
+#ifdef USE_QT_GUI
 	guard.lock();
 	if(qiNewObjects.empty())
 	{
@@ -647,7 +651,7 @@ CMOTDABDec::DeliverIfReady(TTransportID TransportID)
 		}
 		//cerr << o << endl;;
 		ostringstream ss; ss << o << endl;
-#ifdef QT_CORE_LIB
+#ifdef USE_QT_GUI
 		guard.lock();
 		qiNewObjects.push(TransportID);
 		blocker.wakeOne();

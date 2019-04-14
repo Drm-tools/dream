@@ -9,7 +9,7 @@
  *  David Flamand
  *
  * Description:
- *	Custom settings of the qwt-plot, Support Qwt version 5.0.0 to 6.1.0(+)
+ *	Custom settings of the qwt-plot, Support Qwt version 5.0.0 to 6.0.1(+)
  *
  ******************************************************************************
  *
@@ -30,7 +30,6 @@
 \******************************************************************************/
 
 #include "DRMPlot.h"
-#include "../DRMSignalIO.h"
 #include <cmath>
 #include <algorithm>
 
@@ -41,8 +40,7 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 	CurCharType(NONE_OLD), InitCharType(NONE_OLD),
 	eLastSDCCodingScheme((ECodScheme)-1), eLastMSCCodingScheme((ECodScheme)-1),
 	bLastAudioDecoder(FALSE), pDRMRec(NULL),
-	WaterfallWidget(NULL), iAudSampleRate(0), iSigSampleRate(0),
-	iLastXoredSampleRate(0), iLastChanMode(-1)
+	WaterfallWidget(NULL), iAudSampleRate(0), iSigSampleRate(0), iLastXoredSampleRate(0)
 {
 	/* Create new plot if none is supplied */
 	if (SuppliedPlot == NULL)
@@ -57,15 +55,8 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 	plot->setAutoDelete(false);
 	plot->setAutoReplot(false);
 
-	/* Base font */
-	QFont basefont;
-	basefont.setPointSize(PLOT_FONT_SIZE);
-	basefont.setStyleHint(QFont::SansSerif, QFont::PreferOutline);
-
 	/* Legend creation */
-	legend = new QwtLegend();
-	QFont legendfont(basefont);
-	legend->setFont(legendfont);
+	QwtLegend* legend = new QwtLegend();
 	plot->insertLegend(legend, QwtPlot::RightLegend);
 
 	/* Curve defaults (other curves are set by PlotDefaults) */
@@ -95,10 +86,13 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 	grid.enableYMin(FALSE);
 	grid.attach(plot);
 
-	/* Axis and title fonts */
-	QFont axisfont(basefont);
-	QFont titlefont(basefont);
+	/* Fonts */
+	QFont axisfont;
+	axisfont.setPointSize(8);
+	axisfont.setStyleHint(QFont::SansSerif, QFont::PreferOutline);
+	QFont titlefont(axisfont);
 	titlefont.setWeight(QFont::Bold);
+
 	plot->setAxisFont(QwtPlot::xBottom, axisfont);
 	plot->setAxisFont(QwtPlot::yLeft, axisfont);
 	plot->setAxisFont(QwtPlot::yRight, axisfont);
@@ -109,8 +103,10 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 	/* Axis titles */
 	bottomTitle.setFont(axisfont);
 	plot->setAxisTitle(QwtPlot::xBottom, bottomTitle);
+
 	leftTitle.setFont(axisfont);
 	plot->setAxisTitle(QwtPlot::yLeft, leftTitle);
+
 	rightTitle.setFont(axisfont);
 	plot->setAxisTitle(QwtPlot::yRight, rightTitle);
 
@@ -122,11 +118,7 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 		WINDOW_MARGIN, WINDOW_MARGIN);
 
 	/* Canvas */
-#if QWT_VERSION < 0x060100
 	plot->setCanvasLineWidth(0);
-#else
-	((QFrame*)plot->canvas())->setLineWidth(0);
-#endif
 	plot->canvas()->setBackgroundRole(QPalette::Window);
 
 	/* Picker */
@@ -166,20 +158,6 @@ CDRMPlot::~CDRMPlot()
 		delete DialogPlot;
 }
 
-void CDRMPlot::UpdateAnalogBWMarker()
-{
-	if (CurCharType == INPUT_SIG_PSD_ANALOG)
-	{
-		_REAL rCenterFreq, rBandwidth;
-		/* Get data and parameters from modules */
-		pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBandwidth);
-		/* Prepare graph and set data */
-		SetDCCarrier(pDRMRec->GetAMDemod()->GetCurMixFreqOffs());
-		SetBWMarker(rCenterFreq, rBandwidth);
-		plot->replot();
-	}
-}
-
 void CDRMPlot::OnTimerChart()
 {
 	CParameter& Parameters = *pDRMRec->GetParameters();
@@ -197,6 +175,7 @@ void CDRMPlot::OnTimerChart()
 	_REAL		rPDSBegin, rPDSEnd;
 	_REAL		rFreqAcquVal;
 	_REAL		rCenterFreq, rBandwidth;
+	int			iXoredSampleRate;
 
 	Parameters.Lock();
 	_REAL rDCFrequency = Parameters.GetDCFrequency();
@@ -205,23 +184,19 @@ void CDRMPlot::OnTimerChart()
 	_BOOLEAN bAudioDecoder = !Parameters.audiodecoder.empty();
 	iAudSampleRate = Parameters.GetAudSampleRate();
 	iSigSampleRate = Parameters.GetSigSampleRate();
-	int iChanMode = (int)pDRMRec->GetReceiveData()->GetInChanSel();
 	Parameters.Unlock();
 
 	/* Needed to detect sample rate change */
-	const int iXoredSampleRate = iAudSampleRate ^ iSigSampleRate;
+	iXoredSampleRate = iAudSampleRate ^ iSigSampleRate;
 
 	CPlotManager& PlotManager = *pDRMRec->GetPlotManager();
 
 	/* First check if plot must be set up */
 	bool change = false;
-	if (InitCharType != CurCharType ||
-		iLastXoredSampleRate != iXoredSampleRate ||
-		iLastChanMode != iChanMode)
+	if (InitCharType != CurCharType || iLastXoredSampleRate != iXoredSampleRate)
 	{
-		InitCharType = CurCharType;
 		iLastXoredSampleRate = iXoredSampleRate;
-		iLastChanMode = iChanMode;
+		InitCharType = CurCharType;
 		change = true;
 		PlotDefaults();
 	}
@@ -336,10 +311,7 @@ void CDRMPlot::OnTimerChart()
 
 		if (change) SetupFreqSamOffsHist();
 		/* Prepare graph and set data */
-		plot->setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ")
-			+ QString().setNum(pDRMRec->GetReceiveData()->
-				ConvertFrequency(rFreqAcquVal))
-			+ " Hz");
+		plot->setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ") + QString().setNum(rFreqAcquVal) + " Hz");
 		AutoScale(vecrData, vecrData2, vecrScale);
 		SetData(vecrData, vecrData2, vecrScale);
 		break;
@@ -530,8 +502,8 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 	}
 
 	/* Apply colors */
-	grid.SETMAJORPEN(QPen(MainGridColorPlot, 0, Qt::DotLine));
-	grid.SETMINORPEN(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.setMajPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.setMinPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
 	vcurvegrid.setPen(QPen(MainGridColorPlot, 1, Qt::DotLine));
 	hcurvegrid.setPen(QPen(MainGridColorPlot, 1, Qt::DotLine));
 	plot->setCanvasBackground(QColor(BckgrdColorPlot));
@@ -611,7 +583,7 @@ void CDRMPlot::PlotDefaults()
 	main2curve.SETDATA(NULL, NULL, 0);
 #if QWT_VERSION < 0x060000
 	curve1.setSymbol(QwtSymbol());
-    curve2.setSymbol(QwtSymbol());
+	curve2.setSymbol(QwtSymbol());
 	curve3.setSymbol(QwtSymbol());
 #else
 	curve1.setSymbol(NULL);
@@ -623,8 +595,8 @@ void CDRMPlot::PlotDefaults()
 #endif
 	grid.enableX(TRUE);
 	grid.enableY(TRUE);
-	grid.SETMAJORPEN(QPen(MainGridColorPlot, 0, Qt::DotLine));
-	grid.SETMINORPEN(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.setMajPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.setMinPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
 	curve1.setItemAttribute(QwtPlotItem::Legend, false);
 	curve2.setItemAttribute(QwtPlotItem::Legend, false);
 	curve3.setItemAttribute(QwtPlotItem::Legend, false);
@@ -636,14 +608,6 @@ void CDRMPlot::PlotDefaults()
 		delete WaterfallWidget;
 		WaterfallWidget = NULL;
 	}
-}
-
-void CDRMPlot::PlotSetLegendFont()
-{
-#if QWT_VERSION < 0x060100
-	foreach(QWidget* item, legend->legendItems())
-		item->setFont(legend->font());
-#endif
 }
 
 void CDRMPlot::PlotForceUpdate()
@@ -787,7 +751,6 @@ void CDRMPlot::SetupTranFct()
 	main2curve.setTitle(tr("Group Del."));
 	main2curve.setYAxis(QwtPlot::yRight);
 	main2curve.attach(plot);
-	PlotSetLegendFont();
 }
 
 void CDRMPlot::SetupAudioSpec(_BOOLEAN bAudioDecoder)
@@ -846,7 +809,6 @@ void CDRMPlot::SetupFreqSamOffsHist()
 	main2curve.setTitle(tr("Samp."));
 	main2curve.setYAxis(QwtPlot::yRight);
 	main2curve.attach(plot);
-	PlotSetLegendFont();
 }
 
 void CDRMPlot::AutoScale(CVector<_REAL>& vecrData,
@@ -917,7 +879,6 @@ void CDRMPlot::SetupDopplerDelayHist()
 	main2curve.setTitle(tr("Doppler"));
 	main2curve.setYAxis(QwtPlot::yRight);
 	main2curve.attach(plot);
-	PlotSetLegendFont();
 }
 
 void CDRMPlot::SetupSNRAudHist()
@@ -946,7 +907,6 @@ void CDRMPlot::SetupSNRAudHist()
 	main2curve.setTitle(tr("Audio"));
 	main2curve.setYAxis(QwtPlot::yRight);
 	main2curve.attach(plot);
-	PlotSetLegendFont();
 }
 
 void CDRMPlot::AutoScale2(CVector<_REAL>& vecrData,
@@ -1086,11 +1046,8 @@ void CDRMPlot::SetupInpSpec()
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input Spectrum [dB]"));
 
 	/* Fixed scale */
-	const double dXScaleMin = pDRMRec->GetReceiveData()->
-		ConvertFrequency((_REAL) 0.0) / 1000;
-	const double dXScaleMax = pDRMRec->GetReceiveData()->
-		ConvertFrequency((_REAL) iSigSampleRate / 2) / 1000;
-	plot->setAxisScale(QwtPlot::xBottom, dXScaleMin, dXScaleMax);
+	plot->setAxisScale(QwtPlot::xBottom,
+	(double) 0.0, (double) iSigSampleRate / 2000);
 
 	plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
 		MAX_VAL_INP_SPEC_Y_AXIS_DB);
@@ -1112,8 +1069,7 @@ void CDRMPlot::SetDCCarrier(const _REAL rDCFreq)
 {
 	/* Insert line for DC carrier */
 	double dX[2], dY[2];
-	dX[0] = dX[1] =
-		pDRMRec->GetReceiveData()->ConvertFrequency(rDCFreq) / 1000;
+	dX[0] = dX[1] = rDCFreq / 1000;
 
 	/* Take the min-max values from scale to get vertical line */
 	dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
@@ -1132,11 +1088,8 @@ void CDRMPlot::SetupInpPSD(_BOOLEAN bAnalog)
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 
 	/* Fixed scale */
-	const double dXScaleMin = pDRMRec->GetReceiveData()->
-		ConvertFrequency((_REAL) 0.0) / 1000;
-	const double dXScaleMax = pDRMRec->GetReceiveData()->
-		ConvertFrequency((_REAL) iSigSampleRate / 2) / 1000;
-	plot->setAxisScale(QwtPlot::xBottom, dXScaleMin, dXScaleMax);
+	const double dXScaleMax = (double) iSigSampleRate / 2000;
+	plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, dXScaleMax);
 
 	plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
 		MAX_VAL_INP_SPEC_Y_AXIS_DB);
@@ -1172,10 +1125,8 @@ void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 	/* Insert marker for filter bandwidth if required */
 	if (rBWWidth != (_REAL) 0.0)
 	{
-		dX[0] = pDRMRec->GetReceiveData()->ConvertFrequency(
-			(rBWCenter - rBWWidth / 2) * (double)iSigSampleRate) / 1000.0;
-		dX[1] = pDRMRec->GetReceiveData()->ConvertFrequency(
-			(rBWCenter + rBWWidth / 2) * (double)iSigSampleRate) / 1000.0;
+		dX[0] = (rBWCenter - rBWWidth / 2) * (double)iSigSampleRate / 1000.0;
+		dX[1] = (rBWCenter + rBWWidth / 2) * (double)iSigSampleRate / 1000.0;
 
 		/* Take the min-max values from scale to get vertical line */
 		dY[0] = MAX_VAL_INP_SPEC_Y_AXIS_DB;//MIN_VAL_INP_SPEC_Y_AXIS_DB;
@@ -1206,11 +1157,8 @@ void CDRMPlot::SetupInpSpecWaterf()
 	plot->setCanvasBackground(palette.color(QPalette::Window));
 
 	/* Fixed scale */
-	const double dXScaleMin = pDRMRec->GetReceiveData()->
-		ConvertFrequency((_REAL) 0.0) / 1000;
-	const double dXScaleMax = pDRMRec->GetReceiveData()->
-		ConvertFrequency((_REAL) iSigSampleRate / 2) / 1000;
-	plot->setAxisScale(QwtPlot::xBottom, dXScaleMin, dXScaleMax);
+	plot->setAxisScale(QwtPlot::xBottom,
+		(double) 0.0, (double) iSigSampleRate / 2000);
 }
 
 void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
@@ -1304,12 +1252,19 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 		imageData[i] = color.rgb();
 	}
 
+#if QT_VERSION >= 0x040600
 	/* Scroll Canvas */
 	Canvas.scroll(0, 1, 0, 0, CanvSize.width(), CanvSize.height(), 0);
+#endif
 
 	/* Paint new line (top line) */
 	QPainter Painter;
 	if (Painter.begin(&Canvas)) {
+#if QT_VERSION < 0x040600
+		/* Scroll Canvas */
+		QPixmap tmpCanvas = Canvas;
+		Painter.drawPixmap(0, 1, tmpCanvas, 0, 0, CanvSize.width(), CanvSize.height()-1);
+#endif
 		/* Draw pixel line to canvas */
 		Painter.drawImage(0, 0, Image);
 
@@ -1474,7 +1429,6 @@ void CDRMPlot::SetupAllConst()
 	curve1.attach(plot);
 	curve2.attach(plot);
 	curve3.attach(plot);
-	PlotSetLegendFont();
 }
 
 void CDRMPlot::SetGrid(double div, int step, int substep)
@@ -1538,11 +1492,7 @@ void CDRMPlot::OnSelected(const QPointF &pos)
 #endif
 {
 	/* Send normalized frequency to receiver */
-#if QWT_VERSION < 0x060100
 	const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->UPPERBOUND();
-#else
-	const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom).UPPERBOUND();
-#endif
 
 	/* Check if dMaxxBottom is valid */
 	if (dMaxxBottom > 0.0)
@@ -1551,9 +1501,7 @@ void CDRMPlot::OnSelected(const QPointF &pos)
 		double dFreq = pos.x();
 
 		/* Emit signal containing normalized selected frequency */
-		emit xAxisValSet(
-			pDRMRec->GetReceiveData()->ConvertFrequency(dFreq * 1000, TRUE) /
-			pDRMRec->GetReceiveData()->ConvertFrequency(dMaxxBottom * 1000, TRUE));
+		emit xAxisValSet(dFreq / dMaxxBottom);
 	}
 }
 
@@ -1708,5 +1656,9 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	}
 
 	/* Main plot */
+#if QT_VERSION < 0x040000
+	QWhatsThis::add(plot, strCurPlotHelp);
+#else
 	plot->setWhatsThis(strCurPlotHelp);
+#endif
 }

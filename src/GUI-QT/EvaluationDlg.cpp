@@ -28,24 +28,29 @@
 
 #include "EvaluationDlg.h"
 #include "DialogUtil.h"
-#ifdef HAVE_LIBHAMLIB
-# include "../util-QT/Rig.h"
-#endif
-#include <QMessageBox>
-#include <QLayout>
-#include <QDateTime>
-#include <QFileDialog>
+#include "Rig.h"
+#include <qmessagebox.h>
+#include <qlayout.h>
+#include <qdatetime.h>
+#include <qfiledialog.h>
 #include <QHideEvent>
 #include <QShowEvent>
 
 /* Implementation *************************************************************/
-systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& Settings,
-                             QWidget* parent) :
-    CWindow(parent, Settings, "System Evaluation"),
+systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
+                             QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
+    systemevalDlgBase(parent, name, modal, f),
     DRMReceiver(NDRMR),
+    Settings(NSettings),
     eNewCharType(CDRMPlot::NONE_OLD)
 {
-    setupUi(this);
+    /* Get window geometry data and apply it */
+    CWinGeom s;
+    Settings.Get("System Evaluation Dialog", s);
+    const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+
+    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+        setGeometry(WinGeom);
 
     /* Set help text for the controls */
     AddWhatsThisHelp();
@@ -53,8 +58,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& Settings,
     /* Init controls -------------------------------------------------------- */
 
     /* Init main plot */
-    iPlotStyle = getSetting("plotstyle", 0, true);
-    putSetting("plotstyle", iPlotStyle, true);
+    iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
+    Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
     MainPlot = new CDRMPlot(NULL, plot);
     MainPlot->SetRecObj(&DRMReceiver);
     MainPlot->SetPlotStyle(iPlotStyle);
@@ -117,7 +122,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& Settings,
     chartSelector->expandAll();
 
     /* Load saved main plot type */
-    eCurCharType = PlotNameToECharType(string(getSetting("plottype", QString()).toLocal8Bit()));
+    eCurCharType = PlotNameToECharType(Settings.Get("System Evaluation Dialog", "plottype", string()));
 
     /* If MDI in is enabled, disable some of the controls and use different
        initialization for the chart and chart selector */
@@ -273,11 +278,12 @@ void systemevalDlg::UpdateControls()
     setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
 }
 
-void systemevalDlg::eventShow(QShowEvent*)
+void systemevalDlg::showEvent(QShowEvent* e)
 {
+	EVENT_FILTER(e);
     /* Restore chart windows */
-    const int iNumChartWin = getSetting("numchartwin", 0);
-    for (int i = 0; i < iNumChartWin; i++)
+    const size_t iNumChartWin = Settings.Get("System Evaluation Dialog", "numchartwin", 0);
+    for (size_t i = 0; i < iNumChartWin; i++)
     {
         stringstream s;
 
@@ -312,14 +318,19 @@ void systemevalDlg::eventShow(QShowEvent*)
     /* Activate real-time timer */
     Timer.start(GUI_CONTROL_UPDATE_TIME);
 
+#if QT_VERSION >= 0x040000  
     /* Notify the MainPlot of showEvent */
     MainPlot->activate();
+#endif
 }
 
-void systemevalDlg::eventHide(QHideEvent*)
+void systemevalDlg::hideEvent(QHideEvent* e)
 {
+	EVENT_FILTER(e);
+#if QT_VERSION >= 0x040000  
     /* Notify the MainPlot of hideEvent */
     MainPlot->deactivate();
+#endif
 
     /* Stop the real-time timer */
     Timer.stop();
@@ -351,19 +362,28 @@ void systemevalDlg::eventHide(QHideEvent*)
         /* Close window afterwards */
         vecpDRMPlots[i]->close();
     }
-    putSetting("numchartwin", iNumOpenCharts);
+    Settings.Put("System Evaluation Dialog", "numchartwin", iNumOpenCharts);
 
     /* We do not need the pointers anymore, reset vector */
     vecpDRMPlots.clear();
 
+    /* Set window geometry data in DRMReceiver module */
+    CWinGeom s;
+    QRect WinGeom = geometry();
+    s.iXPos = WinGeom.x();
+    s.iYPos = WinGeom.y();
+    s.iHSize = WinGeom.height();
+    s.iWSize = WinGeom.width();
+    Settings.Put("System Evaluation Dialog", s);
+
     /* Store current plot type */
-    putSetting("plottype", QString::fromLocal8Bit(ECharTypeToPlotName(eCurCharType).c_str()));
+    Settings.Put("System Evaluation Dialog", "plottype", ECharTypeToPlotName(eCurCharType));
 }
 
 void systemevalDlg::UpdatePlotStyle(int iPlotStyle)
 {
     /* Save the new style */
-    putSetting("plotstyle", iPlotStyle, true);
+    Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
     this->iPlotStyle = iPlotStyle;
 
     /* Update chart windows */
@@ -459,7 +479,7 @@ string systemevalDlg::ECharTypeToPlotName(CDRMPlot::ECharType eCharType)
 {
     QTreeWidgetItem* item = FindItemByECharType(eCharType);
     if (item != NULL)
-        return item->text(0).toStdString();
+        return string(item->text(0).toStdString());
     return string();
 }
 
@@ -491,11 +511,9 @@ void systemevalDlg::OnTimer()
 
     Parameters.Lock();
 
-        SetStatus(LEDFAC, Parameters.ReceiveStatus.FAC.GetStatus());
+        SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
         SetStatus(LEDSDC, Parameters.ReceiveStatus.SDC.GetStatus());
-		// TODO Data Broadcasts
-		int iShortID = Parameters.GetCurSelAudioService();
-        SetStatus(LEDMSC, Parameters.AudioComponentStatus[iShortID].GetStatus());
+        SetStatus(LEDFAC, Parameters.ReceiveStatus.FAC.GetStatus());
         SetStatus(LEDFrameSync, Parameters.ReceiveStatus.FSync.GetStatus());
         SetStatus(LEDTimeSync, Parameters.ReceiveStatus.TSync.GetStatus());
         ETypeRxStatus soundCardStatusI = Parameters.ReceiveStatus.InterfaceI.GetStatus(); /* Input */
@@ -567,8 +585,8 @@ void systemevalDlg::OnTimer()
 
 #ifdef _DEBUG_
         TextFreqOffset->setText("DC: " +
-                                QString().setNum(DRMReceiver.GetReceiveData()->
-                                        ConvertFrequency(Parameters.GetDCFrequency()), 'f', 3) + " Hz ");
+                                QString().setNum(Parameters.
+                                        GetDCFrequency(), 'f', 3) + " Hz ");
 
         /* Metric values */
         ValueFreqOffset->setText(tr("Metrics [dB]: MSC: ") +
@@ -580,13 +598,13 @@ void systemevalDlg::OnTimer()
                                      DRMReceiver.GetFACMLC()->GetAccMetric(), 'f', 2));
 #else
         /* DC frequency */
-        ValueFreqOffset->setText(QString().setNum(DRMReceiver.GetReceiveData()->
-                                     ConvertFrequency(Parameters.GetDCFrequency()), 'f', 2) + " Hz");
+        ValueFreqOffset->setText(QString().setNum(
+                                     Parameters.GetDCFrequency(), 'f', 2) + " Hz");
 #endif
 
         /* _WIN32 fix because in Visual c++ the GUI files are always compiled even
-           if QT_GUI_LIB is set or not (problem with MDI in DRMReceiver) */
-#ifdef QT_GUI_LIB
+           if USE_QT_GUI is set or not (problem with MDI in DRMReceiver) */
+#ifdef USE_QT_GUI
         /* If MDI in is enabled, do not show any synchronization parameter */
         if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
         {
@@ -774,9 +792,7 @@ void systemevalDlg::UpdateGPS(CParameter& Parameters)
 
     QString qStrPosition;
     if (gps.set&LATLON_SET)
-//      Wrong char on Qt 5
-//      qStrPosition = QString(tr("Lat: %1\260  Long: %2\260")).arg(gps.fix.latitude, 0, 'f', 4).arg(gps.fix.longitude,0, 'f',4);
-        qStrPosition = QString(trUtf8("Lat: %1°  Long: %2°")).arg(gps.fix.latitude, 0, 'f', 4).arg(gps.fix.longitude,0, 'f',4);
+        qStrPosition = QString(tr("Lat: %1\260  Long: %2\260")).arg(gps.fix.latitude, 0, 'f', 4).arg(gps.fix.longitude,0, 'f',4);
     else
         qStrPosition = tr("Lat: ?  Long: ?");
 

@@ -62,7 +62,11 @@ CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
     last_packet_time(0),pacer(NULL),
     pF(NULL), wanted_dest_port(-1), eFileType(pcap)
 {
+#if defined(_MSC_VER) && (_MSC_VER < 1400)
+    pacer = new CPacer(400000000);
+#else
     pacer = new CPacer(400000000ULL);
+#endif
 }
 
 void CPacketSourceFile::poll()
@@ -194,11 +198,11 @@ CPacketSourceFile::readFF(vector<_BYTE>& vecbydata, int& interval)
         return;
     }
 
-    long remaining = fflen; // use a signed number here to help loop exit
+    long remaining = fflen; // use a signed muber here to help loop exit
     while(remaining>0)
     {
         readTagPacketHeader(tag, len);
-        remaining -= 8; // 4 bytes tag, 4 bytes length;
+        remaining -= 64; // 4*8 nits tag, 4*8 bytes length;
         remaining -= len;
 
         if(tag=="time")
@@ -216,17 +220,11 @@ CPacketSourceFile::readFF(vector<_BYTE>& vecbydata, int& interval)
             n = fread(&ns, sizeof(ns), 1, (FILE *) pF);
             (void)n;
             //TODO update last packet and interval times
-            readTagPacketHeader(tag, len);
-            remaining -= 8; // 4 bytes tag, 4 bytes length;
-            remaining -= len;
         }
 
         if(tag=="afpf")
         {
-            uint32_t l = readRawAF(vecbydata, interval);
-            if(l!=len) {
-                qDebug("why not");
-            }
+            readRawAF(vecbydata, interval);
         }
         else
         {
@@ -236,7 +234,7 @@ CPacketSourceFile::readFF(vector<_BYTE>& vecbydata, int& interval)
     }
 }
 
-int
+void
 CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
 {
     char sync[2];
@@ -253,7 +251,7 @@ CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
         // throw?
         fclose((FILE *) pF);
         pF = 0;
-        return 0;
+        return;
     }
     // get the length
     size_t iAFPacketLen = iAFHeaderLen + ntohl(bytes) + iAFCRCLen;
@@ -263,7 +261,7 @@ CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
         // throw?
         fclose((FILE *) pF);
         pF = 0;
-        return 0;
+        return;
     }
 
     // initialise the output vector
@@ -273,7 +271,7 @@ CPacketSourceFile::readRawAF(vector<_BYTE>& vecbydata, int& interval)
 
     last_packet_time += interval;
 
-    return n;
+    (void)n;
 }
 
 // not robust against the sync characters appearing in the payload!!!!
@@ -339,21 +337,17 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
         {
             link_len=14;
         }
-#ifdef DLT_LINUX_SLL
         /* linux cooked */
         if(lt==DLT_LINUX_SLL)
         {
             link_len=16;
         }
-#endif
         /* raw IP header ? */
         if(lt==DLT_RAW)
         {
             link_len=0;
         }
-        //packet_time = header->ts; try this for BSD
-		packet_time.tv_sec = header->ts.tv_sec;
-		packet_time.tv_usec = header->ts.tv_usec;
+        packet_time = header->ts;
 #endif
         if(pkt_data == NULL)
             return;

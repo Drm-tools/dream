@@ -394,8 +394,7 @@ _BOOLEAN CFACReceive::FACParam(CVector<_BINARY>* pbiFACData,
     for (int i = 0; i < NUM_FAC_BITS_PER_BLOCK / SIZEOF__BYTE - 1; i++)
         CRCObject.AddByte((_BYTE) (*pbiFACData).Separate(SIZEOF__BYTE));
 
-    bool permissive = Parameter.lenient_RSCI;
-    if (permissive || CRCObject.CheckCRC((*pbiFACData).Separate(8)) == TRUE)
+    if (CRCObject.CheckCRC((*pbiFACData).Separate(8)) == TRUE)
     {
         /* CRC-check successful, extract data from FAC-stream */
         /* Reset separation function */

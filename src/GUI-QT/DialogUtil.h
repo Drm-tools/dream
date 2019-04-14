@@ -33,17 +33,21 @@
 #include "../DrmTransceiver.h"
 #include "../sound/selectioninterface.h"
 
-#include <map>
+#include<map>
 
-#include "ui_AboutDlgbase.h"
-#include <QThread>
-#include <QMenu>
-#include <QDialog>
-#include <QAction>
-#include <QEvent>
-#include <QSystemTrayIcon>
-#include <QTimer>
-#include <QAction>
+#include <qthread.h>
+#if QT_VERSION < 0x040000
+# include <qaction.h>
+# include <qpopupmenu.h>
+# include <qevent.h>
+# include "AboutDlgbase.h"
+#else
+# include "ui_AboutDlgbase.h"
+# include <QMenu>
+# include <QDialog>
+# include <QAction>
+# include <QEvent>
+#endif
 
 #include <qwt_thermo.h> /* S-Meter */
 
@@ -63,47 +67,70 @@ typedef int rig_model_t;
 /* Classes ********************************************************************/
 
 /* About dialog ------------------------------------------------------------- */
-class CAboutDlg : public QDialog, public Ui_CAboutDlgBase
+#if QT_VERSION >= 0x040000
+class CAboutDlgBase : public QDialog, public Ui_CAboutDlgBase
+{
+public:
+	CAboutDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f):
+		QDialog(parent,f){setupUi(this);}
+	virtual ~CAboutDlgBase() {}
+};
+#endif
+
+class CAboutDlg : public CAboutDlgBase
 {
 	Q_OBJECT
 
 public:
-	CAboutDlg(QWidget* parent = 0);
-	virtual ~CAboutDlg() {}
+	CAboutDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
+		Qt::WFlags f = 0);
 };
 
 /* Help Usage --------------------------------------------------------------- */
-class CHelpUsage : public CAboutDlg
+class CHelpUsage : public CAboutDlgBase
 {
 	Q_OBJECT
 
 public:
-	CHelpUsage(const char* usage, const char* argv0, QWidget* parent = 0);
-	virtual ~CHelpUsage() {}
+	CHelpUsage(const char* usage, const char* argv0, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 };
 
-/* System Tray -------------------------------------------------------------- */
-class CSysTray
+#if QT_VERSION < 0x040000
+/* Help menu ---------------------------------------------------------------- */
+class CDreamHelpMenu : public QPopupMenu
 {
+	Q_OBJECT
+
 public:
-	static CSysTray* Create(QWidget* parent, const char* callbackIcon, const char* callbackTimer, const char* icon);
-	static void Destroy(CSysTray** pSysTray);
-	static void SetToolTip(CSysTray* pSysTray, const QString& Title, const QString& Message);
-	static void Start(CSysTray* pSysTray);
-	static void Stop(CSysTray* pSysTray, const QString& Message);
-	static QAction* AddAction(CSysTray* pSysTray, const QString& text, const QObject* receiver, const char* member);
-	static QAction* AddSeparator(CSysTray* pSysTray);
+	CDreamHelpMenu(QWidget* parent);
+
+public slots:
+	void OnHelpWhatsThis();
+};
+
+/* Sound card selection menu ------------------------------------------------ */
+class CSoundCardSelMenu : public QPopupMenu
+{
+	Q_OBJECT
+
+public:
+	CSoundCardSelMenu(
+        CDRMTransceiver& DRMTransceiver,
+        QWidget* parent = 0);
 
 protected:
-	~CSysTray();
-	CSysTray(QWidget* parent, const char* callbackIcon, const char* callbackTimer, const char* icon);
-	void CreateContextMenu();
-	QString Title;
-	QString Message;
-	QSystemTrayIcon* pSystemTrayIcon;
-	QTimer* pTimer;
-	QMenu* pContextMenu;
+        CDRMTransceiver&        DRMTransceiver;
+        vector<string>          vecSoundInNames;
+        vector<string>          vecSoundOutNames;
+        QPopupMenu*             pSoundInMenu;
+        QPopupMenu*             pSoundOutMenu;
+
+public slots:
+	void OnSoundInDevice(int id);
+	void OnSoundOutDevice(int id);
 };
+#endif
 
 /* GUI help functions ------------------------------------------------------- */
 /* Converts from RGB to integer and back */
@@ -127,6 +154,118 @@ public:
 	}
 };
 
+/* The purpose of this class is to prevent showEvent and
+   hideEvent from spurious event like unmatched show/hide,
+   which cause some problem for window save and restore.
+   The class may be adapted for other type of filtering
+   as well. The member isValid() return FALSE when the
+   event must be ignored. */
+class CEventFilter
+{
+public:
+	CEventFilter() : eLastEventType(QEvent::Hide) {}
+	~CEventFilter() {}
+	bool isValid(const QEvent* event)
+	{
+		bool bValid = FALSE;
+		QEvent::Type eEventType = event->type();
+		switch (eEventType)
+		{
+		case QEvent::Hide:
+			bValid = eLastEventType == QEvent::Show;
+			eLastEventType = eEventType;
+			break;
+		case QEvent::Show:
+			bValid = eLastEventType == QEvent::Hide;
+			eLastEventType = eEventType;
+			break;
+		default:
+			break;
+		}
+		return bValid;
+	}
+protected:
+	QEvent::Type eLastEventType; 
+};
+#define EVENT_FILTER(e) do { if (!ef.isValid((QEvent*)e)) return; } while(0)
+
+
+inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
+{
+#if QT_VERSION < 0x030000
+	/* Under Windows QT only sets the caption if a "Qt" is
+	   present in the name. Make a little "trick" to display our desired
+	   name without seeing the "Qt" (by Andrea Russo) */
+	QString sTitle = "";
+#ifdef _MSC_VER
+	sTitle.fill(' ', 10000);
+	sTitle += "Qt";
+#endif
+	pDlg->setCaption(sCap + sTitle);
+#else
+# if QT_VERSION < 0x040000
+	pDlg->setCaption(sCap);
+# else
+	pDlg->setWindowTitle(sCap);
+# endif
+#endif
+}
+
+class RemoteMenu : public QObject
+{
+	Q_OBJECT
+
+public:
+	RemoteMenu(QWidget*, CRig&);
+# if QT_VERSION < 0x040000
+	QPopupMenu
+#else
+	QMenu
+#endif
+	* menu(){ return pRemoteMenu; }
+
+public slots:
+	void OnModRigMenu(int iID);
+	void OnRemoteMenu(int iID);
+	void OnComPortMenu(QAction* action);
+
+signals:
+	void SMeterAvailable();
+
+protected:
+#ifdef HAVE_LIBHAMLIB
+	struct Rigmenu {
+		std::string mfr;
+# if QT_VERSION < 0x040000
+	QPopupMenu
+#else
+	QMenu
+#endif
+		* pMenu;
+	};
+	std::map<int,Rigmenu> rigmenus;
+	std::vector<rig_model_t> specials;
+	CRig&	rig;
+#endif
+# if QT_VERSION < 0x040000
+	QPopupMenu
+#else
+	QMenu
+#endif
+	* pRemoteMenu, *pRemoteMenuOther;
+};
+
+#define OTHER_MENU_ID (666)
+#define SMETER_MENU_ID (667)
+
+QString VerifyFilename(QString filename);
+
+QString VerifyHtmlPath(QString path);
+
+#if QT_VERSION >= 0x040000
+QString UrlEncodePath(QString url);
+bool IsUrlDirectory(QString url);
+#endif
 
 /* s-meter thermo parameters */
 #define S_METER_THERMO_MIN				((_REAL) -60.0) /* dB */
@@ -134,5 +273,11 @@ public:
 #define S_METER_THERMO_ALARM			((_REAL) 0.0) /* dB */
 
 void InitSMeter(QWidget* parent, QwtThermo* sMeter);
+
+void Linkify(QString& text);
+
+void CreateDirectories(const QString& strFilename);
+
+void RestartTransceiver(CDRMTransceiver *DRMTransceiver);
 
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_

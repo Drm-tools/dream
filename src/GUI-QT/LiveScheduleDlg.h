@@ -28,22 +28,30 @@
 #ifndef __LiveScheduleDlg_H
 #define LiveScheduleDlg_H
 
-#include "ui_LiveScheduleWindow.h"
-#include "CWindow.h"
 #include "../DrmReceiver.h"
-#include <QSignalMapper>
-#include <QDialog>
-#include <QTreeWidget>
-#include <QPixmap>
-#include <QRadioButton>
-#include <QTimer>
-#include <QMessageBox>
-#include <QMenuBar>
-#include <QLayout>
-#include <QLabel>
-#include <QCheckBox>
-#include <QThread>
+#include "../util/Settings.h"
+#include "DialogUtil.h"
 #include <vector>
+#if QT_VERSION < 0x040000
+# include "LiveScheduleDlgbase.h"
+# include <qpopupmenu.h>
+# include <qurloperator.h>
+# include <qlistview.h>
+#else
+# include <QSignalMapper>
+# include <QDialog>
+# include <QTreeWidget>
+# include "ui_LiveScheduleWindow.h"
+#endif
+#include <qpixmap.h>
+#include <qradiobutton.h>
+#include <qtimer.h>
+#include <qmessagebox.h>
+#include <qmenubar.h>
+#include <qlayout.h>
+#include <qlabel.h>
+#include <qcheckbox.h>
+#include <qthread.h>
 
 
 /* Definitions ****************************************************************/
@@ -123,6 +131,21 @@ protected:
 	double		dReceiverLongitude;
 };
 
+#if QT_VERSION < 0x040000
+class MyListLiveViewItem : public QListViewItem
+{
+public:
+	MyListLiveViewItem(QListView* parent, QString s1, QString s2 = QString::null,
+		QString s3 = QString::null, QString s4 = QString::null,
+		QString s5 = QString::null, QString s6 = QString::null,
+		QString s7 = QString::null, QString s8 = QString::null) :
+	QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8)
+	{}
+
+	/* Custom "key()" function for correct sorting behaviour */
+	virtual QString key(int column, bool ascending) const;
+};
+#else
 class MyListLiveViewItem : public QTreeWidgetItem
 {
 public:
@@ -137,36 +160,63 @@ public:
 	virtual QString key(int column, bool ascending) const;
 	void setPixmap(int col, QPixmap p) { setIcon(col, p); }
 };
+#endif
 
-class LiveScheduleDlg : public CWindow, public Ui_LiveScheduleWindow
+#if QT_VERSION >= 0x040000
+class CLiveScheduleDlgBase : public QDialog, public Ui_LiveScheduleWindow
+{
+public:
+	CLiveScheduleDlgBase(QWidget* parent, const char*, bool, Qt::WFlags):
+		QDialog(parent) {setWindowFlags(Qt::Window);}
+	virtual ~CLiveScheduleDlgBase() {}
+};
+#endif
+class LiveScheduleDlg : public CLiveScheduleDlgBase
 {
 	Q_OBJECT
 
 public:
-	LiveScheduleDlg(CDRMReceiver&, CSettings&, QMap<QWidget*,QString>&);
+	LiveScheduleDlg(CDRMReceiver&, CSettings&,
+		QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~LiveScheduleDlg();
 
+	void LoadSchedule();
+	void SaveSettings(CSettings&);
+
 protected:
-	virtual void	eventClose(QCloseEvent* pEvent);
-	virtual void	eventHide(QHideEvent* pEvent);
-	virtual void	eventShow(QShowEvent* pEvent);
-	void			LoadSettings();
-	void			SaveSettings();
-	void			LoadSchedule();
 	int				iCurrentSortColumn;
 	_BOOLEAN		bCurrentSortAscending;
+	void			LoadSettings(const CSettings&);
 	void			SetStationsView();
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
+	void			showEvent(QShowEvent* pEvent);
+	void			hideEvent(QHideEvent* pEvent);
 	QString			ExtractDaysFlagString(const int iDayCode);
 	QString			ExtractTime(const CAltFreqSched& schedule);
-	bool			showAll();
+	_BOOLEAN		showAll();
 	int				currentSortColumn();
 
 	CDRMReceiver&		DRMReceiver;
+	CSettings&			Settings;
 	CDRMLiveSchedule	DRMSchedule;
 	QTimer			TimerList;
 	QTimer			TimerUTCLabel;
+#if QT_VERSION < 0x040000
+	QPixmap			BitmCubeGreen;
+	QPixmap			BitmCubeGreenLittle;
+	QPixmap			BitmCubeYellow;
+	QPixmap			BitmCubeRed;
+	QPixmap			BitmCubeOrange;
+	QPixmap			BitmCubePink;
+	QPopupMenu*		pViewMenu;
+	QPopupMenu*		pPreviewMenu;
+	QPopupMenu*		pFileMenu;
+	int				showActiveViewMenuItem;
+	int				showAllViewMenuItem;
+	void setupUi(QWidget*);
+#else
 	QIcon			smallGreenCube;
 	QIcon			greenCube;
 	QIcon			redCube;
@@ -176,12 +226,14 @@ protected:
 	QActionGroup*	previewGroup;
 	QSignalMapper*	showMapper;
 	QActionGroup*	showGroup;
+#endif
 
 	vector<MyListLiveViewItem*>	vecpListItems;
 	QMutex			ListItemsMutex;
 	QString			strCurrentSavePath;
 	int				iColStationID;
 	int				iWidthColStationID;
+	CEventFilter	ef;
 
 public slots:
 	void OnTimerList();

@@ -28,46 +28,53 @@
 
 #include "fdrmdialog.h"
 #include <iostream>
-#include <QDir>
-#include <QWhatsThis>
-#include <QHideEvent>
-#include <QEvent>
-#include <QShowEvent>
-#include <QCloseEvent>
-#include "SlideShowViewer.h"
-#include "JLViewer.h"
-#ifdef QT_WEBKIT_LIB
+#if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
+# include <qbuttongroup.h>
+# include <qwhatsthis.h>
+# include <qcstring.h>
+# include "MultimediaDlg.h"
+# define toUpper(s) s.upper()
+#else
+# include <QWhatsThis>
+# include <QHideEvent>
+# include <QEvent>
+# include <QShowEvent>
+# include <QCloseEvent>
 # include "BWSViewer.h"
+# include "SlideShowViewer.h"
+# include "JLViewer.h"
+# define CHECK_PTR(x) Q_CHECK_PTR(x)
+# define toUpper(s) s.toUpper()
 #endif
-#ifdef HAVE_LIBHAMLIB
-# include "../util-QT/Rig.h"
-#endif
+#include "Rig.h"
 #include "../Scheduler.h"
-#include "../util-QT/Util.h"
 
-// Simone's values
-// static _REAL WMERSteps[] = {8.0, 12.0, 16.0, 20.0, 24.0};
-// David's values
-static _REAL WMERSteps[] = {6.0, 12.0, 18.0, 24.0, 30.0};
+inline QString str2qstr(const string& s) {
+#if QT_VERSION < 0x040000
+    return QString().fromUtf8(QCString(s.c_str()));
+#else
+    return QString().fromUtf8(s.c_str());
+#endif
+}
 
 /* Implementation *************************************************************/
-#ifdef HAVE_LIBHAMLIB
-FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings, CRig& rig,
-                       QWidget* parent)
-#else
-FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings, 
-                       QWidget* parent)
-#endif
+FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& NSettings, CRig& rig,
+                       QWidget* parent, const char* name, bool modal, Qt::WFlags f)
     :
-    CWindow(parent, Settings, "DRM"),
-    DRMReceiver(NDRMR),
-    serviceLabels(4), pLogging(NULL),
-    pSysTray(NULL), pCurrentWindow(this),
+    FDRMDialogBase(parent, name, modal, f),
+    DRMReceiver(NDRMR),Settings(NSettings),
+    Timer(),serviceLabels(4),pLogging(NULL),
     iMultimediaServiceBit(0),
     iLastMultimediaServiceSelected(-1),
     pScheduler(NULL), pScheduleTimer(NULL)
 {
-    setupUi(this);
+    /* Recover window size and position */
+    CWinGeom s;
+    Settings.Get("DRM Dialog", s);
+    const QRect WinGeom(s.iXPos, s.iYPos, s.iWSize, s.iHSize);
+    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
+        setGeometry(WinGeom);
 
     /* Set help text for the controls */
     AddWhatsThisHelp();
@@ -77,43 +84,144 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings,
     pLogging = new CLogging(Parameters);
     pLogging->LoadSettings(Settings);
 
-    /* Creation of file and sound card menu */
-    pFileMenu = new CFileMenu(DRMReceiver, this, menu_View);
-    pSoundCardMenu = new CSoundCardSelMenu(DRMReceiver, pFileMenu, this);
-    menu_Settings->addMenu(pSoundCardMenu);
-    connect(pFileMenu, SIGNAL(soundFileChanged(CDRMReceiver::ESFStatus)), this, SLOT(OnSoundFileChanged(CDRMReceiver::ESFStatus)));
-
+#if QT_VERSION < 0x040000
     /* Analog demodulation window */
-    pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, pFileMenu, pSoundCardMenu);
+    pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings, NULL, "", FALSE, Qt::WStyle_MinMax);
+    SetDialogCaption(pAnalogDemDlg, tr("Analog Demodulation"));
 
     /* FM window */
-    pFMDlg = new FMDialog(DRMReceiver, Settings, pFileMenu, pSoundCardMenu);
+    pFMDlg = new FMDialog(DRMReceiver, Settings, rig, NULL, "", FALSE, Qt::WStyle_MinMax);
+    SetDialogCaption(pFMDlg, tr("FM Receiver"));
 
-    /* Parent list for Stations and Live Schedule window */
-	QMap <QWidget*,QString> parents;
-	parents[this] = "drm";
-	parents[pAnalogDemDlg] = "analog";
+    /* Multimedia window */
+    pMultiMediaDlg = new MultimediaDlg(DRMReceiver, Settings, NULL, "", FALSE, Qt::WStyle_MinMax);
+    SetDialogCaption(pMultiMediaDlg, tr("Multimedia"));
 
     /* Stations window */
-#ifdef HAVE_LIBHAMLIB
-    pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, parents);
-#else
-    pStationsDlg = new StationsDlg(DRMReceiver, Settings, parents);
-#endif
+    pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this, "", FALSE, Qt::WStyle_MinMax);
+    SetDialogCaption(pStationsDlg, tr("Stations"));
 
     /* Live Schedule window */
-    pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, Settings, parents);
+    pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+    SetDialogCaption(pLiveScheduleDlg, tr("Live Schedule"));
+
+    /* Programme Guide Window */
+    pEPGDlg = new EPGDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+    SetDialogCaption(pEPGDlg, tr("Programme Guide"));
+
+    /* Evaluation window */
+    pSysEvalDlg = new systemevalDlg(DRMReceiver, Settings, this, "", FALSE, Qt::WStyle_MinMax);
+    SetDialogCaption(pSysEvalDlg, tr("System Evaluation"));
+
+    /* General settings window */
+    pGeneralSettingsDlg = new GeneralSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
+    SetDialogCaption(pGeneralSettingsDlg, tr("General settings"));
+
+    /* Multimedia settings window */
+    pMultSettingsDlg = new MultSettingsDlg(Parameters, Settings, this, "", TRUE, Qt::WStyle_Dialog);
+    SetDialogCaption(pMultSettingsDlg, tr("Multimedia settings"));
+
+    /* Set Menu ***************************************************************/
+    /* View menu ------------------------------------------------------------ */
+    QPopupMenu* EvalWinMenu = new QPopupMenu(this);
+    CHECK_PTR(EvalWinMenu);
+    EvalWinMenu->insertItem(tr("&Evaluation Dialog..."), pSysEvalDlg,
+                            SLOT(show()), Qt::CTRL+Qt::Key_E, 0);
+    EvalWinMenu->insertItem(tr("M&ultimedia Dialog..."), pMultiMediaDlg,
+                            SLOT(show()), Qt::CTRL+Qt::Key_U, 1);
+    EvalWinMenu->insertItem(tr("S&tations Dialog..."), pStationsDlg,
+                            SLOT(show()), Qt::CTRL+Qt::Key_T, 2);
+    EvalWinMenu->insertItem(tr("&Live Schedule Dialog..."), pLiveScheduleDlg,
+                            SLOT(show()), Qt::CTRL+Qt::Key_L, 3);
+    EvalWinMenu->insertItem(tr("&Programme Guide..."), pEPGDlg,
+                            SLOT(show()), Qt::CTRL+Qt::Key_P, 4);
+    EvalWinMenu->insertSeparator();
+    EvalWinMenu->insertItem(tr("E&xit"), this, SLOT(close()), Qt::CTRL+Qt::Key_Q, 5);
+
+    /* Settings menu  ------------------------------------------------------- */
+    pSettingsMenu = new QPopupMenu(this);
+    CHECK_PTR(pSettingsMenu);
+
+    pSettingsMenu->insertItem(tr("&AM (analog)"), this,
+                              SLOT(OnSwitchToAM()), Qt::CTRL+Qt::Key_A);
+    pSettingsMenu->insertItem(tr("&FM (analog)"), this,
+                              SLOT(OnSwitchToFM()), Qt::CTRL+Qt::Key_F);
+    pSettingsMenu->insertItem(tr("New &DRM Acquisition"), this,
+                              SLOT(OnNewAcquisition()), Qt::CTRL+Qt::Key_D);
+    pSettingsMenu->insertSeparator();
+    pSettingsMenu->insertItem(tr("Set D&isplay Color..."), this,
+                              SLOT(OnMenuSetDisplayColor()));
+
+    /* Plot style settings */
+    pPlotStyleMenu = new QPopupMenu(this);
+    pPlotStyleMenu->insertItem(tr("&Blue / White"), this, SLOT(OnMenuPlotStyle(int)), 0, 0);
+    pPlotStyleMenu->insertItem(tr("&Green / Black"), this, SLOT(OnMenuPlotStyle(int)), 0, 1);
+    pPlotStyleMenu->insertItem(tr("B&lack / Grey"), this, SLOT(OnMenuPlotStyle(int)), 0, 2);
+    pSettingsMenu->insertItem(tr("&Plot Style"), pPlotStyleMenu);
+
+    /* Set check */
+    pPlotStyleMenu->setItemChecked(Settings.Get("System Evaluation Dialog", "plotstyle", 0), TRUE);
+
+    /* Multimedia settings */
+    pSettingsMenu->insertSeparator();
+    pSettingsMenu->insertItem(tr("&Multimedia settings..."), pMultSettingsDlg,
+                              SLOT(show()));
+
+    pSettingsMenu->insertItem(tr("&General settings..."), pGeneralSettingsDlg,
+                              SLOT(show()));
+
+    /* Sound Card */
+    pSettingsMenu->insertItem(tr("&Sound Card Selection"),
+                              new CSoundCardSelMenu(DRMReceiver, this));
+
+    /* Main menu bar -------------------------------------------------------- */
+    pMenu = new QMenuBar(this);
+    CHECK_PTR(pMenu);
+    pMenu->insertItem(tr("&View"), EvalWinMenu);
+    pMenu->insertItem(tr("&Settings"), pSettingsMenu);
+    pMenu->insertItem(tr("&?"), new CDreamHelpMenu(this));
+    pMenu->setSeparator(QMenuBar::InWindowsStyle);
+
+    /* Now tell the layout about the menu */
+    FDRMDialogBaseLayout->setMenuBar(pMenu);
+
+    connect(this, SIGNAL(plotStyleChanged(int)), pSysEvalDlg, SLOT(UpdatePlotStyle(int)));
+    connect(this, SIGNAL(plotStyleChanged(int)), pAnalogDemDlg, SLOT(UpdatePlotStyle(int)));
+
+    /* Digi controls */
+    /* Set display color */
+    SetDisplayColor(CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000)));
+
+    pButtonGroup = new QButtonGroup(this);
+    pButtonGroup->hide();
+    pButtonGroup->setExclusive(true);
+    pButtonGroup->insert(PushButtonService1, 0);
+    pButtonGroup->insert(PushButtonService2, 1);
+    pButtonGroup->insert(PushButtonService3, 2);
+    pButtonGroup->insert(PushButtonService4, 3);
+    connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectAudioService(int)));
+    connect(pButtonGroup, SIGNAL(clicked(int)), this, SLOT(OnSelectDataService(int)));
+#else
+    /* Analog demodulation window */
+    pAnalogDemDlg = new AnalogDemDlg(DRMReceiver, Settings);
+
+    /* FM window */
+    pFMDlg = new FMDialog(DRMReceiver, Settings, rig);
 
     /* MOT broadcast website viewer window */
-#ifdef QT_WEBKIT_LIB
-    pBWSDlg = new BWSViewer(DRMReceiver, Settings, this);
-#endif
+    pBWSDlg = new BWSViewer(DRMReceiver, Settings, NULL);
 
     /* Journaline viewer window */
-    pJLDlg = new JLViewer(DRMReceiver, Settings, this);
+    pJLDlg = new JLViewer(DRMReceiver, Settings, NULL);
 
     /* MOT slide show window */
-    pSlideShowDlg = new SlideShowViewer(DRMReceiver, Settings, this);
+    pSlideShowDlg = new SlideShowViewer(DRMReceiver, Settings, NULL);
+
+    /* Stations window */
+    pStationsDlg = new StationsDlg(DRMReceiver, Settings, rig, this);
+
+    /* Live Schedule window */
+    pLiveScheduleDlg = new LiveScheduleDlg(DRMReceiver, Settings, this);
 
     /* Programme Guide Window */
     pEPGDlg = new EPGDlg(DRMReceiver, Settings, this);
@@ -136,6 +244,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings,
 
     action_Multimedia_Dialog->setEnabled(false);
 
+    pFileMenu = new CFileMenu(DRMReceiver, this, menu_View);
+    pSoundCardMenu = new CSoundCardSelMenu(DRMReceiver, pFileMenu, this);
+    menu_Settings->addMenu(pSoundCardMenu);
+    connect(pFileMenu, SIGNAL(soundFileChanged(CDRMReceiver::ESFStatus)), this, SLOT(OnSoundFileChanged(CDRMReceiver::ESFStatus)));
+
     connect(actionMultimediaSettings, SIGNAL(triggered()), pMultSettingsDlg, SLOT(show()));
     connect(actionGeneralSettings, SIGNAL(triggered()), pGeneralSettingsDlg, SLOT(show()));
 
@@ -146,8 +259,8 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings,
     connect(actionDisplayColor, SIGNAL(triggered()), this, SLOT(OnMenuSetDisplayColor()));
 
     /* Plot style settings */
-    QSignalMapper* plotStyleMapper = new QSignalMapper(this);
-    QActionGroup* plotStyleGroup = new QActionGroup(this);
+    plotStyleMapper = new QSignalMapper(this);
+    plotStyleGroup = new QActionGroup(this);
     plotStyleGroup->addAction(actionBlueWhite);
     plotStyleGroup->addAction(actionGreenBlack);
     plotStyleGroup->addAction(actionBlackGrey);
@@ -158,7 +271,7 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings,
     connect(actionGreenBlack, SIGNAL(triggered()), plotStyleMapper, SLOT(map()));
     connect(actionBlackGrey, SIGNAL(triggered()), plotStyleMapper, SLOT(map()));
     connect(plotStyleMapper, SIGNAL(mapped(int)), this, SIGNAL(plotStyleChanged(int)));
-    switch(getSetting("plotstyle", int(0), true))
+    switch(Settings.Get("System Evaluation Dialog", "plotstyle", int(0)))
     {
     case 0:
         actionBlueWhite->setChecked(true);
@@ -172,10 +285,14 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings,
     }
 
     connect(actionAbout_Dream, SIGNAL(triggered()), this, SLOT(OnHelpAbout()));
-    connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(OnWhatsThis()));
+    connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(on_actionWhats_This()));
 
     connect(this, SIGNAL(plotStyleChanged(int)), pSysEvalDlg, SLOT(UpdatePlotStyle(int)));
     connect(this, SIGNAL(plotStyleChanged(int)), pAnalogDemDlg, SLOT(UpdatePlotStyle(int)));
+
+    /* Digi controls */
+    /* Set display color */
+    SetDisplayColor(CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000)));
 
     pButtonGroup = new QButtonGroup(this);
     pButtonGroup->setExclusive(true);
@@ -186,21 +303,21 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings,
     connect(pButtonGroup, SIGNAL(buttonClicked(int)), this, SLOT(OnSelectAudioService(int)));
     connect(pButtonGroup, SIGNAL(buttonClicked(int)), this, SLOT(OnSelectDataService(int)));
 
+#endif
+
     connect(pFMDlg, SIGNAL(About()), this, SLOT(OnHelpAbout()));
     connect(pAnalogDemDlg, SIGNAL(About()), this, SLOT(OnHelpAbout()));
 
     /* Init progress bar for input signal level */
-#if QWT_VERSION < 0x060100
     ProgrInputLevel->setRange(-50.0, 0.0);
-    ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
-#else
-    ProgrInputLevel->setScale(-50.0, 0.0);
-    ProgrInputLevel->setOrientation(Qt::Vertical);
-    ProgrInputLevel->setScalePosition(QwtThermo::TrailingScale);
-#endif
     ProgrInputLevel->setAlarmLevel(-12.5);
     QColor alarmColor(QColor(255, 0, 0));
     QColor fillColor(QColor(0, 190, 0));
+#if QWT_VERSION < 0x050000
+    ProgrInputLevel->setOrientation(QwtThermo::Vertical, QwtThermo::Left);
+#else
+    ProgrInputLevel->setOrientation(Qt::Vertical, QwtThermo::LeftScale);
+#endif
 #if QWT_VERSION < 0x060000
     ProgrInputLevel->setAlarmColor(alarmColor);
     ProgrInputLevel->setFillColor(fillColor);
@@ -212,13 +329,11 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings,
     ProgrInputLevel->setPalette(newPalette);
 #endif
 
-#ifdef HAVE_LIBHAMLIB
     connect(pStationsDlg, SIGNAL(subscribeRig()), &rig, SLOT(subscribe()));
     connect(pStationsDlg, SIGNAL(unsubscribeRig()), &rig, SLOT(unsubscribe()));
     connect(&rig, SIGNAL(sigstr(double)), pStationsDlg, SLOT(OnSigStr(double)));
     connect(pLogging, SIGNAL(subscribeRig()), &rig, SLOT(subscribe()));
     connect(pLogging, SIGNAL(unsubscribeRig()), &rig, SLOT(unsubscribe()));
-#endif
     connect(pSysEvalDlg, SIGNAL(startLogging()), pLogging, SLOT(start()));
     connect(pSysEvalDlg, SIGNAL(stopLogging()), pLogging, SLOT(stop()));
 
@@ -248,101 +363,30 @@ FDRMDialog::FDRMDialog(CDRMReceiver& NDRMR, CSettings& Settings,
 
     ClearDisplay();
 
-    /* System tray setup */
-    pSysTray = CSysTray::Create(
-        this,
-        SLOT(OnSysTrayActivated(QSystemTrayIcon::ActivationReason)),
-        SLOT(OnSysTrayTimer()),
-        ":/icons/MainIcon.svg");
-    CSysTray::AddAction(pSysTray, tr("&New Acquisition"), this, SLOT(OnNewAcquisition()));
-    CSysTray::AddSeparator(pSysTray);
-    CSysTray::AddAction(pSysTray, tr("&Exit"), this, SLOT(close()));
-
-	/* clear signal strenght */
-	setBars(0);
-
-	/* Activate real-time timers */
+    /* Activate real-time timers */
     Timer.start(GUI_CONTROL_UPDATE_TIME);
-}
-
-void FDRMDialog::setBars(int bars)
-{
-	onebar->setAutoFillBackground(bars>0);
-	twobars->setAutoFillBackground(bars>1);
-	threebars->setAutoFillBackground(bars>2);
-	fourbars->setAutoFillBackground(bars>3);
-	fivebars->setAutoFillBackground(bars>4);
 }
 
 FDRMDialog::~FDRMDialog()
 {
-    /* Destroying logger */
     delete pLogging;
-    /* Destroying top level windows, children are automaticaly destroyed */
-    delete pAnalogDemDlg;
-    delete pFMDlg;
 }
 
-void FDRMDialog::OnSysTrayActivated(QSystemTrayIcon::ActivationReason reason)
-{
-    if (reason == QSystemTrayIcon::Trigger
-#if QT_VERSION < 0x050000
-        || reason == QSystemTrayIcon::DoubleClick
-#endif
-    )
-    {
-        const Qt::WindowStates ws = pCurrentWindow->windowState();
-        if (ws & Qt::WindowMinimized)
-            pCurrentWindow->setWindowState((ws & ~Qt::WindowMinimized) | Qt::WindowActive);
-        else
-            pCurrentWindow->toggleVisibility();
-    }
-}
-
-void FDRMDialog::OnSysTrayTimer()
-{
-    QString Title, Message;
-    if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
-    {
-        CParameter& Parameters = *(DRMReceiver.GetParameters());
-        Parameters.Lock();
-            const int iCurSelAudioServ = Parameters.GetCurSelAudioService();
-            CService audioService = Parameters.Service[iCurSelAudioServ];
-            const bool bServiceIsValid = audioService.IsActive()
-                                   && (audioService.AudioParam.iStreamID != STREAM_ID_NOT_USED)
-                                   && (audioService.eAudDataFlag == CService::SF_AUDIO);
-            if (bServiceIsValid)
-            {
-                /* Service label (UTF-8 encoded string -> convert) */
-                Title = QString::fromUtf8(audioService.strLabel.c_str());
-                // Text message of current selected audio service (UTF-8 decoding)
-                Message = QString::fromUtf8(audioService.AudioParam.strTextMessage.c_str());
-            }
-		if(Parameters.rWMERMSC>WMERSteps[4])
-			setBars(5);
-		else if(Parameters.rWMERMSC>WMERSteps[3])
-			setBars(4);
-		else if(Parameters.rWMERMSC>WMERSteps[2])
-			setBars(3);
-		else if(Parameters.rWMERMSC>WMERSteps[1])
-			setBars(2);
-		else if(Parameters.rWMERMSC>WMERSteps[0])
-			setBars(1);
-		else
-			setBars(0);
-        Parameters.Unlock();
-    }
-	else {
-        Message = tr("Scanning...");
-		setBars(0);
-	}
-    CSysTray::SetToolTip(pSysTray, Title, Message);
-}
-
-void FDRMDialog::OnWhatsThis()
+void FDRMDialog::on_actionWhats_This()
 {
     QWhatsThis::enterWhatsThisMode();
 }
+
+#if QT_VERSION < 0x040000
+void FDRMDialog::OnMenuPlotStyle(int value)
+{
+    /* Set new plot style in other dialogs */
+    emit plotStyleChanged(value);
+    /* Taking care of the checks */
+    for (int i = 0; i < NUM_AVL_COLOR_SCHEMES_PLOT; i++)
+        pPlotStyleMenu->setItemChecked(i, i == value);
+}
+#endif
 
 void FDRMDialog::OnSwitchToFM()
 {
@@ -378,7 +422,9 @@ void FDRMDialog::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void FDRMDialog::UpdateDRM_GUI()
 {
+#if QT_VERSION >= 0x040000
     _BOOLEAN bMultimediaServiceAvailable;
+#endif
     CParameter& Parameters = *DRMReceiver.GetParameters();
 
     if (isVisible() == false)
@@ -388,13 +434,9 @@ void FDRMDialog::UpdateDRM_GUI()
 
     /* Input level meter */
     ProgrInputLevel->setValue(Parameters.GetIFSignalLevel());
-    SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
+    SetStatus(CLED_MSC, Parameters.ReceiveStatus.Audio.GetStatus());
     SetStatus(CLED_SDC, Parameters.ReceiveStatus.SDC.GetStatus());
-	int iShortID = Parameters.GetCurSelAudioService();
-	if(Parameters.Service[iShortID].eAudDataFlag == CService::SF_AUDIO)
-	    SetStatus(CLED_MSC, Parameters.AudioComponentStatus[iShortID].GetStatus());
-	else
-	    SetStatus(CLED_MSC, Parameters.DataComponentStatus[iShortID].GetStatus());
+    SetStatus(CLED_FAC, Parameters.ReceiveStatus.FAC.GetStatus());
 
     Parameters.Unlock();
 
@@ -411,11 +453,13 @@ void FDRMDialog::UpdateDRM_GUI()
            multimedia service selected to none */
         iLastMultimediaServiceSelected = -1;
     }
+#if QT_VERSION >= 0x040000
     /* If multimedia service availability has changed
        then update the menu */
     bMultimediaServiceAvailable = iMultimediaServiceBit != 0;
     if (bMultimediaServiceAvailable != action_Multimedia_Dialog->isEnabled())
         action_Multimedia_Dialog->setEnabled(bMultimediaServiceAvailable);
+#endif
 }
 
 void FDRMDialog::startLogging()
@@ -468,6 +512,8 @@ void FDRMDialog::OnTimer()
         ChangeGUIModeToAM();
         break;
     case RM_FM:
+        pStationsDlg->hide(); // in case open in AM mode - AM dialog can't hide this
+        pLiveScheduleDlg->hide(); // in case open in AM mode - AM dialog can't hide this
         ChangeGUIModeToFM();
         break;
     case RM_NONE: // wait until working thread starts operating
@@ -476,12 +522,12 @@ void FDRMDialog::OnTimer()
 
     // do this here so GUI has initialised before we might pop up a message box
     if(pScheduler!=NULL)
-        return;
+	return;
 
     string schedfile = Settings.Get("command", "schedule", string());
     if(schedfile != "")
     {
-        bool testMode = Settings.Get("command", "test", false);
+	bool testMode = Settings.Get("command", "test", false);
         pScheduler = new CScheduler(testMode);
         if(pScheduler->LoadSchedule(schedfile)) {
             pScheduleTimer = new QTimer(this);
@@ -567,15 +613,14 @@ void FDRMDialog::showTextMessage(const QString& textMessage)
 void FDRMDialog::showServiceInfo(const CService& service)
 {
     /* Service label (UTF-8 encoded string -> convert) */
-    QString ServiceLabel(QString::fromUtf8(service.strLabel.c_str()));
-    LabelServiceLabel->setText(ServiceLabel);
+    LabelServiceLabel->setText(str2qstr(service.strLabel));
 
     /* Service ID (plot number in hexadecimal format) */
     const long iServiceID = (long) service.iServiceID;
 
     if (iServiceID != 0)
     {
-        LabelServiceID->setText(QString("ID:%1").arg(iServiceID,4,16).toUpper());
+        LabelServiceID->setText(toUpper(QString("ID:%1").arg(iServiceID,4,16)));
     }
     else
         LabelServiceID->setText("");
@@ -659,15 +704,11 @@ QString FDRMDialog::serviceSelector(CParameter& Parameters, int i)
     if (service.IsActive())
     {
         /* Do UTF-8 to string conversion with the label strings */
-        QString strLabel = QString().fromUtf8(service.strLabel.c_str());
+        QString strLabel = str2qstr(service.strLabel);
 
         /* Label for service selection button (service label, codec
            and Mono / Stereo information) */
-		QString strCodec = GetCodecString(service);
-		QString strType = GetTypeString(service);
-		text = strLabel;
-		if (!strCodec.isEmpty() || !strType.isEmpty())
-			text += "  |   " + strCodec + " " + strType;
+        text = strLabel + "  |   " + GetCodecString(service) + " " + GetTypeString(service);
 
         /* Bit-rate (only show if greater than 0) */
         if (rAudioBitRate > (_REAL) 0.0)
@@ -767,7 +808,11 @@ void FDRMDialog::UpdateDisplay()
     {
         QString label = serviceSelector(Parameters, i);
         serviceLabels[i]->setText(label);
+#if QT_VERSION < 0x040000
+        pButtonGroup->find(i)->setEnabled(label != "");
+#else
         pButtonGroup->button(i)->setEnabled(label != "");
+#endif
         if (!bServiceIsValid && (iFirstAudioService == -1 || iFirstDataService == -1))
         {
             Parameters.Lock();
@@ -815,14 +860,17 @@ void FDRMDialog::UpdateDisplay()
         audioService = Parameters.Service[iCurSelAudioServ];
         Parameters.Unlock();
 
+#if QT_VERSION < 0x040000
+        pButtonGroup->setButton(iCurSelAudioServ);
+#else
         pButtonGroup->button(iCurSelAudioServ)->setChecked(true);
+#endif
 
         /* If we have text messages */
         if (audioService.AudioParam.bTextflag == TRUE)
         {
             // Text message of current selected audio service (UTF-8 decoding)
-            QString TextMessage(QString::fromUtf8(audioService.AudioParam.strTextMessage.c_str()));
-            showTextMessage(TextMessage);
+            showTextMessage(str2qstr(audioService.AudioParam.strTextMessage));
         }
         else
         {
@@ -882,9 +930,15 @@ void FDRMDialog::ClearDisplay()
     pButtonGroup->setExclusive(FALSE);
     for(size_t i=0; i<serviceLabels.size(); i++)
     {
+#if QT_VERSION < 0x040000
+        QPushButton* button = (QPushButton*)pButtonGroup->find(i);
+        if (button && button->isEnabled()) button->setEnabled(FALSE);
+        if (button && button->isOn())      button->setOn(FALSE);
+#else
         QPushButton* button = (QPushButton*)pButtonGroup->button(i);
         if (button && button->isEnabled()) button->setEnabled(FALSE);
         if (button && button->isChecked()) button->setChecked(FALSE);
+#endif
         serviceLabels[i]->setText("");
     }
     pButtonGroup->setExclusive(TRUE);
@@ -905,73 +959,116 @@ void FDRMDialog::ClearDisplay()
     LabelServiceLabel->setText(tr("Scanning..."));
 }
 
-void FDRMDialog::UpdateWindowTitle()
-{
-    QString windowName, fileName(QString::fromLocal8Bit(DRMReceiver.GetInputFileName().c_str()));
-    const bool bInputFile = fileName != "";
-    fileName = bInputFile ? QDir(fileName).dirName() : "";
-    windowName = "Dream";
-    windowName = bInputFile ? fileName + " - " + windowName : windowName;
-    setWindowTitle(windowName);
-    windowName = tr("Analog Demodulation");
-    windowName = bInputFile ? fileName + " - " + windowName : windowName;
-    pAnalogDemDlg->setWindowTitle(windowName);
-    windowName = tr("FM Receiver");
-    windowName = bInputFile ? fileName + " - " + windowName : windowName;
-    pFMDlg->setWindowTitle(windowName);
-}
-
 /* change mode is only called when the mode REALLY has changed
  * so no conditionals are needed in this routine
  */
 
 void FDRMDialog::ChangeGUIModeToDRM()
 {
-    CSysTray::Start(pSysTray);
-    pCurrentWindow = this;
-    pCurrentWindow->eventUpdate();
-    pCurrentWindow->show();
+    switchEvent();
+    show();
 }
 
 void FDRMDialog::ChangeGUIModeToAM()
 {
     hide();
     Timer.stop();
-    CSysTray::Stop(pSysTray, tr("Dream AM"));
-    pCurrentWindow = pAnalogDemDlg;
-    pCurrentWindow->eventUpdate();
-    pCurrentWindow->show();
+    pAnalogDemDlg->switchEvent();
+    pAnalogDemDlg->show();
 }
 
 void FDRMDialog::ChangeGUIModeToFM()
 {
     hide();
     Timer.stop();
-    CSysTray::Stop(pSysTray, tr("Dream FM"));
-    pCurrentWindow = pFMDlg;
-    pCurrentWindow->eventUpdate();
-    pCurrentWindow->show();
+    pFMDlg->switchEvent();
+    pFMDlg->show();
 }
 
-void FDRMDialog::eventUpdate()
+void FDRMDialog::switchEvent()
 {
-    /* Put (re)initialization code here for the settings that might have
-       be changed by another top level window. Called on mode switch */
+    /* Put initialization code on mode switch here */
+#if QT_VERSION >= 0x040000
     pFileMenu->UpdateMenu();
-    SetDisplayColor(CRGBConversion::int2RGB(getSetting("colorscheme", 0xff0000, true)));
+#endif
 }
 
-void FDRMDialog::eventShow(QShowEvent*)
+void FDRMDialog::showEvent(QShowEvent* e)
 {
+    EVENT_FILTER(e);
+    if (Settings.Get("DRM Dialog", "Stations Dialog visible", false))
+        pStationsDlg->show();
+    else
+        pStationsDlg->hide(); // in case AM had it open
+
+    if (Settings.Get("DRM Dialog", "Live Schedule Dialog visible", false))
+        pLiveScheduleDlg->show();
+
+    if (Settings.Get("DRM Dialog", "EPG Dialog visible", false))
+        pEPGDlg->show();
+
+    if (Settings.Get("DRM Dialog", "System Evaluation Dialog visible", false))
+        pSysEvalDlg->show();
+
+#if QT_VERSION < 0x040000
+    if (Settings.Get("DRM Dialog", "MultiMedia Dialog visible", false))
+        pMultiMediaDlg->show();
+#else
+    if (Settings.Get("DRM Dialog", "BWS Dialog visible", false))
+        pBWSDlg->show();
+
+    if (Settings.Get("DRM Dialog", "SS Dialog visible", false))
+        pSlideShowDlg->show();
+
+    if (Settings.Get("DRM Dialog", "JL Dialog visible", false))
+        pJLDlg->show();
+#endif
+
+    if (Settings.Get("DRM Dialog", "EPG Dialog visible", false))
+        pEPGDlg->show();
+
     /* Set timer for real-time controls */
     OnTimer();
     Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void FDRMDialog::eventHide(QHideEvent*)
+void FDRMDialog::hideEvent(QHideEvent* e)
 {
+    EVENT_FILTER(e);
     /* Deactivate real-time timers */
     Timer.stop();
+
+    /* remember the state of the windows */
+    Settings.Put("DRM Dialog", "Live Schedule Dialog visible", pLiveScheduleDlg->isVisible());
+    Settings.Put("DRM Dialog", "System Evaluation Dialog visible", pSysEvalDlg->isVisible());
+#if QT_VERSION < 0x040000
+    Settings.Put("DRM Dialog", "MultiMedia Dialog visible", pMultiMediaDlg->isVisible());
+    pMultiMediaDlg->hide();
+    pMultiMediaDlg->SaveSettings(Settings);
+#else
+    Settings.Put("DRM Dialog", "BWS Dialog visible", pBWSDlg->isVisible());
+    Settings.Put("DRM Dialog", "JL Dialog visible", pJLDlg->isVisible());
+    Settings.Put("DRM Dialog", "SS Dialog visible", pSlideShowDlg->isVisible());
+    pSlideShowDlg->hide();
+    pBWSDlg->hide();
+    pJLDlg->hide();
+#endif
+    Settings.Put("DRM Dialog", "EPG Dialog visible", pEPGDlg->isVisible());
+
+    /* now close all the other windows */
+    pSysEvalDlg->hide();
+    pLiveScheduleDlg->hide();
+    pEPGDlg->hide();
+    pStationsDlg->hide();
+
+    CWinGeom s;
+    QRect WinGeom = geometry();
+    s.iXPos = WinGeom.x();
+    s.iYPos = WinGeom.y();
+    s.iHSize = WinGeom.height();
+    s.iWSize = WinGeom.width();
+    Settings.Put("DRM Dialog", s);
+
 }
 
 void FDRMDialog::OnNewAcquisition()
@@ -1005,15 +1102,28 @@ void FDRMDialog::OnSelectDataService(int shortId)
 
     int iAppIdent = Parameters.Service[shortId].DataParam.iUserAppIdent;
 
+#if QT_VERSION < 0x040000
     switch(iAppIdent)
     {
     case DAB_AT_EPG:
         pDlg = pEPGDlg;
         break;
     case DAB_AT_BROADCASTWEBSITE:
-#ifdef QT_WEBKIT_LIB
+    case DAB_AT_JOURNALINE:
+    case DAB_AT_MOTSLIDESHOW:
+        pDlg = pMultiMediaDlg;
+        break;
+    default:
+        ;
+    }
+#else
+    switch(iAppIdent)
+    {
+    case DAB_AT_EPG:
+        pDlg = pEPGDlg;
+        break;
+    case DAB_AT_BROADCASTWEBSITE:
         pDlg = pBWSDlg;
-#endif
         break;
     case DAB_AT_JOURNALINE:
         pDlg = pJLDlg;
@@ -1022,6 +1132,7 @@ void FDRMDialog::OnSelectDataService(int shortId)
         pDlg = pSlideShowDlg;
         break;
     }
+#endif
 
     if(pDlg != NULL)
         Parameters.SetCurSelDataService(shortId);
@@ -1085,17 +1196,17 @@ void FDRMDialog::OnViewMultimediaDlg()
 
 void FDRMDialog::OnMenuSetDisplayColor()
 {
-    const QColor color = CRGBConversion::int2RGB(getSetting("colorscheme", 0xff0000, true));
-    const QColor newColor = QColorDialog::getColor(color, this);
+    const QColor color = CRGBConversion::int2RGB(Settings.Get("DRM Dialog", "colorscheme", 0xff0000));
+    const QColor newColor = QColorDialog::getColor( color, this);
     if (newColor.isValid())
     {
         /* Store new color and update display */
         SetDisplayColor(newColor);
-        putSetting("colorscheme", CRGBConversion::RGB2int(newColor), true);
+        Settings.Put("DRM Dialog", "colorscheme", CRGBConversion::RGB2int(newColor));
     }
 }
 
-void FDRMDialog::eventClose(QCloseEvent* ce)
+void FDRMDialog::closeEvent(QCloseEvent* ce)
 {
     /* The close event has been actioned and we want to shut
      * down, but the main window should be the last thing to
@@ -1110,12 +1221,25 @@ void FDRMDialog::eventClose(QCloseEvent* ce)
         /* Stop real-time timer */
         Timer.stop();
 
+        pStationsDlg->SaveSettings(Settings);
+        pLiveScheduleDlg->SaveSettings(Settings);
         pLogging->SaveSettings(Settings);
+
+        /* Save the station dialog visibility state */
+        switch (DRMReceiver.GetReceiverMode())
+        {
+        case RM_DRM:
+            Settings.Put("DRM Dialog", "Stations Dialog visible", pStationsDlg->isVisible());
+            break;
+        case RM_AM:
+            Settings.Put("AM Dialog", "Stations Dialog visible", pStationsDlg->isVisible());
+            break;
+        default:
+            break;
+        }
 
         /* Set the timer for polling the working thread state */
         TimerClose.start(50);
-
-        CSysTray::Destroy(&pSysTray);
     }
 
     /* Wait indefinitely until the working thread is stopped,
@@ -1125,9 +1249,9 @@ void FDRMDialog::eventClose(QCloseEvent* ce)
     if (DRMReceiver.GetParameters()->eRunState == CParameter::STOPPED)
     {
         TimerClose.stop();
-        AboutDlg.close();
-        pAnalogDemDlg->close();
-        pFMDlg->close();
+#if QT_VERSION >= 0x040000
+        AboutDlg.reject();
+#endif
         ce->accept();
     }
     else
@@ -1147,9 +1271,6 @@ QString FDRMDialog::GetCodecString(const CService& service)
         /* Audio coding */
         switch (service.AudioParam.eAudioCoding)
         {
-        case CAudioParam::AC_NONE:
-            break;
-
         case CAudioParam::AC_AAC:
             /* Only 12 and 24 kHz sample rates are supported for AAC encoding */
             if (eSamRate == CAudioParam::AS_12KHZ)
@@ -1169,41 +1290,6 @@ QString FDRMDialog::GetCodecString(const CService& service)
         case CAudioParam::AC_HVXC:
             strReturn = "HVXC";
             break;
-
-		case CAudioParam::AC_OPUS:
-			strReturn = "OPUS ";
-			/* Opus Audio sub codec */
-			switch (service.AudioParam.eOPUSSubCod)
-			{
-				case CAudioParam::OS_SILK:
-					strReturn += "SILK ";
-					break;
-				case CAudioParam::OS_HYBRID:
-					strReturn += "HYBRID ";
-					break;
-				case CAudioParam::OS_CELT:
-					strReturn += "CELT ";
-					break;
-			}
-			/* Opus Audio bandwidth */
-			switch (service.AudioParam.eOPUSBandwidth)
-			{
-				case CAudioParam::OB_NB:
-					strReturn += "NB";
-					break;
-				case CAudioParam::OB_MB:
-					strReturn += "MB";
-					break;
-				case CAudioParam::OB_WB:
-					strReturn += "WB";
-					break;
-				case CAudioParam::OB_SWB:
-					strReturn += "SWB";
-					break;
-				case CAudioParam::OB_FB:
-					strReturn += "FB";
-					break;
-			}
         }
 
         /* SBR */
@@ -1229,41 +1315,20 @@ QString FDRMDialog::GetTypeString(const CService& service)
     if (service.eAudDataFlag == CService::SF_AUDIO)
     {
         /* Audio service */
-        switch (service.AudioParam.eAudioCoding)
+        /* Mono-Stereo */
+        switch (service.AudioParam.eAudioMode)
         {
-        case CAudioParam::AC_NONE:
+        case CAudioParam::AM_MONO:
+            strReturn = "Mono";
             break;
 
-        case CAudioParam::AC_OPUS:
-            /* Opus channels configuration */
-            switch (service.AudioParam.eOPUSChan)
-            {
-            case CAudioParam::OC_MONO:
-            strReturn = "MONO";
+        case CAudioParam::AM_P_STEREO:
+            strReturn = "P-Stereo";
             break;
 
-            case CAudioParam::OC_STEREO:
-            strReturn = "STEREO";
+        case CAudioParam::AM_STEREO:
+            strReturn = "Stereo";
             break;
-            }
-            break;
-
-        default:
-            /* Mono-Stereo */
-            switch (service.AudioParam.eAudioMode)
-            {
-            case CAudioParam::AM_MONO:
-                strReturn = "Mono";
-                break;
-
-            case CAudioParam::AM_P_STEREO:
-                strReturn = "P-Stereo";
-                break;
-
-            case CAudioParam::AM_STEREO:
-                strReturn = "Stereo";
-                break;
-            }
         }
     }
     else
@@ -1348,29 +1413,59 @@ void FDRMDialog::SetDisplayColor(const QColor newColor)
         QPalette CurPal(vecpWidgets[i]->palette());
 
         /* Change colors */
-        if (vecpWidgets[i] != TextTextMessage)
+#if QT_VERSION < 0x040000
+        CurPal.setColor(QPalette::Active, QColorGroup::Foreground, newColor);
+        CurPal.setColor(QPalette::Active, QColorGroup::Button, newColor);
+        CurPal.setColor(QPalette::Active, QColorGroup::Text, newColor);
+        CurPal.setColor(QPalette::Active, QColorGroup::Light, newColor);
+        CurPal.setColor(QPalette::Active, QColorGroup::Dark, newColor);
+
+        CurPal.setColor(QPalette::Inactive, QColorGroup::Foreground, newColor);
+        CurPal.setColor(QPalette::Inactive, QColorGroup::Button, newColor);
+        CurPal.setColor(QPalette::Inactive, QColorGroup::Text, newColor);
+        CurPal.setColor(QPalette::Inactive, QColorGroup::Light, newColor);
+        CurPal.setColor(QPalette::Inactive, QColorGroup::Dark, newColor);
+
+        /* Special treatment for text message window. This should always be
+           black color of the text */
+        if (vecpWidgets[i] == TextTextMessage)
         {
-            CurPal.setColor(QPalette::Active, QPalette::Text, newColor);
-            CurPal.setColor(QPalette::Active, QPalette::Foreground, newColor);
-            CurPal.setColor(QPalette::Inactive, QPalette::Text, newColor);
-            CurPal.setColor(QPalette::Inactive, QPalette::Foreground, newColor);
+            CurPal.setColor(QPalette::Active, QColorGroup::Text, Qt::black);
+            CurPal.setColor(QPalette::Active, QColorGroup::Foreground, Qt::black);
+            CurPal.setColor(QPalette::Inactive, QColorGroup::Text, Qt::black);
+            CurPal.setColor(QPalette::Inactive, QColorGroup::Foreground, Qt::black);
+
+            /* We need to specify special color for disabled */
+            CurPal.setColor(QPalette::Disabled, QColorGroup::Light, Qt::black);
+            CurPal.setColor(QPalette::Disabled, QColorGroup::Dark, Qt::black);
         }
+#else
+        CurPal.setColor(QPalette::Active, QPalette::Foreground, newColor);
         CurPal.setColor(QPalette::Active, QPalette::Button, newColor);
+        CurPal.setColor(QPalette::Active, QPalette::Text, newColor);
         CurPal.setColor(QPalette::Active, QPalette::Light, newColor);
         CurPal.setColor(QPalette::Active, QPalette::Dark, newColor);
 
+        CurPal.setColor(QPalette::Inactive, QPalette::Foreground, newColor);
         CurPal.setColor(QPalette::Inactive, QPalette::Button, newColor);
+        CurPal.setColor(QPalette::Inactive, QPalette::Text, newColor);
         CurPal.setColor(QPalette::Inactive, QPalette::Light, newColor);
         CurPal.setColor(QPalette::Inactive, QPalette::Dark, newColor);
 
-        /* Special treatment for text message window */
+        /* Special treatment for text message window. This should always be
+           black color of the text */
         if (vecpWidgets[i] == TextTextMessage)
         {
+            CurPal.setColor(QPalette::Active, QPalette::Text, Qt::black);
+            CurPal.setColor(QPalette::Active, QPalette::Foreground, Qt::black);
+            CurPal.setColor(QPalette::Inactive, QPalette::Text, Qt::black);
+            CurPal.setColor(QPalette::Inactive, QPalette::Foreground, Qt::black);
+
             /* We need to specify special color for disabled */
             CurPal.setColor(QPalette::Disabled, QPalette::Light, Qt::black);
             CurPal.setColor(QPalette::Disabled, QPalette::Dark, Qt::black);
         }
-
+#endif
         /* Set new palette */
         vecpWidgets[i]->setPalette(CurPal);
     }
@@ -1447,6 +1542,31 @@ void FDRMDialog::AddWhatsThisHelp()
            "In this case the alternative frequencies can be viewed by opening the Live Schedule Dialog."
           );
 
+#if QT_VERSION < 0x040000
+    QWhatsThis::add(TextTextMessage, strTextMessage);
+    QWhatsThis::add(TextLabelInputLevel, strInputLevel);
+    QWhatsThis::add(ProgrInputLevel, strInputLevel);
+    QWhatsThis::add(CLED_MSC, strStatusLEDS);
+    QWhatsThis::add(CLED_SDC, strStatusLEDS);
+    QWhatsThis::add(CLED_FAC, strStatusLEDS);
+    QWhatsThis::add(LabelBitrate, strStationLabelOther);
+    QWhatsThis::add(LabelCodec, strStationLabelOther);
+    QWhatsThis::add(LabelStereoMono, strStationLabelOther);
+    QWhatsThis::add(LabelServiceLabel, strStationLabelOther);
+    QWhatsThis::add(LabelProgrType, strStationLabelOther);
+    QWhatsThis::add(LabelServiceID, strStationLabelOther);
+    QWhatsThis::add(LabelLanguage, strStationLabelOther);
+    QWhatsThis::add(LabelCountryCode, strStationLabelOther);
+    QWhatsThis::add(FrameAudioDataParams, strStationLabelOther);
+    QWhatsThis::add(PushButtonService1, strServiceSel);
+    QWhatsThis::add(PushButtonService2, strServiceSel);
+    QWhatsThis::add(PushButtonService3, strServiceSel);
+    QWhatsThis::add(PushButtonService4, strServiceSel);
+    QWhatsThis::add(TextMiniService1, strServiceSel);
+    QWhatsThis::add(TextMiniService2, strServiceSel);
+    QWhatsThis::add(TextMiniService3, strServiceSel);
+    QWhatsThis::add(TextMiniService4, strServiceSel);
+#else
     TextTextMessage->setWhatsThis(strTextMessage);
     TextLabelInputLevel->setWhatsThis(strInputLevel);
     ProgrInputLevel->setWhatsThis(strInputLevel);
@@ -1470,11 +1590,5 @@ void FDRMDialog::AddWhatsThisHelp()
     TextMiniService2->setWhatsThis(strServiceSel);
     TextMiniService3->setWhatsThis(strServiceSel);
     TextMiniService4->setWhatsThis(strServiceSel);
-
-    const QString strBars = tr("from 1 to 5 bars indicates WMER in the range 8 to 24 dB");
-	onebar->setWhatsThis(strBars);
-	twobars->setWhatsThis(strBars);
-	threebars->setWhatsThis(strBars);
-	fourbars->setWhatsThis(strBars);
-	fivebars->setWhatsThis(strBars);
+#endif
 }

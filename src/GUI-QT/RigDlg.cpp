@@ -35,20 +35,16 @@
 
 /* Implementation *************************************************************/
 
-RigDlg::RigDlg(CRig& nrig, QWidget* parent) :
-    QDialog(parent),
-    rig(nrig), rigmap(), bComboBoxPortMutex(FALSE)
+RigDlg::RigDlg(
+    CRig& nrig,
+    QWidget* parent, Qt::WFlags f) :
+    QDialog(parent, f), Ui_RigDlg(),
+    rig(nrig),rigmap()
 {
-    setAttribute(Qt::WA_QuitOnClose, false);
-    setupUi(this);
-#if QWT_VERSION < 0x060100
-    sMeter->setScalePosition(QwtThermo::TopScale);
-#else
-    sMeter->setScalePosition(QwtThermo::TrailingScale);
-#endif
 
     map<rig_model_t,CHamlib::SDrRigCaps> r;
 
+    setupUi(this);
     rig.GetRigList(r);
     modified->setEnabled(false);
     //rigTypes->setColumnCount(2);
@@ -93,31 +89,19 @@ RigDlg::~RigDlg()
 
 void RigDlg::showEvent(QShowEvent*)
 {
-	/* Port selection */
-	bComboBoxPortMutex = TRUE;
-	map<string,string> ports;
-	rig.GetPortList(ports);
-	comboBoxPort->clear();
-	prev_port = rig.GetComPort();
-	int index = -1;
-	for (map<string,string>::const_iterator i=ports.begin(); i!=ports.end(); i++)
-	{
+    map<string,string> ports;
+    rig.GetPortList(ports);
+    comboBoxPort->clear();
+	string port = rig.GetComPort();
+	int index=0;
+    for(map<string,string>::const_iterator i=ports.begin(); i!=ports.end(); i++)
+    {
 		comboBoxPort->addItem(i->first.c_str(), i->second.c_str());
-		if (i->second.compare(prev_port) == 0)
-			index = comboBoxPort->count() - 1; /* index is zero based */
-	}
-	if (index != -1)
-	{
-		comboBoxPort->setCurrentIndex(index);
-	}
-	else
-	{	/* Add the port to the list if not found */
-		comboBoxPort->addItem(prev_port.c_str(), prev_port.c_str());
-		comboBoxPort->setCurrentIndex(comboBoxPort->findText(prev_port.c_str()));
-	}
-	bComboBoxPortMutex = FALSE;
+		if(i->second.compare(port)==0)
+			index = comboBoxPort->count();
+    }
+	comboBoxPort->setCurrentIndex(index);
 
-	/* Rig model selection */
     prev_rig_model = rig.GetHamlibModelID();
     if (prev_rig_model == RIG_MODEL_NONE)
     {
@@ -136,6 +120,9 @@ void RigDlg::showEvent(QShowEvent*)
             }
         }
     }
+
+    prev_port = rig.GetComPort();
+    comboBoxPort->setCurrentIndex(comboBoxPort->findText(prev_port.c_str()));
 
 	connect(&rig, SIGNAL(sigstr(double)), this, SLOT(onSigstr(double)));
 }
@@ -173,7 +160,7 @@ RigDlg::on_testRig_clicked()
 void
 RigDlg::on_buttonBox_accepted()
 {
-	rig.SetComPort(getComboBoxComPort().toStdString());
+	rig.SetComPort(comboBoxPort->itemData(comboBoxPort->currentIndex()).toString().toStdString());
 	rig.SetHamlibModelID(rigTypes->currentItem()->data(0, Qt::UserRole).toInt());
 	rig.unsubscribe();
 	close();
@@ -189,22 +176,9 @@ RigDlg::on_buttonBox_rejected()
 }
 
 void
-RigDlg::on_comboBoxPort_editTextChanged(const QString&)
+RigDlg::on_comboBoxPort_currentIndexChanged(int index)
 {
-	if (bComboBoxPortMutex == FALSE)
-		rig.SetComPort(getComboBoxComPort().toStdString());
-}
-
-QString
-RigDlg::getComboBoxComPort()
-{
-	QString strPort;
-	const int index = comboBoxPort->currentIndex();
-	if (comboBoxPort->currentText().compare(comboBoxPort->itemText(index)))
-		strPort = comboBoxPort->currentText();
-	else
-		strPort = comboBoxPort->itemData(index).toString();
-	return strPort;
+	rig.SetComPort(comboBoxPort->itemData(index).toString().toStdString());
 }
 
 void
