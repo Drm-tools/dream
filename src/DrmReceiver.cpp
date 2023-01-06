@@ -1367,8 +1367,7 @@ void CDRMReceiver::SetFrequency(int iNewFreqkHz)
 void
 CDRMReceiver::SetIQRecording(bool bON)
 {
-    ReceiveData.SetInitFlag();
-    SplitForIQRecord.SetInitFlag();
+    InitsForAllModules(); // the data path gets changed, so maybe best to reset all
     if (bON)
     {
         cout<<"Starting I/Q recording"<<endl;
