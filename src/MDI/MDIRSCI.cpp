@@ -390,6 +390,10 @@ CDownstreamDI::AddSubscriber(const string& dest, const char profile, const strin
     {
         subs = new CRSISubscriberSocket;
     }
+    else if (dest.substr(0,5)=="http:" || dest.substr(0,6)=="https:")
+    {
+        subs = new CRSISubscriberSocket;
+    }
     else if (dest.find_first_not_of("TPtp0123456789.:") != string::npos)
 	{
 		subs = new CRSISubscriberFile();
