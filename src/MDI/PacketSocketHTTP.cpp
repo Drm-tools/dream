@@ -32,21 +32,23 @@ void CPacketSocketHTTP::ResetPacketSink(void)
 // Send packet to the socket
 void CPacketSocketHTTP::SendPacket(const std::vector<_BYTE>& vecbydata, uint32_t addr, uint16_t port)
 {
-    std::cout<<"emitting postDataReady signal"<<std::endl;
     QByteArray qdata(reinterpret_cast<const char*>(vecbydata.data()), vecbydata.size());
     emit postDataReady(qdata);
 }
 
 void CPacketSocketHTTP::doPost(const QByteArray& qdata)
 {
-    std::cout<<"Sending packet to http"<<std::endl;
     QNetworkRequest req(QString::fromStdString(dest));
+    req.setHeader(QNetworkRequest::ContentTypeHeader, "application/octet-stream");
     pNetworkAccessManager->post(req, qdata);
 }
 
 void CPacketSocketHTTP::onFinished(QNetworkReply *pReply)
 {
-    std::cout<<"onFinished called; reply error num " <<pReply->error() << " string: " << pReply->errorString().toStdString() << std::endl;
+    if (pReply->error() != 0)
+    {
+        std::cout<<"onFinished called; reply error num " <<pReply->error() << " string: " << pReply->errorString().toStdString() << std::endl;
+    }
     pReply->deleteLater();
 }
 
