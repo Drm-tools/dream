@@ -339,7 +339,7 @@ win32 {
 }
 fdk-aac {
      DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
-     unix: {
+     unix:!macx {
          INCLUDEPATH += /usr/include/fdk-aac
          LIBS += -L/usr/lib64/fdk-aac
      }
@@ -381,7 +381,11 @@ gps {
 }
 hamlib {
      DEFINES += HAVE_LIBHAMLIB
-     macx:LIBS += -framework IOKit
+     macx: {
+        INCLUDEPATH += /usr/local/include
+        LIBS += -L/usr/local/lib/
+        LIBS += -framework IOKit
+     }
      unix:LIBS += -lhamlib
      win32 {
        msvc* {
