@@ -144,7 +144,7 @@ template<class TData> CVectorEx<TData>* CSingleBuffer<TData>::Get(const int iReq
 #endif
     if (iRequestedSize > iFillLevel)
     {
-        std::cerr<<"SingleBuffer Get() FillLevel"<<iFillLevel<<" Requested size "<< iRequestedSize<<std::endl;
+        //std::cerr<<"SingleBuffer Get() FillLevel"<<iFillLevel<<" Requested size "<< iRequestedSize<<std::endl;
     }
 	/* Block is read, buffer is now empty again */
 	iFillLevel -= iRequestedSize;
@@ -159,7 +159,7 @@ template<class TData> void CSingleBuffer<TData>::Put(const int iOfferedSize)
 
     if (iFillLevel > this->iBufferSize)
     {
-        std::cerr<<"SingleBuffer Put() FillLevel "<<iFillLevel<< " Buffer size"<< this->iBufferSize<<std::endl;
+        //std::cerr<<"SingleBuffer Put() FillLevel "<<iFillLevel<< " Buffer size"<< this->iBufferSize<<std::endl;
     }
 #ifdef _DEBUG_DREAM
 	if (iFillLevel > this->iBufferSize)
@@ -215,7 +215,7 @@ template<class TData> CVectorEx<TData>* CCyclicBuffer<TData>::Get(const int iReq
 
     if (iAvailSpace < iRequestedSize)
     {
-        std::cerr<<"CyclicBuffer Get() Available space "<<iAvailSpace<< " Requested size " << iRequestedSize<<std::endl;
+        //std::cerr<<"CyclicBuffer Get() Available space "<<iAvailSpace<< " Requested size " << iRequestedSize<<std::endl;
     }
 #ifdef _DEBUG_DREAM
 	if (iAvailSpace < iRequestedSize)
@@ -286,7 +286,7 @@ template<class TData> void CCyclicBuffer<TData>::Put(const int iOfferedSize)
 	}
 #endif
     if (iAvailSpace < iOfferedSize) {
-        std::cerr<<"CyclicBuffer Put() Available space"<<iAvailSpace<< "Offered size"<< iOfferedSize<<std::endl;
+        //std::cerr<<"CyclicBuffer Put() Available space"<<iAvailSpace<< "Offered size"<< iOfferedSize<<std::endl;
     }
 
 

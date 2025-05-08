@@ -221,6 +221,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 	/* Generate some other tags */
 	TagItemGeneratorRINF.GenTag(Parameter.sReceiverID);	/* rinf */
+	TagItemGeneratorFracModJulDate.GenTag(); /* fmjd */
 	TagItemGeneratorRxFrequency.GenTag(true, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(true); /* ract */
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
