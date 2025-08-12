@@ -425,6 +425,8 @@ FdkAacCodec::EncGetVersion()
 bool
 FdkAacCodec::CanEncode(CAudioParam::EAudCod eAudioCoding)
 {
+    return (eAudioCoding == CAudioParam::AC_MPEGAAC);
+
     if(eAudioCoding != CAudioParam::AC_AAC)
         return false;
     if(hEncoder == nullptr) {
@@ -485,7 +487,7 @@ FdkAacCodec::EncOpen(const CAudioParam& AudioParam, unsigned long& lNumSampEncIn
             r = aacEncoder_SetParam(hEncoder, AACENC_AOT, AOT_DRM_SBR);
         }
         else {
-            r = aacEncoder_SetParam(hEncoder, AACENC_AOT, AOT_DRM_AAC); // OpenDigitalRadio version doesn't claim to support AOT_DRM_AAC
+            r = aacEncoder_SetParam(hEncoder, AACENC_AOT, AOT_AAC_LC); // OpenDigitalRadio version doesn't claim to support AOT_DRM_AAC
         }
         break;
     case CAudioParam::AM_P_STEREO:
@@ -543,23 +545,21 @@ FdkAacCodec::EncOpen(const CAudioParam& AudioParam, unsigned long& lNumSampEncIn
         cerr << "error setting channel mode " << hex << r << dec << endl;
         return false;
     }
-    r = aacEncoder_SetParam(hEncoder, AACENC_TRANSMUX, TT_DRM); // OpenDigitalRadio doesn't have TT_DRM in it
+    r = aacEncoder_SetParam(hEncoder, AACENC_TRANSMUX, TT_MP4_ADTS); // ADTS
     if(r!=AACENC_OK) {
         cerr << "error setting transport type " << hex << r << dec << endl;
         return false;
     }
-    r = aacEncoder_SetParam(hEncoder, AACENC_BITRATE,  1000*960*8/400);
+    r = aacEncoder_SetParam(hEncoder, AACENC_BITRATE,  128000);
     if(r!=AACENC_OK) {
         cerr << "error setting bitrate " << hex << r << dec << endl;
         return false;
     }
-    r = aacEncoder_SetParam(hEncoder, AACENC_GRANULE_LENGTH, 960); // might let us set frameLength
-    if(r!=AACENC_OK) {
-        cerr << "error setting frame length " << hex << r << dec << endl;
-        return false;
-    }
-    lNumSampEncIn=960;
-    lMaxBytesEncOut=769; // TODO
+    //r = aacEncoder_SetParam(hEncoder, AACENC_GRANULE_LENGTH, 960); // might let us set frameLength
+    //if(r!=AACENC_OK) {
+    //    cerr << "error setting frame length " << hex << r << dec << endl;
+    //    return false;
+   // }
     r = aacEncEncode(hEncoder, nullptr, nullptr, nullptr, nullptr);
     if(r!=AACENC_OK) {
         cerr << "error initialising encoder " << hex << r << dec << endl;
@@ -576,14 +576,67 @@ FdkAacCodec::EncOpen(const CAudioParam& AudioParam, unsigned long& lNumSampEncIn
     cerr << "inputChannels " << info.inputChannels << endl;
     cerr << "frameLength " << info.frameLength << endl;
     cerr << "maxAncBytes " << info.maxAncBytes << endl;
+    lNumSampEncIn=info.frameLength * info.inputChannels;
+    lMaxBytesEncOut=info.maxOutBufBytes; // TODO
     return true;
 }
 
 int
-FdkAacCodec::Encode(CVector<_SAMPLE>&, unsigned long, CVector<uint8_t>&, unsigned long)
+FdkAacCodec::Encode(CVector<_SAMPLE>& vecsEncInData, unsigned long lNumSampEncIn, CVector<uint8_t>& vecsEncOutData, unsigned long lMaxBytesEncOut)
 {
     int bytesEncoded = 0;
+    static INT_PCM inputBuffer[8*2048];
+    static UCHAR outputBuffer[8192];
+    
+    static void* inBuffer[] = { inputBuffer };
+    static INT inBufferIds[] = { IN_AUDIO_DATA };
+    static INT inBufferSize[] = { sizeof(inputBuffer) };
+    static INT inBufferElSize[] = { sizeof(INT_PCM) };
+    static void* outBuffer[] = { outputBuffer };
+    static INT outBufferIds[] = { OUT_BITSTREAM_DATA };
+    static INT outBufferSize[] = { sizeof(outputBuffer) };
+    static INT outBufferElSize[] = { sizeof(UCHAR) };
+
+    AACENC_BufDesc inBufDesc;
+    AACENC_BufDesc outBufDesc;
+
+    inBufDesc.numBufs = sizeof(inBuffer)/sizeof(void*);
+    inBufDesc.bufs = (void**)&inBuffer;
+    inBufDesc.bufferIdentifiers = inBufferIds;
+    inBufDesc.bufSizes = inBufferSize;
+    inBufDesc.bufElSizes = inBufferElSize;
+
+    outBufDesc.numBufs = sizeof(outBuffer)/sizeof(void*);
+    outBufDesc.bufs = (void**)&outBuffer;
+    outBufDesc.bufferIdentifiers = outBufferIds;
+    outBufDesc.bufSizes = outBufferSize;
+    outBufDesc.bufElSizes = outBufferElSize;
+
+    AACENC_InArgs inargs; 
+    AACENC_OutArgs outargs;
+
+    inargs.numInSamples = lNumSampEncIn;
+
+    for (unsigned int i=0; i<lNumSampEncIn; i++)
+       inputBuffer[i] = vecsEncInData[i];
+
     if (hEncoder != nullptr) {
+      AACENC_ERROR err = aacEncEncode(hEncoder, &inBufDesc, &outBufDesc, &inargs, &outargs);
+      if (err != AACENC_OK)
+        cerr<<"FDK AAC Encoder error "<<err<<endl;
+      bytesEncoded = outargs.numOutBytes;
+      //cerr<<"encoded "<<outargs.numInSamples<<" samples and produced "<<bytesEncoded<<" bytes."<<endl;
+      if (bytesEncoded > lMaxBytesEncOut) {
+        cerr<<"Output buffer too small!"<<endl;
+	return 0;
+      }
+
+      //cerr<<"Encoded audio: ";
+      for (int i=0; i<bytesEncoded; i++) {
+        //cerr<<hex<<setw(2)<<setfill('0')<<int(outputBuffer[i]);
+        vecsEncOutData[i] = outputBuffer[i]; 
+      }
+      //cerr<<endl;
     }
     return bytesEncoded;
 }
