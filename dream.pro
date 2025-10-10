@@ -9,6 +9,9 @@ INCLUDEPATH += $$PWD/include
 contains(QT_VERSION, ^6\\..*) {
     VERSION_MESSAGE = Qt 6
 }
+contains(QT_VERSION, ^6\\..*) {
+    VERSION_MESSAGE = Qt 6
+}
 CONFIG(debug, debug|release) {
     DEBUG_MESSAGE = debug
 }
