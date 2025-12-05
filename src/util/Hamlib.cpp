@@ -122,7 +122,7 @@ modes(), levels(), functions(), parameters(), config()
 
 	/* Get all models which are available.
 	 * A call-back function is called to return the different rigs */
-	rig_list_foreach(PrintHamlibModelList, this);
+    rig_list_foreach(PrintHamlibModelList, this);
 }
 
 CHamlib::~CHamlib()
@@ -341,7 +341,7 @@ string CHamlib::GetComPort() const
 }
 
 int
-CHamlib::PrintHamlibModelList(struct rig_caps *caps, void *data)
+CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
 {
 	/* Access data members of class through pointer ((CHamlib*) data) */
 	CHamlib & Hamlib = *((CHamlib *) data);

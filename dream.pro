@@ -149,7 +149,7 @@ unix {
 }
 macx {
     contains(QT, core) {
-        QT += webenginewidgets
+#        QT += webenginewidgets
         !sound {
             QT += multimedia
             CONFIG += sound
@@ -255,6 +255,7 @@ unix:!cross_compile {
         CONFIG += sndfile
       }
       exists(/usr/include/hamlib/rig.h) | \
+      exists(/usr/local/include/hamlib/rig.h) | \
       exists($$PREFIX/include/hamlib/rig.h) {
           CONFIG += hamlib
       }
