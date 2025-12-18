@@ -111,7 +111,6 @@ exists(libs/neaacdec.h) {
     message("with FAAD2")
 }
 unix {
-    target.path = /usr/bin
     INSTALLS += target
     CONFIG += link_pkgconfig
     exists(/usr/include/pulse/pulseaudio.h) {
