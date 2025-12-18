@@ -35,7 +35,6 @@
 #define TAG_ITEM_DECODER_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
-#include "../Parameter.h"
 #include "MDIDefinitions.h"
 #include "../util/Vector.h"
 
@@ -48,7 +47,7 @@ public:
 	virtual void DecodeTag(CVector<_BINARY>& vecbiTag, const int iLenDataBits) = 0;
 
 	// This function must return the name of the tag item that this decoder decodes.
-	virtual string GetTagName(void) = 0;
+	virtual std::string GetTagName(void) = 0;
 	virtual ~CTagItemDecoder() {}
 
 	CTagItemDecoder() : bIsReady(FALSE) {};
@@ -65,18 +64,5 @@ private:
 
 };
 
-// RSCI Status
-class CTagItemDecoderRSI : public CTagItemDecoder
-{
-public:
-    CTagItemDecoderRSI(CParameter* pP, const string& s) : pParameter(pP), tag(s) {}
-    void SetParameterPtr(CParameter *pP) {pParameter = pP;}
-    virtual string GetTagName() { return tag; }
-protected:
-
-    _REAL decodeDb(CVector<_BINARY>& vecbiTag);
-    CParameter *pParameter;
-    string tag;
-};
 
 #endif

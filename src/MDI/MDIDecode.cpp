@@ -54,25 +54,16 @@ void CDecodeRSIMDI::ProcessDataInternal(CParameter& Parameters)
 	}
 
 	if (TagPacketDecoderMDI.TagItemDecoderLoFrCnt.IsReady()) {
-        bool ok=true;
 		uint32_t dlfc = TagPacketDecoderMDI.TagItemDecoderLoFrCnt.dlfc;
 		if(dlfc == last_dlfc)
-            ok = false; // duplicate packet - might be a network thing, not an error but don't process again.
+			return; // duplicate packet - might be a network thing, not an error but don't process again.
 		if(dlfc < last_dlfc) {
 			if( (last_dlfc - dlfc) < 10 )
-                ok = false; // recent packet - could be out of order or duplicate, not interested
+				return; // recent packet - could be out of order or duplicate, not interested
 		}
-        if(ok)
-        {
-            // if we get here, dlfc is newer, or much older, than last_dlfc, assume its OK
-            // this includes the case where last_dlfc has not been initialised yet.
-            last_dlfc = dlfc;
-        }
-        else
-        {
-            if(dlfc!=0) // allow Newstar dr111
-                return;
-        }
+		// if we get here, dlfc is newer, or much older, than last_dlfc, assume its OK
+		// this includes the case where last_dlfc has not been initialised yet.
+		last_dlfc = dlfc;
 	}
 
 	Parameters.Lock();

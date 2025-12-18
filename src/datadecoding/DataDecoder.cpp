@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "DataDecoder.h"
-#include "epgutil.h"
+#include "./epg/epgutil.h"
 #include "Journaline.h"
 #include "Experiment.h"
 #include <iostream>
@@ -82,16 +82,15 @@ CDataDecoder::ProcessDataInternal(CParameter & Parameters)
 
 		/* Store result in vector and show CRC in multimedia window */
 		uint16_t crc = pvecInputData->Separate(16);
-		int iShortID = Parameters.GetCurSelDataService();
 		if (CRCObject.CheckCRC(crc) == TRUE)
 		{
 			veciCRCOk[j] = 1;	/* CRC ok */
-			Parameters.DataComponentStatus[iShortID].SetStatus(RX_OK);
+			Parameters.ReceiveStatus.MOT.SetStatus(RX_OK);
 		}
 		else
 		{
 			veciCRCOk[j] = 0;	/* CRC wrong */
-			Parameters.DataComponentStatus[iShortID].SetStatus(CRC_ERROR);
+			Parameters.ReceiveStatus.MOT.SetStatus(CRC_ERROR);
 		}
 	}
 
@@ -558,8 +557,7 @@ CDataDecoder::EAppType CDataDecoder::GetAppType(const CDataParam& DataParam)
 			eAppType  = AT_JOURNALINE;
 			break;
 
-		case AT_DMB: case AT_VOICE: case AT_MIDDLEWARE: case AT_IPDC:
-		case DAB_AT_DREAM_EXPERIMENTAL:	/* Just save the objects as files */
+		case DAB_AT_EXPERIMENTAL:	/* Journaline */
 			eAppType  = AT_EXPERIMENTAL;
 			break;
 		}

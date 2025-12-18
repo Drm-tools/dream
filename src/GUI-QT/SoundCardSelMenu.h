@@ -37,6 +37,11 @@
 #include "../sound/selectioninterface.h"
 
 
+/* undefine this if you want a separate
+   "Open Signal file..." "Open MDI/RSCI File..." */
+#define FILE_MENU_UNIFIED_OPEN_FILE
+
+
 typedef struct CHANSEL {
     const char* Name;
     const int iChanSel;
@@ -71,7 +76,6 @@ public slots:
     void OnSoundInDevice(QAction*);
     void OnSoundOutDevice(QAction*);
     void OnSoundSampleRate(QAction*);
-    void OnSoundSignalUpscale(bool);
     void OnSoundFileChanged(CDRMReceiver::ESFStatus);
 
 signals:
@@ -84,20 +88,35 @@ class CFileMenu : public QMenu
 
 public:
     CFileMenu(CDRMTransceiver& DRMTransceiver,
-        QMainWindow* parent, QMenu* menuInsertBefore);
+        QMainWindow* parent, QMenu* menuInsertBefore,
+        bool bSignal = TRUE);
     void UpdateMenu();
 
 protected:
     CDRMTransceiver&	DRMTransceiver;
+#ifdef FILE_MENU_UNIFIED_OPEN_FILE
     QAction*			actionOpenFile;
     QAction*			actionCloseFile;
+#else
+    QAction*			actionOpenSignalFile;
+    QAction*			actionCloseSignalFile;
+    QAction*			actionOpenRsciFile;
+    QAction*			actionCloseRsciFile;
+#endif
     const bool			bReceiver;
 	QString				strLastSoundPath;
 	QString				strLastRsciPath;
 
 public slots:
+#ifdef FILE_MENU_UNIFIED_OPEN_FILE
     void OnOpenFile();
     void OnCloseFile();
+#else
+    void OnOpenSignalFile();
+    void OnCloseSignalFile();
+    void OnOpenRsciFile();
+    void OnCloseRsciFile();
+#endif
 
 signals:
     void soundFileChanged(CDRMReceiver::ESFStatus eStatus);

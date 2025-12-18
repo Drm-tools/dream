@@ -42,12 +42,17 @@
  *
 \******************************************************************************/
 
-#include "PacketSocket.h"
+#include "MDIRSCI.h"
 #include "../DrmReceiver.h"
+#ifndef USE_NO_QT
+# include "PacketSocketQT.h"
+# include <qhostaddress.h>
+#else
+# include "PacketSocketNull.h"
+#endif
 #include "PacketSourceFile.h"
 #include <sstream>
 #include <iomanip>
-#include "MDIRSCI.h"
 
 /* Implementation *************************************************************/
 CDownstreamDI::CDownstreamDI() : iLogFraCnt(0), pDrmReceiver(NULL),
@@ -376,7 +381,7 @@ void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 }
 
 _BOOLEAN
-CDownstreamDI::AddSubscriber(const string& dest, const char profile, const string& origin)
+CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile)
 {
 	CRSISubscriber* subs = NULL;
 	/* heuristic to test for file or socket - TODO - better syntax */
@@ -522,13 +527,8 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 void CDownstreamDI::poll()
 {
 	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
-		i!=RSISubscribers.end(); i++) {
-		CRSISubscriber *s = *i;
-		string origin; 
-		bool hasOrigin = s->GetOrigin(origin);
-		if(hasOrigin)
-			s->poll();
-	}
+			i!=RSISubscribers.end(); i++)
+		(*i)->poll();
 }
 
 /* allow multiple destinations, allow destinations to send cpro instructions back */
@@ -560,15 +560,22 @@ _BOOLEAN CUpstreamDI::SetOrigin(const string& str)
 
 	strOrigin = str;
 
-	// try a file
-	source = new CPacketSourceFile;
+	// try a socket
+#ifndef USE_NO_QT
+	source = new CPacketSocketQT;
+#else
+	source = new CPacketSocketNull;
+#endif
+
+	// Delegate to socket
 	_BOOLEAN bOK = source->SetOrigin(str);
 
 	if(!bOK)
 	{
-		// try a socket
+		// try a file
 		delete source;
-		source = new CPacketSocketNative;
+		source = NULL;
+		source = new CPacketSourceFile;
 		bOK = source->SetOrigin(str);
 	}
 	if (bOK)
@@ -618,8 +625,6 @@ void CUpstreamDI::SetReceiverMode(ERecMode eNewMode)
 /* we only support one upstream RSCI source, so ignore the source address */
 void CUpstreamDI::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16_t)
 {
-	if(!vecbydata.size())
-		return;
 	if(vecbydata[0]=='P')
 	{
 		vector<_BYTE> vecOut;

@@ -45,6 +45,7 @@
 #include "TagItemDecoder.h"
 #include "../util/CRC.h"
 #include <iostream>
+using namespace std;
 
 CTagPacketDecoder::CTagPacketDecoder() : vecpTagItemDecoders(0),iSeqNumber(0xffff)
 {
@@ -77,10 +78,7 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 		CRCObject.AddByte((_BYTE) vecbiAFPkt.Separate(SIZEOF__BYTE));
 	}
 
-	int iCRC = vecbiAFPkt.Separate(16);
-
-	const _BOOLEAN bCRCOk = CRCObject.CheckCRC(iCRC);
-    (void)bCRCOk;
+	const _BOOLEAN bCRCOk = CRCObject.CheckCRC(vecbiAFPkt.Separate(16));
 
 	/* Actual packet decoding ----------------------------------------------- */
 	vecbiAFPkt.ResetBitAccess();
@@ -125,8 +123,8 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 	if (vecbiAFPkt.Separate(1)==1)
 	{
 		/* Use CRC check which was already done */
-//		if (!bCRCOk)
-//			return E_CRC;
+		if (!bCRCOk)
+			return E_CRC;
 	}
 
 	/* MAJ: major revision of the AF protocol in use (3 bits long) */
@@ -150,14 +148,14 @@ CTagPacketDecoder::DecodeAFPacket(CVectorEx<_BINARY>& vecbiAFPkt)
 
 
 	/* Payload -------------------------------------------------------------- */
-	DecodeTagPackets(vecbiAFPkt, iPayLLen);
+	DecodeTagPacket(vecbiAFPkt, iPayLLen);
 
 	return E_OK;
 }
 
 	// Decode all the tags in the tag packet. To do things before or after the decoding,
 	// override this and call the base class function to do the decoding
-void CTagPacketDecoder::DecodeTagPackets(CVectorEx<_BINARY>& vecbiPkt, const int iPayloadLen)
+void CTagPacketDecoder::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, const int iPayloadLen)
 {
 	/* Decode all tags */
 	int iCurConsBytes = 0;
@@ -178,6 +176,7 @@ int CTagPacketDecoder::DecodeTag(CVector<_BINARY>& vecbiTag)
 		strTagName += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 	/* Get tag data length (4 bytes = 32 bits) */
 	const int iLenDataBits = vecbiTag.Separate(32);
+
 	/* Check the tag name against each tag decoder in the vector of tag decoders */
 	_BOOLEAN bTagWasDec = FALSE;
 	for (i=0; i<vecpTagItemDecoders.Size(); i++)

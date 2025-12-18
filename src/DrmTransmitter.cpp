@@ -240,7 +240,7 @@ CDRMTransmitter::~CDRMTransmitter()
 }
 
 CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettings, new CSoundIn, new CSoundOut, TRUE),
-        ReadData(pSoundInInterface), TransmitData(pSoundOutInterface),
+        ReadData(pSoundInInterface), TransmitData(),
         rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
         // UEP only works with Dream receiver, FIXME! -> disabled for now
         bUseUEP(FALSE)
@@ -279,6 +279,8 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
     /* Either one audio or one data service can be chosen */
     _BOOLEAN bIsAudio = TRUE;
 
+    CService Service;
+
     /* In the current version only one service and one stream is supported. The
        stream IDs must be 0 in both cases */
     if (bIsAudio == TRUE)
@@ -299,7 +301,7 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
         Parameters.SetAudDataFlag(0,  CService::SF_AUDIO);
 
         /* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
-        Parameters.Service[0].iServiceDescr = 15; /* 15 -> other music */
+        Service.iServiceDescr = 15; /* 15 -> other music */
 
         Parameters.SetCurSelAudioService(0);
     }
@@ -323,18 +325,20 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
 
         /* The value 0 indicates that the application details are provided
            solely by SDC data entity type 5 */
-        Parameters.Service[0].iServiceDescr = 0;
+        Service.iServiceDescr = 0;
     }
 
     /* Init service parameters, 24 bit unsigned integer number */
-    Parameters.Service[0].iServiceID = 0;
+    Service.iServiceID = 0;
 
     /* Service label data. Up to 16 bytes defining the label using UTF-8
        coding */
-    Parameters.Service[0].strLabel = "Dream Test";
+    Service.strLabel = "Dream Test";
 
     /* Language (see TableFAC.h, "strTableLanguageCode[]") */
-    Parameters.Service[0].iLanguage = 5; /* 5 -> english */
+    Service.iLanguage = 5; /* 5 -> english */
+
+    Parameters.SetServiceParameters(0, Service);
 
     /* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
        short interleaving (400 ms): SI_SHORT */
@@ -479,10 +483,10 @@ void CDRMTransmitter::LoadSettings()
 
         /* Language */
         Service.iLanguage = s.Get(service, "language", int(Service.iLanguage));
-
+#if 0 // TODO
         /* Audio codec */
-        value = s.Get(service, "codec", string("AAC"));
-        if      (value == "AAC") { Service.AudioParam.eAudioCoding = CAudioParam::AC_AAC;   }
+        value = s.Get(service, "codec", string("faac"));
+        if      (value == "faac") { Service.AudioParam.eAudioCoding = CAudioParam::AC_AAC;  }
         else if (value == "Opus") { Service.AudioParam.eAudioCoding = CAudioParam::AC_OPUS; }
 
         /* Opus Codec Channels */
@@ -512,6 +516,7 @@ void CDRMTransmitter::LoadSettings()
         value = s.Get(service, "Opus_Application", string("OA_AUDIO"));
         if      (value == "OA_VOIP")  { Service.AudioParam.eOPUSApplication = CAudioParam::OA_VOIP;  }
         else if (value == "OA_AUDIO") { Service.AudioParam.eOPUSApplication = CAudioParam::OA_AUDIO; }
+#endif
     }
 }
 
@@ -635,10 +640,10 @@ void CDRMTransmitter::SaveSettings()
 
         /* Language */
         s.Put(service, "language", int(Service.iLanguage));
-
+#if 0 // TODO
         /* Audio codec */
         switch (Service.AudioParam.eAudioCoding) {
-        case CAudioParam::AC_AAC:  value = "AAC";  break;
+        case CAudioParam::AC_AAC:  value = "faac"; break;
         case CAudioParam::AC_OPUS: value = "Opus"; break;
         default: value = ""; }
         s.Put(service, "codec", value);
@@ -661,7 +666,10 @@ void CDRMTransmitter::SaveSettings()
         s.Put(service, "Opus_Bandwith", value);
 
         /* Opus Forward Error Correction */
-        value = Service.AudioParam.bOPUSForwardErrorCorrection ? "1" : "0";
+        switch (Service.AudioParam.bOPUSForwardErrorCorrection) {
+        case FALSE: value = "0"; break;
+        case TRUE:  value = "1"; break;
+        default: value = ""; }
         s.Put(service, "Opus_FEC", value);
 
         /* Opus encoder signal type */
@@ -677,5 +685,6 @@ void CDRMTransmitter::SaveSettings()
         case CAudioParam::OA_AUDIO: value = "OA_AUDIO"; break;
         default: value = ""; }
         s.Put(service, "Opus_Application", value);
+#endif
     }
 }

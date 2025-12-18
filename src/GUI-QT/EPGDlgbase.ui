@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>CEPGDlgbase</class>
- <widget class="QMainWindow" name="CEPGDlgbase">
+ <widget class="QDialog" name="CEPGDlgbase">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -24,9 +24,11 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res/icons.qrc">
-    <normaloff>:/icons/MainIcon.svg</normaloff>:/icons/MainIcon.svg</iconset>
+    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
   </property>
-  <widget class="QWidget" name="centralwidget">
+  <property name="sizeGripEnabled">
+   <bool>true</bool>
+  </property>
   <layout class="QGridLayout">
    <item row="0" column="0">
     <widget class="QFrame" name="frame">
@@ -234,7 +236,6 @@
     </layout>
    </item>
   </layout>
-  </widget>
  </widget>
  <tabstops>
   <tabstop>pages</tabstop>
@@ -248,7 +249,7 @@
    <sender>close</sender>
    <signal>clicked()</signal>
    <receiver>CEPGDlgbase</receiver>
-   <slot>close()</slot>
+   <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
      <x>20</x>

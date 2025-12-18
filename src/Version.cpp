@@ -29,19 +29,8 @@
 #include "GlobalDefinitions.h"
 
 const char dream_manufacturer[] = "drea";
-#ifdef QT_CORE_LIB
-# if QT_VERSION >= 0x050000
-const char dream_implementation[] = "Q5";
-# elif QT_VERSION >= 0x040000
-const char dream_implementation[] = "Q4";
-# else
-const char dream_implementation[] = "QT";
-# endif
-#else
-const char dream_implementation[] = "CL";
-#endif
-const int dream_version_major = 2;
-const int dream_version_minor = 1;
-const int dream_version_patch = 1;
-const char dream_version_build[] = "-svn808";
+const char dream_implementation[] = "Qt";
+const int dream_version_major = 1;
+const int dream_version_minor = 18;
+const char dream_version_build[] = "";
 

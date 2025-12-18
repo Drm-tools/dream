@@ -31,9 +31,6 @@
 #ifdef _WIN32
 # include <windows.h>
 #endif
-#if defined(__unix__) && !defined(__APPLE__)
-# include <csignal>
-#endif
 
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
@@ -42,20 +39,24 @@
 #include "../util/Settings.h"
 #include <iostream>
 
-#ifdef QT_CORE_LIB
-# ifdef QT_GUI_LIB
-#  include "fdrmdialog.h"
-#  include "TransmDlg.h"
-#  include "DialogUtil.h"
-#  ifdef HAVE_LIBHAMLIB
-#   include "../util-QT/Rig.h"
-#  endif
-#  include <QApplication>
-#  include <QMessageBox>
+#ifdef USE_QT_GUI
+# include "fdrmdialog.h"
+# include "TransmDlg.h"
+# include "DialogUtil.h"
+# include "Rig.h"
+# include <qapplication.h>
+# include <qmessagebox.h>
+# if QT_VERSION >= 0x040000
+#  include <QCoreApplication>
+#  include <QTranslator>
 # endif
-# include <QCoreApplication>
-# include <QTranslator>
-# include <QThread>
+#endif
+
+#if QT_VERSION >= 0x040000 || defined(USE_QT_GUI)
+# if QT_VERSION >= 0x040000
+#  include <QCoreApplication>
+# endif
+# include <qthread.h>
 
 class CRx: public QThread
 {
@@ -88,41 +89,23 @@ CRx::run()
 }
 #endif
 
-#ifdef USE_OPENSL
-# include <SLES/OpenSLES.h>
-SLObjectItf engineObject = NULL;
-#endif
-
-#ifdef QT_GUI_LIB
+#ifdef USE_QT_GUI
 /******************************************************************************\
 * Using GUI with QT                                                            *
 \******************************************************************************/
 int
 main(int argc, char **argv)
 {
-#ifdef USE_OPENSL
-    (void)slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
-    (void)(*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
-#endif
-#if defined(__unix__) && !defined(__APPLE__)
-	/* Prevent signal interaction with popen */
-	sigset_t sigset;
-	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGPIPE);
-	sigaddset(&sigset, SIGCHLD);
-	pthread_sigmask(SIG_BLOCK, &sigset, NULL);
-#endif
-
 	/* create app before running Settings.Load to consume platform/QT parameters */
 	QApplication app(argc, argv);
 
 #if defined(__APPLE__)
 	/* find plugins on MacOs when deployed in a bundle */
+# if QT_VERSION>0x040000
 	app.addLibraryPath(app.applicationDirPath()+"../PlugIns");
-#endif
-#ifdef _WIN32
-	WSADATA wsaData;
-	(void)WSAStartup(MAKEWORD(2,2), &wsaData);
+# else
+	app.setLibraryPaths(app.applicationDirPath()+"../PlugIns");
+# endif
 #endif
 
 	/* Load and install multi-language support (if available) */
@@ -152,10 +135,8 @@ main(int argc, char **argv)
 			   routine since we cannot 100% assume that the working thread is
 			   ready before the GUI thread */
 
-#ifdef HAVE_LIBHAMLIB
 			CRig rig(DRMReceiver.GetParameters());
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
-#endif
 			DRMReceiver.LoadSettings();
 
 #ifdef HAVE_LIBHAMLIB
@@ -165,17 +146,22 @@ main(int argc, char **argv)
 			{
 				rig.subscribe();
 			}
-			FDRMDialog *pMainDlg = new FDRMDialog(DRMReceiver, Settings, rig);
-#else
-			FDRMDialog *pMainDlg = new FDRMDialog(DRMReceiver, Settings);
 #endif
-			(void)pMainDlg;
+			FDRMDialog MainDlg(DRMReceiver, Settings, rig
+#if QT_VERSION < 0x040000
+				, NULL, NULL, FALSE, Qt::WStyle_MinMax
+#endif
+				);
 
 			/* Start working thread */
 			CRx rx(DRMReceiver);
 			rx.start();
 
 			/* Set main window */
+#if QT_VERSION < 0x040000
+			app.setMainWidget(&MainDlg);
+#endif
+
 			app.exec();
 
 #ifdef HAVE_LIBHAMLIB
@@ -189,15 +175,31 @@ main(int argc, char **argv)
 		}
 		else if(mode == "transmit")
 		{
-			TransmDialog* pMainDlg = new TransmDialog(Settings);
+			TransmDialog MainDlg(Settings
+#if QT_VERSION < 0x040000
+				, NULL, NULL, FALSE, Qt::WStyle_MinMax
+#endif
+				);
+
+#if QT_VERSION < 0x040000
+			/* Set main window */
+			app.setMainWidget(&MainDlg);
+#endif
 
 			/* Show dialog */
-			pMainDlg->show();
+			MainDlg.show();
 			app.exec();
 		}
 		else
 		{
-			CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]);
+			CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]
+#if QT_VERSION < 0x040000
+			, NULL, NULL, FALSE, Qt::WStyle_MinMax
+#endif
+			);
+#if QT_VERSION < 0x040000
+			app.setMainWidget(&HelpUsage);
+#endif
 			app.exec();
 			exit(0);
 		}
@@ -249,7 +251,7 @@ ErrorMessage(string strErrorString)
 */
 	exit(1);
 }
-#else /* QT_GUI_LIB */
+#else /* USE_QT_GUI */
 /******************************************************************************\
 * No GUI                                                                       *
 \******************************************************************************/
@@ -257,11 +259,7 @@ ErrorMessage(string strErrorString)
 int
 main(int argc, char **argv)
 {
-#ifdef USE_OPENSL
-    (void)slCreateEngine(&engineObject, 0, NULL, 0, NULL, NULL);
-    (void)(*engineObject)->Realize(engineObject, SL_BOOLEAN_FALSE);
-#endif
-    try
+	try
 	{
 		CSettings Settings;
 		Settings.Load(argc, argv);
@@ -275,11 +273,7 @@ main(int argc, char **argv)
 			DRMSimulation.SimScript();
 			DRMReceiver.LoadSettings();
 
-#ifdef _WIN32
-	WSADATA wsaData;
-	(void)WSAStartup(MAKEWORD(2,2), &wsaData);
-#endif
-#ifdef QT_CORE_LIB
+#if QT_VERSION >= 0x040000
 			QCoreApplication app(argc, argv);
 			/* Start working thread */
 			CRx rx(DRMReceiver);
@@ -321,7 +315,7 @@ ErrorMessage(string strErrorString)
 {
 	perror(strErrorString.c_str());
 }
-#endif /* QT_GUI_LIB */
+#endif /* USE_QT_GUI */
 
 void
 DebugError(const char *pchErDescr, const char *pchPar1Descr,

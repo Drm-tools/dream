@@ -29,44 +29,66 @@
 #ifndef __FMDIALOG_H
 #define __FMDIALOG_H
 
-#include <QLabel>
-#include <QPushButton>
-#include <QTimer>
-#include <QString>
-#include <QMenuBar>
-#include <QEvent>
-#include <QLayout>
-#include <QPalette>
-#include <QMenu>
-#include <QDialog>
-#include <QColorDialog>
-#include "ui_FMMainWindow.h"
-#include "SoundCardSelMenu.h"
+#include <qlabel.h>
+#include <qpushbutton.h>
+#include <qtimer.h>
+#include <qstring.h>
+#include <qmenubar.h>
+#include <qevent.h>
+#include <qlayout.h>
+#include <qpalette.h>
+#if QT_VERSION < 0x040000
+# include "fmdialogbase.h"
+# include <qpopupmenu.h>
+#else
+# include <QMenu>
+# include <QDialog>
+# include "ui_FMMainWindow.h"
+# include "SoundCardSelMenu.h"
+#endif
 #include "DialogUtil.h"
-#include "CWindow.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
-/* Classes ********************************************************************/
+#include <qcolordialog.h>
 
-class FMDialog : public CWindow, public Ui_FMMainWindow
+/* Classes ********************************************************************/
+#if QT_VERSION >= 0x040000
+class FMDialogBase : public QMainWindow, public Ui_FMMainWindow
+{
+public:
+	FMDialogBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WindowFlags f = 0):
+		QMainWindow(parent,f){(void)name;(void)modal;setupUi(this);}
+	virtual ~FMDialogBase() {}
+};
+#endif
+class FMDialog : public FMDialogBase
 {
 	Q_OBJECT
 
 public:
-	FMDialog(CDRMReceiver&, CSettings&, CFileMenu*, CSoundCardSelMenu*,
-	QWidget* parent = 0);
+	FMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE,	Qt::WindowFlags f = 0);
+	void switchEvent();
 
 protected:
 	CDRMReceiver&		DRMReceiver;
+	CSettings&			Settings;
 
 	QMenuBar*			pMenu;
+#if QT_VERSION < 0x040000
+	QPopupMenu*			pReceiverModeMenu;
+	QPopupMenu*			pSettingsMenu;
+	QPopupMenu*			pPlotStyleMenu;
+#else
 	QMenu*				pReceiverModeMenu;
 	QMenu*				pSettingsMenu;
 	QMenu*				pPlotStyleMenu;
 	CFileMenu*			pFileMenu;
 	CSoundCardSelMenu*	pSoundCardMenu;
+#endif
 	QTimer				Timer;
 	QTimer				TimerClose;
 
@@ -76,12 +98,12 @@ protected:
 	_BOOLEAN		bStationsDlgWasVis;
 	_BOOLEAN		bEPGDlgWasVis;
 	ERecMode		eReceiverMode;
+    CEventFilter	ef;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	virtual void	eventClose(QCloseEvent* ce);
-	virtual void	eventShow(QShowEvent* pEvent);
-	virtual void	eventHide(QHideEvent* pEvent);
-	virtual void	eventUpdate();
+	virtual void	closeEvent(QCloseEvent* ce);
+	virtual void	showEvent(QShowEvent* pEvent);
+	void			hideEvent(QHideEvent* pEvent);
 	void			SetService(int iNewServiceID);
 	void			AddWhatsThisHelp();
 	void			UpdateDisplay();
@@ -100,7 +122,7 @@ public slots:
 	void OnSwitchToDRM();
 	void OnSwitchToAM();
 	void OnHelpAbout() {emit About();}
-	void OnWhatsThis();
+	void on_actionWhats_This();
 
 signals:
 	void SwitchMode(int);

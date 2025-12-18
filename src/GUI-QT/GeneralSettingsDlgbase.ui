@@ -2,9 +2,6 @@
 <ui version="4.0">
  <class>CGeneralSettingsDlgBase</class>
  <widget class="QDialog" name="CGeneralSettingsDlgBase">
-  <property name="windowModality">
-   <enum>Qt::ApplicationModal</enum>
-  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -27,7 +24,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res/icons.qrc">
-    <normaloff>:/icons/MainIcon.svg</normaloff>:/icons/MainIcon.svg</iconset>
+    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>

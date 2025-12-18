@@ -29,14 +29,16 @@
 #ifndef __EVALUATIONDLG_H
 #define __EVALUATIONDLG_H
 
+#include <QMainWindow>
 #include "ui_systemevalDlgbase.h"
-#include "CWindow.h"
 #include "DRMPlot.h"
+
 #include "DialogUtil.h"
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 #include "../DrmReceiver.h"
+#include "../util/Settings.h"
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -45,24 +47,35 @@
 
 /* Classes ********************************************************************/
 
-class systemevalDlg : public CWindow, public Ui_SystemEvaluationWindow
+class systemevalDlgBase : public QDialog, public Ui::SystemEvaluationWindow
+{
+public:
+	systemevalDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WindowFlags f = 0):
+		QDialog(parent) {(void)name;(void)modal;(void)f; setWindowFlags(Qt::Window); setupUi(this);}
+	virtual ~systemevalDlgBase() {}
+};
+
+class systemevalDlg : public systemevalDlgBase
 {
 	Q_OBJECT
 
 public:
-	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0);
-	virtual ~systemevalDlg();
+	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WindowFlags f = 0);
 
+	virtual ~systemevalDlg();
 	void SetStatus(CMultColorLED*, ETypeRxStatus);
 
 protected:
 	CDRMReceiver&	DRMReceiver;
+	CSettings&		Settings;
 
 	QTimer			Timer;
 	CDRMPlot*		MainPlot;
 
-	virtual void	eventShow(QShowEvent* pEvent);
-	virtual void	eventHide(QHideEvent* pEvent);
+	virtual void	showEvent(QShowEvent* pEvent);
+	virtual void	hideEvent(QHideEvent* pEvent);
 	void			UpdateGPS(CParameter&);
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
@@ -78,6 +91,7 @@ protected:
 	CDRMPlot::ECharType eCurCharType, eNewCharType;
 	int				iPlotStyle;
 	vector<CDRMPlot*>	vecpDRMPlots;
+	CEventFilter	ef;
 
 public slots:
 	void OnTimer();

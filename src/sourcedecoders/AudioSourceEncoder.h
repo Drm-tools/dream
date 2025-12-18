@@ -23,8 +23,8 @@
  *
 \******************************************************************************/
 
-#ifndef _AUDIOSOURCEENCODER_H_INCLUDED_
-#define _AUDIOSOURCEENCODER_H_INCLUDED_
+#ifndef __AUDIOSOURCEENCODER_H
+# define __AUDIOSOURCEENCODER_H
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
@@ -34,11 +34,12 @@
 #include "../resample/Resample.h"
 #include "../datadecoding/DataEncoder.h"
 #include "../util/Utilities.h"
-#include "AudioCodec.h"
 
-/* Definition */
-#define MAX_ENCODED_CHANNELS 2
-
+#ifdef USE_FAAC_LIBRARY
+# include <faac.h>
+#else
+# include "faac_dll.h"
+#endif
 
 /* Classes ********************************************************************/
 class CAudioSourceEncoderImplementation
@@ -59,21 +60,7 @@ public:
 	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
 		{return DataEncoder.GetSliShowEnc()->GetTransStat(strCPi, rCPe);}
 
-    bool CanEncode(CAudioParam::EAudCod eAudCod) {
-        switch (eAudCod)
-        {
-        case CAudioParam::AC_NONE: return true;
-        case CAudioParam::AC_AAC:  return bCanEncodeAAC;
-        case CAudioParam::AC_CELP: return false;
-        case CAudioParam::AC_HVXC: return false;
-        case CAudioParam::AC_OPUS: return bCanEncodeOPUS;
-        }
-        return false;
-    }
-
 protected:
-	void CloseEncoder();
-
 	CTextMessageEncoder		TextMessage;
 	_BOOLEAN				bUsingTextMessage;
 	CDataEncoder			DataEncoder;
@@ -81,7 +68,8 @@ protected:
 	_BOOLEAN				bIsDataService;
 	int						iTotNumBitsForUsage;
 
-	CAudioCodec*			codec;
+	faacEncHandle			hEncoder;
+	faacEncConfigurationPtr CurEncFormat;
 
 	unsigned long			lNumSampEncIn;
 	unsigned long			lMaxBytesEncOut;
@@ -90,24 +78,20 @@ protected:
 	CVector<_SAMPLE>		vecsEncInData;
 	CMatrix<_BYTE>			audio_frame;
 	CVector<int>			veciFrameLength;
-	int						iNumChannels;
-	int						iNumAudioFrames;
-	int						iNumBorders;
+	int						iNumAACFrames;
 	int						iAudioPayloadLen;
 	int						iNumHigherProtectedBytes;
 
-	CAudioResample			ResampleObj[MAX_ENCODED_CHANNELS];
-	CVector<_REAL>			vecTempResBufIn[MAX_ENCODED_CHANNELS];
-	CVector<_REAL>			vecTempResBufOut[MAX_ENCODED_CHANNELS];
-
-	_BOOLEAN				bCanEncodeAAC;
-	_BOOLEAN				bCanEncodeOPUS;
+	_BOOLEAN				bFaacCodecSupported;
+	CAudioResample			ResampleObj;
+	CVector<_REAL>			vecTempResBufIn;
+	CVector<_REAL>			vecTempResBufOut;
 
 public:
-	virtual void InitInternalTx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
-	virtual void InitInternalRx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
-	virtual void ProcessDataInternal(CParameter& Parameters, CVectorEx<_SAMPLE>* pvecInputData,
-					CVectorEx<_BINARY>* pvecOutputData, int &iInputBlockSize, int &iOutputBlockSize);
+		virtual void InitInternalTx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
+		virtual void InitInternalRx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
+		virtual void ProcessDataInternal(CParameter& Parameters, CVectorEx<_SAMPLE>* pvecInputData,
+						CVectorEx<_BINARY>* pvecOutputData, int &iInputBlockSize, int &iOutputBlockSize);
 };
 
 class CAudioSourceEncoderRx : public CReceiverModul<_SAMPLE, _BINARY>
@@ -150,9 +134,6 @@ public:
 	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
 			{return AudioSourceEncoderImpl.GetTransStat(strCPi, rCPe);}
 
-	bool CanEncode(CAudioParam::EAudCod eAudCod)
-			{return AudioSourceEncoderImpl.CanEncode(eAudCod);}
-
 protected:
 	CAudioSourceEncoderImplementation AudioSourceEncoderImpl;
 
@@ -168,4 +149,4 @@ protected:
 
 };
 
-#endif // _AUDIOSOURCEENCODER_H_INCLUDED_
+#endif

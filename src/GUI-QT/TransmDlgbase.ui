@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res/icons.qrc">
-    <normaloff>:/icons/MainIconTx.svg</normaloff>:/icons/MainIconTx.svg</iconset>
+    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_5">
@@ -158,6 +158,9 @@ Institute for Communication Technology</string>
              </item>
              <item>
               <widget class="QwtThermo" name="ProgrInputLevel">
+               <property name="scalePosition">
+                <enum>QwtThermo::LeadingScale</enum>
+               </property>
               </widget>
              </item>
             </layout>
@@ -1025,9 +1028,9 @@ Institute for Communication Technology</string>
              </property>
              <layout class="QHBoxLayout">
               <item>
-               <widget class="QRadioButton" name="RadioButtonAAC">
+               <widget class="QRadioButton" name="RadioButtonFAAC">
                 <property name="text">
-                 <string>AAC</string>
+                 <string>faac</string>
                 </property>
                 <attribute name="buttonGroup">
                  <string notr="true">ButtonGroupCodec</string>
@@ -1441,7 +1444,7 @@ Institute for Communication Technology</string>
   <tabstop>ComboBoxLanguage</tabstop>
   <tabstop>CheckBoxEnableAudio</tabstop>
   <tabstop>ComboBoxProgramType</tabstop>
-  <tabstop>RadioButtonAAC</tabstop>
+  <tabstop>RadioButtonFAAC</tabstop>
   <tabstop>RadioButtonOPUS</tabstop>
   <tabstop>CheckBoxEnableTextMessage</tabstop>
   <tabstop>ComboBoxTextMessage</tabstop>

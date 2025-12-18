@@ -26,27 +26,31 @@
 \******************************************************************************/
 
 #include "MultSettingsDlg.h"
-#include <QFileDialog>
-#include <QShowEvent>
-#include <QHideEvent>
-#include <QLabel>
-#include <QToolTip>
+#if QT_VERSION < 0x040000
+# include <qfiledialog.h>
+#else
+# include <QFileDialog>
+# include <QShowEvent>
+# include <QHideEvent>
+#endif
+#include <qlabel.h>
+#include <qtooltip.h>
 
 /* Implementation *************************************************************/
 
-MultSettingsDlg::MultSettingsDlg(CParameter& NP, CSettings& NSettings,
-	QWidget* parent) :
-	QDialog(parent), Parameters(NP), Settings(NSettings)
+MultSettingsDlg::MultSettingsDlg(CParameter& NP, CSettings& NSettings, QWidget* parent,
+	const char* name, bool modal, Qt::WindowFlags f) :
+	CMultSettingsDlgBase(parent, name, modal, f),
+	Parameters(NP), Settings(NSettings)
 {
-	setAttribute(Qt::WA_QuitOnClose, false);
-	setupUi(this);
-
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 
+#if QT_VERSION >= 0x040000
 	// TODO
 	CheckBoxAddRefresh->hide();
 	EdtSecRefresh->hide();
+#endif
 
 	/* Connect buttons */
 
@@ -68,10 +72,36 @@ MultSettingsDlg::~MultSettingsDlg()
 
 void MultSettingsDlg::hideEvent(QHideEvent*)
 {
+#if QT_VERSION < 0x040000
+	/* save current settings */
+	Settings.Put("Multimedia Dialog", "addrefresh", CheckBoxAddRefresh->isChecked());
+
+	QString strRefresh = EdtSecRefresh->text();
+	int iMOTRefresh = strRefresh.toUInt();
+
+	if (iMOTRefresh < MIN_MOT_BWS_REFRESH_TIME)
+		iMOTRefresh = MIN_MOT_BWS_REFRESH_TIME;
+
+	if (iMOTRefresh > MAX_MOT_BWS_REFRESH_TIME)
+		iMOTRefresh = MAX_MOT_BWS_REFRESH_TIME;
+
+	Settings.Put("Multimedia Dialog", "motbwsrefresh", iMOTRefresh);
+#else
+	// TODO
+#endif
 }
 
 void MultSettingsDlg::showEvent(QShowEvent*)
 {
+#if QT_VERSION < 0x040000
+	if (Settings.Get("Multimedia Dialog", "addrefresh", TRUE))
+		CheckBoxAddRefresh->setChecked(TRUE);
+
+	EdtSecRefresh->setText(QString().setNum(Settings.Get("Multimedia Dialog", "motbwsrefresh", 10)));
+#else
+	// TODO
+#endif
+
     SetDataDirectoryControls();
 }
 
@@ -86,6 +116,18 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 	{
 		dir.setFilter(QDir::Files | QDir::Dirs | QDir::NoSymLinks);
 
+#if QT_VERSION < 0x040000
+		/* Eventually apply the filter */
+		if (sFilter != "")
+			dir.setNameFilter(sFilter);
+
+		dir.setSorting( QDir::DirsFirst );
+
+		const QFileInfoList *list = dir.entryInfoList();
+		QFileInfoListIterator it( *list ); /* create list iterator */
+		for(QFileInfo *fi; (fi=it.current()); ++it )
+		{
+#else
 		/* Eventually apply the filter */
 		if (sFilter != "")
 			dir.setNameFilters(QStringList(sFilter));
@@ -94,6 +136,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 		const QList<QFileInfo> list = dir.entryInfoList();
 		for(QList<QFileInfo>::const_iterator fi = list.begin(); fi!=list.end(); fi++)
 		{
+#endif
 
 			/* for each file/dir */
 			/* if directory...=> scan recursive */
@@ -119,14 +162,22 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 
 void MultSettingsDlg::OnbuttonChooseDir()
 {
+#if QT_VERSION < 0x040000
+	QString strFilename = QFileDialog::getExistingDirectory(TextLabelDir->text(), this);
+#else
 	QString strFilename = QFileDialog::getExistingDirectory(this, TextLabelDir->text());
+#endif
 	/* Check if user not hit the cancel button */
 	if (!strFilename.isEmpty())
 	{
 #ifdef _WIN32
 		strFilename.replace(QRegExp("/"), "\\");
 #endif
-		Parameters.SetDataDirectory(string(strFilename.toUtf8().constData()));
+#if QT_VERSION < 0x040000
+		Parameters.SetDataDirectory(string(strFilename.utf8().data()));
+#else
+		Parameters.SetDataDirectory(string(strFilename.toUtf8().data()));
+#endif
 		SetDataDirectoryControls();
 	}
 }
@@ -155,7 +206,11 @@ void MultSettingsDlg::SetDataDirectoryControls()
 #endif
 	if (!strFilename.isEmpty() && strFilename.at(strFilename.length()-1) == QChar(PATH_SEP))
 		strFilename.remove(strFilename.length()-1, 1);
+#if QT_VERSION < 0x040000
+	QToolTip::add(TextLabelDir, strFilename);
+#else
 	TextLabelDir->setToolTip(strFilename);
+#endif
 	TextLabelDir->setText(strFilename);
 }
 

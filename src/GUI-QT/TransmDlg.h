@@ -25,33 +25,47 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
+#ifndef __TransmDlg_H
+#define __TransmDlg_H
+// (DF) TODO: to be enabled and removed in a future release
+//#define ENABLE_TRANSM_CODECPARAMS
 
-#ifndef _TRANSMDLG_H_
-#define _TRANSMDLG_H_
+#include <qpushbutton.h>
+#include <qstring.h>
+#include <qlabel.h>
+#include <qradiobutton.h>
+#include <qcheckbox.h>
+#include <qlineedit.h>
+#include <qtabwidget.h>
+#include <qcombobox.h>
+#include <qstring.h>
+#include <qfileinfo.h>
+#include <qstringlist.h>
+#include <qmenubar.h>
+#include <qlayout.h>
+#include <qthread.h>
+#include <qtimer.h>
+#include <qwt_thermo.h>
+#if QT_VERSION < 0x040000
+# include <qdialog.h>
+# include <qpopupmenu.h>
+# include "TransmDlgbase.h"
+#else
+# include <QMainWindow>
+# include <QMenu>
+# include "ui_TransmDlgbase.h"
+#endif
 
-#include "ui_TransmDlgbase.h"
-#include "CodecParams.h"
+#ifdef _WIN32
+# include "windows.h"
+#endif
 #include "DialogUtil.h"
-#include "CWindow.h"
 #include "../DrmTransmitter.h"
 #include "../Parameter.h"
-#include <QPushButton>
-#include <QString>
-#include <QLabel>
-#include <QRadioButton>
-#include <QCheckBox>
-#include <QLineEdit>
-#include <QTabWidget>
-#include <QComboBox>
-#include <QFileInfo>
-#include <QStringList>
-#include <QMenuBar>
-#include <QLayout>
-#include <QThread>
-#include <QTimer>
-#include <QMainWindow>
-#include <QMenu>
-#include <qwt_thermo.h>
+#include "../util/Settings.h"
+#ifdef ENABLE_TRANSM_CODECPARAMS
+# include "CodecParams.h"
+#endif
 
 
 /* Classes ********************************************************************/
@@ -69,6 +83,12 @@ public:
 
 	virtual void run()
 	{
+		/* Set thread priority (The working thread should have a higher priority
+		   than the GUI) */
+#ifdef _WIN32
+		SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
+#endif
+
 		try
 		{
 			/* Call receiver main routine */
@@ -84,39 +104,56 @@ public:
 	CDRMTransmitter	DRMTransmitter;
 };
 
-
-class TransmDialog : public CWindow, public Ui_TransmDlgBase
+#if QT_VERSION >= 0x040000
+class TransmDlgBase : public QMainWindow, public Ui_TransmDlgBase
+{
+public:
+	TransmDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WindowFlags f = 0):
+		QMainWindow(parent){(void)name;(void)modal;(void)f;setupUi(this);}
+	virtual ~TransmDlgBase() {}
+};
+#endif
+class TransmDialog : public TransmDlgBase
 {
 	Q_OBJECT
 
 public:
-	TransmDialog(CSettings&, QWidget* parent=0);
+	TransmDialog(CSettings&,
+		QWidget* parent=0, const char* name=0, bool modal=FALSE, Qt::WindowFlags f=0);
 	virtual ~TransmDialog();
 
 protected:
-	virtual void eventClose(QCloseEvent*);
+	void closeEvent(QCloseEvent*);
 	void DisableAllControlsForSet();
 	void EnableAllControlsForSet();
 	void TabWidgetEnableTabs(QTabWidget* tabWidget, bool enable);
 
 	CTransmitterThread	TransThread; /* Working thread object */
 	CDRMTransmitter&	DRMTransmitter;
+	CSettings&			Settings;
+#if QT_VERSION < 0x040000
+	QMenuBar*			pMenu;
+	QPopupMenu*			pSettingsMenu;
+#else
+	QMenu*				pSettingsMenu;
+#endif
 	CAboutDlg			AboutDlg;
 	QTimer				Timer;
 	QTimer				TimerStop;
-	CVector<string>		vecstrTextMessage;
-	QMenu*				pSettingsMenu;
-	CodecParams*		pCodecDlg;
-    CSysTray*           pSysTray;
-	QAction*			pActionStartStop;
+#ifdef ENABLE_TRANSM_CODECPARAMS
+	CodecParams*		CodecDlg;
+#endif
 
 	_BOOLEAN			bIsStarted;
+	CVector<string>		vecstrTextMessage;
 	int					iIDCurrentText;
 	int					iServiceDescr;
 	_BOOLEAN			bCloseRequested;
+#ifdef ENABLE_TRANSM_CODECPARAMS
 	int					iButtonCodecState;
-
 	void				ShowButtonCodec(_BOOLEAN bShow, int iKey);
+#endif
 	_BOOLEAN			GetMessageText(const int iID);
 	void				UpdateMSCProtLevCombo();
 	void				EnableTextMessage(const _BOOLEAN bFlag);
@@ -124,13 +161,16 @@ protected:
 	void				EnableData(const _BOOLEAN bFlag);
 	void				AddWhatsThisHelp();
 
+
 public slots:
 	void OnButtonStartStop();
 	void OnPushButtonAddText();
 	void OnButtonClearAllText();
 	void OnPushButtonAddFileName();
 	void OnButtonClearAllFileNames();
+#if defined(ENABLE_TRANSM_CODECPARAMS) || QT_VERSION < 0x040000
 	void OnButtonCodec();
+#endif
 	void OnToggleCheckBoxHighQualityIQ(bool bState);
 	void OnToggleCheckBoxAmplifiedOutput(bool bState);
 	void OnToggleCheckBoxEnableData(bool bState);
@@ -147,15 +187,18 @@ public slots:
 	void OnRadioRobustnessMode(int iID);
 	void OnRadioBandwidth(int iID);
 	void OnRadioOutput(int iID);
+#if defined(ENABLE_TRANSM_CODECPARAMS) || QT_VERSION < 0x040000
 	void OnRadioCodec(int iID);
+#endif
 	void OnRadioCurrentTime(int iID);
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);
 	void OnTextChangedSndCrdIF(const QString& strIF);
 	void OnTimer();
 	void OnTimerStop();
-	void OnSysTrayActivated(QSystemTrayIcon::ActivationReason);
-	void OnWhatsThis();
+	void on_actionWhats_This();
+#if QT_VERSION < 0x040000
+	void OnHelpAbout() {AboutDlg.show();}
+#endif
 };
-
-#endif // _TRANSMDLG_H_
+#endif

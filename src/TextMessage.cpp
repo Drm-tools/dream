@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "TextMessage.h"
+using namespace std;
 
 
 /* Implementation *************************************************************/
@@ -480,40 +481,38 @@ void CTextMessageDecoder::SetText()
                         /* Get character */
                         char cNewChar = Segment[i].byData[j];
 
-                        if(decodeSpecial)
+#ifdef USE_QT_GUI
+                        /* Append new character */
+                        (*pstrText).append(&cNewChar, 1);
+#else
+                        /* NOT USE_QT_GUI */
+                        switch (cNewChar)
                         {
-                            switch (cNewChar)
-                            {
-                            case 0x0A:
-                                /* Code 0x0A may be inserted to indicate a preferred
-                                   line break */
-                            case 0x1F:
-                                /* Code 0x1F (hex) may be inserted to indicate a
-                                   preferred word break. This code may be used to
-                                   display long words comprehensibly */
+                        case 0x0A:
+                            /* Code 0x0A may be inserted to indicate a preferred
+                               line break */
+                        case 0x1F:
+                            /* Code 0x1F (hex) may be inserted to indicate a
+                               preferred word break. This code may be used to
+                               display long words comprehensibly */
 
-                                (*pstrText).append("\r\n", 2);
-                                break;
+                            (*pstrText).append("\r\n", 2);
+                            break;
 
-                            case 0x0B:
-                                /* End of a headline */
+                        case 0x0B:
+                            /* End of a headline */
 
-                                /* Two line-breaks */
-                                (*pstrText).append("\r\n\r\n", 4);
-                                cNewChar = 0x0A;
-                                break;
+                            /* Two line-breaks */
+                            (*pstrText).append("\r\n\r\n", 4);
+                            cNewChar = 0x0A;
+                            break;
 
-                            default:
-                                /* Append new character */
-                                (*pstrText).append(&cNewChar, 1);
-                                break;
-                            }
-                        }
-                        else
-                        {
+                        default:
                             /* Append new character */
                             (*pstrText).append(&cNewChar, 1);
+                            break;
                         }
+#endif
                     }
                 }
             }

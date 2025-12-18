@@ -40,7 +40,7 @@ class CPacketSink;
 class CDRMReceiver;
 class CTagPacketGenerator;
 
-class CRSISubscriber : public CPacketSocket
+class CRSISubscriber : public CPacketSink
 {
 public:
 	CRSISubscriber(CPacketSink *pSink = NULL);
@@ -91,11 +91,8 @@ public:
 	virtual ~CRSISubscriberSocket();
 
 	_BOOLEAN SetOrigin(const string& str);
-	_BOOLEAN GetOrigin(string& addr);
 	_BOOLEAN SetDestination(const string& str);
 	_BOOLEAN GetDestination(string& addr);
-	void SetPacketSink(CPacketSink *pSink) { (void)pSink; }
-	void ResetPacketSink() {}
 	void poll();
 
 private:
@@ -117,9 +114,6 @@ public:
 	void poll() {} // Do Nothing
 
 	_BOOLEAN GetDestination(string& addr);
-	_BOOLEAN GetOrigin(string& addr) { (void)addr; return false; }
-	void SetPacketSink(CPacketSink *pSink) { (void)pSink; }
-	void ResetPacketSink() {}
 private:
 	CPacketSinkFile* pPacketSinkFile;
 };

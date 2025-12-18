@@ -26,14 +26,17 @@
  *
 \******************************************************************************/
 
-#ifndef _GLOBALDEFINITIONS_H
-#define _GLOBALDEFINITIONS_H
+#if !defined(DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
+#define DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include <complex>
-using namespace std; /* Because of the library: "complex" */
 #include <string>
 #include <cstdio>
 #include <cmath>
+#ifdef HAVE_CONFIG_H
+# include "config.h"
+#endif
+
 #include "tables/TableDRMGlobal.h"
 
 
@@ -55,21 +58,18 @@ using namespace std; /* Because of the library: "complex" */
 #endif /* _WIN32 */
 
 /* set sensible defaults for QT */
-#ifdef QT_CORE_LIB
+#ifndef USE_NO_QT
 # include <qglobal.h>
-# if QT_VERSION < 0x040600
-#  error Qt version too old, need at least Qt 4.6
-# endif
-#else
-# define qDebug(...) do {} while (0)
 #endif
 
+/* Standard definitions */
 #ifndef TRUE
-# define TRUE 1
+# define TRUE							1
 #endif
 #ifndef FALSE
-# define FALSE 0
+# define FALSE							0
 #endif
+
 
 /* Choose algorithms -------------------------------------------------------- */
 /* There are two algorithms available for frequency offset estimation for
@@ -106,7 +106,7 @@ using namespace std; /* Because of the library: "complex" */
 
 /* Define the application specific data-types ------------------------------- */
 typedef	double							_REAL;
-typedef	complex<_REAL>					_COMPLEX;
+typedef	std::complex<_REAL>					_COMPLEX;
 typedef short							_SAMPLE;
 typedef unsigned char					_BYTE;
 typedef bool							_BOOLEAN;
@@ -238,10 +238,18 @@ public:
 };
 
 
-#ifdef QT_CORE_LIB
+#if QT_VERSION >= 0x040000 || defined(USE_QT_GUI)
+#if QT_VERSION < 0x040000
+# if QT_VERSION < 0x030000
+#  include <qthread.h>
+# else
+#  include <qmutex.h>
+#  include <qwaitcondition.h>
+# endif
+#else
 # include <QMutex>
 # include <QWaitCondition>
-
+#endif
 /* Mutex object to access data safely from different threads */
 
 class CMutex
@@ -293,8 +301,8 @@ public:
 class CGenErr
 {
 public:
-    CGenErr(string strNE) : strError(strNE) {}
-    string strError;
+    CGenErr(std::string strNE) : strError(strNE) {}
+    std::string strError;
 };
 
 
@@ -326,7 +334,7 @@ void DebugError(const char* pchErDescr, const char* pchPar1Descr,
                 const double dPar1, const char* pchPar2Descr,
                 const double dPar2);
 
-void ErrorMessage(string strErrorString);
+void ErrorMessage(std::string strErrorString);
 
 
 /* Global functions ***********************************************************/

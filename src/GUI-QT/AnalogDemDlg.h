@@ -30,17 +30,23 @@
 \******************************************************************************/
 
 
-#include "ui_AMMainWindow.h"
-#include "ui_AMSSDlgbase.h"
-#include "CWindow.h"
-#include "SoundCardSelMenu.h"
-#include "DRMPlot.h"
+#include <qtimer.h>
+#if QT_VERSION < 0x040000
+# include "AnalogDemDlgbase.h"
+# include "AMSSDlgbase.h"
+#else
+# include "ui_AMMainWindow.h"
+# include "ui_AMSSDlgbase.h"
+# include <QDialog>
+# include <QButtonGroup>
+# include "SoundCardSelMenu.h"
+#endif
+
+#include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
+#include "../util/Settings.h"
 #include "../tables/TableAMSS.h"
-#include <QTimer>
-#include <QDialog>
-#include <QButtonGroup>
 
 
 /* Definitions ****************************************************************/
@@ -49,24 +55,56 @@
 
 
 /* Classes ********************************************************************/
+class CDRMPlot;
+
+#if QT_VERSION >= 0x040000
+class CAMSSDlgBase : public QDialog, public Ui_CAMSSDlgBase
+{
+public:
+    CAMSSDlgBase(QWidget* parent, const char*, bool, Qt::WindowFlags f = 0):
+        QDialog(parent,f) {
+        setupUi(this);
+    }
+    virtual ~CAMSSDlgBase() {}
+};
+
+class AnalogDemDlgBase : public QMainWindow, public Ui_AMMainWindow
+{
+public:
+    AnalogDemDlgBase(QWidget* parent = 0,
+                     const char* name = 0, bool modal=false, Qt::WindowFlags f = 0):
+        QMainWindow(parent,f), MainPlot(NULL)
+    {
+        (void)name;
+        (void)modal;
+        setupUi(this);
+    }
+    virtual ~AnalogDemDlgBase() {}
+protected:
+    CDRMPlot*           MainPlot;
+};
+#endif
 
 
 /* AMSS dialog -------------------------------------------------------------- */
-class CAMSSDlg : public CWindow, public Ui_CAMSSDlgBase
+class CAMSSDlg : public CAMSSDlgBase
 {
 	Q_OBJECT
 
 public:
-	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0);
+	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WindowFlags f = 0);
 
 protected:
 	CDRMReceiver&	DRMReceiver;
+	CSettings&	Settings;
+	CEventFilter	ef;
 
-	QTimer			Timer;
-	QTimer			TimerPLLPhaseDial;
-	void			AddWhatsThisHelp();
-	virtual void	eventShow(QShowEvent*);
-	virtual void	eventHide(QHideEvent*);
+	QTimer	Timer;
+	QTimer	TimerPLLPhaseDial;
+	void	AddWhatsThisHelp();
+	void	showEvent(QShowEvent*);
+	void	hideEvent(QHideEvent*);
 
 public slots:
 	void OnTimer();
@@ -75,37 +113,37 @@ public slots:
 
 
 /* Analog demodulation dialog ----------------------------------------------- */
-class AnalogDemDlg : public CWindow, public Ui_AMMainWindow
+class AnalogDemDlg : public AnalogDemDlgBase
 {
 	Q_OBJECT
 
 public:
-	AnalogDemDlg(CDRMReceiver&, CSettings&, CFileMenu*, CSoundCardSelMenu*,
-	QWidget* parent = 0);
+	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WindowFlags f = 0);
 
 protected:
-	CDRMReceiver&		DRMReceiver;
+	CDRMReceiver&	DRMReceiver;
+	CSettings&		Settings;
 
-	QTimer				Timer;
-	QTimer				TimerPLLPhaseDial;
-	QTimer				TimerClose;
-	CAMSSDlg			AMSSDlg;
-    CDRMPlot*			MainPlot;
-	CFileMenu*			pFileMenu;
-	CSoundCardSelMenu*	pSoundCardMenu;
+	QTimer			Timer;
+	QTimer			TimerPLLPhaseDial;
+	QTimer			TimerClose;
+	CAMSSDlg		AMSSDlg;
+	CEventFilter	ef;
+#if QT_VERSION >= 0x040000
+    CFileMenu*			pFileMenu;
+    CSoundCardSelMenu*	pSoundCardMenu;
+#endif
 
 	void UpdateControls();
-	void UpdateSliderBandwidth();
 	void AddWhatsThisHelp();
-	virtual void eventClose(QCloseEvent* pEvent);
-	virtual void eventShow(QShowEvent* pEvent);
-	virtual void eventHide(QHideEvent* pEvent);
-	virtual void eventUpdate();
+	void showEvent(QShowEvent* pEvent);
+	void hideEvent(QHideEvent* pEvent);
 
 public slots:
+	void switchEvent();
+	void closeEvent(QCloseEvent* pEvent);
 	void UpdatePlotStyle(int);
-	void OnSampleRateChanged();
-	void OnSoundFileChanged(CDRMReceiver::ESFStatus);
 	void OnTimer();
 	void OnTimerPLLPhaseDial();
 	void OnTimerClose();
@@ -119,12 +157,11 @@ public slots:
 	void OnSliderBWChange(int value);
 	void OnRadioNoiRed(int iID);
 	void OnButtonWaterfall();
-	void on_ButtonFreqOffset_clicked(bool);
-	void on_SpinBoxNoiRedLevel_valueChanged(int value);
+	void OnButtonAMSS();
 	void OnSwitchToDRM();
 	void OnSwitchToFM();
 	void OnHelpAbout() {emit About();}
-	void OnWhatsThis();
+	void on_actionWhats_This();
 
 signals:
 	void SwitchMode(int);

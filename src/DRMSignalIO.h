@@ -33,6 +33,8 @@
 #ifdef QT_MULTIMEDIA_LIB
 #include <QAudioInput>
 #include <QIODevice>
+#else
+  class QIODevice;
 #endif
 #include "Parameter.h"
 #include "matlib/Matlib.h"
@@ -75,6 +77,9 @@
    the following macro will enable the raw data option */
 #define FILE_DRM_USING_RAW_DATA
 
+    enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_SUB_CHAN, CS_IQ_POS,
+                     CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_IQ_POS_SPLIT, CS_IQ_NEG_SPLIT
+                    };
 
 /* Classes ********************************************************************/
 class CTransmitData : public CTransmitterModul<_COMPLEX, _COMPLEX>
@@ -84,10 +89,8 @@ public:
                      OF_IQ_NEG /* I / Q */, OF_EP /* envelope / phase */
                     };
 
-    CTransmitData(CSoundOutInterface* pNS) : pFileTransmitter(NULL), pSound(pNS),
-            eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
-            strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE),
-            bAmplified(FALSE), bHighQualityIQ(FALSE) {}
+    CTransmitData();
+
     virtual ~CTransmitData();
 
     void SetIQOutput(const EOutFormat eFormat) {
@@ -116,6 +119,16 @@ public:
         rDefCarOffset = rNewCarOffset;
     }
 
+    void SetSoundInterface(string);
+    string GetSoundInterface() { return soundDevice; }
+    void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions);
+    void Stop();
+#ifdef QT_MULTIMEDIA_LIB
+	string GetSoundInterfaceVersion() { return "QtMultimedia"; }
+#else
+	string GetSoundInterfaceVersion() { return "unknown"; }
+#endif
+
     void SetWriteToFile(const string strNFN)
     {
         strOutFileName = strNFN;
@@ -126,7 +139,11 @@ public:
 
 protected:
     FILE*				pFileTransmitter;
+#ifdef QT_MULTIMEDIA_LIB
+    QIODevice*              pIODevice;
+#endif
     CSoundOutInterface*	pSound;
+    string              soundDevice;
     CVector<short>		vecsDataOut;
     int					iBlockCnt;
     int					iNumBlocks;
@@ -141,6 +158,7 @@ protected:
 
     string				strOutFileName;
     _BOOLEAN			bUseSoundcard;
+    int					iSampleRate;
 
     _BOOLEAN			bAmplified;
     _BOOLEAN			bHighQualityIQ;
@@ -155,15 +173,11 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
-    enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_SUB_CHAN, CS_IQ_POS,
-                     CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_IQ_POS_SPLIT, CS_IQ_NEG_SPLIT
-                    };
-
     CReceiveData() :
 #ifdef QT_MULTIMEDIA_LIB
-        pIODevice(NULL),
+        pIODevice(nullptr),
 #endif
-        pSound(NULL),
+        pSound(nullptr),
         vecrInpData(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0),
             bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN), iPhase(0)
     {}
@@ -190,11 +204,15 @@ public:
         mutexInpData.Unlock();
     }
 
-    void SetSoundInterface(CSoundInInterface* pS) {
-        pSound = pS;
-    }
+    void SetSoundInterface(CSoundInInterface* ps);
+    void SetSoundInterface(string);
+    string GetSoundInterface() { return soundDevice; }
+    void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions);
+    void Stop();
 #ifdef QT_MULTIMEDIA_LIB
-    void SetSoundInterface(QAudioInput *);
+	string GetSoundInterfaceVersion() { return "QtMultimedia"; }
+#else
+	string GetSoundInterfaceVersion() { return "unknown"; }
 #endif
     void SetInChanSel(const EInChanSel eNS) {
         eInChanSelection = eNS;
@@ -212,6 +230,7 @@ protected:
 #endif
     CSoundInInterface*		pSound;
     CVector<_SAMPLE>		vecsSoundBuffer;
+    string                  soundDevice;
 
     /* Access to vecrInpData buffer must be done 
        inside mutexInpData mutex */

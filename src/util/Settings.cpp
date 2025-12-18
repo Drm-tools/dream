@@ -43,7 +43,6 @@
 #include <cstring>
 #include <cstdlib>
 using namespace std;
-#include "FileTyper.h"
 
 /* Implementation *************************************************************/
 void
@@ -186,10 +185,13 @@ CSettings::IsReceiver(const char *argv0)
 void
 CSettings::FileArg(const string& str)
 {
-    // Identify the type of file
-    FileTyper::type t = FileTyper::resolve(str);
-    if(FileTyper::is_rxstat(t))
-    {
+	// Identify the type of file
+	string ext;
+	size_t p = str.rfind('.');
+	if (p != string::npos)
+		ext = str.substr(p + 1);
+	if (ext.substr(0,2) == "RS" || ext.substr(0,2) == "rs" || ext.substr(0,4) == "pcap")
+	{
 		// it's an RSI or MDI input file
 		Put("command", "rsiin", str);
 	}
@@ -206,7 +208,8 @@ CSettings::ParseArguments(int argc, char **argv)
 	_BOOLEAN bIsReceiver;
 	_REAL rArgument;
 	string strArgument;
-	string rsiOutProfile="A";
+	int rsioutnum = 0;
+	int rciinnum = 0;
 
 	bIsReceiver = IsReceiver(argv[0]);
 
@@ -273,14 +276,6 @@ CSettings::ParseArguments(int argc, char **argv)
 							  strArgument) == TRUE)
 		{
 			Put(ReceiverTransmitter, "snddevout", strArgument);
-			continue;
-		}
-
-		/* Signal upscale ratio --------------------------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-U", "--sigupratio",
-							  1, 2, rArgument) == TRUE)
-		{
-			Put("Receiver", "sigupratio", rArgument);
 			continue;
 		}
 
@@ -358,7 +353,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		}
 
 		/* Frequency acquisition search window size ------------------------- */
-		if (GetNumericArgument(argc, argv, i, "-S", "--fracwinsize", -1,
+		if (GetNumericArgument(argc, argv, i, "-S", "--fracwinsize", 0,
 							   MAX_FREQ_AQC_SE_WIN_SZ, rArgument) == TRUE)
 		{
 			Put("command", "fracwinsize", rArgument);
@@ -366,7 +361,7 @@ CSettings::ParseArguments(int argc, char **argv)
 		}
 
 		/* Frequency acquisition search window center ----------------------- */
-		if (GetNumericArgument(argc, argv, i, "-E", "--fracwincent", -1,
+		if (GetNumericArgument(argc, argv, i, "-E", "--fracwincent", 0,
 							   MAX_FREQ_AQC_SE_WIN_CT, rArgument) == TRUE)
 		{
 			Put("command", "fracwincent", rArgument);
@@ -413,7 +408,7 @@ CSettings::ParseArguments(int argc, char **argv)
 //			continue;
 //		}
 
-#ifdef QT_CORE_LIB /* QThread needed for log file timing */
+#ifdef USE_QT_GUI /* QThread needed for log file timing */
 
 		/* log enable flag  ------------------------------------------------- */
 		if (GetNumericArgument(argc, argv, i, "-g", "--enablelog", 0, 1,
@@ -489,7 +484,13 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetStringArgument(argc, argv, i, "--rsioutprofile", "--rsioutprofile",
 							  strArgument) == TRUE)
 		{
-			rsiOutProfile = strArgument;
+			for (int i = 0; i < rsioutnum; i++)
+			{
+				stringstream s;
+				s << "rsioutprofile" << i;
+				if(ini["command"].count(s.str()) == 0)
+					Put("command", s.str(), strArgument);
+			}
 			continue;
 		}
 
@@ -497,11 +498,10 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetStringArgument(argc, argv, i, "--rsiout", "--rsiout",
 							  strArgument) == TRUE)
 		{
-			string s = Get("command", "rsiout", string(""));
-			if(s == "")
-				Put("command", "rsiout", rsiOutProfile+":"+strArgument);
-			else
-				Put("command", "rsiout", s+" "+rsiOutProfile+":"+strArgument);
+			stringstream s;
+			s << "rsiout" << rsioutnum;
+			Put("command", s.str(), strArgument);
+			rsioutnum++;
 			continue;
 		}
 
@@ -525,20 +525,12 @@ CSettings::ParseArguments(int argc, char **argv)
 		if (GetStringArgument(argc, argv, i, "--rciin", "--rciin",
 							  strArgument) == TRUE)
 		{
-			string s = Get("command", "rciin", string(""));
-			if(s == "")
-				Put("command", "rciin", strArgument);
-			else
-				Put("command", "rciin", s+" "+strArgument);
+			stringstream s;
+			s << "rciin" << rciinnum;
+			Put("command", s.str(), strArgument);
+			rciinnum++;
 			continue;
 		}
-
-        if (GetNumericArgument(argc, argv, i, "-permissive",
-                "--permissive", 0, 1, rArgument) == TRUE)
-        {
-            Put("command", "permissive", (int) rArgument);
-            continue;
-        }
 
 		if (GetStringArgument (argc, argv, i,
 				"--rsirecordprofile", "--rsirecordprofile", strArgument) == TRUE)
@@ -618,14 +610,6 @@ CSettings::ParseArguments(int argc, char **argv)
 	}
 }
 
-/*
- Option argument:
-  <b> boolean (0=off, 1=on)
-  <n> integer number
-  <r> real number
-  <s> string
-*/
-
 const char *
 CSettings::UsageArguments()
 {
@@ -651,11 +635,11 @@ CSettings::UsageArguments()
 		"                               2: mix both channels (default);      3: subtract right from left;\n"
 		"                               4: I / Q input positive;             5: I / Q input negative;\n"
 		"                               6: I / Q input positive (0 Hz IF);   7: I / Q input negative (0 Hz IF)\n"
-		"                               8: I / Q input positive split;       9: I / Q input negative split\n"
 		"  -u <n>, --outchansel <n>     output channel selection\n"
 		"                               0: L -> L, R -> R (default);   1: L -> L, R muted;   2: L muted, R -> R\n"
 		"                               3: mix -> L, R muted;          4: L muted, mix -> R\n"
-#ifdef QT_CORE_LIB
+//		"  -e <b>, --decodeepg <b>      enable/disable epg decoding (0: off; 1: on)\n"
+#ifdef USE_QT_GUI
 		"  -g <b>, --enablelog <b>      enable/disable logging (0: no logging; 1: logging)\n"
 		"  -r <n>, --frequency <n>      set frequency [kHz] for log file\n"
 		"  -l <n>, --logdelay <n>       delay start of logging by <n> seconds, allowed range: 0...3600)\n"
@@ -674,13 +658,11 @@ CSettings::UsageArguments()
 		"  --rsirecordprofile <s>       RSCI recording profile: A|B|C|D|Q|M\n"
 		"  --rsirecordtype <s>          RSCI recording file type: raw|ff|pcap\n"
 		"  --recordiq <b>               enable/disable recording an I/Q file\n"
-		"  --permissive <b>             enable decoding of bad RSCI frames (0: off; 1: on)\n"
 		"  -R <n>, --samplerate <n>     set audio and signal sound card sample rate [Hz]\n"
 		"  --audsrate <n>               set audio sound card sample rate [Hz] (allowed range: 8000...192000)\n"
 		"  --sigsrate <n>               set signal sound card sample rate [Hz] (allowed values: 24000, 48000, 96000, 192000)\n"
 		"  -I <s>, --snddevin <s>       set sound in device\n"
 		"  -O <s>, --snddevout <s>      set sound out device\n"
-		"  -U <n>, --sigupratio <n>     set signal upscale ratio (allowed values: 1, 2)\n"
 #ifdef HAVE_LIBHAMLIB
 		"  -M <n>, --hamlib-model <n>   set Hamlib radio model ID\n"
 		"  -C <s>, --hamlib-config <s>  set Hamlib config parameter\n"
@@ -690,7 +672,7 @@ CSettings::UsageArguments()
 		"  -h, -?, --help               this help text\n"
 		"\n"
 		"Example: $EXECNAME -p --sampleoff -0.23 -i 2"
-#ifdef QT_NETWORK_LIB
+#ifdef USE_QT_GUI
 		" -r 6140 --rsiout 127.0.0.1:3002"
 #endif
 		"";
@@ -766,6 +748,14 @@ CSettings::GetNumericArgument(int argc, char **argv, int &i,
    The homepage is http://robertk.com/source
 
    Copyright August 18, 1999 by Robert Kesterson */
+
+#ifdef _MSC_VER
+/* These pragmas are to quiet VC++ about the expanded template identifiers
+   exceeding 255 chars. You won't be able to see those variables in a debug
+   session, but the code will run normally */
+#pragma warning (push)
+#pragma warning (disable : 4786 4503)
+#endif
 
 string
 CIniFile::GetIniSetting(const string& section,
@@ -893,11 +883,16 @@ CIniFile::SaveIni(ostream& file) const
 /* Return true or false depending on whether the first string is less than the
    second */
 bool
-StlIniCompareStringNoCase::operator() (const string & x, const string & y) const
-{
+StlIniCompareStringNoCase::operator() (const string & x, const string & y)
+	 const
+	 {
 #ifdef _WIN32
-	return (_stricmp(x.c_str(), y.c_str()) < 0) ? true : false;
+		 return (_stricmp(x.c_str(), y.c_str()) < 0) ? true : false;
 #else
-	return (strcasecmp(x.c_str(), y.c_str()) < 0) ? true : false;
+		 return (strcasecmp(x.c_str(), y.c_str()) < 0) ? true : false;
 #endif /* strcasecmp */
-}
+	 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif

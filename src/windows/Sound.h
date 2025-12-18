@@ -37,8 +37,12 @@
    In case of robustness mode D we have 24 symbols */
 #define NUM_SOUND_BUFFERS_IN	24		/* Number of sound card buffers */
 
-#ifdef QT_GUI_LIB
-# define NUM_SOUND_BUFFERS_OUT	6		/* Number of sound card buffers */
+#ifdef USE_QT_GUI
+# if QT_VERSION >= 0x030000
+#  define NUM_SOUND_BUFFERS_OUT	6		/* Number of sound card buffers */
+# else
+#  define NUM_SOUND_BUFFERS_OUT	12		/* Number of sound card buffers */
+# endif
 #else
 # define NUM_SOUND_BUFFERS_OUT	3		/* Number of sound card buffers */
 #endif
@@ -55,18 +59,19 @@ virtual ~CSoundIn();
 
 virtual _BOOLEAN	Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
 virtual _BOOLEAN	Read(CVector<short>& psData);
-virtual void		Enumerate(vector<string>& names, vector<string>& descriptions);
-virtual string		GetDev();
-virtual void		SetDev(string sNewDev);
+virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions);
+virtual std::string		GetDev();
+virtual void		SetDev(std::string sNewDev);
 virtual void		Close();
+virtual std::string		GetVersion() { return ""; };
 
 protected:
 void		OpenDevice();
 void		PrepareBuffer(int iBufNum);
 void		AddBuffer();
 
-vector<string>	vecstrDevices;
-string			sCurDev;
+std::vector<std::string>	vecstrDevices;
+std::string			sCurDev;
 WAVEFORMATEX	sWaveFormatEx;
 _BOOLEAN		bChangDev;
 HANDLE			m_WaveEvent;
@@ -91,10 +96,11 @@ virtual ~CSoundOut();
 
 virtual _BOOLEAN	Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
 virtual _BOOLEAN	Write(CVector<short>& psData);
-virtual void		Enumerate(vector<string>& names, vector<string>& descriptions);
-virtual string		GetDev();
-virtual void		SetDev(string sNewDev);
+virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions);
+virtual std::string		GetDev();
+virtual void		SetDev(std::string sNewDev);
 virtual void		Close();
+virtual std::string		GetVersion() { return ""; };
 
 protected:
 void		OpenDevice();
@@ -102,8 +108,8 @@ void		PrepareBuffer(int iBufNum);
 void		AddBuffer(int iBufNum);
 void		GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf);
 
-vector<string>	vecstrDevices;
-string			sCurDev;
+std::vector<std::string>	vecstrDevices;
+std::string			sCurDev;
 WAVEFORMATEX	sWaveFormatEx;
 _BOOLEAN		bChangDev;
 HANDLE			m_WaveEvent;
