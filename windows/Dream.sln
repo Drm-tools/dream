@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C++ Express 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "dream", "Dream.vcproj", "{D2B6F1C6-16EA-33F8-9AED-94580D6A5FCB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Dream", "Dream.vcproj", "{811EC90A-5D62-3003-B41E-AE7D035DE797}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,10 +9,10 @@ Global
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{D2B6F1C6-16EA-33F8-9AED-94580D6A5FCB}.Debug|Win32.ActiveCfg = Debug|Win32
-		{D2B6F1C6-16EA-33F8-9AED-94580D6A5FCB}.Debug|Win32.Build.0 = Debug|Win32
-		{D2B6F1C6-16EA-33F8-9AED-94580D6A5FCB}.Release|Win32.ActiveCfg = Release|Win32
-		{D2B6F1C6-16EA-33F8-9AED-94580D6A5FCB}.Release|Win32.Build.0 = Release|Win32
+		{811EC90A-5D62-3003-B41E-AE7D035DE797}.Debug|Win32.ActiveCfg = Debug|Win32
+		{811EC90A-5D62-3003-B41E-AE7D035DE797}.Debug|Win32.Build.0 = Debug|Win32
+		{811EC90A-5D62-3003-B41E-AE7D035DE797}.Release|Win32.ActiveCfg = Release|Win32
+		{811EC90A-5D62-3003-B41E-AE7D035DE797}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

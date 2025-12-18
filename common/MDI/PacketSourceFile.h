@@ -33,34 +33,36 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 #include "PacketInOut.h"
-#include <qobject.h>
-#include <qdatetime.h>
 
-class CPacketSourceFile : public QObject, public CPacketSource
+class CPacer;
+
+class CPacketSourceFile : public CPacketSource
 {
-	Q_OBJECT
 public:
 	CPacketSourceFile();
-	virtual ~CPacketSourceFile();
+	~CPacketSourceFile();
 	// Set the sink which will receive the packets
-	virtual void SetPacketSink(CPacketSink *pSink);
+	void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink
-	virtual void ResetPacketSink(void);
-	virtual _BOOLEAN SetOrigin(const string& str);
+	void ResetPacketSink(void);
+	_BOOLEAN SetOrigin(const string& str);
+	void poll();
 
 private:
 
-    void readRawOrFF(vector<_BYTE>& vecbydata, int& interval);
-    void readPcap(vector<_BYTE>& vecbydata, int& interval);
+    void readRawAF(vector<_BYTE>& vecbydata, int& interval);
+    void readRawPFT(vector<_BYTE>& vecbydata, int& interval);
+    void readFF(vector<_BYTE>& vecbydata, int& interval);
 
-	CPacketSink		*pPacketSink;
-	QTime			timeKeeper;
-	uint64_t		last_packet_time;
-    void*			pf;
-	_BOOLEAN		bRaw;
-	int 			wanted_dest_port;
-public slots:
-	void OnDataReceived();
+    void readPcap(vector<_BYTE>& vecbydata, int& interval);
+    void readTagPacketHeader(string& tag, uint32_t& len);
+
+    CPacketSink		*pPacketSink;
+    uint64_t		last_packet_time;
+    CPacer*		pacer;
+    void*		pF;
+    int 		wanted_dest_port;
+    enum {pcap,ff,af,pf}    eFileType;
 };
 
 #endif

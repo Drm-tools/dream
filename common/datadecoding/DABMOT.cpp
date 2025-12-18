@@ -34,8 +34,11 @@
 #include "DABMOT.h"
 #include "../util/Utilities.h"
 #include <algorithm>
+#include <assert.h>
 #include <cctype>
 #include <cstring>
+#include <fstream>
+#include <iostream>
 #ifdef HAVE_LIBZ
 #include <zlib.h>
 #else
@@ -589,39 +592,47 @@ CMOTDABEnc::Reset()
 /******************************************************************************\
 * Decoder                                                                      *
 \******************************************************************************/
+CMOTDABDec::CMOTDABDec():MOTmode (unknown), MOTHeaders(),
+MOTDirectoryEntity(), MOTDirComprEntity(),
+MOTDirectory(), MOTCarousel(), qiNewObjects()
+{
+	assert(qiNewObjects.empty());
+}
+
 _BOOLEAN
 CMOTDABDec::NewObjectAvailable()
 {
-	return qiNewObjects.empty() == FALSE;
+	return !qiNewObjects.empty();
 }
-
-/*static void dump(vector<_BYTE> b, size_t o, size_t n)
-{
-for(size_t i=o; i<o+n; i++)
-printf("%02x ", b[i]);
-for(size_t j=o; j<o+n; j++){
-int c = b[j];
-if(!(' '<=c && c<='~'))
-  c='.';
-printf("%c", c);
-}
-printf("\n");
-}*/
 
 void
 CMOTDABDec::GetNextObject(CMOTObject & NewMOTObject)
 {
-	if (!qiNewObjects.empty())
+	TTransportID firstNew;
+#ifdef USE_QT_GUI
+	guard.lock();
+	if(qiNewObjects.empty())
 	{
-		TTransportID firstNew = qiNewObjects.front();
-		qiNewObjects.pop();
-		NewMOTObject = MOTCarousel[firstNew];
+		if(blocker.wait(&guard, 1000))
+		{
+			if(!qiNewObjects.empty())
+			{
+				firstNew = qiNewObjects.front();
+				qiNewObjects.pop();
+			}
+		}
 	}
 	else
 	{
-		fprintf(stderr, "GetObject called when queue empty\n");
-		fflush(stderr);
+		firstNew = qiNewObjects.front();
+		qiNewObjects.pop();
 	}
+	guard.unlock();
+#else
+	firstNew = qiNewObjects.front();
+	qiNewObjects.pop();
+#endif
+	NewMOTObject = MOTCarousel[firstNew];
 }
 
 void
@@ -638,7 +649,18 @@ CMOTDABDec::DeliverIfReady(TTransportID TransportID)
 				o.strName = string(o.strName.c_str()) + ".gz";
 		}
 		//cerr << o << endl;;
+		ostringstream ss; ss << o << endl;
+#ifdef USE_QT_GUI
+		guard.lock();
 		qiNewObjects.push(TransportID);
+		blocker.wakeOne();
+		guard.unlock();
+#else
+		ofstream file;
+		file.open(o.strName.c_str());
+		file.write((char*)&o.Body.vecData[0], o.Body.vecData.Size());
+		file.close();		
+#endif
 	}
 }
 
@@ -699,12 +721,12 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 	vecbiNewData.Separate(4);
 
 	/* Extension field (not used) */
-	if (biExtensionFlag == TRUE)
+	if (biExtensionFlag == 1)
 		vecbiNewData.Separate(16);
 
 	/* Session header ------------------------------------------------------- */
 	/* Segment field */
-	if (biSegmentFlag == TRUE)
+	if (biSegmentFlag == 1)
 	{
 		/* Last */
 		biLastFlag = (_BINARY) vecbiNewData.Separate(1);
@@ -719,7 +741,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 	}
 
 	/* User access field */
-	if (biUserAccFlag == TRUE)
+	if (biUserAccFlag == 1)
 	{
 		/* Rfa (Reserved for future addition) */
 		vecbiNewData.Separate(3);
@@ -749,7 +771,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 	/* MSC data group data field -------------------------------------------- */
 	/* If CRC is not used enter if-block, if CRC flag is used, it must be ok to
 	   enter the if-block */
-	if ((biCRCFlag == FALSE) || ((biCRCFlag == TRUE) && (bCRCOk == TRUE)))
+	if ((biCRCFlag == 0) || ((biCRCFlag == 1) && (bCRCOk == TRUE)))
 	{
 		/* Segmentation header ---------------------------------------------- */
 		/* Repetition count (not used) */
@@ -762,7 +784,7 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 
 		/* Get MOT data ----------------------------------------------------- */
 		/* Segment number and user access data is needed */
-		if ((biSegmentFlag == TRUE) && (biUserAccFlag == TRUE) &&
+		if ((biSegmentFlag == 1) && (biUserAccFlag == 1) &&
 			(biTransportIDFlag == 1))
 		{
 			/* don't make any assumptions about the order or interleaving of
@@ -835,7 +857,6 @@ CMOTDABDec::AddDataUnit(CVector < _BINARY > &vecbiNewData)
 			}
 			else if (iDataGroupType == 6)	/* MOT directory */
 			{
-				//cout << "DG6" << endl;
 				if (MOTmode != directoryMode)
 				{
 					/* mode change, throw away any headers */
@@ -1223,6 +1244,7 @@ CReassembler::AddSegment(CVector < _BYTE > &vecDataIn,
 		}
 		bReady = TRUE;
 	}
+	//qDebug("AddSegment %d last %d ready %d\n", iSegNum, bLast?1:0, bReady?1:0);
 }
 
 void

@@ -36,97 +36,103 @@
 
 /* Implementation *************************************************************/
 CParameter::CParameter(CDRMReceiver *pRx):
-        pDRMRec(pRx),
-        eSymbolInterlMode(),
-        eMSCCodingScheme(),
-        eSDCCodingScheme(),
-        iNumAudioService(0),
-        iNumDataService(0),
-        iAMSSCarrierMode(0),
-        sReceiverID("                "),
-        sSerialNumber(),
-        sDataFilesDirectory("."),
-        MSCPrLe(),
-        Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
-        iNumBitsHierarchFrameTotal(0),
-        iNumDecodedBitsMSC(0),
-        iNumSDCBitsPerSFrame(0),
-        iNumAudioDecoderBits(0),
-        iNumDataDecoderBits(0),
-        iYear(0),
-        iMonth(0),
-        iDay(0),
-        iUTCHour(0),
-        iUTCMin(0),
-        iFrameIDTransm(0),
-        iFrameIDReceiv(0),
-        rFreqOffsetAcqui(0.0),
-        rFreqOffsetTrack(0.0),
-        rResampleOffset(0.0),
-        iTimingOffsTrack(0),
-        eReceiverMode(RM_NONE),
-        eAcquiState(AS_NO_SIGNAL),
-        iNumAudioFrames(0),
-        vecbiAudioFrameStatus(0),
-        bMeasurePSD(FALSE), bMeasurePSDAlways(FALSE),
-        vecrPSD(0),
-        matcReceivedPilotValues(),
-        RawSimDa(),
-        eSimType(ST_NONE),
-        iDRMChannelNum(0),
-        iSpecChDoppler(0),
-        rBitErrRate(0.0),
-        rSyncTestParam(0.0),
-        rSINR(0.0),
-        iNumBitErrors(0),
-        iChanEstDelay(0),
-        iNumTaps(0),
-        iPathDelay(MAX_NUM_TAPS_DRM_CHAN),
-        rGainCorr(0.0),
-        iOffUsfExtr(0),
-        ReceiveStatus(),
-        FrontEndParameters(),
-        AltFreqSign(),
-        rMER(0.0),
-        rWMERMSC(0.0),
-        rWMERFAC(0.0),
-        rSigmaEstimate(0.0),
-        rMinDelay(0.0),
-        rMaxDelay(0.0),
-        bMeasureDelay(),
-        vecrRdel(0),
-        vecrRdelThresholds(0),
-        vecrRdelIntervals(0),
-        bMeasureDoppler(0),
-        rRdop(0.0),
-        bMeasureInterference(FALSE),
-        rIntFreq(0.0),
-        rINR(0.0),
-        rICR(0.0),
-        rMaxPSDwrtSig(0.0),
-        rMaxPSDFreq(0.0),
-        rSigStrengthCorrection(0.0),
-        eRunState(STOPPED),
-        CellMappingTable(),
-        GPSData(),
-        audioencoder(""),audiodecoder(""),
-        rSysSimSNRdB(0.0),
-        iFrequency(0),
-        bValidSignalStrength(FALSE),
-        rSigStr(0.0),
-        rIFSigStr(0.0),
-        iCurSelAudioService(0),
-        iCurSelDataService(0),
-        eRobustnessMode(RM_ROBUSTNESS_MODE_B),
-        eSpectOccup(SO_3),
-        LastAudioService(),
-        LastDataService(),
-        Mutex()
+    pDRMRec(pRx),
+    eSymbolInterlMode(),
+    eMSCCodingScheme(),
+    eSDCCodingScheme(),
+    iNumAudioService(0),
+    iNumDataService(0),
+    iAMSSCarrierMode(0),
+    sReceiverID("                "),
+    sSerialNumber(),
+    sDataFilesDirectory("."),
+    MSCPrLe(),
+    Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
+    iNumBitsHierarchFrameTotal(0),
+    iNumDecodedBitsMSC(0),
+    iNumSDCBitsPerSFrame(0),
+    iNumAudioDecoderBits(0),
+    iNumDataDecoderBits(0),
+    iYear(0),
+    iMonth(0),
+    iDay(0),
+    iUTCHour(0),
+    iUTCMin(0),
+    iFrameIDTransm(0),
+    iFrameIDReceiv(0),
+    rFreqOffsetAcqui(0.0),
+    rFreqOffsetTrack(0.0),
+    rResampleOffset(0.0),
+    iTimingOffsTrack(0),
+    eReceiverMode(RM_NONE),
+    eAcquiState(AS_NO_SIGNAL),
+    iNumAudioFrames(0),
+    vecbiAudioFrameStatus(0),
+    bMeasurePSD(FALSE), bMeasurePSDAlways(FALSE),
+    vecrPSD(0),
+    matcReceivedPilotValues(),
+    RawSimDa(),
+    eSimType(ST_NONE),
+    iDRMChannelNum(0),
+    iSpecChDoppler(0),
+    rBitErrRate(0.0),
+    rSyncTestParam(0.0),
+    rSINR(0.0),
+    iNumBitErrors(0),
+    iChanEstDelay(0),
+    iNumTaps(0),
+    iPathDelay(MAX_NUM_TAPS_DRM_CHAN),
+    rGainCorr(0.0),
+    iOffUsfExtr(0),
+    ReceiveStatus(),
+    FrontEndParameters(),
+    AltFreqSign(),
+    rMER(0.0),
+    rWMERMSC(0.0),
+    rWMERFAC(0.0),
+    rSigmaEstimate(0.0),
+    rMinDelay(0.0),
+    rMaxDelay(0.0),
+    bMeasureDelay(),
+    vecrRdel(0),
+    vecrRdelThresholds(0),
+    vecrRdelIntervals(0),
+    bMeasureDoppler(0),
+    rRdop(0.0),
+    bMeasureInterference(FALSE),
+    rIntFreq(0.0),
+    rINR(0.0),
+    rICR(0.0),
+    rMaxPSDwrtSig(0.0),
+    rMaxPSDFreq(0.0),
+    rSigStrengthCorrection(0.0),
+    eRunState(STOPPED),
+    CellMappingTable(),
+    audioencoder(""),audiodecoder(""),
+    use_gpsd(0), restart_gpsd(false),
+    gps_host("localhost"), gps_port("2497"),
+    rSysSimSNRdB(0.0),
+    iFrequency(0),
+    bValidSignalStrength(FALSE),
+    rSigStr(0.0),
+    rIFSigStr(0.0),
+    iCurSelAudioService(0),
+    iCurSelDataService(0),
+    eRobustnessMode(RM_ROBUSTNESS_MODE_B),
+    eSpectOccup(SO_3),
+    LastAudioService(),
+    LastDataService(),
+    Mutex()
 {
     GenerateRandomSerialNumber();
     if (pDRMRec)
         eReceiverMode = pDRMRec->GetReceiverMode();
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+    gps_data.set=0;
+    gps_data.status=0;
+#ifdef HAVE_LIBGPS
+    gps_data.gps_fd = -1;
+#endif
 }
 
 CParameter::~CParameter()
@@ -134,102 +140,105 @@ CParameter::~CParameter()
 }
 
 CParameter::CParameter(const CParameter& p):
-        pDRMRec(p.pDRMRec),
-        eSymbolInterlMode(p.eSymbolInterlMode),
-        eMSCCodingScheme(p.eMSCCodingScheme),
-        eSDCCodingScheme(p.eSDCCodingScheme),
-        iNumAudioService(p.iNumAudioService),
-        iNumDataService(p.iNumDataService),
-        iAMSSCarrierMode(p.iAMSSCarrierMode),
-        sReceiverID(p.sReceiverID),
-        sSerialNumber(p.sSerialNumber),
-        sDataFilesDirectory(p.sDataFilesDirectory),
-        MSCPrLe(p.MSCPrLe),
-        Stream(p.Stream), Service(p.Service),
-        iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
-        iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
-        iNumSDCBitsPerSFrame(p.iNumSDCBitsPerSFrame),
-        iNumAudioDecoderBits(p.iNumAudioDecoderBits),
-        iNumDataDecoderBits(p.iNumDataDecoderBits),
-        iYear(p.iYear),
-        iMonth(p.iMonth),
-        iDay(p.iDay),
-        iUTCHour(p.iUTCHour),
-        iUTCMin(p.iUTCMin),
-        iUTCOff(p.iUTCOff),
-        iUTCSense(p.iUTCSense),
-        iFrameIDTransm(p.iFrameIDTransm),
-        iFrameIDReceiv(p.iFrameIDReceiv),
-        rFreqOffsetAcqui(p.rFreqOffsetAcqui),
-        rFreqOffsetTrack(p.rFreqOffsetTrack),
-        rResampleOffset(p.rResampleOffset),
-        iTimingOffsTrack(p.iTimingOffsTrack),
-        eReceiverMode(p.eReceiverMode),
-        eAcquiState(p.eAcquiState),
-        iNumAudioFrames(p.iNumAudioFrames),
-        vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
-        bMeasurePSD(p.bMeasurePSD), bMeasurePSDAlways(p.bMeasurePSDAlways),
-        vecrPSD(p.vecrPSD),
+    pDRMRec(p.pDRMRec),
+    eSymbolInterlMode(p.eSymbolInterlMode),
+    eMSCCodingScheme(p.eMSCCodingScheme),
+    eSDCCodingScheme(p.eSDCCodingScheme),
+    iNumAudioService(p.iNumAudioService),
+    iNumDataService(p.iNumDataService),
+    iAMSSCarrierMode(p.iAMSSCarrierMode),
+    sReceiverID(p.sReceiverID),
+    sSerialNumber(p.sSerialNumber),
+    sDataFilesDirectory(p.sDataFilesDirectory),
+    MSCPrLe(p.MSCPrLe),
+    Stream(p.Stream), Service(p.Service),
+    iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
+    iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
+    iNumSDCBitsPerSFrame(p.iNumSDCBitsPerSFrame),
+    iNumAudioDecoderBits(p.iNumAudioDecoderBits),
+    iNumDataDecoderBits(p.iNumDataDecoderBits),
+    iYear(p.iYear),
+    iMonth(p.iMonth),
+    iDay(p.iDay),
+    iUTCHour(p.iUTCHour),
+    iUTCMin(p.iUTCMin),
+    iUTCOff(p.iUTCOff),
+    iUTCSense(p.iUTCSense),
+    iFrameIDTransm(p.iFrameIDTransm),
+    iFrameIDReceiv(p.iFrameIDReceiv),
+    rFreqOffsetAcqui(p.rFreqOffsetAcqui),
+    rFreqOffsetTrack(p.rFreqOffsetTrack),
+    rResampleOffset(p.rResampleOffset),
+    iTimingOffsTrack(p.iTimingOffsTrack),
+    eReceiverMode(p.eReceiverMode),
+    eAcquiState(p.eAcquiState),
+    iNumAudioFrames(p.iNumAudioFrames),
+    vecbiAudioFrameStatus(p.vecbiAudioFrameStatus),
+    bMeasurePSD(p.bMeasurePSD), bMeasurePSDAlways(p.bMeasurePSDAlways),
+    vecrPSD(p.vecrPSD),
 //matcReceivedPilotValues(p.matcReceivedPilotValues),
-        matcReceivedPilotValues(), // OPH says copy constructor for CMatrix not safe yet
-        RawSimDa(p.RawSimDa),
-        eSimType(p.eSimType),
-        iDRMChannelNum(p.iDRMChannelNum),
-        iSpecChDoppler(p.iSpecChDoppler),
-        rBitErrRate(p.rBitErrRate),
-        rSyncTestParam	(p.rSyncTestParam),
-        rSINR(p.rSINR),
-        iNumBitErrors(p.iNumBitErrors),
-        iChanEstDelay(p.iChanEstDelay),
-        iNumTaps(p.iNumTaps),
-        iPathDelay(p.iPathDelay),
-        rGainCorr(p.rGainCorr),
-        iOffUsfExtr(p.iOffUsfExtr),
-        ReceiveStatus(p.ReceiveStatus),
-        FrontEndParameters(p.FrontEndParameters),
-        AltFreqSign(p.AltFreqSign),
-        rMER(p.rMER),
-        rWMERMSC(p.rWMERMSC),
-        rWMERFAC(p.rWMERFAC),
-        rSigmaEstimate(p.rSigmaEstimate),
-        rMinDelay(p.rMinDelay),
-        rMaxDelay(p.rMaxDelay),
-        bMeasureDelay(p.bMeasureDelay),
-        vecrRdel(p.vecrRdel),
-        vecrRdelThresholds(p.vecrRdelThresholds),
-        vecrRdelIntervals(p.vecrRdelIntervals),
-        bMeasureDoppler(p.bMeasureDoppler),
-        rRdop(p.rRdop),
-        bMeasureInterference(p.bMeasureInterference),
-        rIntFreq(p.rIntFreq),
-        rINR(p.rINR),
-        rICR(p.rICR),
-        rMaxPSDwrtSig(p.rMaxPSDwrtSig),
-        rMaxPSDFreq(p.rMaxPSDFreq),
-        rSigStrengthCorrection(p.rSigStrengthCorrection),
-        eRunState(p.eRunState),
-        CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
-        GPSData(p.GPSData),
-		audioencoder(p.audioencoder),audiodecoder(p.audiodecoder),
-        rSysSimSNRdB(p.rSysSimSNRdB),
-        iFrequency(p.iFrequency),
-        bValidSignalStrength(p.bValidSignalStrength),
-        rSigStr(p.rSigStr),
-        rIFSigStr(p.rIFSigStr),
-        iCurSelAudioService(p.iCurSelAudioService),
-        iCurSelDataService(p.iCurSelDataService),
-        eRobustnessMode(p.eRobustnessMode),
-        eSpectOccup(p.eSpectOccup),
-        LastAudioService(p.LastAudioService),
-        LastDataService(p.LastDataService)
+    matcReceivedPilotValues(), // OPH says copy constructor for CMatrix not safe yet
+    RawSimDa(p.RawSimDa),
+    eSimType(p.eSimType),
+    iDRMChannelNum(p.iDRMChannelNum),
+    iSpecChDoppler(p.iSpecChDoppler),
+    rBitErrRate(p.rBitErrRate),
+    rSyncTestParam	(p.rSyncTestParam),
+    rSINR(p.rSINR),
+    iNumBitErrors(p.iNumBitErrors),
+    iChanEstDelay(p.iChanEstDelay),
+    iNumTaps(p.iNumTaps),
+    iPathDelay(p.iPathDelay),
+    rGainCorr(p.rGainCorr),
+    iOffUsfExtr(p.iOffUsfExtr),
+    ReceiveStatus(p.ReceiveStatus),
+    FrontEndParameters(p.FrontEndParameters),
+    AltFreqSign(p.AltFreqSign),
+    rMER(p.rMER),
+    rWMERMSC(p.rWMERMSC),
+    rWMERFAC(p.rWMERFAC),
+    rSigmaEstimate(p.rSigmaEstimate),
+    rMinDelay(p.rMinDelay),
+    rMaxDelay(p.rMaxDelay),
+    bMeasureDelay(p.bMeasureDelay),
+    vecrRdel(p.vecrRdel),
+    vecrRdelThresholds(p.vecrRdelThresholds),
+    vecrRdelIntervals(p.vecrRdelIntervals),
+    bMeasureDoppler(p.bMeasureDoppler),
+    rRdop(p.rRdop),
+    bMeasureInterference(p.bMeasureInterference),
+    rIntFreq(p.rIntFreq),
+    rINR(p.rINR),
+    rICR(p.rICR),
+    rMaxPSDwrtSig(p.rMaxPSDwrtSig),
+    rMaxPSDFreq(p.rMaxPSDFreq),
+    rSigStrengthCorrection(p.rSigStrengthCorrection),
+    eRunState(p.eRunState),
+    CellMappingTable(), // jfbc CCellMappingTable uses a CMatrix :(
+    audioencoder(p.audioencoder),audiodecoder(p.audiodecoder),
+    use_gpsd(p.use_gpsd),restart_gpsd(p.restart_gpsd),
+    gps_host(p.gps_host),gps_port(p.gps_port),
+    rSysSimSNRdB(p.rSysSimSNRdB),
+    iFrequency(p.iFrequency),
+    bValidSignalStrength(p.bValidSignalStrength),
+    rSigStr(p.rSigStr),
+    rIFSigStr(p.rIFSigStr),
+    iCurSelAudioService(p.iCurSelAudioService),
+    iCurSelDataService(p.iCurSelDataService),
+    eRobustnessMode(p.eRobustnessMode),
+    eSpectOccup(p.eSpectOccup),
+    LastAudioService(p.LastAudioService),
+    LastDataService(p.LastDataService)
 //, Mutex() // jfbc: I don't think this state should be copied
 {
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
     matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO
+    gps_data = p.gps_data;
 }
 
 CParameter& CParameter::operator=(const CParameter& p)
 {
+    gps_data = p.gps_data;
     pDRMRec = p.pDRMRec;
     eSymbolInterlMode = p.eSymbolInterlMode;
     eMSCCodingScheme = p.eMSCCodingScheme;
@@ -304,9 +313,12 @@ CParameter& CParameter::operator=(const CParameter& p)
     rSigStrengthCorrection = p.rSigStrengthCorrection;
     eRunState = p.eRunState;
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
-    GPSData = p.GPSData;
-	audiodecoder =  p.audiodecoder;
-	audioencoder =  p.audioencoder;
+    audiodecoder =  p.audiodecoder;
+    audioencoder =  p.audioencoder;
+    use_gpsd = p.use_gpsd;
+    gps_host = p.gps_host;
+    gps_port = p.gps_port;
+    restart_gpsd = p.restart_gpsd;
     rSysSimSNRdB = p.rSysSimSNRdB;
     iFrequency = p.iFrequency;
     bValidSignalStrength = p.bValidSignalStrength;
@@ -720,13 +732,10 @@ CAudioParam CParameter::GetAudioParam(const int iShortID) const
 
 void CParameter::SetDataParam(const int iShortID, const CDataParam& NewDataParam)
 {
-    CDataParam& DataParam = Service[iShortID].DataParam;
-
     /* Apply changes only if parameters have changed */
-    if (DataParam != NewDataParam)
+    if (Service[iShortID].DataParam != NewDataParam)
     {
-        DataParam = NewDataParam;
-
+        Service[iShortID].DataParam = NewDataParam;
         /* Set init flags */
         if (pDRMRec) pDRMRec->InitsForDataParam();
     }
@@ -799,7 +808,6 @@ void CParameter::SetCurSelDataService(const int iNewService)
             (Service[iNewService].DataParam.iStreamID != STREAM_ID_NOT_USED))
     {
         iCurSelDataService = iNewService;
-cerr << "data service shortid " << iNewService << " stream " << Service[iNewService].DataParam.iStreamID << " packet id " << Service[iNewService].DataParam.iPacketID << endl;
         LastDataService.Reset();
 
         /* Set init flags */
@@ -1057,7 +1065,7 @@ void CParameter::GenerateRandomSerialNumber()
 }
 
 CMinMaxMean::CMinMaxMean():rSum(0.0),rCur(0.0),
-        rMin(numeric_limits<_REAL>::max()),rMax(numeric_limits<_REAL>::min()),iNum(0)
+    rMin(numeric_limits<_REAL>::max()),rMax(numeric_limits<_REAL>::min()),iNum(0)
 {
 }
 

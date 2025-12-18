@@ -27,8 +27,6 @@ CPacer::CPacer(uint64_t ns)
 
 CPacer::~CPacer()
 {
-    cout << "CPacer destructor" << endl;
-    cout.flush();
 }
 
 void CPacer::wait()
@@ -48,7 +46,7 @@ uint64_t CPacer::nstogo()
 {
     timespec now;
 #if _POSIX_TIMERS>0
-    int r = clock_gettime(CLOCK_REALTIME, &now);
+    (void)clock_gettime(CLOCK_REALTIME, &now);
 #else
     timeval t;
     (void)gettimeofday(&t, NULL);

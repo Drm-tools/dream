@@ -30,7 +30,6 @@
 #define SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_
 
 #include "../GlobalDefinitions.h"
-#include "../GPSData.h"
 #include <map>
 #include <string>
 
@@ -159,8 +158,7 @@ public:
 	string Get(const string& section, const string& key, const string& def="") const;
 	void Put(const string& section, const string& key, const string& value);
 	bool Get(const string& section, const string& key, const bool def) const;
-	void Put(const string& section, const string& key, const bool value)
-		{ Put(section, key, value?1:0); }
+	void Put(const string& section, const string& key, const bool value);
 	int Get(const string& section, const string& key, const int def) const;
 	void Put(const string& section, const string& key, const int value);
 	_REAL Get(const string& section, const string& key, const _REAL def) const;

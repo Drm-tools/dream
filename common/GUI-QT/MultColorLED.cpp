@@ -28,40 +28,36 @@
 \******************************************************************************/
 
 #include "MultColorLED.h"
+#if QT_VERSION >= 0x040000
+# include <QLabel>
+#endif
 
 
 /* Implementation *************************************************************/
-CMultColorLED::CMultColorLED(QWidget * parent, const char * name, WFlags f) : 
-	QLabel(parent, name, f)
+CMultColorLED::CMultColorLED(QWidget * parent, const char * name, Qt::WFlags f) : 
+	QLabel(parent), eColorFlag(RL_GREY),
+	TimerRedLight(), TimerGreenLight(), TimerYellowLight(),
+	bFlagRedLi(false), bFlagGreenLi(false), bFlagYellowLi(false),
+	iUpdateTime(DEFAULT_UPDATE_TIME),
+	green(13,13),yellow(13,13),red(13,13),grey(13,13)
 {
-	/* Define size of the bitmaps */
-	const int iXSize = 13;
-	const int iYSize = 13;
-
-	/* Create bitmaps */
-	BitmCubeGreen.resize(iXSize, iYSize);
-	BitmCubeGreen.fill(QColor(0, 255, 0));
-	BitmCubeRed.resize(iXSize, iYSize);
-	BitmCubeRed.fill(QColor(255, 0, 0));
-	BitmCubeGrey.resize(iXSize, iYSize);
-	BitmCubeGrey.fill(QColor(192, 192, 192));
-	BitmCubeYellow.resize(iXSize, iYSize);
-	BitmCubeYellow.fill(QColor(255, 255, 0));
+	(void)name;
+	(void)f;
+	green.fill(QColor(0, 255, 0));
+	red.fill(QColor(255, 0, 0));
+	grey.fill(QColor(192, 192, 192));
+	yellow.fill(QColor(255, 255, 0));
 
 	/* Set modified style */
 	setFrameShape(QFrame::Panel);
 	setFrameShadow(QFrame::Sunken);
 	setIndent(0);
 
-	/* Init color flags */
 	Reset();
 
 	/* Set init-bitmap */
-	setPixmap(BitmCubeGrey);
-	eColorFlag = RL_GREY;
+	setPixmap(grey);
 
-	/* Init update time */
-	iUpdateTime = DEFAULT_UPDATE_TIME;
 
 	/* Connect timer events to the desired slots */
 	connect(&TimerRedLight, SIGNAL(timeout()), 
@@ -111,12 +107,12 @@ void CMultColorLED::UpdateColor()
 {
 	/* Red light has highest priority, then comes yellow and at the end, we
 	   decide to set green light. Allways check the current color of the
-	   control before setting the color to prevent flicking */
+	   control before setting the color to prevent flickering */
 	if (bFlagRedLi)
 	{
 		if (eColorFlag != RL_RED)
 		{
-			setPixmap(BitmCubeRed);
+			setPixmap(red);
 			eColorFlag = RL_RED;
 		}
 		return;
@@ -126,7 +122,7 @@ void CMultColorLED::UpdateColor()
 	{
 		if (eColorFlag != RL_YELLOW)
 		{
-			setPixmap(BitmCubeYellow);
+			setPixmap(yellow);
 			eColorFlag = RL_YELLOW;
 		}
 		return;
@@ -136,7 +132,7 @@ void CMultColorLED::UpdateColor()
 	{
 		if (eColorFlag != RL_GREEN)
 		{
-			setPixmap(BitmCubeGreen);
+			setPixmap(green);
 			eColorFlag = RL_GREEN;
 		}
 		return;
@@ -145,31 +141,46 @@ void CMultColorLED::UpdateColor()
 	/* If no color is active, set control to grey light */
 	if (eColorFlag != RL_GREY)
 	{
-		setPixmap(BitmCubeGrey);
+		setPixmap(grey);
 		eColorFlag = RL_GREY;
 	}
 }
 
-void CMultColorLED::SetLight(int iNewStatus)
+void CMultColorLED::SetLight(ELightColor color)
 {
-	switch (iNewStatus)
+	switch (color)
 	{
-	case 0:
+	case RL_GREEN:
 		/* Green light */
 		bFlagGreenLi = true;
+#if QT_VERSION < 0x040000
 		TimerGreenLight.changeInterval(iUpdateTime);
+#else
+		TimerGreenLight.start(iUpdateTime);
+#endif
 		break;
 
-	case 1:
+	case RL_YELLOW:
 		/* Yellow light */
 		bFlagYellowLi = true;
+#if QT_VERSION < 0x040000
 		TimerYellowLight.changeInterval(iUpdateTime);
+#else
+		TimerYellowLight.start(iUpdateTime);
+#endif
 		break;
 
-	case 2:
+	case RL_RED:
 		/* Red light */
 		bFlagRedLi = true;
+#if QT_VERSION < 0x040000
 		TimerRedLight.changeInterval(iUpdateTime);
+#else
+		TimerRedLight.start(iUpdateTime);
+#endif
+		break;
+	case RL_GREY:
+		// TODO
 		break;
 	}
 

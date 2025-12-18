@@ -33,6 +33,15 @@
 
 /* implementation --------------------------------------------- */
 
+CReceptLog::CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALSE),
+            bRxlEnabled(FALSE), bPositionEnabled(FALSE),
+            iSecDelLogStart(0)
+{
+    iFrequency = Parameters.GetFrequency();
+    latitude = Parameters.gps_data.fix.latitude;
+    longitude = Parameters.gps_data.fix.longitude;
+}
+
 void
 CReceptLog::Start(const string & filename)
 {
@@ -60,14 +69,21 @@ CReceptLog::Update()
 {
     if (!bLogActivated)
         return;
-	int iCurrentFrequency = Parameters.GetFrequency();
-    if (iCurrentFrequency != iFrequency)
+    int iCurrentFrequency = Parameters.GetFrequency();
+    double currentLatitude = Parameters.gps_data.fix.latitude;
+    double currentLongitude = Parameters.gps_data.fix.longitude;
+    if((iCurrentFrequency != iFrequency)
+    || (bPositionEnabled && int(currentLatitude) != int(latitude))
+    || (bPositionEnabled && int(currentLongitude) != int(longitude))
+    )
     {
-    	// Frequency has changed
+        // Frequency or position has changed
         if (bLogActivated)
         {
             writeTrailer();
             iFrequency = iCurrentFrequency;
+	    latitude = currentLatitude;
+	    longitude = currentLongitude;
             writeHeader();
         }
         else
@@ -126,13 +142,13 @@ CShortLog::writeHeader()
     ESpecOcc SpecOcc=SO_5;
     _REAL bitrate = 0.0;
 
-	iFrequency = Parameters.GetFrequency();
     Parameters.Lock();
+    iFrequency = Parameters.GetFrequency();
 
-    const CGPSData & GPSData = Parameters.GPSData;
-    if (GPSData.GetPositionAvailable())
+    if (Parameters.gps_data.set & LATLON_SET)
     {
-        GPSData.asDM(latitude, longitude);
+        asDM(latitude, Parameters.gps_data.fix.latitude, 'S', 'N');
+        asDM(longitude, Parameters.gps_data.fix.longitude, 'W', 'E');
     }
     int iCurSelServ = Parameters.GetCurSelAudioService();
 
@@ -152,7 +168,7 @@ CShortLog::writeHeader()
 
     /* Beginning of new table (similar to DW DRM log file) */
     File << endl << ">>>>" << endl << "Dream" << endl
-    << "Software Version " << dream_version_major << "." << dream_version_minor << endl;
+         << "Software Version " << dream_version_major << "." << dream_version_minor << endl;
 
     time_t now;
     (void) time(&now);
@@ -219,16 +235,8 @@ CShortLog::writeHeader()
         File << "      RXL";
     File << endl;
 
-	iCount = 0; // start count each time a new header is put
+    iCount = 0; // start count each time a new header is put
 }
-
-/*
-MINUTE  SNR     SYNC    AUDIO     TYPE
-  0000   21      148  1437/10        0
-  coordinates are again decimal, I think we agreed to degrees and minutes, if I start/ stop logfiles without restarting Dream each time, then the minutes in the log do not start at 0, see attachment.
-  Simone
-
-*/
 
 void
 CShortLog::writeParameters()
@@ -263,10 +271,10 @@ CShortLog::writeParameters()
     try
     {
         File << "  " << fixed << setw(4) << setfill('0') << count
-        << setfill(' ') << setw(5) << iAverageSNR
-        << setw(9) << iNumCRCOkFAC
-        << setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
-        << setfill(' ') << "      0";
+             << setfill(' ') << setw(5) << iAverageSNR
+             << setw(9) << iNumCRCOkFAC
+             << setw(6) << iNumCRCOkMSC << "/" << setw(2) << setfill('0') << iTmpNumAAC
+             << setfill(' ') << "      0";
         if (bRxlEnabled)
         {
             File << setw(10) << setprecision(2) << iRXL;
@@ -319,7 +327,7 @@ CLongLog::writeHeader()
         return; /* allow updates when file closed */
 
     File <<
-    "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY";
+         "FREQ/MODE/QAM PL:ABH,       DATE,       TIME,    SNR, SYNC, FAC, MSC, AUDIO, AUDIOOK, DOPPLER, DELAY";
     if (bRxlEnabled)
         File << ",     RXL";
     if (bPositionEnabled)
@@ -349,7 +357,7 @@ CLongLog::writeParameters()
        not synchronized, set parameters to zero */
     _REAL rDelay = (_REAL) 0.0;
     _REAL rDoppler = (_REAL) 0.0;
-    if (Parameters.eAcquiState == AS_WITH_SIGNAL)
+    if (Parameters.GetAcquiState() == AS_WITH_SIGNAL)
     {
         rDelay = Parameters.rMinDelay;
         rDoppler = Parameters.rSigmaEstimate;
@@ -402,9 +410,10 @@ CLongLog::writeParameters()
     Parameters.ReceiveStatus.LLAudio.ResetCounts();
 
     double latitude=0.0, longitude=0.0;
-    if (bPositionEnabled)
+    if (bPositionEnabled && (Parameters.gps_data.set & LATLON_SET))
     {
-        Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
+        latitude = Parameters.gps_data.fix.latitude;
+        longitude = Parameters.gps_data.fix.longitude;
     }
 
     Parameters.Unlock();
@@ -417,18 +426,18 @@ CLongLog::writeParameters()
         time_t now;
         (void) time(&now);
         File << fixed << setprecision(2)
-        << setw(5) << iFrequency << '/' << setw(1) << cRobMode
-        << iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH << "         ,"
-        << " " << strdate(now) << ", "
-        << strtime(now) << ".0" << ","
-        << setw(7) << rSNR << ","
-        << setw(5) << iFrameSyncStatus << ","
-        << setw(4) << iFACStatus << ","
-        << setw(4) << iAudioStatus << ","
-        << setw(6) << iNumCRCMSC << ","
-        << setw(8) << iNumCRCOkMSC << ","
-        << "  " << setw(6) << rDoppler << ','
-        << setw(6) << rDelay;
+             << setw(5) << iFrequency << '/' << setw(1) << cRobMode
+             << iCurMSCSc << iCurProtLevPartA << iCurProtLevPartB << iCurProtLevPartH << "         ,"
+             << " " << strdate(now) << ", "
+             << strtime(now) << ".0" << ","
+             << setw(7) << rSNR << ","
+             << setw(5) << iFrameSyncStatus << ","
+             << setw(4) << iFACStatus << ","
+             << setw(4) << iAudioStatus << ","
+             << setw(6) << iNumCRCMSC << ","
+             << setw(8) << iNumCRCOkMSC << ","
+             << "  " << setw(6) << rDoppler << ','
+             << setw(6) << rDelay;
 
         if (bRxlEnabled)
             File << ',' << setprecision(2) << setw(8) << Parameters.SigStrstat.getCurrent()+S9_DBUV;
@@ -470,8 +479,8 @@ string CReceptLog::strdate(time_t t)
     today = gmtime(&t);		/* Always UTC */
 
     s << setfill('0')
-    << setw(4) << today->tm_year + 1900 << "-"
-    << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
+      << setw(4) << today->tm_year + 1900 << "-"
+      << setw(2) << today->tm_mon + 1 << "-" << setw(2) << today->tm_mday;
     return s.str();
 }
 
@@ -483,6 +492,31 @@ string CReceptLog::strtime(time_t t)
     today = gmtime(&t);		/* Always UTC */
 
     s << setfill('0')
-    << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
+      << setw(2) << today->tm_hour << ":" << setw(2) << today-> tm_min << ":" << setw(2) << today->tm_sec;
     return s.str();
+}
+
+void
+CReceptLog::asDM(string& pos, double d, char n, char p) const
+{
+    stringstream s;
+    char np;
+    int ideg;
+    double dmin;
+    if (d<0.0)
+    {
+        np = n;
+        ideg = 0 - int(d);
+        dmin = 0.0 - d;
+    }
+    else
+    {
+        np = p;
+        ideg = int(d);
+        dmin = d;
+    }
+    int degrees = (unsigned int) dmin;
+    uint16_t minutes = (unsigned int) (((floor((dmin - degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
+    s << ideg << '\xb0' << setw(2) << setfill('0') << minutes << "'" << np;
+    pos = s.str();
 }

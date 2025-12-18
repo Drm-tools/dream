@@ -34,6 +34,9 @@
 #include "util/Vector.h"
 #include "matlib/Matlib.h"
 #include "resample/Resample.h"
+#ifdef HAVE_SPEEX
+ #include <speex/speex_preprocess.h>
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -93,7 +96,12 @@
 class CNoiseReduction
 {
 public:
-    CNoiseReduction() : eNoiRedDegree(NR_MEDIUM) {}
+    CNoiseReduction() : eNoiRedDegree(NR_MEDIUM)
+#ifdef HAVE_SPEEX
+	 ,preprocess_state(NULL),use_speex_denoise(false)
+#endif
+	{
+	}
     virtual ~CNoiseReduction() {}
 
     enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
@@ -101,9 +109,10 @@ public:
     void Init(const int iNewBlockLen);
     void Process(CRealVector& vecrIn /* in/out */);
 
-    void SetNoiRedDegree(const ENoiRedDegree eNND) {
-        eNoiRedDegree = eNND;
-    }
+    void SetNoiRedSpeex(bool);
+
+    void SetNoiRedDegree(const ENoiRedDegree eNND);
+
     ENoiRedDegree GetNoiRedDegree() {
         return eNoiRedDegree;
     }
@@ -137,6 +146,10 @@ protected:
     CRealVector		vecrFiltResult;
 
     ENoiRedDegree	eNoiRedDegree;
+#ifdef HAVE_SPEEX
+    SpeexPreprocessState *preprocess_state;
+    bool		use_speex_denoise;
+#endif
 };
 
 
@@ -251,7 +264,7 @@ public:
     virtual ~CAMDemodulation() {}
 
     enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_FM};
-    enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH};
+    enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH, NR_SPEEX_LOW, NR_SPEEX_MEDIUM, NR_SPEEX_HIGH};
 
     void SetAcqFreq(const CReal rNewNormCenter);
 
@@ -288,6 +301,14 @@ public:
     void SetNoiRedType(const ENoiRedType eNewType);
     ENoiRedType GetNoiRedType() {
         return NoiRedType;
+    }
+
+    _BOOLEAN haveSpeex() {
+#ifdef HAVE_SPEEX
+        return TRUE;
+#else
+        return FALSE;
+#endif
     }
 
     void GetBWParameters(CReal& rCenterFreq, CReal& rBW)

@@ -1,7 +1,7 @@
 #ifndef PA_RINGBUFFER_H
 #define PA_RINGBUFFER_H
 /*
- * $Id: pa_ringbuffer.h,v 1.6 2009/12/23 14:37:22 jcable Exp $
+ * $Id: pa_ringbuffer.h,v 1.7 2012/04/22 13:17:56 jcable Exp $
  * Portable Audio I/O Library
  * Ring Buffer utility.
  *
@@ -50,6 +50,13 @@
  @ingroup common_src
 */
 
+#ifdef _MSC_VER
+#  define align64  __declspec(align(8)) 
+#  define ALLOW_SMP_DANGERS
+#else
+#  define align64
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -57,13 +64,13 @@ extern "C"
 
     typedef struct PaUtilRingBuffer
     {
-        long   bufferSize; /* Number of bytes in FIFO. Power of 2. Set by PaUtil_InitRingBuffer. */
-        long   writeIndex; /* Index of next writable byte. Set by PaUtil_AdvanceRingBufferWriteIndex. */
-        long   readIndex;  /* Index of next readable byte. Set by PaUtil_AdvanceRingBufferReadIndex. */
-        long   bigMask;    /* Used for wrapping indices with extra bit to distinguish full/empty. */
-        long   smallMask;  /* Used for fitting indices to buffer. */
-        char  *buffer;
-    }PaUtilRingBuffer;
+        align64 long   bufferSize; /* Number of bytes in FIFO. Power of 2. Set by PaUtil_InitRingBuffer. */
+        align64 long   writeIndex; /* Index of next writable byte. Set by PaUtil_AdvanceRingBufferWriteIndex. */
+        align64 long   readIndex;  /* Index of next readable byte. Set by PaUtil_AdvanceRingBufferReadIndex. */
+        align64 long   bigMask;    /* Used for wrapping indices with extra bit to distinguish full/empty. */
+        align64 long   smallMask;  /* Used for fitting indices to buffer. */
+        align64 char  *buffer;
+    } PaUtilRingBuffer;
 
     /** Initialize Ring Buffer.
 

@@ -6,7 +6,7 @@
  *	Andrea Russo
  *
  * Description:
- *	
+ *
  ******************************************************************************
  *
  * This program is free software; you can redistribute it and/or modify it under
@@ -25,56 +25,53 @@
  *
 \******************************************************************************/
 
+#include "DialogUtil.h"
 #include "GeneralSettingsDlg.h"
 #include <qlineedit.h>
 #include <qpushbutton.h>
-#include <qwhatsthis.h>
 #include <qvalidator.h>
 #include <qmessagebox.h>
 #include <qcheckbox.h>
+#if QT_VERSION < 0x040000
+# include <qwhatsthis.h>
+#else
+# include <QShowEvent>
+# include <QHideEvent>
+#endif
 
 
 /* Implementation *************************************************************/
 
 GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
-	QWidget* parent, const char* name, bool modal, WFlags f) :
-	CGeneralSettingsDlgBase(parent, name, modal, f), Parameters(NParam),Settings(NSettings),
-	host("localhost"),port(2947),bUseGPS(FALSE)
+                                       QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
+    CGeneralSettingsDlgBase(parent, name, modal, f),
+    Parameters(NParam),Settings(NSettings)
 {
+    /* Set the validators fro the receiver coordinate */
+    EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
+    EdtLongitudeDegrees->setValidator(new QIntValidator(0, 180, EdtLongitudeDegrees));
 
-	host = Settings.Get("GPS", "host", host);
-	port = Settings.Get("GPS", "port", port);
-	bUseGPS = Settings.Get("GPS", "usegpsd", bUseGPS);
-	CheckBoxUseGPS->setChecked(bUseGPS);
+    EdtLatitudeMinutes->setValidator(new QIntValidator(0, 59, EdtLatitudeMinutes));
+    EdtLongitudeMinutes->setValidator(new QIntValidator(0, 59, EdtLongitudeMinutes));
 
-	/* Set the validators fro the receiver coordinate */
-	EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
-	EdtLongitudeDegrees->setValidator(new QIntValidator(0, 180, EdtLongitudeDegrees));
+    /* Connections */
 
-	EdtLatitudeMinutes->setValidator(new QIntValidator(0, 59, EdtLatitudeMinutes));
-	EdtLongitudeMinutes->setValidator(new QIntValidator(0, 59, EdtLongitudeMinutes));
+    connect(buttonOk, SIGNAL(clicked()), SLOT(ButtonOkClicked()) );
 
-	/* Connections */
+    connect(EdtLatitudeNS, SIGNAL(textChanged( const QString &)), this
+            , SLOT(CheckSN(const QString&)));
 
-	connect(buttonOk, SIGNAL(clicked()), SLOT(ButtonOkClicked()) );
+    connect(EdtLongitudeEW, SIGNAL(textChanged( const QString &)), this
+            , SLOT(CheckEW(const QString&)));
 
-	connect(EdtLatitudeNS, SIGNAL(textChanged( const QString &)), this
-		, SLOT(CheckSN(const QString&)));
+    connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
 
-	connect(EdtLongitudeEW, SIGNAL(textChanged( const QString &)), this
-		, SLOT(CheckEW(const QString&)));
-
-	connect(CheckBoxUseGPS, SIGNAL(clicked()), SLOT(OnCheckBoxUseGPS()) );
-
-	/* Set help text for the controls */
-	AddWhatsThisHelp();
+    /* Set help text for the controls */
+    AddWhatsThisHelp();
 }
 
 GeneralSettingsDlg::~GeneralSettingsDlg()
 {
-	Settings.Put("GPS", "host", host);
-	Settings.Put("GPS", "port", port);
-	Settings.Put("GPS", "usegpsd", bUseGPS);
 }
 
 void GeneralSettingsDlg::hideEvent(QHideEvent*)
@@ -83,284 +80,285 @@ void GeneralSettingsDlg::hideEvent(QHideEvent*)
 
 void GeneralSettingsDlg::showEvent(QShowEvent*)
 {
-	/* Clear all fields */
-	EdtLongitudeDegrees->setText(""); 
-	EdtLongitudeMinutes->setText("");
-	EdtLongitudeEW->setText("");
-	EdtLatitudeDegrees->setText(""); 
-	EdtLatitudeMinutes->setText("");
-	EdtLatitudeNS->setText("");
+    /* Clear all fields */
+    EdtLongitudeDegrees->setText("");
+    EdtLongitudeMinutes->setText("");
+    EdtLongitudeEW->setText("");
+    EdtLatitudeDegrees->setText("");
+    EdtLatitudeMinutes->setText("");
+    EdtLatitudeNS->setText("");
 
-    LineEditGPSHost->setText(host.c_str());
-    LineEditGPSPort->setText(QString("%1").arg(port));
+    LineEditGPSHost->setText(QString(Settings.Get("GPS", "host", string("localhost")).c_str()));
+    LineEditGPSPort->setText(Settings.Get("GPS", "port", string("2947")).c_str());
+    CheckBoxUseGPS->setChecked(Settings.Get("GPS", "usegpsd", false));
 
-	/* Extract the receiver coordinates setted */
-	ExtractReceiverCoordinates();
+    /* Extract the receiver coordinates  */
+    ExtractReceiverCoordinates();
 }
 
 void GeneralSettingsDlg::CheckSN(const QString& NewText)
 {
-	/* Only S or N char are accepted */
+    /* Only S or N char are accepted */
 
-	const QString sVal = NewText.upper();
+    const QString sVal = NewText;
 
-	if (sVal != "S" && sVal != "N" && sVal != "")
-		EdtLatitudeNS->setText("");
-	else
-		if (sVal != NewText) /* if lowercase change to uppercase */
-			EdtLatitudeNS->setText(sVal);
-
+    if (sVal != "S" && sVal != "N" && sVal != "")
+        EdtLatitudeNS->setText("");
 }
 
 void GeneralSettingsDlg::CheckEW(const QString& NewText)
 {
-	/* Only E or W char are accepted */
+    /* Only E or W char are accepted */
 
-	const QString sVal = NewText.upper();
+    const QString sVal = NewText;
 
-	if (sVal != "E" && sVal != "W" && sVal != "")
-		EdtLongitudeEW->setText("");
-	else
-		if (sVal != NewText) /* if lowercase change to uppercase */
-			EdtLongitudeEW->setText(sVal);
-
+    if (sVal != "E" && sVal != "W" && sVal != "")
+        EdtLongitudeEW->setText("");
 }
 
 void GeneralSettingsDlg::OnCheckBoxUseGPS()
 {
-#if defined(_MSC_VER) && (_MSC_VER < 1400)
-	//QMessageBox::information( this, "Dream", "Don't enable GPS unless you have gpsd running." );
-#endif
-	bUseGPS = CheckBoxUseGPS->isChecked();
-	if(bUseGPS)
-		emit StartGPS();
-	else
-		emit StopGPS();
+    bool bUseGPS = CheckBoxUseGPS->isChecked();
+    Parameters.Lock();
+    Parameters.use_gpsd=bUseGPS;
+    Parameters.restart_gpsd=bUseGPS;
+    Parameters.Unlock();
 }
 
 void GeneralSettingsDlg::ButtonOkClicked()
 {
-	_BOOLEAN bOK = TRUE;
-	_BOOLEAN bAllEmpty = TRUE;
-	_BOOLEAN bAllCompiled = FALSE;
+    _BOOLEAN bOK = TRUE;
+    _BOOLEAN bAllEmpty = TRUE;
+    _BOOLEAN bAllCompiled = FALSE;
 
-	/* Check the values and close the dialog */
+    /* Check the values and close the dialog */
 
-	if (ValidInput(EdtLatitudeDegrees) == FALSE)
-	{
-		bOK = FALSE;
-		QMessageBox::information(this, "Dream",
-			tr("Latitude value must be in the range 0 to 90")
-			,QMessageBox::Ok);
-	}
-	else if (ValidInput(EdtLongitudeDegrees) == FALSE)
-	{
-		bOK = FALSE;
+    if (ValidInput(EdtLatitudeDegrees) == FALSE)
+    {
+        bOK = FALSE;
+        QMessageBox::information(this, "Dream",
+                                 tr("Latitude value must be in the range 0 to 90")
+                                 ,QMessageBox::Ok);
+    }
+    else if (ValidInput(EdtLongitudeDegrees) == FALSE)
+    {
+        bOK = FALSE;
 
-		QMessageBox::information(this, "Dream",
-			tr("Longitude value must be in the range 0 to 180")
-			,QMessageBox::Ok);
-	}
-	else if (ValidInput(EdtLongitudeMinutes) == FALSE
-		|| ValidInput(EdtLatitudeMinutes) == FALSE)
-	{
-		bOK = FALSE;
+        QMessageBox::information(this, "Dream",
+                                 tr("Longitude value must be in the range 0 to 180")
+                                 ,QMessageBox::Ok);
+    }
+    else if (ValidInput(EdtLongitudeMinutes) == FALSE
+             || ValidInput(EdtLatitudeMinutes) == FALSE)
+    {
+        bOK = FALSE;
 
-		QMessageBox::information(this, "Dream",
-			tr("Minutes value must be in the range 0 to 59")
-			,QMessageBox::Ok);
-	}
-	
-	if (bOK == TRUE)
-	{
-		/* Check if all coordinates are empty */
+        QMessageBox::information(this, "Dream",
+                                 tr("Minutes value must be in the range 0 to 59")
+                                 ,QMessageBox::Ok);
+    }
 
-		bAllEmpty = (EdtLongitudeDegrees->text() 
-			+ EdtLongitudeMinutes->text()
-			+ EdtLongitudeEW->text()
-			+ EdtLatitudeDegrees->text() 
-			+ EdtLatitudeMinutes->text()
-			+ EdtLatitudeNS->text()
-			) == "";
+    if (bOK == TRUE)
+    {
+        /* Check if all coordinates are empty */
 
-		/* Check if all coordinates are compiled */
+        bAllEmpty = (EdtLongitudeDegrees->text()
+                     + EdtLongitudeMinutes->text()
+                     + EdtLongitudeEW->text()
+                     + EdtLatitudeDegrees->text()
+                     + EdtLatitudeMinutes->text()
+                     + EdtLatitudeNS->text()
+                    ) == "";
 
-		bAllCompiled = (EdtLongitudeDegrees->text() != "")
-			&& (EdtLongitudeMinutes->text() != "")
-			&& (EdtLongitudeEW->text() != "")
-			&& (EdtLatitudeDegrees->text() != "") 
-			&& (EdtLatitudeMinutes->text() != "")
-			&& (EdtLatitudeNS->text() != "");
+        /* Check if all coordinates are compiled */
 
-		if (!bAllEmpty && !bAllCompiled)
-		{
-			bOK = FALSE;
+        bAllCompiled = (EdtLongitudeDegrees->text() != "")
+                       && (EdtLongitudeMinutes->text() != "")
+                       && (EdtLongitudeEW->text() != "")
+                       && (EdtLatitudeDegrees->text() != "")
+                       && (EdtLatitudeMinutes->text() != "")
+                       && (EdtLatitudeNS->text() != "");
 
-			QMessageBox::information(this, "Dream",
-				tr("Compile all fields on receiver coordinates")
-				,QMessageBox::Ok);
-		}
-	}
+        if (!bAllEmpty && !bAllCompiled)
+        {
+            bOK = FALSE;
 
-	if (bOK == TRUE)
-	{
-		/* save current settings */
+            QMessageBox::information(this, "Dream",
+                                     tr("Compile all fields on receiver coordinates")
+                                     ,QMessageBox::Ok);
+        }
+    }
 
-		Parameters.Lock(); 
+    if (bOK == TRUE)
+    {
+        /* save current settings */
 
-		if (!bAllEmpty)
-		{
-			double latitude, longitude;
+        Parameters.Lock();
 
-			latitude = EdtLatitudeDegrees->text().toDouble() + EdtLatitudeMinutes->text().toDouble()/60.0;
-			if(EdtLatitudeNS->text().upper().latin1()[0]=='S')
-				latitude = - latitude;
+        if (!bAllEmpty)
+        {
+            double latitude, longitude;
 
-			longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60.0;
-			if(EdtLongitudeEW->text().upper().latin1()[0]=='W')
-				longitude = - longitude;
+            latitude = EdtLatitudeDegrees->text().toDouble() + EdtLatitudeMinutes->text().toDouble()/60.0;
+            if(EdtLatitudeNS->text()[0]=='S' || EdtLatitudeNS->text()[0]=='s')
+                latitude = - latitude;
 
-			Parameters.GPSData.SetPositionAvailable(TRUE);
-			Parameters.GPSData.SetLatLongDegrees(latitude, longitude);
+            longitude = EdtLongitudeDegrees->text().toDouble() + EdtLongitudeMinutes->text().toDouble()/60.0;
+            if(EdtLongitudeEW->text()[0]=='W' || EdtLongitudeEW->text()[0]=='w')
+                longitude = - longitude;
 
-		}
-		else
-		{
-			Parameters.GPSData.SetPositionAvailable(FALSE);
-		}
-		Parameters.Unlock(); 
+            Parameters.gps_data.set |= LATLON_SET;
+            Parameters.gps_data.fix.latitude = latitude;
+            Parameters.gps_data.fix.longitude = longitude;
 
-    	host = LineEditGPSHost->text().latin1();
-    	port = LineEditGPSPort->text().toInt();
+        }
+        else
+        {
+            Parameters.gps_data.set &= ~LATLON_SET;
+        }
 
-		accept(); /* If the values are valid close the dialog */
-	}
+        string host = LineEditGPSHost->text().latin1();
+        if(Parameters.gps_host != host)
+            Parameters.restart_gpsd = true;
+        Parameters.gps_host=host;
+        string port = LineEditGPSPort->text().latin1();
+        if(Parameters.gps_port != port)
+            Parameters.restart_gpsd = true;
+        Parameters.gps_port=port;
+
+        Parameters.Unlock();
+
+        accept(); /* If the values are valid close the dialog */
+    }
 }
 
 _BOOLEAN GeneralSettingsDlg::ValidInput(const QLineEdit* le)
 {
-QString sText;
+    QString sText;
 
-	/* Use the validator for check if the value is valid */
+    /* Use the validator for check if the value is valid */
 
-	sText = le->text();
+    sText = le->text();
 
-	if (sText == "")
-		return TRUE;
-	else
-	{
-		int iPosCursor = 0;
-		return le->validator()->validate(sText,iPosCursor) == QValidator::Acceptable;
-	}
+    if (sText == "")
+        return TRUE;
+    else
+    {
+        int iPosCursor = 0;
+        return le->validator()->validate(sText,iPosCursor) == QValidator::Acceptable;
+    }
 }
 
 QString GeneralSettingsDlg::ExtractDigits(const QString strStr, const int iStart
-	, const int iDigits)
+        , const int iDigits)
 {
-QString sVal;
-QChar ch;
-_BOOLEAN bStop;
+    QString sVal;
+    QChar ch;
+    _BOOLEAN bStop;
 
-	/* Extract the first iDigits from position iStart */
+    /* Extract the first iDigits from position iStart */
 
-	sVal = "";
-	bStop = FALSE;
+    sVal = "";
+    bStop = FALSE;
 
-	for (int i = iStart - 1 ; i <= iStart + iDigits - 1; i++)
-	{
-		if (bStop == FALSE)
-		{
-			ch = strStr.at(i);
-			if (ch.isDigit() == TRUE)
-				sVal = sVal + ch;
-			else
-				bStop = TRUE;
-		}
-	}
-	return sVal;
+    for (int i = iStart - 1 ; i <= iStart + iDigits - 1; i++)
+    {
+        if (bStop == FALSE)
+        {
+            ch = strStr.at(i);
+            if (ch.isDigit() == TRUE)
+                sVal = sVal + ch;
+            else
+                bStop = TRUE;
+        }
+    }
+    return sVal;
 }
 
 void GeneralSettingsDlg::ExtractReceiverCoordinates()
 {
-	QString sVal, sDir;
+    QString sVal, sDir;
+    double latitude, longitude;
 
-	/* parse the latitude and longitude string stored into Dream settings to
-		extract local latitude and longitude coordinates */
+    Parameters.Lock();
+    latitude = Parameters.gps_data.fix.latitude;
+    longitude = Parameters.gps_data.fix.longitude;
 
-	double latitude, longitude;
+    /* Extract latitude values */
 
-	Parameters.Lock(); 
-	Parameters.GPSData.GetLatLongDegrees(latitude, longitude);
+    if(latitude<0.0)
+    {
+        latitude = -latitude;
+        EdtLatitudeNS->setText("S");
+    }
+    else
+    {
+        EdtLatitudeNS->setText("N");
+    }
 
-	/* Extract latitude values */
+    int degrees = int(latitude);
+    int minutes = int(((floor((latitude - degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
 
-	if(latitude<0.0)
-	{
-		latitude = -latitude;
-		EdtLatitudeNS->setText("S");
-	}
-	else
-	{
-		EdtLatitudeNS->setText("N");
-	}
+    /* Extract degrees */
 
-	unsigned int Minutes;
+    /* Latitude degrees max 2 digits */
+    sVal = QString("%1").arg(degrees);
 
-	/* Extract degrees */
+    EdtLatitudeDegrees->setText(sVal);
 
-	/* Latitude degrees max 2 digits */
-	sVal = QString("%1").arg(int(latitude));
 
-	EdtLatitudeDegrees->setText(sVal);
+    sVal = QString("%1").arg(minutes);
 
-	/* Extract minutes */
-	Minutes = Parameters.GPSData.ExtractMinutes(latitude);
-	sVal = QString("%1").arg(Minutes);
+    EdtLatitudeMinutes->setText(sVal);
 
-	EdtLatitudeMinutes->setText(sVal);
+    /* Extract longitude values */
 
-	/* Extract longitude values */
+    if(longitude<0.0)
+    {
+        longitude = -longitude;
+        EdtLongitudeEW->setText("W");
+    }
+    else if(longitude>180.0)
+    {
+        longitude = 360.0-longitude;
+        EdtLongitudeEW->setText("E");
+    }
+    else
+    {
+        EdtLongitudeEW->setText("E");
+    }
 
-	if(longitude<0.0)
-	{
-		longitude = -longitude;
-		EdtLongitudeEW->setText("W");
-	}
-	else if(longitude>180.0)
-	{
-		longitude = 360.0-longitude;
-		EdtLongitudeEW->setText("E");
-	}
-	else
-	{
-		EdtLongitudeEW->setText("E");
-	}
+    /* Extract degrees */
 
-	/* Extract degrees */
+    degrees = int(longitude);
+    minutes = int(((floor((longitude - degrees) * 1000000) / 1000000) + 0.00005) * 60.0);
 
-	Minutes = Parameters.GPSData.ExtractMinutes(longitude);
+    /* Longitude degrees max 3 digits */
+    sVal = QString("%1").arg(degrees);
 
-	/* Longitude degrees max 3 digits */
-	sVal = QString("%1").arg(int(longitude));
+    EdtLongitudeDegrees->setText(sVal);
 
-	EdtLongitudeDegrees->setText(sVal);
+    /* Extract minutes */
+    sVal = QString("%1").arg(minutes);
 
-	/* Extract minutes */
-	sVal = QString("%1").arg(Minutes);
+    EdtLongitudeMinutes->setText(sVal);
 
-	EdtLongitudeMinutes->setText(sVal);
-
-	Parameters.Unlock(); 
+    Parameters.Unlock();
 
 }
 
 void GeneralSettingsDlg::AddWhatsThisHelp()
 {
-	QWhatsThis::add(this,
-		tr("<b>Receiver coordinates:</b> Are used on "
-		"Live Schedule Dialog to show a little green cube on the left"
-		" of the target column if the receiver coordinates (latitude and longitude)"
-		" are inside the target area of this transmission.<br>"
-		"Receiver coordinates are also saved into the Log file."));
+    QString str =
+        tr("<b>Receiver coordinates:</b> Are used on "
+           "Live Schedule Dialog to show a little green cube on the left"
+           " of the target column if the receiver coordinates (latitude and longitude)"
+           " are inside the target area of this transmission.<br>"
+           "Receiver coordinates are also saved into the Log file.");
+#if QT_VERSION < 0x040000
+    QWhatsThis::add(this, str);
+#else
+    setWhatsThis(str);
+#endif
 }
 

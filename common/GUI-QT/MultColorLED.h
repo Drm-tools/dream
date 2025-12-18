@@ -52,21 +52,16 @@ class CMultColorLED : public QLabel
     Q_OBJECT
 
 public:
-	CMultColorLED(QWidget* parent, const char * name = 0, WFlags f = 0);
-	virtual ~CMultColorLED() {}
-
-	void SetUpdateTime(int iNUTi);
-	void SetLight(int iNewStatus);
-	void Reset();
-
-
-protected:
 	enum ELightColor {RL_GREY, RL_RED, RL_GREEN, RL_YELLOW};
 
-	QPixmap			BitmCubeGreen;
-	QPixmap			BitmCubeYellow;
-	QPixmap			BitmCubeRed;
-	QPixmap			BitmCubeGrey;
+	CMultColorLED(QWidget* parent, const char * name = 0, Qt::WFlags f = 0);
+	virtual ~CMultColorLED() {}
+
+	void SetUpdateTime(int);
+	void SetLight(ELightColor);
+	void Reset();
+
+protected:
 
 	ELightColor		eColorFlag;
 
@@ -78,7 +73,12 @@ protected:
 	bool			bFlagGreenLi;
 	bool			bFlagYellowLi;
 
-	int				iUpdateTime;
+	int			iUpdateTime;
+
+	QPixmap			green;
+	QPixmap			yellow;
+	QPixmap			red;
+	QPixmap			grey;
 
 	void			UpdateColor();
 

@@ -38,6 +38,8 @@ string epgFilename (const CDateAndTime & date,
 		    uint32_t sid, int type, bool advanced);
 string epgFilename_etsi (const CDateAndTime & date,
 		    uint32_t sid, int type, bool advanced);
+string epgFilename_dab (const CDateAndTime & date,
+		    uint32_t sid, int type, bool advanced);
 
 string epgFilename2 (const CDateAndTime & date,
 		    uint32_t sid, int type, bool advanced);

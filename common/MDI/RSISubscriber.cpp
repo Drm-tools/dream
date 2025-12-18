@@ -33,11 +33,7 @@
 #include "RSISubscriber.h"
 #include "../DrmReceiver.h"
 #include "TagPacketGenerator.h"
-#ifdef USE_QT_GUI
-# include "PacketSocketQT.h"
-#else
-# include "PacketSocketNull.h"
-#endif
+#include "PacketSocketQT.h"
 
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
@@ -107,11 +103,7 @@ void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16
 CRSISubscriberSocket::CRSISubscriberSocket(CPacketSink *pSink):CRSISubscriber(pSink),pSocket(NULL)
 ,uIf(0),uAddr(0),uPort(0)
 {
-#ifdef USE_QT_GUI
 	pSocket = new CPacketSocketQT;
-#else
-	pSocket = new CPacketSocketNull;
-#endif
 	pPacketSink = pSocket;
 }
 
@@ -122,30 +114,20 @@ CRSISubscriberSocket::~CRSISubscriberSocket()
 
 _BOOLEAN CRSISubscriberSocket::SetDestination(const string& dest)
 {
-#ifdef USE_QT_GUI
-	string d = dest;
-	QSocketDevice::Type type = QSocketDevice::Datagram;
-	switch(d[0])
+	if(pSocket==NULL)
 	{
-		case 'P': case 'p':
-			SetPFTFragmentSize(800);
-			d.erase(0, 1);
-			break;
-		case 'T': case 't':
-			d.erase(0, 1);
-			type = QSocketDevice::Stream;
-			break;
+		return FALSE;
 	}
-	delete pSocket;
-	pSocket = new CPacketSocketQT(type);
-	pPacketSink = pSocket;
-    _BOOLEAN bOk = pSocket->SetDestination(d);
-    if(bOk && type == QSocketDevice::Stream)
+	string d = dest;
+	if(d[0] == 'P' || d[0] == 'p')
+	{
+		SetPFTFragmentSize(800);
+		d.erase(0, 1);
+	}
+	_BOOLEAN bOk = pSocket->SetDestination(d);
+	if(bOk)
 		pSocket->SetPacketSink(this);
 	return bOk;
-#else
-	return FALSE;
-#endif
 }
 
 _BOOLEAN CRSISubscriberSocket::GetDestination(string& str)
@@ -158,17 +140,26 @@ _BOOLEAN CRSISubscriberSocket::GetDestination(string& str)
 
 _BOOLEAN CRSISubscriberSocket::SetOrigin(const string& str)
 {
-	if(pSocket)
+	if(pSocket==NULL)
 	{
-		// Delegate to socket
-		_BOOLEAN bOK = pSocket->SetOrigin(str);
-
-		if (bOK)
-			// Connect socket to the MDI decoder
-			pSocket->SetPacketSink(this);
+		return FALSE;
+	}
+	// Delegate to socket
+	_BOOLEAN bOK = pSocket->SetOrigin(str);
+	if (bOK)
+	{
+		// Connect socket to the MDI decoder
+		pSocket->SetPacketSink(this);
 		return bOK;
 	}
 	return FALSE;
+}
+
+/* poll for incoming packets */
+void CRSISubscriberSocket::poll()
+{
+	if(pSocket!=NULL)
+		pSocket->poll();
 }
 
 CRSISubscriberFile::CRSISubscriberFile(): CRSISubscriber(NULL), pPacketSinkFile(NULL)

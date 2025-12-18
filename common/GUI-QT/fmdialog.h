@@ -26,34 +26,50 @@
  *
 \******************************************************************************/
 
+#ifndef __FMDIALOG_H
+#define __FMDIALOG_H
+
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>
 #include <qstring.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
-#include <qwt/qwt_thermo.h>
 #include <qevent.h>
-#include <qcstring.h>
 #include <qlayout.h>
-#include <qwhatsthis.h>
 #include <qpalette.h>
-#include <qcolordialog.h>
-
-#include "fmdialogbase.h"
+#if QT_VERSION < 0x040000
+# include "fmdialogbase.h"
+# include <qpopupmenu.h>
+#else
+# include <QMenu>
+# include <QDialog>
+# include "ui_FMMainWindow.h"
+#endif
 #include "DialogUtil.h"
 #include "MultColorLED.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 
+#include <qcolordialog.h>
+
 /* Classes ********************************************************************/
+#if QT_VERSION >= 0x040000
+class FMDialogBase : public QMainWindow, public Ui_FMMainWindow
+{
+public:
+	FMDialogBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QMainWindow(parent,f){(void)name;(void)modal;setupUi(this);}
+	virtual ~FMDialogBase() {}
+};
+#endif
 class FMDialog : public FMDialogBase
 {
 	Q_OBJECT
 
 public:
 	FMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE,	WFlags f = 0);
+		bool modal = FALSE,	Qt::WFlags f = 0);
 
 	virtual ~FMDialog();
 
@@ -62,10 +78,18 @@ protected:
 	CSettings&			Settings;
 
 	QMenuBar*			pMenu;
+#if QT_VERSION < 0x040000
 	QPopupMenu*			pReceiverModeMenu;
 	QPopupMenu*			pSettingsMenu;
 	QPopupMenu*			pPlotStyleMenu;
+#else
+	QMenu*				pReceiverModeMenu;
+	QMenu*				pSettingsMenu;
+	QMenu*				pPlotStyleMenu;
+	CAboutDlg			AboutDlg;
+#endif
 	QTimer				Timer;
+	QBrush				alarmBrush;
 
 	_BOOLEAN		bSysEvalDlgWasVis;
 	_BOOLEAN		bMultMedDlgWasVis;
@@ -75,7 +99,6 @@ protected:
 	ERecMode		eReceiverMode;
 
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	virtual void	customEvent(QCustomEvent* Event);
 	virtual void	closeEvent(QCloseEvent* ce);
 	virtual void	showEvent(QShowEvent* pEvent);
 	void			hideEvent(QHideEvent* pEvent);
@@ -95,6 +118,7 @@ public slots:
 	void OnMenuSetDisplayColor();
 	void OnSwitchToDRM();
 	void OnSwitchToAM();
+	void on_actionWhats_This();
 
 signals:
 	void SwitchMode(int);
@@ -102,3 +126,5 @@ signals:
 	void ViewLiveScheduleDlg();
 	void Closed();
 };
+
+#endif

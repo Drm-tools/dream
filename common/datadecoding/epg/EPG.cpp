@@ -28,7 +28,6 @@
 \******************************************************************************/
 
 #include "EPG.h"
-#include "epgutil.h"
 #include <qfileinfo.h>
 #include <qfile.h>
 #include <qdir.h>
@@ -1259,39 +1258,6 @@ EPG::addChannel (const string& label, uint32_t sid)
     Parameters.ServiceInformation[sid].id = sid;
 }
 
-QDomDocument*
-EPG::getFile (const QDate& date, uint32_t sid, bool bAdvanced)
-{
-    CDateAndTime d;
-    d.year = date.year();
-    d.month = date.month();
-    d.day = date.day();
-
-    QString fileName(epgFilename(d, sid, 1, bAdvanced).c_str ());
-    QFile file (dir + "/" +fileName);
-    if (!file.open (IO_ReadOnly))
-    {
-		fileName = epgFilename_etsi(d, sid, 1, bAdvanced); // try the other filename convention
-		file.setName(dir + "/" +fileName);
-		if (!file.open (IO_ReadOnly))
-		{
-				return NULL;
-		}
-    }
-    vector<_BYTE> vecData;
-    vecData.resize (file.size ());
-    vecData.resize (file.size ());
-    file.readBlock ((char *) &vecData.front (), file.size ());
-    file.close ();
-    CEPGDecoder *epg = new CEPGDecoder();
-    epg->decode (vecData);
-    epg->doc.documentElement().insertBefore(
-		epg->doc.createComment(fileName),
-		epg->doc.documentElement().firstChild()
-    );
-    return &(epg->doc);
-}
-
 void
 EPG::parseDoc (const QDomDocument & doc)
 {
@@ -1354,7 +1320,11 @@ EPG::parseDoc (const QDomDocument & doc)
                     if (e.tagName () == "genre")
                     {
                         QString genre = e.attribute ("href", "");
+#if QT_VERSION < 0x040000
                         int i = genre.findRev (':');
+#else
+                        int i = genre.lastIndexOf(':');
+#endif
                         if (i != -1)
                             genre = genre.mid (i + 1);
                         QString type = e.attribute ("type", "main");
@@ -1376,7 +1346,11 @@ EPG::parseDoc (const QDomDocument & doc)
             QMap<time_t,CProg>::ConstIterator existing = progs.find(start);
             if (existing != progs.end())
             {
+#if QT_VERSION < 0x040000
                 p.augment(existing.data());
+#else
+                p.augment(existing.value());
+#endif
             }
             progs[start] = p;
         }
@@ -1424,7 +1398,11 @@ void
 EPG::saveChannels (const QString & fileName)
 {
     QFile f (fileName);
+# if QT_VERSION < 0x040000
     if (!f.open (IO_WriteOnly))
+#else
+    if (!f.open (QIODevice::WriteOnly))
+#endif
     {
         return;
     }
@@ -1461,7 +1439,11 @@ EPG::loadChannels (const QString & fileName)
 {
     QDomDocument domTree;
     QFile f (fileName);
+# if QT_VERSION < 0x040000
     if (!f.open (IO_ReadOnly))
+#else
+    if (!f.open (QIODevice::ReadOnly))
+#endif
     {
         addChannel ("BBC & DW", 0xE1C248);
         return;
@@ -1487,7 +1469,11 @@ EPG::loadChannels (const QString & fileName)
                 {
                     QDomElement s = e.toElement ();
                     if (s.tagName () == "shortName")
-                        name = s.text().utf8();
+#if QT_VERSION >= 0x040000
+                        name = s.text().toUtf8().constData();
+#else
+                        name = s.text().utf8().data();
+#endif
                     if (s.tagName () == "serviceID")
                         sid = s.attribute ("id", "0");
                 }
@@ -1507,7 +1493,11 @@ time_t EPG::parseTime(const QString & time)
     if (time=="")
         return 0; // invalid
     QRegExp q("[-T:+Z]");
+#if QT_VERSION >= 0x040000
+    QStringList sl = time.split(q);
+#else
     QStringList sl = QStringList::split(q, time);
+#endif
 #ifdef _WIN32
     SYSTEMTIME st;
     st.wYear = 1970;
@@ -1590,9 +1580,9 @@ int EPG::parseDuration (const QString& duration)
         int yy=0,mo=0,dd=0,hh=0,mi=0,ss=0;
         int d=0;
         bool date=true;
-        for (size_t i=1; i<duration.length(); i++)
+        for (size_t i=1; i<(size_t)duration.length(); i++)
         {
-            switch (duration[int(i)])
+            switch (duration[int(i)].unicode())
             {
             case 'T':
                 d = 0;

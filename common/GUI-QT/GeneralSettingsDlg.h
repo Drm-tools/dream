@@ -25,14 +25,33 @@
  *
 \******************************************************************************/
 
+#ifndef __GENERAL_SETTINGS_DLG_H
+#define __GENERAL_SETTINGS_DLG_H
+
 #include "../Parameter.h"
 #include "../util/Settings.h"
 
-#include "GeneralSettingsDlgbase.h"
+#include <qglobal.h>
+#if QT_VERSION < 0x040000
+# include "GeneralSettingsDlgbase.h"
+#else
+# include <QDialog>
+# include "ui_GeneralSettingsDlgbase.h"
+#endif
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
+#if QT_VERSION >= 0x040000
+class CGeneralSettingsDlgBase : public QDialog, public Ui_CGeneralSettingsDlgBase
+{
+public:
+	CGeneralSettingsDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,f){(void)name;(void)modal;setupUi(this);}
+	virtual ~CGeneralSettingsDlgBase() {}
+};
+#endif
 class GeneralSettingsDlg : public CGeneralSettingsDlgBase
 {
 	Q_OBJECT
@@ -40,7 +59,7 @@ class GeneralSettingsDlg : public CGeneralSettingsDlgBase
 public:
 
 	GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~GeneralSettingsDlg();
 
 protected:
@@ -55,13 +74,6 @@ protected:
 
 	CParameter&		Parameters;
 	CSettings&		Settings;
-	string			host;
-	int				port;
-	_BOOLEAN		bUseGPS;
-
-signals:
-	void StartGPS();
-	void StopGPS();
 
 public slots:
 	void CheckSN(const QString& NewText);
@@ -69,3 +81,5 @@ public slots:
 	void ButtonOkClicked();
 	void OnCheckBoxUseGPS();
 };
+
+#endif

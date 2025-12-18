@@ -29,26 +29,25 @@
 #if !defined(DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_)
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
-#include<map>
-
-#include <qmenubar.h>
-#include <qpopupmenu.h>
-#include <qevent.h>
-#include <qtextview.h>
-#include <qlabel.h>
-#include <qwhatsthis.h>
-#include <qthread.h>
-
-#include "AboutDlgbase.h"
 #include "../Parameter.h"
 #include "../selectioninterface.h"
-#ifdef HAVE_LIBHAMLIB
-# include "../util/Utilities.h"
+
+#include<map>
+
+#include <qthread.h>
+#if QT_VERSION < 0x040000
+# include <qaction.h>
+# include <qpopupmenu.h>
+# include "AboutDlgbase.h"
+#else
+# include "ui_AboutDlgbase.h"
+# include <QMenu>
+# include <QDialog>
+# include <QAction>
 #endif
 
-#ifndef HAVE_LIBHAMLIB
+class CRig;
 typedef int rig_model_t;
-#endif
 
 /* Definitions ****************************************************************/
 
@@ -59,29 +58,28 @@ typedef int rig_model_t;
 	#define FONT_COURIER    "Courier"
 #endif
 /* Classes ********************************************************************/
-/* DRM events --------------------------------------------------------------- */
-class DRMEvent : public QCustomEvent
-{
-public:
-	DRMEvent(const int iNewMeTy, const int iNewSt) :
-		QCustomEvent(QEvent::User + 11), iMessType(iNewMeTy), iStatus(iNewSt) {}
-
-	int iMessType;
-	int iStatus;
-};
-
 
 /* About dialog ------------------------------------------------------------- */
+#if QT_VERSION >= 0x040000
+class CAboutDlgBase : public QDialog, public Ui_CAboutDlgBase
+{
+public:
+	CAboutDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f):
+		QDialog(parent,f){setupUi(this);}
+	virtual ~CAboutDlgBase() {}
+};
+#endif
+
 class CAboutDlg : public CAboutDlgBase
 {
 	Q_OBJECT
 
 public:
 	CAboutDlg(QWidget* parent = 0, const char* name = 0, bool modal = FALSE,
-		WFlags f = 0);
+		Qt::WFlags f = 0);
 };
 
-
+#if QT_VERSION < 0x040000
 /* Help menu ---------------------------------------------------------------- */
 class CDreamHelpMenu : public QPopupMenu
 {
@@ -94,10 +92,9 @@ protected:
 	CAboutDlg AboutDlg;
 
 public slots:
-	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
+	void OnHelpWhatsThis();
 	void OnHelpAbout() {AboutDlg.exec();}
 };
-
 
 /* Sound card selection menu ------------------------------------------------ */
 class CSoundCardSelMenu : public QPopupMenu
@@ -106,23 +103,24 @@ class CSoundCardSelMenu : public QPopupMenu
 
 public:
 	CSoundCardSelMenu(CSelectionInterface* pNSIn,
-						CSelectionInterface* pNSOut, QWidget* parent = 0);
+		CSelectionInterface* pNSOut, QWidget* parent = 0);
 
 protected:
 	CSelectionInterface*	pSoundInIF;
 	CSelectionInterface*	pSoundOutIF;
-	vector<string>			vecSoundInNames;
-	vector<string>			vecSoundOutNames;
-	int						iNumSoundInDev;
-	int						iNumSoundOutDev;
-	QPopupMenu*				pSoundInMenu;
-	QPopupMenu*				pSoundOutMenu;
+
+        vector<string>          vecSoundInNames;
+        vector<string>          vecSoundOutNames;
+        int                     iNumSoundInDev;
+        int                     iNumSoundOutDev;
+        QPopupMenu*             pSoundInMenu;
+        QPopupMenu*             pSoundOutMenu;
 
 public slots:
 	void OnSoundInDevice(int id);
 	void OnSoundOutDevice(int id);
 };
-
+#endif
 
 /* GUI help functions ------------------------------------------------------- */
 /* Converts from RGB to integer and back */
@@ -149,61 +147,24 @@ public:
 
 inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
 {
-	/* Under Windows it does seem that QT only sets the caption if a "Qt" is
+#if QT_VERSION < 0x030000
+	/* Under Windows QT only sets the caption if a "Qt" is
 	   present in the name. Make a little "trick" to display our desired
 	   name without seeing the "Qt" (by Andrea Russo) */
 	QString sTitle = "";
-
 #ifdef _MSC_VER
-# if QT_VERSION < 0x030000
 	sTitle.fill(' ', 10000);
 	sTitle += "Qt";
+#endif
+	pDlg->setCaption(sCap + sTitle);
+#else
+# if QT_VERSION < 0x040000
+	pDlg->setCaption(sCap);
+# else
+	pDlg->setWindowTitle(sCap);
 # endif
 #endif
-
-	pDlg->setCaption(sCap + sTitle);
 }
-
-
-class QAction;
-
-class CRig : public QObject, public QThread
-{
-	Q_OBJECT
-public:
-	CRig(CParameter* np):
-#ifdef HAVE_LIBHAMLIB
-	Hamlib(),
-#endif
-	subscribers(0),pParameters(np)
-	{ }
-	void run();
-	void subscribe();
-	void unsubscribe();
-#ifdef HAVE_LIBHAMLIB
-	void GetRigList(map<rig_model_t,CHamlib::SDrRigCaps>& r) { Hamlib.GetRigList(r); }
-	rig_model_t GetHamlibModelID() { return Hamlib.GetHamlibModelID(); }
-	void SetHamlibModelID(rig_model_t r) { Hamlib.SetHamlibModelID(r); }
-	void SetEnableModRigSettings(_BOOLEAN b) { Hamlib.SetEnableModRigSettings(b); }
-	void GetPortList(map<string,string>& ports) { Hamlib.GetPortList(ports); }
-	string GetComPort() { return Hamlib.GetComPort(); }
-	void SetComPort(const string& s) { Hamlib.SetComPort(s); }
-	_BOOLEAN GetEnableModRigSettings() { return Hamlib.GetEnableModRigSettings(); }
-	CHamlib::ESMeterState GetSMeter(_REAL& r) { return Hamlib.GetSMeter(r); }
-	void LoadSettings(CSettings& s) { Hamlib.LoadSettings(s);}
-	void SaveSettings(CSettings& s) { Hamlib.SaveSettings(s); }
-	CHamlib* GetRig() { return &Hamlib; }
-
-protected:
-	CHamlib Hamlib;
-#endif
-protected:
-	int subscribers;
-	CParameter* pParameters;
-
-signals:
-    void sigstr(double);
-};
 
 class RemoteMenu : public QObject
 {
@@ -211,7 +172,12 @@ class RemoteMenu : public QObject
 
 public:
 	RemoteMenu(QWidget*, CRig&);
-	QPopupMenu* menu(){ return pRemoteMenu; }
+# if QT_VERSION < 0x040000
+	QPopupMenu
+#else
+	QMenu
+#endif
+	* menu(){ return pRemoteMenu; }
 
 public slots:
 	void OnModRigMenu(int iID);
@@ -223,13 +189,25 @@ signals:
 
 protected:
 #ifdef HAVE_LIBHAMLIB
-	struct Rigmenu {std::string mfr; QPopupMenu* pMenu;};
+	struct Rigmenu {
+		std::string mfr;
+# if QT_VERSION < 0x040000
+	QPopupMenu
+#else
+	QMenu
+#endif
+		* pMenu;
+	};
 	std::map<int,Rigmenu> rigmenus;
 	std::vector<rig_model_t> specials;
 	CRig&	rig;
 #endif
-	QPopupMenu* pRemoteMenu;
-	QPopupMenu* pRemoteMenuOther;
+# if QT_VERSION < 0x040000
+	QPopupMenu
+#else
+	QMenu
+#endif
+	* pRemoteMenu, *pRemoteMenuOther;
 };
 
 #define OTHER_MENU_ID (666)

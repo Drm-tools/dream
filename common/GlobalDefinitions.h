@@ -53,34 +53,20 @@ using namespace std; /* Because of the library: "complex" */
 # undef NOMINMAX
 # define NOMINMAX 1
 
-/* Define whether using GUI or non-GUI receiver */
-# define USE_QT_GUI
-//# undef USE_QT_GUI
-
-/* Define to get com port auto detection on Win2K and beyond */
-# define HAVE_SETUPAPI
-//# undef HAVE_SETUPAPI
-
 # define DLL_EXPORT 1
 //# undef DLL_EXPORT 1
 
-/* set sensible defaults for QT2 or QT3 */
-# ifdef USE_QT_GUI
-#  include <qglobal.h>
-# endif
+#endif /* _WIN32 */
 
-# if defined(QT_VERSION) && QT_VERSION < 0x030000
-#  define HAVE_LIBFREEIMAGE
-//#  undef HAVE_LIBFREEIMAGE
-//#  define HAVE_LIBZ 1
-#  undef HAVE_LIBZ
-# else
-//# define HAVE_LIBFREEIMAGE
-#  undef HAVE_LIBFREEIMAGE
-#  define HAVE_LIBZ 1
-//# undef HAVE_LIBZ
-# endif
+/* set sensible defaults for QT */
+#include <qglobal.h>
 
+/* Standard definitions */
+#ifndef TRUE
+# define	TRUE							1
+#endif
+#ifndef FALSE
+# define FALSE							0
 #endif
 
 
@@ -227,9 +213,6 @@ const _REAL crPi = ((_REAL) 3.14159265358979323846);
 #define RET_VAL_LOG_0					((_REAL) -200.0)
 
 
-/* Standard definitions */
-#define	TRUE							1
-#define FALSE							0
 
 
 /* Classes ********************************************************************/
@@ -255,12 +238,15 @@ public:
 
 /* Mutex object to access data safely from different threads */
 /* QT mutex */
+
 #ifdef USE_QT_GUI
+
 # if QT_VERSION < 0x030000
 #  include <qthread.h>
 # else
 #  include <qmutex.h>
 # endif
+
 class CMutex
 {
 public:

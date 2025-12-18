@@ -78,7 +78,7 @@
 
 /* Classes ********************************************************************/
 class CSettings;
-class CHamlib;
+class CRig;
 
 class CSplitFAC : public CSplitModul<_BINARY>
 {
@@ -124,8 +124,8 @@ protected:
 class CConvertAudio : public CReceiverModul<_REAL,_SAMPLE>
 {
 protected:
-	virtual void InitInternal(CParameter&);
-	virtual void ProcessDataInternal(CParameter&);
+    virtual void InitInternal(CParameter&);
+    virtual void ProcessDataInternal(CParameter&);
 };
 
 class CDRMReceiver
@@ -137,22 +137,21 @@ public:
 
     void					LoadSettings(CSettings&); // can write to settings to set defaults
     void					SaveSettings(CSettings&);
-    void					Init();
     void					Start();
     void					Stop();
     void					RequestNewAcquisition() {
         bRestartFlag = TRUE;
     }
     EAcqStat				GetAcquiState() {
-        return pReceiverParam->eAcquiState;
+        return pReceiverParam->GetAcquiState();
     }
     ERecMode				GetReceiverMode() {
         return eReceiverMode;
     }
     bool GetDownstreamRSCIOutEnabled()
     {
-		return downstreamRSCI.GetOutEnabled();
-	}
+        return downstreamRSCI.GetOutEnabled();
+    }
 
     void					SetReceiverMode(ERecMode eNewMode);
     void					SetInitResOff(_REAL rNRO)
@@ -162,9 +161,15 @@ public:
     void					SetAMDemodType(CAMDemodulation::EDemodType);
     void					SetAMFilterBW(int iBw);
     void					SetAMDemodAcq(_REAL rNewNorCen);
-    void	 				SetRig(CHamlib* n) { pRig=n; }
+#ifdef HAVE_LIBHAMLIB
+    void	 				SetRig(CRig* n) {
+        pRig=n;
+    }
+#endif
     void	 				SetFrequency(int);
-    int		 				GetFrequency() {return pReceiverParam->GetFrequency();}
+    int		 				GetFrequency() {
+        return pReceiverParam->GetFrequency();
+    }
     void					SetIQRecording(_BOOLEAN);
     void					SetRSIRecording(_BOOLEAN, const char);
 
@@ -417,7 +422,6 @@ protected:
     int						iDataStreamID;
 
 
-    _BOOLEAN				bDoInitRun;
     _BOOLEAN				bRestartFlag;
 
     _REAL					rInitResampleOffset;
@@ -434,11 +438,13 @@ protected:
     int						iBwUSB;
     int						iBwCW;
     int						iBwFM;
-    _BOOLEAN				bReadFromFile;
     time_t					time_keeper;
-    CHamlib*				pRig;
+#ifdef HAVE_LIBHAMLIB
+    CRig*				pRig;
+#endif
 
     CPlotManager PlotManager;
+    string			rsiOrigin;
 };
 
 

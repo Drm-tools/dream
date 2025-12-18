@@ -26,12 +26,22 @@
 \******************************************************************************/
 
 #include "MultSettingsDlg.h"
+#if QT_VERSION < 0x040000
+# include <qfiledialog.h>
+#else
+# include <QFileDialog>
+# include <QShowEvent>
+# include <QHideEvent>
+#endif
+#include <qlabel.h>
+#include <qtooltip.h>
 
 /* Implementation *************************************************************/
 
 MultSettingsDlg::MultSettingsDlg(CParameter& NP, CSettings& NSettings, QWidget* parent,
-	const char* name, bool modal, WFlags f) :
-	CMultSettingsDlgBase(parent, name, modal, f), Parameters(NP), Settings(NSettings)
+	const char* name, bool modal, Qt::WFlags f) :
+	CMultSettingsDlgBase(parent, name, modal, f),
+	Parameters(NP), Settings(NSettings)
 {
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
@@ -80,7 +90,11 @@ void MultSettingsDlg::showEvent(QShowEvent*)
 
 	QString dir = Parameters.sDataFilesDirectory.c_str();
 	TextLabelDir->setText(dir);
-        QToolTip::add(TextLabelDir, dir);
+#if QT_VERSION < 0x040000
+    QToolTip::add(TextLabelDir, dir);
+#else
+    TextLabelDir->setToolTip(dir);
+#endif
 }
 
 void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN bDeleteDirs)
@@ -94,6 +108,7 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 	{
 		dir.setFilter(QDir::Files | QDir::Dirs | QDir::NoSymLinks);
 
+#if QT_VERSION < 0x040000
 		/* Eventually apply the filter */
 		if (sFilter != "")
 			dir.setNameFilter(sFilter);
@@ -102,9 +117,19 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 
 		const QFileInfoList *list = dir.entryInfoList();
 		QFileInfoListIterator it( *list ); /* create list iterator */
-
 		for(QFileInfo *fi; (fi=it.current()); ++it )
 		{
+#else
+		/* Eventually apply the filter */
+		if (sFilter != "")
+			dir.setNameFilters(QStringList(sFilter));
+
+		dir.setSorting( QDir::DirsFirst );
+		const QList<QFileInfo> list = dir.entryInfoList();
+		for(QList<QFileInfo>::const_iterator fi = list.begin(); fi!=list.end(); fi++)
+		{
+#endif
+
 			/* for each file/dir */
 			/* if directory...=> scan recursive */
 			if (fi->isDir())
@@ -129,13 +154,22 @@ void MultSettingsDlg::ClearCache(QString sPath, QString sFilter = "", _BOOLEAN b
 
 void MultSettingsDlg::OnbuttonChooseDir()
 {
+#if QT_VERSION < 0x040000
     QString strFileName = QFileDialog::getExistingDirectory(TextLabelDir->text(), this);
+#else
+    QString strFileName = QFileDialog::getExistingDirectory(this, TextLabelDir->text());
+#endif
     /* Check if user not hit the cancel button */
     if (!strFileName.isEmpty())
     {
         TextLabelDir->setText(strFileName);
-        QToolTip::add(TextLabelDir, strFileName);
+#if QT_VERSION < 0x040000
+	    QToolTip::add(TextLabelDir, strFileName);
         Parameters.sDataFilesDirectory = (const char*)strFileName.utf8();
+#else
+		TextLabelDir->setToolTip(strFileName);
+        Parameters.sDataFilesDirectory = (const char*)strFileName.toUtf8();
+#endif
     }
 }
 

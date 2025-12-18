@@ -35,7 +35,18 @@
 #include <time.h>
 #include <map>
 #include <queue>
-#include <iostream>
+#ifdef USE_QT_GUI
+# if QT_VERSION < 0x040000
+#  if QT_VERSION < 0x030000
+#   include <qthread.h>
+#  else
+#   include <qwaitcondition.h>
+#  endif
+# else
+#  include <QWaitCondition>
+#  include <QMutex>
+# endif
+#endif
 
 
 /* Definitions ****************************************************************/
@@ -551,11 +562,7 @@ class CMOTDABDec
 {
   public:
 
-    CMOTDABDec ():MOTmode (unknown), MOTHeaders(),
-    MOTDirectoryEntity(), MOTDirComprEntity(),
-    MOTDirectory(), MOTCarousel(), qiNewObjects()
-    {
-    }
+    CMOTDABDec ();
 
     virtual ~ CMOTDABDec ()
     {
@@ -581,7 +588,7 @@ class CMOTDABDec
 
   protected:
 
-	void ProcessDirectory (CBitReassembler &MOTDir);
+    void ProcessDirectory (CBitReassembler &MOTDir);
 
     void DeliverIfReady (TTransportID TransportID);
 
@@ -597,6 +604,10 @@ class CMOTDABDec
     CMOTDirectory MOTDirectory;
     map < TTransportID, CMOTObject > MOTCarousel;
     queue < TTransportID > qiNewObjects;
+#ifdef USE_QT_GUI
+    QMutex guard;
+    QWaitCondition blocker;
+#endif
 };
 
 #endif // !defined(DABMOT_H__3B0UBVE98732KJVEW363E7A0D31912__INCLUDED_)

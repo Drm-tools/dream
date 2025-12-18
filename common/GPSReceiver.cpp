@@ -29,11 +29,6 @@
 
 #include "GPSReceiver.h"
 
-#ifdef USE_QT_GUI
-# include <qsocket.h>
-# include <qsignal.h>
-#endif
-
 #include <sstream>
 #include <iomanip>
 using namespace std;
@@ -61,11 +56,16 @@ CGPSReceiver::~CGPSReceiver()
 void CGPSReceiver::open()
 {
     Parameters.Lock();
+    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_GPS_RECEIVER);
     Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
     Parameters.Unlock();
     if (m_pSocket == NULL)
     {
+#if QT_VERSION < 0x040000
         m_pSocket = new QSocket();
+#else
+        m_pSocket = new QTcpSocket();
+#endif
         if (m_pSocket == NULL)
             return;
 
@@ -83,6 +83,7 @@ void CGPSReceiver::close()
         return;
 
     Parameters.Lock();
+    Parameters.GPSData.SetGPSSource(CGPSData::GPS_SOURCE_MANUAL_ENTRY);
     Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NOT_CONNECTED);
     Parameters.Unlock();
 
@@ -96,6 +97,7 @@ void CGPSReceiver::close()
 
 void CGPSReceiver::DecodeGPSDReply(string Reply)
 {
+qDebug("DecodeGPSDReply");
     string TotalReply;
 
     TotalReply = Reply;
@@ -105,7 +107,6 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
 
     size_t GPSDPos=0;
 
-    Parameters.Lock();
     while ((GPSDPos = TotalReply.find("GPSD",0)) != string::npos)
     {
         TotalReply=TotalReply.substr(GPSDPos+5,TotalReply.length()-(5+GPSDPos));
@@ -135,7 +136,6 @@ void CGPSReceiver::DecodeGPSDReply(string Reply)
             }
         }
     }
-    Parameters.Unlock();
 }
 
 //decode gpsd strings
@@ -159,6 +159,7 @@ void CGPSReceiver::DecodeString(char Command, string Value)
 
 void CGPSReceiver::DecodeO(string Value)
 {
+    Parameters.Lock();
     if (Value[0] == '?')
     {
         Parameters.GPSData.SetPositionAvailable(FALSE);
@@ -166,6 +167,7 @@ void CGPSReceiver::DecodeO(string Value)
         Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
         Parameters.GPSData.SetHeadingAvailable(FALSE);
         Parameters.GPSData.SetSpeedAvailable(FALSE);
+	Parameters.Unlock();
         return;
     }
 
@@ -221,15 +223,18 @@ void CGPSReceiver::DecodeO(string Value)
     }
     else
         Parameters.GPSData.SetSpeedAvailable(FALSE);
+    Parameters.Unlock();
 
 }
 
 void CGPSReceiver::DecodeY(string Value)
 {
+    Parameters.Lock();
     if (Value[0] == '?')
     {
         Parameters.GPSData.SetSatellitesVisibleAvailable(FALSE);
         Parameters.GPSData.SetTimeAndDateAvailable(FALSE);
+	Parameters.Unlock();
         return;
     }
 
@@ -244,10 +249,12 @@ void CGPSReceiver::DecodeY(string Value)
 
     //todo - timestamp//
 
+    Parameters.Unlock();
 }
 
 void CGPSReceiver::slotInit()
 {
+qDebug("slotInit");
     close();
     //disconnect(m_pTimer);
     m_pTimer->stop();
@@ -256,6 +263,7 @@ void CGPSReceiver::slotInit()
 
 void CGPSReceiver::slotConnected()
 {
+qDebug("slotConnected");
     m_iCounter = 0;
     Parameters.Lock();
     Parameters.GPSData.SetStatus(CGPSData::GPS_RX_NO_DATA);
@@ -264,8 +272,11 @@ void CGPSReceiver::slotConnected()
     while (m_pSocket->canReadLine())
         m_pSocket->readLine();
 
+#if QT_VERSION < 0x040000
     m_pSocket->writeBlock("W1\n",2);	// try to force gpsd into watcher mode
-
+#else
+	m_pSocket->write("W1\n");
+#endif
     disconnect(m_pTimerDataTimeout, 0, 0, 0);	// disconnect everything connected from the timer
     connect( m_pTimerDataTimeout, SIGNAL(timeout()), SLOT(slotTimeout()) );
     m_pTimerDataTimeout->start(c_usReconnectIntervalSeconds*1000);
@@ -273,6 +284,7 @@ void CGPSReceiver::slotConnected()
 
 void CGPSReceiver::slotTimeout()
 {
+qDebug("slotTimeout");
     m_iCounter--;
 
     if (m_iCounter<=0)
@@ -295,6 +307,7 @@ void CGPSReceiver::slotTimeout()
 
 void CGPSReceiver::slotReadyRead()
 {
+qDebug("slotReadyRead");
     m_iCounter = c_usReconnectIntervalSeconds/5;
     Parameters.Lock();
     Parameters.GPSData.SetStatus(CGPSData::GPS_RX_DATA_AVAILABLE);
@@ -306,8 +319,13 @@ void CGPSReceiver::slotReadyRead()
 
 void CGPSReceiver::slotSocketError(int)
 {
+qDebug("slotSocketError");
 //	close()
     disconnect(m_pTimer, 0, 0, 0);	// disconnect everything connected to the timer
     connect( m_pTimer, SIGNAL(timeout()), SLOT(slotInit()) );
+#if QT_VERSION < 0x040000
     m_pTimer->start(c_usReconnectIntervalSeconds*1000, TRUE);
+#else
+    m_pTimer->start(c_usReconnectIntervalSeconds*1000);
+#endif
 }

@@ -25,28 +25,34 @@
  *
 \******************************************************************************/
 
-#include <qheader.h>
-#include <qlistview.h>
+#ifndef __LiveScheduleDlg_H
+#define LiveScheduleDlg_H
+
+#include "../DrmReceiver.h"
+#include "../util/Settings.h"
+#include "DialogUtil.h"
+#include <vector>
+#if QT_VERSION < 0x040000
+# include "LiveScheduleDlgbase.h"
+# include <qpopupmenu.h>
+# include <qurloperator.h>
+# include <qlistview.h>
+#else
+# include <QSignalMapper>
+# include <QDialog>
+# include <QTreeWidget>
+# include "ui_LiveScheduleWindow.h"
+#endif
 #include <qpixmap.h>
 #include <qradiobutton.h>
 #include <qtimer.h>
 #include <qmessagebox.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
 #include <qlayout.h>
-#include <qwhatsthis.h>
 #include <qlabel.h>
-#include <qfiledialog.h>
-#include <qtextstream.h>
 #include <qcheckbox.h>
 #include <qthread.h>
-#include <qfiledialog.h>
 
-#include "LiveScheduleDlgbase.h"
-#include "../DrmReceiver.h"
-#include "../util/Settings.h"
-#include "DialogUtil.h"
-#include <vector>
 
 /* Definitions ****************************************************************/
 /* Define the timer interval of updating the list view */
@@ -125,6 +131,7 @@ protected:
 	double		dReceiverLongitude;
 };
 
+#if QT_VERSION < 0x040000
 class MyListLiveViewItem : public QListViewItem
 {
 public:
@@ -132,13 +139,38 @@ public:
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
 		QString s7 = QString::null, QString s8 = QString::null) :
-		QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8) {}
+	QListViewItem(parent, s1, s2, s3, s4, s5, s6, s7, s8)
+	{}
 
 	/* Custom "key()" function for correct sorting behaviour */
 	virtual QString key(int column, bool ascending) const;
 };
+#else
+class MyListLiveViewItem : public QTreeWidgetItem
+{
+public:
+	MyListLiveViewItem(QTreeWidget* parent, QString s1, QString s2 = QString::null,
+		QString s3 = QString::null, QString s4 = QString::null,
+		QString s5 = QString::null, QString s6 = QString::null,
+		QString s7 = QString::null, QString s8 = QString::null) :	
+	QTreeWidgetItem(parent, QStringList() << s1 << s2 << s3 << s4 << s5 << s6 << s7 << s8)
+	{}
 
+	/* Custom "key()" function for correct sorting behaviour */
+	virtual QString key(int column, bool ascending) const;
+	void setPixmap(int col, QPixmap p) { setIcon(col, p); }
+};
+#endif
 
+#if QT_VERSION >= 0x040000
+class CLiveScheduleDlgBase : public QMainWindow, public Ui_LiveScheduleWindow
+{
+public:
+	CLiveScheduleDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
+		QMainWindow(parent,f){}
+	virtual ~CLiveScheduleDlgBase() {}
+};
+#endif
 class LiveScheduleDlg : public CLiveScheduleDlgBase
 {
 	Q_OBJECT
@@ -147,45 +179,61 @@ public:
 
 	LiveScheduleDlg(CDRMReceiver&,
 		QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~LiveScheduleDlg();
 
 	void LoadSchedule();
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
 
-	int				iCurrentSortColumn;
+	int			iCurrentSortColumn;
 	_BOOLEAN		bCurrentSortAscending;
 
 protected:
 	void			SetStationsView();
 	void			AddWhatsThisHelp();
 	void			SetUTCTimeLabel();
-	virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
+	void			showEvent(QShowEvent* pEvent);
+	void			hideEvent(QHideEvent* pEvent);
 	QString			ExtractDaysFlagString(const int iDayCode);
 	QString			ExtractTime(const CAltFreqSched& schedule);
+	_BOOLEAN		showAll();
+	int			currentSortColumn();
 
-	CDRMReceiver&				DRMReceiver;
-	CDRMLiveSchedule			DRMSchedule;
-	QPixmap						BitmCubeGreen;
-	QPixmap						BitmCubeGreenLittle;
-	QPixmap						BitmCubeYellow;
-	QPixmap						BitmCubeRed;
-	QPixmap						BitmCubeOrange;
-	QPixmap						BitmCubePink;
-	QTimer						TimerList;
-	QTimer						TimerUTCLabel;
-	_BOOLEAN					bShowAll;
-	QPopupMenu*					pViewMenu;
-	QPopupMenu*					pPreviewMenu;
-	QPopupMenu*					pFileMenu;
+	CDRMReceiver&		DRMReceiver;
+	CDRMLiveSchedule	DRMSchedule;
+	QTimer			TimerList;
+	QTimer			TimerUTCLabel;
+#if QT_VERSION < 0x040000
+	QPixmap			BitmCubeGreen;
+	QPixmap			BitmCubeGreenLittle;
+	QPixmap			BitmCubeYellow;
+	QPixmap			BitmCubeRed;
+	QPixmap			BitmCubeOrange;
+	QPixmap			BitmCubePink;
+	QPopupMenu*		pViewMenu;
+	QPopupMenu*		pPreviewMenu;
+	QPopupMenu*		pFileMenu;
+	int			showActiveViewMenuItem;
+	int			showAllViewMenuItem;
+	void setupUi(QWidget*);
+#else
+	QIcon	smallGreenCube;
+	QIcon	greenCube;
+	QIcon	redCube;
+	QIcon	orangeCube;
+	QIcon	pinkCube;
+	QSignalMapper* previewMapper;
+	QActionGroup* previewGroup;
+	QSignalMapper* showMapper;
+	QActionGroup* showGroup;
+#endif
 
 	vector<MyListLiveViewItem*>	vecpListItems;
-	QMutex						ListItemsMutex;
-	QString						strCurrentSavePath;
-	int							iColStationID;
-	int							iWidthColStationID;
+	QMutex		ListItemsMutex;
+	QString		strCurrentSavePath;
+	int		iColStationID;
+	int		iWidthColStationID;
 
 public slots:
 	void OnTimerList();
@@ -196,3 +244,5 @@ public slots:
 	void OnSave();
 	void OnCheckFreeze();
 };
+
+#endif

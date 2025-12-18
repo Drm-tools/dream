@@ -44,13 +44,9 @@
 
 #include "MDIRSCI.h"
 #include "../DrmReceiver.h"
-#ifdef USE_QT_GUI
-#  include "PacketSocketQT.h"
-#  include "PacketSourceFile.h"
-#  include <qhostaddress.h>
-#else
-# include "PacketSocketNull.h"
-#endif
+#include "PacketSocketQT.h"
+#include "PacketSourceFile.h"
+#include <qhostaddress.h>
 #include <sstream>
 #include <iomanip>
 
@@ -136,7 +132,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
 	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	// rgps
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.gps_data);	// rgps
 
 	GenDIPacket();
 }
@@ -168,7 +164,7 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
-    TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
+	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
 
 	TagItemGeneratorPilots.GenEmptyTag();
 
@@ -181,7 +177,7 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
 	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.gps_data);	/* rgps */
 
 	GenDIPacket();
 }
@@ -213,7 +209,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
 
-    TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
+	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
 
 	TagItemGeneratorPilots.GenEmptyTag();
 
@@ -229,7 +225,7 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 	_REAL rSigStr = Parameter.SigStrstat.getCurrent();
 	TagItemGeneratorSignalStrength.GenTag(TRUE, rSigStr + S9_DBUV);
 
-	TagItemGeneratorGPS.GenTag(TRUE, Parameter.GPSData);	/* rgps */
+	TagItemGeneratorGPS.GenTag(TRUE, Parameter.gps_data);	/* rgps */
 
 	GenDIPacket();
 }
@@ -309,7 +305,7 @@ void CDownstreamDI::GenDIPacket()
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorReceiverStatus);
 
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerSpectralDensity);
-    TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerImpulseResponse);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerImpulseResponse);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPilots);
 
 
@@ -380,7 +376,6 @@ void CDownstreamDI::GetNextPacket(CSingleBuffer<_BINARY>&)
 	// TODO
 }
 
-/* allow multiple destinations, allow destinations to send cpro instructions back */
 _BOOLEAN
 CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const char profile)
 {
@@ -403,20 +398,36 @@ CDownstreamDI::AddSubscriber(const string& dest, const string& origin, const cha
 	}
 
 	// Delegate
-	_BOOLEAN bOK = subs->SetDestination(dest);
+	_BOOLEAN bOK = TRUE;
+	if (dest != "")
+	{
+		bOK &= subs->SetDestination(dest);
+		if (bOK)
+		{
+			bMDIOutEnabled = TRUE;
+			subs->SetProfile(profile);
+		}
+	}
 	if (origin != "")
+	{
 		bOK &= subs->SetOrigin(origin);
+		if (bOK)
+		{
+			bMDIInEnabled = TRUE;
+		}
+	}
 	if (bOK)
 	{
-		subs->SetProfile(profile);
 		subs->SetReceiver(pDrmReceiver);
-		bMDIInEnabled = TRUE;
-		bMDIOutEnabled = TRUE;
 		RSISubscribers.push_back(subs);
 		return TRUE;
 	}
 	else
+	{
+		bMDIInEnabled = FALSE;
+		bMDIOutEnabled = FALSE;
 		delete subs;
+	}
 	return FALSE;
 }
 
@@ -509,6 +520,14 @@ void CDownstreamDI::SendPacket(const vector<_BYTE>&, uint32_t, uint16_t)
 	cerr << "this shouldn't get called CDownstreamDI::SendPacket" << endl;
 }
 
+void CDownstreamDI::poll()
+{
+	for(vector<CRSISubscriber*>::iterator i = RSISubscribers.begin();
+			i!=RSISubscribers.end(); i++)
+		(*i)->poll();
+}
+
+/* allow multiple destinations, allow destinations to send cpro instructions back */
 /******************************************************************************\
 * DI receive status, send control                                             *
 \******************************************************************************/
@@ -538,11 +557,7 @@ _BOOLEAN CUpstreamDI::SetOrigin(const string& str)
 	strOrigin = str;
 
 	// try a socket
-#ifdef USE_QT_GUI
 	source = new CPacketSocketQT;
-#else
-	source = new CPacketSocketNull;
-#endif
 
 	// Delegate to socket
 	_BOOLEAN bOK = source->SetOrigin(str);
@@ -552,10 +567,8 @@ _BOOLEAN CUpstreamDI::SetOrigin(const string& str)
 		// try a file
 		delete source;
 		source = NULL;
-#ifdef USE_QT_GUI
 		source = new CPacketSourceFile;
 		bOK = source->SetOrigin(str);
-#endif
 	}
 	if (bOK)
 	{
@@ -625,10 +638,14 @@ void CUpstreamDI::InitInternal(CParameter&)
 void CUpstreamDI::ProcessDataInternal(CParameter&)
 {
 	vector<_BYTE> vecbydata;
+	source->poll();
 	queue.Get(vecbydata);
-	iOutputBlockSize = vecbydata.size()*SIZEOF__BYTE;
+	size_t bytes = vecbydata.size();
+	iOutputBlockSize = bytes*SIZEOF__BYTE;
 	pvecOutputData->Init(iOutputBlockSize);
 	pvecOutputData->ResetBitAccess();
-	for(size_t i=0; i<size_t(iOutputBlockSize/SIZEOF__BYTE); i++)
+	for(size_t i=0; i<bytes; i++)
+	{
 		pvecOutputData->Enqueue(vecbydata[i], SIZEOF__BYTE);
+	}
 }

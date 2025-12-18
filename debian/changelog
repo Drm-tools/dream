@@ -1,0 +1,5 @@
+drm (1.15) unstable; urgency=low
+
+  * bug fixes, GPS updates and allows schedule fetching via http
+
+ -- julian <jcable@users.sourceforge.net>  Fri, 19 Oct 2012 17:51:13 +0000

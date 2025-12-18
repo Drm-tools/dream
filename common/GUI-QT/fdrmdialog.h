@@ -26,24 +26,35 @@
  *
 \******************************************************************************/
 
+#ifndef __FDRMDIALOG_H
+#define __FDRMDIALOG_H
+
 #include <qlabel.h>
 #include <qpushbutton.h>
 #include <qtimer.h>
 #include <qstring.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
-#include <qwt/qwt_thermo.h>
-#include <qevent.h>
-#include <qcstring.h>
 #include <qlayout.h>
-#include <qwhatsthis.h>
 #include <qpalette.h>
 #include <qcolordialog.h>
+#include <qwt_thermo.h>
+#if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
+# include "fdrmdialogbase.h"
+# include "systemevalDlg.h"
+#else
+# include <QActionGroup>
+# include <QSignalMapper>
+# include <QDialog>
+# include <QMenu>
+# include <QShowEvent>
+# include <QHideEvent>
+# include <QCloseEvent>
+# include "ui_DRMMainWindow.h"
+# include "EvaluationDlg.h"
+#endif
 
-#include "fdrmdialogbase.h"
 #include "DialogUtil.h"
-#include "systemevalDlg.h"
-#include "MultimediaDlg.h"
 #include "StationsDlg.h"
 #include "LiveScheduleDlg.h"
 #include "EPGDlg.h"
@@ -52,75 +63,115 @@
 #include "MultSettingsDlg.h"
 #include "GeneralSettingsDlg.h"
 #include "MultColorLED.h"
+#include "Logging.h"
 #include "../DrmReceiver.h"
 #include "../util/Vector.h"
 #include "../datadecoding/DataDecoder.h"
 
-
-
 /* Classes ********************************************************************/
+#if QT_VERSION < 0x040000
+class MultimediaDlg;
+#else
+class BWSViewer;
+class JLViewer;
+class SlideShowViewer;
+#endif
+
+#if QT_VERSION >= 0x040000
+class FDRMDialogBase : public QMainWindow, public Ui_DRMMainWindow
+{
+public:
+    FDRMDialogBase(QWidget* parent, const char*, bool, Qt::WFlags f):
+        QMainWindow(parent,f) {
+        setupUi(this);
+    }
+    virtual ~FDRMDialogBase() {}
+};
+#endif
 class FDRMDialog : public FDRMDialogBase
 {
-	Q_OBJECT
+    Q_OBJECT
 
 public:
-	FDRMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE,	WFlags f = 0);
+    FDRMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
+               bool modal = FALSE,	Qt::WFlags f = 0);
 
-	virtual ~FDRMDialog();
+    virtual ~FDRMDialog();
 
 protected:
-	CDRMReceiver&		DRMReceiver;
-	CSettings&			Settings;
-	QTimer				Timer;
-	vector<QLabel*>		serviceLabels;
+    CDRMReceiver&		DRMReceiver;
+    CSettings&			Settings;
+    QTimer			Timer;
+    vector<QLabel*>		serviceLabels;
 
-	systemevalDlg*		pSysEvalDlg;
-	MultimediaDlg*		pMultiMediaDlg;
-	MultSettingsDlg*	pMultSettingsDlg;
-	StationsDlg*		pStationsDlg;
-	LiveScheduleDlg*	pLiveScheduleDlg;
-	EPGDlg*				pEPGDlg;
-	AnalogDemDlg*		pAnalogDemDlg;
-	FMDialog*			pFMDlg;
-	GeneralSettingsDlg* pGeneralSettingsDlg;
-	QMenuBar*			pMenu;
-	QPopupMenu*			pReceiverModeMenu;
-	QPopupMenu*			pSettingsMenu;
-	QPopupMenu*			pPlotStyleMenu;
+    CLogging*			pLogging;
+    systemevalDlg*		pSysEvalDlg;
+#if QT_VERSION < 0x040000
+    MultimediaDlg*		pMultiMediaDlg;
+#else
+    BWSViewer*			pBWSDlg;
+    JLViewer*			pJLDlg;
+    SlideShowViewer*	pSlideShowDlg;
+#endif
+    MultSettingsDlg*	pMultSettingsDlg;
+    StationsDlg*		pStationsDlg;
+    LiveScheduleDlg*	pLiveScheduleDlg;
+    EPGDlg*				pEPGDlg;
+    AnalogDemDlg*		pAnalogDemDlg;
+    FMDialog*			pFMDlg;
+    GeneralSettingsDlg* pGeneralSettingsDlg;
+    QMenuBar*			pMenu;
     QButtonGroup*		pButtonGroup;
+#if QT_VERSION < 0x040000
+    QPopupMenu*		pReceiverModeMenu;
+    QPopupMenu*		pSettingsMenu;
+    QPopupMenu*		pPlotStyleMenu;
+#else
+    QMenu*		pReceiverModeMenu;
+    QMenu*		pSettingsMenu;
+    QMenu*		pPlotStyleMenu;
+    QSignalMapper*	plotStyleMapper;
+    QActionGroup*	plotStyleGroup;
+    CAboutDlg		AboutDlg;
+#endif
 
-	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	virtual void	customEvent(QCustomEvent* Event);
-	virtual void	closeEvent(QCloseEvent* ce);
-	virtual void	showEvent(QShowEvent* pEvent);
-	void			hideEvent(QHideEvent* pEvent);
-	void			AddWhatsThisHelp();
-	void			UpdateDisplay();
-	void			ClearDisplay();
+    void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
+    virtual void	closeEvent(QCloseEvent* ce);
+    virtual void	showEvent(QShowEvent* pEvent);
+    void		hideEvent(QHideEvent* pEvent);
+    void		AddWhatsThisHelp();
+    void		UpdateDisplay();
+    void		ClearDisplay();
 
 
-	void			SetDisplayColor(const QColor newColor);
+    void		SetDisplayColor(const QColor newColor);
 
-	void			ChangeGUIModeToDRM();
-	void			ChangeGUIModeToAM();
-	void			ChangeGUIModeToFM();
+    void		ChangeGUIModeToDRM();
+    void		ChangeGUIModeToAM();
+    void		ChangeGUIModeToFM();
 
-	QString	GetCodecString(const CService&);
-	QString	GetTypeString(const CService&);
-	QString serviceSelector(CParameter&, int);
-	void showTextMessage(const QString&);
-	void showServiceInfo(const CService&);
+    QString	GetCodecString(const CService&);
+    QString	GetTypeString(const CService&);
+    QString serviceSelector(CParameter&, int);
+    void showTextMessage(const QString&);
+    void showServiceInfo(const CService&);
 
 public slots:
-	void OnTimer();
-	void OnSelectAudioService(int);
-	void OnSelectDataService(int);
-	void OnViewStationsDlg();
-	void OnMenuSetDisplayColor();
-	void OnMenuPlotStyle(int value);
-	void OnNewAcquisition();
-	void OnSwitchMode(int);
-	void OnSwitchToFM();
-	void OnSwitchToAM();
+    void OnTimer();
+    void OnSelectAudioService(int);
+    void OnSelectDataService(int);
+    void OnViewStationsDlg();
+    void OnMenuSetDisplayColor();
+    void OnNewAcquisition();
+    void OnSwitchMode(int);
+    void OnSwitchToFM();
+    void OnSwitchToAM();
+    void on_actionWhats_This();
+#if QT_VERSION < 0x040000
+    void OnMenuPlotStyle(int);
+#endif
+signals:
+    void plotStyleChanged(int);
 };
+
+#endif

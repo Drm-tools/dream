@@ -29,30 +29,19 @@
  *
 \******************************************************************************/
 
-#include <qtimer.h>
-#include <qstring.h>
-#include <qlabel.h>
-#include <qradiobutton.h>
-#include <qcheckbox.h>
-#include <qtooltip.h>
-#include <qbuttongroup.h>
-#include <qpushbutton.h>
-#include <qcheckbox.h>
-#include <qfiledialog.h>
-#include <qslider.h>
-#include <qwt/qwt_dial.h>
-#include <qwt/qwt_dial_needle.h>
-#include <qlayout.h>
-#include <qprogressbar.h>
-#include <qcombobox.h>
-#include <qlistbox.h>
-/* This include is for setting the progress bar style */
-#include <qmotifstyle.h>
 
-#include "AnalogDemDlgbase.h"
-#include "AMSSDlgbase.h"
+#include <qtimer.h>
+#if QT_VERSION < 0x040000
+# include "AnalogDemDlgbase.h"
+# include "AMSSDlgbase.h"
+#else
+# include "ui_AMMainWindow.h"
+# include "ui_AMSSDlgbase.h"
+# include <QDialog>
+# include <QButtonGroup>
+#endif
+
 #include "DialogUtil.h"
-#include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../util/Settings.h"
@@ -65,6 +54,40 @@
 
 
 /* Classes ********************************************************************/
+class CDRMPlot;
+
+#if QT_VERSION >= 0x040000
+class CAMSSDlgBase : public QDialog, public Ui_CAMSSDlgBase
+{
+public:
+    CAMSSDlgBase(QWidget* parent, const char*, bool, Qt::WFlags f = 0):
+        QDialog(parent,f) {
+        setupUi(this);
+    }
+    virtual ~CAMSSDlgBase() {}
+};
+
+class AnalogDemDlgBase : public QMainWindow, public Ui_AMMainWindow
+{
+public:
+    AnalogDemDlgBase(QWidget* parent = 0,
+                     const char* name = 0, bool modal=false, Qt::WFlags f = 0):
+        QMainWindow(parent,f), MainPlot(NULL),
+	ButtonGroupDemodulation(), ButtonGroupAGC(), ButtonGroupNoiseReduction()
+    {
+        (void)name;
+        (void)modal;
+        setupUi(this);
+    }
+    virtual ~AnalogDemDlgBase() {}
+protected:
+    CDRMPlot*           MainPlot;
+    QButtonGroup        ButtonGroupDemodulation, ButtonGroupAGC, ButtonGroupNoiseReduction;
+    CAboutDlg		AboutDlg;
+};
+#endif
+
+
 /* AMSS dialog -------------------------------------------------------------- */
 class CAMSSDlg : public CAMSSDlgBase
 {
@@ -72,17 +95,17 @@ class CAMSSDlg : public CAMSSDlgBase
 
 public:
 	CAMSSDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, WFlags f = 0);
+		bool modal = FALSE, Qt::WFlags f = 0);
 
 protected:
 	CDRMReceiver&	DRMReceiver;
-	CSettings&		Settings;
+	CSettings&	Settings;
 
-	QTimer			Timer;
-	QTimer			TimerPLLPhaseDial;
-	void			AddWhatsThisHelp();
-	virtual void	hideEvent(QHideEvent* pEvent);
-    virtual void	showEvent(QShowEvent* pEvent);
+	QTimer	Timer;
+	QTimer	TimerPLLPhaseDial;
+	void	AddWhatsThisHelp();
+	void	showEvent(QShowEvent*);
+	void	hideEvent(QHideEvent*);
 
 public slots:
 	void OnTimer();
@@ -97,9 +120,8 @@ class AnalogDemDlg : public AnalogDemDlgBase
 
 public:
 	AnalogDemDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
-	void 			UpdatePlotsStyle();
 
 protected:
 	CDRMReceiver&	DRMReceiver;
@@ -109,13 +131,14 @@ protected:
 	QTimer			TimerPLLPhaseDial;
 	CAMSSDlg		AMSSDlg;
 
-	void			UpdateControls();
-	void			AddWhatsThisHelp();
-    virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
-	virtual void	closeEvent(QCloseEvent* pEvent);
+	void UpdateControls();
+	void AddWhatsThisHelp();
+        void showEvent(QShowEvent* pEvent);
+	void hideEvent(QHideEvent* pEvent);
 
 public slots:
+	void closeEvent(QCloseEvent* pEvent);
+	void UpdatePlotStyle(int);
 	void OnTimer();
 	void OnTimerPLLPhaseDial();
 	void OnRadioDemodulation(int iID);
@@ -131,6 +154,7 @@ public slots:
 	void OnButtonAMSS();
 	void OnSwitchToDRM();
 	void OnSwitchToFM();
+	void on_actionWhats_This();
 
 signals:
 	void SwitchMode(int);

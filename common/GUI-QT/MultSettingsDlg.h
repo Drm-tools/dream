@@ -25,22 +25,38 @@
  *
 \******************************************************************************/
 
+#ifndef __MultSettingsDlg_H
+#define __MultSettingsDlg_H
+
 #include <qcheckbox.h>
 #include <qlineedit.h>
 #include <qdir.h>
 #include <qpushbutton.h>
 #include <qvalidator.h>
-#include <qwhatsthis.h>
 
 #include "../DrmReceiver.h"
 #include "../datadecoding/epg/epgutil.h"
 #include "../util/Settings.h"
-#include "MultimediaDlg.h"
-#include "MultSettingsDlgbase.h"
+#if QT_VERSION < 0x040000
+# include "MultSettingsDlgbase.h"
+#else
+# include <QDialog>
+# include "ui_MultSettingsDlgbase.h"
+#endif
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
+#if QT_VERSION >= 0x040000
+class CMultSettingsDlgBase : public QDialog, public Ui_CMultSettingsDlgBase
+{
+public:
+	CMultSettingsDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,f){(void)name;(void)modal;setupUi(this);}
+	virtual ~CMultSettingsDlgBase() {}
+};
+#endif
 class MultSettingsDlg : public CMultSettingsDlgBase
 {
 	Q_OBJECT
@@ -48,7 +64,7 @@ class MultSettingsDlg : public CMultSettingsDlgBase
 public:
 
 	MultSettingsDlg(CParameter&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~MultSettingsDlg();
 
 protected:
@@ -67,3 +83,5 @@ public slots:
 	void OnbuttonClearCacheMOT();
 	void OnbuttonClearCacheEPG();
 };
+
+#endif

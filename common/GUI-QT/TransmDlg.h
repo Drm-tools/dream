@@ -25,7 +25,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-
+#ifndef __TransmDlg_H
+#define __TransmDlg_H
 
 #include <qpushbutton.h>
 #include <qstring.h>
@@ -36,25 +37,25 @@
 #include <qtabwidget.h>
 #include <qcombobox.h>
 #include <qstring.h>
-#include <qbuttongroup.h>
-#include <qmultilineedit.h>
-#include <qlistview.h>
-#include <qfiledialog.h>
 #include <qfileinfo.h>
 #include <qstringlist.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
 #include <qlayout.h>
 #include <qthread.h>
 #include <qtimer.h>
-#include <qwhatsthis.h>
-#include <qprogressbar.h>
-#include <qwt/qwt_thermo.h>
+#include <qwt_thermo.h>
+#if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
+# include "TransmDlgbase.h"
+#else
+# include <QMenu>
+# include <QDialog>
+# include "ui_TransmDlgbase.h"
+#endif
 
 #ifdef _WIN32
 # include "windows.h"
 #endif
-#include "TransmDlgbase.h"
 #include "DialogUtil.h"
 #include "../DrmTransmitter.h"
 #include "../Parameter.h"
@@ -99,13 +100,23 @@ public:
 	CDRMTransmitter	DRMTransmitter;
 };
 
+#if QT_VERSION >= 0x040000
+class TransmDlgBase : public QDialog, public Ui_TransmDlgBase
+{
+public:
+	TransmDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QDialog(parent,f){(void)name;(void)modal;setupUi(this);}
+	virtual ~TransmDlgBase() {}
+};
+#endif
 class TransmDialog : public TransmDlgBase
 {
 	Q_OBJECT
 
 public:
 	TransmDialog(CSettings&,
-		QWidget* parent=0, const char* name=0, bool modal=FALSE, WFlags f=0);
+		QWidget* parent=0, const char* name=0, bool modal=FALSE, Qt::WFlags f=0);
 	virtual ~TransmDialog();
 
 protected:
@@ -114,7 +125,11 @@ protected:
 
 	CSettings&			Settings;
 	QMenuBar*			pMenu;
+#if QT_VERSION < 0x040000
 	QPopupMenu*			pSettingsMenu;
+#else
+	QMenu*				pSettingsMenu;
+#endif
 	QTimer				Timer;
 
 	CTransmitterThread	TransThread; /* Working thread object */
@@ -152,5 +167,6 @@ public slots:
 	void OnTextChangedServiceID(const QString& strID);
 	void OnTextChangedSndCrdIF(const QString& strIF);
 	void OnTimer();
-	void OnHelpWhatsThis() {QWhatsThis::enterWhatsThisMode();}
+	void OnHelpWhatsThis();
 };
+#endif

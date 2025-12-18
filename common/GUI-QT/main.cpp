@@ -41,21 +41,21 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
+#include "Rig.h"
 
+#include <iostream>
+
+#include <qthread.h>
 #ifdef USE_QT_GUI
 # include <qapplication.h>
-# include <qthread.h>
 # include <qmessagebox.h>
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
 #endif
-#include <iostream>
-
-/* Implementation *************************************************************/
-#ifdef USE_QT_GUI
-/******************************************************************************\
-* Using GUI with QT                                                            *
-\******************************************************************************/
+#if QT_VERSION >= 0x040000
+# include <QCoreApplication>
+# include <QTranslator>
+#endif
 
 class CRx: public QThread
 {
@@ -73,6 +73,7 @@ CRx::run()
     /* it doesn't matter what the GUI does, we want to be normal! */
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
 #endif
+    qDebug("Working thread started");
     try
     {
         /* Call receiver main routine */
@@ -82,18 +83,30 @@ CRx::run()
     {
         ErrorMessage(GenErr.strError);
     }
+    catch (string strError)
+    {
+        ErrorMessage(strError);
+    }
     qDebug("Working thread complete");
 }
 
+#ifdef USE_QT_GUI
+/******************************************************************************\
+* Using GUI with QT                                                            *
+\******************************************************************************/
 int
 main(int argc, char **argv)
 {
 	/* create app before running Settings.Load to consume platform/QT parameters */
 	QApplication app(argc, argv);
 
-#if defined(__APPLE__) &&  QT_VERSION >= 0x030000
+#if defined(__APPLE__)
 	/* find plugins on MacOs when deployed in a bundle */
+# if QT_VERSION>0x040000
+	app.addLibraryPath(app.applicationDirPath()+"../PlugIns");
+# else
 	app.setLibraryPaths(app.applicationDirPath()+"../PlugIns");
+# endif
 #endif
 
 	/* Load and install multi-language support (if available) */
@@ -142,32 +155,29 @@ main(int argc, char **argv)
 			   ready before the GUI thread */
 
 			CRig rig(DRMReceiver.GetParameters());
-#ifdef HAVE_LIBHAMLIB
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
-#endif
 			DRMReceiver.LoadSettings(Settings);
 
 			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
 
-			DRMReceiver.Init();
-
 #ifdef HAVE_LIBHAMLIB
-			DRMReceiver.SetRig(rig.GetRig());
+			DRMReceiver.SetRig(&rig);
 
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
 			{
 				rig.subscribe();
 			}
 #endif
-
-			FDRMDialog MainDlg(DRMReceiver, Settings, rig, NULL, NULL, FALSE, Qt::WStyle_MinMax);
+			FDRMDialog MainDlg(DRMReceiver, Settings, rig);
 
 			/* Start working thread */
 			CRx rx(DRMReceiver);
 			rx.start();
 
 			/* Set main window */
+#if QT_VERSION < 0x040000
 			app.setMainWidget(&MainDlg);
+#endif
 
 			app.exec();
 
@@ -182,10 +192,12 @@ main(int argc, char **argv)
 		}
 		else if(mode == "transmit")
 		{
-			TransmDialog MainDlg(Settings, 0, 0, FALSE, Qt::WStyle_MinMax);
+			TransmDialog MainDlg(Settings);
 
 			/* Set main window */
+#if QT_VERSION < 0x040000
 			app.setMainWidget(&MainDlg);
+#endif
 
 			/* Show dialog */
 			MainDlg.show();
@@ -256,7 +268,8 @@ main(int argc, char **argv)
 	{
 		CSettings Settings;
 		Settings.Load(argc, argv);
-		if (Settings.Get("command", "isreceiver", TRUE))
+		string mode = Settings.Get("command", "mode", string("receive"));
+		if (mode == "receive")
 		{
 			CDRMSimulation DRMSimulation;
 			CDRMReceiver DRMReceiver;
@@ -264,12 +277,27 @@ main(int argc, char **argv)
 			DRMSimulation.SimScript();
 			DRMReceiver.LoadSettings(Settings);
 			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
+
+#if QT_VERSION >= 0x040000
+			QCoreApplication a(argc, argv);
+			/* Start working thread */
+			CRx rx(DRMReceiver);
+			rx.start();
+			return a.exec();
+#else
 			DRMReceiver.Start();
+#endif
+
 		}
-		else
+		else if(mode == "transmit")
 		{
 			CDRMTransmitter DRMTransmitter;
 			DRMTransmitter.Start();
+		}
+		else
+		{
+			cerr << Settings.UsageArguments(argv) << endl;
+			exit(0);
 		}
 	}
 	catch(CGenErr GenErr)
@@ -292,12 +320,12 @@ DebugError(const char *pchErDescr, const char *pchPar1Descr,
 		   const double dPar1, const char *pchPar2Descr, const double dPar2)
 {
 	FILE *pFile = fopen("test/DebugError.dat", "a");
-	fprintf(pFile, pchErDescr);
+	fprintf(pFile, "%s", pchErDescr);
 	fprintf(pFile, " ### ");
-	fprintf(pFile, pchPar1Descr);
+	fprintf(pFile, "%s", pchPar1Descr);
 	fprintf(pFile, ": ");
 	fprintf(pFile, "%e ### ", dPar1);
-	fprintf(pFile, pchPar2Descr);
+	fprintf(pFile, "%s", pchPar2Descr);
 	fprintf(pFile, ": ");
 	fprintf(pFile, "%e\n", dPar2);
 	fclose(pFile);

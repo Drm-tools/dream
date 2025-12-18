@@ -33,8 +33,21 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 
-#include <qsocketdevice.h>
-#include <qsocketnotifier.h>
+#if QT_VERSION < 0x040000
+# include <qsocketdevice.h>
+# include <qsocketnotifier.h> 
+# include <qstringlist.h>
+#else
+# include <QUdpSocket>
+# include <QTcpSocket>
+# include <QHostAddress>
+# if QT_VERSION >= 0x040200
+#   include <QNetworkInterface>
+# endif
+# if QT_VERSION >= 0x040800
+#  include <QNetworkAddressEntry>
+# endif
+#endif
 #include <qdatetime.h>
 
 /* Maximum number of bytes received from the network interface. Maximum data
@@ -45,12 +58,17 @@
 
 #include "PacketInOut.h"
 
-class CPacketSocketQT : public QObject, public CPacketSocket
+class CPacketSocketQT :
+#if QT_VERSION < 0x040000
+	public QObject,
+#endif
+	public CPacketSocket
 {
+#if QT_VERSION < 0x040000
 	Q_OBJECT
-
+#endif
 public:
-	CPacketSocketQT(QSocketDevice::Type type=QSocketDevice::Datagram);
+	CPacketSocketQT();
 	virtual ~CPacketSocketQT();
 	// Set the sink which will receive the packets
 	virtual void SetPacketSink(CPacketSink *pSink);
@@ -65,22 +83,34 @@ public:
 
 	virtual _BOOLEAN GetDestination(string& str);
 
+	void poll();
+
 private:
+	void pollStream();
+	void pollDatagram();
+
+	QStringList parseDest(const string & strNewAddr);
+	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int, QHostAddress);
+#if QT_VERSION >= 0x040200
+	QNetworkInterface GetInterface(QHostAddress AddrInterface);
+#endif
 	CPacketSink *pPacketSink;
 
-	QHostAddress				HostAddrOut;
-	int							iHostPortOut;
+	uint32_t	sourceAddr;
+	QHostAddress	HostAddrOut;
+	int		iHostPortOut;
+	vector<_BYTE>	writeBuf;
+	bool udp;
 
-	QSocketDevice				SocketDevice;
-	QSocketNotifier*			pSocketNotivRead;
-	QSocketNotifier*			pSocketNotivWrite;
-	QMutex						writeLock;
-	vector<_BYTE>				writeBuf;
-
-public slots:
-	void OnDataReceived();
-	void OnWritePossible();
-
+#if QT_VERSION < 0x040000
+	QSocketDevice* pSocketDevice;
+	QSocketNotifier* pSn;
+private slots:
+	void OnActivated();
+#else
+	QUdpSocket* udpSocket;
+	QTcpSocket* tcpSocket;
+#endif
 };
 
 #endif

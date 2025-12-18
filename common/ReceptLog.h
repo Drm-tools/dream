@@ -35,11 +35,7 @@
 class CReceptLog
 {
 public:
-    CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALSE),
-            bRxlEnabled(FALSE), bPositionEnabled(FALSE),
-            iSecDelLogStart(0), iFrequency(0)
-    {
-    }
+    CReceptLog(CParameter & p);
     virtual ~CReceptLog()
     {
     }
@@ -78,6 +74,8 @@ protected:
     virtual void writeHeader() = 0;
     virtual void writeTrailer() = 0;
     char GetRobModeStr();
+    void asDM(string& pos, double d, char n, char p) const;
+
 
     string strdate(time_t);
     string strtime(time_t);
@@ -90,6 +88,7 @@ protected:
     _BOOLEAN bPositionEnabled;
     int iSecDelLogStart;
     int iFrequency;
+    double latitude,longitude;
 };
 
 class CShortLog: public CReceptLog

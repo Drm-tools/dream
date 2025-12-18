@@ -29,28 +29,31 @@
 #ifndef _MULTIMEDIADLG_H
 #define _MULTIMEDIADLG_H
 
-#include <qtextbrowser.h>
+#include <qstring.h>
 #include <qmime.h>
 #include <qimage.h>
 #include <qtimer.h>
 #include <qpushbutton.h>
 #include <qlabel.h>
 #include <qmenubar.h>
-#include <qpopupmenu.h>
 #include <qlayout.h>
-#include <qfiledialog.h>
 #include <qdatetime.h>
 #include <qregexp.h>
 #include <qtooltip.h>
-#include <qtextstream.h>
 #include <qfileinfo.h>
 #include <qdir.h>
 #include <qmessagebox.h>
 #include <qfontdialog.h>
 #include <qfont.h>
-#include <qstylesheet.h>
+#if QT_VERSION < 0x040000
+# include <qpopupmenu.h>
+# include "MultimediaDlgbase.h"
+#else
+# include <QMenu>
+# include <QDialog>
+# include "ui_MultimediaDlgbase.h"
+#endif
 
-#include "MultimediaDlgbase.h"
 #include "MultColorLED.h"
 #include "DialogUtil.h"
 #include "../GlobalDefinitions.h"
@@ -100,20 +103,28 @@ protected:
 	int				iNumHist;
 };
 
+#if QT_VERSION >= 0x040000
+class MultimediaDlgBase : public QMainWindow, public Ui_MultimediaDlgBase
+{
+public:
+	MultimediaDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WFlags f = 0):
+		QMainWindow(parent,name,f){(void)name;(void)modal;setupUi(this);}
+	virtual ~MultimediaDlgBase() {}
+};
+#endif
 class MultimediaDlg : public MultimediaDlgBase
 {
 	Q_OBJECT
 
 public:
 	MultimediaDlg(CDRMReceiver&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
 	virtual ~MultimediaDlg();
 
 	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
-
-	void SetStatus(int MessID, int iMessPara);
 
 protected:
 
@@ -123,7 +134,11 @@ protected:
 
 	QTimer					Timer;
 	QMenuBar*				pMenu;
+#if QT_VERSION < 0x040000
 	QPopupMenu*				pFileMenu;
+#else
+	QMenu*					pFileMenu;
+#endif
 	virtual void			showEvent(QShowEvent* pEvent);
 	virtual void			hideEvent(QHideEvent* pEvent);
 	CVector<CMOTObject>		vecRawImages;

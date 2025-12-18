@@ -95,7 +95,7 @@ public:
     CWriteData(CSoundOutInterface* pNS);
     virtual ~CWriteData() {}
 
-    void StartWriteWaveFile(const string strFileName);
+    void StartWriteWaveFile(const string& strFileName);
     _BOOLEAN GetIsWriteWaveFile() {
         return bDoWriteWaveFile;
     }

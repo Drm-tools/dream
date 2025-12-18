@@ -26,6 +26,9 @@
  *
 \******************************************************************************/
 
+#ifndef __SYSEVALDLG_H
+#define __SYSEVALDLG_H
+
 #include <qtimer.h>
 #include <qstring.h>
 #include <qlabel.h>
@@ -36,16 +39,17 @@
 #include <qdatetime.h>
 #include <qlineedit.h>
 #include <qtooltip.h>
-#include <qfiledialog.h>
-#include <qwhatsthis.h>
-#include <qlistview.h>
-#include <qbuttongroup.h>
-#include <qpopupmenu.h>
+#include <qwt_thermo.h>
 #include <qpixmap.h>
-#include <qwt/qwt_thermo.h>
 
+#include <qpopupmenu.h>
+#include <qlistview.h>
 #include "systemevalDlgbase.h"
-#include "DRMPlot.h"
+#if QWT_VERSION > 0x050200
+# include "DRMPlot-qwt6.h"
+#else
+# include "DRMPlot.h"
+#endif
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
@@ -54,7 +58,6 @@
 #include "../util/Settings.h"
 
 class CGPSReceiver;
-class CRig;
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -67,56 +70,27 @@ class systemevalDlg : public systemevalDlgBase
 	Q_OBJECT
 
 public:
-	systemevalDlg(CDRMReceiver&, CRig&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, WFlags f = 0);
+	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 
 	virtual ~systemevalDlg();
 
-	void SetStatus(int MessID, int iMessPara);
 	void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
-	void UpdatePlotsStyle();
 	void StopLogTimers();
 
 protected:
-	class CCharSelItem : public QListViewItem
-	{
-	public:
-		CCharSelItem(QListView* parent, QString str1,
-			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
-			QListViewItem(parent, str1), eCharTy(eNewCharTy)
-			{setSelectable(bSelble);}
-		CCharSelItem(QListViewItem* parent, QString str1,
-			CDRMPlot::ECharType eNewCharTy, _BOOLEAN bSelble = TRUE) :
-			QListViewItem(parent, str1), eCharTy(eNewCharTy)
-			{setSelectable(bSelble);}
-
-		CDRMPlot::ECharType GetCharType() {return eCharTy;}
-
-	protected:
-		CDRMPlot::ECharType eCharTy;
-	};
-
 	CDRMReceiver&		DRMReceiver;
 	CSettings&		Settings;
 
 	QTimer			Timer;
 	QTimer			TimerInterDigit;
 
-	/* logging */
-	QTimer			TimerLogFileLong;
-	QTimer			TimerLogFileShort;
-	QTimer			TimerLogFileStart;
-
-	CShortLog		shortLog;
-	CLongLog		longLog;
-	int				iLogDelay;
-	CRig&			rig;
-
 	virtual void		showEvent(QShowEvent* pEvent);
 	virtual void		hideEvent(QHideEvent* pEvent);
+	void			UpdateGPS(CParameter&);
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
-	CDRMPlot*		OpenChartWin(const CDRMPlot::ECharType eNewType);
+	CDRMPlot*		OpenChartWin(CDRMPlot::ECharType eNewType);
 
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();
@@ -124,14 +98,10 @@ protected:
 	QPopupMenu*		pListViewContextMenu;
 	vector<CDRMPlot*>	vecpDRMPlots;
 
-	CGPSReceiver*		pGPSReceiver;
-
 public slots:
+	void UpdatePlotStyle(int);
 	void OnTimer();
 	void OnTimerInterDigit();
-	void OnTimerLogFileStart();
-	void OnTimerLogFileShort();
-	void OnTimerLogFileLong();
 	void OnRadioTimeLinear();
 	void OnRadioTimeWiener();
 	void OnRadioFrequencyLinear();
@@ -147,11 +117,12 @@ public slots:
 	void OnCheckSaveAudioWAV();
 	void OnCheckRecFilter();
 	void OnCheckModiMetric();
-	void OnListSelChanged(QListViewItem* NewSelIt);
 	void OnListViContMenu();
 	void OnFrequencyEdited (const QString&);
-	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt,
-		int iCol);
-	void EnableGPS();
-	void DisableGPS();
+	void OnListSelChanged(QListViewItem* NewSelIt);
+	void OnListRightButClicked(QListViewItem* NewSelIt, const QPoint& iPnt, int iCol);
+signals:
+        void startLogging();
+        void stopLogging();
 };
+#endif

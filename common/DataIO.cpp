@@ -213,7 +213,7 @@ CWriteData::CWriteData(CSoundOutInterface* pNS) : pSound(pNS), /* Sound interfac
     /* Constructor */
 }
 
-void CWriteData::StartWriteWaveFile(const string strFileName)
+void CWriteData::StartWriteWaveFile(const string& strFileName)
 {
     /* No Lock(), Unlock() needed here */
     if (bDoWriteWaveFile == FALSE)
@@ -365,9 +365,8 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
 
         if (iCounter == iNumSimBlocks)
         {
-        	if(TransmParam.eRunState==CParameter::RUNNING)
-				TransmParam.eRunState = CParameter::STOP_REQUESTED;
-            iCounter = 0;
+		TransmParam.eRunState = CParameter::STOP_REQUESTED;
+		iCounter = 0;
         }
         break;
 
@@ -440,8 +439,7 @@ void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
             /* A minimum simulation time must be elapsed */
             if (iCounter >= iMinNumBlocks)
             {
-				if(TransmParam.eRunState==CParameter::RUNNING)
-					TransmParam.eRunState = CParameter::STOP_REQUESTED;
+		TransmParam.eRunState = CParameter::STOP_REQUESTED;
                 iCounter = 0;
             }
         }
