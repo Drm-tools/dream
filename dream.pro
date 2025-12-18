@@ -1,142 +1,95 @@
-contains(QT_VERSION, ^4\\..*) {
-	CONFIG += qt4
-	VERSION_MESSAGE = Qt 4
-	CONFIG(debug, debug|release) {
-		DEBUG_MESSAGE = debug
-	}
-	else {
-		DEBUG_MESSAGE = release 
-	}
-}
-count(QT_VERSION, 0) {
-	CONFIG += qt3 thread
-	VERSION_MESSAGE = Qt 3
-	debug {
-		DEBUG_MESSAGE = debug
-	}
-	else {
-		DEBUG_MESSAGE = release 
-	}
-}
-console {
-    QT -= gui
-    CONFIG -= qt
-    qt3:CONFIG -= qt3
-    qt4:CONFIG -= qt4
-    DEFINES += USE_NO_QT
-    DEFINES -= USE_QT_GUI
-    UI_MESSAGE = console mode
-    VERSION_MESSAGE=No Qt
-}
-else {
-    qtconsole {
-        QT -= gui
-        DEFINES -= USE_QT_GUI
-        UI_MESSAGE = console mode
-    }
-    else {
-        DEFINES += USE_QT_GUI
-        RESOURCES = src/GUI-QT/res/icons.qrc
-        UI_MESSAGE = GUI mode
-	FORMS += TransmDlgbase.ui
-	FORMS += AMSSDlgbase.ui \
-	systemevalDlgbase.ui \
-	StationsDlgbase.ui \
-	EPGDlgbase.ui
-	FORMS += GeneralSettingsDlgbase.ui \
-	MultSettingsDlgbase.ui \
-	AboutDlgbase.ui
-    }
-}
-message($$VERSION_MESSAGE $$DEBUG_MESSAGE $$UI_MESSAGE)
 TEMPLATE = app
 TARGET = dream
-INCLUDEPATH += src/GUI-QT
 INCLUDEPATH += libs
 LIBS += -Llibs
 OBJECTS_DIR = obj
 DEFINES += EXECUTABLE_NAME=$$TARGET
 macx:QMAKE_LFLAGS += -F$$PWD/libs
-qt4 {
-	VPATH += src/GUI-QT
-        QT += network xml webkit
-        HEADERS += src/GUI-QT/DRMPlot.h src/GUI-QT/EvaluationDlg.h
-        HEADERS += src/GUI-QT/SlideShowViewer.h src/GUI-QT/JLViewer.h
-        HEADERS += src/GUI-QT/BWSViewer.h src/GUI-QT/jlbrowser.h
-        HEADERS += src/GUI-QT/SoundCardSelMenu.h
-        SOURCES += src/GUI-QT/DRMPlot.cpp src/GUI-QT/EvaluationDlg.cpp
-        SOURCES += src/GUI-QT/SlideShowViewer.cpp src/GUI-QT/JLViewer.cpp
-        SOURCES += src/GUI-QT/BWSViewer.cpp src/GUI-QT/jlbrowser.cpp
-        SOURCES += src/GUI-QT/SoundCardSelMenu.cpp
-        FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
-        FORMS += JLViewer.ui BWSViewer.ui SlideShowViewer.ui
-        unix {
-            macx {
-                exists(libs/qwt.framework) {
-                    message("with qwt6")
-                    INCLUDEPATH += libs/qwt
-                    LIBS += -framework qwt
-                }
-                else {
-                    error("no usable qwt version 6 found")
-                }
-            }
-            else {
-                exists(/usr/include/qwt/qwt.h) {
-                    message("with qwt")
-                    INCLUDEPATH += /usr/include/qwt
-                    LIBS += -lqwt
-                }
-                exists(/usr/include/qwt5/qwt.h) {
-                    message("with qwt")
-                    INCLUDEPATH += /usr/include/qwt5
-                    LIBS += -lqwt
-                }
-                exists(/usr/include/qwt-qt4/qwt.h) {
-                    message("with qwt")
-                    INCLUDEPATH += /usr/include/qwt-qt4
-                    LIBS += -lqwt-qt4
-                }
-		target.path = /usr/bin
-		documentation.path = /usr/share/man/man1
-		documentation.files = linux/dream.1
-		INSTALLS += documentation
-            }
-        }
-        win32 {
-             INCLUDEPATH += libs/qwt
-             CONFIG( debug, debug|release ) {
-                 # debug
-                 LIBS += -lqwtd
-             } else {
-                 # release
-                 LIBS += -lqwt
-             }
-        }
+console {
+	QT -= core gui
+    DEFINES += USE_NO_QT
+    DEFINES -= USE_QT_GUI
+    UI_MESSAGE = console mode
+    VERSION_MESSAGE=No Qt
 }
-qt3 {
-	VPATH += src/GUI-QT/qt2
-        HEADERS += src/GUI-QT/qt2/DRMPlot.h src/GUI-QT/systemevalDlg.h src/GUI-QT/MultimediaDlg.h
-        SOURCES += src/GUI-QT/qt2/DRMPlot.cpp src/GUI-QT/systemevalDlg.cpp src/GUI-QT/MultimediaDlg.cpp
-        FORMS += fdrmdialogbase.ui fmdialogbase.ui AnalogDemDlgbase.ui LiveScheduleDlgbase.ui
-        FORMS += MultimediaDlgbase.ui
-        LIBS += -lqwt
-        unix {
-            exists(/usr/local/include/qwt) {
-                INCLUDEPATH += /usr/local/include/qwt
-                LIBS += -L/usr/local/lib
-            }
-            exists(/usr/include/qwt) {
-                INCLUDEPATH += /usr/include/qwt
-            }
-        }
-        win32 {
-            INCLUDEPATH += libs/qwt
-        }
+qtconsole {
+	QT -= gui
+	QT += network xml
+	DEFINES -= USE_QT_GUI
+	UI_MESSAGE = console mode
+	INCLUDEPATH += moc
+}
+contains(QT, gui) {
+	QT += network xml widgets
+	VPATH += src/GUI-QT
+	INCLUDEPATH += libs/qwt
+	INCLUDEPATH += src/GUI-QT
+	INCLUDEPATH += moc
+	DEFINES += USE_QT_GUI
+	RESOURCES = src/GUI-QT/res/icons.qrc
+	UI_MESSAGE = GUI mode
+	HEADERS += src/GUI-QT/DRMPlot.h src/GUI-QT/EvaluationDlg.h
+	HEADERS += src/GUI-QT/SlideShowViewer.h
+	HEADERS += src/GUI-QT/SoundCardSelMenu.h
+	SOURCES += src/GUI-QT/DRMPlot.cpp src/GUI-QT/EvaluationDlg.cpp
+	SOURCES += src/GUI-QT/SlideShowViewer.cpp
+	SOURCES += src/GUI-QT/SoundCardSelMenu.cpp
+	FORMS += TransmDlgbase.ui AMSSDlgbase.ui systemevalDlgbase.ui StationsDlgbase.ui EPGDlgbase.ui
+	FORMS += GeneralSettingsDlgbase.ui MultSettingsDlgbase.ui AboutDlgbase.ui
+	FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
+	FORMS += SlideShowViewer.ui
+	unix {
+		macx {
+			exists(libs/qwt.framework) {
+				message("with qwt6")
+				INCLUDEPATH += libs/qwt.framework/Headers
+				LIBS += -framework qwt
+			}
+			else {
+				error("no usable qwt version 6 found")
+			}
+		}
+		else {
+			exists(/usr/include/qwt/qwt.h) {
+				message("with qwt")
+				INCLUDEPATH += /usr/include/qwt
+				exists(/usr/lib/libqwt.so) {
+					LIBS += -lqwt
+				}
+				exists(/usr/lib/libqwt-qt5.so) {
+					LIBS += -lqwt-qt5
+				}
+			}
+			exists(/usr/include/qwt5/qwt.h) {
+				message("with qwt")
+				INCLUDEPATH += /usr/include/qwt5
+				LIBS += -lqwt
+			}
+			exists(/usr/include/qwt-qt4/qwt.h) {
+				message("with qwt")
+				INCLUDEPATH += /usr/include/qwt-qt4
+				LIBS += -lqwt-qt4
+			}
+	target.path = /usr/bin
+	documentation.path = /usr/share/man/man1
+	documentation.files = linux/dream.1
+	INSTALLS += documentation
+		}
+	}
+	win32 {
+		 INCLUDEPATH += libs/qwt
+		 CONFIG( debug, debug|release ) {
+			 # debug
+			 LIBS += -lqwtd
+		 } else {
+			 # release
+			 LIBS += -lqwt
+		 }
+	}
 }
 macx {
-    INCLUDEPATH += /Developer/dream/include /opt/local/include
-    LIBS += -L/Developer/dream/lib -L/opt/local/lib
+    INCLUDEPATH += /Developer/dream/include /opt/local/include /usr/local/include
+    LIBS += -L/Developer/dream/lib -L/opt/local/lib -L/usr/local/lib
     LIBS += -framework CoreFoundation -framework CoreServices
     LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit
     UI_DIR = moc
@@ -180,7 +133,7 @@ unix {
         CONFIG += pcap
                   message("with pcap")
               }
-    exists(/usr/include/sndfile.h) {
+    exists(/usr/include/sndfile.h) | exists(/usr/local/include/sndfile.h){
         CONFIG += sndfile
                   message("with libsndfile")
               }
@@ -188,7 +141,7 @@ unix {
         CONFIG += sndfile
                   message("with libsndfile")
               }
-    exists(/usr/include/fftw3.h) {
+    exists(/usr/include/fftw3.h) | exists(/usr/local/include/fftw3.h) {
         DEFINES += HAVE_FFTW3_H
                    LIBS += -lfftw3
                            message("with fftw3")
@@ -296,11 +249,13 @@ win32 {
     UI_DIR = moc
     MOC_DIR = moc
     LIBS += -lsetupapi \
+	-ladvapi32 \
+	-lzlib \
+	-luser32 \
     -lwinmm \
     -lwsock32
     DEFINES += HAVE_SETUPAPI \
     HAVE_LIBZ
-    DEFINES -= UNICODE
     SOURCES += src/windows/Pacer.cpp
 }
 faad {
@@ -332,11 +287,11 @@ hamlib {
     macx:LIBS += -framework IOKit
     unix:LIBS += -lhamlib
     win32:LIBS += libhamlib-2.lib
-    qt4 {
-        HEADERS += src/GUI-QT/RigDlg.h
-        SOURCES += src/GUI-QT/RigDlg.cpp
-        FORMS += RigDlg.ui
-    }
+	contains(QT, gui) {
+		HEADERS += src/GUI-QT/RigDlg.h
+		SOURCES += src/GUI-QT/RigDlg.cpp
+		FORMS += RigDlg.ui
+	}
 }
 alsa {
     DEFINES += USE_ALSA
@@ -612,3 +567,4 @@ SOURCES += \
     src/GUI-QT/StationsDlg.cpp \
     src/GUI-QT/TransmDlg.cpp
 }
+message($$VERSION_MESSAGE $$DEBUG_MESSAGE $$UI_MESSAGE)
