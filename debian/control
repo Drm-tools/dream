@@ -1,25 +1,23 @@
-Source: drm
+Standards-Version: 3.9.4
+Source: dream
 Section: hamradio
-Priority: extra
+Priority: optional
 Maintainer: Julian Cable <jcable@users.sourceforge.net>
-Build-Depends: debhelper (>= 7.0.50~),
-               libqt3-mt-dev,
-               qt3-dev-tools,
-               fftw-dev,
-               libqwt-dev,
+Build-Depends: debhelper,
+               libqt4-dev,
+               qt4-dev-tools,
+               libqwt5-qt4-dev,
+               fftw3-dev,
                portaudio19-dev,
                libsndfile1-dev,
                libpcap0.8-dev,
                libhamlib-dev,
-               libgps-dev
-Standards-Version: 3.9.1
-Homepage: http://sourceforge.net/apps/mediawiki/drm/
-#Vcs-Git: git://git.debian.org/collab-maint/drm.git
-#Vcs-Browser: http://git.debian.org/?p=collab-maint/drm.git;a=summary
+               libgps-dev, zlib1g-dev
 
-Package: drm
+Homepage: http://drm.sourceforge.net
+Package: dream
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}
+Depends:      ${shlibs:Depends}
 Description: a DRM (Digital Radio Mondiale) and AM Software Defined Radio
  Digital Radio Mondiale (DRM) is the digital radio standard for the
  long-, medium- and short-wave ranges. The standard was formed by a
