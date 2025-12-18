@@ -119,19 +119,17 @@ protected:
 class CAMSSPhaseDemod : public CReceiverModul<_REAL, _REAL>
 {
 public:
-    CAMSSPhaseDemod() : rBPNormBW((CReal) AMSS_IF_FILTER_BW / SOUNDCRD_SAMPLE_RATE), rNormCurMixFreqOffs((CReal) 0.0)
-    {
-        rPreviousPhaseSample = 0.0;
-        rPhaseOffset = 0.0;
-    }
-    virtual ~CAMSSPhaseDemod() { }
+    CAMSSPhaseDemod() :
+        rBPNormBW((CReal) 0.0), rNormCurMixFreqOffs((CReal) 0.0),
+        rPreviousPhaseSample((CReal) 0.0), rPhaseOffset((CReal) 0.0) {}
+    virtual ~CAMSSPhaseDemod() {}
 
     void SetAcqFreq(const CReal rNewNormCenter);
     _BOOLEAN GetPLLPhase(CReal& rPhaseOut);
 
 protected:
-    virtual void InitInternal(CParameter& ReceiverParam);
-    virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& Parameters);
+    virtual void ProcessDataInternal(CParameter& Parameters);
 
     int			iSymbolBlockSize;
 
@@ -182,8 +180,8 @@ public:
     }
     virtual ~CAMSSExtractBits() { }
 protected:
-    virtual void InitInternal(CParameter& ReceiverParam);
-    virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& Parameters);
+    virtual void ProcessDataInternal(CParameter& Parameters);
 
     int					iSymbolBlockSize;
 
@@ -244,8 +242,8 @@ public:
     }
 
 protected:
-    virtual void InitInternal(CParameter& ReceiverParam);
-    virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& Parameters);
+    virtual void ProcessDataInternal(CParameter& Parameters);
 
     EAMSSBlockLockStat	eAMSSBlockLockStatus;
 
@@ -257,8 +255,8 @@ protected:
     int				iTotalDataEntityGroupSegments;
     CVector<int>	blDataEntityGroupSegmentsReceived;
 
-    int				DecodeBlock(CVector<_BINARY>& bBits, CParameter& ReceiverParam);
-    void			DecodeBlock1(CVector<_BINARY>& bBits, CParameter& ReceiverParam);
+    int				DecodeBlock(CVector<_BINARY>& bBits, CParameter& Parameters);
+    void			DecodeBlock1(CVector<_BINARY>& bBits, CParameter& Parameters);
     void			DecodeBlock2(CVector<_BINARY>& bBits);
 
     void			ApplyOffsetWord(CVector<_BINARY>& bBlockBits, CVector<_BINARY>& offset);

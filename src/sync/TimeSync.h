@@ -62,11 +62,17 @@
    by 8 [4] */
 #ifdef USE_10_KHZ_HILBFILT
 # define GRDCRR_DEC_FACT				4
-# define NUM_TAPS_HILB_FILT				NUM_TAPS_HILB_FILT_10
+# define NUM_TAPS_HILB_FILT_24			NUM_TAPS_HILB_FILT_10_24
+# define NUM_TAPS_HILB_FILT_48			NUM_TAPS_HILB_FILT_10_48
+# define NUM_TAPS_HILB_FILT_96			NUM_TAPS_HILB_FILT_10_96
+# define NUM_TAPS_HILB_FILT_192			NUM_TAPS_HILB_FILT_10_192
 # define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_10
 #else
 # define GRDCRR_DEC_FACT				8
-# define NUM_TAPS_HILB_FILT				NUM_TAPS_HILB_FILT_5
+# define NUM_TAPS_HILB_FILT_24			NUM_TAPS_HILB_FILT_5_24
+# define NUM_TAPS_HILB_FILT_48			NUM_TAPS_HILB_FILT_5_48
+# define NUM_TAPS_HILB_FILT_96			NUM_TAPS_HILB_FILT_5_96
+# define NUM_TAPS_HILB_FILT_192			NUM_TAPS_HILB_FILT_5_192
 # define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_5
 #endif
 
@@ -91,6 +97,10 @@ public:
 	void StopRMDetAcqu() {bRobModAcqu = FALSE;}
 
 protected:
+	int							iSampleRate;
+	int							iGrdcrrDecFact;
+	int							iNumTapsHilbFilt;
+	const float*				fHilLPProt;
 	int							iCorrCounter;
 	int							iAveCorr;
 	int							iStepSizeGuardCorr;
@@ -163,10 +173,10 @@ protected:
 
 	int			GetIndFromRMode(ERobMode eNewMode);
 	ERobMode	GetRModeFromInd(int iNewInd);
-	void		SetFilterTaps(const CReal rNewOffsetNorm);
+	void		SetFilterTaps(CReal rNewOffsetNorm);
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+	virtual void InitInternal(CParameter& Parameters);
+	virtual void ProcessDataInternal(CParameter& Parameters);
 };
 
 

@@ -31,7 +31,6 @@
 
 #include <qtimer.h>
 #include <qstring.h>
-#include <qlabel.h>
 
 #include "../GlobalDefinitions.h"
 #include "../ReceptLog.h"
@@ -48,15 +47,17 @@ public:
 	virtual ~CLogging() {}
 	void LoadSettings(CSettings&);
 	void SaveSettings(CSettings&);
+	bool enabled() { return state!=off; }
 
 protected:
-	QTimer			TimerLogFileLong;
-	QTimer			TimerLogFileShort;
+	QTimer			TimerLogFile;
 	QTimer			TimerLogFileStart;
 
 	CShortLog		shortLog;
 	CLongLog		longLog;
-	bool			enabled;
+	int			iLogDelay;
+	int			iLogCount;
+	enum {off,starting,on}  state;
 
 signals:
 	void subscribeRig();
@@ -64,8 +65,8 @@ signals:
 public slots:
 	void start();
 	void stop();
-	void OnTimerLogFileShort();
-	void OnTimerLogFileLong();
+	void OnTimerLogFile();
+	void OnTimerLogFileStart();
 };
 
 #endif

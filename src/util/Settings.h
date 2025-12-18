@@ -52,8 +52,8 @@
 #define MAX_SAM_OFFS_INI			200
 
 /* Maximum for frequency acqisition search window size and center frequency */
-#define MAX_FREQ_AQC_SE_WIN_SI		(SOUNDCRD_SAMPLE_RATE / 2)
-#define MAX_FREQ_AQC_SE_WIN_CEN		(SOUNDCRD_SAMPLE_RATE / 2)
+#define MAX_FREQ_AQC_SE_WIN_SZ		(_REAL(DEFAULT_SOUNDCRD_SAMPLE_RATE) / 2)
+#define MAX_FREQ_AQC_SE_WIN_CT		(_REAL(DEFAULT_SOUNDCRD_SAMPLE_RATE) / 4)
 
 /* Maximum carrier frequency  */
 # define MAX_RF_FREQ				30000 /* kHz */
@@ -89,9 +89,6 @@
 
 /* Maximum for preview */
 #define MAX_NUM_SEC_PREVIEW			3600
-
-/* Maximum for column number in stations preview */
-#define MAX_COLUMN_NUMBER			8
 
 /* Maximum value for rgb-colors encoded as integers */
 #define MAX_NUM_COL_MAIN_DISP		16777215
@@ -136,14 +133,15 @@ class CIniFile
 public:
 	CIniFile() {}
 	virtual ~CIniFile() {}
-protected:
-	void SaveIni(const char* pszFilename);
-	void LoadIni(const char* pszFilename);
+	void SaveIni(ostream&) const;
+	void SaveIni(const char*) const;
+	bool LoadIni(const char*);
 
 	string GetIniSetting(const string& strSection, const string& strKey,
 				const string& strDefaultVal = "") const;
 	void PutIniSetting(const string& strSection, const string& strKey="",
 				const string& strVal = "");
+protected:
 	INIFile ini;
 	CMutex Mutex;
 };
@@ -165,12 +163,10 @@ public:
 	void Put(const string& section, const string& key, const _REAL value);
 	void Get(const string& section, CWinGeom&) const;
 	void Put(const string& section, const CWinGeom&);
-
-	string UsageArguments(char** argv);
+	const char* UsageArguments();
 
 protected:
-
-
+	int IsReceiver(const char *argv0);
 	void ParseArguments(int argc, char** argv);
 	void FileArg(const string&);
 	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, string strShortOpt,
@@ -182,7 +178,6 @@ protected:
 	_BOOLEAN GetStringArgument(int argc, char** argv, int& i,
 							   string strShortOpt, string strLongOpt,
 							   string& strArg);
-
 };
 
 #endif // !defined(SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_)

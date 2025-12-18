@@ -106,7 +106,7 @@ public:
 
     enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
 
-    void Init(const int iNewBlockLen);
+    void Init(int iSampleRate, int iNewBlockLen);
     void Process(CRealVector& vecrIn /* in/out */);
 
     void SetNoiRedSpeex(bool);
@@ -191,7 +191,7 @@ public:
     enum EType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
 
     CAGC() : eType(AT_MEDIUM) {}
-    void Init(const int iNewBlockSize);
+    void Init(int iSampleRate, int iNewBlockSize);
     void Process(CRealVector& vecrIn /* in/out */);
 
     void SetType(const EType eNewType);
@@ -200,6 +200,7 @@ public:
     }
 
 protected:
+    int		iSampleRate;
     int		iBlockSize;
     EType	eType;
     CReal	rAttack, rDecay;
@@ -290,7 +291,7 @@ public:
 
     void SetFilterBW(const int iNewBW);
     int GetFilterBW() {
-        return (int) (rBPNormBW * SOUNDCRD_SAMPLE_RATE);
+        return (int) (rBPNormBW * iSigSampleRate);
     }
 
     void SetAGCType(const CAGC::EType eNewType);
@@ -320,7 +321,7 @@ public:
     _BOOLEAN GetPLLPhase(CReal& rPhaseOut);
     CReal GetCurMixFreqOffs() const
     {
-        return rNormCurMixFreqOffs * SOUNDCRD_SAMPLE_RATE;
+        return rNormCurMixFreqOffs * iSigSampleRate;
     }
 
     _BOOLEAN GetFrameBoundary() {
@@ -365,6 +366,8 @@ protected:
 
     CComplex					cOldVal;
 
+    CVector<_REAL>				vecTempResBufIn;
+    CVector<_REAL>				vecTempResBufOut;
 
     /* Objects */
     CPLL						PLL;
@@ -373,14 +376,19 @@ protected:
     CAGC						AGC;
     CNoiseReduction				NoiseReduction;
     ENoiRedType					NoiRedType;
+    CAudioResample				ResampleObj;
 
     /* OPH: counter to count symbols within a frame in order to generate */
     /* RSCI output */
     int							iFreeSymbolCounter;
+    int							iAudSampleRate;
+    int							iSigSampleRate;
+    int							iBandwidth;
+    int							iResOutBlockSize;
 
 
-    virtual void InitInternal(CParameter& ReceiverParam);
-    virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& Parameters);
+    virtual void ProcessDataInternal(CParameter& Parameters);
 };
 
 

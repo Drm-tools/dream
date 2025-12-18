@@ -39,7 +39,8 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 	SuppliedPlot(SuppliedPlot), DialogPlot(NULL), bActive(FALSE),
 	CurCharType(NONE_OLD), InitCharType(NONE_OLD),
 	eLastSDCCodingScheme((ECodScheme)-1), eLastMSCCodingScheme((ECodScheme)-1),
-	bLastAudioDecoder(FALSE), bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL)
+	bLastAudioDecoder(FALSE), pDRMRec(NULL),
+	WaterfallWidget(NULL), iAudSampleRate(0), iSigSampleRate(0), iLastXoredSampleRate(0)
 {
 	/* Create new plot if none is supplied */
 	if (SuppliedPlot == NULL)
@@ -159,19 +160,10 @@ CDRMPlot::~CDRMPlot()
 
 void CDRMPlot::OnTimerChart()
 {
-	/* In some cases, if the user moves the mouse very fast over the chart
-	   selection list view, this function is called by two different threads.
-	   Somehow, using QMutex does not help. Therefore we introduce a flag for
-	   doing this job. This solution is a work-around. TODO: better solution */
-	/* DF: Not sure if this bug exist in Qt4 or even in a recent Qt3 version.
-	   The mutex flag idea is good, but (optional) TODO: the flag check and set
-	   must be done inside a real mutex, a race condition can still happen. */
-//	mutex lock
-    if (bOnTimerCharMutexFlag == TRUE)
-//		mutex unlock
+	CParameter& Parameters = *pDRMRec->GetParameters();
+	/* Update only performed when running */
+	if (Parameters.eRunState != CParameter::RUNNING)
 		return;
-	bOnTimerCharMutexFlag = TRUE;
-//	mutex unlock
 
 	/* CHART ******************************************************************/
 	CVector<_REAL>	vecrData;
@@ -183,21 +175,27 @@ void CDRMPlot::OnTimerChart()
 	_REAL		rPDSBegin, rPDSEnd;
 	_REAL		rFreqAcquVal;
 	_REAL		rCenterFreq, rBandwidth;
+	int			iXoredSampleRate;
 
-	CParameter& Parameters = *pDRMRec->GetParameters();
 	Parameters.Lock();
 	_REAL rDCFrequency = Parameters.GetDCFrequency();
 	ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
 	ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
 	_BOOLEAN bAudioDecoder = !Parameters.audiodecoder.empty();
+	iAudSampleRate = Parameters.GetAudSampleRate();
+	iSigSampleRate = Parameters.GetSigSampleRate();
 	Parameters.Unlock();
+
+	/* Needed to detect sample rate change */
+	iXoredSampleRate = iAudSampleRate ^ iSigSampleRate;
 
 	CPlotManager& PlotManager = *pDRMRec->GetPlotManager();
 
 	/* First check if plot must be set up */
 	bool change = false;
-	if (InitCharType != CurCharType)
+	if (InitCharType != CurCharType || iLastXoredSampleRate != iXoredSampleRate)
 	{
+		iLastXoredSampleRate = iXoredSampleRate;
 		InitCharType = CurCharType;
 		change = true;
 		PlotDefaults();
@@ -303,7 +301,8 @@ void CDRMPlot::OnTimerChart()
 			SetupAudioSpec(bAudioDecoder);
 		}
 		/* Set data */
-		SetData(vecrData, vecrScale);
+		if (bAudioDecoder)
+			SetData(vecrData, vecrScale);
 		break;
 
 	case FREQ_SAM_OFFS_HIST:
@@ -388,9 +387,6 @@ void CDRMPlot::OnTimerChart()
 	}
 
 	plot->replot();
-
-	/* "Unlock" mutex flag */
-	bOnTimerCharMutexFlag = FALSE;
 }
 
 void CDRMPlot::SetupChart(const ECharType eNewType)
@@ -566,6 +562,7 @@ void CDRMPlot::PlotDefaults()
 {
 	/* Set default value of plot items */
 	Canvas = QPixmap();
+	Image = QImage();
 	curve1.detach();
 	curve2.detach();
 	curve3.detach();
@@ -606,9 +603,14 @@ void CDRMPlot::PlotDefaults()
 	main1curve.setItemAttribute(QwtPlotItem::Legend, false);
 	main2curve.setItemAttribute(QwtPlotItem::Legend, false);
 	plot->setCanvasBackground(QColor(BckgrdColorPlot));
+	if (WaterfallWidget != NULL)
+	{
+		delete WaterfallWidget;
+		WaterfallWidget = NULL;
+	}
 }
 
-bool CDRMPlot::PlotForceUpdate(QColor BackgroundColor)
+void CDRMPlot::PlotForceUpdate()
 {
 	/* Force the plot to update */
 #if QWT_VERSION >= 0x050200
@@ -618,15 +620,28 @@ bool CDRMPlot::PlotForceUpdate(QColor BackgroundColor)
 	plot->replot();
 #endif
 
-	/* Check if the canvas size of the plot is valid */
-	QSize CanvSize = plot->canvas()->size();
-	if (CanvSize.isEmpty())
-		return TRUE; /* Canvas is invalid */
+	/* Get window background color */
+	const QPalette& palette(plot->palette());
+	BackgroundColor = palette.color(QPalette::Window);
 
-	/* The size is valid, initialize the drawing buffer */
+	/* Get/Set various size */
+	scaleWidth = plot->axisScaleDraw(QwtPlot::xBottom)->length();
+#if QWT_VERSION >= 0x060000
+	QRect rect(plot->plotLayout()->canvasRect().toRect());
+#else
+	QRect rect(plot->plotLayout()->canvasRect());
+#endif
+	QSize CanvSize(scaleWidth, rect.height());
+	LastPlotCanvRect = rect;
+
+	/* Update waterfall widget geometry */
+	WaterfallWidget->setGeometry(rect.x() + (rect.width()-scaleWidth)/2, rect.y(), CanvSize.width(), CanvSize.height());
+
+	/* Allocate the new canvas */
 	Canvas = QPixmap(CanvSize);
 	Canvas.fill(BackgroundColor);
-	return FALSE; /* Canvas is valid */
+	Image = QImage(scaleWidth, 1, QImage::Format_RGB32);
+	imageData = (QRgb*)Image.bits();
 }
 
 void CDRMPlot::SetupAvIR()
@@ -744,7 +759,10 @@ void CDRMPlot::SetupAudioSpec(_BOOLEAN bAudioDecoder)
 	if (bAudioDecoder)
 		plot->setTitle(tr("Audio Spectrum"));
 	else
+	{
 		plot->setTitle(tr("No audio decoding possible"));
+		main1curve.SETDATA(NULL, NULL, 0);
+	}
 	plot->enableAxis(QwtPlot::yRight, FALSE);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
 	plot->enableAxis(QwtPlot::yLeft, TRUE);
@@ -752,9 +770,10 @@ void CDRMPlot::SetupAudioSpec(_BOOLEAN bAudioDecoder)
 
 	/* Fixed scale */
 	plot->setAxisScale(QwtPlot::yLeft, (double) -100.0, (double) -20.0);
-	double dBandwidth = (double) SOUNDCRD_SAMPLE_RATE / 2400; /* 20.0 for 48 kHz */
-	if (dBandwidth < (double) 20.0)
-		dBandwidth = (double) 20.0;
+	int iMaxAudioFrequency = MAX_SPEC_AUDIO_FREQUENCY;
+	if (iMaxAudioFrequency > iAudSampleRate/2)
+		iMaxAudioFrequency = iAudSampleRate/2;
+	const double dBandwidth = double(iMaxAudioFrequency) / 1000;
 	plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
 
 	/* Curve color */
@@ -972,7 +991,7 @@ void CDRMPlot::SetupPSD()
 
 	/* Fixed scale */
 	plot->setAxisScale(QwtPlot::xBottom,
-		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+		(double) 0.0, (double) iSigSampleRate / 2000);
 
 	plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_SHIF_PSD_Y_AXIS_DB,
 		MAX_VAL_SHIF_PSD_Y_AXIS_DB);
@@ -1028,7 +1047,7 @@ void CDRMPlot::SetupInpSpec()
 
 	/* Fixed scale */
 	plot->setAxisScale(QwtPlot::xBottom,
-	(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+	(double) 0.0, (double) iSigSampleRate / 2000);
 
 	plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
 		MAX_VAL_INP_SPEC_Y_AXIS_DB);
@@ -1069,7 +1088,7 @@ void CDRMPlot::SetupInpPSD(_BOOLEAN bAnalog)
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 
 	/* Fixed scale */
-	const double dXScaleMax = (double) SOUNDCRD_SAMPLE_RATE / 2000;
+	const double dXScaleMax = (double) iSigSampleRate / 2000;
 	plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, dXScaleMax);
 
 	plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
@@ -1106,8 +1125,8 @@ void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 	/* Insert marker for filter bandwidth if required */
 	if (rBWWidth != (_REAL) 0.0)
 	{
-		dX[0] = (rBWCenter - rBWWidth / 2) * (double)SOUNDCRD_SAMPLE_RATE / 1000.0;
-		dX[1] = (rBWCenter + rBWWidth / 2) * (double)SOUNDCRD_SAMPLE_RATE / 1000.0;
+		dX[0] = (rBWCenter - rBWWidth / 2) * (double)iSigSampleRate / 1000.0;
+		dX[1] = (rBWCenter + rBWWidth / 2) * (double)iSigSampleRate / 1000.0;
 
 		/* Take the min-max values from scale to get vertical line */
 		dY[0] = MAX_VAL_INP_SPEC_Y_AXIS_DB;//MIN_VAL_INP_SPEC_Y_AXIS_DB;
@@ -1129,27 +1148,40 @@ void CDRMPlot::SetupInpSpecWaterf()
 	grid.enableX(FALSE);
 	grid.enableY(FALSE);
 
+	/* Create a new waterfall widget if not exists */
+	if (WaterfallWidget == NULL)
+		WaterfallWidget = new CWidget(plot, Canvas);
+
+	/* Set plot background color */
+	const QPalette& palette(plot->palette());
+	plot->setCanvasBackground(palette.color(QPalette::Window));
+
 	/* Fixed scale */
 	plot->setAxisScale(QwtPlot::xBottom,
-		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+		(double) 0.0, (double) iSigSampleRate / 2000);
 }
 
 void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 {
-#ifdef QT3_SUPPORT
-	int i, iStartScale, iEndScale;
-	_BOOLEAN bWidthChanged, bHeightChanged;
-	CVector<_REAL> *pvecrResampledData;
+	/* No WaterfallWidget so return */
+	if (WaterfallWidget == NULL)
+		return;
 
 	/* Check if the canvas size has changed */
-	QSize CanvSize = plot->canvas()->size();
-	bWidthChanged = Canvas.size().width() != CanvSize.width();
-	bHeightChanged = Canvas.size().height() != CanvSize.height();
+	_BOOLEAN bWidthChanged, bHeightChanged;
+	QSize CanvSize(Canvas.size());
+#if QWT_VERSION >= 0x060000
+	QRect PlotCanvRect(plot->plotLayout()->canvasRect().toRect());
+#else
+	QRect PlotCanvRect(plot->plotLayout()->canvasRect());
+#endif
+	bWidthChanged = LastPlotCanvRect.width() != PlotCanvRect.width();
+	bHeightChanged = LastPlotCanvRect.height() != PlotCanvRect.height();
 	if (Canvas.size().isEmpty() || bWidthChanged)
 	{
 		/* Force plot update */
-		if (PlotForceUpdate(plot->backgroundColor()))
-			return; /* The canvas is not ready so return */
+		PlotForceUpdate();
+
 		/* Update current canvas size */
 		CanvSize = Canvas.size();
 	}
@@ -1160,30 +1192,65 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 	{
 		QPixmap tmpPixmap = QPixmap(Canvas);
 		Canvas = QPixmap(CanvSize);
-		Canvas.fill(plot->backgroundColor());
+
+		/* Force plot update */
+		PlotForceUpdate();
+
+		/* Update current canvas size */
+		CanvSize = Canvas.size();
+		if (CanvSize.isEmpty())
+			return;
+
 		QPainter p(&Canvas);
 		int width = CanvSize.width();
 		int height = CanvSize.height();
 		p.drawPixmap(0, 0, width, height, tmpPixmap, 0, 0, width, height);
 	}
 
-	/* Calculate sizes */
-	int iLenScale = plot->axisScaleDraw(QwtPlot::xBottom)->length();
-	if ((iLenScale > 0) && (iLenScale < CanvSize.width()))
-	{
-		/* Calculate start and end of scale (needed for the borders) */
-		iStartScale = (CanvSize.width() - iLenScale) / 2;
-		iEndScale = iLenScale + iStartScale;
-	}
-	else
-	{
-		/* Something went wrong, use safe parameters */
-		iStartScale = 0;
-		iEndScale = iLenScale = CanvSize.width();
-	}
+	/* Check if the canvas is valid */
+	if (CanvSize.isEmpty())
+		return;
 
 	/* Resample input data */
-	Resample.Resample(&vecrData, &pvecrResampledData, iLenScale, TRUE);
+	CVector<_REAL> *pvecrResampledData;
+	Resample.Resample(&vecrData, &pvecrResampledData, scaleWidth, TRUE);
+
+	/* The scaling factor */
+	const _REAL rScale = _REAL(pvecrResampledData->Size()) / scaleWidth;
+
+	/* Actual waterfall data */
+	QColor color;
+	for (int i = 0; i < scaleWidth; i++)
+	{
+		/* Init some constants */
+		const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
+		const int iMaxSat = 255; /* Range of saturation is 0-255 */
+
+		/* Stretch width to entire canvas width */
+		const int iCurIdx =
+			(int) Round(_REAL(i) * rScale);
+
+		/* Translate dB-values in colors */
+		const int iCurCol =
+			(int) Round(((*pvecrResampledData)[iCurIdx] - MIN_VAL_INP_SPEC_Y_AXIS_DB) /
+			(MAX_VAL_INP_SPEC_Y_AXIS_DB - MIN_VAL_INP_SPEC_Y_AXIS_DB) *
+			iMaxHue);
+
+		/* Reverse colors and add some offset (to make it look a bit nicer) */
+		const int iColOffset = 60;
+		int iFinalCol = iMaxHue - iColOffset - iCurCol;
+		if (iFinalCol < 0) /* Prevent from out-of-range */
+			iFinalCol = 0;
+
+		/* Also change saturation to get dark colors when low level */
+		int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
+		if (iCurSat < 0) /* Prevent from out-of-range */
+			iCurSat = 0;
+
+		/* Generate pixel */
+		color.setHsv(iFinalCol, iCurSat, iCurSat);
+		imageData[i] = color.rgb();
+	}
 
 #if QT_VERSION >= 0x040600
 	/* Scroll Canvas */
@@ -1198,61 +1265,13 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 		QPixmap tmpCanvas = Canvas;
 		Painter.drawPixmap(0, 1, tmpCanvas, 0, 0, CanvSize.width(), CanvSize.height()-1);
 #endif
-		/* Generate pixel, left of the scale (left border) */
-		Painter.setPen(plot->backgroundColor());
-		for (i = 0; i < iStartScale; i++)
-			Painter.drawPoint(i, 0); /* line 0 -> top line */
-
-		/* The scaling factor */
-		const _REAL rScale = _REAL(pvecrResampledData->Size()) / iLenScale;
-
-		/* Actual waterfall data */
-		for (i = iStartScale; i < iEndScale; i++)
-		{
-			/* Init some constants */
-			const int iMaxHue = 359; /* Range of "Hue" is 0-359 */
-			const int iMaxSat = 255; /* Range of saturation is 0-255 */
-
-			/* Stretch width to entire canvas width */
-			const int iCurIdx =
-				(int) Round(_REAL(i - iStartScale) * rScale);
-
-			/* Translate dB-values in colors */
-			const int iCurCol =
-				(int) Round(((*pvecrResampledData)[iCurIdx] - MIN_VAL_INP_SPEC_Y_AXIS_DB) /
-				(MAX_VAL_INP_SPEC_Y_AXIS_DB - MIN_VAL_INP_SPEC_Y_AXIS_DB) *
-				iMaxHue);
-
-			/* Reverse colors and add some offset (to make it look a bit nicer) */
-			const int iColOffset = 60;
-			int iFinalCol = iMaxHue - iColOffset - iCurCol;
-			if (iFinalCol < 0) /* Prevent from out-of-range */
-				iFinalCol = 0;
-
-			/* Also change saturation to get dark colors when low level */
-			int iCurSat = (int) ((1 - (_REAL) iFinalCol / iMaxHue) * iMaxSat);
-			if (iCurSat < 0) /* Prevent from out-of-range */
-				iCurSat = 0;
-
-			/* Generate pixel */
-			Painter.setPen(QColor(iFinalCol, iCurSat, iCurSat, QColor::Hsv));
-			Painter.drawPoint(i, 0); /* line 0 -> top line */
-		}
-
-		/* Generate pixel, right of scale (right border) */
-		Painter.setPen(plot->backgroundColor());
-		for (i = iEndScale; i < CanvSize.width(); i++)
-			Painter.drawPoint(i, 0); /* line 0 -> top line */
+		/* Draw pixel line to canvas */
+		Painter.drawImage(0, 0, Image);
 
 		Painter.end();
 
-		/* Show the bitmap */
-		plot->canvas()->setBackgroundPixmap(Canvas);
+		WaterfallWidget->repaint();
 	}
-#else
-	//TODO
-	(void)vecrData;
-#endif
 }
 
 void CDRMPlot::SetupFACConst()
@@ -1480,10 +1499,6 @@ void CDRMPlot::OnSelected(const QPointF &pos)
 	{
 		/* Get frequency from current cursor position */
 		double dFreq = pos.x();
-
-		/* Check if dFreq is valid */
-		if (dFreq < 0.0)
-			dFreq = 0.0;
 
 		/* Emit signal containing normalized selected frequency */
 		emit xAxisValSet(dFreq / dMaxxBottom);

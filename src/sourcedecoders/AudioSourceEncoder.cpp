@@ -17,7 +17,7 @@
  *
  * This program is distributed in the hope that it will be useful, but WITHOUT
  * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more 1111
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
  * details.
  *
  * You should have received a copy of the GNU General Public License along with
@@ -27,10 +27,14 @@
 \******************************************************************************/
 
 #include "AudioSourceEncoder.h"
+#if !defined(USE_FAAC_LIBRARY)
+# include "../util/LibraryLoader.h"
+#endif
 #include <iostream>
 
-// dummy AAC Encoder implementation if dll not found
+
 #ifndef USE_FAAC_LIBRARY
+// dummy AAC Encoder implementation if dll not found
 static int FAACAPI dummyfaacEncGetVersion(char **, char **) {
     return 0;
 }
@@ -54,73 +58,74 @@ static int FAACAPI dummyfaacEncEncode(faacEncHandle, int32_t *, unsigned int, un
 static int FAACAPI dummyfaacEncClose(faacEncHandle) {
     return 0;
 }
+static void* hFaacLib;
+static faacEncGetVersion_t* faacEncGetVersion;
+static faacEncGetCurrentConfiguration_t* faacEncGetCurrentConfiguration;
+static faacEncSetConfiguration_t* faacEncSetConfiguration;
+static faacEncOpen_t* faacEncOpen;
+//static faacEncGetDecoderSpecificInfo_t* faacEncGetDecoderSpecificInfo;
+static faacEncEncode_t* faacEncEncode;
+static faacEncClose_t* faacEncClose;
+static const LIBFUNC LibFuncs[] = {
+	{ "faacEncGetVersion",              (void**)&faacEncGetVersion,              (void*)dummyfaacEncGetVersion              },
+	{ "faacEncGetCurrentConfiguration", (void**)&faacEncGetCurrentConfiguration, (void*)dummyfaacEncGetCurrentConfiguration },
+	{ "faacEncSetConfiguration",        (void**)&faacEncSetConfiguration,        (void*)dummyfaacEncSetConfiguration        },
+	{ "faacEncOpen",                    (void**)&faacEncOpen,                    (void*)dummyfaacEncOpen                    },
+//	{ "faacEncGetDecoderSpecificInfo",  (void**)&faacEncGetDecoderSpecificInfo,  (void*)dummyfaacEncGetDecoderSpecificInfo  },
+	{ "faacEncEncode",                  (void**)&faacEncEncode,                  (void*)dummyfaacEncEncode                  },
+	{ "faacEncClose",                   (void**)&faacEncClose,                   (void*)dummyfaacEncClose                   },
+	{ NULL, NULL, NULL }
+};
+# if defined(_WIN32)
+static const char* LibNames[] = { "faac_drm.dll", "libfaac_drm.dll", "libfaac.dll", NULL };
+# elif defined(__APPLE__)
+static const char* LibNames[] = { "libfaac_drm.dylib", NULL };
+# else
+static const char* LibNames[] = { "libfaac_drm.so", "libfaac.so.0", NULL };
+# endif
+static bool FaacCheckCallback()
+{
+    bool bLibOk = false;
+    unsigned long lNumSampEncIn = 0;
+    unsigned long lMaxBytesEncOut = 0;
+    faacEncHandle hEncoder = faacEncOpen(24000, 1, &lNumSampEncIn, &lMaxBytesEncOut);
+    if (hEncoder != NULL)
+    {
+        /* lMaxBytesEncOut is odd when DRM is supported */
+        bLibOk = lMaxBytesEncOut & 1;
+        faacEncClose(hEncoder);
+    }
+    return bLibOk;
+}
 #endif
 
 
 /* Implementation *************************************************************/
 
 CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
-    : bUsingTextMessage(FALSE), hEncoder(NULL)
+    : bUsingTextMessage(FALSE), hEncoder(NULL),
 #ifndef USE_FAAC_LIBRARY
-        ,faacEncGetVersion(NULL), faacEncGetCurrentConfiguration(NULL), faacEncSetConfiguration(NULL), faacEncOpen(NULL),
-        /*faacEncGetDecoderSpecificInfo(NULL), */faacEncEncode(NULL), faacEncClose(NULL)
+        bFaacCodecSupported(FALSE)
+#else
+        bFaacCodecSupported(TRUE)
 #endif
 {
 #ifndef USE_FAAC_LIBRARY
-    _BOOLEAN bFaacCodecSupported;
-# ifdef _WIN32
-    hlib = LoadLibrary(TEXT("faac_drm.dll"));
-# else
-#  define GetProcAddress(a, b) dlsym(a, b)
-#  define FreeLibrary(a) dlclose(a)
-#  define TEXT(a) (a)
-#  if defined(__APPLE__)
-    hlib = dlopen("libfaac_drm.dylib", RTLD_LOCAL | RTLD_NOW);
-#  else
-    hlib = dlopen("libfaac_drm.so", RTLD_LOCAL | RTLD_NOW);
-#  endif
-# endif
-    if (hlib)
+    if (hFaacLib == NULL)
     {
-        faacEncGetVersion = (faacEncGetVersion_t*)GetProcAddress(hlib, TEXT("faacEncGetVersion"));
-        faacEncGetCurrentConfiguration = (faacEncGetCurrentConfiguration_t*)GetProcAddress(hlib, TEXT("faacEncGetCurrentConfiguration"));
-        faacEncSetConfiguration = (faacEncSetConfiguration_t*)GetProcAddress(hlib, TEXT("faacEncSetConfiguration"));
-        faacEncOpen = (faacEncOpen_t*)GetProcAddress(hlib, TEXT("faacEncOpen"));
-//        faacEncGetDecoderSpecificInfo = (faacEncGetDecoderSpecificInfo_t*)GetProcAddress(hlib, TEXT("faacEncGetDecoderSpecificInfo"));
-        faacEncEncode = (faacEncEncode_t*)GetProcAddress(hlib, TEXT("faacEncEncode"));
-        faacEncClose = (faacEncClose_t*)GetProcAddress(hlib, TEXT("faacEncClose"));
+        hFaacLib = CLibraryLoader::Load(LibNames, LibFuncs, FaacCheckCallback);
+        bFaacCodecSupported = !!hFaacLib;
+        if (!bFaacCodecSupported)
+            cerr << "No usable FAAC aac encoder library found" << endl;
+        else
+            cerr << "Got FAAC library" << endl;
     }
-    bFaacCodecSupported =
-        faacEncGetVersion &&
-        faacEncGetCurrentConfiguration &&
-        faacEncSetConfiguration &&
-        faacEncOpen &&
-//        faacEncGetDecoderSpecificInfo &&
-        faacEncEncode &&
-        faacEncClose;
-    if (!bFaacCodecSupported)
-    {
-        faacEncGetVersion = dummyfaacEncGetVersion;
-        faacEncGetCurrentConfiguration = dummyfaacEncGetCurrentConfiguration;
-        faacEncSetConfiguration = dummyfaacEncSetConfiguration;
-        faacEncOpen = dummyfaacEncOpen;
-//        faacEncGetDecoderSpecificInfo = dummyfaacEncGetDecoderSpecificInfo;
-        faacEncEncode = dummyfaacEncEncode;
-        faacEncClose = dummyfaacEncClose;
-        if (hlib)
-        {
-            FreeLibrary(hlib);
-            hlib = NULL;
-        }
-        cerr << "no FAAC library - using dummy" << endl;
-    }
-    else
-        cerr << "got FAAC library" << endl;
 #endif
 }
 
 void
-CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
+CAudioSourceEncoderImplementation::ProcessDataInternal(CParameter& Parameters,
+        CVectorEx < _SAMPLE >
         *pvecInputData,
         CVectorEx < _BINARY >
         *pvecOutputData,
@@ -128,6 +133,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
         int &iOutputBlockSize)
 {
     int i, j;
+    (void)Parameters;
 
     /* Reset data to zero. This is important since usually not all data is used
        and this data has to be set to zero as defined in the DRM standard */
@@ -294,7 +300,7 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CVectorEx < _SAMPLE >
 }
 
 void
-CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
+CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
         int &iInputBlockSize,
         int &iOutputBlockSize)
 {
@@ -302,28 +308,27 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
 
     int iCurSelServ = 0;		// TEST
 
-    TransmParam.Lock();
+    Parameters.Lock();
 
     /* Calculate number of input samples in mono. Audio block are always
        400 ms long */
-    const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
-                                         (_REAL) 0.4 /* 400 ms */ );
+    const int iNumInSamplesMono = (int) ((_REAL) Parameters.GetAudSampleRate() * (_REAL) 0.4 /* 400 ms */ );
 
     /* Set the total available number of bits, byte aligned */
     iTotNumBitsForUsage =
-        (TransmParam.iNumDecodedBitsMSC / SIZEOF__BYTE) * SIZEOF__BYTE;
+        (Parameters.iNumDecodedBitsMSC / SIZEOF__BYTE) * SIZEOF__BYTE;
 
     /* Total number of bytes which can be used for data and audio */
     const int iTotNumBytesForUsage = iTotNumBitsForUsage / SIZEOF__BYTE;
 
-    if (TransmParam.iNumDataService == 1)
+    if (Parameters.iNumDataService == 1)
     {
         /* Data service ----------------------------------------------------- */
         bIsDataService = TRUE;
-        iTotPacketSize = DataEncoder.Init(TransmParam);
+        iTotPacketSize = DataEncoder.Init(Parameters);
 
         /* Get stream ID for data service */
-        iCurStreamID = TransmParam.Service[iCurSelServ].DataParam.iStreamID;
+        iCurStreamID = Parameters.Service[iCurSelServ].DataParam.iStreamID;
     }
     else
     {
@@ -331,7 +336,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
         bIsDataService = FALSE;
 
         /* Get stream ID for audio service */
-        iCurStreamID = TransmParam.Service[iCurSelServ].AudioParam.iStreamID;
+        iCurStreamID = Parameters.Service[iCurSelServ].AudioParam.iStreamID;
 
         /* Total frame size is input block size minus the bytes for the text
            message (if text message is used) */
@@ -356,14 +361,14 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
             iTimeEachAudBloMS = 80;	/* ms */
             iNumAACFrames = 5;
             iNumHeaderBytes = 6;
-            TransmParam.Service[iCurSelServ].AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;	/* Set parameter in global struct */
+            Parameters.Service[iCurSelServ].AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;	/* Set parameter in global struct */
             break;
 
         case 24000:
             iTimeEachAudBloMS = 40;	/* ms */
             iNumAACFrames = 10;
             iNumHeaderBytes = 14;
-            TransmParam.Service[iCurSelServ].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;	/* Set parameter in global struct */
+            Parameters.Service[iCurSelServ].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;	/* Set parameter in global struct */
             break;
         }
 
@@ -376,7 +381,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
         const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
 
         /* Set to mono */
-        TransmParam.Service[iCurSelServ].AudioParam.eAudioMode =
+        Parameters.Service[iCurSelServ].AudioParam.eAudioMode =
             CAudioParam::AM_MONO;
 
         /* Open encoder instance */
@@ -426,18 +431,18 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
         if (lNumSampEncIn == 1024)
         {
             ResampleObj.Init(iNumInSamplesMono,
-                             (_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE *
+                             (_REAL) lEncSamprate / Parameters.GetAudSampleRate() *
                              1024.0 / 960.0);
         }
         else
         {
             ResampleObj.Init(iNumInSamplesMono,
-                             (_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE);
+                             (_REAL) lEncSamprate / Parameters.GetAudSampleRate());
         }
 
         /* Calculate number of bytes for higher protected blocks */
         iNumHigherProtectedBytes =
-            (TransmParam.Stream[iCurStreamID].iLenPartA
+            (Parameters.Stream[iCurStreamID].iLenPartA
              - iNumHeaderBytes -
              iNumAACFrames /* CRC bytes */ ) / iNumAACFrames;
 
@@ -446,42 +451,42 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & TransmParam,
     }
 
     /* Adjust part B length for SDC stream. Notice, that the
-       "TransmParam.iNumDecodedBitsMSC" parameter depends on these settings.
+       "Parameters.iNumDecodedBitsMSC" parameter depends on these settings.
        Thus, length part A and B have to be set before, preferably in the
        DRMTransmitter initialization */
-    if ((TransmParam.Stream[iCurStreamID].iLenPartA == 0) ||
-            (iTotNumBytesForUsage < TransmParam.Stream[iCurStreamID].iLenPartA))
+    if ((Parameters.Stream[iCurStreamID].iLenPartA == 0) ||
+            (iTotNumBytesForUsage < Parameters.Stream[iCurStreamID].iLenPartA))
     {
         /* Equal error protection was chosen or protection part A was chosen too
            high, set to equal error protection! */
-        TransmParam.Stream[iCurStreamID].iLenPartA = 0;
-        TransmParam.Stream[iCurStreamID].iLenPartB = iTotNumBytesForUsage;
+        Parameters.Stream[iCurStreamID].iLenPartA = 0;
+        Parameters.Stream[iCurStreamID].iLenPartB = iTotNumBytesForUsage;
     }
     else
-        TransmParam.Stream[iCurStreamID].iLenPartB = iTotNumBytesForUsage -
-                TransmParam.Stream[iCurStreamID].iLenPartA;
+        Parameters.Stream[iCurStreamID].iLenPartB = iTotNumBytesForUsage -
+                Parameters.Stream[iCurStreamID].iLenPartA;
 
     /* Define input and output block size */
-    iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
+    iOutputBlockSize = Parameters.iNumDecodedBitsMSC;
     iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
 
-    TransmParam.Unlock();
+    Parameters.Unlock();
 }
 
 void
-CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
+CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
         int &iInputBlockSize,
         int &iOutputBlockSize)
 {
-    Param.Lock();
+    Parameters.Lock();
 
     /* Calculate number of input samples in mono. Audio block are always 400 ms long */
-    const int iNumInSamplesMono = (int) ((_REAL) SOUNDCRD_SAMPLE_RATE *
+    const int iNumInSamplesMono = (int) ((_REAL) Parameters.GetAudSampleRate() *
                                          (_REAL) 0.4 /* 400 ms */ );
 
     /* Set the total available number of bits, byte aligned */
     iTotNumBitsForUsage =
-        (Param.Stream[0].iLenPartA + Param.Stream[0].iLenPartB) * SIZEOF__BYTE;
+        (Parameters.Stream[0].iLenPartA + Parameters.Stream[0].iLenPartB) * SIZEOF__BYTE;
 
     /* Total number of bytes which can be used for data and audio */
     //const int iTotNumBytesForUsage = iTotNumBitsForUsage / SIZEOF__BYTE;
@@ -511,14 +516,14 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
         iTimeEachAudBloMS = 80;	/* ms */
         iNumAACFrames = 5;
         iNumHeaderBytes = 6;
-        Param.Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;	/* Set parameter in global struct */
+        Parameters.Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_12KHZ;	/* Set parameter in global struct */
         break;
 
     case 24000:
         iTimeEachAudBloMS = 40;	/* ms */
         iNumAACFrames = 10;
         iNumHeaderBytes = 14;
-        Param.Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;	/* Set parameter in global struct */
+        Parameters.Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;	/* Set parameter in global struct */
         break;
     }
 
@@ -532,7 +537,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
     const int iActEncOutBytes = (int) (iAudioPayloadLen / iNumAACFrames);
 
     /* Set to mono */
-    Param.Service[0].AudioParam.eAudioMode =
+    Parameters.Service[0].AudioParam.eAudioMode =
         CAudioParam::AM_MONO;
 
     /* Open encoder instance */
@@ -585,13 +590,13 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
     if (lNumSampEncIn == 1024)
     {
         ResampleObj.Init(iNumInSamplesMono,
-                         (_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE *
+                         (_REAL) lEncSamprate / Parameters.GetAudSampleRate() *
                          1024.0 / 960.0);
     }
     else
     {
         ResampleObj.Init(iNumInSamplesMono,
-                         (_REAL) lEncSamprate / SOUNDCRD_SAMPLE_RATE);
+                         (_REAL) lEncSamprate / Parameters.GetAudSampleRate());
     }
 
     /* Calculate number of bytes for higher protected blocks */
@@ -601,7 +606,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter & Param,
     iOutputBlockSize = iTotNumBitsForUsage;
     iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
 
-    Param.Unlock();
+    Parameters.Unlock();
 }
 
 void

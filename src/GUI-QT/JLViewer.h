@@ -31,6 +31,7 @@
 
 #include <QTextDocument>
 #include "ui_JLViewer.h"
+#include "DialogUtil.h"
 #include "../DrmReceiver.h"
 #include <string>
 
@@ -46,13 +47,13 @@ public:
     virtual ~JLViewer();
 
 protected:
-
     QTimer Timer;
     QTextDocument           document;
-    std::string             strCurrentSavePath;
-    CDRMReceiver&		receiver;
+//    QString                 strCurrentSavePath;
+    CDRMReceiver&           receiver;
     CSettings&              settings;
     bool                    decoderSet;
+    CEventFilter            ef;
 
 public slots:
     void OnTimer();

@@ -29,21 +29,20 @@
 #include "Logging.h"
 #include "../util/Settings.h"
 
+#define SHORT_LOG_FILENAME "DreamLog.txt"
+#define LONG_LOG_FILENAME "DreamLogLong.csv"
+
+
 /* Implementation *************************************************************/
-CLogging::CLogging(CParameter& Parameters) : QObject(),
-    TimerLogFileLong(), TimerLogFileShort(), TimerLogFileStart(),
+CLogging::CLogging(CParameter& Parameters) :
     shortLog(Parameters), longLog(Parameters),
-    enabled(false)
+    iLogDelay(0), iLogCount(0), state(off)
 {
 #if QT_VERSION >= 0x040000
-	TimerLogFileStart.setSingleShot(true);
+    TimerLogFileStart.setSingleShot(true);
 #endif
-    connect(&TimerLogFileLong, SIGNAL(timeout()),
-            this, SLOT(OnTimerLogFileLong()));
-    connect(&TimerLogFileShort, SIGNAL(timeout()),
-            this, SLOT(OnTimerLogFileShort()));
-    connect(&TimerLogFileStart, SIGNAL(timeout()),
-            this, SLOT(start()));
+    connect(&TimerLogFile, SIGNAL(timeout()), this, SLOT(OnTimerLogFile()));
+    connect(&TimerLogFileStart, SIGNAL(timeout()), this, SLOT(OnTimerLogFileStart()));
 }
 
 void CLogging::LoadSettings(CSettings& Settings)
@@ -58,56 +57,58 @@ void CLogging::LoadSettings(CSettings& Settings)
     shortLog.SetPositionEnabled(enablepositiondata);
     longLog.SetPositionEnabled(enablepositiondata);
 
-    enabled = Settings.Get("Logfile", "enablelog", false);
+    bool enabled = Settings.Get("Logfile", "enablelog", false);
+    if(enabled)
+	state = starting;
+    iLogDelay = Settings.Get("Logfile", "delay", 0);
+    SaveSettings(Settings);
+}
 
-    /* Activate log file start if necessary. */
-    if (enabled)
-    {
-        /* One shot timer */
-	int iLogDelay = Settings.Get("Logfile", "delay", 0);
+void CLogging::start()
+{
+    /* One shot timer */
+    TimerLogFileStart.start(iLogDelay * 1000 /* ms */
 #if QT_VERSION < 0x040000
-        TimerLogFileStart.start(iLogDelay * 1000 /* ms */, true);
-#else
-        TimerLogFileStart.start(iLogDelay * 1000 /* ms */);
+	, true
 #endif
-	// initialise ini file if never set
-        Settings.Put("Logfile", "delay", iLogDelay);
-    }
+    );
 }
 
 void CLogging::SaveSettings(CSettings& Settings)
 {
     Settings.Put("Logfile", "enablerxl", shortLog.GetRxlEnabled());
     Settings.Put("Logfile", "enablepositiondata", shortLog.GetPositionEnabled());
-    Settings.Put("Logfile", "enablelog", enabled);
+    Settings.Put("Logfile", "enablelog", state!=off);
+    Settings.Put("Logfile", "delay", iLogDelay);
 }
 
-void CLogging::OnTimerLogFileShort()
+void CLogging::OnTimerLogFile()
 {
-    /* Write new parameters in log file (short version) */
-    shortLog.Update();
-}
-
-void CLogging::OnTimerLogFileLong()
-{
-    /* Write new parameters in log file (long version) */
-    longLog.Update();
-}
-
-void CLogging::start()
-{
-    enabled = true;
-    /* Start logging (if not already done) */
-    if(!longLog.GetLoggingActivated())
+    if (shortLog.restartNeeded())
     {
-        /* Activate log file timer for long and short log file */
-        TimerLogFileShort.start(60000); /* Every minute (i.e. 60000 ms) */
-        TimerLogFileLong.start(1000); /* Every second */
-
-        /* Open log file */
-        shortLog.Start("DreamLog.txt");
-        longLog.Start("DreamLogLong.csv");
+        stop(); start();
     }
+    else
+    {
+        iLogCount++;
+        if(iLogCount == 60)
+        {
+            iLogCount = 0;
+            shortLog.Update();
+        }
+        longLog.Update();
+    }
+}
+
+void CLogging::OnTimerLogFileStart()
+{
+    iLogCount = 0;
+    state = on;
+    /* Start logging (if not already done) */
+    TimerLogFile.start(1000); /* Every second */
+    /* Open log files */
+    shortLog.Start(SHORT_LOG_FILENAME);
+    longLog.Start(LONG_LOG_FILENAME);
     if(longLog.GetRxlEnabled())
     {
         emit subscribeRig();
@@ -116,10 +117,9 @@ void CLogging::start()
 
 void CLogging::stop()
 {
-    enabled = false;
+    state = off;
     TimerLogFileStart.stop();
-    TimerLogFileShort.stop();
-    TimerLogFileLong.stop();
+    TimerLogFile.stop();
     shortLog.Stop();
     longLog.Stop();
     if(longLog.GetRxlEnabled())

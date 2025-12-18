@@ -822,12 +822,12 @@ private:
 class CReceiveStatus
 {
 public:
-    CReceiveStatus():FSync(),TSync(),Interface(),
+    CReceiveStatus():FSync(),TSync(),InterfaceI(),InterfaceO(),
             FAC(),SDC(),Audio(),LLAudio(),MOT()
     {
     }
     CReceiveStatus(const CReceiveStatus& s):FSync(s.FSync), TSync(s.TSync),
-            Interface(s.Interface), FAC(s.FAC), SDC(s.SDC),
+            InterfaceI(s.InterfaceI), InterfaceO(s.InterfaceO), FAC(s.FAC), SDC(s.SDC),
             Audio(s.Audio),LLAudio(s.LLAudio),MOT(s.MOT)
     {
     }
@@ -835,7 +835,8 @@ public:
     {
         FSync = s.FSync;
         TSync = s.TSync;
-        Interface = s.Interface;
+        InterfaceI = s.InterfaceI;
+        InterfaceO = s.InterfaceO;
         FAC = s.FAC;
         SDC = s.SDC;
         Audio = s.Audio;
@@ -846,7 +847,8 @@ public:
 
     CRxStatus FSync;
     CRxStatus TSync;
-    CRxStatus Interface;
+    CRxStatus InterfaceI;
+    CRxStatus InterfaceO;
     CRxStatus FAC;
     CRxStatus SDC;
     CRxStatus Audio;
@@ -946,9 +948,8 @@ protected:
 class CParameter
 {
 public:
-    CParameter(CDRMReceiver*);
+    CParameter();
     CParameter(const CParameter&);
-    //CParameter(CDRMReceiver *pRx, CParameter *pParameter); // OPH - just copy some of the members
     virtual ~CParameter();
     CParameter& operator=(const CParameter&);
 
@@ -956,9 +957,11 @@ public:
     /* AS: AFS in SDC is valid or not */
     enum EAFSVali { AS_VALID, AS_NOT_VALID };
 
-
     /* SI: Symbol Interleaver */
     enum ESymIntMod { SI_LONG, SI_SHORT };
+
+    /* CT: Current Time */
+    enum ECurTime { CT_OFF, CT_LOCAL, CT_UTC, CT_UTC_OFFSET };
 
     /* ST: Simulation Type */
     enum ESimType
@@ -967,6 +970,7 @@ public:
     };
 
     /* Misc. Functions ------------------------------------------------------ */
+    void SetReceiver(CDRMReceiver *pDRMReceiver);
     void GenerateRandomSerialNumber();
     void GenerateReceiverID();
     void ResetServicesStreams();
@@ -1010,9 +1014,58 @@ public:
         iCurSelDataService = 0;
     }
 
+    int GetAudSampleRate() const
+    {
+        return iAudSampleRate;
+    }
+    int GetSigSampleRate() const
+    {
+        return iSigSampleRate;
+    }
+    /* Used internaly by DrmReceiver.cpp TODO */
+    void SetSigSampleRate(int sr)
+    {
+        iSigSampleRate = sr;
+    }
+    void SetNewAudSampleRate(int sr)
+    {
+        /* Perform range check */
+        if      (sr < 8000)   sr = 8000;
+        else if (sr > 192000) sr = 192000;
+        /* Audio sample rate must be a multiple of 25,
+           set to the nearest multiple of 25 */
+        // TODO AM Demod still have issue with some sample rate
+        // The buffering system is not enough flexible
+        sr = (sr + 12) / 25 * 25; // <- ok for DRM mode
+        iNewAudSampleRate = sr;
+    }
+    void SetNewSigSampleRate(int sr)
+    {
+        /* Set to the nearest supported sample rate */
+        if      (sr < 36000)  sr = 24000;
+        else if (sr < 72000)  sr = 48000;
+        else if (sr < 144000) sr = 96000;
+        else                  sr = 192000;
+        iNewSigSampleRate = sr;
+    }
+    /* New sample rate are fetched at init (restart) */
+    void FetchNewSampleRate()
+    {
+        if (iNewAudSampleRate != 0)
+        {
+            iAudSampleRate = iNewAudSampleRate;
+            iNewAudSampleRate = 0;
+        }
+        if (iNewSigSampleRate != 0)
+        {
+            iSigSampleRate = iNewSigSampleRate;
+            iNewSigSampleRate = 0;
+        }
+    }
+
     _REAL GetDCFrequency() const
     {
-        return SOUNDCRD_SAMPLE_RATE * (rFreqOffsetAcqui + rFreqOffsetTrack);
+        return iSigSampleRate * (rFreqOffsetAcqui + rFreqOffsetTrack);
     }
 
     _REAL GetBitRateKbps(const int iShortID, const _BOOLEAN bAudData) const;
@@ -1060,7 +1113,12 @@ public:
     /* Serial number and received ID */
     string sReceiverID;
     string sSerialNumber;
+protected:
     string sDataFilesDirectory;
+public:
+
+    string GetDataDirectory(const char* pcChildDirectory = NULL) const;
+    void SetDataDirectory(string sNewDataFilesDirectory);
 
     /* Parameters controlled by SDC ----------------------------------------- */
     void SetAudioParam(const int iShortID, const CAudioParam& NewAudParam);
@@ -1072,6 +1130,7 @@ public:
     void SetStreamLen(const int iStreamID, const int iNewLenPartA, const int iNewLenPartB);
     void GetStreamLen(const int iStreamID, int& iLenPartA, int& iLenPartB) const;
     int GetStreamLen(const int iStreamID) const;
+    ECurTime eTransmitCurrentTime;
 
     /* Protection levels for MSC */
     CMSCProtLev MSCPrLe;
@@ -1210,7 +1269,7 @@ public:
     /* General -------------------------------------------------------------- */
     _REAL GetNominalBandwidth();
     _REAL GetSysToNomBWCorrFact();
-    enum { STOPPED, RUNNING, STOP_REQUESTED } eRunState;
+    volatile enum { STOPPED, RUNNING, STOP_REQUESTED, RESTART } eRunState;
 
     CCellMappingTable CellMappingTable;
 
@@ -1223,6 +1282,11 @@ public:
     string gps_host; string gps_port;
 
 protected:
+
+    int iAudSampleRate;
+    int iSigSampleRate;
+    int iNewAudSampleRate;
+    int iNewSigSampleRate;
 
     _REAL rSysSimSNRdB;
 

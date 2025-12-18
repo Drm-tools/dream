@@ -42,8 +42,7 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     systemevalDlgBase(parent, name, modal, f),
     DRMReceiver(NDRMR),
     Settings(NSettings),
-    eNewCharType(CDRMPlot::NONE_OLD),
-    bEdtFrequencyMutex(FALSE)
+    eNewCharType(CDRMPlot::NONE_OLD)
 {
     /* Get window geometry data and apply it */
     CWinGeom s;
@@ -59,8 +58,11 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     /* Init controls -------------------------------------------------------- */
 
     /* Init main plot */
+    iPlotStyle = Settings.Get("System Evaluation Dialog", "plotstyle", 0);
+    Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
     MainPlot = new CDRMPlot(NULL, plot);
     MainPlot->SetRecObj(&DRMReceiver);
+    MainPlot->SetPlotStyle(iPlotStyle);
 
     /* Init slider control */
     SliderNoOfIterations->setRange(0, 4);
@@ -119,8 +121,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     /* Expand all items */
     chartSelector->expandAll();
 
-    /* Load saved main plot style */
-    eCurCharType = PlotNameToECharType(Settings.Get("System Evaluation Dialog", "plotstyle", string()));
+    /* Load saved main plot type */
+    eCurCharType = PlotNameToECharType(Settings.Get("System Evaluation Dialog", "plottype", string()));
 
     /* If MDI in is enabled, disable some of the controls and use different
        initialization for the chart and chart selector */
@@ -132,8 +134,6 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
         ButtonGroupChanEstTimeInt->setEnabled(FALSE);
         ButtonGroupTimeSyncTrack->setEnabled(FALSE);
         CheckBoxFlipSpec->setEnabled(FALSE);
-        EdtFrequency->setText("0");
-        EdtFrequency->setEnabled(FALSE);
         GroupBoxInterfRej->setEnabled(FALSE);
 
         /* Only audio spectrum makes sence for MDI in */
@@ -180,8 +180,8 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
             this, SLOT(OnCheckFlipSpectrum()));
     connect(CheckBoxMuteAudio, SIGNAL(clicked()),
             this, SLOT(OnCheckBoxMuteAudio()));
-    connect(CheckBoxWriteLog, SIGNAL(clicked()),
-            this, SLOT(OnCheckWriteLog()));
+    connect(CheckBoxWriteLog, SIGNAL(stateChanged(int)),
+            this, SLOT(OnCheckWriteLog(int)));
     connect(CheckBoxSaveAudioWave, SIGNAL(clicked()),
             this, SLOT(OnCheckSaveAudioWAV()));
     connect(CheckBoxRecFilter, SIGNAL(clicked()),
@@ -191,18 +191,9 @@ systemevalDlg::systemevalDlg(CDRMReceiver& NDRMR, CSettings& NSettings,
     connect(CheckBoxReverb, SIGNAL(clicked()),
             this, SLOT(OnCheckBoxReverb()));
 
-    /* Timers */
+    /* Timer */
     connect(&Timer, SIGNAL(timeout()),
             this, SLOT(OnTimer()));
-
-    connect(&TimerInterDigit, SIGNAL(timeout()),
-            this, SLOT(OnTimerInterDigit()));
-
-    connect(EdtFrequency, SIGNAL(textChanged ( const QString&)),
-            this, SLOT(OnFrequencyEdited ( const QString &)));
-
-    /* Start log file flag */
-    CheckBoxWriteLog->setChecked(Settings.Get("Logfile", "enablelog", FALSE));
 
     /* Select chart type */
     chartSelector->setCurrentItem(FindItemByECharType(eCurCharType), 0);
@@ -285,40 +276,7 @@ void systemevalDlg::UpdateControls()
 
     CheckBoxSaveAudioWave->
     setChecked(DRMReceiver.GetWriteData()->GetIsWriteWaveFile());
-
-
-    /* Update frequency edit control (frequency could be changed by
-       schedule dialog */
-    if (!TimerInterDigit.isActive())
-    {
-        int iFrequency = DRMReceiver.GetFrequency();
-        int iCurFrequency = EdtFrequency->text().toInt();
-
-        if (iFrequency != iCurFrequency)
-        {
-            bEdtFrequencyMutex = TRUE;
-            EdtFrequency->setText(QString().setNum(iFrequency));
-            bEdtFrequencyMutex = FALSE;
-            iCurFrequency = iFrequency;
-        }
-    }
 }
-
-#ifdef _WIN32
-/* Compatibility with DRMLogger */
-bool systemevalDlg::winEvent(MSG *msg, long *result)
-{
-	(void)result;
-	if (msg->message == WM_ACTIVATE && msg->wParam == WA_ACTIVE)
-	{
-		if (CheckBoxWriteLog->isChecked())
-			EdtFrequency->setFocus();
-		else
-			CheckBoxWriteLog->setFocus();
-	}
-	return false;
-}
-#endif
 
 void systemevalDlg::showEvent(QShowEvent* e)
 {
@@ -333,7 +291,7 @@ void systemevalDlg::showEvent(QShowEvent* e)
         s << "Chart Window " << i;
 
         /* get the chart type */
-        const CDRMPlot::ECharType eNewType = PlotNameToECharType(Settings.Get(s.str(), "plotstyle", string()));
+        const CDRMPlot::ECharType eNewType = PlotNameToECharType(Settings.Get(s.str(), "plottype", string()));
 
         /* get window geometry data */
         CWinGeom c;
@@ -349,6 +307,9 @@ void systemevalDlg::showEvent(QShowEvent* e)
 
         /* Add window pointer in vector (needed for closing the windows) */
         vecpDRMPlots.push_back(pNewChartWin);
+
+		/* Show new window */
+		pNewChartWin->show();
     }
 
     /* Update controls */
@@ -394,7 +355,7 @@ void systemevalDlg::hideEvent(QHideEvent* e)
 
             s << "Chart Window " << iNumOpenCharts;
             Settings.Put(s.str(), c);
-            Settings.Put(s.str(), "plotstyle", ECharTypeToPlotName(vecpDRMPlots[i]->GetChartType()));
+            Settings.Put(s.str(), "plottype", ECharTypeToPlotName(vecpDRMPlots[i]->GetChartType()));
 
             iNumOpenCharts++;
         }
@@ -415,50 +376,16 @@ void systemevalDlg::hideEvent(QHideEvent* e)
     s.iWSize = WinGeom.width();
     Settings.Put("System Evaluation Dialog", s);
 
-    /* Store current plot type. */
-    Settings.Put("System Evaluation Dialog", "plotstyle", ECharTypeToPlotName(eCurCharType));
-}
-
-void systemevalDlg::OnTimerInterDigit()
-{
-    TimerInterDigit.stop();
-    QString strFreq = EdtFrequency->text();
-    int len = strFreq.size();
-    /* Keep only characters 0 to 9 */
-    for (int i = 0; i < len; i++)
-        if (!(strFreq[i]>=QChar('0') && strFreq[i]<=QChar('9')))
-            { strFreq.remove(i, 1); len--; i--; }
-    int freq = strFreq.toInt();
-    bEdtFrequencyMutex = TRUE;
-    EdtFrequency->setText(QString::number(freq));
-    bEdtFrequencyMutex = FALSE;
-    DRMReceiver.SetFrequency(freq);
-}
-
-void systemevalDlg::OnFrequencyEdited(const QString&)
-{
-    if (!bEdtFrequencyMutex)
-    {
-#ifdef _WIN32
-		/* Compatibility with DRMLogger */
-		QString strFreq = EdtFrequency->text();
-		int pos = strFreq.lastIndexOf(QChar('L'), -1, Qt::CaseInsensitive);
-		if (pos >= 0 && (pos+1) == strFreq.length())
-		{
-			strFreq.remove(pos, 1);
-			bEdtFrequencyMutex = TRUE;
-			EdtFrequency->setText(strFreq);
-			bEdtFrequencyMutex = FALSE;
-			CheckBoxWriteLog->toggle();
-		}
-#endif
-		TimerInterDigit.stop();
-        TimerInterDigit.start(1000);
-    }
+    /* Store current plot type */
+    Settings.Put("System Evaluation Dialog", "plottype", ECharTypeToPlotName(eCurCharType));
 }
 
 void systemevalDlg::UpdatePlotStyle(int iPlotStyle)
 {
+    /* Save the new style */
+    Settings.Put("System Evaluation Dialog", "plotstyle", iPlotStyle);
+    this->iPlotStyle = iPlotStyle;
+
     /* Update chart windows */
     for (size_t i = 0; i < vecpDRMPlots.size(); i++)
         vecpDRMPlots[i]->SetPlotStyle(iPlotStyle);
@@ -472,7 +399,12 @@ void systemevalDlg::OnTreeWidgetContMenu(bool)
     if (eNewCharType != CDRMPlot::NONE_OLD)
     {
         /* Open the new chart */
-        vecpDRMPlots.push_back(OpenChartWin(eNewCharType));
+		CDRMPlot* pNewChartWin = OpenChartWin(eNewCharType);
+        vecpDRMPlots.push_back(pNewChartWin);
+
+		/* Show new window */
+		pNewChartWin->show();
+
         eNewCharType = CDRMPlot::NONE_OLD;
     }
 }
@@ -503,8 +435,8 @@ CDRMPlot* systemevalDlg::OpenChartWin(CDRMPlot::ECharType eNewType)
     pNewChartWin->SetRecObj(&DRMReceiver);
     pNewChartWin->SetupChart(eNewType);
 
-    /* Show new window */
-    pNewChartWin->show();
+    /* Set plot style*/
+    pNewChartWin->SetPlotStyle(iPlotStyle);
 
     return pNewChartWin;
 }
@@ -575,16 +507,18 @@ void systemevalDlg::SetStatus(CMultColorLED* LED, ETypeRxStatus state)
 
 void systemevalDlg::OnTimer()
 {
-    CParameter& ReceiverParam = *(DRMReceiver.GetParameters());
+    CParameter& Parameters = *(DRMReceiver.GetParameters());
 
-    ReceiverParam.Lock();
+    Parameters.Lock();
 
-        SetStatus(LEDMSC, ReceiverParam.ReceiveStatus.Audio.GetStatus());
-        SetStatus(LEDSDC, ReceiverParam.ReceiveStatus.SDC.GetStatus());
-        SetStatus(LEDFAC, ReceiverParam.ReceiveStatus.FAC.GetStatus());
-        SetStatus(LEDFrameSync, ReceiverParam.ReceiveStatus.FSync.GetStatus());
-        SetStatus(LEDTimeSync, ReceiverParam.ReceiveStatus.TSync.GetStatus());
-        SetStatus(LEDIOInterface, ReceiverParam.ReceiveStatus.Interface.GetStatus());
+        SetStatus(LEDMSC, Parameters.ReceiveStatus.Audio.GetStatus());
+        SetStatus(LEDSDC, Parameters.ReceiveStatus.SDC.GetStatus());
+        SetStatus(LEDFAC, Parameters.ReceiveStatus.FAC.GetStatus());
+        SetStatus(LEDFrameSync, Parameters.ReceiveStatus.FSync.GetStatus());
+        SetStatus(LEDTimeSync, Parameters.ReceiveStatus.TSync.GetStatus());
+        ETypeRxStatus soundCardStatusI = Parameters.ReceiveStatus.InterfaceI.GetStatus(); /* Input */
+        ETypeRxStatus soundCardStatusO = Parameters.ReceiveStatus.InterfaceO.GetStatus(); /* Output */
+        SetStatus(LEDIOInterface, soundCardStatusO == NOT_PRESENT || (soundCardStatusI != NOT_PRESENT && soundCardStatusI != RX_OK) ? soundCardStatusI : soundCardStatusO);
 
         /* Show SNR if receiver is in tracking mode */
         if (DRMReceiver.GetAcquiState() == AS_WITH_SIGNAL)
@@ -592,7 +526,7 @@ void systemevalDlg::OnTimer()
             /* Get a consistant snapshot */
 
             /* We only get SNR from a local DREAM Front-End */
-            _REAL rSNR = ReceiverParam.GetSNR();
+            _REAL rSNR = Parameters.GetSNR();
             if (rSNR >= 0.0)
             {
                 /* SNR */
@@ -604,11 +538,11 @@ void systemevalDlg::OnTimer()
                 ValueSNR->setText("<b>---</b>");
             }
             /* We get MER from a local DREAM Front-End or an RSCI input but not an MDI input */
-            _REAL rMER = ReceiverParam.rMER;
+            _REAL rMER = Parameters.rMER;
             if (rMER >= 0.0 )
             {
                 ValueMERWMER->setText(QString().
-                                      setNum(ReceiverParam.rWMERMSC, 'f', 1) + " dB / "
+                                      setNum(Parameters.rWMERMSC, 'f', 1) + " dB / "
                                       + QString().setNum(rMER, 'f', 1) + " dB");
             }
             else
@@ -617,27 +551,27 @@ void systemevalDlg::OnTimer()
             }
 
             /* Doppler estimation (assuming Gaussian doppler spectrum) */
-            if (ReceiverParam.rSigmaEstimate >= 0.0)
+            if (Parameters.rSigmaEstimate >= 0.0)
             {
                 /* Plot delay and Doppler values */
                 ValueWiener->setText(
-                    QString().setNum(ReceiverParam.rSigmaEstimate, 'f', 2) + " Hz / "
-                    + QString().setNum(ReceiverParam.rMinDelay, 'f', 2) + " ms");
+                    QString().setNum(Parameters.rSigmaEstimate, 'f', 2) + " Hz / "
+                    + QString().setNum(Parameters.rMinDelay, 'f', 2) + " ms");
             }
             else
             {
                 /* Plot only delay, Doppler not available */
                 ValueWiener->setText("--- / "
-                                     + QString().setNum(ReceiverParam.rMinDelay, 'f', 2) + " ms");
+                                     + QString().setNum(Parameters.rMinDelay, 'f', 2) + " ms");
             }
 
             /* Sample frequency offset estimation */
-            const _REAL rCurSamROffs = ReceiverParam.rResampleOffset;
+            const _REAL rCurSamROffs = Parameters.rResampleOffset;
 
             /* Display value in [Hz] and [ppm] (parts per million) */
             ValueSampFreqOffset->setText(
                 QString().setNum(rCurSamROffs, 'f', 2) + " Hz (" +
-                QString().setNum((int) (rCurSamROffs / SOUNDCRD_SAMPLE_RATE * 1e6))
+                QString().setNum((int) (rCurSamROffs / Parameters.GetSigSampleRate() * 1e6))
                 + " ppm)");
 
         }
@@ -651,7 +585,7 @@ void systemevalDlg::OnTimer()
 
 #ifdef _DEBUG_
         TextFreqOffset->setText("DC: " +
-                                QString().setNum(ReceiverParam.
+                                QString().setNum(Parameters.
                                         GetDCFrequency(), 'f', 3) + " Hz ");
 
         /* Metric values */
@@ -665,7 +599,7 @@ void systemevalDlg::OnTimer()
 #else
         /* DC frequency */
         ValueFreqOffset->setText(QString().setNum(
-                                     ReceiverParam.GetDCFrequency(), 'f', 2) + " Hz");
+                                     Parameters.GetDCFrequency(), 'f', 2) + " Hz");
 #endif
 
         /* _WIN32 fix because in Visual c++ the GUI files are always compiled even
@@ -675,12 +609,12 @@ void systemevalDlg::OnTimer()
         if (DRMReceiver.GetRSIIn()->GetInEnabled() == TRUE)
         {
             ValueSNR->setText("<b>---</b>");
-            if (ReceiverParam.vecrRdelThresholds.GetSize() > 0)
-                ValueWiener->setText(QString().setNum(ReceiverParam.rRdop, 'f', 2) + " Hz / "
-                                     + QString().setNum(ReceiverParam.vecrRdelIntervals[0], 'f', 2) + " ms ("
-                                     + QString().setNum(ReceiverParam.vecrRdelThresholds[0]) + "%)");
+            if (Parameters.vecrRdelThresholds.GetSize() > 0)
+                ValueWiener->setText(QString().setNum(Parameters.rRdop, 'f', 2) + " Hz / "
+                                     + QString().setNum(Parameters.vecrRdelIntervals[0], 'f', 2) + " ms ("
+                                     + QString().setNum(Parameters.vecrRdelThresholds[0]) + "%)");
             else
-                ValueWiener->setText(QString().setNum(ReceiverParam.rRdop, 'f', 2) + " Hz / ---");
+                ValueWiener->setText(QString().setNum(Parameters.rRdop, 'f', 2) + " Hz / ---");
 
             ValueSampFreqOffset->setText("---");
             ValueFreqOffset->setText("---");
@@ -699,7 +633,7 @@ void systemevalDlg::OnTimer()
 
 
         /* Interleaver Depth #################### */
-        switch (ReceiverParam.eSymbolInterlMode)
+        switch (Parameters.eSymbolInterlMode)
         {
         case CParameter::SI_LONG:
             strFACInfo = tr("2 s (Long Interleaving)");
@@ -719,7 +653,7 @@ void systemevalDlg::OnTimer()
 
         /* SDC, MSC mode #################### */
         /* SDC */
-        switch (ReceiverParam.eSDCCodingScheme)
+        switch (Parameters.eSDCCodingScheme)
         {
         case CS_1_SM:
             strFACInfo = "4-QAM / ";
@@ -734,7 +668,7 @@ void systemevalDlg::OnTimer()
         }
 
         /* MSC */
-        switch (ReceiverParam.eMSCCodingScheme)
+        switch (Parameters.eMSCCodingScheme)
         {
         case CS_2_SM:
             strFACInfo += "SM 16-QAM";
@@ -761,9 +695,9 @@ void systemevalDlg::OnTimer()
 
 
         /* Code rates #################### */
-        strFACInfo = QString().setNum(ReceiverParam.MSCPrLe.iPartB);
+        strFACInfo = QString().setNum(Parameters.MSCPrLe.iPartB);
         strFACInfo += " / ";
-        strFACInfo += QString().setNum(ReceiverParam.MSCPrLe.iPartA);
+        strFACInfo += QString().setNum(Parameters.MSCPrLe.iPartA);
 
         //FACCodeRateL->setText(tr("Prot. Level (B / A):")); /* Label */
         FACCodeRateV->setText(strFACInfo); /* Value */
@@ -771,20 +705,20 @@ void systemevalDlg::OnTimer()
 
         /* Number of services #################### */
         strFACInfo = tr("Audio: ");
-        strFACInfo += QString().setNum(ReceiverParam.iNumAudioService);
+        strFACInfo += QString().setNum(Parameters.iNumAudioService);
         strFACInfo += tr(" / Data: ");
-        strFACInfo += QString().setNum(ReceiverParam.iNumDataService);
+        strFACInfo += QString().setNum(Parameters.iNumDataService);
 
         //FACNumServicesL->setText(tr("Number of Services:")); /* Label */
         FACNumServicesV->setText(strFACInfo); /* Value */
 
 
         /* Time, date #################### */
-        if ((ReceiverParam.iUTCHour == 0) &&
-                (ReceiverParam.iUTCMin == 0) &&
-                (ReceiverParam.iDay == 0) &&
-                (ReceiverParam.iMonth == 0) &&
-                (ReceiverParam.iYear == 0))
+        if ((Parameters.iUTCHour == 0) &&
+                (Parameters.iUTCMin == 0) &&
+                (Parameters.iDay == 0) &&
+                (Parameters.iMonth == 0) &&
+                (Parameters.iYear == 0))
         {
             /* No time service available */
             strFACInfo = tr("Service not available");
@@ -794,17 +728,17 @@ void systemevalDlg::OnTimer()
 #ifdef GUI_QT_DATE_TIME_TYPE
             /* QT type of displaying date and time */
             QDateTime DateTime;
-            DateTime.setDate(QDate(ReceiverParam.iYear,
-                                   ReceiverParam.iMonth,
-                                   ReceiverParam.iDay));
-            DateTime.setTime(QTime(ReceiverParam.iUTCHour,
-                                   ReceiverParam.iUTCMin));
+            DateTime.setDate(QDate(Parameters.iYear,
+                                   Parameters.iMonth,
+                                   Parameters.iDay));
+            DateTime.setTime(QTime(Parameters.iUTCHour,
+                                   Parameters.iUTCMin));
 
             strFACInfo = DateTime.toString();
 #else
             /* Set time and date */
             QString strMin;
-            const int iMin = ReceiverParam.iUTCMin;
+            const int iMin = Parameters.iUTCMin;
 
             /* Add leading zero to number smaller than 10 */
             if (iMin < 10)
@@ -816,35 +750,35 @@ void systemevalDlg::OnTimer()
 
             strFACInfo =
                 /* Time */
-                QString().setNum(ReceiverParam.iUTCHour) + ":" +
+                QString().setNum(Parameters.iUTCHour) + ":" +
                 strMin + "  -  " +
                 /* Date */
-                QString().setNum(ReceiverParam.iMonth) + "/" +
-                QString().setNum(ReceiverParam.iDay) + "/" +
-                QString().setNum(ReceiverParam.iYear);
+                QString().setNum(Parameters.iMonth) + "/" +
+                QString().setNum(Parameters.iDay) + "/" +
+                QString().setNum(Parameters.iYear);
 #endif
             /* Add UTC offset if available */
-            if (ReceiverParam.bValidUTCOffsetAndSense)
+            if (Parameters.bValidUTCOffsetAndSense)
                 strFACInfo += QString(" %1%2%3%4")
                     .arg(tr("UTC"))
-                    .arg(ReceiverParam.iUTCSense ? "-" : "+")
-                    .arg(ReceiverParam.iUTCOff / 2, 0, 10)
-                    .arg(ReceiverParam.iUTCOff & 1 ? ".5" : "");
+                    .arg(Parameters.iUTCSense ? "-" : "+")
+                    .arg(Parameters.iUTCOff / 2, 0, 10)
+                    .arg(Parameters.iUTCOff & 1 ? ".5" : "");
         }
 
         //FACTimeDateL->setText(tr("Received time - date:")); /* Label */
         FACTimeDateV->setText(strFACInfo); /* Value */
 
-        UpdateGPS(ReceiverParam);
+        UpdateGPS(Parameters);
 
         UpdateControls();
 
-    ReceiverParam.Unlock();
+    Parameters.Unlock();
 }
 
-void systemevalDlg::UpdateGPS(CParameter& ReceiverParam)
+void systemevalDlg::UpdateGPS(CParameter& Parameters)
 {
-    gps_data_t& gps = ReceiverParam.gps_data;
+    gps_data_t& gps = Parameters.gps_data;
 
     if((gps.set&STATUS_SET)==0) {
         LEDGPS->SetLight(CMultColorLED::RL_RED);
@@ -1039,9 +973,9 @@ void systemevalDlg::OnCheckSaveAudioWAV()
 }
 
 
-void systemevalDlg::OnCheckWriteLog()
+void systemevalDlg::OnCheckWriteLog(int state)
 {
-    if (CheckBoxWriteLog->isChecked())
+    if (state == Qt::Checked)
     {
 		emit startLogging();
     }
@@ -1292,12 +1226,6 @@ void systemevalDlg::AddWhatsThisHelp()
                         "<br>The log file will be "
                         "written in the directory were the Dream application was started and "
                         "the name of this file is always DreamLog.txt"));
-
-    /* Freq */
-    EdtFrequency->setWhatsThis(
-                     tr("<b>Freq:</b> In this edit control, the current "
-                        "selected frequency on the front-end can be specified. This frequency "
-                        "will be written into the log file."));
 
     /* Wiener */
     const QString strWienerChanEst =

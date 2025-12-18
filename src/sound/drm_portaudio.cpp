@@ -70,7 +70,7 @@ playbackCallback(const void *inputBuffer, void *outputBuffer,
 int CPaCommon::pa_count = 0;
 
 CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
-        names(), devices(), dev(-1),
+        names(), devices(),
         is_capture(cap), blocking(true), device_changed(true), xrun(false),
         framesPerBuffer(0), ringBufferData(NULL)
 {
@@ -83,7 +83,8 @@ CPaCommon::CPaCommon(bool cap):ringBuffer(),xruns(0),stream(NULL),
     }
     pa_count++;
     vector < string > choices;
-    Enumerate(choices);
+    vector < string > descriptions;
+    Enumerate(choices, descriptions);
 }
 
 CPaCommon::~CPaCommon()
@@ -102,10 +103,15 @@ CPaCommon::~CPaCommon()
 }
 
 void
-CPaCommon::Enumerate(vector < string > &choices)
+CPaCommon::Enumerate(vector < string > &choices, vector < string > &descriptions)
 {
     vector < string > tmp;
+
     names.clear();
+    descriptions.clear();
+	names.push_back(""); /* default device */
+	descriptions.push_back("");
+
     int numDevices = Pa_GetDeviceCount();
     if (numDevices < 0)
         throw string("PortAudio error: ") + Pa_GetErrorText(numDevices);
@@ -132,29 +138,31 @@ CPaCommon::Enumerate(vector < string > &choices)
 }
 
 void
-CPaCommon::SetDev(int iNewDevice)
+CPaCommon::SetDev(string sNewDevice)
 {
-    if (dev != iNewDevice)
+    if (dev != sNewDevice)
     {
-        dev = iNewDevice;
+        dev = sNewDevice;
         device_changed = true;
     }
 }
 
-int
+string
 CPaCommon::GetDev()
 {
     return dev;
 }
 
 /* buffer_size is in samples - frames would be better */
-void
-CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+_BOOLEAN
+CPaCommon::Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
-    if (device_changed == false)
-        return;
+    if (device_changed == false && double(iSampleRate) == samplerate)
+        return FALSE;
 
     unsigned long channels=2;
+
+    samplerate = double(iSampleRate);
 
     if (is_capture)
         framesPerBuffer = iNewBufferSize / channels;
@@ -185,6 +193,8 @@ CPaCommon::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
         cerr << "portaudio can't open stream" << endl;
         //throw "portaudio open error";
     }
+
+    return TRUE;
 }
 
 void
@@ -199,7 +209,17 @@ CPaCommon::ReInit()
     pParameters.hostApiSpecificStreamInfo = NULL;
     pParameters.sampleFormat = paInt16;
 
-    if (dev < 0 || dev >= int(devices.size()))
+    int idev = -1;
+    for (int i = 0; i < int(names.size()); i++)
+    {
+        if (names[i] == dev)
+        {
+            idev = i;
+            break;
+        }
+    }
+
+    if (idev < 0 || idev >= int(devices.size()))
     {
         if (is_capture)
             pParameters.device = Pa_GetDefaultInputDevice();
@@ -208,14 +228,13 @@ CPaCommon::ReInit()
     }
     else
     {
-        cout << "opening " << names[dev] << endl;
-        pParameters.device = devices[dev];
+        cout << "opening " << names[idev] << endl;
+        pParameters.device = devices[idev];
     }
 
     if (pParameters.device == paNoDevice)
         return;
 
-    double srate = (double)SOUNDCRD_SAMPLE_RATE;
     unsigned long minRingBufferSize;
     int err;
 
@@ -236,7 +255,7 @@ CPaCommon::ReInit()
     /* flags that can be used to define dither, clip settings and more */
     if (is_capture)
     {
-        err = Pa_OpenStream(&stream, &pParameters, NULL, srate,
+        err = Pa_OpenStream(&stream, &pParameters, NULL, samplerate,
                             framesPerBuffer, paNoFlag, captureCallback,
                             (void *) this);
 
@@ -250,7 +269,7 @@ CPaCommon::ReInit()
     }
     else
     {
-        err = Pa_OpenStream(&stream, NULL, &pParameters, srate,
+        err = Pa_OpenStream(&stream, NULL, &pParameters, samplerate,
                             framesPerBuffer, paNoFlag, playbackCallback,
                             (void *) this);
         if (err != paNoError) {
@@ -359,10 +378,10 @@ CPaIn::~CPaIn()
     Close();
 }
 
-void
-CPaIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+_BOOLEAN
+CPaIn::Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
-    hw.Init(iNewBufferSize, bNewBlocking);
+    return hw.Init(iSampleRate, iNewBufferSize, bNewBlocking);
 }
 
 _BOOLEAN
@@ -387,10 +406,10 @@ CPaOut::~CPaOut()
     Close();
 }
 
-void
-CPaOut::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+_BOOLEAN
+CPaOut::Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)
 {
-    hw.Init(iNewBufferSize, bNewBlocking);
+    return hw.Init(iSampleRate, iNewBufferSize, bNewBlocking);
 }
 
 _BOOLEAN

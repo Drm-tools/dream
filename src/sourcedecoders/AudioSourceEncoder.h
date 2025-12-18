@@ -71,23 +71,6 @@ protected:
 	faacEncHandle			hEncoder;
 	faacEncConfigurationPtr CurEncFormat;
 
-#ifndef USE_FAAC_LIBRARY
-# ifdef _WIN32
-    HINSTANCE hlib;
-# else
-    void* hlib;
-# endif
-    faacEncGetVersion_t*  faacEncGetVersion;
-    faacEncGetCurrentConfiguration_t*
-			    faacEncGetCurrentConfiguration;
-    faacEncSetConfiguration_t*
-			    faacEncSetConfiguration;
-    faacEncOpen_t*          faacEncOpen;
-    faacEncGetDecoderSpecificInfo_t*
-			    faacEncGetDecoderSpecificInfo;
-    faacEncEncode_t*        faacEncEncode;
-    faacEncClose_t*         faacEncClose;
-#endif
 	unsigned long			lNumSampEncIn;
 	unsigned long			lMaxBytesEncOut;
 	unsigned long			lEncSamprate;
@@ -99,14 +82,15 @@ protected:
 	int						iAudioPayloadLen;
 	int						iNumHigherProtectedBytes;
 
+	_BOOLEAN				bFaacCodecSupported;
 	CAudioResample			ResampleObj;
 	CVector<_REAL>			vecTempResBufIn;
 	CVector<_REAL>			vecTempResBufOut;
 
 public:
-		virtual void InitInternalTx(CParameter &TransmParam, int &iInputBlockSize, int &iOutputBlockSize);
-		virtual void InitInternalRx(CParameter& Param, int &iInputBlockSize, int &iOutputBlockSize);
-		virtual void ProcessDataInternal(CVectorEx<_SAMPLE>* pvecInputData,
+		virtual void InitInternalTx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
+		virtual void InitInternalRx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
+		virtual void ProcessDataInternal(CParameter& Parameters, CVectorEx<_SAMPLE>* pvecInputData,
 						CVectorEx<_BINARY>* pvecOutputData, int &iInputBlockSize, int &iOutputBlockSize);
 };
 
@@ -119,14 +103,14 @@ public:
 protected:
 	CAudioSourceEncoderImplementation AudioSourceEncoderImpl;
 
-	virtual void InitInternal(CParameter& Param)
+	virtual void InitInternal(CParameter& Parameters)
 	{
-		AudioSourceEncoderImpl.InitInternalRx(Param, iInputBlockSize, iOutputBlockSize);
+		AudioSourceEncoderImpl.InitInternalRx(Parameters, iInputBlockSize, iOutputBlockSize);
 	}
 
-	virtual void ProcessDataInternal(CParameter& )
+	virtual void ProcessDataInternal(CParameter& Parameters)
 	{
-		AudioSourceEncoderImpl.ProcessDataInternal(pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
+		AudioSourceEncoderImpl.ProcessDataInternal(Parameters, pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
 	}
 };
 
@@ -153,14 +137,14 @@ public:
 protected:
 	CAudioSourceEncoderImplementation AudioSourceEncoderImpl;
 
-	virtual void InitInternal(CParameter& TransmParam)
+	virtual void InitInternal(CParameter& Parameters)
 	{
-		AudioSourceEncoderImpl.InitInternalTx(TransmParam, iInputBlockSize, iOutputBlockSize);
+		AudioSourceEncoderImpl.InitInternalTx(Parameters, iInputBlockSize, iOutputBlockSize);
 	}
 
-	virtual void ProcessDataInternal(CParameter& )
+	virtual void ProcessDataInternal(CParameter& Parameters)
 	{
-		AudioSourceEncoderImpl.ProcessDataInternal(pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
+		AudioSourceEncoderImpl.ProcessDataInternal(Parameters, pvecInputData, pvecOutputData, iInputBlockSize, iOutputBlockSize);
 	}
 
 };

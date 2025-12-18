@@ -29,8 +29,8 @@
 #if !defined(DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_)
 #define DRMSIGNALIO_H__3B0BA660_CA63_4344_B_23E7A0D31912__INCLUDED_
 
+#include "sound/soundinterface.h"
 #include "Parameter.h"
-#include "soundinterface.h"
 #include <math.h>
 #include "matlib/Matlib.h"
 #include "IQInputFilter.h"
@@ -81,7 +81,8 @@ public:
 
     CTransmitData(CSoundOutInterface* pNS) : pFileTransmitter(NULL), pSound(pNS),
             eOutputFormat(OF_REAL_VAL), rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
-            strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE) {}
+            strOutFileName("test/TransmittedData.txt"), bUseSoundcard(TRUE),
+            bAmplified(FALSE), bHighQualityIQ(FALSE) {}
     virtual ~CTransmitData();
 
     void SetIQOutput(const EOutFormat eFormat) {
@@ -89,6 +90,20 @@ public:
     }
     EOutFormat GetIQOutput() {
         return eOutputFormat;
+    }
+
+    void SetAmplifiedOutput(_BOOLEAN bEnable) {
+        bAmplified = bEnable;
+    }
+    _BOOLEAN GetAmplifiedOutput() {
+        return bAmplified;
+    }
+
+    void SetHighQualityIQ(_BOOLEAN bEnable) {
+        bHighQualityIQ = bEnable;
+    }
+    _BOOLEAN GetHighQualityIQ() {
+        return bHighQualityIQ;
     }
 
     void SetCarOffset(const CReal rNewCarOffset)
@@ -122,6 +137,12 @@ protected:
     string				strOutFileName;
     _BOOLEAN			bUseSoundcard;
 
+    _BOOLEAN			bAmplified;
+    _BOOLEAN			bHighQualityIQ;
+    CVector<_REAL>		vecrReHist;
+
+    void HilbertFilt(_COMPLEX& vecData);
+
     virtual void InitInternal(CParameter& TransmParam);
     virtual void ProcessDataInternal(CParameter& Parameter);
 };
@@ -129,13 +150,13 @@ protected:
 class CReceiveData : public CReceiverModul<_REAL, _REAL>
 {
 public:
-    enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_IQ_POS,
-                     CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO
+    enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_SUB_CHAN, CS_IQ_POS,
+                     CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_IQ_POS_SPLIT, CS_IQ_NEG_SPLIT
                     };
 
     CReceiveData() : pSound(NULL),
             vecrInpData(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0),
-            bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN)
+            bFippedSpectrum(FALSE), eInChanSelection(CS_MIX_CHAN), iPhase(0)
     {}
     virtual ~CReceiveData();
 
@@ -150,6 +171,10 @@ public:
     }
     _BOOLEAN GetFlippedSpectrum() {
         return bFippedSpectrum;
+    }
+
+    void ClearInputData() {
+        vecrInpData.Init(INPUT_DATA_VECTOR_SIZE, (_REAL) 0.0);
     }
 
     void SetSoundInterface(CSoundInInterface* pS) {
@@ -170,14 +195,16 @@ protected:
 
     CShiftRegister<_REAL>	vecrInpData;
 
-    _BOOLEAN				bFippedSpectrum;
+    int				iSampleRate;
+    _BOOLEAN			bFippedSpectrum;
 
-    EInChanSel				eInChanSelection;
+    EInChanSel			eInChanSelection;
 
-    CVector<_REAL>			vecrReHist;
-    CVector<_REAL>			vecrImHist;
-    _COMPLEX				cCurExp;
-    _COMPLEX				cExpStep;
+    CVector<_REAL>		vecrReHist;
+    CVector<_REAL>		vecrImHist;
+    _COMPLEX			cCurExp;
+    _COMPLEX			cExpStep;
+    int					iPhase;
 
     _REAL HilbertFilt(const _REAL rRe, const _REAL rIm);
 
@@ -185,17 +212,17 @@ protected:
     /* RSCI output */
     int							iFreeSymbolCounter;
 
-    virtual void InitInternal(CParameter& ReceiverParam);
-    virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& Parameters);
+    virtual void ProcessDataInternal(CParameter& Parameters);
 
-    void PutPSD(CParameter& ReceiverParam);
+    void PutPSD(CParameter& Parameters);
     void CalculatePSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
                       const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
                       const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
                       const int iPSDOverlap = 0);
 
-    void CalculateSigStrengthCorrection(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD);
-    void CalculatePSDInterferenceTag(CParameter &ReceiverParam, CVector<_REAL> &vecrPSD);
+    void CalculateSigStrengthCorrection(CParameter &Parameters, CVector<_REAL> &vecrPSD);
+    void CalculatePSDInterferenceTag(CParameter &Parameters, CVector<_REAL> &vecrPSD);
 
     int FreqToBin(_REAL rFreq);
     _REAL CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin);

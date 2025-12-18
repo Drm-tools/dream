@@ -30,7 +30,8 @@
 #define DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_
 
 #include "../Parameter.h"
-#include "../selectioninterface.h"
+#include "../DrmTransceiver.h"
+#include "../sound/selectioninterface.h"
 
 #include<map>
 
@@ -57,9 +58,11 @@ typedef int rig_model_t;
 
 /* Definition for Courier font */
 #ifdef _WIN32
-	#define FONT_COURIER    "Courier New"
+# define FONT_COURIER    "Courier New"
+#elif defined(__linux__)
+# define FONT_COURIER    "Monospace"
 #else
-	#define FONT_COURIER    "Courier"
+# define FONT_COURIER    "Courier"
 #endif
 /* Classes ********************************************************************/
 
@@ -83,6 +86,16 @@ public:
 		Qt::WFlags f = 0);
 };
 
+/* Help Usage --------------------------------------------------------------- */
+class CHelpUsage : public CAboutDlgBase
+{
+	Q_OBJECT
+
+public:
+	CHelpUsage(const char* usage, const char* argv0, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
+};
+
 #if QT_VERSION < 0x040000
 /* Help menu ---------------------------------------------------------------- */
 class CDreamHelpMenu : public QPopupMenu
@@ -102,17 +115,14 @@ class CSoundCardSelMenu : public QPopupMenu
 	Q_OBJECT
 
 public:
-	CSoundCardSelMenu(CSelectionInterface* pNSIn,
-		CSelectionInterface* pNSOut, QWidget* parent = 0);
+	CSoundCardSelMenu(
+        CDRMTransceiver& DRMTransceiver,
+        QWidget* parent = 0);
 
 protected:
-	CSelectionInterface*	pSoundInIF;
-	CSelectionInterface*	pSoundOutIF;
-
+        CDRMTransceiver&        DRMTransceiver;
         vector<string>          vecSoundInNames;
         vector<string>          vecSoundOutNames;
-        int                     iNumSoundInDev;
-        int                     iNumSoundOutDev;
         QPopupMenu*             pSoundInMenu;
         QPopupMenu*             pSoundOutMenu;
 
@@ -177,7 +187,7 @@ public:
 protected:
 	QEvent::Type eLastEventType; 
 };
-#define EVENT_FILTER(e) do { if (!ef.isValid(e)) return; } while(0)
+#define EVENT_FILTER(e) do { if (!ef.isValid((QEvent*)e)) return; } while(0)
 
 
 inline void SetDialogCaption(QDialog* pDlg, const QString sCap)
@@ -252,6 +262,11 @@ QString VerifyFilename(QString filename);
 
 QString VerifyHtmlPath(QString path);
 
+#if QT_VERSION >= 0x040000
+QString UrlEncodePath(QString url);
+bool IsUrlDirectory(QString url);
+#endif
+
 /* s-meter thermo parameters */
 #define S_METER_THERMO_MIN				((_REAL) -60.0) /* dB */
 #define S_METER_THERMO_MAX				((_REAL) 60.0) /* dB */
@@ -260,5 +275,9 @@ QString VerifyHtmlPath(QString path);
 void InitSMeter(QWidget* parent, QwtThermo* sMeter);
 
 void Linkify(QString& text);
+
+void CreateDirectories(const QString& strFilename);
+
+void RestartTransceiver(CDRMTransceiver *DRMTransceiver);
 
 #endif // DIALOGUTIL_H__FD6B23452398345OIJ9453_804E1606C2AC__INCLUDED_

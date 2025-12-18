@@ -31,8 +31,9 @@
 
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
-	QwtPlot (p, name), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
-	bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL)
+	QwtPlot(p, name), CurCharType(NONE_OLD), InitCharType(NONE_OLD),
+	bOnTimerCharMutexFlag(FALSE), pDRMRec(NULL), bAudioDecoder(FALSE),
+	bLastAudioDecoder(FALSE), iAudSampleRate(0), iSigSampleRate(0)
 {
 	/* Grid defaults */
 	enableGridX(TRUE);
@@ -69,8 +70,6 @@ CDRMPlot::CDRMPlot(QWidget *p, const char *name) :
 		this, SLOT(OnClicked(const QMouseEvent&)));
 	connect(&TimerChart, SIGNAL(timeout()),
 		this, SLOT(OnTimerChart()));
-
-	TimerChart.stop();
 }
 
 void CDRMPlot::OnTimerChart()
@@ -100,7 +99,9 @@ void CDRMPlot::OnTimerChart()
 	_REAL rDCFrequency = Parameters.GetDCFrequency();
 	ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
 	ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
-	string audiodecoder = Parameters.audiodecoder;
+	bAudioDecoder = Parameters.audiodecoder != "";
+	iAudSampleRate = Parameters.GetAudSampleRate();
+	iSigSampleRate = Parameters.GetSigSampleRate();
 	Parameters.Unlock();
 
 	CPlotManager& PlotManager = *pDRMRec->GetPlotManager();
@@ -179,14 +180,6 @@ void CDRMPlot::OnTimerChart()
 	case AUDIO_SPECTRUM:
 		/* Get data from module */
 		pDRMRec->GetWriteData()->GetAudioSpec(vecrData, vecrScale);
-		if(audiodecoder=="")
-		{
-			setTitle(tr("No audio decoding possible"));
-		}
-		else
-		{
-			setTitle(tr("Audio Spectrum"));
-		}
 		/* Prepare graph and set data */
 		SetAudioSpec(vecrData, vecrScale);
 		break;
@@ -632,6 +625,10 @@ void CDRMPlot::SetTranFct(CVector<_REAL>& vecrData, CVector<_REAL>& vecrData2,
 void CDRMPlot::SetupAudioSpec()
 {
 	/* Init chart for audio spectrum */
+	if (bAudioDecoder)
+		setTitle(tr("Audio Spectrum"));
+	else
+		setTitle(tr("No audio decoding possible"));
 	enableAxis(QwtPlot::yRight, FALSE);
 	enableGridX(TRUE);
 	enableGridY(TRUE);
@@ -642,10 +639,10 @@ void CDRMPlot::SetupAudioSpec()
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::yLeft, (double) -100.0, (double) -20.0);
-	double dBandwidth = (double) SOUNDCRD_SAMPLE_RATE / 2400; /* 20.0 for 48 kHz */
-	if (dBandwidth < (double) 20.0)
-		dBandwidth = (double) 20.0;
-
+	int iMaxAudioFrequency = MAX_SPEC_AUDIO_FREQUENCY;
+	if (iMaxAudioFrequency > iAudSampleRate/2)
+		iMaxAudioFrequency = iAudSampleRate/2;
+	const double dBandwidth = double(iMaxAudioFrequency) / 1000;
 	setAxisScale(QwtPlot::xBottom, (double) 0.0, dBandwidth);
 
 	/* Add main curve */
@@ -660,13 +657,14 @@ void CDRMPlot::SetupAudioSpec()
 void CDRMPlot::SetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
 	/* First check if plot must be set up */
-	if (InitCharType != AUDIO_SPECTRUM)
+	if (InitCharType != AUDIO_SPECTRUM || bLastAudioDecoder != bAudioDecoder)
 	{
+		bLastAudioDecoder = bAudioDecoder;
 		InitCharType = AUDIO_SPECTRUM;
 		SetupAudioSpec();
 	}
-
-	SetData(vecrData, vecrScale);
+	if (bAudioDecoder)
+		SetData(vecrData, vecrScale);
 	replot();
 }
 
@@ -897,7 +895,7 @@ void CDRMPlot::SetupPSD()
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
-		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+		(double) 0.0, (double) iSigSampleRate / 2000);
 
 	setAxisScale(QwtPlot::yLeft, MIN_VAL_SHIF_PSD_Y_AXIS_DB,
 		MAX_VAL_SHIF_PSD_Y_AXIS_DB);
@@ -1014,7 +1012,7 @@ void CDRMPlot::SetupInpSpec()
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
-		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+		(double) 0.0, (double) iSigSampleRate / 2000);
 
 	setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
 		MAX_VAL_INP_SPEC_Y_AXIS_DB);
@@ -1073,7 +1071,7 @@ void CDRMPlot::SetupInpPSD()
 	canvas()->setBackgroundMode(QWidget::PaletteBackground);
 
 	/* Fixed scale */
-	const double dXScaleMax = (double) SOUNDCRD_SAMPLE_RATE / 2000;
+	const double dXScaleMax = (double) iSigSampleRate / 2000;
 	setAxisScale(QwtPlot::xBottom, (double) 0.0, dXScaleMax);
 
 	setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
@@ -1166,8 +1164,8 @@ void CDRMPlot::SetInpPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
 	/* Insert marker for filter bandwidth if required */
 	if (rBWWidth != (_REAL) 0.0)
 	{
-		dX[0] = (rBWCenter - rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
-		dX[1] = (rBWCenter + rBWWidth / 2) * SOUNDCRD_SAMPLE_RATE / 1000;
+		dX[0] = (rBWCenter - rBWWidth / 2) * iSigSampleRate / 1000;
+		dX[1] = (rBWCenter + rBWWidth / 2) * iSigSampleRate / 1000;
 
 		/* Take the min-max values from scale to get vertical line */
 		dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
@@ -1194,7 +1192,7 @@ void CDRMPlot::SetupInpSpecWaterf()
 
 	/* Fixed scale */
 	setAxisScale(QwtPlot::xBottom,
-		(double) 0.0, (double) SOUNDCRD_SAMPLE_RATE / 2000);
+		(double) 0.0, (double) iSigSampleRate / 2000);
 
 	/* Clear old plot data */
 	clear();

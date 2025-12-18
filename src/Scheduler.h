@@ -1,12 +1,12 @@
 /******************************************************************************\
  * British Broadcasting Corporation
- * Copyright (c) 2007
+ * Copyright (c) 2012
  *
  * Author(s):
- *	Julian Cable
+ *      Julian Cable
  *
- * Decription:
- * sound interfaces
+ * Description:
+ *
  *
  ******************************************************************************
  *
@@ -26,33 +26,39 @@
  *
 \******************************************************************************/
 
-#ifndef _SOUNDINTERFACE_H
-#define _SOUNDINTERFACE_H
+#ifndef __SCHEDULER_H
+#define __SCHEDULER_H
 
-#include "selectioninterface.h"
-#include "util/Vector.h"
+#include <string>
+#include <map>
+#include <queue>
+#include "util/Settings.h"
 
-class CSoundInInterface : public CSelectionInterface
+using namespace std;
+
+class CScheduler
 {
 public:
-    virtual 			~CSoundInInterface() {}
-
-    /* sound card interface - used by ReadData */
-    virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE)=0;
-    virtual _BOOLEAN	Read(CVector<short>& psData)=0;
-    virtual void		Close()=0;
-
+	struct SEvent { time_t time; int frequency; };
+	CScheduler(bool test=false):schedule(),events(),iniFile(),testMode(test){}
+	bool LoadSchedule(const string& filename);
+	bool empty() const;
+	SEvent front(); // get next event 
+	SEvent pop(); // remove first event from queue
+private:
+	map<time_t,int> schedule; // map seconds from start of day to schedule event, frequency or -1 for off
+	queue<SEvent> events;
+	CIniFile iniFile;
+	bool testMode;
+	void fill();
+	void before();
+	int parse(string);
+	string format(time_t);
+	string format(const struct tm&);
 };
 
-class CSoundOutInterface : public CSelectionInterface
-{
-public:
-    virtual 			~CSoundOutInterface() {}
-
-    /* sound card interface - used by WriteData */
-    virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE)=0;
-    virtual _BOOLEAN	Write(CVector<short>& psData)=0;
-    virtual void		Close()=0;
-};
+#if 0
+int dprintf(const char *format, ...);
+#endif
 
 #endif

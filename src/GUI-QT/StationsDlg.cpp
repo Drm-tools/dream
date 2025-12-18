@@ -33,6 +33,7 @@
 # include <qftp.h>
 # include <qsocket.h>
 # include <qwhatsthis.h>
+# include <qregexp.h>
 # ifdef HAVE_LIBHAMLIB
 #  include "Rig.h"
 # endif
@@ -50,12 +51,18 @@
 #include <qapplication.h>
 #include <cmath>
 
+#if QT_VERSION < 0x040000
+# define TOUTF8() utf8().data()
+#else
+# define TOUTF8() toUtf8().data()
+#endif
+
 /* Implementation *************************************************************/
 #if QT_VERSION < 0x040000
 QString MyListViewItem::key(int column, bool ascending) const
 {
     /* Reimplement "key()" function to get correct sorting behaviour */
-    if ((column == 2) || (column == 4))
+    if ((column == 2) || (column == 3))
     {
         /* These columns are filled with numbers. Some items may have numbers
            after the comma, therefore multiply with 10000 (which moves the
@@ -108,42 +115,42 @@ void CDRMSchedule::SetSchedMode(const ESchedMode eNewSchM)
 
 void CDRMSchedule::UpdateStringListForFilter(const CStationsItem& StationsItem)
 {
-    QStringList result;
-
+#if QT_VERSION < 0x040000
     QString strTarget = StationsItem.strTarget;
     QString strCountry = StationsItem.strCountry;
     QString strLanguage = StationsItem.strLanguage;
-#if QT_VERSION < 0x040000
-    result = ListTargets.grep(strTarget);
+    QStringList result;
+    result = ListTargets.grep(QRegExp("^" + strTarget + "$"));
     if (result.isEmpty())
         ListTargets.append(strTarget);
 
-    result = ListCountries.grep(strCountry);
+    result = ListCountries.grep(QRegExp("^" + strCountry + "$"));
     if (result.isEmpty())
         ListCountries.append(strCountry);
 
-    result = ListLanguages.grep(strLanguage);
+    result = ListLanguages.grep(QRegExp("^" + strLanguage + "$"));
     if (result.isEmpty())
         ListLanguages.append(strLanguage);
 #else
-    result = ListTargets.filter(strTarget);
-    if (result.isEmpty())
-        ListTargets.append(strTarget);
+    if (!ListTargets.contains(StationsItem.strTarget))
+        ListTargets.append(StationsItem.strTarget);
 
-    result = ListCountries.filter(strCountry);
-    if (result.isEmpty())
-        ListCountries.append(strCountry);
+    if (!ListCountries.contains(StationsItem.strCountry))
+        ListCountries.append(StationsItem.strCountry);
 
-
-    result = ListLanguages.filter(strLanguage);
-    if (result.isEmpty())
-        ListLanguages.append(strLanguage);
+    if (!ListLanguages.contains(StationsItem.strLanguage))
+        ListLanguages.append(StationsItem.strLanguage);
 #endif
 }
 
 void CDRMSchedule::LoadSchedule()
 {
+#if QT_VERSION < 0x040000
     const char *filename = schedFileName.latin1();
+#else
+    QByteArray fn(schedFileName.toUtf8());
+    const char *filename = fn.data();
+#endif
     if (filename != NULL) /* Needed for Qt3 windows */
     {
         QApplication::setOverrideCursor(
@@ -177,11 +184,11 @@ void CDRMSchedule::LoadSchedule()
 void CDRMSchedule::ReadINIFile(FILE* pFile)
 {
     const int	iMaxLenName = 256;
-    char	cName[iMaxLenName];
-    int		iFileStat;
+    char	cName[iMaxLenName], *r;
+    int		iFileStat, n;
     _BOOLEAN	bReadOK = TRUE;
 
-    fgets(cName, iMaxLenName, pFile); /* [DRMSchedule] */
+    r = fgets(cName, iMaxLenName, pFile); /* [DRMSchedule] */
     do
     {
         CStationsItem StationsItem;
@@ -206,7 +213,7 @@ void CDRMSchedule::ReadINIFile(FILE* pFile)
 
         iFileStat = fscanf(pFile, "Days[SMTWTFS]=%255[^\n|^\r]\n", cName);
         if (iFileStat != 1)
-            fscanf(pFile, "\n");
+            n = fscanf(pFile, "\n");
         else
         {
             /* Check for length of input string (must be 7) */
@@ -223,42 +230,42 @@ void CDRMSchedule::ReadINIFile(FILE* pFile)
         /* Target */
         iFileStat = fscanf(pFile, "Target=%255[^\n|^\r]\n", cName);
         if (iFileStat != 1)
-            fscanf(pFile, "\n");
+            n = fscanf(pFile, "\n");
         else
             StationsItem.strTarget = cName;
 
         /* Power */
         iFileStat = fscanf(pFile, "Power=%255[^\n|^\r]\n", cName);
         if (iFileStat != 1)
-            fscanf(pFile, "\n");
+            n = fscanf(pFile, "\n");
         else
             StationsItem.rPower = QString(cName).toFloat();
 
         /* Name of the station */
         iFileStat = fscanf(pFile, "Programme=%255[^\n|^\r]\n", cName);
         if (iFileStat != 1)
-            fscanf(pFile, "\n");
+            n = fscanf(pFile, "\n");
         else
             StationsItem.strName = cName;
 
         /* Language */
         iFileStat = fscanf(pFile, "Language=%255[^\n|^\r]\n", cName);
         if (iFileStat != 1)
-            fscanf(pFile, "\n");
+            n = fscanf(pFile, "\n");
         else
             StationsItem.strLanguage = cName;
 
         /* Site */
         iFileStat = fscanf(pFile, "Site=%255[^\n|^\r]\n", cName);
         if (iFileStat != 1)
-            fscanf(pFile, "\n");
+            n = fscanf(pFile, "\n");
         else
             StationsItem.strSite = cName;
 
         /* Country */
         iFileStat = fscanf(pFile, "Country=%255[^\n|^\r]\n", cName);
         if (iFileStat != 1)
-            fscanf(pFile, "\n");
+            n = fscanf(pFile, "\n");
         else
             StationsItem.strCountry = cName;
 
@@ -278,6 +285,7 @@ void CDRMSchedule::ReadINIFile(FILE* pFile)
         }
     } while (!((iFileStat == EOF) || (bReadOK == FALSE)));
 
+    (void)r; (void)n;
 }
 
 void CDRMSchedule::ReadCSVFile(FILE* pFile)
@@ -289,7 +297,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
     do {
         CStationsItem StationsItem;
 
-        fgets(cRow, iMaxLenRow, pFile);
+        char* r = fgets(cRow, iMaxLenRow, pFile); (void)r;
         QStringList fields;
         stringstream ss(cRow);
         do {
@@ -325,11 +333,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 
         if(fields[2].length()>0)
         {
-#if QT_VERSION < 0x040000
-            stringstream ss(fields[2].utf8().data());
-#else
-            stringstream ss(fields[2].toStdString());
-#endif
+            stringstream ss(fields[2].TOUTF8());
             char c;
             enum Days { Sunday=0, Monday=1, Tuesday=2, Wednesday=3,
                         Thursday=4, Friday=5, Saturday=6
@@ -402,15 +406,11 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 #endif
         if(fieldcount>3)
         {
-#if QT_VERSION < 0x040000
-            homecountry = fields[3].utf8().data();
-#else
-            homecountry = fields[3].toStdString();
-#endif
+            homecountry = fields[3].TOUTF8();
             string c = data.itu_r_country(homecountry);
             if(c == "")
                 c = homecountry;
-            StationsItem.strCountry = QString(c.c_str());
+            StationsItem.strCountry = QString::fromUtf8(c.c_str());
         }
 
         if(fieldcount>4)
@@ -418,33 +418,25 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
 
         if(fieldcount>5)
         {
-#if QT_VERSION < 0x040000
-            string l = data.eibi_language(fields[5].utf8().data());
-#else
-            string l = data.eibi_language(fields[5].toStdString());
-#endif
-            StationsItem.strLanguage = QString(l.c_str());
+            string l = data.eibi_language(fields[5].TOUTF8());
+            StationsItem.strLanguage = QString::fromUtf8(l.c_str());
         }
 
         if(fieldcount>6)
         {
-#if QT_VERSION < 0x040000
-            string s = fields[6].utf8().data();
-#else
-            string s = fields[6].toStdString();
-#endif
+            string s = fields[6].TOUTF8();
             string t = data.eibi_target(s);
             if(t == "")
             {
                 string c = data.itu_r_country(s);
                 if(c == "")
-                    StationsItem.strTarget = QString(s.c_str());
+                    StationsItem.strTarget = QString::fromUtf8(s.c_str());
                 else
-                    StationsItem.strTarget = QString(c.c_str());
+                    StationsItem.strTarget = QString::fromUtf8(c.c_str());
             }
             else
             {
-                StationsItem.strTarget = QString(t.c_str());
+                StationsItem.strTarget = QString::fromUtf8(t.c_str());
             }
         }
         string country;
@@ -452,11 +444,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
         if(fieldcount>7)
         {
             StationsItem.strSite = fields[7];
-#if QT_VERSION < 0x040000
-            string s  = fields[7].utf8().data();
-#else
-            string s  = fields[7].toStdString();
-#endif
+            string s  = fields[7].TOUTF8();
             if(s=="") // unknown or main Tx site of the home country
             {
                 country = homecountry;
@@ -498,7 +486,7 @@ void CDRMSchedule::ReadCSVFile(FILE* pFile)
         {
             country = homecountry;
         }
-        QString site = QString(data.eibi_station(country, stn).c_str());
+        QString site = QString::fromUtf8(data.eibi_station(country, stn).c_str());
         if(site == "")
         {
             //cout << StationsItem.iFreq << " [" << StationsItem.strSite << "] [" << country << "] [" << stn << "]" << endl;
@@ -650,22 +638,23 @@ void CStationsItem::SetDaysFlagString(const QString& strNewDaysFlags)
     }
 }
 
-StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CRig& rig,
+StationsDlg::StationsDlg(CDRMReceiver& DRMReceiver, CSettings& Settings, CRig& Rig,
                          QWidget* parent, const char* name, bool modal, Qt::WFlags f) :
     CStationsDlgBase(parent, name, modal, f),
-    DRMReceiver(NDRMR),
+    DRMReceiver(DRMReceiver), Settings(Settings), Rig(Rig),
 #if QT_VERSION < 0x040000
     vecpListItems(0),
 #else
-    greenCube(":/icons/greenCube.png"),redCube(":/icons/redCube.png"),
-    orangeCube(":/icons/orangeCube.png"),pinkCube(":/icons/pinkCube.png"),
+    greenCube(":/icons/greenCube.png"), redCube(":/icons/redCube.png"),
+    orangeCube(":/icons/orangeCube.png"), pinkCube(":/icons/pinkCube.png"),
 #endif
-    bReInitOnFrequencyChange(FALSE)
+    bReInitOnFrequencyChange(FALSE), eLastScheduleMode(CDRMSchedule::SM_NONE)
 {
-#if QT_VERSION < 0x040000
-    pRemoteMenu = new RemoteMenu(this, rig);
-#endif
     setupUi(this);
+
+    /* Load settings */
+    LoadSettings(Settings);
+
     /* Set help text for the controls */
     AddWhatsThisHelp();
 
@@ -681,21 +670,28 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CRig& rig,
 
 #if QT_VERSION >= 0x040000
 
+#if QT_VERSION >= 0x040200
+    ListViewStations->setAllColumnsShowFocus(true);
+#endif
     ListViewStations->setColumnCount(9);
     ListViewStations->setRootIsDecorated ( false );
     ListViewStations->setSortingEnabled ( true );
     QStringList headers;
     headers
+            << QString() /* icon, enable sorting by online/offline */
             << tr("Station Name")
             << tr("Time [UTC]")
             << tr("Frequency [kHz]")
-            << tr("Target")
             << tr("Power [kW]")
+            << tr("Target")
             << tr("Country")
             << tr("Site")
             << tr("Language")
             << tr("Days");
     ListViewStations->setHeaderLabels(headers);
+    ListViewStations->headerItem()->setTextAlignment(2, Qt::AlignRight | Qt::AlignVCenter);
+    ListViewStations->headerItem()->setTextAlignment(3, Qt::AlignRight | Qt::AlignVCenter);
+    ListViewStations->headerItem()->setTextAlignment(4, Qt::AlignRight | Qt::AlignVCenter);
 
     previewMapper = new QSignalMapper(this);
     previewGroup = new QActionGroup(this);
@@ -705,6 +701,7 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CRig& rig,
     showMapper->setMapping(actionShowOnlyActiveStations, 0);
     showGroup->addAction(actionShowAllStations);
     showMapper->setMapping(actionShowAllStations, 1);
+    connect(actionClose, SIGNAL(triggered()), SLOT(close()));
     connect(actionShowAllStations, SIGNAL(triggered()), showMapper, SLOT(map()));
     connect(actionShowOnlyActiveStations, SIGNAL(triggered()), showMapper, SLOT(map()));
     connect(showMapper, SIGNAL(mapped(int)), this, SLOT(OnShowStationsMenu(int)));
@@ -721,10 +718,11 @@ StationsDlg::StationsDlg(CDRMReceiver& NDRMR, CRig& rig,
     connect(action15minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
     connect(action30minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
     connect(previewMapper, SIGNAL(mapped(int)), this, SLOT(OnShowPreviewMenu(int)));
+    connect(ListViewStations->header(), SIGNAL(sectionClicked(int)), this, SLOT(OnHeaderClicked(int)));
 
     //connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
 # ifdef HAVE_LIBHAMLIB
-    RigDlg *pRigDlg = new RigDlg(rig, this);
+    RigDlg *pRigDlg = new RigDlg(Rig, this);
     connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
 # else
     actionChooseRig->setEnabled(false);
@@ -797,15 +795,16 @@ void StationsDlg::setupUi(QObject*)
     ListViewStations->setColumnText(0, tr("Station Name"));
     ListViewStations->addColumn(tr("Time [UTC]"));
     ListViewStations->addColumn(tr("Frequency [kHz]"));
-    ListViewStations->addColumn(tr("Target"));
     ListViewStations->addColumn(tr("Power [kW]"));
+    ListViewStations->addColumn(tr("Target"));
     ListViewStations->addColumn(tr("Country"));
     ListViewStations->addColumn(tr("Site"));
     ListViewStations->addColumn(tr("Language"));
     ListViewStations->addColumn(tr("Days"));
     /* Set right alignment for numeric columns */
+    ListViewStations->setColumnAlignment(1, Qt::AlignRight);
     ListViewStations->setColumnAlignment(2, Qt::AlignRight);
-    ListViewStations->setColumnAlignment(4, Qt::AlignRight);
+    ListViewStations->setColumnAlignment(3, Qt::AlignRight);
 
     /* Set Menu ***************************************************************/
     /* View menu ------------------------------------------------------------ */
@@ -834,10 +833,11 @@ void StationsDlg::setupUi(QObject*)
 
     /* Remote menu  --------------------------------------------------------- */
     /* Separator */
+    pRemoteMenu = new RemoteMenu(this, Rig);
     pRemoteMenu->menu()->insertSeparator();
 
     /* Enable s-meter */
-    const int iSMeterMenuID = pRemoteMenu->menu()->insertItem(tr("Enable S-Meter"),
+    /*const int iSMeterMenuID =*/ pRemoteMenu->menu()->insertItem(tr("Enable S-Meter"),
                               this, SLOT(OnSMeterMenu(int)), 0, SMETER_MENU_ID);
 
     /* Update menu ---------------------------------------------------------- */
@@ -974,13 +974,11 @@ void StationsDlg::on_ComboBoxFilterLanguage_activated(const QString& s)
 #if QT_VERSION < 0x040000
 void StationsDlg::httpConnected()
 {
-    QUrl* qurl;
-    if(DRMSchedule.GetSchedMode()==CDRMSchedule::SM_DRM)
-        qurl = DRMSchedule.qurldrm;
-    else
-        qurl = DRMSchedule.qurlanalog;
+    const bool bDrmMode = DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM;
+    QUrl* pqurl = bDrmMode ? &DRMSchedule.qurldrm : &DRMSchedule.qurlanalog;
+    QUrl qurl = *pqurl;
     QCString s = QString("GET %1 HTTP/1.0\r\nHost: %2\r\n\r\n")
-                 .arg(qurl->encodedPathAndQuery()).arg(qurl->host()).utf8();
+                 .arg(qurl.encodedPathAndQuery()).arg(qurl.host()).utf8();
     httpSocket->writeBlock(s.data(), s.length());
     httpHeader=true;
 }
@@ -1044,11 +1042,13 @@ void StationsDlg::httpError(int n)
 
 void StationsDlg::on_actionGetUpdate_triggered()
 {
-    QUrl* qurl;
-    if(DRMSchedule.GetSchedMode()==CDRMSchedule::SM_DRM)
-        qurl = DRMSchedule.qurldrm;
-    else
-        qurl = DRMSchedule.qurlanalog;
+    const bool bDrmMode = DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM;
+#if QT_VERSION < 0x040000
+    QUrl* pqurl = bDrmMode ? &DRMSchedule.qurldrm : &DRMSchedule.qurlanalog;
+    QUrl qurl = *pqurl;
+#else
+    QUrl& qurl(bDrmMode ? DRMSchedule.qurldrm : DRMSchedule.qurlanalog);
+#endif
     if (QMessageBox::information(this, tr("Dream Schedule Update"),
                                  tr("Dream tries to download the newest schedule\n"
                                     "Your computer must be connected to the internet.\n\n"
@@ -1059,8 +1059,8 @@ void StationsDlg::on_actionGetUpdate_triggered()
         /* Try to download the current schedule. Copy the file to the
            current working directory (which is "QDir().absFilePath(NULL)") */
 #if QT_VERSION < 0x040000
-        if(qurl->protocol() == QString("ftp")) {
-            UrlUpdateSchedule.copy(qurl->toString(), QDir().absFilePath(NULL));
+        if(qurl.protocol() == QString("ftp")) {
+            UrlUpdateSchedule.copy(qurl.toString(), QDir().absFilePath(NULL));
         }
         else
         {
@@ -1070,13 +1070,13 @@ void StationsDlg::on_actionGetUpdate_triggered()
             connect(httpSocket, SIGNAL(connectionClosed()), this, SLOT(httpDisconnected()));
             connect(httpSocket, SIGNAL(error(int)), this, SLOT(httpError(int)));
             connect(httpSocket, SIGNAL(readyRead()), this, SLOT(httpRead()));
-            int port = qurl->port();
+            int port = qurl.port();
             if(port == -1)
                 port = 80;
-            httpSocket->connectToHost(qurl->host().utf8().data(), port);
+            httpSocket->connectToHost(qurl.host().utf8().data(), port);
         }
 #else
-        manager->get(QNetworkRequest(*qurl));
+        manager->get(QNetworkRequest(qurl));
 #endif
     }
 }
@@ -1144,8 +1144,8 @@ void CDRMSchedule::SetAnalogUrl()
 {
     QDate d = QDate::currentDate();
     int month = d.month();
-    int year;
-    char season;
+    int year = 0;
+    char season = 0;
 
 // transitions last sunday in March and October
     switch(month) {
@@ -1195,7 +1195,8 @@ void CDRMSchedule::SetAnalogUrl()
         year = d.year();
         season = 'b';
     }
-    qurlanalog = new QUrl(QString("http://eibispace.de/dx/sked-%1%2.csv").arg(season).arg(year-2000,2));
+    if (season)
+        qurlanalog = QUrl(QString("http://eibispace.de/dx/sked-%1%2.csv").arg(season).arg(year-2000,2));
 }
 
 void StationsDlg::hideEvent(QHideEvent* e)
@@ -1378,21 +1379,28 @@ void StationsDlg::LoadSettings(const CSettings& Settings)
     }
     iSortColumndrm = Settings.Get("Stations Dialog", "sortcolumndrm", 0);
     bCurrentSortAscendingdrm = Settings.Get("Stations Dialog", "sortascendingdrm", TRUE);
+    strColumnParamdrm = QString::fromUtf8(Settings.Get("Stations Dialog", "columnparamdrm", string("")).c_str());
     iSortColumnanalog = Settings.Get("Stations Dialog", "sortcolumnanalog", 0);
     bCurrentSortAscendinganalog = Settings.Get("Stations Dialog", "sortascendinganalog", TRUE);
+    strColumnParamanalog = QString::fromUtf8(Settings.Get("Stations Dialog", "columnparamanalog", string("")).c_str());
 
-    string url = Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL));
-    DRMSchedule.qurldrm = new QUrl(QString(url.c_str()));
-    DRMSchedule.targetFilterdrm = Settings.Get("Stations Dialog", "targetfilterdrm", string("")).c_str();
-    DRMSchedule.countryFilterdrm = Settings.Get("Stations Dialog", "countryfilterdrm", string("")).c_str();
-    DRMSchedule.languageFilterdrm = Settings.Get("Stations Dialog", "languagefilterdrm", string("")).c_str();
-    DRMSchedule.targetFilteranalog = Settings.Get("Stations Dialog", "targetfilteranalog", string("")).c_str();
-    DRMSchedule.countryFilteranalog = Settings.Get("Stations Dialog", "countryfilteranalog", string("")).c_str();
-    DRMSchedule.languageFilteranalog = Settings.Get("Stations Dialog", "languagefilteranalog", string("")).c_str();
+    DRMSchedule.qurldrm = QUrl(QString::fromUtf8(Settings.Get("Stations Dialog", "DRM URL", string(DRM_SCHEDULE_URL)).c_str()));
+    DRMSchedule.targetFilterdrm = QString::fromUtf8(Settings.Get("Stations Dialog", "targetfilterdrm", string("")).c_str());
+    DRMSchedule.countryFilterdrm = QString::fromUtf8(Settings.Get("Stations Dialog", "countryfilterdrm", string("")).c_str());
+    DRMSchedule.languageFilterdrm = QString::fromUtf8(Settings.Get("Stations Dialog", "languagefilterdrm", string("")).c_str());
+    DRMSchedule.targetFilteranalog = QString::fromUtf8(Settings.Get("Stations Dialog", "targetfilteranalog", string("")).c_str());
+    DRMSchedule.countryFilteranalog = QString::fromUtf8(Settings.Get("Stations Dialog", "countryfilteranalog", string("")).c_str());
+    DRMSchedule.languageFilteranalog = QString::fromUtf8(Settings.Get("Stations Dialog", "languagefilteranalog", string("")).c_str());
 }
 
 void StationsDlg::SaveSettings(CSettings& Settings)
 {
+    if (eLastScheduleMode != CDRMSchedule::SM_NONE)
+    {
+        const bool bDrmMode = eLastScheduleMode == CDRMSchedule::SM_DRM;
+        ColumnParamToStr(bDrmMode ? strColumnParamdrm : strColumnParamanalog);
+    }
+
 #if QT_VERSION < 0x040000
     Settings.Put("Hamlib", "ensmeter", (pRemoteMenu==NULL)?false:pRemoteMenu->menu()->isItemChecked(SMETER_MENU_ID));
     Settings.Put("Stations Dialog", "showall", pViewMenu->isItemChecked(1));
@@ -1400,18 +1408,20 @@ void StationsDlg::SaveSettings(CSettings& Settings)
     Settings.Put("Hamlib", "ensmeter", actionEnable_S_Meter->isChecked());
     Settings.Put("Stations Dialog", "showall", actionShowAllStations->isChecked());
 #endif
-    Settings.Put("Stations Dialog", "DRM URL", string(DRMSchedule.qurldrm->toString().latin1()));
-    Settings.Put("Stations Dialog", "ANALOG URL", string(DRMSchedule.qurlanalog->toString().latin1()));
+    Settings.Put("Stations Dialog", "DRM URL", string(DRMSchedule.qurldrm.toString().TOUTF8()));
+    Settings.Put("Stations Dialog", "ANALOG URL", string(DRMSchedule.qurlanalog.toString().TOUTF8()));
     Settings.Put("Stations Dialog", "sortcolumndrm", iSortColumndrm);
     Settings.Put("Stations Dialog", "sortascendingdrm", bCurrentSortAscendingdrm);
+    Settings.Put("Stations Dialog", "columnparamdrm", string(strColumnParamdrm.TOUTF8()));
     Settings.Put("Stations Dialog", "sortcolumnanalog", iSortColumnanalog);
     Settings.Put("Stations Dialog", "sortascendinganalog", bCurrentSortAscendinganalog);
-    Settings.Put("Stations Dialog", "targetfilterdrm", string(DRMSchedule.targetFilterdrm.latin1()));
-    Settings.Put("Stations Dialog", "countryfilterdrm", string(DRMSchedule.countryFilterdrm.latin1()));
-    Settings.Put("Stations Dialog", "languagefilterdrm", string(DRMSchedule.languageFilterdrm.latin1()));
-    Settings.Put("Stations Dialog", "targetfilteranalog", string(DRMSchedule.targetFilteranalog.latin1()));
-    Settings.Put("Stations Dialog", "countryfilteranalog", string(DRMSchedule.countryFilteranalog.latin1()));
-    Settings.Put("Stations Dialog", "languagefilteranalog", string(DRMSchedule.languageFilteranalog.latin1()));
+    Settings.Put("Stations Dialog", "columnparamanalog", string(strColumnParamanalog.TOUTF8()));
+    Settings.Put("Stations Dialog", "targetfilterdrm", string(DRMSchedule.targetFilterdrm.TOUTF8()));
+    Settings.Put("Stations Dialog", "countryfilterdrm", string(DRMSchedule.countryFilterdrm.TOUTF8()));
+    Settings.Put("Stations Dialog", "languagefilterdrm", string(DRMSchedule.languageFilterdrm.TOUTF8()));
+    Settings.Put("Stations Dialog", "targetfilteranalog", string(DRMSchedule.targetFilteranalog.TOUTF8()));
+    Settings.Put("Stations Dialog", "countryfilteranalog", string(DRMSchedule.countryFilteranalog.TOUTF8()));
+    Settings.Put("Stations Dialog", "languagefilteranalog", string(DRMSchedule.languageFilteranalog.TOUTF8()));
 
     /* Set window geometry data in DRMReceiver module */
     QRect WinGeom = geometry();
@@ -1483,6 +1493,13 @@ void StationsDlg::LoadFilters()
 
 void StationsDlg::LoadSchedule()
 {
+    /* Store previous columns settings */
+    if (eLastScheduleMode != CDRMSchedule::SM_NONE)
+    {
+        const bool bDrmMode = eLastScheduleMode == CDRMSchedule::SM_DRM;
+        ColumnParamToStr(bDrmMode ? strColumnParamdrm : strColumnParamanalog);
+    }
+
     ClearStationsView();
 
     DRMSchedule.LoadSchedule();
@@ -1522,8 +1539,8 @@ void StationsDlg::LoadSchedule()
                 station.strName     /* name */,
                 strTimes            /* time */,
                 QString().setNum(station.iFreq) /* freq. */,
-                station.strTarget   /* target */,
                 strPower            /* power */,
+                station.strTarget   /* target */,
                 station.strCountry  /* country */,
                 station.strSite     /* site */,
                 station.strLanguage /* language */);
@@ -1533,36 +1550,44 @@ void StationsDlg::LoadSchedule()
         vecpListItems[i] = item;
 #else
         QTreeWidgetItem* item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
-        item->setText(0, station.strName);
-        item->setText(1, strTimes /* time */);
-        item->setText(2, QString().setNum(station.iFreq) /* freq. */);
-        item->setText(3, station.strTarget   /* target */);
+        item->setText(1, station.strName);
+        item->setText(2, strTimes /* time */);
+        item->setText(3, QString().setNum(station.iFreq) /* freq. */);
         item->setText(4, strPower            /* power */);
-        item->setText(5, station.strCountry  /* country */);
-        item->setText(6, station.strSite     /* site */);
-        item->setText(7, station.strLanguage /* language */);
-        item->setText(8, station.strDaysShow);
-	item->setData(0, Qt::UserRole, i);
+        item->setText(5, station.strTarget   /* target */);
+        item->setText(6, station.strCountry  /* country */);
+        item->setText(7, station.strSite     /* site */);
+        item->setText(8, station.strLanguage /* language */);
+        item->setText(9, station.strDaysShow);
+        item->setData(1, Qt::UserRole, i);
+        item->setTextAlignment(2, Qt::AlignRight | Qt::AlignVCenter);
+        item->setTextAlignment(3, Qt::AlignRight | Qt::AlignVCenter);
+        item->setTextAlignment(4, Qt::AlignRight | Qt::AlignVCenter);
 #endif
     }
     int c;
     bool b;
     if(DRMSchedule.GetSchedMode()==CDRMSchedule::SM_DRM)
     {
-	b = bCurrentSortAscendingdrm;
-	c = iSortColumndrm;
+        b = bCurrentSortAscendingdrm;
+        c = iSortColumndrm;
     }
     else
     {
-	b = bCurrentSortAscendinganalog;
-	c = iSortColumnanalog;
+        b = bCurrentSortAscendinganalog;
+        c = iSortColumnanalog;
     }
 #if QT_VERSION < 0x040000
     ListViewStations->setSorting(c, b);
 #else
-    ListViewStations->sortByColumn(c, b?Qt::AscendingOrder:Qt::DescendingOrder);
+    ListViewStations->sortByColumn(c, b ? Qt::AscendingOrder : Qt::DescendingOrder);
 #endif
     LoadFilters();
+
+    /* Restore columns settings */
+    eLastScheduleMode = DRMSchedule.GetSchedMode();
+    const bool bDrmMode = eLastScheduleMode == CDRMSchedule::SM_DRM;
+    ColumnParamFromStr(bDrmMode ? strColumnParamdrm : strColumnParamanalog);
 
     /* Update list view */
     SetStationsView();
@@ -1646,25 +1671,30 @@ void StationsDlg::SetStationsView()
     for (int i = 0; i < ListViewStations->topLevelItemCount(); i++)
     {
         QTreeWidgetItem* item = ListViewStations->topLevelItem(i);
-	int scheduleItem = item->data(0, Qt::UserRole).toInt();
+        int scheduleItem = item->data(1, Qt::UserRole).toInt();
 
         Station::EState iState = DRMSchedule.GetState(scheduleItem);
 
         switch (iState)
         {
         case Station::IS_ACTIVE:
+            item->setData(0, Qt::UserRole, 1);
             item->setIcon(0, greenCube);
             break;
         case Station::IS_PREVIEW:
+            item->setData(0, Qt::UserRole, 2);
             item->setIcon(0, orangeCube);
             break;
         case Station::IS_SOON_INACTIVE:
+            item->setData(0, Qt::UserRole, 0);
             item->setIcon(0, pinkCube);
             break;
         case Station::IS_INACTIVE:
+            item->setData(0, Qt::UserRole, 3);
             item->setIcon(0, redCube);
             break;
         default:
+            item->setData(0, Qt::UserRole, 4);
             item->setIcon(0, redCube);
             break;
         }
@@ -1697,22 +1727,111 @@ void StationsDlg::OnHeaderClicked(int c)
         SetSortAscending(!GetSortAscending());
     else
         SetSortAscending(true);
+    /* Store the column of sorting */
+    if (DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM)
+        iSortColumndrm = c;
+    else
+        iSortColumnanalog = c;
+}
+
+int StationsDlg::currentSortColumn()
+{
+    if (DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM)
+        return iSortColumndrm;
+    else
+        return iSortColumnanalog;
 }
 
 void StationsDlg::SetSortAscending(_BOOLEAN b)
 {
-    if(DRMSchedule.GetSchedMode()==CDRMSchedule::SM_DRM)
-	bCurrentSortAscendingdrm = b;
+    if (DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM)
+        bCurrentSortAscendingdrm = b;
     else
         bCurrentSortAscendinganalog = b;
 }
 
 _BOOLEAN StationsDlg::GetSortAscending()
 {
-    if(DRMSchedule.GetSchedMode()==CDRMSchedule::SM_DRM)
-	return bCurrentSortAscendingdrm;
+    if (DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM)
+        return bCurrentSortAscendingdrm;
     else
         return bCurrentSortAscendinganalog;
+}
+
+void StationsDlg::ColumnParamFromStr(const QString& strColumnParam)
+{
+#if QT_VERSION < 0x040000
+    QStringList list(QStringList::split(QChar('|'), strColumnParam));
+#else
+    QStringList list(strColumnParam.split(QChar('|')));
+#endif
+    const int n = list.count(); /* width and position */
+    if (n == 2)
+    {
+        for (int j = 0; j < n; j++)
+        {
+            int c = ListViewStations->header()->count();
+#if QT_VERSION < 0x040000
+            QStringList values(QStringList::split(QChar(','), list[j]));
+#else
+            QStringList values(list[j].split(QChar(',')));
+#endif
+            const int lc = (int)values.count();
+            if (lc < c)
+                c = lc;
+            for (int i = 0; i < c; i++)
+            {
+                int v = values[i].toInt();
+                if (!j) /* width*/
+                    ListViewStations->header()->resizeSection(i, v);
+                else /* position */
+#if QT_VERSION < 0x040000
+                    ListViewStations->header()->moveSection(i, v);
+#else
+                    ListViewStations->header()->moveSection(ListViewStations->header()->visualIndex(i), v);
+#endif
+            }
+        }
+    }
+    else
+    {
+#if QT_VERSION >= 0x040200
+        ListViewStations->header()->resizeSections(QHeaderView::ResizeToContents);
+        ListViewStations->header()->resizeSections(QHeaderView::Interactive);
+#endif
+#if QT_VERSION >= 0x040000
+        ListViewStations->header()->resizeSection(0, ListViewStations->header()->minimumSectionSize());
+#endif
+    }
+}
+
+void StationsDlg::ColumnParamToStr(QString& strColumnParam)
+{
+    strColumnParam = "";
+    const int n = 2; /* width and position */
+    for (int j = 0; j < n; j++)
+    {
+        const int c = ListViewStations->header()->count();
+        for (int i = 0; i < c; i++)
+        {
+            int v;
+            if (!j) /* width*/
+                v = ListViewStations->header()->sectionSize(i);
+            else /* position */
+#if QT_VERSION < 0x040000
+                v = ListViewStations->header()->mapToIndex(i);
+#else
+                v = ListViewStations->header()->visualIndex(i);
+#endif
+            QString strValue;
+            strValue.setNum(v);
+            strColumnParam += strValue;
+            if (i < (c-1))
+                strColumnParam += ",";
+        }
+        if (j < (n-1))
+            strColumnParam += "|";
+    }
 }
 
 void StationsDlg::SetFrequencyFromGUI(int iFreq)
@@ -1726,6 +1845,9 @@ void StationsDlg::SetFrequencyFromGUI(int iFreq)
      schedule mode is different from receiver mode */
     switch (DRMSchedule.GetSchedMode())
     {
+    case CDRMSchedule::SM_NONE:
+        break;
+
     case CDRMSchedule::SM_DRM:
         if (eCurrentMode != RM_DRM)
             DRMReceiver.SetReceiverMode(RM_DRM);
@@ -1763,7 +1885,7 @@ void StationsDlg::on_ListViewStations_itemSelectionChanged()
     QList<QTreeWidgetItem *> items =  ListViewStations->selectedItems();
     if(items.size()==1)
     {
-        SetFrequencyFromGUI(QString(items.first()->text(2)).toInt());
+        SetFrequencyFromGUI(QString(items.first()->text(3)).toInt());
     }
 #endif
 }
@@ -1873,18 +1995,6 @@ void StationsDlg::AddWhatsThisHelp()
     TextLabelUTCTime->setWhatsThis(strTime);
     TextLabelSMeter->setWhatsThis(strSMeter);
     ProgrSigStrength->setWhatsThis(strSMeter);
-#endif
-}
-
-int StationsDlg::currentSortColumn()
-{
-#if QT_VERSION < 0x030000
-    if (DRMSchedule.GetSchedMode() == CDRMSchedule::SM_DRM)
-	return iSortColumndrm;
-    else
-	return iSortColumnanalog;
-#else
-    return ListViewStations->sortColumn();
 #endif
 }
 

@@ -30,17 +30,19 @@
 #include <qlabel.h>
 #include <qaction.h>
 #include <qmessagebox.h>
-#if QT_VERSION < 0x040000
-# include <qregexp.h>
-#endif
+#include <qdir.h>
+#include <qfile.h>
 #ifdef _WIN32
 # include <winsock2.h>
 #endif
 #include "DialogUtil.h"
 #if QT_VERSION < 0x040000
+# include "../sound/sound.h"
+# include <qregexp.h>
 # include <qwhatsthis.h>
 # include <qtextview.h>
 #else
+# include <QCoreApplication>
 # include <QWhatsThis>
 # define CHECK_PTR(x) Q_CHECK_PTR(x)
 #endif
@@ -53,6 +55,9 @@
 #endif
 #ifdef USE_PORTAUDIO
 # include <portaudio.h>
+#endif
+#ifdef USE_PULSEAUDIO
+# include <pulse/version.h>
 #endif
 #ifdef HAVE_LIBSNDFILE
 # include <sndfile.h>
@@ -89,6 +94,25 @@
 # endif
 #endif
 
+
+QString VersionString(QWidget* parent)
+{
+    QString strVersionText;
+    strVersionText = "<center><b>" + parent->tr("Dream, Version ");
+    strVersionText += QString("%1.%2%3")
+        .arg(dream_version_major)
+        .arg(dream_version_minor)
+        .arg(dream_version_build);
+    strVersionText += "</b><br> " + parent->tr("Open-Source Software Implementation of "
+                                       "a DRM-Receiver") + "<br>";
+    strVersionText += parent->tr("Under the GNU General Public License (GPL)") +
+                      "</center>";
+    return strVersionText;
+#ifdef _MSC_VER
+	parent; // warning C4100: 'parent' : unreferenced formal parameter !!!
+#endif
+}
+
 /* Implementation *************************************************************/
 /* About dialog ------------------------------------------------------------- */
 CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f):
@@ -98,18 +122,13 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
     char  sfversion [128] ;
     sf_command (NULL, SFC_GET_LIB_VERSION, sfversion, sizeof (sfversion)) ;
 #endif
-    /* Set the text for the about dialog html text control */
-#if QT_VERSION < 0x040000
-    TextViewCredits->setText(
-#else
-	textBrowser->setText(
-#endif
+    QString strCredits = 
         "<p>" /* General description of Dream software */
         "<big><b>Dream</b> " + tr("is a software implementation of a Digital "
                                   "Radio Mondiale (DRM) receiver. With Dream, DRM broadcasts can be received "
                                   "with a modified analog receiver (SW, MW, LW) and a PC with a sound card.")
         + "</big></p><br>"
-        "<p><font face=\"" + FONT_COURIER + "\">" /* GPL header text */
+        "<p><font face=\"" FONT_COURIER "\">" /* GPL header text */
         "This program is free software; you can redistribute it and/or modify "
         "it under the terms of the GNU General Public License as published by "
         "the Free Software Foundation; either version 2 of the License, or "
@@ -122,7 +141,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
         "Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 "
         "USA"
         "</font></p><br>" /* Our warning text */
-        "<p><font color=\"#ff0000\" face=\"" + FONT_COURIER + "\">" +
+        "<p><font color=\"#ff0000\" face=\"" FONT_COURIER "\">" +
         tr("Although this software is going to be "
            "distributed as free software under the terms of the GPL this does not "
            "mean that its use is free of rights of others. The use may infringe "
@@ -145,7 +164,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
         "<li><b>FAAC</b> <i>http://faac.sourceforge.net</i></li>"
 #endif
 #ifdef USE_QT_GUI /* QWT */
-        "<li><b>Qt</b> (" + QString(QT_VERSION_STR) + ") <i>http://www.trolltech.com</i></li>"
+        "<li><b>Qt</b> (" + QString(QT_VERSION_STR) + ") <i>http://qt-project.org</i></li>"
         "<li><b>QWT</b> (" + QString(QWT_VERSION_STR) + ") <i>Dream is based in part on the work of the Qwt "
         "project (http://qwt.sf.net).</i></li>"
 #endif
@@ -154,7 +173,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
 #endif
         "<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
         "Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
-        "Germany. For more information visit http://www.iis.fhg.de/dab</i></li>"
+        "Germany. For more information visit http://www.iis.fraunhofer.de/en/bf/db/pro.html</i></li>"
 #ifdef HAVE_LIBFREEIMAGE
         "<li><b>FreeImage</b> (" + QString(FreeImage_GetVersion()) + ") <i>This software uses the FreeImage open source "
         "image library. See http://freeimage.sourceforge.net for details. "
@@ -175,7 +194,10 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
         "<li><b>ALSA</b> (" + QString(SND_LIB_VERSION_STR) + ") <i>http://www.alsa-project.org</i></li>"
 #endif
 #ifdef USE_PORTAUDIO
-        "<li><b>portaudio</b> ("+QString(Pa_GetVersionText())+") <i>http://www.portaudio.com</i></li>"
+        "<li><b>PortAudio</b> (" + QString(Pa_GetVersionText()) + ") <i>http://www.portaudio.com</i></li>"
+#endif
+#ifdef USE_PULSEAUDIO
+        "<li><b>PulseAudio</b> (" + QString(pa_get_headers_version()) + ") <i>http://www.pulseaudio.org</i></li>"
 #endif
 #ifdef USE_JACK
         "<li><b>libjack</b> (The Jack Audio Connection Kit) <i>http://www.jackaudio.org</i></li>"
@@ -190,7 +212,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
         "Broadcasting Corporation</i> added code for an "
         "AMSS demodulator. <i>Oliver Haffenden</i> and <i>Julian Cable</i> (also <i>BBC</i>) rewrote "
         "the MDI interface and added RSCI support."
-        "Many other GUI improvements were implemented by <i>Andrea Russo and David Flamand</i>."
+        " Many other GUI improvements were implemented by <i>Andrea Russo and David Flamand</i>."
         "<br>Right now the code is mainly maintained by <i>David Flamand and Julian Cable</i>."
         " Quality Assurance and user testing is provided by <i>Simone St&ouml;ppler.</i>"
         "<br><br><br>"
@@ -206,7 +228,7 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
         "<p>Fillod, Stephane</p>"
         "<p>Fischer, Volker</p>"
         "<p>Fine, Mark J.</p>"
-        "<p>Flamand, David.</p>"
+        "<p>Flamand, David</p>"
         "<p>Haffenden, Oliver</p>"
         "<p>Kurpiers, Alexander</p>"
         "<p>Manninen, Tomi</p>"
@@ -242,17 +264,16 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
         "<p>St&ouml;ppler, Simone</p>"
         "<p>Varlamov, Oleg</p>"
         "<p>Wade, Graham</p>"
-        "</center><br>");
+        "</center><br>";
+
+    /* Add link to text */
+    Linkify(strCredits);
+
+    /* Set the text for the about dialog html text control */
+    TextViewCredits->setText(strCredits);
 
     /* Set version number in about dialog */
-    QString strVersionText;
-    strVersionText = "<center><b>" + tr("Dream, Version ");
-    strVersionText += QString("%1.%2").arg(dream_version_major).arg(dream_version_minor);
-    strVersionText += "</b><br> " + tr("Open-Source Software Implementation of "
-                                       "a DRM-Receiver") + "<br>";
-    strVersionText += tr("Under the GNU General Public License (GPL)") +
-                      "</center>";
-    TextLabelVersion->setText(strVersionText);
+    TextLabelVersion->setText(VersionString(this));
 
     /* Set author names in about dialog */
     TextLabelAuthorNames->setText("Volker Fischer, Alexander Kurpiers, Andrea Russo\nJulian Cable, Andrew Murphy, Oliver Haffenden");
@@ -261,9 +282,32 @@ CAboutDlg::CAboutDlg(QWidget* parent, const char* name, bool modal, Qt::WFlags f
     TextLabelCopyright->setText("Copyright (C) 2001 - 2012");
 }
 
-
-/* Help menu ---------------------------------------------------------------- */
+/* Help Usage --------------------------------------------------------------- */
+CHelpUsage::CHelpUsage(const char* usage, const char* argv0,
+    QWidget* parent, const char* name, bool modal, Qt::WFlags f)
+    : CAboutDlgBase(parent, name, modal, f)
+{
 #if QT_VERSION < 0x040000
+    SetDialogCaption(this, tr("Dream Command Line Help"));
+#else
+    setWindowTitle(tr("Dream Command Line Help"));
+#endif
+    TextLabelVersion->setText(VersionString(this));
+    TextLabelAuthorNames->setText("");
+    TextLabelCopyright->setText(tr("Command line usage:"));
+    QString text(tr(usage));
+    text.replace(QRegExp("\\$EXECNAME"), QString::fromUtf8(argv0));
+#if QT_VERSION < 0x040000
+    TextViewCredits->setText(text);
+#else
+    TextViewCredits->setFontFamily(FONT_COURIER);
+    TextViewCredits->setPlainText(text);
+#endif
+    show();
+}
+
+#if QT_VERSION < 0x040000
+/* Help menu ---------------------------------------------------------------- */
 CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
 {
     /* Standard help menu consists of about and what's this help */
@@ -276,111 +320,90 @@ void CDreamHelpMenu::OnHelpWhatsThis()
 {
     QWhatsThis::enterWhatsThisMode();
 }
-#else
-#if 0
-CDreamHelpMenu::CDreamHelpMenu(QWidget* parent) : QPopupMenu(parent)
-{
-    /* Standard help menu consists of about and what's this help */
-    setTitle("?");
-    addAction(tr("What's This"), this , SLOT(OnHelpWhatsThis()), Qt::SHIFT+Qt::Key_F1);
-    addSeparator();
-    addAction(tr("About..."), parent, SLOT(OnHelpAbout()));
-}
-#endif
-#endif
-
-#if 0 // QT_VERSION >= 0x040000
-QSignalMapper* CSoundCardSelMenu::Init(const QString& text, CSelectionInterface* intf)
-{
-    QMenu* menu = addMenu(text);
-    QSignalMapper* map = new QSignalMapper(this);
-    QActionGroup* group = new QActionGroup(this);
-    vector<string> names;
-
-    intf->Enumerate(names);
-    int iNumSoundDev = names.size();
-    int iDefaultDev = intf->GetDev();
-    if ((iDefaultDev > iNumSoundDev) || (iDefaultDev < 0))
-        iDefaultDev = iNumSoundDev;
-
-    for (int i = 0; i < iNumSoundDev; i++)
-    {
-        QString name(names[i].c_str());
-        QAction* m = menu->addAction(name, map, SLOT(map()));
-		group->addAction(m);
-		map->setMapping(m, i);
-        if(i==iDefaultDev)
-            menu->setActiveAction(m);
-    }
-    return map;
-}
-#endif
 
 /* Sound card selection menu ------------------------------------------------ */
-#if QT_VERSION < 0x040000
-CSoundCardSelMenu::CSoundCardSelMenu(
-    CSelectionInterface* pNSIn, CSelectionInterface* pNSOut, QWidget* parent) :
-    QPopupMenu(parent), pSoundInIF(pNSIn), pSoundOutIF(pNSOut)
+# undef DEVICE_STRING
+# ifdef _WIN32
+#  define DEVICE_STRING(s) s.c_str()
+# else
+#  define DEVICE_STRING(s) QString::fromUtf8(s.c_str())
+# endif
+
+CSoundCardSelMenu::CSoundCardSelMenu(CDRMTransceiver& DRMTransceiver, QWidget* parent) :
+    QPopupMenu(parent), DRMTransceiver(DRMTransceiver)
 {
-        pSoundInMenu = new QPopupMenu(parent);
-        CHECK_PTR(pSoundInMenu);
-        pSoundOutMenu = new QPopupMenu(parent);
-        CHECK_PTR(pSoundOutMenu);
-        int i;
+    /* We need to get device list directly from sound card,
+       since DRMTransceiver.GetSoundInInterface() can be an audio file interface */
+    CSelectionInterface* pSoundInIF = new CSoundIn();
+    CSelectionInterface* pSoundOutIF = DRMTransceiver.GetSoundOutInterface();
 
-        /* Get sound device names */
-        pSoundInIF->Enumerate(vecSoundInNames);
-        iNumSoundInDev = vecSoundInNames.size();
+    pSoundInMenu = new QPopupMenu(parent);
+    CHECK_PTR(pSoundInMenu);
+    pSoundOutMenu = new QPopupMenu(parent);
+    CHECK_PTR(pSoundOutMenu);
+    vector<string> vecDescriptions;
+    int i, iDefaultInDev = -1, iDefaultOutDev = -1;
 
-        for (i = 0; i < iNumSoundInDev; i++)
-        {
-                QString name(vecSoundInNames[i].c_str());
-#if defined(_MSC_VER) && (_MSC_VER < 1400)
-                if(name.find("blaster", 0, FALSE)>=0)
-                        name += " (has problems on some platforms)";
-#endif
-                pSoundInMenu->insertItem(name, this, SLOT(OnSoundInDevice(int)), 0, i);
-        }
+    /* Get sound in device names */
+    string sDefaultInDev = DRMTransceiver.GetSoundInInterface()->GetDev();
+    pSoundInIF->Enumerate(vecSoundInNames, vecDescriptions);
+    const int iNumSoundInDev = vecSoundInNames.size();
+    for (i = 0; i < iNumSoundInDev; i++)
+    {
+        if (vecSoundInNames[i] == sDefaultInDev)
+            iDefaultInDev = i;
+        QString name(DEVICE_STRING(vecSoundInNames[i]));
+# if defined(_MSC_VER) && (_MSC_VER < 1400)
+        if (name.find("blaster", 0, FALSE) >= 0)
+            name += " (has problems on some platforms)";
+# endif
+        if (name == "") name = tr("[default]");
+        pSoundInMenu->insertItem(name, this, SLOT(OnSoundInDevice(int)), 0, i);
+    }
 
-        pSoundOutIF->Enumerate(vecSoundOutNames);
-        iNumSoundOutDev = vecSoundOutNames.size();
-        for (i = 0; i < iNumSoundOutDev; i++)
-        {
-                pSoundOutMenu->insertItem(QString(vecSoundOutNames[i].c_str()), this,
-                        SLOT(OnSoundOutDevice(int)), 0, i);
-        }
+    /* Get sound out device names */
+    string sDefaultOutDev = pSoundOutIF->GetDev();
+    pSoundOutIF->Enumerate(vecSoundOutNames, vecDescriptions);
+    const int iNumSoundOutDev = vecSoundOutNames.size();
+    for (i = 0; i < iNumSoundOutDev; i++)
+    {
+        if (vecSoundOutNames[i] == sDefaultOutDev)
+            iDefaultOutDev = i;
+        QString name(DEVICE_STRING(vecSoundOutNames[i]));
+        if (name == "") name = tr("[default]");
+        pSoundOutMenu->insertItem(name, this, SLOT(OnSoundOutDevice(int)), 0, i);
+    }
 
-        /* Set default device. If no valid device was selected, select
- *            "Wave mapper" */
-        int iDefaultInDev = pSoundInIF->GetDev();
-        if ((iDefaultInDev > iNumSoundInDev) || (iDefaultInDev < 0))
-                iDefaultInDev = iNumSoundInDev;
-        int iDefaultOutDev = pSoundOutIF->GetDev();
-        if ((iDefaultOutDev > iNumSoundOutDev) || (iDefaultOutDev < 0))
-                iDefaultOutDev = iNumSoundOutDev;
-
+    if (iDefaultInDev >= 0)
         pSoundInMenu->setItemChecked(iDefaultInDev, TRUE);
+    if (iDefaultOutDev >= 0)
         pSoundOutMenu->setItemChecked(iDefaultOutDev, TRUE);
 
-        insertItem(tr("Sound &In"), pSoundInMenu);
-        insertItem(tr("Sound &Out"), pSoundOutMenu);
+    insertItem(tr("Sound &In"), pSoundInMenu);
+    insertItem(tr("Sound &Out"), pSoundOutMenu);
 }
 
 void CSoundCardSelMenu::OnSoundInDevice(int id)
 {
-    pSoundInIF->SetDev(id);
-    /* Take care of checks in the menu. "+ 1" because of wave mapper entry */
-    for (int i = 0; i < iNumSoundInDev + 1; i++)
+    CSelectionInterface* pSoundInIF = DRMTransceiver.GetSoundInInterface();
+	const int iNumSoundInDev = vecSoundInNames.size();
+    if (id >= 0 && id < iNumSoundInDev)
+        pSoundInIF->SetDev(vecSoundInNames[id]);
+    for (int i = 0; i < iNumSoundInDev; i++)
         pSoundInMenu->setItemChecked(i, i == id);
 }
 
 void CSoundCardSelMenu::OnSoundOutDevice(int id)
 {
-    pSoundOutIF->SetDev(id);
-    /* Take care of checks in the menu. "+ 1" because of wave mapper entry */
-    for (int i = 0; i < iNumSoundOutDev + 1; i++)
+    CSelectionInterface* pSoundOutIF = DRMTransceiver.GetSoundOutInterface();
+	const int iNumSoundOutDev = vecSoundOutNames.size();
+    if (id >= 0 && id < iNumSoundOutDev)
+        pSoundOutIF->SetDev(vecSoundOutNames[id]);
+    for (int i = 0; i < iNumSoundOutDev; i++)
         pSoundOutMenu->setItemChecked(i, i == id);
 }
+
+# undef DEVICE_STRING
 #endif
 
 RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
@@ -388,6 +411,9 @@ RemoteMenu::RemoteMenu(QWidget* parent, CRig& nrig)
     :rigmenus(),specials(),rig(nrig)
 #endif
 {
+#ifndef HAVE_LIBHAMLIB
+    (void)nrig;
+#endif
 #if QT_VERSION < 0x040000
     pRemoteMenu = new QPopupMenu(parent);
     pRemoteMenuOther = new QPopupMenu(parent);
@@ -582,6 +608,8 @@ void RemoteMenu::OnModRigMenu(int iID)
         pRemoteMenu->setItemChecked(iID, TRUE);
         rig.SetEnableModRigSettings(TRUE);
     }
+# else
+    (void)iID;
 # endif
 #else
     // TODO QT4
@@ -592,7 +620,7 @@ void RemoteMenu::OnModRigMenu(int iID)
 void RemoteMenu::OnRemoteMenu(int iID)
 {
 #if QT_VERSION < 0x040000
-#ifdef HAVE_LIBHAMLIB
+# ifdef HAVE_LIBHAMLIB
     // if an "others" rig was selected add it to the specials list
     for (map<int,Rigmenu>::iterator i=rigmenus.begin(); i!=rigmenus.end(); i++)
     {
@@ -637,7 +665,9 @@ void RemoteMenu::OnRemoteMenu(int iID)
     {
         emit SMeterAvailable();
     }
-#endif
+# else
+	(void)iID;
+# endif
 #else
     // TODO QT4
     (void)iID;
@@ -647,7 +677,13 @@ void RemoteMenu::OnRemoteMenu(int iID)
 void RemoteMenu::OnComPortMenu(QAction* action)
 {
 #ifdef HAVE_LIBHAMLIB
+# if QT_VERSION < 0x040000
     rig.SetComPort(action->text().utf8().data());
+# else
+    rig.SetComPort(action->text().toUtf8().data());
+# endif
+#else
+    (void)action;
 #endif
 }
 
@@ -676,6 +712,37 @@ QString VerifyHtmlPath(QString path)
     path.replace(QRegExp("/\\.\\./"), "/_/"); /* replace '/../' with '/_/' */
     return path;
 }
+
+#if QT_VERSION >= 0x040000
+/* Accept both absolute and relative url, but only return the path component.
+   Invalid characters in path are percent-encoded (e.g. space = %20) */
+QString UrlEncodePath(QString url)
+{
+    /* Get path component */
+    QString path(QUrl(url, QUrl::TolerantMode).path());
+    /* Prepend with '/' if none present */
+    if (path.size() == 0 || path.at(0) != QChar('/'))
+        path.insert(0, QChar('/'));
+    /* Replace multiple '/' by single '/' */
+    path.replace(QRegExp("/{1,}"), "/");
+    /* Replace all occurrence of '/./' with '/' */
+    while (path.indexOf("/./") != -1)
+        path.replace(QRegExp("/\\./"), "/");
+    /* The Actual percent encoding */
+# if QT_VERSION < 0x040400
+    path = QString(QUrl(path, QUrl::TolerantMode).toEncoded(QUrl::RemoveScheme | QUrl::RemoveAuthority));
+# else
+    path = QString(QUrl(path, QUrl::TolerantMode).encodedPath());
+# endif
+    return path;
+}
+
+/* Determine if the given url is a directory */
+bool IsUrlDirectory(QString url)
+{
+    return url.endsWith(QChar('/'));
+}
+#endif
 
 void InitSMeter(QWidget* parent, QwtThermo* sMeter)
 {
@@ -747,7 +814,7 @@ void Linkify(QString& text)
                     break;
                 }
             }
-            int rawLinkSize = posEnd-posBegin;
+            const int rawLinkSize = posEnd-posBegin;
             QStringRef rawLink(&text, posBegin, rawLinkSize);
             QString newLink;
             if (posBegin == posMAIL)
@@ -757,13 +824,85 @@ void Linkify(QString& text)
             else /* posBegin == posHTTP */
                 newLink = "<a href=\"%1\">%1</a>";
             newLink = newLink.arg(rawLink.toString());
-            int newLinkSize = newLink.size();
+            const int newLinkSize = newLink.size();
             text.replace(posBegin, rawLinkSize, newLink);
-            i = posEnd + newLinkSize - rawLinkSize;
-            size += newLinkSize - rawLinkSize;
+            const int diff = newLinkSize - rawLinkSize;
+            i = posEnd + diff;
+            size += diff;
+            if (posWWW >= 0)
+                posWWW += diff;
+            if (posHTTP >= 0)
+                posHTTP += diff;
+            if (posMAIL >= 0)
+                posMAIL += diff;
         }
         else
             break;
     }
+#else
+	(void)text;
 #endif
 }
+
+void CreateDirectories(const QString& strFilename)
+{
+    /*
+    	This function is for creating a complete directory structure to a given
+    	file name. If there is a pathname like this:
+    	/html/files/images/myimage.gif
+    	this function create all the folders into MOTCache:
+    	/html
+    	/html/files
+    	/html/files/images
+    	QFileInfo only creates a file if the pathname is valid. If not all folders
+    	are created, QFileInfo will not save the file. There was no QT function
+    	or a hint the QT mailing list found in which does the job of this function.
+    */
+    for (int i = 0;; i++)
+    {
+#if QT_VERSION < 0x040000
+# ifdef _WIN32
+        int i1 = strFilename.find(QChar('/'), i);
+        int i2 = strFilename.find(QChar('\\'), i);
+        i = i1 >= 0 && i1 < i2 ? i1 : i2;
+# else
+        i = strFilename.find(QChar('/'), i);
+# endif
+#else
+# ifdef _WIN32
+        int i1 = strFilename.indexOf(QChar('/'), i);
+        int i2 = strFilename.indexOf(QChar('\\'), i);
+        i = i1 >= 0 && i1 < i2 ? i1 : i2;
+# else
+        i = strFilename.indexOf(QChar('/'), i);
+# endif
+#endif
+        if (i < 0)
+            break;
+        const QString strDirName = strFilename.left(i);
+        if (!strDirName.isEmpty() && !QFileInfo(strDirName).exists())
+            QDir().mkdir(strDirName);
+    }
+}
+
+void RestartTransceiver(CDRMTransceiver *DRMTransceiver)
+{
+#if QT_VERSION >= 0x040000
+    if (DRMTransceiver != NULL)
+    {
+        QMutex sleep;
+        CParameter& Parameters = *DRMTransceiver->GetParameters();
+        DRMTransceiver->Restart();
+        while (Parameters.eRunState == CParameter::RESTART)
+        {
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            sleep.lock(); /* TODO find a better way to sleep on Qt */
+            sleep.tryLock(10);
+            sleep.unlock();
+        }
+    }
+#else
+	(void)DRMTransceiver;
+#endif
+}
+

@@ -34,9 +34,18 @@
 #include <iomanip>
 //#include "util/LogPrint.h"
 
+#ifdef _WIN32
+# define PATH_SEPARATOR "\\"
+# define PATH_SEPARATORS "/\\"
+#else
+# define PATH_SEPARATOR "/"
+# define PATH_SEPARATORS "/"
+#endif
+#define DEFAULT_DATA_FILES_DIRECTORY "data" PATH_SEPARATOR
+
 /* Implementation *************************************************************/
-CParameter::CParameter(CDRMReceiver *pRx):
-    pDRMRec(pRx),
+CParameter::CParameter():
+    pDRMRec(NULL),
     eSymbolInterlMode(),
     eMSCCodingScheme(),
     eSDCCodingScheme(),
@@ -45,7 +54,8 @@ CParameter::CParameter(CDRMReceiver *pRx):
     iAMSSCarrierMode(0),
     sReceiverID("                "),
     sSerialNumber(),
-    sDataFilesDirectory("."),
+    sDataFilesDirectory(DEFAULT_DATA_FILES_DIRECTORY),
+    eTransmitCurrentTime(CT_OFF),
     MSCPrLe(),
     Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
     iNumBitsHierarchFrameTotal(0),
@@ -111,6 +121,10 @@ CParameter::CParameter(CDRMReceiver *pRx):
     audioencoder(""),audiodecoder(""),
     use_gpsd(0), restart_gpsd(false),
     gps_host("localhost"), gps_port("2497"),
+    iAudSampleRate(DEFAULT_SOUNDCRD_SAMPLE_RATE),
+    iSigSampleRate(DEFAULT_SOUNDCRD_SAMPLE_RATE),
+    iNewAudSampleRate(0),
+    iNewSigSampleRate(0),
     rSysSimSNRdB(0.0),
     iFrequency(0),
     bValidSignalStrength(FALSE),
@@ -125,9 +139,7 @@ CParameter::CParameter(CDRMReceiver *pRx):
     Mutex()
 {
     GenerateRandomSerialNumber();
-    if (pDRMRec)
-        eReceiverMode = pDRMRec->GetReceiverMode();
-    CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+    CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate);
     gps_data.set=0;
     gps_data.status=0;
 #ifdef HAVE_LIBGPS
@@ -150,6 +162,7 @@ CParameter::CParameter(const CParameter& p):
     sReceiverID(p.sReceiverID),
     sSerialNumber(p.sSerialNumber),
     sDataFilesDirectory(p.sDataFilesDirectory),
+    eTransmitCurrentTime(p.eTransmitCurrentTime),
     MSCPrLe(p.MSCPrLe),
     Stream(p.Stream), Service(p.Service),
     iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
@@ -219,6 +232,10 @@ CParameter::CParameter(const CParameter& p):
     audioencoder(p.audioencoder),audiodecoder(p.audiodecoder),
     use_gpsd(p.use_gpsd),restart_gpsd(p.restart_gpsd),
     gps_host(p.gps_host),gps_port(p.gps_port),
+    iAudSampleRate(p.iAudSampleRate),
+    iSigSampleRate(p.iSigSampleRate),
+    iNewAudSampleRate(p.iNewAudSampleRate),
+    iNewSigSampleRate(p.iNewSigSampleRate),
     rSysSimSNRdB(p.rSysSimSNRdB),
     iFrequency(p.iFrequency),
     bValidSignalStrength(p.bValidSignalStrength),
@@ -232,7 +249,7 @@ CParameter::CParameter(const CParameter& p):
     LastDataService(p.LastDataService)
 //, Mutex() // jfbc: I don't think this state should be copied
 {
-    CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+    CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate);
     matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO
     gps_data = p.gps_data;
 }
@@ -250,6 +267,7 @@ CParameter& CParameter::operator=(const CParameter& p)
     sReceiverID = p.sReceiverID;
     sSerialNumber = p.sSerialNumber;
     sDataFilesDirectory = p.sDataFilesDirectory;
+    eTransmitCurrentTime = p.eTransmitCurrentTime;
     MSCPrLe = p.MSCPrLe;
     Stream = p.Stream;
     Service = p.Service;
@@ -313,13 +331,17 @@ CParameter& CParameter::operator=(const CParameter& p)
     rMaxPSDFreq = p.rMaxPSDFreq;
     rSigStrengthCorrection = p.rSigStrengthCorrection;
     eRunState = p.eRunState;
-    CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup); // don't copy CMatrix
+    CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate); // don't copy CMatrix
     audiodecoder =  p.audiodecoder;
     audioencoder =  p.audioencoder;
     use_gpsd = p.use_gpsd;
     gps_host = p.gps_host;
     gps_port = p.gps_port;
     restart_gpsd = p.restart_gpsd;
+    iAudSampleRate = p.iAudSampleRate;
+    iSigSampleRate = p.iSigSampleRate;
+    iNewAudSampleRate = p.iNewAudSampleRate;
+    iNewSigSampleRate = p.iNewSigSampleRate;
     rSysSimSNRdB = p.rSysSimSNRdB;
     iFrequency = p.iFrequency;
     bValidSignalStrength = p.bValidSignalStrength;
@@ -332,6 +354,13 @@ CParameter& CParameter::operator=(const CParameter& p)
     LastAudioService = p.LastAudioService;
     LastDataService = p.LastDataService;
     return *this;
+}
+
+void CParameter::SetReceiver(CDRMReceiver* pDRMReceiver)
+{
+	pDRMRec = pDRMReceiver;
+    if (pDRMRec)
+        eReceiverMode = pDRMRec->GetReceiverMode();
 }
 
 void CParameter::ResetServicesStreams()
@@ -536,7 +565,7 @@ void CParameter::InitCellMapTable(const ERobMode eNewWaveMode,
     /* Set new values and make table */
     eRobustnessMode = eNewWaveMode;
     eSpectOccup = eNewSpecOcc;
-    CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+    CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate);
 }
 
 _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
@@ -561,7 +590,7 @@ _BOOLEAN CParameter::SetWaveMode(const ERobMode eNewWaveMode)
         eRobustnessMode = eNewWaveMode;
 
         /* This parameter change provokes update of table */
-        CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+        CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate);
 
         /* Set init flags */
         if (pDRMRec) pDRMRec->InitsForWaveMode();
@@ -595,7 +624,7 @@ void CParameter::SetSpectrumOccup(ESpecOcc eNewSpecOcc)
         eSpectOccup = eNewSpecOcc;
 
         /* This parameter change provokes update of table */
-        CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup);
+        CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate);
 
         /* Set init flags */
         if (pDRMRec) pDRMRec->InitsForSpectrumOccup();
@@ -898,6 +927,40 @@ void CParameter::SetServiceID(const int iShortID, const uint32_t iNewServiceID)
     }
 }
 
+/* Append child directory to data files directory,
+   always terminated by '/' or '\' */
+string CParameter::GetDataDirectory(const char* pcChildDirectory) const
+{
+    string sDirectory(sDataFilesDirectory);
+    size_t p = sDirectory.find_last_of(PATH_SEPARATORS);
+    if (sDirectory != "" && (p == string::npos || p != (sDirectory.size()-1)))
+        sDirectory += PATH_SEPARATOR;
+    if (pcChildDirectory != NULL)
+    {
+        sDirectory += pcChildDirectory;
+        size_t p = sDirectory.find_last_of(PATH_SEPARATORS);
+        if (sDirectory != "" && (p == string::npos || p != (sDirectory.size()-1)))
+            sDirectory += PATH_SEPARATOR;
+    }
+    if (sDirectory == "")
+        sDirectory = DEFAULT_DATA_FILES_DIRECTORY;
+    return sDirectory;
+}
+
+/* Set new data files directory, terminated by '/' or '\' if not */
+void CParameter::SetDataDirectory(string sNewDataFilesDirectory)
+{
+    if (sNewDataFilesDirectory == "")
+        sNewDataFilesDirectory = DEFAULT_DATA_FILES_DIRECTORY;
+    else
+    {
+        size_t p = sNewDataFilesDirectory.find_last_of(PATH_SEPARATORS);
+        if (p == string::npos || p != (sNewDataFilesDirectory.size()-1))
+            sNewDataFilesDirectory += PATH_SEPARATOR;
+    }
+    sDataFilesDirectory = sNewDataFilesDirectory;
+}
+
 
 /* Implementaions for simulation -------------------------------------------- */
 void CRawSimData::Add(uint32_t iNewSRS)
@@ -928,7 +991,9 @@ _REAL CParameter::GetSysSNRdBPilPos() const
     	positions compared to the total SNR of the DRM signal.
     */
     return (_REAL) 10.0 * log10(pow((_REAL) 10.0, rSysSimSNRdB / 10) /
-                                CellMappingTable.rAvPowPerSymbol * CellMappingTable.rAvScatPilPow * (_REAL) CellMappingTable.iNumCarrier);
+                                CellMappingTable.rAvPowPerSymbol *
+				CellMappingTable.rAvScatPilPow *
+				(_REAL) CellMappingTable.iNumCarrier);
 }
 
 void
@@ -1001,7 +1066,7 @@ _REAL CParameter::GetSysToNomBWCorrFact()
     _REAL rNomBW = GetNominalBandwidth();
 
     /* Calculate system bandwidth (N / T_u) */
-    const _REAL rSysBW = (_REAL) CellMappingTable.iNumCarrier / CellMappingTable.iFFTSizeN * SOUNDCRD_SAMPLE_RATE;
+    const _REAL rSysBW = (_REAL) CellMappingTable.iNumCarrier / CellMappingTable.iFFTSizeN * iSigSampleRate;
 
     return rSysBW / rNomBW;
 }
@@ -1059,7 +1124,11 @@ void CParameter::GenerateRandomSerialNumber()
     char serialNumTemp[7];
 
     for (size_t i=0; i < 6; i++)
-        serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX];
+#ifdef _WIN32
+        serialNumTemp[i] = randomChars[(int) 35.0*rand()/RAND_MAX]; /* integer overflow on linux, RAND_MAX=0x7FFFFFFF */
+#else
+        serialNumTemp[i] = randomChars[35ll * (long long)rand() / RAND_MAX];
+#endif
 
     serialNumTemp[6] = '\0';
 

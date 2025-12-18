@@ -1,42 +1,72 @@
+contains(QT_VERSION, ^4\\..*) {
+	CONFIG += qt4
+	VERSION_MESSAGE = Qt 4
+	CONFIG(debug, debug|release) {
+		DEBUG_MESSAGE = debug
+	}
+	else {
+		DEBUG_MESSAGE = release 
+	}
+}
+count(QT_VERSION, 0) {
+	CONFIG += qt3 thread
+	VERSION_MESSAGE = Qt 3
+	debug {
+		DEBUG_MESSAGE = debug
+	}
+	else {
+		DEBUG_MESSAGE = release 
+	}
+}
 console {
-    message("console mode")
     QT -= gui
+    CONFIG -= qt
+    qt3:CONFIG -= qt3
+    qt4:CONFIG -= qt4
+    DEFINES += USE_NO_QT
     DEFINES -= USE_QT_GUI
+    UI_MESSAGE = console mode
+    VERSION_MESSAGE=No Qt
 }
 else {
-    DEFINES += USE_QT_GUI
-    RESOURCES = src/GUI-QT/res/icons.qrc
-}
-TEMPLATE = app
-TARGET = dream
-CONFIG += qt warn_on debug thread
-INCLUDEPATH += src/GUI-QT
-INCLUDEPATH += libs
-OBJECTS_DIR = obj
-DEFINES += EXECUTABLE_NAME=$$TARGET
-#LIBS += -L$$PWD/libs
-macx:QMAKE_LFLAGS += -F$$PWD/libs
-unix {
-target.path = /usr/bin
-documentation.path = /usr/share/man/man1
-documentation.files = linux/dream.1
-INSTALLS += documentation
-}
-contains(QT_VERSION, ^4\\..*) {
-message("Qt 4")
-QT += network xml qt3support webkit
-VPATH += src/GUI-QT
-console {
-TARGET = dream-cli
+    qtconsole {
+        QT -= gui
+        DEFINES -= USE_QT_GUI
+        UI_MESSAGE = console mode
     }
     else {
+        DEFINES += USE_QT_GUI
+        RESOURCES = src/GUI-QT/res/icons.qrc
+        UI_MESSAGE = GUI mode
+	FORMS += TransmDlgbase.ui
+	FORMS += AMSSDlgbase.ui \
+	systemevalDlgbase.ui \
+	StationsDlgbase.ui \
+	EPGDlgbase.ui
+	FORMS += GeneralSettingsDlgbase.ui \
+	MultSettingsDlgbase.ui \
+	AboutDlgbase.ui
+    }
+}
+message($$VERSION_MESSAGE $$DEBUG_MESSAGE $$UI_MESSAGE)
+TEMPLATE = app
+TARGET = dream
+INCLUDEPATH += src/GUI-QT
+INCLUDEPATH += libs
+LIBS += -Llibs
+OBJECTS_DIR = obj
+DEFINES += EXECUTABLE_NAME=$$TARGET
+macx:QMAKE_LFLAGS += -F$$PWD/libs
+qt4 {
+	VPATH += src/GUI-QT
+        QT += network xml webkit
         HEADERS += src/GUI-QT/DRMPlot.h src/GUI-QT/EvaluationDlg.h
-        HEADERS += src/GUI-QT/SlideShowViewer.h src/GUI-QT/JLViewer.h src/GUI-QT/BWSViewer.h
-        HEADERS += src/GUI-QT/bwsbrowser.h src/GUI-QT/jlbrowser.h
+        HEADERS += src/GUI-QT/SlideShowViewer.h src/GUI-QT/JLViewer.h
+        HEADERS += src/GUI-QT/BWSViewer.h src/GUI-QT/jlbrowser.h
         HEADERS += src/GUI-QT/SoundCardSelMenu.h
         SOURCES += src/GUI-QT/DRMPlot.cpp src/GUI-QT/EvaluationDlg.cpp
-        SOURCES += src/GUI-QT/SlideShowViewer.cpp src/GUI-QT/JLViewer.cpp src/GUI-QT/BWSViewer.cpp
-        SOURCES += src/GUI-QT/bwsbrowser.cpp src/GUI-QT/jlbrowser.cpp
+        SOURCES += src/GUI-QT/SlideShowViewer.cpp src/GUI-QT/JLViewer.cpp
+        SOURCES += src/GUI-QT/BWSViewer.cpp src/GUI-QT/jlbrowser.cpp
         SOURCES += src/GUI-QT/SoundCardSelMenu.cpp
         FORMS += DRMMainWindow.ui FMMainWindow.ui AMMainWindow.ui LiveScheduleWindow.ui
         FORMS += JLViewer.ui BWSViewer.ui SlideShowViewer.ui
@@ -52,104 +82,57 @@ TARGET = dream-cli
                 }
             }
             else {
-                    exists(/usr/include/qwt6) {
-                        message("with qwt6")
-                        LIBS += -lqwt
-                            INCLUDEPATH += /usr/include/qwt6
-                    }
-                    else {
-                        exists(/usr/include/qwt-qt4) {
-                            message("with qwt5")
-                            LIBS += -lqwt-qt4
-                            INCLUDEPATH += /usr/include/qwt-qt4
-                        } 
-                        else {
-                          exists(/usr/include/qwt5) {
-                            message("with qwt5")
-                            LIBS += -lqwt
-                            INCLUDEPATH += /usr/include/qwt5
-                          } 
-                          else {
-                            exists(/usr/include/qwt) {
-                              message("with qwt5")
-                              LIBS += -lqwt
-                              INCLUDEPATH += /usr/include/qwt
-                            }
-                            else {
-                              error("no usable qwt version found")
-                            }
-                        }
-                    }
+                exists(/usr/include/qwt/qwt.h) {
+                    message("with qwt")
+                    INCLUDEPATH += /usr/include/qwt
+                    LIBS += -lqwt
                 }
+                exists(/usr/include/qwt5/qwt.h) {
+                    message("with qwt")
+                    INCLUDEPATH += /usr/include/qwt5
+                    LIBS += -lqwt
+                }
+                exists(/usr/include/qwt-qt4/qwt.h) {
+                    message("with qwt")
+                    INCLUDEPATH += /usr/include/qwt-qt4
+                    LIBS += -lqwt-qt4
+                }
+		target.path = /usr/bin
+		documentation.path = /usr/share/man/man1
+		documentation.files = linux/dream.1
+		INSTALLS += documentation
             }
         }
         win32 {
-            exists($$(QWT)) {
-                message("with qwt6")
-                INCLUDEPATH += $$(QWT)/include
-                LIBS += $$(QWT)/lib/libqwt.so
-            }
-            else {
-                exists(libs/qwt) {
-                    INCLUDEPATH += libs/qwt
-                    CONFIG( debug, debug|release ) {
-                        # debug
-                        LIBS += -lqwtd
-                    } else {
-                        # release
-                        LIBS += -lqwt
-                    }
-                }
-                else {
-                    error("no usable qwt version found")
-                }
-            }
+             INCLUDEPATH += libs/qwt
+             CONFIG( debug, debug|release ) {
+                 # debug
+                 LIBS += -lqwtd
+             } else {
+                 # release
+                 LIBS += -lqwt
+             }
         }
-    }
 }
-count(QT_VERSION, 0) {
-    message("Qt 3")
-    CONFIG += old
-    VPATH += src/GUI-QT/qt2
-    console {
-        TARGET = dream-cli
-    }
-    else {
+qt3 {
+	VPATH += src/GUI-QT/qt2
         HEADERS += src/GUI-QT/qt2/DRMPlot.h src/GUI-QT/systemevalDlg.h src/GUI-QT/MultimediaDlg.h
         SOURCES += src/GUI-QT/qt2/DRMPlot.cpp src/GUI-QT/systemevalDlg.cpp src/GUI-QT/MultimediaDlg.cpp
         FORMS += fdrmdialogbase.ui fmdialogbase.ui AnalogDemDlgbase.ui LiveScheduleDlgbase.ui
         FORMS += MultimediaDlgbase.ui
+        LIBS += -lqwt
         unix {
-            exists(/usr/local/lib/libqwt.so.4) {
-    	        message("with qwt4")
+            exists(/usr/local/include/qwt) {
                 INCLUDEPATH += /usr/local/include/qwt
-                LIBS += /usr/local/lib/libqwt.so.4
+                LIBS += -L/usr/local/lib
             }
-            else {
-                exists(/usr/lib/libqwt.so.4) {
-        	        message("with qwt4")
-                    INCLUDEPATH += /usr/include/qwt
-                    LIBS += /usr/lib/libqwt.so.4
-                }
-                else {
-                    error("no usable qwt version found")
-                }
+            exists(/usr/include/qwt) {
+                INCLUDEPATH += /usr/include/qwt
             }
         }
         win32 {
             INCLUDEPATH += libs/qwt
         }
-    }
-}
-!console {
-    FORMS += TransmDlgbase.ui
-    FORMS += AMSSDlgbase.ui \
-    systemevalDlgbase.ui \
-    StationsDlgbase.ui \
-    EPGDlgbase.ui
-    FORMS += GeneralSettingsDlgbase.ui \
-    MultSettingsDlgbase.ui \
-    AboutDlgbase.ui
 }
 macx {
     INCLUDEPATH += /Developer/dream/include /opt/local/include
@@ -162,12 +145,12 @@ macx {
 }
 exists(libs/faac.h) {
     CONFIG += faac
-              message("with FAAC")
-          }
+    message("with FAAC")
+}
 exists(libs/neaacdec.h) {
     CONFIG += faad
-              message("with FAAD2")
-          }
+    message("with FAAD2")
+}
 unix {
     INSTALLS += target
     CONFIG += link_pkgconfig
@@ -229,22 +212,21 @@ unix {
         error("no usable fftw library found - install fftw dev package")
       }
     }
-    LIBS += -lz \
-            -ldl
+    LIBS += -lz -ldl
     SOURCES += src/linux/Pacer.cpp
     DEFINES += HAVE_DLFCN_H \
               HAVE_MEMORY_H \
               HAVE_STDINT_H \
               HAVE_STDLIB_H
-      DEFINES += HAVE_STRINGS_H \
+    DEFINES += HAVE_STRINGS_H \
               HAVE_STRING_H \
               STDC_HEADERS
-      DEFINES += HAVE_INTTYPES_H \
+    DEFINES += HAVE_INTTYPES_H \
               HAVE_STDINT_H \
               HAVE_SYS_STAT_H \
               HAVE_SYS_TYPES_H \
               HAVE_UNISTD_H
-      DEFINES += HAVE_LIBZ
+    DEFINES += HAVE_LIBZ
     !macx {
         MAKEFILE = Makefile
         LIBS += -lrt
@@ -274,6 +256,11 @@ win32 {
     exists(libs/portaudio.h) {
         CONFIG += portaudio
         message("with portaudio")
+    }
+    else {
+        HEADERS += src/windows/Sound.h
+        SOURCES += src/windows/Sound.cpp
+        message("with mmsystem")
     }
     exists(libs/fftw3.h) {
         DEFINES += HAVE_FFTW3_H
@@ -314,8 +301,7 @@ win32 {
     DEFINES += HAVE_SETUPAPI \
     HAVE_LIBZ
     DEFINES -= UNICODE
-    HEADERS += src/windows/Sound.h src/windows/SoundWin.h
-    SOURCES += src/windows/Pacer.cpp src/windows/Sound.cpp
+    SOURCES += src/windows/Pacer.cpp
 }
 faad {
     DEFINES += HAVE_LIBFAAD \
@@ -342,12 +328,11 @@ pcap {
     win32:LIBS += wpcap.lib packet.lib
 }
 hamlib {
-    DEFINES += HAVE_LIBHAMLIB \
-    HAVE_RIG_PARSE_MODE
+    DEFINES += HAVE_LIBHAMLIB
     macx:LIBS += -framework IOKit
     unix:LIBS += -lhamlib
     win32:LIBS += libhamlib-2.lib
-    !console:!old {
+    qt4 {
         HEADERS += src/GUI-QT/RigDlg.h
         SOURCES += src/GUI-QT/RigDlg.cpp
         FORMS += RigDlg.ui
@@ -375,9 +360,9 @@ pulseaudio {
     SOURCES += src/sound/drm_pulseaudio.cpp
     LIBS += -lpulse
 }
-HEADERS += src/AMDemodulation.h \
+HEADERS += \
+   src/AMDemodulation.h \
    src/AMSSDemodulation.h \
-   src/audiofilein.h \
    src/chanest/ChanEstTime.h \
    src/chanest/ChannelEstimation.h \
    src/chanest/IdealChannelEstimation.h \
@@ -386,8 +371,6 @@ HEADERS += src/AMDemodulation.h \
    src/datadecoding/DABMOT.h \
    src/datadecoding/DataDecoder.h \
    src/datadecoding/DataEncoder.h \
-   src/datadecoding/epg/EPG.h \
-   src/datadecoding/epg/epgdec.h \
    src/datadecoding/epg/epgutil.h \
    src/datadecoding/journaline/NML.h \
    src/datadecoding/journaline/Splitter.h \
@@ -410,6 +393,7 @@ HEADERS += src/AMDemodulation.h \
    src/DrmReceiver.h \
    src/DRMSignalIO.h \
    src/DrmSimulation.h \
+   src/DrmTransceiver.h \
    src/DrmTransmitter.h \
    src/FAC/FAC.h \
    src/GlobalDefinitions.h \
@@ -430,8 +414,6 @@ HEADERS += src/AMDemodulation.h \
    src/MDI/PacketInOut.h \
    src/MDI/PacketSinkFile.h \
    src/MDI/PacketSourceFile.h \
-   src/MDI/PacketSocketNull.h \
-   src/MDI/PacketSocketQT.h \
    src/MDI/Pft.h \
    src/MDI/RCITagItems.h \
    src/MDI/RSCITagItemDecoders.h \
@@ -457,9 +439,11 @@ HEADERS += src/AMDemodulation.h \
    src/resample/Resample.h \
    src/resample/ResampleFilter.h \
    src/SDC/SDC.h \
-   src/selectioninterface.h \
-   src/soundinterface.h \
-   src/sound.h \
+   src/Scheduler.h \
+   src/sound/audiofilein.h \
+   src/sound/selectioninterface.h \
+   src/sound/sound.h \
+   src/sound/soundinterface.h \
    src/sound/soundnull.h \
    src/sourcedecoders/AudioSourceDecoder.h \
    src/sourcedecoders/AudioSourceEncoder.h \
@@ -479,6 +463,7 @@ HEADERS += src/AMDemodulation.h \
    src/util/AudioFile.h \
    src/util/Buffer.h \
    src/util/CRC.h \
+   src/util/LibraryLoader.h \
    src/util/LogPrint.h \
    src/util/Modul.h \
    src/util/Pacer.h \
@@ -486,12 +471,10 @@ HEADERS += src/AMDemodulation.h \
    src/util/Settings.h \
    src/util/Utilities.h \
    src/util/Vector.h \
-   src/GUI-QT/Rig.h \
-   src/GUI-QT/Logging.h \
    src/Version.h
-SOURCES += src/AMDemodulation.cpp \
+SOURCES += \
+      src/AMDemodulation.cpp \
       src/AMSSDemodulation.cpp \
-      src/audiofilein.cpp \
       src/chanest/ChanEstTime.cpp \
       src/chanest/ChannelEstimation.cpp \
       src/chanest/IdealChannelEstimation.cpp \
@@ -500,8 +483,6 @@ SOURCES += src/AMDemodulation.cpp \
       src/datadecoding/DABMOT.cpp \
       src/datadecoding/DataDecoder.cpp \
       src/datadecoding/DataEncoder.cpp \
-      src/datadecoding/epg/EPG.cpp \
-      src/datadecoding/epg/epgdec.cpp \
       src/datadecoding/epg/epgutil.cpp \
       src/datadecoding/journaline/NML.cpp \
       src/datadecoding/journaline/dabdgdec_impl.c \
@@ -524,6 +505,7 @@ SOURCES += src/AMDemodulation.cpp \
       src/DrmTransmitter.cpp \
       src/FAC/FAC.cpp \
       src/InputResample.cpp \
+      src/Scheduler.cpp \
       src/interleaver/BlockInterleaver.cpp \
       src/interleaver/SymbolInterleaver.cpp \
       src/IQInputFilter.cpp \
@@ -537,8 +519,6 @@ SOURCES += src/AMDemodulation.cpp \
       src/MDI/MDITagItems.cpp \
       src/MDI/PacketSinkFile.cpp \
       src/MDI/PacketSourceFile.cpp \
-      src/MDI/PacketSocketNull.cpp \
-      src/MDI/PacketSocketQT.cpp \
       src/MDI/Pft.cpp \
       src/MDI/RCITagItems.cpp \
       src/MDI/RSCITagItemDecoders.cpp \
@@ -567,6 +547,7 @@ SOURCES += src/AMDemodulation.cpp \
       src/SDC/SDCReceive.cpp \
       src/SDC/SDCTransmit.cpp \
       src/SimulationParameters.cpp \
+      src/sound/audiofilein.cpp \
       src/sourcedecoders/AudioSourceDecoder.cpp \
       src/sourcedecoders/AudioSourceEncoder.cpp \
       src/sync/FreqSyncAcq.cpp \
@@ -584,11 +565,30 @@ SOURCES += src/AMDemodulation.cpp \
       src/util/Settings.cpp \
       src/util/Utilities.cpp \
       src/Version.cpp \
-      src/GUI-QT/Rig.cpp \
-      src/GUI-QT/Logging.cpp \
       src/GUI-QT/main.cpp
 !console {
-    HEADERS += src/GUI-QT/AnalogDemDlg.h \
+HEADERS += \
+    src/datadecoding/epg/EPG.h \
+    src/datadecoding/epg/epgdec.h \
+    src/GUI-QT/Logging.h \
+    src/GUI-QT/Rig.h \
+    src/MDI/PacketSocketQT.h
+SOURCES += \
+    src/datadecoding/epg/EPG.cpp \
+    src/datadecoding/epg/epgdec.cpp \
+    src/GUI-QT/Logging.cpp \
+    src/GUI-QT/Rig.cpp \
+    src/MDI/PacketSocketQT.cpp
+}
+else {
+HEADERS += \
+    src/MDI/PacketSocketNull.h
+SOURCES += \
+    src/MDI/PacketSocketNull.cpp
+}
+!console:!qtconsole {
+HEADERS += \
+    src/GUI-QT/AnalogDemDlg.h \
     src/GUI-QT/DialogUtil.h \
     src/GUI-QT/EPGDlg.h \
     src/GUI-QT/fdrmdialog.h \
@@ -599,7 +599,8 @@ SOURCES += src/AMDemodulation.cpp \
     src/GUI-QT/MultSettingsDlg.h \
     src/GUI-QT/StationsDlg.h \
     src/GUI-QT/TransmDlg.h
-    SOURCES += src/GUI-QT/AnalogDemDlg.cpp \
+SOURCES += \
+    src/GUI-QT/AnalogDemDlg.cpp \
     src/GUI-QT/DialogUtil.cpp \
     src/GUI-QT/EPGDlg.cpp \
     src/GUI-QT/fmdialog.cpp \

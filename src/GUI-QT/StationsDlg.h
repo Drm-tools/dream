@@ -113,8 +113,6 @@ namespace Station {
 class MyListViewItem : public QListViewItem
 {
 public:
-	/* If you want to add another columns, change also MAX_COLUMN_NUMBER in
-	   Settings.h! */
 	MyListViewItem(QListView* parent, QString s1, QString s2 = QString::null,
 		QString s3 = QString::null, QString s4 = QString::null,
 		QString s5 = QString::null, QString s6 = QString::null,
@@ -136,7 +134,9 @@ public:
 	{
 		// bug 29 - sort frequency and power numerically
 		int col = treeWidget()->sortColumn();
-		if (col == 2) // integer frequency
+		if (col == 0) // online/offline
+			return data(0, Qt::UserRole).toInt() < rhs.data(0, Qt::UserRole).toInt();
+		else if (col == 3) // integer frequency
 			return text( col ).toInt() < rhs.text( col ).toInt();
 		else if (col == 4) // real power
 			return text( col ).toDouble() < rhs.text( col ).toDouble();
@@ -198,7 +198,7 @@ public:
 	CDRMSchedule();
 	virtual ~CDRMSchedule() {}
 
-	enum ESchedMode {SM_DRM, SM_ANALOG};
+	enum ESchedMode {SM_NONE, SM_DRM, SM_ANALOG};
 
 	void ReadINIFile(FILE* pFile);
 	void ReadCSVFile(FILE* pFile);
@@ -215,14 +215,14 @@ public:
 	void UpdateStringListForFilter(const CStationsItem& StationsItem);
 	void LoadSchedule();
 
-	QStringList			ListTargets;
-	QStringList			ListCountries;
-	QStringList			ListLanguages;
+	QStringList		ListTargets;
+	QStringList		ListCountries;
+	QStringList		ListLanguages;
 
-	QString countryFilterdrm, targetFilterdrm, languageFilterdrm;
-	QString countryFilteranalog, targetFilteranalog, languageFilteranalog;
-	QString schedFileName;
-	QUrl *qurldrm, *qurlanalog;
+	QString			countryFilterdrm, targetFilterdrm, languageFilterdrm;
+	QString			countryFilteranalog, targetFilteranalog, languageFilteranalog;
+	QString			schedFileName;
+	QUrl			qurldrm, qurlanalog;
 
 protected:
 	void			SetAnalogUrl();
@@ -255,15 +255,14 @@ class StationsDlg : public CStationsDlgBase
 	Q_OBJECT
 
 public:
-
-	StationsDlg(CDRMReceiver&, CRig&, QWidget* parent = 0,
+	StationsDlg(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
 	virtual ~StationsDlg();
 
-	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
 
 protected:
+	void			LoadSettings(const CSettings&);
 	void			CheckMode();
 	void			LoadSchedule();
 	void			LoadFilters();
@@ -279,13 +278,19 @@ protected:
 	_BOOLEAN		showAll();
 	_BOOLEAN		GetSortAscending();
 	void			SetSortAscending(_BOOLEAN b);
+	void			ColumnParamFromStr(const QString& strColumnParam);
+	void			ColumnParamToStr(QString& strColumnParam);
 	int			currentSortColumn();
 	_BOOLEAN		bCurrentSortAscendingdrm;
 	_BOOLEAN		bCurrentSortAscendinganalog;
 	int			iSortColumndrm;
 	int			iSortColumnanalog;
+	QString			strColumnParamdrm;
+	QString			strColumnParamanalog;
 
 	CDRMReceiver&		DRMReceiver;
+	CSettings&			Settings;
+	CRig&				Rig;
 	CDRMSchedule		DRMSchedule;
 #if QT_VERSION < 0x040000
 	void			setupUi(QObject*);
@@ -320,7 +325,8 @@ protected:
 	QMutex			ListItemsMutex;
 
 	RemoteMenu*		pRemoteMenu;
-	QString		okMessage, badMessage;
+	QString			okMessage, badMessage;
+	CDRMSchedule::ESchedMode eLastScheduleMode;
 	CEventFilter	ef;
 
 signals:

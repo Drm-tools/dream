@@ -35,7 +35,7 @@
 
 
 /* Implementation *************************************************************/
-void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
+void CTimeSync::ProcessDataInternal(CParameter& Parameters)
 {
 	int				i, j, k;
 	int				iMaxIndex;
@@ -86,7 +86,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		   We decimate the signal with this function, too, because we only
 		   analyze a spectrum bandwith of approx. 5 [10] kHz */
 		CComplexVector cvecOutTmp(
-			FirFiltDec(cvecB, cvecInpTmp, cvecZ, GRDCRR_DEC_FACT));
+			FirFiltDec(cvecB, cvecInpTmp, cvecZ, iGrdcrrDecFact));
 
 		/* Get size of new output vector */
 		iDecInpuSize = cvecOutTmp.GetSize();
@@ -97,7 +97,11 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		   everywhere) */
 		cvecOutTmpInterm.Init(iDecInpuSize);
 		for (i = 0; i < iDecInpuSize; i++)
+		{
 			cvecOutTmpInterm[i] = cvecOutTmp[i];
+//			float value[2] = {cvecOutTmp[i].real()/8192, cvecOutTmp[i].imag()/8192};
+//			write(1000, &value, sizeof(value));
+		}
 
 		/* Write new block of data at the end of shift register */
 		HistoryBufCorr.AddEnd(cvecOutTmpInterm, iDecInpuSize);
@@ -115,7 +119,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 		/* Guard-interval correlation at ML estimated timing position */
 		/* Calculate start points for correlation. Consider delay from
 		   Hilbert-filter */
-		const int iHalHilFilDelDec = NUM_TAPS_HILB_FILT / 2 / GRDCRR_DEC_FACT;
+		const int iHalHilFilDelDec = iNumTapsHilbFilt / 2 / iGrdcrrDecFact;
 		const int iCorrPosFirst = iDecSymBS + iHalHilFilDelDec;
 		const int iCorrPosSec =
 			iDecSymBS + iHalHilFilDelDec + iLenUsefPart[iSelectedMode];
@@ -142,9 +146,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 
 		/* Integrate the result for controling the frequency offset, normalize
 		   estimate */
-		ReceiverParam.Lock(); 
-		ReceiverParam.rFreqOffsetTrack -= rFreqOffsetEst * rNormConstFOE;
-		ReceiverParam.Unlock(); 
+		Parameters.Lock(); 
+		Parameters.rFreqOffsetTrack -= rFreqOffsetEst * rNormConstFOE;
+		Parameters.Unlock(); 
 #endif
 
 
@@ -304,13 +308,13 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 								/* The optimal start position for the FFT-window
 								   is the middle of the "MaxDetBuffer" */
 								iNewStartIndexField[iNewStIndCount] = 
-									iTimeSyncPos * GRDCRR_DEC_FACT -
+									iTimeSyncPos * iGrdcrrDecFact -
 									iSymbolBlockSize / 2 -
 									/* Compensate for Hilbert-filter delay. The
 									   delay is introduced in the downsampled
 									   domain, therefore devide it by
 									   "GRDCRR_DEC_FACT" */
-									NUM_TAPS_HILB_FILT / 2 / GRDCRR_DEC_FACT;
+									iNumTapsHilbFilt / 2 / iGrdcrrDecFact;
 
 								iNewStIndCount++;
 							}
@@ -375,8 +379,8 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 						bRobModAcqu = FALSE;
 
 						/* Set wave mode */
-						ReceiverParam.Lock(); 
-						if (ReceiverParam.
+						Parameters.Lock(); 
+						if (Parameters.
 							SetWaveMode(GetRModeFromInd(iDetectedRModeInd)) == TRUE)
 						{
 							/* Reset output cyclic-buffer because wave mode has
@@ -384,7 +388,7 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							   valid anymore */
 							SetBufReset1();
 						}
-						ReceiverParam.Unlock(); 
+						Parameters.Unlock(); 
 					}
 				}
 			}
@@ -413,9 +417,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 				iAveCorr = 0;
 
 				/* GUI message that timing is ok */
-				ReceiverParam.Lock(); 
-				ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
-				ReceiverParam.Unlock(); 
+				Parameters.Lock(); 
+				Parameters.ReceiveStatus.TSync.SetStatus(RX_OK);
+				Parameters.Unlock(); 
 
 				/* Acquisition was successful, reset init flag (just in case it
 				   was not reset by the non-linear correction unit */
@@ -453,9 +457,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 							(CReal) iAveCorr / (NUM_SYM_BEFORE_RESET + 1);
 
 						/* GUI message that timing was corrected (red light) */
-						ReceiverParam.Lock(); 
-						ReceiverParam.ReceiveStatus.TSync.SetStatus(CRC_ERROR);
-						ReceiverParam.Unlock(); 
+						Parameters.Lock(); 
+						Parameters.ReceiveStatus.TSync.SetStatus(CRC_ERROR);
+						Parameters.Unlock(); 
 					}
 
 					/* Reset counters */
@@ -468,9 +472,9 @@ void CTimeSync::ProcessDataInternal(CParameter& ReceiverParam)
 					   show any light if init was done right before this */
 					if (bInitTimingAcqu == FALSE)
 					{
-						ReceiverParam.Lock(); 
-						ReceiverParam.ReceiveStatus.TSync.SetStatus(DATA_ERROR);
-						ReceiverParam.Unlock(); 
+						Parameters.Lock(); 
+						Parameters.ReceiveStatus.TSync.SetStatus(DATA_ERROR);
+						Parameters.Unlock(); 
 					}
 				}
 			}
@@ -488,7 +492,7 @@ fflush(pFile);
 	}
 	else
 	{
-		ReceiverParam.Lock(); 
+		Parameters.Lock(); 
 		/* Detect situation when acquisition was deactivated right now */
 		if (bAcqWasActive == TRUE)
 		{
@@ -496,24 +500,24 @@ fflush(pFile);
 
 			/* Reset also the tracking value since the tracking could not get
 			   right parameters since the timing was not yet correct */
-			ReceiverParam.iTimingOffsTrack = 0;
+			Parameters.iTimingOffsTrack = 0;
 		}
 
 		/* In case of tracking only, use final acquisition result "rStartIndex"
 		   (which is not updated any more) and add tracking correction */
-		iStartIndex = (int) rStartIndex + ReceiverParam.iTimingOffsTrack;
+		iStartIndex = (int) rStartIndex + Parameters.iTimingOffsTrack;
 
 		/* Timing acquisition was successfully finished, show always green
 		   light */
-		ReceiverParam.ReceiveStatus.TSync.SetStatus(RX_OK);
+		Parameters.ReceiveStatus.TSync.SetStatus(RX_OK);
 
-		ReceiverParam.Unlock(); 
+		Parameters.Unlock(); 
 
 #ifdef _DEBUG_
 /* Save estimated positions of timing (tracking) */
 static FILE* pFile = fopen("test/testtimetrack.dat", "w");
 static int iTimeTrackAbs = 0;
-iTimeTrackAbs += ReceiverParam.iTimingOffsTrack; /* Integration */
+iTimeTrackAbs += Parameters.iTimingOffsTrack; /* Integration */
 fprintf(pFile, "%d\n", iTimeTrackAbs);
 fflush(pFile);
 #endif
@@ -580,38 +584,99 @@ fflush(pFile);
 	(*pvecOutputData).GetExData().iCurTimeCorr = iIntDiffToCenter;
 }
 
-void CTimeSync::InitInternal(CParameter& ReceiverParam)
+void CTimeSync::InitInternal(CParameter& Parameters)
 {
-	int		i, j;
-	int		iMaxSymbolBlockSize;
-	int		iObservedFreqBin;
+	int	i, j;
+	int	iMaxSymbolBlockSize;
+	int	iObservedFreqBin;
 	CReal	rArgTemp;
-	int		iCorrBuffSize;
+	int	iCorrBuffSize;
 
-	ReceiverParam.Lock(); 
+	Parameters.Lock(); 
 
 	/* Get parameters from info class */
-	iGuardSize = ReceiverParam.CellMappingTable.iGuardSize;
-	iDFTSize = ReceiverParam.CellMappingTable.iFFTSizeN;
-	iSymbolBlockSize = ReceiverParam.CellMappingTable.iSymbolBlockSize;
+	iSampleRate = Parameters.GetSigSampleRate();
+
+	/* Adjusting fft size to sample rate */
+	const int iRMAFFTSizeN = ADJ_FOR_SRATE(RMA_FFT_SIZE_N, iSampleRate);
+	const int iRMBFFTSizeN = ADJ_FOR_SRATE(RMB_FFT_SIZE_N, iSampleRate);
+	const int iRMCFFTSizeN = ADJ_FOR_SRATE(RMC_FFT_SIZE_N, iSampleRate);
+	const int iRMDFFTSizeN = ADJ_FOR_SRATE(RMD_FFT_SIZE_N, iSampleRate);
+
+	/* Adjusting GRDCRR_DEC_FACT to sample rate */
+	iGrdcrrDecFact = ADJ_FOR_SRATE(GRDCRR_DEC_FACT, iSampleRate);
+
+	/* Set Hilbert-filter parameters according to sample rate */
+	switch (iSampleRate)
+	{
+#ifdef NUM_TAPS_HILB_FILT_24
+	case 24000:
+		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_24;
+# ifdef USE_10_KHZ_HILBFILT
+		fHilLPProt = fHilLPProt10_24;
+# else
+		fHilLPProt = fHilLPProt5_24;
+# endif
+		break;
+#endif
+#ifdef NUM_TAPS_HILB_FILT_48
+	case 48000:
+		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_48;
+# ifdef USE_10_KHZ_HILBFILT
+		fHilLPProt = fHilLPProt10_48;
+# else
+		fHilLPProt = fHilLPProt5_48
+# endif
+		break;
+#endif
+#ifdef NUM_TAPS_HILB_FILT_96
+	case 96000:
+		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_96;
+# ifdef USE_10_KHZ_HILBFILT
+		fHilLPProt = fHilLPProt10_96;
+# else
+		fHilLPProt = fHilLPProt5_96;
+# endif
+		break;
+#endif
+#ifdef NUM_TAPS_HILB_FILT_192
+	case 192000:
+		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_192;
+# ifdef USE_10_KHZ_HILBFILT
+		fHilLPProt = fHilLPProt10_192;
+# else
+		fHilLPProt = fHilLPProt5_192;
+# endif
+		break;
+#endif
+	}
+
+	/* Init Hilbert filter. Since the frequency offset correction was
+	   done in the previous module, the offset for the filter is
+	   always "VIRTUAL_INTERMED_FREQ" */
+	SetFilterTaps((CReal) VIRTUAL_INTERMED_FREQ / iSampleRate);
+
+	iGuardSize = Parameters.CellMappingTable.iGuardSize;
+	iDFTSize = Parameters.CellMappingTable.iFFTSizeN;
+	iSymbolBlockSize = Parameters.CellMappingTable.iSymbolBlockSize;
 
 	/* Decimated symbol block size */
-	iDecSymBS = iSymbolBlockSize / GRDCRR_DEC_FACT;
+	iDecSymBS = iSymbolBlockSize / iGrdcrrDecFact;
 
 	/* Calculate maximum symbol block size (This is Rob. Mode A) */
-	iMaxSymbolBlockSize = RMA_FFT_SIZE_N + 
-		RMA_FFT_SIZE_N * RMA_ENUM_TG_TU / RMA_DENOM_TG_TU;
+	iMaxSymbolBlockSize = iRMAFFTSizeN + 
+		iRMAFFTSizeN * RMA_ENUM_TG_TU / RMA_DENOM_TG_TU;
 
 	/* We need at least two blocks of data for determining the timing */
 	iTotalBufferSize = 2 * iSymbolBlockSize + iMaxSymbolBlockSize;
-	iCorrBuffSize = iTotalBufferSize / GRDCRR_DEC_FACT;
+	iCorrBuffSize = iTotalBufferSize / iGrdcrrDecFact;
 
 	/* Set step size of the guard-interval correlation */
 	iStepSizeGuardCorr = STEP_SIZE_GUARD_CORR;
 
 	/* Size for moving average buffer for guard-interval correlation */
 	iMovAvBufSize = 
-		(int) ((CReal) iGuardSize / GRDCRR_DEC_FACT / iStepSizeGuardCorr);
+		(int) ((CReal) iGuardSize / iGrdcrrDecFact / iStepSizeGuardCorr);
 
 	/* Size of buffer, storing the moving-average results for 
 	   maximum detection */
@@ -657,7 +722,7 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 
 	/* Set the selected robustness mode index */
-	iSelectedMode = GetIndFromRMode(ReceiverParam.GetWaveMode());
+	iSelectedMode = GetIndFromRMode(Parameters.GetWaveMode());
 
 	/* Init init count for timing sync (one symbol) */
 	iTiSyncInitCnt = iDecSymBS / iStepSizeGuardCorr;
@@ -684,27 +749,27 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 		switch (i)
 		{
 		case 0:
-			iLenUsefPart[i] = RMA_FFT_SIZE_N / GRDCRR_DEC_FACT;
-			iLenGuardInt[i] = (int) ((CReal) RMA_FFT_SIZE_N * 
-				RMA_ENUM_TG_TU / RMA_DENOM_TG_TU / GRDCRR_DEC_FACT);
+			iLenUsefPart[i] = iRMAFFTSizeN / iGrdcrrDecFact;
+			iLenGuardInt[i] = (int) ((CReal) iRMAFFTSizeN * 
+				RMA_ENUM_TG_TU / RMA_DENOM_TG_TU / iGrdcrrDecFact);
 			break;
 
 		case 1:
-			iLenUsefPart[i] = RMB_FFT_SIZE_N / GRDCRR_DEC_FACT;
-			iLenGuardInt[i] = (int) ((CReal) RMB_FFT_SIZE_N * 
-				RMB_ENUM_TG_TU / RMB_DENOM_TG_TU / GRDCRR_DEC_FACT);
+			iLenUsefPart[i] = iRMBFFTSizeN / iGrdcrrDecFact;
+			iLenGuardInt[i] = (int) ((CReal) iRMBFFTSizeN * 
+				RMB_ENUM_TG_TU / RMB_DENOM_TG_TU / iGrdcrrDecFact);
 			break;
 
 		case 2:
-			iLenUsefPart[i] = RMC_FFT_SIZE_N / GRDCRR_DEC_FACT;
-			iLenGuardInt[i] = (int) ((CReal) RMC_FFT_SIZE_N * 
-				RMC_ENUM_TG_TU / RMC_DENOM_TG_TU / GRDCRR_DEC_FACT);
+			iLenUsefPart[i] = iRMCFFTSizeN / iGrdcrrDecFact;
+			iLenGuardInt[i] = (int) ((CReal) iRMCFFTSizeN * 
+				RMC_ENUM_TG_TU / RMC_DENOM_TG_TU / iGrdcrrDecFact);
 			break;
 
 		case 3:
-			iLenUsefPart[i] = RMD_FFT_SIZE_N / GRDCRR_DEC_FACT;
-			iLenGuardInt[i] = (int) ((CReal) RMD_FFT_SIZE_N * 
-				RMD_ENUM_TG_TU / RMD_DENOM_TG_TU / GRDCRR_DEC_FACT);
+			iLenUsefPart[i] = iRMDFFTSizeN / iGrdcrrDecFact;
+			iLenGuardInt[i] = (int) ((CReal) iRMDFFTSizeN * 
+				RMD_ENUM_TG_TU / RMD_DENOM_TG_TU / iGrdcrrDecFact);
 			break;
 		}
 
@@ -756,18 +821,18 @@ void CTimeSync::InitInternal(CParameter& ReceiverParam)
 
 	/* Init time constant for IIR filter for frequency offset estimation */
 	rLamFreqOff = IIR1Lam(TICONST_FREQ_OFF_EST_GUCORR,
-		(CReal) SOUNDCRD_SAMPLE_RATE / ReceiverParam.iSymbolBlockSize);
+		(CReal) iSampleRate / Parameters.iSymbolBlockSize);
 
 	/* Nomalization constant for frequency offset estimation */
 	rNormConstFOE = (CReal) 1.0 /
-		((CReal) 2.0 * crPi * ReceiverParam.iFFTSizeN * GRDCRR_DEC_FACT);
+		((CReal) 2.0 * crPi * Parameters.iFFTSizeN * iGrdcrrDecFact);
 #endif
 
 	/* Define block-sizes for input and output */
 	iInputBlockSize = iSymbolBlockSize; /* For the first loop */
 	iOutputBlockSize = iDFTSize;
 
-	ReceiverParam.Unlock(); 
+	Parameters.Unlock(); 
 }
 
 void CTimeSync::StartAcquisition()
@@ -800,43 +865,36 @@ void CTimeSync::StartAcquisition()
 	iCorrAvInd = 0;
 }
 
-void CTimeSync::SetFilterTaps(const CReal rNewOffsetNorm)
+void CTimeSync::SetFilterTaps(CReal rNewOffsetNorm)
 {
-#ifdef USE_10_KHZ_HILBFILT
-	float * fHilLPProt = fHilLPProt10;
-#else
-	float * fHilLPProt = fHilLPProt5;
-
+#ifndef USE_10_KHZ_HILBFILT
 	/* The filter should be on the right of the DC carrier in 5 kHz mode */
-	rNewOffsetNorm += (CReal) HILB_FILT_BNDWIDTH / 2 / SOUNDCRD_SAMPLE_RATE;
+	rNewOffsetNorm += (CReal) HILB_FILT_BNDWIDTH / 2 / iSampleRate;
 #endif
 
 	/* Calculate filter taps for complex Hilbert filter */
-	cvecB.Init(NUM_TAPS_HILB_FILT);
+	cvecB.Init(iNumTapsHilbFilt);
 
-	for (int i = 0; i < NUM_TAPS_HILB_FILT; i++)
+	for (int i = 0; i < iNumTapsHilbFilt; i++)
 		cvecB[i] = CComplex(
 			fHilLPProt[i] * Cos((CReal) 2.0 * crPi * rNewOffsetNorm * i),
 			fHilLPProt[i] * Sin((CReal) 2.0 * crPi * rNewOffsetNorm * i));
 
 	/* Init state vector for filtering with zeros */
-	cvecZ.Init(NUM_TAPS_HILB_FILT - 1, (CReal) 0.0);
+	cvecZ.Init(iNumTapsHilbFilt - 1, (CReal) 0.0);
 }
 
-CTimeSync::CTimeSync() : iTimeSyncPos(0), bSyncInput(FALSE), bTimingAcqu(FALSE),
+CTimeSync::CTimeSync() : iSampleRate(0), iGrdcrrDecFact(0),
+	iNumTapsHilbFilt(0), fHilLPProt(NULL),
+	iTimeSyncPos(0), bSyncInput(FALSE), bTimingAcqu(FALSE),
 	bRobModAcqu(FALSE), bAcqWasActive(FALSE), rLambdaCoAv((CReal) 1.0),
 	iLengthIntermCRes(NUM_ROBUSTNESS_MODES),
 	iPosInIntermCResBuf(NUM_ROBUSTNESS_MODES),
 	iLengthOverlap(NUM_ROBUSTNESS_MODES), iLenUsefPart(NUM_ROBUSTNESS_MODES),
 	iLenGuardInt(NUM_ROBUSTNESS_MODES), cGuardCorr(NUM_ROBUSTNESS_MODES),
 	cGuardCorrBlock(NUM_ROBUSTNESS_MODES), rGuardPow(NUM_ROBUSTNESS_MODES),
-	rGuardPowBlock(NUM_ROBUSTNESS_MODES)
-,vecrRMCorrBuffer()
+	rGuardPowBlock(NUM_ROBUSTNESS_MODES), vecrRMCorrBuffer()
 {
-	/* Init Hilbert filter. Since the frequency offset correction was
-	   done in the previous module, the offset for the filter is
-	   always "VIRTUAL_INTERMED_FREQ" */
-	SetFilterTaps((_REAL) VIRTUAL_INTERMED_FREQ / SOUNDCRD_SAMPLE_RATE);
 }
 
 int CTimeSync::GetIndFromRMode(ERobMode eNewMode)

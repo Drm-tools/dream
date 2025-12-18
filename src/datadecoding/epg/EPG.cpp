@@ -1225,6 +1225,11 @@ EPG::genre_list[] = {
     {0, 0},
 };
 
+#ifdef USE_QT_GUI
+/* DialogUtil.cpp TODO: CreateDirectories should be accessible from qtconsole mode */
+extern void CreateDirectories(const QString& strFilename);
+#endif
+
 EPG::EPG(CParameter& NParameters):Parameters(NParameters)
 {
     for (int i = 0; true; i++)
@@ -1233,10 +1238,13 @@ EPG::EPG(CParameter& NParameters):Parameters(NParameters)
             break;
         genres[genre_list[i].genre] = genre_list[i].desc;
     }
-
-    dir = (Parameters.sDataFilesDirectory + "/EPG").c_str();
-	if (!QFileInfo(dir).exists())
-	QDir().mkdir(dir);
+    dir = Parameters.GetDataDirectory("EPG").c_str();
+#ifdef USE_QT_GUI
+    CreateDirectories(dir);
+#else
+    if (!QFileInfo(dir).exists())
+        QDir().mkdir(dir);
+#endif
     servicesFilename = dir + "/services.xml";
     loadChannels (servicesFilename);
     saveChannels (servicesFilename);
@@ -1579,7 +1587,7 @@ int EPG::parseDuration (const QString& duration)
         return 0;
     if (duration[0]=='P')
     {
-        int yy=0,mo=0,dd=0,hh=0,mi=0,ss=0;
+        int /*yy=0,mo=0,dd=0,*/hh=0,mi=0,ss=0;
         int d=0;
         bool date=true;
         for (size_t i=1; i<(size_t)duration.length(); i++)
@@ -1621,18 +1629,18 @@ int EPG::parseDuration (const QString& duration)
                 d = d*10+9;
                 break;
             case 'Y':
-                yy=d;
+//                yy=d;
                 d=0;
                 break;
             case 'M':
-                if (date)
-                    mo = d;
-                else
+                if (!date)
                     mi = d;
+//                else
+//                    mo = d;
                 d = 0;
                 break;
             case 'D':
-                dd=d;
+//                dd=d;
                 d=0;
                 break;
             case 'H':

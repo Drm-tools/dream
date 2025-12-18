@@ -38,22 +38,22 @@
 
 
 /* Implementation *************************************************************/
-void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
-								  ESpecOcc eNewSpectOccup)
+void CCellMappingTable::MakeTable(
+  ERobMode eNewRobustnessMode, ESpecOcc eNewSpectOccup, int iSampleRate)
 {
-	int				iNoMSCDummyCells; /* Number of MSC dummy cells */
-	int				iNumTimePilots=0; /* Number of time pilots per frame */
+	int			iNoMSCDummyCells; /* Number of MSC dummy cells */
+	int			iNumTimePilots=0; /* Number of time pilots per frame */
 	CScatPilots		ScatPilots;
-	int				iSym;
-	int				iFrameSym;
-	int				iCar;
-	int				iTimePilotsCounter;
-	int				iFreqPilotsCounter;
-	int				iScatPilotsCounter;
-	int				iFACCounter;
-	int				iScatPilPhase;
-	int				iCarArrInd;
-	int				iSpecOccArrayIndex=0;
+	int			iSym;
+	int			iFrameSym;
+	int			iCar;
+	int			iTimePilotsCounter;
+	int			iFreqPilotsCounter;
+	int			iScatPilotsCounter;
+	int			iFACCounter;
+	int			iScatPilPhase;
+	int			iCarArrInd;
+	int			iSpecOccArrayIndex=0;
 	/* Tables */
 	const int*		piTableFAC=NULL;
 	const int*		piTableTimePilots=NULL;
@@ -203,6 +203,9 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 		break;
 	}
 
+	/* Adjusting fft size to sample rate */
+	iFFTSizeN = ADJ_FOR_SRATE(iFFTSizeN, iSampleRate);
+
 	/* Get number of carriers with DC */
 	iNumCarrier = iCarrierKmax - iCarrierKmin + 1;
 
@@ -216,7 +219,7 @@ void CCellMappingTable::MakeTable(ERobMode eNewRobustnessMode,
 
 	/* Calculate the index of the DC carrier in the shifted spectrum */
 	iIndexDCFreq = (int) ((_REAL) VIRTUAL_INTERMED_FREQ *
-		iFFTSizeN / SOUNDCRD_SAMPLE_RATE);
+		iFFTSizeN / iSampleRate);
 
 	/* Index of minimum useful carrier (shifted) */
 	iShiftedKmin = iIndexDCFreq + iCarrierKmin;

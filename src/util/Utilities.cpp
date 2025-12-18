@@ -48,6 +48,22 @@
 
 /* Implementation *************************************************************/
 /******************************************************************************\
+* Thread safe counter                                                          *
+\******************************************************************************/
+unsigned int CCounter::operator++()
+	{ unsigned int value; mutex.Lock(); value = ++count; mutex.Unlock(); return value; }
+unsigned int CCounter::operator++(int)
+	{ unsigned int value; mutex.Lock(); value = count++; mutex.Unlock(); return value; }
+unsigned int CCounter::operator--()
+	{ unsigned int value; mutex.Lock(); value = --count; mutex.Unlock(); return value; }
+unsigned int CCounter::operator--(int)
+	{ unsigned int value; mutex.Lock(); value = count--; mutex.Unlock(); return value; }
+CCounter::operator unsigned int()
+	{ unsigned int value; mutex.Lock(); value = count;   mutex.Unlock(); return value; }
+unsigned int CCounter::operator=(unsigned int value)
+	{ mutex.Lock(); count = value; mutex.Unlock(); return value; }
+
+/******************************************************************************\
 * Signal level meter                                                           *
 \******************************************************************************/
 void
@@ -124,8 +140,8 @@ CDRMBandpassFilt::Process(CVector < _COMPLEX > &veccData)
 }
 
 void
-CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
-					   const ESpecOcc eSpecOcc, const EFiltType eNFiTy)
+CDRMBandpassFilt::Init(int iSampleRate, int iNewBlockSize, _REAL rOffsetHz,
+					   ESpecOcc eSpecOcc, EFiltType eNFiTy)
 {
 	CReal rMargin = 0.0;
 
@@ -138,9 +154,9 @@ CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
 	/* Choose correct filter for chosen DRM bandwidth. Also, adjust offset
 	   frequency for different modes. E.g., 5 kHz mode is on the right side
 	   of the DC frequency */
-	CReal rNormCurFreqOffset = rOffsetHz / SOUNDCRD_SAMPLE_RATE;
+	CReal rNormCurFreqOffset = rOffsetHz / iSampleRate;
 	/* Band-pass filter bandwidth */
-	CReal rBPFiltBW = ((CReal) 10000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
+	CReal rBPFiltBW = ((CReal) 10000.0 + rMargin) / iSampleRate;
 
 	/* Negative margin for receiver filter for better interferer rejection */
 	if (eNFiTy == FT_TRANSMITTER)
@@ -151,49 +167,49 @@ CDRMBandpassFilt::Init(const int iNewBlockSize, const _REAL rOffsetHz,
 	switch (eSpecOcc)
 	{
 	case SO_0:
-		rBPFiltBW = ((CReal) 4500.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
+		rBPFiltBW = ((CReal) 4500.0 + rMargin) / iSampleRate;
 
 		/* Completely on the right side of DC */
 		rNormCurFreqOffset =
-			(rOffsetHz + (CReal) 2190.0) / SOUNDCRD_SAMPLE_RATE;
+			(rOffsetHz + (CReal) 2190.0) / iSampleRate;
 		break;
 
 	case SO_1:
-		rBPFiltBW = ((CReal) 5000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
+		rBPFiltBW = ((CReal) 5000.0 + rMargin) / iSampleRate;
 
 		/* Completely on the right side of DC */
 		rNormCurFreqOffset =
-			(rOffsetHz + (CReal) 2440.0) / SOUNDCRD_SAMPLE_RATE;
+			(rOffsetHz + (CReal) 2440.0) / iSampleRate;
 		break;
 
 	case SO_2:
-		rBPFiltBW = ((CReal) 9000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
+		rBPFiltBW = ((CReal) 9000.0 + rMargin) / iSampleRate;
 
 		/* Centered */
-		rNormCurFreqOffset = rOffsetHz / SOUNDCRD_SAMPLE_RATE;
+		rNormCurFreqOffset = rOffsetHz / iSampleRate;
 		break;
 
 	case SO_3:
-		rBPFiltBW = ((CReal) 10000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
+		rBPFiltBW = ((CReal) 10000.0 + rMargin) / iSampleRate;
 
 		/* Centered */
-		rNormCurFreqOffset = rOffsetHz / SOUNDCRD_SAMPLE_RATE;
+		rNormCurFreqOffset = rOffsetHz / iSampleRate;
 		break;
 
 	case SO_4:
-		rBPFiltBW = ((CReal) 18000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
+		rBPFiltBW = ((CReal) 18000.0 + rMargin) / iSampleRate;
 
 		/* Main part on the right side of DC */
 		rNormCurFreqOffset =
-			(rOffsetHz + (CReal) 4500.0) / SOUNDCRD_SAMPLE_RATE;
+			(rOffsetHz + (CReal) 4500.0) / iSampleRate;
 		break;
 
 	case SO_5:
-		rBPFiltBW = ((CReal) 20000.0 + rMargin) / SOUNDCRD_SAMPLE_RATE;
+		rBPFiltBW = ((CReal) 20000.0 + rMargin) / iSampleRate;
 
 		/* Main part on the right side of DC */
 		rNormCurFreqOffset =
-			(rOffsetHz + (CReal) 5000.0) / SOUNDCRD_SAMPLE_RATE;
+			(rOffsetHz + (CReal) 5000.0) / iSampleRate;
 		break;
 	}
 
@@ -235,7 +251,7 @@ void
 CModJulDate::Set(const uint32_t iModJulDate)
 {
 	uint32_t iZ, iA, iAlpha, iB, iC, iD, iE;
-	_REAL rJulDate, rF;
+	_REAL rJulDate/*, rF*/;
 
 	/* Definition of the Modified Julian Date */
 	rJulDate = (_REAL) iModJulDate + 2400000.5;
@@ -245,7 +261,7 @@ CModJulDate::Set(const uint32_t iModJulDate)
 	// 1. Add .5 to the JD and let Z = integer part of (JD+.5) and F the
 	// fractional part F = (JD+.5)-Z
 	iZ = (uint32_t) (rJulDate + (_REAL) 0.5);
-	rF = (rJulDate + (_REAL) 0.5) - iZ;
+//	rF = (rJulDate + (_REAL) 0.5) - iZ;
 
 	// 2. If Z < 2299161, take A = Z
 	// If Z >= 2299161, calculate alpha = INT((Z-1867216.25)/36524.25)
@@ -291,6 +307,17 @@ CModJulDate::Set(const uint32_t iModJulDate)
 		iYear = iC - 4715;
 }
 
+void
+CModJulDate::Get(const uint32_t iYear, const uint32_t iMonth, const uint32_t iDay)
+{
+	/* Taken from "http://en.wikipedia.org/wiki/Julian_day" */
+	uint32_t a = (14 - iMonth) / 12;
+	uint32_t y = iYear + 4800 - a;
+	uint32_t m = iMonth + 12*a - 3;;
+	uint32_t iJulDate = iDay + (153*m+2)/5 + 365*y + y/4 - y/100 + y/400 - 32045;
+	iModJulDate = iJulDate - 2400001;
+}
+
 /******************************************************************************\
 * Audio Reverberation                                                          *
 \******************************************************************************/
@@ -306,11 +333,11 @@ CModJulDate::Set(const uint32_t iModJulDate)
 	three series allpass units, followed by four parallel comb filters, and two
 	decorrelation delay lines in parallel at the output.
 */
-CAudioReverb::CAudioReverb(const CReal rT60)
+void CAudioReverb::Init(CReal rT60, int iSampleRate)
 {
 	/* Delay lengths for 44100 Hz sample rate */
 	int lengths[9] = { 1777, 1847, 1993, 2137, 389, 127, 43, 211, 179 };
-	const CReal scaler = (CReal) SOUNDCRD_SAMPLE_RATE / 44100.0;
+	const CReal scaler = CReal(iSampleRate) / 44100.0;
 
 	int delay, i;
 	if (scaler != 1.0)
@@ -335,7 +362,7 @@ CAudioReverb::CAudioReverb(const CReal rT60)
 	for (i = 0; i < 4; i++)
 		combDelays_[i].Init(lengths[i]);
 
-	setT60(rT60);
+	setT60(rT60, iSampleRate);
 	allpassCoefficient_ = (CReal) 0.7;
 	Clear();
 }
@@ -377,15 +404,12 @@ CAudioReverb::Clear()
 }
 
 void
-CAudioReverb::setT60(const CReal rT60)
+CAudioReverb::setT60(const CReal rT60, int iSampleRate)
 {
 	/* Set the reverberation T60 decay time */
 	for (int i = 0; i < 4; i++)
 	{
-		combCoefficient_[i] = pow((CReal) 10.0, (CReal) (-3.0 *
-														 combDelays_[i].
-														 Size() / (rT60 *
-																   SOUNDCRD_SAMPLE_RATE)));
+		combCoefficient_[i] = pow((CReal) 10.0, (CReal) (-3.0 * combDelays_[i].  Size() / (rT60 * iSampleRate)));
 	}
 }
 
@@ -611,14 +635,14 @@ CHamlib::GetPortList(map < string, string > &ports)
 	while (!feof(p))
 	{
 		char buf[1024];
-		fgets(buf, sizeof(buf), p);
+		char* r = fgets(buf, sizeof(buf), p);
 		if (strlen(buf) > 0)
 		{
 			string s =
 				string("hal-get-property --key serial.device --udi ") +
 				buf;
 			FILE *p2 = popen(s.c_str(), "r");
-			fgets(buf, sizeof(buf), p2);
+			r = fgets(buf, sizeof(buf), p2);
 			size_t n = strlen(buf);
 			if (n > 0)
 			{
@@ -630,6 +654,7 @@ CHamlib::GetPortList(map < string, string > &ports)
 			}
 			pclose(p2);
 		}
+		(void)r;
 	}
 	pclose(p);
 	if (!bOK)
@@ -647,7 +672,7 @@ CHamlib::GetPortList(map < string, string > &ports)
     classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue);
     if (classesToMatch == NULL)
     {
-        printf("IOServiceMatching returned a NULL dictionary.\n");
+        fprintf(stderr, "IOServiceMatching returned a NULL dictionary.\n");
     }
     else
 	{
@@ -659,7 +684,7 @@ CHamlib::GetPortList(map < string, string > &ports)
     kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);
     if (KERN_SUCCESS != kernResult)
     {
-        printf("IOServiceGetMatchingServices returned %d\n", kernResult);
+        fprintf(stderr, "IOServiceGetMatchingServices returned %d\n", kernResult);
     }
 
     io_object_t		modemService;

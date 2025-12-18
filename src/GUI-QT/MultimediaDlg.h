@@ -118,16 +118,14 @@ class MultimediaDlg : public MultimediaDlgBase
 	Q_OBJECT
 
 public:
-	MultimediaDlg(CDRMReceiver&, QWidget* parent = 0,
+	MultimediaDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
 		const char* name = 0, bool modal = FALSE, Qt::WFlags f = 0);
-
 	virtual ~MultimediaDlg();
 
-	void LoadSettings(const CSettings&);
 	void SaveSettings(CSettings&);
 
 protected:
-
+	CSettings&				Settings;
 	CParameter&				Parameters;
 	CDataDecoder&			DataDecoder;
 	CJournaline				JournalineDecoder;
@@ -156,12 +154,12 @@ protected:
 	int						iRefresh;
 	bool					bGetFromFile;
 
+	void LoadSettings(const CSettings&);
 	void SetSlideShowPicture();
 	void SetJournalineText();
 	void UpdateAccButtonsSlideShow();
 	int GetIDLastPicture() {return vecRawImages.Size() - 1;}
-	void SaveMOTObject(const CVector<_BYTE>& vecbRawData, const QString& strFileName);
-	void CreateDirectories(const QString& filename);
+	void SaveMOTObject(const QString& strFileName, const CMOTObject& obj);
 	void ClearAllSlideShow();
 
 	void InitApplication(CDataDecoder::EAppType eNewAppType);

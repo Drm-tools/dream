@@ -3,7 +3,7 @@
  * Copyright (c) 2009
  *
  * Author(s):
- *	 Julian Cable
+ *	 Julian Cable, David Flamand
  *
  * Description: MOT Slide Show Viewer
  *
@@ -31,9 +31,10 @@
 
 #include "ui_SlideShowViewer.h"
 #include "../DrmReceiver.h"
+#include "DialogUtil.h"
 class CSettings;
 
-class SlideShowViewer : public QDialog
+class SlideShowViewer : public QDialog, Ui_SlideShowViewer
 {
     Q_OBJECT
 
@@ -42,17 +43,24 @@ public:
     virtual ~SlideShowViewer();
 
 protected:
-
     void                    SetImage(int);
     void                    UpdateButtons();
-    QTimer Timer;
-    std::string             strCurrentSavePath;
-    CDRMReceiver&	    receiver;
+    void                    ClearMOTCache(CMOTDABDec *motdec);
+    void                    GetServiceParams(uint32_t* iServiceID, bool* bServiceValid, QString* strLabel, ETypeRxStatus* eStatus=NULL, int* shortID=NULL, int* iPacketID=NULL);
+    void                    UpdateWindowTitle(const uint32_t iServiceID, const bool bServiceValid, QString strLabel);
+    QTimer                  Timer;
+    QString                 strCurrentSavePath;
+    CDRMReceiver&           receiver;
     CSettings&              settings;
     std::vector<QPixmap>    vecImages;
     std::vector<QString>    vecImageNames;
-    int			    iCurImagePos;
-    Ui_SlideShowViewer*	    ui;
+    int                     iCurImagePos;
+    bool                    bClearMOTCache;
+    uint32_t                iLastServiceID;
+    uint32_t                iCurrentDataServiceID;
+    bool                    bLastServiceValid;
+    QString                 strLastLabel;
+    CEventFilter            ef;
 
 public slots:
     void OnTimer();

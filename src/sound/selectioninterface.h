@@ -6,7 +6,7 @@
  *	Julian Cable
  *
  * Decription:
- * Read a file at the correct rate
+ * sound interfaces
  *
  ******************************************************************************
  *
@@ -26,41 +26,20 @@
  *
 \******************************************************************************/
 
-#ifndef _AUDIOFILEIN
-#define _AUDIOFILEIN
+#ifndef _SELECTIONINTERFACE_H
+#define _SELECTIONINTERFACE_H
 
-#include "soundinterface.h"
-#include "util/Pacer.h"
+#include "../GlobalDefinitions.h"
+#include <vector>
+#include <string>
 
-/* Classes ********************************************************************/
-class CAudioFileIn : public CSoundInInterface
+class CSelectionInterface
 {
 public:
-    CAudioFileIn();
-    virtual ~CAudioFileIn();
-
-    virtual void		Enumerate(vector<string>&) { }
-    virtual void		SetDev(int) {}
-    virtual int			GetDev() {
-        return -1;
-    }
-    virtual void		SetFileName(const string& strFileName);
-
-    virtual void 		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
-    virtual _BOOLEAN 	Read(CVector<short>& psData);
-    virtual void 		Close();
-
-protected:
-    FILE*				pFileReceiver;
-    string				strInFileName;
-    enum {
-        fmt_txt, fmt_raw_mono, fmt_raw_stereo, fmt_other
-    }				eFmt;
-    int					iFileSampleRate;
-    int					iFileChannels;
-    CPacer*				pacer;
-    short *buffer;
-    int iBufferSize;
+    virtual 			~CSelectionInterface() {}
+    virtual void		Enumerate(vector<string>& names, vector<string>& descriptions)=0;
+    virtual string		GetDev()=0;
+    virtual void		SetDev(string sNewDev)=0;
 };
 
 #endif

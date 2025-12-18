@@ -1,12 +1,12 @@
 /******************************************************************************\
  * British Broadcasting Corporation
- * Copyright (c) 2009
+ * Copyright (c) 2007
  *
  * Author(s):
- *	 Julian Cable
+ *	Julian Cable
  *
- * Description: Broadcast Website Specialisation of TextBrowser
- *
+ * Decription:
+ * sound interfaces
  *
  ******************************************************************************
  *
@@ -26,42 +26,33 @@
  *
 \******************************************************************************/
 
-#ifndef _BWSBROWSER_H
-#define _BWSBROWSER_H
+#ifndef _SOUNDINTERFACE_H
+#define _SOUNDINTERFACE_H
 
-#include <map>
-#include <QTextBrowser>
-#include "../datadecoding/DataDecoder.h"
+#include "selectioninterface.h"
+#include "../util/Vector.h"
 
-class BWSBrowser : public QTextBrowser
+class CSoundInInterface : public CSelectionInterface
 {
-    Q_OBJECT
 public:
-    BWSBrowser(QWidget * parent = 0);
-    ~BWSBrowser() {}
-    QVariant loadResource ( int type, const QUrl & name );
-    bool changed();
-    void setDecoder(CDataDecoder *d) {
-        decoder = d;
-    }
-    void setSavePath(const QString& path) {
-        sPath = path;
-    }
-    void setRestrictedProfile(bool b) {
-        restricted = b;
-    }
-    bool restrictedProfile() {
-        return restricted;
-    }
+    virtual 		~CSoundInInterface() {}
 
-protected:
+    /* sound card interface - used by ReadData */
+    virtual _BOOLEAN Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)=0;
+    virtual _BOOLEAN Read(CVector<short>& psData)=0;
+    virtual void     Close()=0;
 
-    void CreateDirectories(const QString& filename);
-    void SaveMOTObject(const CVector<_BYTE>& vecbRawData, const QString& strFileName);
-    CDataDecoder*   decoder;
-    std::map<QString,QVariant> pages;
-    QString sPath;
-    bool restricted, initialised;
+};
+
+class CSoundOutInterface : public CSelectionInterface
+{
+public:
+    virtual 		~CSoundOutInterface() {}
+
+    /* sound card interface - used by WriteData */
+    virtual _BOOLEAN Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)=0;
+    virtual _BOOLEAN Write(CVector<short>& psData)=0;
+    virtual void     Close()=0;
 };
 
 #endif

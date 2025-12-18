@@ -137,6 +137,15 @@ public:
 
     virtual ~CAudioSourceDecoder();
 
+    bool CanDecode(CAudioParam::EAudCod eAudCod) {
+        switch (eAudCod)
+        {
+        case CAudioParam::AC_AAC:  return canDecodeAAC;
+        case CAudioParam::AC_CELP: return canDecodeCELP;
+        case CAudioParam::AC_HVXC: return canDecodeHVXC;
+        }
+        return false;
+    }
     int GetNumCorDecAudio();
     void SetReverbEffect(const _BOOLEAN bNER) {
         bUseReverbEffect = bNER;
@@ -198,17 +207,7 @@ protected:
 
     int iBadBlockCount;
     int iAudioPayloadLen;
-#ifndef USE_FAAD2_LIBRARY
-# ifdef _WIN32
-    HINSTANCE hFaaDlib;
-# else
-    void* hFaaDlib;
-# endif
-    NeAACDecOpen_t *NeAACDecOpen;
-    NeAACDecInitDRM_t *NeAACDecInitDRM;
-    NeAACDecClose_t *NeAACDecClose;
-    NeAACDecDecode_t *NeAACDecDecode;
-#endif
+
     /* HVXC decoding */
     CMatrix<_BINARY> hvxc_frame;
     int iNumHvxcBits;
@@ -218,9 +217,9 @@ protected:
     CVector<_BYTE> celp_crc_bits;
     int iNumHigherProtectedBits;
     int iNumLowerProtectedBits;
-
     _BOOLEAN bCELPCRC;
     CCRC CELPCRCObject;
+
     string audiodecoder;
     bool canDecodeAAC;
     bool canDecodeCELP;
@@ -231,8 +230,8 @@ protected:
 #ifdef USE_CELP_DECODER
     /* TODO put here decoder specific things */
 #endif
-    virtual void InitInternal(CParameter& ReceiverParam);
-    virtual void ProcessDataInternal(CParameter& ReceiverParam);
+    virtual void InitInternal(CParameter& Parameters);
+    virtual void ProcessDataInternal(CParameter& Parameters);
     string AACFileName(CParameter&);
     string CELPFileName(CParameter&);
     string HVXCFileName(CParameter&);

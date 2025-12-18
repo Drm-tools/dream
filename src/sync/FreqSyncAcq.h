@@ -75,8 +75,7 @@ public:
 	CFreqSyncAcq() : 
 		veciTableFreqPilots(3), /* 3 frequency pilots */
 		bAquisition(FALSE), bSyncInput(FALSE),
-		rCenterFreq((_REAL) SOUNDCRD_SAMPLE_RATE / 4),
-		rWinSize((_REAL) SOUNDCRD_SAMPLE_RATE / 2),
+		rCenterFreq(0), rWinSize(0),
 		bUseRecFilter(FALSE)
 		{}
 	virtual ~CFreqSyncAcq() {}
@@ -140,8 +139,8 @@ protected:
 	/* RSCI output even when unlocked */
 	int							iFreeSymbolCounter;
 
-	virtual void InitInternal(CParameter& ReceiverParam);
-	virtual void ProcessDataInternal(CParameter& ReceiverParam);
+	virtual void InitInternal(CParameter& Parameters);
+	virtual void ProcessDataInternal(CParameter& Parameters);
 };
 
 

@@ -34,8 +34,8 @@
 /* implementation --------------------------------------------- */
 
 CReceptLog::CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALSE),
-            bRxlEnabled(FALSE), bPositionEnabled(FALSE),
-            iSecDelLogStart(0)
+    bRxlEnabled(FALSE), bPositionEnabled(FALSE),
+    iSecDelLogStart(0)
 {
     iFrequency = Parameters.GetFrequency();
     latitude = Parameters.gps_data.fix.latitude;
@@ -45,6 +45,7 @@ CReceptLog::CReceptLog(CParameter & p):Parameters(p), File(), bLogActivated(FALS
 void
 CReceptLog::Start(const string & filename)
 {
+qDebug("open log");
     File.open(filename.c_str(), ios::app);
     if (File.is_open())
     {
@@ -61,6 +62,7 @@ CReceptLog::Stop()
         return;
     writeTrailer();
     File.close();
+qDebug("close log");
     bLogActivated = FALSE;
 }
 
@@ -69,29 +71,25 @@ CReceptLog::Update()
 {
     if (!bLogActivated)
         return;
+    writeParameters();
+}
+
+bool CReceptLog::restartNeeded()
+{
     int iCurrentFrequency = Parameters.GetFrequency();
     double currentLatitude = Parameters.gps_data.fix.latitude;
     double currentLongitude = Parameters.gps_data.fix.longitude;
     if((iCurrentFrequency != iFrequency)
-    || (bPositionEnabled && int(currentLatitude) != int(latitude))
-    || (bPositionEnabled && int(currentLongitude) != int(longitude))
-    )
+            || (bPositionEnabled && int(currentLatitude) != int(latitude))
+            || (bPositionEnabled && int(currentLongitude) != int(longitude))
+      )
     {
-        // Frequency or position has changed
-        if (bLogActivated)
-        {
-            writeTrailer();
-            iFrequency = iCurrentFrequency;
-	    latitude = currentLatitude;
-	    longitude = currentLongitude;
-            writeHeader();
-        }
-        else
-        {
-            iFrequency = iCurrentFrequency;
-        }
+        iFrequency = iCurrentFrequency;
+        latitude = currentLatitude;
+        longitude = currentLongitude;
+        return true;
     }
-    writeParameters();
+    return false;
 }
 
 /* Get robustness mode string */
@@ -168,7 +166,7 @@ CShortLog::writeHeader()
 
     /* Beginning of new table (similar to DW DRM log file) */
     File << endl << ">>>>" << endl << "Dream" << endl
-         << "Software Version " << dream_version_major << "." << dream_version_minor << endl;
+         << "Software Version " << dream_version_major << "." << dream_version_minor << dream_version_build << endl;
 
     time_t now;
     (void) time(&now);
@@ -352,6 +350,7 @@ CLongLog::writeParameters()
 {
 
     Parameters.Lock();
+    iFrequency = Parameters.GetFrequency();
 
     /* Get parameters for delay and Doppler. In case the receiver is
        not synchronized, set parameters to zero */

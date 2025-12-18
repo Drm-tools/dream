@@ -52,6 +52,7 @@
 # include <QCloseEvent>
 # include "ui_DRMMainWindow.h"
 # include "EvaluationDlg.h"
+# include "SoundCardSelMenu.h"
 #endif
 
 #include "DialogUtil.h"
@@ -76,6 +77,7 @@ class BWSViewer;
 class JLViewer;
 class SlideShowViewer;
 #endif
+class CScheduler;
 
 #if QT_VERSION >= 0x040000
 class FDRMDialogBase : public QMainWindow, public Ui_DRMMainWindow
@@ -95,6 +97,7 @@ class FDRMDialog : public FDRMDialogBase
 public:
     FDRMDialog(CDRMReceiver&, CSettings&, CRig&, QWidget* parent = 0, const char* name = 0,
                bool modal = FALSE,	Qt::WFlags f = 0);
+    void switchEvent();
 
     virtual ~FDRMDialog();
 
@@ -124,19 +127,24 @@ protected:
     QMenuBar*			pMenu;
     QButtonGroup*		pButtonGroup;
 #if QT_VERSION < 0x040000
-    QPopupMenu*		pReceiverModeMenu;
-    QPopupMenu*		pSettingsMenu;
-    QPopupMenu*		pPlotStyleMenu;
+    QPopupMenu*			pReceiverModeMenu;
+    QPopupMenu*			pSettingsMenu;
+    QPopupMenu*			pPlotStyleMenu;
 #else
-    QMenu*		pReceiverModeMenu;
-    QMenu*		pSettingsMenu;
-    QMenu*		pPlotStyleMenu;
-    QSignalMapper*	plotStyleMapper;
-    QActionGroup*	plotStyleGroup;
+    QMenu*				pReceiverModeMenu;
+    QMenu*				pSettingsMenu;
+    QMenu*				pPlotStyleMenu;
+    QSignalMapper*		plotStyleMapper;
+    QActionGroup*		plotStyleGroup;
+    CFileMenu*			pFileMenu;
+    CSoundCardSelMenu*	pSoundCardMenu;
 #endif
     CAboutDlg		AboutDlg;
     int			iMultimediaServiceBit;
     int			iLastMultimediaServiceSelected;
+    CScheduler* 	pScheduler;
+    QTimer*		pScheduleTimer;
+    CEventFilter ef;
 
     void SetStatus(CMultColorLED* LED, ETypeRxStatus state);
     virtual void	closeEvent(QCloseEvent* ce);
@@ -158,10 +166,12 @@ protected:
     QString serviceSelector(CParameter&, int);
     void showTextMessage(const QString&);
     void showServiceInfo(const CService&);
-	CEventFilter ef;
+    void startLogging();
+    void stopLogging();
 
 public slots:
     void OnTimer();
+    void OnScheduleTimer();
     void OnTimerClose();
     void OnSelectAudioService(int);
     void OnSelectDataService(int);
@@ -172,6 +182,7 @@ public slots:
     void OnSwitchToFM();
     void OnSwitchToAM();
     void OnHelpAbout() {AboutDlg.show();}
+    void OnSoundFileChanged(CDRMReceiver::ESFStatus) {ClearDisplay();};
     void on_actionWhats_This();
 #if QT_VERSION < 0x040000
     void OnMenuPlotStyle(int);

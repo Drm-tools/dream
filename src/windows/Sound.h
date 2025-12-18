@@ -29,7 +29,7 @@
 #if !defined(AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_)
 #define AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_
 
-#include "../soundinterface.h"
+#include "../sound/soundinterface.h"
 #include <windows.h>
 #include <mmsystem.h>
 
@@ -46,8 +46,7 @@
 #else
 # define NUM_SOUND_BUFFERS_OUT	3		/* Number of sound card buffers */
 #endif
-#define	NUM_IN_OUT_CHANNELS		2		/* Stereo recording (but we only
-use one channel for recording) */
+#define	NUM_IN_OUT_CHANNELS		2		/* Stereo */
 #define	BITS_PER_SAMPLE			16		/* Use all bits of the D/A-converter */
 #define BYTES_PER_SAMPLE		2		/* Number of bytes per sample */
 
@@ -58,11 +57,11 @@ class CSoundIn : public CSoundInInterface
     CSoundIn();
 virtual ~CSoundIn();
 
-virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
+virtual _BOOLEAN	Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
 virtual _BOOLEAN	Read(CVector<short>& psData);
-virtual void		Enumerate(vector<string>&);
-virtual int			GetDev();
-virtual void		SetDev(int iNewDev);
+virtual void		Enumerate(vector<string>& names, vector<string>& descriptions);
+virtual string		GetDev();
+virtual void		SetDev(string sNewDev);
 virtual void		Close();
 
 protected:
@@ -71,12 +70,13 @@ void		PrepareBuffer(int iBufNum);
 void		AddBuffer();
 
 vector<string>	vecstrDevices;
-int				iCurDev;
+string			sCurDev;
 WAVEFORMATEX	sWaveFormatEx;
 _BOOLEAN		bChangDev;
 HANDLE			m_WaveEvent;
-int				iBufferSize;
-int				iWhichBuffer;
+int			iSampleRate;
+int			iBufferSize;
+int			iWhichBuffer;
 _BOOLEAN		bBlocking;
 
 /* Wave in */
@@ -93,11 +93,11 @@ class CSoundOut : public CSoundOutInterface
     CSoundOut();
 virtual ~CSoundOut();
 
-virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
+virtual _BOOLEAN	Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
 virtual _BOOLEAN	Write(CVector<short>& psData);
-virtual void		Enumerate(vector<string>&);
-virtual int			GetDev();
-virtual void		SetDev(int iNewDev);
+virtual void		Enumerate(vector<string>& names, vector<string>& descriptions);
+virtual string		GetDev();
+virtual void		SetDev(string sNewDev);
 virtual void		Close();
 
 protected:
@@ -107,12 +107,13 @@ void		AddBuffer(int iBufNum);
 void		GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf);
 
 vector<string>	vecstrDevices;
-int				iCurDev;
+string			sCurDev;
 WAVEFORMATEX	sWaveFormatEx;
-_BOOLEAN			bChangDev;
+_BOOLEAN		bChangDev;
 HANDLE			m_WaveEvent;
-int				iBufferSize;
-int				iWhichBuffer;
+int			iSampleRate;
+int			iBufferSize;
+int			iWhichBuffer;
 _BOOLEAN		bBlocking;
 
 /* Wave out */

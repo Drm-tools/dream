@@ -50,6 +50,24 @@
 #define	METER_FLY_BACK					15
 
 /* Classes ********************************************************************/
+/* Thread safe counter ------------------------------------------------------ */
+class CCounter
+{
+public:
+	CCounter() : count(0) {}
+	~CCounter() {}
+	unsigned int operator++();
+	unsigned int operator++(int);
+	unsigned int operator--();
+	unsigned int operator--(int);
+	operator unsigned int();
+	unsigned int operator=(unsigned int value);
+private:
+	CMutex mutex;
+	unsigned int count;
+};
+
+
 /* Signal level meter ------------------------------------------------------- */
 class CSignalLevelMeter
 {
@@ -74,8 +92,8 @@ class CDRMBandpassFilt
 public:
 	enum EFiltType {FT_TRANSMITTER, FT_RECEIVER};
 
-	void Init(const int iNewBlockSize, const _REAL rOffsetHz,
-		const ESpecOcc eSpecOcc, const EFiltType eNFiTy);
+	void Init(int iSampleRate, int iNewBlockSize, _REAL rOffsetHz,
+		ESpecOcc eSpecOcc, EFiltType eNFiTy);
 	void Process(CVector<_COMPLEX>& veccData);
 
 protected:
@@ -96,17 +114,21 @@ protected:
 class CModJulDate
 {
 public:
-	CModJulDate() : iYear(0), iDay(0), iMonth(0) {}
+	CModJulDate() : iYear(0), iDay(0), iMonth(0), iModJulDate(0) {}
 	CModJulDate(const uint32_t iModJulDate) {Set(iModJulDate);}
+	CModJulDate(const uint32_t iYear, const uint32_t iMonth, const uint32_t iDay)
+		{Get(iYear, iMonth, iDay);}
 
 	void Set(const uint32_t iModJulDate);
+	void Get(const uint32_t iYear, const uint32_t iMonth, const uint32_t iDay);
 
 	int GetYear() {return iYear;}
 	int GetDay() {return iDay;}
 	int GetMonth() {return iMonth;}
+	int GetModJulDate() {return iModJulDate;}
 
 protected:
-	int iYear, iDay, iMonth;
+	int iYear, iDay, iMonth, iModJulDate;
 };
 
 
@@ -114,13 +136,13 @@ protected:
 class CAudioReverb
 {
 public:
-	CAudioReverb(const CReal rT60 = (CReal) 1.0);
-
+	CAudioReverb() {}
+	void Init(CReal rT60, int iSampleRate);
 	void Clear();
 	CReal ProcessSample(const CReal rLInput, const CReal rRInput);
 
 protected:
-	void setT60(const CReal rT60);
+	void setT60(const CReal rT60, int iSampleRate);
 	_BOOLEAN isPrime(const int number);
 
 	CFIFO<int>	allpassDelays_[3];

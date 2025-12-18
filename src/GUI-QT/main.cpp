@@ -29,10 +29,6 @@
 \******************************************************************************/
 
 #ifdef _WIN32
-# ifdef _WIN32_WINNT
-#  undef _WIN32_WINNT
-# endif
-# define _WIN32_WINNT 0x0400
 # include <windows.h>
 #endif
 
@@ -41,26 +37,32 @@
 #include "../DrmTransmitter.h"
 #include "../DrmSimulation.h"
 #include "../util/Settings.h"
-#include "Rig.h"
-
 #include <iostream>
 
-#include <qthread.h>
 #ifdef USE_QT_GUI
-# include <qapplication.h>
-# include <qmessagebox.h>
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
+# include "DialogUtil.h"
+# include "Rig.h"
+# include <qapplication.h>
+# include <qmessagebox.h>
+# if QT_VERSION >= 0x040000
+#  include <QCoreApplication>
+#  include <QTranslator>
+# endif
 #endif
-#if QT_VERSION >= 0x040000
-# include <QCoreApplication>
-# include <QTranslator>
-#endif
+
+#if QT_VERSION >= 0x040000 || defined(USE_QT_GUI)
+# if QT_VERSION >= 0x040000
+#  include <QCoreApplication>
+# endif
+# include <qthread.h>
 
 class CRx: public QThread
 {
 public:
-	CRx(CDRMReceiver& nRx):rx(nRx){}
+	CRx(CDRMReceiver& nRx):rx(nRx)
+	{}
 	void run();
 private:
 	CDRMReceiver& rx;
@@ -69,10 +71,6 @@ private:
 void
 CRx::run()
 {
-#ifdef _WIN32
-    /* it doesn't matter what the GUI does, we want to be normal! */
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_NORMAL);
-#endif
     qDebug("Working thread started");
     try
     {
@@ -89,27 +87,7 @@ CRx::run()
     }
     qDebug("Working thread complete");
 }
-
-int isTransmitter(const char *argv0)
-{
-#ifdef EXECUTABLE_NAME
-	/* Give the possibility to launch directly dream transmitter
-	   with a symbolic link to the executable, a 't' need to be 
-	   appended to the symbolic link name */
-# define _xstr(s) _str(s)
-# define _str(s) #s
-# ifndef _WIN32
-	const int pathseparator = '/';
-# else
-	const int pathseparator = '\\';
-# endif
-	const char *str = strrchr(argv0, pathseparator);
-	return !strcmp(str ? str+1 : argv0, _xstr(EXECUTABLE_NAME) "t");
-#else
-	(void)argv0;
-	return 0;
 #endif
-}
 
 #ifdef USE_QT_GUI
 /******************************************************************************\
@@ -146,32 +124,12 @@ main(int argc, char **argv)
 	/* Parse arguments and load settings from init-file */
 	Settings.Load(argc, argv);
 
-	const int transmitter = isTransmitter(argv[0]);
-
 	try
 	{
-
-#ifdef _WIN32
-		/* works for both transmit and receive. GUI is low, working is normal.
-		 * the working thread does not need to know what the setting is.
-		 */
-			if (Settings.Get("GUI", "processpriority", TRUE))
-			{
-				/* Set priority class for this application */
-				SetPriorityClass(GetCurrentProcess(), HIGH_PRIORITY_CLASS);
-
-				/* Low priority for GUI thread */
-				SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_LOWEST);
-				Settings.Put("GUI", "processpriority", TRUE);
-			}
-			else
-				Settings.Put("GUI", "processpriority", FALSE);
-#endif
-
-		string mode = Settings.Get("command", "mode", string("receive"));
-		if (!transmitter && mode == "receive")
+		string mode = Settings.Get("command", "mode", string());
+		if (mode == "receive")
 		{
-			CDRMReceiver DRMReceiver;
+			CDRMReceiver DRMReceiver(&Settings);
 
 			/* First, initialize the working thread. This should be done in an extra
 			   routine since we cannot 100% assume that the working thread is
@@ -179,9 +137,7 @@ main(int argc, char **argv)
 
 			CRig rig(DRMReceiver.GetParameters());
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
-			DRMReceiver.LoadSettings(Settings);
-
-			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
+			DRMReceiver.LoadSettings();
 
 #ifdef HAVE_LIBHAMLIB
 			DRMReceiver.SetRig(&rig);
@@ -215,9 +171,9 @@ main(int argc, char **argv)
 			}
 			rig.SaveSettings(Settings);
 #endif
-			DRMReceiver.SaveSettings(Settings);
+			DRMReceiver.SaveSettings();
 		}
-		else if(transmitter || mode == "transmit")
+		else if(mode == "transmit")
 		{
 			TransmDialog MainDlg(Settings
 #if QT_VERSION < 0x040000
@@ -225,8 +181,8 @@ main(int argc, char **argv)
 #endif
 				);
 
-			/* Set main window */
 #if QT_VERSION < 0x040000
+			/* Set main window */
 			app.setMainWidget(&MainDlg);
 #endif
 
@@ -236,7 +192,15 @@ main(int argc, char **argv)
 		}
 		else
 		{
-			QMessageBox::information(0, "Dream", Settings.UsageArguments(argv).c_str());
+			CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]
+#if QT_VERSION < 0x040000
+			, NULL, NULL, FALSE, Qt::WStyle_MinMax
+#endif
+			);
+#if QT_VERSION < 0x040000
+			app.setMainWidget(&HelpUsage);
+#endif
+			app.exec();
 			exit(0);
 		}
 	}
@@ -297,40 +261,44 @@ main(int argc, char **argv)
 {
 	try
 	{
-		const int transmitter = isTransmitter(argv[0]);
-
 		CSettings Settings;
 		Settings.Load(argc, argv);
-		string mode = Settings.Get("command", "mode", string("receive"));
-		if (!transmitter && mode == "receive")
+
+		string mode = Settings.Get("command", "mode", string());
+		if (mode == "receive")
 		{
 			CDRMSimulation DRMSimulation;
-			CDRMReceiver DRMReceiver;
+			CDRMReceiver DRMReceiver(&Settings);
 
 			DRMSimulation.SimScript();
-			DRMReceiver.LoadSettings(Settings);
-			DRMReceiver.SetReceiverMode(ERecMode(Settings.Get("Receiver", "mode", int(0))));
+			DRMReceiver.LoadSettings();
 
 #if QT_VERSION >= 0x040000
-			QCoreApplication a(argc, argv);
+			QCoreApplication app(argc, argv);
 			/* Start working thread */
 			CRx rx(DRMReceiver);
 			rx.start();
-			return a.exec();
+			return app.exec();
 #else
 			DRMReceiver.Start();
 #endif
-
 		}
-		else if(transmitter || mode == "transmit")
+		else if (mode == "transmit")
 		{
-			CDRMTransmitter DRMTransmitter;
-			DRMTransmitter.LoadSettings(Settings);
+			CDRMTransmitter DRMTransmitter(&Settings);
+			DRMTransmitter.LoadSettings();
 			DRMTransmitter.Start();
 		}
 		else
 		{
-			cerr << Settings.UsageArguments(argv) << endl;
+			string usage(Settings.UsageArguments());
+			for (;;)
+			{
+				size_t pos = usage.find("$EXECNAME");
+				if (pos == string::npos) break;
+				usage.replace(pos, sizeof("$EXECNAME")-1, argv[0]);
+			}
+			cerr << usage << endl << endl;
 			exit(0);
 		}
 	}
@@ -363,6 +331,6 @@ DebugError(const char *pchErDescr, const char *pchPar1Descr,
 	fprintf(pFile, ": ");
 	fprintf(pFile, "%e\n", dPar2);
 	fclose(pFile);
-	printf("\nDebug error! For more information see test/DebugError.dat\n");
+	fprintf(stderr, "\nDebug error! For more information see test/DebugError.dat\n");
 	exit(1);
 }
