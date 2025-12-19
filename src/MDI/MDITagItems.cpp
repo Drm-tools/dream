@@ -188,10 +188,10 @@ void CTagItemGeneratorFracModJulDate::GenTag()
 {
 
     using namespace std::chrono;
-    const time_point<high_resolution_clock> now = high_resolution_clock::now();
+    const time_point<systrm_clock> now = system_clock::now();
     auto ms = (duration_cast<milliseconds>(now.time_since_epoch()) % 1000);
 
-    auto timer = high_resolution_clock::to_time_t(now);
+    auto timer = system_clock::to_time_t(now);
     std::tm bt = *std::gmtime(&timer);
 
     // MJD calculation from TS 102 349, but with ceiling operator ignored
