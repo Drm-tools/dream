@@ -171,7 +171,6 @@ Any thoughts?
 
 #include <assert.h>
 #include <iostream>
-#include <math.h>
 #include <limits>
 #include <vector>
 
@@ -413,7 +412,6 @@ Any thoughts?
 
 #include <assert.h>
 #include <iostream>
-#include <math.h>
 #include <limits>
 #include <vector>
 
@@ -659,7 +657,6 @@ Any thoughts?
 
 #include <assert.h>
 #include <iostream>
-#include <math.h>
 #include <limits>
 #include <vector>
 
@@ -921,7 +918,6 @@ Any thoughts?
 
 #include <assert.h>
 #include <iostream>
-#include <math.h>
 #include <limits>
 #include <vector>
 
@@ -1060,7 +1056,6 @@ Any thoughts?
 
 #include <assert.h>
 #include <iostream>
-#include <math.h>
 #include <limits>
 #include <vector>
 
