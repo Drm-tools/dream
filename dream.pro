@@ -271,11 +271,10 @@ win32:cross_compile {
 }
 win32 {
   CONFIG += fdk-aac
-  LIBS += -lwpcap -lpacket -lmincore
-  DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP
+  LIBS += -lwpcap -lpacket -lmincore -lzlib -lfftw3 -lsetupapi -ldl
+  DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
   SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
   HEADERS += src/windows/platform_util.h
-  LIBS += -lsetupapi
   contains(QT,multimedia) {
 	CONFIG += sound
   }
@@ -287,41 +286,25 @@ win32 {
 	CONFIG += sound
   }
   win32-g++ {
-	DEFINES += HAVE_STDINT_H
-	LIBS += -lz -lfftw3
+	LIBS += -lz
   }
   else {
 	DEFINES += NOMINMAX
 	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmt.lib
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmt.lib
-	LIBS += -lzlib -llibfftw3-3
   }
-  mxe {
-    message('MXE')
-    !minimal:CONFIG += sndfile hamlib opus
-    minimal {
-        HEADERS += src/windows/Sound.h
-        SOURCES += src/windows/Sound.cpp
-        LIBS += -lwinmm
-    }
-    CONFIG += speexdsp sound
-    #!console:QT += multimedia
+  exists($$PWD/include/speex/speex_preprocess.h) {
+    CONFIG += speexdsp
   }
-  else {
-    exists($$PWD/include/speex/speex_preprocess.h) {
-      CONFIG += speexdsp
-    }
-    exists($$PWD/include/hamlib/rig.h) {
-      CONFIG += hamlib
-    }
-    exists($$PWD/include/sndfile.h) {
-        CONFIG += sndfile
-    }
-    exists($$PWD/include/opus/opus.h) {
-        CONFIG += opus
-    }
-
+  exists($$PWD/include/hamlib/rig.h) {
+    CONFIG += hamlib
+  }
+  exists($$PWD/include/sndfile.h) {
+    CONFIG += sndfile
+  }
+  exists($$PWD/include/opus/opus.h) {
+    CONFIG += opus
   }
 }
 fdk-aac {
@@ -365,14 +348,7 @@ hamlib {
      DEFINES += HAVE_LIBHAMLIB
      macx:LIBS += -framework IOKit
      unix:LIBS += -lhamlib
-     win32 {
-       msvc* {
-         LIBS += -llibhamlib-2
-       }
-       else {
-         LIBS += -lhamlib -lusb-1.0
-       }
-     }
+     win32:LIBS += -lhamlib -lusb-1.0
      HEADERS += src/util/Hamlib.h
      SOURCES += src/util/Hamlib.cpp
      contains(QT,core) {
