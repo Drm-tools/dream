@@ -750,46 +750,46 @@ void systemevalDlg::OnTimer()
 
 void systemevalDlg::UpdateGPS(CParameter& Parameters)
 {
-    gps_data_t& gps = Parameters.gps_data;
+    gps_data_t& gps_data = Parameters.gps_data;
 
-    if((gps.set&STATUS_SET)==0) {
+    if((gps_data.set&STATUS_SET)==0) {
         LEDGPS->SetLight(CMultColorLED::RL_RED);
     } else {
 
-        if(gps.status==0)
+        if(gps_data.fix.status==0)
             LEDGPS->SetLight(CMultColorLED::RL_YELLOW);
         else
             LEDGPS->SetLight(CMultColorLED::RL_GREEN);
     }
 
     QString qStrPosition;
-    if (gps.set&LATLON_SET)
+    if (gps_data.set&LATLON_SET)
 //      Wrong char on Qt 5
-//      qStrPosition = QString(tr("Lat: %1\260  Long: %2\260")).arg(gps.fix.latitude, 0, 'f', 4).arg(gps.fix.longitude,0, 'f',4);
-        qStrPosition = QString(trUtf8("Lat: %1°  Long: %2°")).arg(gps.fix.latitude, 0, 'f', 4).arg(gps.fix.longitude,0, 'f',4);
+//      qStrPosition = QString(tr("Lat: %1\260  Long: %2\260")).arg(gps_data.fix.latitude, 0, 'f', 4).arg(gps_data.fix.longitude,0, 'f',4);
+        qStrPosition = QString(trUtf8("Lat: %1°  Long: %2°")).arg(gps_data.fix.latitude, 0, 'f', 4).arg(gps_data.fix.longitude,0, 'f',4);
     else
         qStrPosition = tr("Lat: ?  Long: ?");
 
     QString qStrAltitude;
-    if (gps.set&ALTITUDE_SET)
-        qStrAltitude = QString(tr("  Alt: %1 m")).arg(gps.fix.altitude, 0, 'f', 0);
+    if (gps_data.set&ALTITUDE_SET)
+        qStrAltitude = QString(tr("  Alt: %1 m")).arg(gps_data.fix.altitude, 0, 'f', 0);
     else
         qStrAltitude = tr("  Alt: ?");
     QString qStrSpeed;
-    if (gps.set&SPEED_SET)
-        qStrSpeed = QString(tr("Speed: %1 m/s")).arg(gps.fix.speed, 0, 'f', 1);
+    if (gps_data.set&SPEED_SET)
+        qStrSpeed = QString(tr("Speed: %1 m/s")).arg(gps_data.fix.speed, 0, 'f', 1);
     else
         qStrSpeed = tr("Speed: ?");
     QString qStrTrack;
-    if (gps.set&TRACK_SET)
-        qStrTrack =  QString(tr("  Track: %1\260")).arg(gps.fix.track);
+    if (gps_data.set&TRACK_SET)
+        qStrTrack =  QString(tr("  Track: %1\260")).arg(gps_data.fix.track);
     else
         qStrTrack =  tr("  Track: ?");
     QString qStrTime;
-    if (gps.set&TIME_SET)
+    if (gps_data.set&TIME_SET)
     {
         struct tm * p_ts;
-        time_t tt = time_t(gps.fix.time);
+        time_t tt = time_t(gps_data.fix.time);
         p_ts = gmtime(&tt);
         QChar fill('0');
         qStrTime = QString("UTC: %1/%2/%3 %4:%5:%6  ")
@@ -803,8 +803,8 @@ void systemevalDlg::UpdateGPS(CParameter& Parameters)
     else
 	qStrTime = "UTC: ?";
     QString qStrSat;
-    if (gps.set&SATELLITE_SET)
-        qStrSat = tr("  Satellites: ") + QString().setNum(gps.satellites_used);
+    if (gps_data.set&SATELLITE_SET)
+        qStrSat = tr("  Satellites: ") + QString().setNum(gps_data.satellites_used);
     else
         qStrSat = tr("  Satellites: ?");
 
