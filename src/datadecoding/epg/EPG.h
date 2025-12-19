@@ -76,7 +76,6 @@ class EPG
     CParameter& Parameters;
     QMap < QString, time_t > filesLoaded;
 private:
-    static const struct gl { const char *genre; const char* desc; } genre_list[];
     time_t parseTime(const QString & time);
     int parseDuration (const QString & duration);
 };

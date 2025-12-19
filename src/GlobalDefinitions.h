@@ -35,9 +35,6 @@
 #include <limits>
 #include <cmath>
 #include "tables/TableDRMGlobal.h"
-#ifndef M_PI
-# define M_PI (3.14159265358979323846)
-#endif
 
 /* Definitions ****************************************************************/
 /* When you define the following flag, a directory called
@@ -45,16 +42,6 @@
    Linux)! */
 #define _DEBUG_
 #undef _DEBUG_
-
-#ifdef _WIN32 /* For Windows set flags here, otherwise it is set by configure */
-
-# undef NOMINMAX
-# define NOMINMAX 1
-
-//# define DLL_EXPORT 1
-//# undef DLL_EXPORT 1
-
-#endif /* _WIN32 */
 
 /* set sensible defaults for QT */
 #ifdef QT_CORE_LIB
