@@ -1161,7 +1161,7 @@ CTagItemGeneratorGPS::GenTag(bool bIsValid, gps_data_t& gps_data)	// Long/Lat in
 
 		if (gps_data.set&TIME_SET)
 		{
-            time_t time = (time_t) gps_data.fix.time;
+            time_t time = (time_t) gps_data.fix.time.tv_sec;
 			struct tm * ptm;
 			ptm = gmtime ( &time );
 			Enqueue((uint32_t) ptm->tm_hour, SIZEOF__BYTE);
