@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>899</width>
-    <height>498</height>
+    <width>862</width>
+    <height>438</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res/icons.qrc">
-    <normaloff>:/icons/MainIcon.svg</normaloff>:/icons/MainIcon.svg</iconset>
+    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -58,8 +58,8 @@
          <property name="frameShadow">
           <enum>QFrame::Raised</enum>
          </property>
-         <layout class="QGridLayout" name="gridLayout_3">
-          <item row="0" column="0">
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
            <widget class="QPushButton" name="ButtonWaterfall">
             <property name="windowTitle">
              <string/>
@@ -78,52 +78,29 @@
             </property>
            </widget>
           </item>
-          <item row="1" column="0">
-           <layout class="QVBoxLayout" name="verticalLayout_2">
-            <property name="spacing">
-             <number>0</number>
+          <item>
+           <widget class="QLabel" name="TextFreqOffset">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
             </property>
-            <item>
-             <widget class="QLabel" name="LabelFreqOffset">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Minimum" vsizetype="Minimum">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="text">
-               <string>Carrier Frequency:</string>
-              </property>
-              <property name="textFormat">
-               <enum>Qt::PlainText</enum>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignBottom|Qt::AlignLeading|Qt::AlignLeft</set>
-              </property>
-              <property name="textInteractionFlags">
-               <set>Qt::NoTextInteraction</set>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="ButtonFreqOffset">
-              <property name="font">
-               <font>
-                <weight>75</weight>
-                <bold>true</bold>
-               </font>
-              </property>
-              <property name="text">
-               <string>TextFreqOffset</string>
-              </property>
-              <property name="flat">
-               <bool>true</bool>
-              </property>
-             </widget>
-            </item>
-           </layout>
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>TextFreqOffset</string>
+            </property>
+            <property name="wordWrap">
+             <bool>false</bool>
+            </property>
+           </widget>
           </item>
-          <item row="2" column="0">
+          <item>
            <widget class="QLabel" name="TextLabelPhaseOffset">
             <property name="sizePolicy">
              <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
@@ -143,18 +120,15 @@ Phase Offset</string>
             </property>
            </widget>
           </item>
-          <item row="3" column="0">
-           <widget class="QwtDial" name="PhaseDial" native="true">
+          <item>
+           <widget class="QwtDial" name="PhaseDial">
             <property name="minimumSize">
              <size>
               <width>0</width>
               <height>70</height>
              </size>
             </property>
-            <property name="focusPolicy">
-             <enum>Qt::NoFocus</enum>
-            </property>
-            <property name="lineWidth" stdset="0">
+            <property name="lineWidth">
              <number>4</number>
             </property>
            </widget>
@@ -208,16 +182,7 @@ Phase Offset</string>
       <property name="spacing">
        <number>6</number>
       </property>
-      <property name="leftMargin">
-       <number>0</number>
-      </property>
-      <property name="topMargin">
-       <number>0</number>
-      </property>
-      <property name="rightMargin">
-       <number>0</number>
-      </property>
-      <property name="bottomMargin">
+      <property name="margin">
        <number>0</number>
       </property>
       <item>
@@ -351,8 +316,8 @@ Phase Offset</string>
         <property name="title">
          <string>Noise Reduction</string>
         </property>
-        <layout class="QGridLayout" name="gridLayout_4">
-         <item row="0" column="0">
+        <layout class="QHBoxLayout" name="horizontalLayout_4">
+         <item>
           <widget class="QRadioButton" name="RadioButtonNoiRedOff">
            <property name="text">
             <string>Off</string>
@@ -362,7 +327,7 @@ Phase Offset</string>
            </attribute>
           </widget>
          </item>
-         <item row="0" column="1">
+         <item>
           <widget class="QRadioButton" name="RadioButtonNoiRedLow">
            <property name="text">
             <string>Low</string>
@@ -372,7 +337,7 @@ Phase Offset</string>
            </attribute>
           </widget>
          </item>
-         <item row="0" column="2">
+         <item>
           <widget class="QRadioButton" name="RadioButtonNoiRedMed">
            <property name="text">
             <string>Med</string>
@@ -382,7 +347,7 @@ Phase Offset</string>
            </attribute>
           </widget>
          </item>
-         <item row="0" column="3">
+         <item>
           <widget class="QRadioButton" name="RadioButtonNoiRedHigh">
            <property name="text">
             <string>High</string>
@@ -390,32 +355,6 @@ Phase Offset</string>
            <attribute name="buttonGroup">
             <string notr="true">ButtonGroupNoiseReduction</string>
            </attribute>
-          </widget>
-         </item>
-         <item row="1" column="0">
-          <widget class="QRadioButton" name="RadioButtonNoiRedSpeex">
-           <property name="text">
-            <string>Speex</string>
-           </property>
-           <attribute name="buttonGroup">
-            <string notr="true">ButtonGroupNoiseReduction</string>
-           </attribute>
-          </widget>
-         </item>
-         <item row="1" column="1">
-          <widget class="QSpinBox" name="SpinBoxNoiRedLevel">
-           <property name="suffix">
-            <string> dB</string>
-           </property>
-           <property name="minimum">
-            <number>-96</number>
-           </property>
-           <property name="maximum">
-            <number>-1</number>
-           </property>
-           <property name="value">
-            <number>-1</number>
-           </property>
           </widget>
          </item>
         </layout>
@@ -594,8 +533,8 @@ Phase Offset</string>
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>899</width>
-     <height>21</height>
+     <width>862</width>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menu_View">
@@ -705,8 +644,8 @@ Phase Offset</string>
  </resources>
  <connections/>
  <buttongroups>
-  <buttongroup name="ButtonGroupNoiseReduction"/>
   <buttongroup name="ButtonGroupAGC"/>
   <buttongroup name="ButtonGroupDemodulation"/>
+  <buttongroup name="ButtonGroupNoiseReduction"/>
  </buttongroups>
 </ui>

@@ -31,7 +31,21 @@
 #include "Matlib.h"
 
 /* fftw (Homepage: http://www.fftw.org) */
-#include <fftw3.h>
+#ifdef HAVE_FFTW3_H
+# include <fftw3.h>
+#else
+# ifdef HAVE_DFFTW_H
+#  include <dfftw.h>
+# else
+#  include <fftw.h>
+# endif
+
+# ifdef HAVE_DRFFTW_H
+#  include <drfftw.h>
+# else
+#  include <rfftw.h>
+# endif
+#endif
 
 /* Classes ********************************************************************/
 class CFftPlans
@@ -45,10 +59,17 @@ public:
 	void Init(const int iFSi);
 	void Init(const int iFSi, EFFTPlan eFFTPlan);
 
+#ifdef HAVE_FFTW3_H
 	fftw_plan	RFFTPlForw;
 	fftw_plan	RFFTPlBackw;
 	double*		pFftwRealIn;
 	double*		pFftwRealOut;
+#else
+	rfftw_plan	RFFTPlForw;
+	rfftw_plan	RFFTPlBackw;
+	fftw_real*	pFftwRealIn;
+	fftw_real*	pFftwRealOut;
+#endif
 	fftw_plan	FFTPlForw;
 	fftw_plan	FFTPlBackw;
 

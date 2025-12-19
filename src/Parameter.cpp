@@ -58,7 +58,6 @@ CParameter::CParameter():
     eTransmitCurrentTime(CT_OFF),
     MSCPrLe(),
     Stream(MAX_NUM_STREAMS), Service(MAX_NUM_SERVICES),
-	AudioComponentStatus(MAX_NUM_SERVICES),DataComponentStatus(MAX_NUM_SERVICES),
     iNumBitsHierarchFrameTotal(0),
     iNumDecodedBitsMSC(0),
     iNumSDCBitsPerSFrame(0),
@@ -123,10 +122,8 @@ CParameter::CParameter():
     gps_host("localhost"), gps_port("2497"),
     iAudSampleRate(DEFAULT_SOUNDCRD_SAMPLE_RATE),
     iSigSampleRate(DEFAULT_SOUNDCRD_SAMPLE_RATE),
-    iSigUpscaleRatio(1),
     iNewAudSampleRate(0),
     iNewSigSampleRate(0),
-    iNewSigUpscaleRatio(0),
     rSysSimSNRdB(0.0),
     iFrequency(0),
     bValidSignalStrength(false),
@@ -138,7 +135,7 @@ CParameter::CParameter():
     eSpectOccup(SO_3),
     LastAudioService(),
     LastDataService(),
-    Mutex(), lenient_RSCI(false)
+    Mutex()
 {
     GenerateRandomSerialNumber();
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate);
@@ -167,8 +164,7 @@ CParameter::CParameter(const CParameter& p):
     eTransmitCurrentTime(p.eTransmitCurrentTime),
     MSCPrLe(p.MSCPrLe),
     Stream(p.Stream), Service(p.Service),
-	AudioComponentStatus(p.AudioComponentStatus),DataComponentStatus(p.DataComponentStatus),
-	iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
+    iNumBitsHierarchFrameTotal(p.iNumBitsHierarchFrameTotal),
     iNumDecodedBitsMSC(p.iNumDecodedBitsMSC),
     iNumSDCBitsPerSFrame(p.iNumSDCBitsPerSFrame),
     iNumAudioDecoderBits(p.iNumAudioDecoderBits),
@@ -236,10 +232,8 @@ CParameter::CParameter(const CParameter& p):
     gps_host(p.gps_host),gps_port(p.gps_port),
     iAudSampleRate(p.iAudSampleRate),
     iSigSampleRate(p.iSigSampleRate),
-    iSigUpscaleRatio(p.iSigUpscaleRatio),
     iNewAudSampleRate(p.iNewAudSampleRate),
     iNewSigSampleRate(p.iNewSigSampleRate),
-    iNewSigUpscaleRatio(p.iNewSigUpscaleRatio),
     rSysSimSNRdB(p.rSysSimSNRdB),
     iFrequency(p.iFrequency),
     bValidSignalStrength(p.bValidSignalStrength),
@@ -252,7 +246,6 @@ CParameter::CParameter(const CParameter& p):
     LastAudioService(p.LastAudioService),
     LastDataService(p.LastDataService)
 //, Mutex() // jfbc: I don't think this state should be copied
-  ,lenient_RSCI(p.lenient_RSCI)
 {
     CellMappingTable.MakeTable(eRobustnessMode, eSpectOccup, iSigSampleRate);
     matcReceivedPilotValues = p.matcReceivedPilotValues; // TODO
@@ -276,8 +269,6 @@ CParameter& CParameter::operator=(const CParameter& p)
     MSCPrLe = p.MSCPrLe;
     Stream = p.Stream;
     Service = p.Service;
-	AudioComponentStatus = p.AudioComponentStatus;
-	DataComponentStatus = p.DataComponentStatus;
     iNumBitsHierarchFrameTotal = p.iNumBitsHierarchFrameTotal;
     iNumDecodedBitsMSC = p.iNumDecodedBitsMSC;
     iNumSDCBitsPerSFrame = p.iNumSDCBitsPerSFrame;
@@ -346,10 +337,8 @@ CParameter& CParameter::operator=(const CParameter& p)
     restart_gpsd = p.restart_gpsd;
     iAudSampleRate = p.iAudSampleRate;
     iSigSampleRate = p.iSigSampleRate;
-    iSigUpscaleRatio = p.iSigUpscaleRatio;
     iNewAudSampleRate = p.iNewAudSampleRate;
     iNewSigSampleRate = p.iNewSigSampleRate;
-    iNewSigUpscaleRatio = p.iNewSigUpscaleRatio;
     rSysSimSNRdB = p.rSysSimSNRdB;
     iFrequency = p.iFrequency;
     bValidSignalStrength = p.bValidSignalStrength;
@@ -361,7 +350,6 @@ CParameter& CParameter::operator=(const CParameter& p)
     eSpectOccup = p.eSpectOccup;
     LastAudioService = p.LastAudioService;
     LastDataService = p.LastDataService;
-    lenient_RSCI = p.lenient_RSCI;
     return *this;
 }
 
@@ -392,7 +380,7 @@ void CParameter::ResetServicesStreams()
         {
             Service[i].AudioParam.strTextMessage = "";
             Service[i].AudioParam.iStreamID = STREAM_ID_NOT_USED;
-            Service[i].AudioParam.eAudioCoding = CAudioParam::AC_NONE;
+            Service[i].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
             Service[i].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
             Service[i].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
             Service[i].AudioParam.bTextflag = false;
@@ -417,8 +405,6 @@ void CParameter::ResetServicesStreams()
             Service[i].eAudDataFlag = CService::SF_AUDIO;
             Service[i].iServiceDescr = 0;
             Service[i].strLabel = "";
-			AudioComponentStatus[i].SetStatus(NOT_PRESENT);
-			DataComponentStatus[i].SetStatus(NOT_PRESENT);
         }
 
         for (i = 0; i < MAX_NUM_STREAMS; i++)

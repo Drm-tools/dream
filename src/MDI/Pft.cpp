@@ -33,6 +33,7 @@
 #include "Pft.h"
 #include "../util/CRC.h"
 #include <iostream>
+using namespace std;
 
 using namespace std;
 

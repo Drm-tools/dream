@@ -33,7 +33,6 @@ extern const char dream_manufacturer[];
 extern const char dream_implementation[];
 extern const int dream_version_major;
 extern const int dream_version_minor;
-extern const int dream_version_patch;
 extern const char dream_version_build[];
 
 #endif

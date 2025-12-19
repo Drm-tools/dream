@@ -32,19 +32,34 @@
 #include "../util/Settings.h"
 
 #include <qglobal.h>
-#include <QDialog>
-#include "ui_GeneralSettingsDlgbase.h"
+#if QT_VERSION < 0x040000
+# include "GeneralSettingsDlgbase.h"
+#else
+# include <QDialog>
+# include "ui_GeneralSettingsDlgbase.h"
+#endif
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-class GeneralSettingsDlg : public QDialog, public Ui_CGeneralSettingsDlgBase
+#if QT_VERSION >= 0x040000
+class CGeneralSettingsDlgBase : public QDialog, public Ui_CGeneralSettingsDlgBase
+{
+public:
+	CGeneralSettingsDlgBase(QWidget* parent = 0, const char* name = 0,
+		bool modal = FALSE, Qt::WindowFlags f = 0):
+		QDialog(parent,f){(void)name;(void)modal;setupUi(this);}
+	virtual ~CGeneralSettingsDlgBase() {}
+};
+#endif
+class GeneralSettingsDlg : public CGeneralSettingsDlgBase
 {
 	Q_OBJECT
 
 public:
-	GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings, 
-		QWidget* parent = 0);
+
+	GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings, QWidget* parent = 0,
+		const char* name = 0, bool modal = FALSE, Qt::WindowFlags f = 0);
 	virtual ~GeneralSettingsDlg();
 
 protected:

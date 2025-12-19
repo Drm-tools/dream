@@ -9,7 +9,7 @@
  *  David Flamand
  *
  * Description:
- *	Custom settings of the qwt-plot, Support Qwt version 5.0.0 to 6.1.0(+)
+ *	Custom settings of the qwt-plot, Support Qwt version 5.0.0 to 6.0.1(+)
  *
  ******************************************************************************
  *
@@ -33,9 +33,12 @@
 #define __DRMPLOT_QWT5_H
 
 /* Qt includes */
-#include <QTimer>
-#include <QObject>
+#include <qobject.h>
+#if QT_VERSION < 0x040000
+# error QT_VERSION < 0x040000
+#endif
 #include <QPainter>
+#include <QTimer>
 #include <QDialog>
 #include <QResizeEvent>
 #include <QPaintEvent>
@@ -105,8 +108,8 @@
 
 
 /* Maximum and minimum values of x-axis of input spectrum plots */
-#define MIN_VAL_INP_SPEC_Y_AXIS_DB				((double) -120.0)
-#define MAX_VAL_INP_SPEC_Y_AXIS_DB				((double) 0.0)
+#define MIN_VAL_INP_SPEC_Y_AXIS_DB				((double) -125.0)
+#define MAX_VAL_INP_SPEC_Y_AXIS_DB				((double) -25.0)
 
 /* Maximum and minimum values of x-axis of input PSD (shifted) */
 #define MIN_VAL_SHIF_PSD_Y_AXIS_DB				((double) -85.0)
@@ -139,10 +142,6 @@
 #define MARKER_STYLE Qt::DashLine
 
 
-/* Define the plot font size */
-#define PLOT_FONT_SIZE 8
-
-
 /* Sometime between Qwt version some name may change, we fix this */
 #if QWT_VERSION < 0x050200
 # define LOWERBOUND lBound
@@ -156,13 +155,7 @@
 #else
 # define SETDATA setSamples
 #endif
-#if QWT_VERSION < 0x060100
-# define SETMAJORPEN setMajPen
-# define SETMINORPEN setMinPen
-#else
-# define SETMAJORPEN setMajorPen
-# define SETMINORPEN setMinorPen
-#endif
+
 
 /* Set workaround flag for Qwt version 5.0.0 and 5.0.1 */
 /* QwtPlotCurve::Xfy seems broken on these versions */
@@ -286,7 +279,7 @@ public:
 
 	void SetupChart(const ECharType eNewType);
 	ECharType GetChartType() const { return CurCharType; }
-	void UpdateAnalogBWMarker();
+	void Update() { OnTimerChart(); }
 	void SetPlotStyle(const int iNewStyleID);
 
 	void setCaption(const QString& s) { if (DialogPlot) DialogPlot->setWindowTitle(s); }
@@ -326,7 +319,6 @@ protected:
 
 	void PlotDefaults();
 	void PlotForceUpdate();
-	void PlotSetLegendFont();
 
 	void SetupAvIR();
 	void SetupTranFct();
@@ -393,7 +385,6 @@ protected:
 	int				iAudSampleRate;
 	int				iSigSampleRate;
 	int				iLastXoredSampleRate;
-	int				iLastChanMode;
 
 public slots:
 #if QWT_VERSION < 0x060000

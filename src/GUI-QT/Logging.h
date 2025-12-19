@@ -29,8 +29,8 @@
 #ifndef __LOGGING_H
 #define __LOGGING_H
 
-#include <QTimer>
-#include <QString>
+#include <qtimer.h>
+#include <qstring.h>
 
 #include "../GlobalDefinitions.h"
 #include "../ReceptLog.h"
