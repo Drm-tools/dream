@@ -330,8 +330,7 @@ opus {
 sndfile {
      DEFINES += HAVE_LIBSNDFILE
      unix:LIBS += -lsndfile
-     win32:mxe:LIBS += -lsndfile -lvorbisenc -lvorbis -lFLAC -logg -lm
-     win32:!mxe:LIBS += -llibsndfile-1
+     win32:LIBS += -lsndfile -lvorbisenc -lvorbis -lFLAC -logg
      message("with libsndfile")
 }
 speexdsp {
