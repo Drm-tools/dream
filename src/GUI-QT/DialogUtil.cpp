@@ -154,10 +154,11 @@ CAboutDlg::CAboutDlg(QWidget* parent):
         "<b>" + tr("This compilation of Dream uses the following libraries:") +
         "</b></p>"
         "<ul>"
-#ifndef _WIN32
-        "<li><b>FFTW</b> (" + QString(fftw_version) + ") <i>http://www.fftw.org</i></li>"
+        "<li><b>FFTW</b> (" + 
+#ifdef _WIN32
+    QString("3")
 #else
-        "<li><b>FFTW</b> <i>http://www.fftw.org</i></li>"
+	QString(fftw_version)
 #endif
 #ifdef QT_CORE_LIB
         "<li><b>Qt</b> (" + QString(QT_VERSION_STR) + ") <i>http://qt-project.org</i></li>"
@@ -167,7 +168,13 @@ CAboutDlg::CAboutDlg(QWidget* parent):
         "project (http://qwt.sf.net).</i></li>"
 #endif
 #ifdef HAVE_LIBHAMLIB
-        "<li><b>Hamlib</b> (" + QString(hamlib_version) + ") <i>http://hamlib.sourceforge.net</i></li>"
+        "<li><b>Hamlib</b> (" + 
+#ifdef _WIN32
+    QString("4")
+#else
+	QString(hamlib_version)
+#endif
+	+ ") <i>http://hamlib.sourceforge.net</i></li>"
 #endif
         "<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
         "Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
