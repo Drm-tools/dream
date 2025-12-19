@@ -1,32 +1,17 @@
-Standards-Version: 3.9.4
 Source: dream
 Section: hamradio
 Priority: optional
 Maintainer: Julian Cable <jcable@users.sourceforge.net>
-Build-Depends: debhelper,
-               libqt4-dev,
-               qt4-dev-tools,
-               libqwt5-qt4-dev,
-               fftw3-dev,
-               portaudio19-dev,
-               libsndfile1-dev,
-               libpcap0.8-dev,
-               libhamlib-dev,
-               libgps-dev, zlib1g-dev
+Build-Depends: debhelper (>=9), make, g++, qt5-default, libqwt-qt5-dev, libfftw3-dev, libopus-dev, libsndfile-dev, libasound2-dev, libgps-dev, libpcap-dev, libhamlib-dev, libspeexdsp-dev, libqt5svg5-dev, zlib1g-dev
+Standards-Version: 3.9.8
+Homepage: https://sourceforge.net/p/drm
+#Vcs-Git: https://anonscm.debian.org/collab-maint/dream.git
+#Vcs-Browser: https://anonscm.debian.org/cgit/collab-maint/dream.git
 
-Homepage: http://drm.sourceforge.net
 Package: dream
 Architecture: any
-Depends:      ${shlibs:Depends}
-Description: a DRM (Digital Radio Mondiale) and AM Software Defined Radio
- Digital Radio Mondiale (DRM) is the digital radio standard for the
- long-, medium- and short-wave ranges. The standard was formed by a
- consortium in co-operation with the International Telecommunication
- Union (ITU).  For more information visit www.drm.org.  Dream uses the
- sound card as the input and output device. A long, medium and short wave
- front-end with an intermediate frequency (IF) between 5 kHz and 15 kHz
- is used to receive the DRM signal. Any commercial front-end with an IF
- of 455 kHz should be usable by adding a 455 kHz to 12 kHz adaptor
- (assuming the receiver bandwidth is sufficient for a DRM signal).
- Documentation of receiver modifications for DRM reception can be found
- at www.drmrx.org. 
+Depends: ${shlibs:Depends}, ${misc:Depends}, libfaad2
+Description: A software radio for AM and Digital Radio Mondiale (DRM)
+ Dream is a software implementation of a Digital Radio Mondiale (DRM) receiver.
+ With Dream, DRM broadcasts can be received with an SDR dongle or 
+ a modified analog receiver (SW, MW, LW) and a PC with a sound card.

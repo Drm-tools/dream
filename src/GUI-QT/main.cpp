@@ -28,97 +28,69 @@
  *
 \******************************************************************************/
 
+#include <QTranslator>
+#include <QThread>
+#include <QApplication>
+#include <QMessageBox>
+
 #ifdef _WIN32
 # include <windows.h>
+#else
+# include <csignal>
 #endif
+#include <iostream>
 
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
-#include "../DrmSimulation.h"
 #include "../util/Settings.h"
-#include <iostream>
-
-#ifdef USE_QT_GUI
 # include "fdrmdialog.h"
 # include "TransmDlg.h"
 # include "DialogUtil.h"
-# include "Rig.h"
-# include <qapplication.h>
-# include <qmessagebox.h>
-# if QT_VERSION >= 0x040000
-#  include <QCoreApplication>
-#  include <QTranslator>
-# endif
+
+#ifdef HAVE_LIBHAMLIB
+# include "../util-QT/Rig.h"
+#endif
+#ifdef USE_OPENSL
+# include <SLES/OpenSLES.h>
+  SLObjectItf engineObject = nullptr;
 #endif
 
-#if QT_VERSION >= 0x040000 || defined(USE_QT_GUI)
-# if QT_VERSION >= 0x040000
-#  include <QCoreApplication>
-# endif
-# include <qthread.h>
+#include "../main-Qt/crx.h"
+#include "../main-Qt/ctx.h"
 
-class CRx: public QThread
-{
-public:
-	CRx(CDRMReceiver& nRx):rx(nRx)
-	{}
-	void run();
-private:
-	CDRMReceiver& rx;
-};
-
-void
-CRx::run()
-{
-    qDebug("Working thread started");
-    try
-    {
-        /* Call receiver main routine */
-        rx.Start();
-    }
-    catch (CGenErr GenErr)
-    {
-        ErrorMessage(GenErr.strError);
-    }
-    catch (string strError)
-    {
-        ErrorMessage(strError);
-    }
-    qDebug("Working thread complete");
-}
-#endif
-
-#ifdef USE_QT_GUI
-/******************************************************************************\
-* Using GUI with QT                                                            *
-\******************************************************************************/
 int
 main(int argc, char **argv)
 {
-	/* create app before running Settings.Load to consume platform/QT parameters */
-	QApplication app(argc, argv);
+    QApplication app(argc, argv);
+
+#ifdef USE_OPENSL
+    (void)slCreateEngine(&engineObject, 0, nullptr, 0, nullptr, nullptr);
+    (void)(*engineObject)->Realize(engineObject, SLbool_false);
+#endif
+#if defined(__unix__) && !defined(__APPLE__)
+	/* Prevent signal interaction with popen */
+	sigset_t sigset;
+	sigemptyset(&sigset);
+	sigaddset(&sigset, SIGPIPE);
+	sigaddset(&sigset, SIGCHLD);
+	pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
+#endif
+
 
 #if defined(__APPLE__)
 	/* find plugins on MacOs when deployed in a bundle */
-# if QT_VERSION>0x040000
 	app.addLibraryPath(app.applicationDirPath()+"../PlugIns");
-# else
-	app.setLibraryPaths(app.applicationDirPath()+"../PlugIns");
-# endif
+#endif
+#ifdef _WIN32
+	WSADATA wsaData;
+	(void)WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
 
 	/* Load and install multi-language support (if available) */
-	QTranslator translator(0);
+    QTranslator translator(nullptr);
 	if (translator.load("dreamtr"))
 		app.installTranslator(&translator);
-
-	CDRMSimulation DRMSimulation;
-
-	/* Call simulation script. If simulation is activated, application is
-	   automatically exit in that routine. If in the script no simulation is
-	   activated, this function will immediately return */
-	DRMSimulation.SimScript();
 
 	CSettings Settings;
 	/* Parse arguments and load settings from init-file */
@@ -135,9 +107,11 @@ main(int argc, char **argv)
 			   routine since we cannot 100% assume that the working thread is
 			   ready before the GUI thread */
 
+#ifdef HAVE_LIBHAMLIB
 			CRig rig(DRMReceiver.GetParameters());
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
-			DRMReceiver.LoadSettings();
+#endif
+            CRx rx(DRMReceiver);
 
 #ifdef HAVE_LIBHAMLIB
 			DRMReceiver.SetRig(&rig);
@@ -146,22 +120,17 @@ main(int argc, char **argv)
 			{
 				rig.subscribe();
 			}
+            FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings, rig);
+#else
+			FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings);
 #endif
-			FDRMDialog MainDlg(DRMReceiver, Settings, rig
-#if QT_VERSION < 0x040000
-				, NULL, NULL, FALSE, Qt::WStyle_MinMax
-#endif
-				);
+			(void)pMainDlg;
+            rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
 
 			/* Start working thread */
-			CRx rx(DRMReceiver);
-			rx.start();
+            rx.start();
 
 			/* Set main window */
-#if QT_VERSION < 0x040000
-			app.setMainWidget(&MainDlg);
-#endif
-
 			app.exec();
 
 #ifdef HAVE_LIBHAMLIB
@@ -171,35 +140,24 @@ main(int argc, char **argv)
 			}
 			rig.SaveSettings(Settings);
 #endif
-			DRMReceiver.SaveSettings();
+            rx.SaveSettings();
 		}
 		else if(mode == "transmit")
 		{
-			TransmDialog MainDlg(Settings
-#if QT_VERSION < 0x040000
-				, NULL, NULL, FALSE, Qt::WStyle_MinMax
-#endif
-				);
+            CDRMTransmitter DRMTransmitter(&Settings);
+            CTx tx(DRMTransmitter);
+            TransmDialog* pMainDlg = new TransmDialog(tx);
 
-#if QT_VERSION < 0x040000
-			/* Set main window */
-			app.setMainWidget(&MainDlg);
-#endif
-
-			/* Show dialog */
-			MainDlg.show();
+            tx.LoadSettings(); // load settings after GUI initialised so LoadSettings signals get captured
+            /* Show dialog */
+			pMainDlg->show();
+            tx.start();
 			app.exec();
-		}
+            tx.SaveSettings();
+        }
 		else
 		{
-			CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]
-#if QT_VERSION < 0x040000
-			, NULL, NULL, FALSE, Qt::WStyle_MinMax
-#endif
-			);
-#if QT_VERSION < 0x040000
-			app.setMainWidget(&HelpUsage);
-#endif
+			CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]);
 			app.exec();
 			exit(0);
 		}
@@ -207,130 +165,19 @@ main(int argc, char **argv)
 
 	catch(CGenErr GenErr)
 	{
-		ErrorMessage(GenErr.strError);
+        qDebug("%s", GenErr.strError.c_str());
 	}
 	catch(string strError)
 	{
-		ErrorMessage(strError);
+        qDebug("%s", strError.c_str());
 	}
 	catch(char *Error)
 	{
-		ErrorMessage(Error);
+        qDebug("%s", Error);
 	}
 
 	/* Save settings to init-file */
 	Settings.Save();
 
 	return 0;
-}
-
-/* Implementation of global functions *****************************************/
-
-void
-ErrorMessage(string strErrorString)
-{
-	/* Workaround for the QT problem */
-	string strError = "The following error occured:\n";
-	strError += strErrorString.c_str();
-	strError += "\n\nThe application will exit now.";
-
-#ifdef _WIN32
-	MessageBoxA(NULL, strError.c_str(), "Dream",
-			   MB_SYSTEMMODAL | MB_OK | MB_ICONEXCLAMATION);
-#else
-	perror(strError.c_str());
-#endif
-
-/*
-// Does not work correctly. If it is called by a different thread, the
-// application hangs! FIXME
-	QMessageBox::critical(0, "Dream",
-		QString("The following error occured:<br><b>") +
-		QString(strErrorString.c_str()) +
-		"</b><br><br>The application will exit now.");
-*/
-	exit(1);
-}
-#else /* USE_QT_GUI */
-/******************************************************************************\
-* No GUI                                                                       *
-\******************************************************************************/
-
-int
-main(int argc, char **argv)
-{
-	try
-	{
-		CSettings Settings;
-		Settings.Load(argc, argv);
-
-		string mode = Settings.Get("command", "mode", string());
-		if (mode == "receive")
-		{
-			CDRMSimulation DRMSimulation;
-			CDRMReceiver DRMReceiver(&Settings);
-
-			DRMSimulation.SimScript();
-			DRMReceiver.LoadSettings();
-
-#if QT_VERSION >= 0x040000
-			QCoreApplication app(argc, argv);
-			/* Start working thread */
-			CRx rx(DRMReceiver);
-			rx.start();
-			return app.exec();
-#else
-			DRMReceiver.Start();
-#endif
-		}
-		else if (mode == "transmit")
-		{
-			CDRMTransmitter DRMTransmitter(&Settings);
-			DRMTransmitter.LoadSettings();
-			DRMTransmitter.Start();
-		}
-		else
-		{
-			string usage(Settings.UsageArguments());
-			for (;;)
-			{
-				size_t pos = usage.find("$EXECNAME");
-				if (pos == string::npos) break;
-				usage.replace(pos, sizeof("$EXECNAME")-1, argv[0]);
-			}
-			cerr << usage << endl << endl;
-			exit(0);
-		}
-	}
-	catch(CGenErr GenErr)
-	{
-		ErrorMessage(GenErr.strError);
-	}
-
-	return 0;
-}
-
-void
-ErrorMessage(string strErrorString)
-{
-	perror(strErrorString.c_str());
-}
-#endif /* USE_QT_GUI */
-
-void
-DebugError(const char *pchErDescr, const char *pchPar1Descr,
-		   const double dPar1, const char *pchPar2Descr, const double dPar2)
-{
-	FILE *pFile = fopen("test/DebugError.dat", "a");
-	fprintf(pFile, "%s", pchErDescr);
-	fprintf(pFile, " ### ");
-	fprintf(pFile, "%s", pchPar1Descr);
-	fprintf(pFile, ": ");
-	fprintf(pFile, "%e ### ", dPar1);
-	fprintf(pFile, "%s", pchPar2Descr);
-	fprintf(pFile, ": ");
-	fprintf(pFile, "%e\n", dPar2);
-	fclose(pFile);
-	fprintf(stderr, "\nDebug error! For more information see test/DebugError.dat\n");
-	exit(1);
 }

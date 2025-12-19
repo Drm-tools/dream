@@ -47,46 +47,46 @@ public:
 		return vecbHaveSegment.size ();
 	}
 
-	_BOOLEAN Ready ()
+	bool Ready ()
 	{
 		if (vecbHaveSegment.size () == 0)
-			return FALSE;
+			return false;
 		for (size_t i = 0; i < vecbHaveSegment.size (); i++)
 		{
-			if (vecbHaveSegment[i] == FALSE)
+			if (vecbHaveSegment[i] == false)
 			{
-				return FALSE;
+				return false;
 			}
 		}
-		return TRUE;
+		return true;
 	}
 
 	void AddSegment (int iSegNum)
 	{
 		if ((iSegNum + 1) > int (vecbHaveSegment.size ()))
-			vecbHaveSegment.resize (iSegNum + 1, FALSE);
-		vecbHaveSegment[iSegNum] = TRUE;
+            vecbHaveSegment.resize (unsigned(iSegNum) + 1, false);
+        vecbHaveSegment[unsigned(iSegNum)] = true;
 	}
 
-	_BOOLEAN HaveSegment (int iSegNum)
+	bool HaveSegment (int iSegNum)
 	{
 		if (iSegNum < int (vecbHaveSegment.size ()))
-			return vecbHaveSegment[iSegNum];
-		return FALSE;
+            return vecbHaveSegment[unsigned(iSegNum)];
+		return false;
 	}
 
 protected:
-	std::vector < _BOOLEAN > vecbHaveSegment;
+	std::vector < bool > vecbHaveSegment;
 };
 
-/* The base class reassembles chunks of byte vectors into one big vector.
+/* The base class reassembles chunks of byte std::vectors into one big std::vector.
  * It assumes that all chunks except the last chunk are the same size.
  * Usage:
  *
  * CReassemblerN o;
  * o.AddSegment (veco, iSegSize, 1);
  * o.AddSegment (veco, iSegSize, 3);
- * o.AddSegment (veco, iSegSize, 7, TRUE); // last segment, ie there are 8 segments, 0..7
+ * o.AddSegment (veco, iSegSize, 7, true); // last segment, ie there are 8 segments, 0..7
  * o.AddSegment (veco, iSegSize, 2);
  * o.AddSegment (veco, iSegSize, 4);
  * o.AddSegment (veco, iSegSize, 6);
@@ -126,76 +126,27 @@ public:
 		bReady = false;
 	}
 
-	_BOOLEAN Ready ()
+	bool Ready ()
 	{
 		return bReady;
 	}
 
-	void AddSegment (std::vector<_BYTE> &vecDataIn, int iSegNum, _BOOLEAN bLast);
+	void AddSegment (std::vector<_BYTE> &vecDataIn, int iSegNum, bool bLast);
 
 	std::vector<_BYTE> vecData;
 
 protected:
 
-	virtual void copyin (std::vector<_BYTE> &vecDataIn, size_t iSegNum);
-	virtual void cachelast (std::vector<_BYTE> &vecDataIn, size_t iSegSize);
-	virtual void copylast ();
+    virtual void copyin(std::vector<_BYTE> &vecDataIn, size_t iSegNum);
+    virtual void cachelast(std::vector<_BYTE> &vecDataIn, size_t iSegSize);
+    virtual void copylast();
 
 	std::vector<_BYTE> vecLastSegment;
-	int iLastSegmentNum;
-	int iLastSegmentSize;
+    int iLastSegmentNum;
+    int iLastSegmentSize;
 	size_t iSegmentSize;
 	CSegmentTrackerN Tracker;
 	bool bReady;
-};
-
-/* CBitReassemblerN uses the Dream CVector class to take a vector of bytes, each holding one bit.
- * It reassembles the segments into another vector, either of bits or of bytes by packing.
- * Packing reduces the amount of storage needed and prepares the output vector to be used in
- * applications expecting vectors of bytes, such as zlib.
- *
- * The major difference to the base class is that the input vector may have a header in front
- * of the data. This will be ignored as long as the bitaccess pointer in the CVector is correctly
- * positioned.
- */
-
-class CBitReassemblerN:public CReassemblerN
-{
-public:
-
-	CBitReassemblerN():CReassemblerN(),bPack(false)
-	{
-	}
-
-	CBitReassemblerN(const CBitReassemblerN& r):CReassemblerN(r),bPack(r.bPack)
-	{
-	}
-
-	inline CBitReassemblerN & operator= (const CBitReassemblerN & r)
-	{
-		CReassemblerN(*this) = r;
-		bPack = r.bPack;
-		return *this;
-	}
-
-protected:
-
-	virtual void copyin (CVector < _BYTE > &vecDataIn, size_t iSegNum);
-	virtual void cachelast (CVector < _BYTE > &vecDataIn, size_t iSegSize);
-	virtual void copylast ();
-
-	bool bPack;
-};
-
-class CByteReassemblerN:public CBitReassemblerN
-{
-public:
-
-	CByteReassemblerN():CBitReassemblerN()
-	{
-		bPack = true;
-	}
-
 };
 
 #endif

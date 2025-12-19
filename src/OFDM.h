@@ -31,7 +31,7 @@
 
 #include "Parameter.h"
 #include "util/Modul.h"
-#include "matlib/Matlib.h"
+#include "matlib/MatlibSigProToolbox.h"
 
 
 /* Definitions ****************************************************************/
@@ -43,7 +43,7 @@
 class COFDMModulation : public CTransmitterModul<_COMPLEX, _COMPLEX>
 {
 public:
-    COFDMModulation() : rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ) {}
+    COFDMModulation() : rDefCarOffset(VIRTUAL_INTERMED_FREQ) {}
     virtual ~COFDMModulation() {}
 
     void SetCarOffset(const _REAL rNewCarOffset)
@@ -73,7 +73,7 @@ protected:
 class COFDMDemodulation : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
-    /* bUseRecFilter shall be set the FALSE as default since in case of
+    /* bUseRecFilter shall be set the false as default since in case of
        BERIDEAL simulations, no filter shall be applied */
     COFDMDemodulation() : iLenPowSpec(0) {}
     virtual ~COFDMDemodulation() {}

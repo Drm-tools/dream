@@ -1,12 +1,12 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001
+ * Copyright (c) 2001-2006
  *
  * Author(s):
- *	Alexander Kurpiers
+ *	Volker Fischer, Andrea Russo, David Flamand
  *
- * Decription:
- * Linux sound interface
+ * Description:
+ *
  *
  ******************************************************************************
  *
@@ -26,35 +26,23 @@
  *
 \******************************************************************************/
 
-#ifndef _SOUND_H
-#define _SOUND_H
+#ifndef __UTIL_QT_UTIL_H
+#define __UTIL_QT_UTIL_H
 
-#ifdef USE_OSS
-# include "soundin.h"
-# include "soundout.h"
-#endif
+#include <QString>
 
-#ifdef USE_ALSA
-# include "soundin.h"
-# include "soundout.h"
-#endif
+class CDRMTransceiver;
 
-#ifdef USE_JACK
-# include "jack.h"
-typedef CSoundInJack CSoundIn;
-typedef CSoundOutJack CSoundOut;
-#endif
+QString VerifyFilename(QString filename);
 
-#ifdef USE_PORTAUDIO
-# include "portaudio.h"
-typedef CPaIn CSoundIn;
-typedef CPaOut CSoundOut;
-#endif
+QString VerifyHtmlPath(QString path);
 
-#if !defined(USE_OSS) && !defined(USE_ALSA) && !defined(USE_JACK) && !defined(USE_PORTAUDIO)
-# include "../../common/soundnull.h"
-typedef CSoundInNull CSoundIn;
-typedef CSoundOutNull CSoundOut;
-#endif
+QString UrlEncodePath(QString url);
 
-#endif
+bool IsUrlDirectory(QString url);
+
+QString& Linkify(QString& text);
+
+void CreateDirectories(const QString& strFilename);
+
+#endif // __UTIL_QT_UTIL_H

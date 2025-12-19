@@ -68,10 +68,10 @@
 #endif
 
 /* Other includes */
-#include "../resample/Resample.h"
+#include "../resample/cspectrumresample.h"
 #include "../util/Vector.h"
 #include "../Parameter.h"
-#include "../DrmReceiver.h"
+#include "../main-Qt/crx.h"
 
 
 /* Definitions ****************************************************************/
@@ -275,7 +275,7 @@ public:
 	QwtPlot         *plot;
 
 	/* This function has to be called before chart can be used! */
-	void SetRecObj(CDRMReceiver* pNDRMRec) {pDRMRec = pNDRMRec;}
+    void SetRecObj(CRx* pNDRMRec) {pDRMRec = pNDRMRec;}
 
 	void SetupChart(const ECharType eNewType);
 	ECharType GetChartType() const { return CurCharType; }
@@ -285,7 +285,7 @@ public:
 	void setCaption(const QString& s) { if (DialogPlot) DialogPlot->setWindowTitle(s); }
 	void setIcon(const QIcon& s) { if (DialogPlot) DialogPlot->setWindowIcon(s); }
 	void setGeometry(const QRect& g) { if (DialogPlot) DialogPlot->setGeometry(g); }
-	bool isVisible() { if (DialogPlot) return DialogPlot->isVisible(); else return FALSE; }
+	bool isVisible() { if (DialogPlot) return DialogPlot->isVisible(); else return false; }
 	const QRect geometry() { if (DialogPlot) return DialogPlot->geometry(); else return QRect(); }
 	void close() { if (DialogPlot) delete this; }
 	void hide() { if (DialogPlot) DialogPlot->hide(); }
@@ -322,7 +322,7 @@ protected:
 
 	void SetupAvIR();
 	void SetupTranFct();
-	void SetupAudioSpec(_BOOLEAN bAudioDecoder);
+	void SetupAudioSpec(bool bAudioDecoder);
 	void SetupFreqSamOffsHist();
 	void SetupDopplerDelayHist();
 	void SetupSNRAudHist();
@@ -333,7 +333,7 @@ protected:
 	void SetupSDCConst(const ECodScheme eNewCoSc);
 	void SetupMSCConst(const ECodScheme eNewCoSc);
 	void SetupAllConst();
-	void SetupInpPSD(_BOOLEAN bAnalog = FALSE);
+	void SetupInpPSD(bool bAnalog = false);
 	void SetupInpSpecWaterf();
 
 	void AddWhatsThisHelpChar(const ECharType NCharType);
@@ -356,7 +356,7 @@ protected:
 	ECharType		InitCharType;
 	ECodScheme		eLastSDCCodingScheme;
 	ECodScheme		eLastMSCCodingScheme;
-	_BOOLEAN		bLastAudioDecoder;
+	bool		bLastAudioDecoder;
 
 	QwtText			leftTitle, rightTitle, bottomTitle;
 
@@ -371,7 +371,7 @@ protected:
 	QwtLegend		*legend;
 
 	QTimer			TimerChart;
-	CDRMReceiver	*pDRMRec;
+    CRx             *pDRMRec;
 
 	/* Waterfall spectrum stuff */
 	QPixmap			Canvas;

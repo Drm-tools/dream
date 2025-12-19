@@ -84,9 +84,9 @@ CDRMSimulation::CDRMSimulation() : iSimTime(0), iSimNumErrors(0),
     Parameters.iFrameIDReceiv = 0;
 
     /* Initialize synchronization parameters */
-    Parameters.rResampleOffset = (_REAL) 0.0;
-    Parameters.rFreqOffsetAcqui = (_REAL) VIRTUAL_INTERMED_FREQ / Parameters.GetSigSampleRate();
-    Parameters.rFreqOffsetTrack = (_REAL) 0.0;
+    Parameters.rResampleOffset = 0.0;
+    Parameters.rFreqOffsetAcqui = VIRTUAL_INTERMED_FREQ / Parameters.GetSigSampleRate();
+    Parameters.rFreqOffsetTrack = 0.0;
     Parameters.iTimingOffsTrack = 0;
 
     Parameters.InitCellMapTable(RM_ROBUSTNESS_MODE_B, SO_3);
@@ -116,9 +116,9 @@ void CDRMSimulation::Run()
     Init();
 
     /* Set run flag */
-    Parameters.eRunState = CParameter::RUNNING;
+    // TODO Parameters.eRunState = CParameter::RUNNING;
 
-    while (Parameters.eRunState == CParameter::RUNNING)
+    while (true) // TODO Parameters.eRunState == CParameter::RUNNING)
     {
         /**********************************************************************\
         * Transmitter														   *
@@ -350,7 +350,7 @@ void CDRMSimulation::Init()
 
     /* Disable FAC evaluation to make sure that no mistakenly correct CRC
        sets false parameters which can cause run-time errors */
-    UtilizeFACData.SetSyncInput(TRUE);
+    UtilizeFACData.SetSyncInput(true);
 
     /* We have to first start aquisition and then stop it right after it to set
        internal parameters */

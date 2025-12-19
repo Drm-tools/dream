@@ -55,13 +55,15 @@ typedef int SOCKET;
 # include <pcap.h>
 #endif
 
+using namespace std;
+
 const size_t iMaxPacketSize = 4096;
 const size_t iAFHeaderLen = 10;
 const size_t iAFCRCLen = 2;
 
-CPacketSourceFile::CPacketSourceFile():pPacketSink(NULL),
-    last_packet_time(0),pacer(NULL),
-    pF(NULL), wanted_dest_port(-1), eFileType(pcap)
+CPacketSourceFile::CPacketSourceFile():pPacketSink(nullptr),
+    last_packet_time(0),pacer(nullptr),
+    pF(nullptr), wanted_dest_port(-1), eFileType(pcap)
 {
 #if defined(_MSC_VER) && (_MSC_VER < 1400)
     pacer = new CPacer(400000000);
@@ -95,12 +97,12 @@ void CPacketSourceFile::poll()
         }
 
         /* Decode the incoming packet */
-        if (pPacketSink != NULL)
+        if (pPacketSink != nullptr)
             pPacketSink->SendPacket(vecbydata);
     }
 }
 
-_BOOLEAN
+bool
 CPacketSourceFile::SetOrigin(const string& origin)
 {
     string str = origin;
@@ -121,7 +123,7 @@ CPacketSourceFile::SetOrigin(const string& origin)
     else
     {
         pF = fopen(str.c_str(), "rb");
-        if ( pF != NULL)
+        if ( pF != nullptr)
         {
             char c;
             size_t n = fread(&c, sizeof(c), 1, (FILE *) pF);
@@ -132,7 +134,7 @@ CPacketSourceFile::SetOrigin(const string& origin)
             if(c=='f') eFileType = ff;
         }
     }
-    return pF != NULL;
+    return pF != nullptr;
 }
 
 CPacketSourceFile::~CPacketSourceFile()
@@ -159,7 +161,7 @@ CPacketSourceFile::SetPacketSink(CPacketSink * pSink)
 void
 CPacketSourceFile::ResetPacketSink()
 {
-    pPacketSink = NULL;
+    pPacketSink = nullptr;
 }
 
 void
@@ -316,7 +318,7 @@ void
 CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
 {
     int link_len = 0;
-    const _BYTE* pkt_data = NULL;
+    const _BYTE* pkt_data = nullptr;
     timeval packet_time = { 0, 0 };
     while(true)
     {
@@ -328,7 +330,7 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
         if((res = pcap_next_ex( (pcap_t*)pF, &header, &data)) != 1)
         {
             pcap_close((pcap_t*)pF);
-            pF = NULL;
+            pF = nullptr;
             return;
         }
         int lt = pcap_datalink((pcap_t*)pF);
@@ -350,7 +352,7 @@ CPacketSourceFile::readPcap(vector<_BYTE>& vecbydata, int& interval)
         }
         packet_time = header->ts;
 #endif
-        if(pkt_data == NULL)
+        if(pkt_data == nullptr)
             return;
 
         /* 4n bytes IP header, 8 bytes UDP header */

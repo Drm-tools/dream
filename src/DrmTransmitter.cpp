@@ -27,34 +27,12 @@
 \******************************************************************************/
 
 #include "DrmTransmitter.h"
-#include "sound/sound.h"
 #include <sstream>
+#ifdef QT_MULTIMEDIA_LIB
+# include <QAudioDeviceInfo>
+#endif
 
 /* Implementation *************************************************************/
-void CDRMTransmitter::Start()
-{
-    /* Set restart flag */
-    Parameters.eRunState = CParameter::RESTART;
-    do
-    {
-        /* Initialization of the modules */
-        Init();
-
-        /* Set run flag */
-        Parameters.eRunState = CParameter::RUNNING;
-
-        /* Start the transmitter run routine */
-        Run();
-    }
-    while (Parameters.eRunState == CParameter::RESTART);
-
-    /* Closing the sound interfaces */
-    CloseSoundInterfaces();
-
-    /* Set flag to stopped */
-    Parameters.eRunState = CParameter::STOPPED;
-}
-
 void CDRMTransmitter::Run()
 {
     /*
@@ -106,12 +84,10 @@ void CDRMTransmitter::Run()
     }
 }
 
-#if 1
-/* Flavour 1: Stop at the frame boundary (worst case delay one frame) */
-_BOOLEAN CDRMTransmitter::CanSoftStopExit()
+bool CDRMTransmitter::CanSoftStopExit()
 {
     /* Set new symbol flag */
-    const _BOOLEAN bNewSymbol = OFDMModBuf.GetFillLevel() != 0;
+    const bool bNewSymbol = OFDMModBuf.GetFillLevel() != 0;
 
     if (bNewSymbol)
     {
@@ -119,8 +95,10 @@ _BOOLEAN CDRMTransmitter::CanSoftStopExit()
         const int iSymbolPerFrame = Parameters.CellMappingTable.iNumSymPerFrame;
 
         /* Set stop requested flag */
-        const _BOOLEAN bStopRequested = Parameters.eRunState != CParameter::RUNNING;
+        const bool bStopRequested = false;//Parameters.eRunState != CParameter::RUNNING;
 
+#if true
+        /* Flavour 1: Stop at the frame boundary (worst case delay one frame) */
         /* The soft stop is always started at the beginning of a new frame */
         if ((bStopRequested && iSoftStopSymbolCount == 0) || iSoftStopSymbolCount < 0)
         {
@@ -129,30 +107,10 @@ _BOOLEAN CDRMTransmitter::CanSoftStopExit()
 
             /* The zeroing will continue until the frame end */
             if (--iSoftStopSymbolCount < -iSymbolPerFrame)
-                return TRUE; /* End of frame reached, signal that loop exit must be done */
+                return true; /* End of frame reached, signal that loop exit must be done */
         }
-        else
-        {
-            /* Update the symbol counter to keep track of frame beginning */
-            if (++iSoftStopSymbolCount >= iSymbolPerFrame)
-                iSoftStopSymbolCount = 0;
-        }
-    }
-    return FALSE; /* Signal to continue the normal operation */
-}
-#endif
-#if 0
-/* Flavour 2: Stop at the symbol boundary (worst case delay two frame) */
-_BOOLEAN CDRMTransmitter::CanSoftStopExit()
-{
-    /* Set new symbol flag */
-    const _BOOLEAN bNewSymbol = OFDMModBuf.GetFillLevel() != 0;
-
-    if (bNewSymbol)
-    {
-        /* Set stop requested flag */
-        const _BOOLEAN bStopRequested = Parameters.eRunState != CParameter::RUNNING;
-
+#else
+        /* Flavour 2: Stop at the symbol boundary (worst case delay two frame) */
         /* Check if stop is requested */
         if (bStopRequested || iSoftStopSymbolCount < 0)
         {
@@ -167,35 +125,62 @@ _BOOLEAN CDRMTransmitter::CanSoftStopExit()
             if (--iSoftStopSymbolCount < -1)
             {
                 TransmitData.FlushData();
-                return TRUE; /* Signal that a loop exit must be done */
+                return true; /* Signal that a loop exit must be done */
             }
-        }
+#endif
         else
         {
-            /* Number of symbol by frame */
-            const int iSymbolPerFrame = Parameters.CellMappingTable.iNumSymPerFrame;
-
             /* Update the symbol counter to keep track of frame beginning */
             if (++iSoftStopSymbolCount >= iSymbolPerFrame)
                 iSoftStopSymbolCount = 0;
         }
     }
-    return FALSE; /* Signal to continue the normal operation */
+    return false; /* Signal to continue the normal operation */
 }
-#endif
-#if 0
-/* Flavour 3: The original behaviour: stop at the symbol boundary,
-   without zeroing any symbol. Cause spreading of the spectrum on the
-   entire bandwidth for the last symbol. */
-_BOOLEAN CDRMTransmitter::CanSoftStopExit()
+
+void CDRMTransmitter::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)
 {
-    return Parameters.eRunState != CParameter::RUNNING;
+    ReadData.Enumerate(names, descriptions, defaultInput);
 }
-#endif
+
+void CDRMTransmitter::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
+{
+    TransmitData.Enumerate(names, descriptions, defaultOutput);
+}
+
+void CDRMTransmitter::doSetInputDevice()
+{
+    ReadData.SetSoundInterface(indev);
+}
+
+void CDRMTransmitter::doSetOutputDevice()
+{
+    TransmitData.SetSoundInterface(outdev);
+}
+
+void
+CDRMTransmitter::SetInputDevice(string device)
+{
+    indev = device;
+    ReadData.SetSoundInterface(indev);
+}
+
+void
+CDRMTransmitter::SetOutputDevice(string device)
+{
+    outdev = device;
+    TransmitData.SetSoundInterface(outdev);
+}
+
+CSettings* CDRMTransmitter::GetSettings()
+{
+    return pSettings;
+}
 
 void CDRMTransmitter::Init()
 {
-    /* Fetch new sample rate if any */
+
+   /* Fetch new sample rate if any */
     Parameters.FetchNewSampleRate();
 
     /* Init cell mapping table */
@@ -231,19 +216,22 @@ void CDRMTransmitter::Init()
 
     /* Initialize the soft stop */
     InitSoftStop();
+
+#ifdef QT_MULTIMEDIA_LIB
+    doSetInputDevice();
+    doSetOutputDevice();
+#endif
 }
 
 CDRMTransmitter::~CDRMTransmitter()
 {
-    delete pSoundInInterface;
-    delete pSoundOutInterface;
 }
 
-CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettings, new CSoundIn, new CSoundOut, TRUE),
-        ReadData(pSoundInInterface), TransmitData(),
-        rDefCarOffset((_REAL) VIRTUAL_INTERMED_FREQ),
+CDRMTransmitter::CDRMTransmitter(CSettings* nPsettings) : CDRMTransceiver(),
+        ReadData(), TransmitData(),
+        rDefCarOffset(VIRTUAL_INTERMED_FREQ),
         // UEP only works with Dream receiver, FIXME! -> disabled for now
-        bUseUEP(FALSE)
+        bUseUEP(false), Parameters(*(new CParameter())), pSettings(nPsettings)
 {
     /* Init streams */
     Parameters.ResetServicesStreams();
@@ -253,7 +241,7 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
 
     /* Init transmission of current time */
     Parameters.eTransmitCurrentTime = CParameter::CT_OFF;
-	Parameters.bValidUTCOffsetAndSense = FALSE;
+	Parameters.bValidUTCOffsetAndSense = false;
 
     /**************************************************************************/
     /* Robustness mode and spectrum occupancy. Available transmission modes:
@@ -277,13 +265,11 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
     Parameters.MSCPrLe.iHierarch = 0;
 
     /* Either one audio or one data service can be chosen */
-    _BOOLEAN bIsAudio = TRUE;
-
-    CService Service;
+    bool bIsAudio = true;
 
     /* In the current version only one service and one stream is supported. The
        stream IDs must be 0 in both cases */
-    if (bIsAudio == TRUE)
+    if (bIsAudio)
     {
         /* Audio */
         Parameters.SetNumOfServices(1,0);
@@ -294,14 +280,14 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
         AudioParam.iStreamID = 0;
 
         /* Text message */
-        AudioParam.bTextflag = TRUE;
+        AudioParam.bTextflag = true;
 
         Parameters.SetAudioParam(0, AudioParam);
 
         Parameters.SetAudDataFlag(0,  CService::SF_AUDIO);
 
         /* Programme Type code (see TableFAC.h, "strTableProgTypCod[]") */
-        Service.iServiceDescr = 15; /* 15 -> other music */
+        Parameters.Service[0].iServiceDescr = 15; /* 15 -> other music */
 
         Parameters.SetCurSelAudioService(0);
     }
@@ -325,20 +311,18 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
 
         /* The value 0 indicates that the application details are provided
            solely by SDC data entity type 5 */
-        Service.iServiceDescr = 0;
+        Parameters.Service[0].iServiceDescr = 0;
     }
 
     /* Init service parameters, 24 bit unsigned integer number */
-    Service.iServiceID = 0;
+    Parameters.Service[0].iServiceID = 0;
 
     /* Service label data. Up to 16 bytes defining the label using UTF-8
        coding */
-    Service.strLabel = "Dream Test";
+    Parameters.Service[0].strLabel = "Dream Test";
 
     /* Language (see TableFAC.h, "strTableLanguageCode[]") */
-    Service.iLanguage = 5; /* 5 -> english */
-
-    Parameters.SetServiceParameters(0, Service);
+    Parameters.Service[0].iLanguage = 5; /* 5 -> english */
 
     /* Interleaver mode of MSC service. Long interleaving (2 s): SI_LONG,
        short interleaving (400 ms): SI_SHORT */
@@ -357,9 +341,9 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
     Parameters.eSDCCodingScheme = CS_2_SM;
 
     /* Set desired intermedia frequency (IF) in Hertz */
-    SetCarOffset(_REAL(VIRTUAL_INTERMED_FREQ)); /* Default: "VIRTUAL_INTERMED_FREQ" */
+    SetCarOffset(VIRTUAL_INTERMED_FREQ); /* Default: "VIRTUAL_INTERMED_FREQ" */
 
-    if (bUseUEP == TRUE)
+    if (bUseUEP)
     {
         // TEST
         Parameters.SetStreamLen(0, 80, 0);
@@ -375,7 +359,7 @@ CDRMTransmitter::CDRMTransmitter(CSettings* pSettings) : CDRMTransceiver(pSettin
 
 void CDRMTransmitter::LoadSettings()
 {
-    if (pSettings == NULL) return;
+    if (pSettings == nullptr) return;
     CSettings& s = *pSettings;
 
     const char *Transmitter = "Transmitter";
@@ -392,13 +376,13 @@ void CDRMTransmitter::LoadSettings()
     Parameters.FetchNewSampleRate();
 
     /* Sound card input device id */
-    pSoundInInterface->SetDev(s.Get(Transmitter, "snddevin", string()));
+    ReadData.SetSoundInterface(s.Get(Transmitter, "snddevin", string()));
 
     /* Sound card output device id */
-    pSoundOutInterface->SetDev(s.Get(Transmitter, "snddevout", string()));
+    TransmitData.SetSoundInterface(s.Get(Transmitter, "snddevout", string()));
 #if 0 // TODO
     /* Sound clock drift adjustment */
-    _BOOLEAN bEnabled = s.Get(Transmitter, "sndclkadj", int(0));
+    bool bEnabled = s.Get(Transmitter, "sndclkadj", int(0));
     ((CSoundOutPulse*)pSoundOutInterface)->EnableClockDriftAdj(bEnabled);
 #endif
     /* Robustness mode and spectrum occupancy */
@@ -483,10 +467,10 @@ void CDRMTransmitter::LoadSettings()
 
         /* Language */
         Service.iLanguage = s.Get(service, "language", int(Service.iLanguage));
-#if 0 // TODO
+
         /* Audio codec */
-        value = s.Get(service, "codec", string("faac"));
-        if      (value == "faac") { Service.AudioParam.eAudioCoding = CAudioParam::AC_AAC;  }
+        value = s.Get(service, "codec", string("AAC"));
+        if      (value == "AAC") { Service.AudioParam.eAudioCoding = CAudioParam::AC_AAC;   }
         else if (value == "Opus") { Service.AudioParam.eAudioCoding = CAudioParam::AC_OPUS; }
 
         /* Opus Codec Channels */
@@ -504,8 +488,8 @@ void CDRMTransmitter::LoadSettings()
 
         /* Opus Forward Error Correction */
         value = s.Get(service, "Opus_FEC", string("0"));
-        if      (value == "0") { Service.AudioParam.bOPUSForwardErrorCorrection = FALSE; }
-        else if (value == "1") { Service.AudioParam.bOPUSForwardErrorCorrection = TRUE;  }
+        if      (value == "0") { Service.AudioParam.bOPUSForwardErrorCorrection = false; }
+        else if (value == "1") { Service.AudioParam.bOPUSForwardErrorCorrection = true;  }
 
         /* Opus encoder signal type */
         value = s.Get(service, "Opus_Signal", string("OG_MUSIC"));
@@ -516,13 +500,12 @@ void CDRMTransmitter::LoadSettings()
         value = s.Get(service, "Opus_Application", string("OA_AUDIO"));
         if      (value == "OA_VOIP")  { Service.AudioParam.eOPUSApplication = CAudioParam::OA_VOIP;  }
         else if (value == "OA_AUDIO") { Service.AudioParam.eOPUSApplication = CAudioParam::OA_AUDIO; }
-#endif
     }
 }
 
 void CDRMTransmitter::SaveSettings()
 {
-    if (pSettings == NULL) return;
+    if (pSettings == nullptr) return;
     CSettings& s = *pSettings;
 
     const char *Transmitter = "Transmitter";
@@ -539,10 +522,10 @@ void CDRMTransmitter::SaveSettings()
     s.Put(Transmitter, "sampleratesig", Parameters.GetSigSampleRate());
 
     /* Sound card input device id */
-    s.Put(Transmitter, "snddevin", pSoundInInterface->GetDev());
+    s.Put(Transmitter, "snddevin", ReadData.GetSoundInterface());
 
     /* Sound card output device id */
-    s.Put(Transmitter, "snddevout", pSoundOutInterface->GetDev());
+    s.Put(Transmitter, "snddevout", TransmitData.GetSoundInterface());
 #if 0 // TODO
     /* Sound clock drift adjustment */
     s.Put(Transmitter, "sndclkadj", int(((CSoundOutPulse*)pSoundOutInterface)->IsClockDriftAdjEnabled()));
@@ -640,10 +623,10 @@ void CDRMTransmitter::SaveSettings()
 
         /* Language */
         s.Put(service, "language", int(Service.iLanguage));
-#if 0 // TODO
+
         /* Audio codec */
         switch (Service.AudioParam.eAudioCoding) {
-        case CAudioParam::AC_AAC:  value = "faac"; break;
+        case CAudioParam::AC_AAC:  value = "AAC";  break;
         case CAudioParam::AC_OPUS: value = "Opus"; break;
         default: value = ""; }
         s.Put(service, "codec", value);
@@ -666,10 +649,7 @@ void CDRMTransmitter::SaveSettings()
         s.Put(service, "Opus_Bandwith", value);
 
         /* Opus Forward Error Correction */
-        switch (Service.AudioParam.bOPUSForwardErrorCorrection) {
-        case FALSE: value = "0"; break;
-        case TRUE:  value = "1"; break;
-        default: value = ""; }
+        value = Service.AudioParam.bOPUSForwardErrorCorrection ? "1" : "0";
         s.Put(service, "Opus_FEC", value);
 
         /* Opus encoder signal type */
@@ -685,6 +665,5 @@ void CDRMTransmitter::SaveSettings()
         case CAudioParam::OA_AUDIO: value = "OA_AUDIO"; break;
         default: value = ""; }
         s.Put(service, "Opus_Application", value);
-#endif
     }
 }

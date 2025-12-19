@@ -43,7 +43,7 @@ public:
 	void Get(std::vector<_BYTE>& data);
 
 protected:
-	std::queue<std::vector<_BYTE> > buffer;
+    std::queue< std::vector<_BYTE> > buffer;
 	CMutex guard;
 	CWaitCondition blocker;
 };

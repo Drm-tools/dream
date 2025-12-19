@@ -35,6 +35,7 @@
 
 #include "SDC.h"
 
+CSDCReceive::~CSDCReceive(){}
 
 /* Implementation *************************************************************/
 CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
@@ -97,11 +98,13 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
     for (int i = 0; i < iNumBytesForCRCCheck; i++)
         CRCObject.AddByte((_BYTE) (*pbiData).Separate(SIZEOF__BYTE));
 
-    if (CRCObject.CheckCRC((*pbiData).Separate(16)) == TRUE)
+    bool permissive = Parameter.lenient_RSCI;
+
+    if (permissive || CRCObject.CheckCRC((*pbiData).Separate(16)))
     {
         /* CRC-check successful, extract data from SDC-stream --------------- */
         int			iLengthOfBody;
-        _BOOLEAN	bError = FALSE;
+        bool	bError = false;
 
         /* Reset separation function */
         (*pbiData).ResetBitAccess();
@@ -125,14 +128,14 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
            is checked! (implicitly)
            Check for: -end tag, -error, -no more data available */
         while (((iLengthOfBody = (*pbiData).Separate(7)) != 0) &&
-                (bError == FALSE) && (iBitsConsumed < iTotNumBitsWithoutCRC))
+                (bError == false) && (iBitsConsumed < iTotNumBitsWithoutCRC))
         {
             /* Version flag */
-            _BOOLEAN bVersionFlag;
+            bool bVersionFlag;
             if ((*pbiData).Separate(1) == 0)
-                bVersionFlag = FALSE;
+                bVersionFlag = false;
             else
-                bVersionFlag = TRUE;
+                bVersionFlag = true;
 
             /* Data entity type */
             /* First calculate number of bits for this entity ("+ 4" because of:
@@ -142,7 +145,8 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
             const int iNumBitsEntity = iLengthOfBody * 8 + 4;
 
             /* Call the routine for the signalled type */
-            switch ((*pbiData).Separate(4))
+            int t = (*pbiData).Separate(4);
+            switch (t)
             {
             case 0: /* Type 0 */
                 bError = DataEntityType0(pbiData, iLengthOfBody, Parameter, bVersionFlag);
@@ -189,14 +193,13 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
                    from the queue */
                 (*pbiData).Separate(iNumBitsEntity);
             }
-
             /* Count number of bits consumed (7 for length, 1 for version flag,
                4 for type = 12 plus actual entitiy body data) */
             iBitsConsumed += 12 + iNumBitsEntity;
         }
 
         /* If error was detected, return proper error code */
-        if (bError == TRUE)
+        if (bError)
             return SR_BAD_DATA;
         else
             return SR_OK; /* everything was ok */
@@ -212,10 +215,10 @@ CSDCReceive::ERetStatus CSDCReceive::SDCParam(CVector<_BINARY>* pbiData,
 /******************************************************************************\
 * Data entity Type 0 (Multiplex description data entity)					   *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter,
-                                      const _BOOLEAN)
+                                      const bool)
 {
     CMSCProtLev				MSCPrLe;
     int						iLenPartA;
@@ -227,7 +230,7 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 
     /* Check number of streams for overflow */
     if (iNumStreams > MAX_NUM_STREAMS)
-        return TRUE;
+        return true;
 
     /* Get protection levels */
     /* Protection level for part A */
@@ -237,7 +240,7 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
     MSCPrLe.iPartB = (*pbiData).Separate(2);
 
     /* Reset hierarchical flag (hierarchical present or not) */
-    _BOOLEAN bWithHierarch = FALSE;
+    bool bWithHierarch = false;
 
     Parameter.Lock();
     /* Get stream parameters */
@@ -251,13 +254,13 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
         {
             /* Protection level for hierarchical */
             MSCPrLe.iHierarch = (*pbiData).Separate(2);
-            bWithHierarch = TRUE;
+            bWithHierarch = true;
 
             /* rfu: these 10 bits shall be reserved for future use by the stream
                description field and shall be set to zero until they are
                defined */
             if ((*pbiData).Separate(10) != 0)
-                return TRUE;
+                return true;
 
             /* Data length for hierarchical */
             iLenPartB = (*pbiData).Separate(12);
@@ -283,7 +286,7 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
     Parameter.SetMSCProtLev(MSCPrLe, bWithHierarch);
     Parameter.Unlock();
 
-    return FALSE;
+    return false;
 }
 
 
@@ -291,7 +294,7 @@ _BOOLEAN CSDCReceive::DataEntityType0(CVector<_BINARY>* pbiData,
 * Data entity Type 1 (Label data entity)									   *
 * Uses the unique flavour of the version flag so it is not needed here		   *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter)
 {
@@ -301,7 +304,7 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
     /* rfu: these 2 bits are reserved for future use and shall be set to zero
        until they are defined */
     if ((*pbiData).Separate(2) != 0)
-        return TRUE;
+        return true;
 
 
     /* Get label string ----------------------------------------------------- */
@@ -331,24 +334,24 @@ _BOOLEAN CSDCReceive::DataEntityType1(CVector<_BINARY>* pbiData,
         }
         Parameter.Unlock();
 
-        return FALSE;
+        return false;
     }
     else
-        return TRUE; /* error */
+        return true; /* error */
 }
 
 
 /******************************************************************************\
 * Data entity Type 3 (Alternative frequency signalling)                        *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter,
-                                      const _BOOLEAN bVersion)
+                                      const bool bVersion)
 {
     int			i;
-    _BOOLEAN	bEnhanceFlag = FALSE;
-    _BOOLEAN	bServRestrFlag = FALSE;
+    bool	bEnhanceFlag = false;
+    bool	bServRestrFlag = false;
     int			iServRestr = 0x0f;
     CMultiplexDefinition AltFreq;
 
@@ -367,13 +370,13 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
         /* Multiplex is not synchronous (different content and/or channel
            parameters and/or multiplex parameters and/or signal timing in target
            area) */
-        AltFreq.bIsSyncMultplx = FALSE;
+        AltFreq.bIsSyncMultplx = false;
         break;
 
     case 1: /* 1 */
         /* Multiplex is synchronous (identical content and channel parameters
            and multiplex parameters and signal timing in target area) */
-        AltFreq.bIsSyncMultplx = TRUE;
+        AltFreq.bIsSyncMultplx = true;
         break;
     }
 
@@ -383,12 +386,12 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
     {
     case 0: /* 0 */
         /* Base layer */
-        bEnhanceFlag = FALSE;
+        bEnhanceFlag = false;
         break;
 
     case 1: /* 1 */
         /* Enhancement layer */
-        bEnhanceFlag = TRUE;
+        bEnhanceFlag = true;
         break;
     }
 
@@ -400,35 +403,35 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
     case 0: /* 0 */
         /* All services in the tuned multiplex are available on the frequencies
            given */
-        bServRestrFlag = FALSE;
+        bServRestrFlag = false;
         break;
 
     case 1: /* 1 */
         /* A restricted set of services are available on the frequencies
            given */
-        bServRestrFlag = TRUE;
+        bServRestrFlag = true;
         break;
     }
 
     /* Region/Schedule flag: this field indicates whether the list of
        frequencies is restricted by region and/or schedule or not */
-    _BOOLEAN bRegionSchedFlag = FALSE;
+    bool bRegionSchedFlag = false;
     switch ((*pbiData).Separate(1))
     {
     case 0: /* 0 */
         /* No restriction */
-        bRegionSchedFlag = FALSE;
+        bRegionSchedFlag = false;
         break;
 
     case 1: /* 1 */
         /* Region and/or schedule applies to this list of frequencies */
-        bRegionSchedFlag = TRUE;
+        bRegionSchedFlag = true;
         break;
     }
 
     /* Service Restriction field: this 8 bit field is only present if the
        Service Restriction flag is set to 1 */
-    if (bServRestrFlag == TRUE)
+    if (bServRestrFlag)
     {
         /* Short Id flags 4 bits. This field indicates, which services
            (identified by their Short Id) of the tuned DRM multiplex are carried
@@ -439,7 +442,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
         /* rfa 4 bits. This field (if present) is reserved for future additions
            and shall be set to zero until it is defined */
         if ((*pbiData).Separate(4) != 0)
-            return TRUE;
+            return true;
 
         /* Remove one byte from frequency count */
         iNumFreqTmp--;
@@ -451,7 +454,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
 
     /* Region/Schedule field: this 8 bit field is only present if the
        Region/Schedule flag is set to 1 */
-    if (bRegionSchedFlag == TRUE)
+    if (bRegionSchedFlag)
     {
         /* Region Id 4 bits. This field indicates whether the region is
            unspecified (value 0) or whether the alternative frequencies are
@@ -477,7 +480,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
        Restriction field and Region/Schedule field, also check that
        remaining number of bytes is devidable by 2 since we read 16 bits) */
     if ((iNumFreqTmp < 0) || (iNumFreqTmp % 2 != 0))
-        return TRUE;
+        return true;
 
     /* n frequencies: this field carries n 16 bit fields. n is in the
        range 0 to 16. The number of frequencies, n, is determined from the
@@ -492,7 +495,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
         /* rfu 1 bit. This field is reserved for future use of the frequency
            value field and shall be set to zero until defined */
         if ((*pbiData).Separate(1) != 0)
-            return TRUE;
+            return true;
 
         /* Frequency value 15 bits. This field is coded as an unsigned integer
            and gives the frequency in kHz */
@@ -509,7 +512,7 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
         Parameter.AltFreqSign.ResetMultiplexes(bVersion);
     }
     /* Enhancement layer is not supported */
-    if (bEnhanceFlag == FALSE)
+    if (bEnhanceFlag == false)
     {
 
         /* Set some parameters */
@@ -531,33 +534,33 @@ _BOOLEAN CSDCReceive::DataEntityType3(CVector<_BINARY>* pbiData,
         /* Now apply temporary object to global struct (first check if new object is not already there) */
         int iCurNumAltFreq = Parameter.AltFreqSign.vecMultiplexes.size();
 
-        _BOOLEAN bAltFreqIsAlreadyThere = FALSE;
+        bool bAltFreqIsAlreadyThere = false;
         for (i = 0; i < iCurNumAltFreq; i++)
         {
             if (Parameter.AltFreqSign.vecMultiplexes[i] == AltFreq)
-                bAltFreqIsAlreadyThere = TRUE;
+                bAltFreqIsAlreadyThere = true;
         }
 
-        if (bAltFreqIsAlreadyThere == FALSE)
+        if (bAltFreqIsAlreadyThere == false)
             Parameter.AltFreqSign.vecMultiplexes.push_back(AltFreq);
     }
     Parameter.Unlock();
 
-    return FALSE;
+    return false;
 }
 
 
 /******************************************************************************\
 * Data entity Type 4 (Alternative frequency signalling: Schedule definition)   *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter,
-                                      const _BOOLEAN bVersion)
+                                      const bool bVersion)
 {
     /* Check length -> must be 4 bytes */
     if (iLengthOfBody != 4)
-        return TRUE;
+        return true;
 
     int iScheduleID = 0;
     CAltFreqSched Sched;
@@ -587,7 +590,7 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
     if ((iScheduleID == 0) || (Sched.iDayCode == 0) || (Sched.iDayCode > 127) ||
             (Sched.iStartTime > 1439) || (Sched.iDuration > 16383) || (Sched.iDuration == 0))
     {
-        return TRUE;
+        return true;
     }
 
 
@@ -605,28 +608,28 @@ _BOOLEAN CSDCReceive::DataEntityType4(CVector<_BINARY>* pbiData,
 
     /*(first check if new object is not already there) */
 
-    _BOOLEAN bAltFreqSchedIsAlreadyThere = FALSE;
+    bool bAltFreqSchedIsAlreadyThere = false;
     for (size_t i = 0; i < vecSchedules.size(); i++)
     {
         if (vecSchedules[i] == Sched)
-            bAltFreqSchedIsAlreadyThere = TRUE;
+            bAltFreqSchedIsAlreadyThere = true;
     }
 
-    if (bAltFreqSchedIsAlreadyThere == FALSE)
+    if (bAltFreqSchedIsAlreadyThere == false)
         vecSchedules.push_back(Sched);
 
     Parameter.Unlock();
 
-    return FALSE;
+    return false;
 }
 
 /******************************************************************************\
 * Data entity Type 5 (Application information data entity)					   *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter,
-                                      const _BOOLEAN)
+                                      const bool)
 {
     /* Short ID (the short ID is the index of the service-array) */
     const int iTempShortID = (*pbiData).Separate(2);
@@ -717,16 +720,16 @@ _BOOLEAN CSDCReceive::DataEntityType5(CVector<_BINARY>* pbiData,
     Parameter.SetDataParam(iTempShortID, DataParam);
     Parameter.Unlock();
 
-    return FALSE;
+    return false;
 }
 
 /******************************************************************************\
 * Data entity Type 7 (Alternative frequency signalling: Region definition)     *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter,
-                                      const _BOOLEAN bVersion)
+                                      const bool bVersion)
 {
     size_t i;
     CAltFreqRegion Region;
@@ -772,7 +775,7 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
         const int iCIRAFZone = (*pbiData).Separate(8);
 
         if ((iCIRAFZone == 0) || (iCIRAFZone > 85))
-            return TRUE; /* Error */
+            return true; /* Error */
         else
             Region.veciCIRAFZones.push_back(iCIRAFZone);
 
@@ -793,7 +796,7 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
             || (Region.iLongitude < -180) || (Region.iLongitude > 179)
             || (Region.iLatitude < -90) || (Region.iLatitude > 90))
     {
-        return TRUE; /* Error */
+        return true; /* Error */
     }
 
 
@@ -810,308 +813,143 @@ _BOOLEAN CSDCReceive::DataEntityType7(CVector<_BINARY>* pbiData,
 
     /*(first check if new object is not already there) */
 
-    _BOOLEAN bAltFreqRegionIsAlreadyThere = FALSE;
+    bool bAltFreqRegionIsAlreadyThere = false;
     for (i = 0; i < vecRegions.size(); i++)
     {
         if (vecRegions[i] == Region)
-            bAltFreqRegionIsAlreadyThere = TRUE;
+            bAltFreqRegionIsAlreadyThere = true;
     }
 
-    if (bAltFreqRegionIsAlreadyThere == FALSE)
+    if (bAltFreqRegionIsAlreadyThere == false)
         vecRegions.push_back(Region);
 
     Parameter.Unlock();
 
-    return FALSE;
+    return false;
 }
 
 
 /******************************************************************************\
 * Data entity Type 8 (Time and date information data entity)				   *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType8(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter)
 {
     /* Check length -> must be 3 or 4 bytes */
-    if (iLengthOfBody < 3)
-        return FALSE;
+    if (iLengthOfBody < 3) return false;
 
-    if (iLengthOfBody > 4)
-        return FALSE;
-
-	if (iLengthOfBody == 3)
-    {
-    /* Decode date */
-    CModJulDate ModJulDate((*pbiData).Separate(17));
+    if (iLengthOfBody > 4) return false;
 
     Parameter.Lock();
+
+    /* Decode date */
+    CModJulDate ModJulDate((*pbiData).Separate(17));
     Parameter.iDay = ModJulDate.GetDay();
     Parameter.iMonth = ModJulDate.GetMonth();
     Parameter.iYear = ModJulDate.GetYear();
 
     /* UTC (hours and minutes) */
-    Parameter.iUTCHour = (*pbiData).Separate(5);
-    Parameter.iUTCMin = (*pbiData).Separate(6);
+    Parameter.iUTCHour = int((*pbiData).Separate(5));
+    Parameter.iUTCMin = int((*pbiData).Separate(6));
 
-    Parameter.bValidUTCOffsetAndSense = FALSE;
-    }
-
-    if (iLengthOfBody == 4)
+    if (iLengthOfBody == 3)
     {
-    /* Decode date */
-    CModJulDate ModJulDate((*pbiData).Separate(17));
-
-    Parameter.Lock();
-    Parameter.iDay = ModJulDate.GetDay();
-    Parameter.iMonth = ModJulDate.GetMonth();
-    Parameter.iYear = ModJulDate.GetYear();
-
-    /* UTC (hours and minutes) */
-    Parameter.iUTCHour = (*pbiData).Separate(5);
-    Parameter.iUTCMin = (*pbiData).Separate(6);
-
-    /* rfu */
-    const int rfu = (*pbiData).Separate(2);
-
-    /* UTC Sense */
-    Parameter.iUTCSense = (*pbiData).Separate(1); 
-
-    /* UTC Offset (local time offset) */
-    Parameter.iUTCOff = ((*pbiData).Separate(5));
-
-    Parameter.bValidUTCOffsetAndSense = TRUE;
-
-    if (rfu)
-    {
-        /* rfu is set, reset all */
-        Parameter.iDay = 0;
-        Parameter.iMonth = 0;
-        Parameter.iYear = 0;
-        Parameter.iUTCSense = 0; 
-        Parameter.iUTCOff = 0;
-        Parameter.bValidUTCOffsetAndSense = FALSE;
+        Parameter.bValidUTCOffsetAndSense = false;
     }
+    else
+    {            
+        /* rfu */
+        const int rfu = int((*pbiData).Separate(2));
+
+        /* UTC Sense */
+        Parameter.iUTCSense = int((*pbiData).Separate(1));
+
+        /* UTC Offset (local time offset) */
+        Parameter.iUTCOff = int(((*pbiData).Separate(5)));
+
+        Parameter.bValidUTCOffsetAndSense = true;
+
+        if (rfu)
+        {
+            /* rfu is set, reset all */
+            Parameter.iDay = 0;
+            Parameter.iMonth = 0;
+            Parameter.iYear = 0;
+            Parameter.iUTCSense = 0;
+            Parameter.iUTCOff = 0;
+            Parameter.bValidUTCOffsetAndSense = false;
+        }
     }
 	
     Parameter.Unlock();
 
-    return FALSE;
+    return false;
 }
 
 
 /******************************************************************************\
 * Data entity Type 9 (Audio information data entity)						   *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
+/*
+6.4.3.10 Audio information data entity - type 9
+Each audio service needs a detailed description of the parameters needed for audio decoding. This data entity uses the reconfiguration mechanism for the version flag.
+• Short Id                2 bits
+• Stream Id               2 bits
+• audio coding            2 bits
+• SBR flag                1 bit
+• audio mode              2 bits
+• audio sampling rate     3 bits
+• text flag               1 bit
+• enhancement flag        1 bit
+• coder field             5 bits
+• rfa                     1 bit
+• codec specific config   8n bits
+
+ */
+bool CSDCReceive::DataEntityType9(CVector<_BINARY>* pbiData,
                                       const int iLengthOfBody,
                                       CParameter& Parameter,
-                                      const _BOOLEAN)
+                                      const bool)
 {
-    /* Check length -> must be 2 bytes */
-    if (iLengthOfBody != 2)
-        return TRUE;
 
-    /* Init error flag with "no error" */
-    _BOOLEAN bError = FALSE;
+    /* Check length -> must be at least 2 bytes */
+    if (iLengthOfBody < 2)
+        return true;
 
     /* Short ID (the short ID is the index of the service-array) */
-    const int iTempShortID = (*pbiData).Separate(2);
+    const int iTempShortID = int((*pbiData).Separate(2));
 
     /* Load audio parameters class with current parameters */
     Parameter.Lock();
+    /* Stream Id */
     CAudioParam AudParam = Parameter.GetAudioParam(iTempShortID);
+    AudParam.iStreamID = int((*pbiData).Separate(2));
+    bool bError = AudParam.setFromType9Bits(*pbiData, unsigned(iLengthOfBody));
     Parameter.Unlock();
 
-    /* Stream Id */
-    AudParam.iStreamID = (*pbiData).Separate(2);
-
-    /* Audio coding */
-    switch ((*pbiData).Separate(2))
-    {
-    case 0: /* 00 */
-        AudParam.eAudioCoding = CAudioParam::AC_AAC;
-        break;
-
-    case 1: /* 01 */
-        AudParam.eAudioCoding = CAudioParam::AC_CELP;
-        break;
-
-    case 2: /* 10 */
-        AudParam.eAudioCoding = CAudioParam::AC_HVXC;
-        break;
-
-    default: /* reserved */
-        bError = TRUE;
-        break;
-    }
-
-    /* SBR flag */
-    switch ((*pbiData).Separate(1))
-    {
-    case 0: /* 0 */
-        AudParam.eSBRFlag = CAudioParam::SB_NOT_USED;
-        break;
-
-    case 1: /* 1 */
-        AudParam.eSBRFlag = CAudioParam::SB_USED;
-        break;
-    }
-
-    /* Audio mode */
-    switch (AudParam.eAudioCoding)
-    {
-    case CAudioParam::AC_AAC:
-        /* Channel type */
-        switch ((*pbiData).Separate(2))
-        {
-        case 0: /* 00 */
-            AudParam.eAudioMode = CAudioParam::AM_MONO;
-            break;
-
-        case 1: /* 01 */
-            AudParam.eAudioMode = CAudioParam::AM_P_STEREO;
-            break;
-
-        case 2: /* 10 */
-            AudParam.eAudioMode = CAudioParam::AM_STEREO;
-            break;
-
-        default: /* reserved */
-            bError = TRUE;
-            break;
-        }
-        break;
-
-    case CAudioParam::AC_CELP:
-        /* rfa */
-        (*pbiData).Separate(1);
-
-        /* CELP_CRC */
-        switch ((*pbiData).Separate(1))
-        {
-        case 0: /* 0 */
-            AudParam.bCELPCRC = FALSE;
-            break;
-
-        case 1: /* 1 */
-            AudParam.bCELPCRC = TRUE;
-            break;
-        }
-        break;
-
-    case CAudioParam::AC_HVXC:
-        /* HVXC_rate */
-        switch ((*pbiData).Separate(1))
-        {
-        case 0: /* 0 */
-            AudParam.eHVXCRate = CAudioParam::HR_2_KBIT;
-            break;
-
-        case 1: /* 1 */
-            AudParam.eHVXCRate = CAudioParam::HR_4_KBIT;
-            break;
-        }
-
-        /* HVXC CRC */
-        switch ((*pbiData).Separate(1))
-        {
-        case 0: /* 0 */
-            AudParam.bHVXCCRC = FALSE;
-            break;
-
-        case 1: /* 1 */
-            AudParam.bHVXCCRC = TRUE;
-            break;
-        }
-        break;
-    }
-
-    /* Audio sampling rate */
-    switch ((*pbiData).Separate(3))
-    {
-    case 0: /* 000 */
-        AudParam.eAudioSamplRate = CAudioParam::AS_8_KHZ;
-        break;
-
-    case 1: /* 001 */
-        AudParam.eAudioSamplRate = CAudioParam::AS_12KHZ;
-        break;
-
-    case 2: /* 010 */
-        AudParam.eAudioSamplRate = CAudioParam::AS_16KHZ;
-        break;
-
-    case 3: /* 011 */
-        AudParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
-        break;
-
-    default: /* reserved */
-        bError = TRUE;
-        break;
-    }
-
-    /* Text flag */
-    switch ((*pbiData).Separate(1))
-    {
-    case 0: /* 0 */
-        AudParam.bTextflag = FALSE;
-        break;
-
-    case 1: /* 1 */
-        AudParam.bTextflag = TRUE;
-        break;
-    }
-
-    /* Enhancement flag */
-    switch ((*pbiData).Separate(1))
-    {
-    case 0: /* 0 */
-        AudParam.bEnhanceFlag = FALSE;
-        break;
-
-    case 1: /* 1 */
-        AudParam.bEnhanceFlag = TRUE;
-        break;
-    }
-
-    /* Coder field */
-    if (AudParam.eAudioCoding == CAudioParam::AC_CELP)
-    {
-        /* CELP index */
-        AudParam.iCELPIndex = (*pbiData).Separate(5);
-    }
-    else
-    {
-        /* rfa 5 bit */
-        (*pbiData).Separate(5);
-    }
-
-    /* rfa 1 bit */
-    (*pbiData).Separate(1);
-
     /* Set new parameters in global struct */
-    if (bError == FALSE)
+    if (bError == false)
     {
         Parameter.Lock();
         Parameter.SetAudioParam(iTempShortID, AudParam);
         Parameter.Unlock();
-        return FALSE;
+        return false;
     }
     else
-        return TRUE;
+        return true;
 }
 
 /******************************************************************************\
 * Data entity Type 11 (Alternative frequency signalling - other services)      *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
                                        const int iLengthOfBody,
                                        CParameter& Parameter,
-                                       const _BOOLEAN bVersion)
+                                       const bool bVersion)
 {
     size_t i;
-    _BOOLEAN		bRegionSchedFlag = FALSE;
+    bool		bRegionSchedFlag = false;
     int				iFrequencyEntryLength;
     COtherService	OtherService;
 
@@ -1133,12 +971,12 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
     {
     case 0: /* 0 */
         /* No restriction */
-        bRegionSchedFlag = FALSE;
+        bRegionSchedFlag = false;
         break;
 
     case 1: /* 1 */
         /* Region and/or schedule applies to this list of frequencies */
-        bRegionSchedFlag = TRUE;
+        bRegionSchedFlag = true;
         break;
     }
 
@@ -1148,11 +986,11 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
     {
     case 0: /* 0 */
         /* No restriction */
-        OtherService.bSameService = FALSE;
+        OtherService.bSameService = false;
         break;
 
     case 1: /* 1 */
-        OtherService.bSameService = TRUE;
+        OtherService.bSameService = true;
         break;
     }
 
@@ -1166,7 +1004,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
     iNumFreqTmp--;
 
     /* Optional Region/schedule ID */
-    if (bRegionSchedFlag == TRUE)
+    if (bRegionSchedFlag)
     {
         OtherService.iRegionID = (*pbiData).Separate(4);
         OtherService.iScheduleID = (*pbiData).Separate(4);
@@ -1237,7 +1075,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
        remaining number of bytes is devisible by iFrequencyEntryLength since
        we read iFrequencyEntryLength * 8 bits) */
     if ( (iNumFreqTmp < 0) || ((iNumFreqTmp % iFrequencyEntryLength) != 0) )
-        return TRUE;
+        return true;
 
     /* 16 bits are read */
     const size_t iNumFreq = iNumFreqTmp / iFrequencyEntryLength;
@@ -1256,7 +1094,7 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
     }
 
     if (iShortIDAnnounceFlag != 0)
-        return FALSE; // no error, but we don't support announcements
+        return false; // no error, but we don't support announcements
 
     /* Now, set data in global struct */
     Parameter.Lock();
@@ -1270,24 +1108,24 @@ _BOOLEAN CSDCReceive::DataEntityType11(CVector<_BINARY>* pbiData,
     /* (first check if new object is not already there) */
     const size_t iCurNumAltFreqOtherServices = Parameter.AltFreqSign.vecOtherServices.size();
 
-    _BOOLEAN bAltFreqIsAlreadyThere = FALSE;
+    bool bAltFreqIsAlreadyThere = false;
     for (i = 0; i < iCurNumAltFreqOtherServices; i++)
     {
         if (Parameter.AltFreqSign.vecOtherServices[i] == OtherService)
-            bAltFreqIsAlreadyThere = TRUE;
+            bAltFreqIsAlreadyThere = true;
     }
-    if (bAltFreqIsAlreadyThere == FALSE)
+    if (bAltFreqIsAlreadyThere == false)
         Parameter.AltFreqSign.vecOtherServices.push_back(OtherService);
     Parameter.Unlock();
 
-    return FALSE;
+    return false;
 }
 
 
 /******************************************************************************\
 * Data entity Type 12 (Language and country data entity)                       *
 \******************************************************************************/
-_BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
+bool CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
                                        const int iLengthOfBody,
                                        CParameter& Parameter)
 {
@@ -1295,7 +1133,7 @@ _BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
 
     /* Check length -> must be 5 bytes */
     if (iLengthOfBody != 5)
-        return TRUE;
+        return true;
 
     /* Short Id: this field indicates the short Id for the service concerned */
     const int iShortID = (*pbiData).Separate(2);
@@ -1303,7 +1141,7 @@ _BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
     /* rfu: these 2 bits are reserved for future use and shall be set to zero
        until they are defined */
     if ((*pbiData).Separate(2) != 0)
-        return TRUE;
+        return true;
 
     Parameter.Lock();
     /* Language code: this 24-bit field identifies the language of the target
@@ -1335,5 +1173,5 @@ _BOOLEAN CSDCReceive::DataEntityType12(CVector<_BINARY>* pbiData,
     }
     Parameter.Unlock();
 
-    return FALSE;
+    return false;
 }

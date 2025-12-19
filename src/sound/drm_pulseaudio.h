@@ -1,6 +1,6 @@
 /******************************************************************************\
  *
- * Copyright (c) 2012
+ * Copyright (c) 2012-2013
  *
  * Author(s):
  *	David Flamand
@@ -53,12 +53,12 @@ class CSoundOutPulse;
 typedef struct pa_stream_notify_cb_userdata_t
 {
 	CSoundOutPulse*		SoundOutPulse;
-	_BOOLEAN			bOverflow;
+	bool			bOverflow;
 } pa_stream_notify_cb_userdata_t;
 
 typedef struct pa_common
 {
-	_BOOLEAN		bClockDriftComp;
+	bool		bClockDriftComp;
 	int				sample_rate_offset;
 } pa_common;
 
@@ -75,19 +75,17 @@ typedef struct pa_object
 class CSoundPulse
 {
 public:
-	CSoundPulse(_BOOLEAN bPlayback);
-	virtual ~CSoundPulse() {}
-	void			Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions);
-	void			SetDev(std::string sNewDevice);
-	std::string			GetDev();
+	CSoundPulse(bool bPlayback);
+    virtual ~CSoundPulse();
+    void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
+    void        SetDev(std::string sNewDevice);
+    std::string GetDev();
 protected:
-	_BOOLEAN		IsDefaultDevice();
-	_BOOLEAN		bPlayback;
-	_BOOLEAN		bChangDev;
-	std::string			sCurrentDevice;
+	bool		bPlayback;
+    std::string sCurrentDevice;
 #ifdef ENABLE_STDIN_STDOUT
-	_BOOLEAN		IsStdinStdout();
-	_BOOLEAN		bStdinStdout;
+    bool        IsStdinStdout();
+    bool        bStdinStdout;
 #endif
 };
 
@@ -95,16 +93,17 @@ class CSoundInPulse : public CSoundPulse, public CSoundInInterface
 {
 public:
 	CSoundInPulse();
-	virtual ~CSoundInPulse() {}
-	void			Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions) {CSoundPulse::Enumerate(names, descriptions);};
-	std::string			GetDev() {return CSoundPulse::GetDev();};
-	void			SetDev(std::string sNewDevice) {CSoundPulse::SetDev(sNewDevice);};
+    virtual ~CSoundInPulse();
+    void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) {CSoundPulse::Enumerate(names, descriptions, defaultDevice);}
+    std::string	GetDev() {return CSoundPulse::GetDev();}
+    void        SetDev(std::string sNewDevice) {CSoundPulse::SetDev(sNewDevice);}
+    std::string GetVersion() { return pa_get_library_version(); }
 
-	_BOOLEAN		Init(int iNewSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
-	_BOOLEAN		Read(CVector<_SAMPLE>& psData);
-	void			Close();
+    bool        Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
+    bool        Read(CVector<_SAMPLE>& psData);
+    void        Close();
 #ifdef CLOCK_DRIFT_ADJ_ENABLED
-	void			SetCommonParamPtr(pa_common *cp_ptr) { cp = cp_ptr; }
+    void        SetCommonParamPtr(pa_common *cp_ptr) { cp = cp_ptr; }
 #endif
 
 protected:
@@ -113,11 +112,12 @@ protected:
 	void			Close_HW();
 	void			SetBufferSize_HW();
 
-	int 			iSampleRate;
-	int 			iBufferSize;
-	_BOOLEAN		bBlockingRec;
+	int				iSampleRate;
+	int				iBufferSize;
+    unsigned        timeToWait;
+	bool		bBlockingRec;
 
-	_BOOLEAN		bBufferingError;
+	bool		bBufferingError;
 
 	pa_stream		*pa_s;
 	size_t			remaining_nbytes;
@@ -125,7 +125,7 @@ protected:
 
 #ifdef CLOCK_DRIFT_ADJ_ENABLED
 	int				record_sample_rate;
-	_BOOLEAN		bClockDriftComp;
+	bool		bClockDriftComp;
 	pa_common		*cp;
 #endif
 };
@@ -134,24 +134,26 @@ class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface
 {
 public:
 	CSoundOutPulse();
-	virtual ~CSoundOutPulse() {}
-	void			Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions) {CSoundPulse::Enumerate(names, descriptions);};
-	std::string			GetDev() {return CSoundPulse::GetDev();};
-	void			SetDev(std::string sNewDevice) {CSoundPulse::SetDev(sNewDevice);};
+    virtual ~CSoundOutPulse();
+    void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+        {CSoundPulse::Enumerate(names, descriptions, defaultDevice);}
+    std::string GetDev() {return CSoundPulse::GetDev();}
+    void        SetDev(std::string sNewDevice) {CSoundPulse::SetDev(sNewDevice);}
+    std::string GetVersion() { return pa_get_library_version(); }
 
-	_BOOLEAN		Init(int iNewSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
-	_BOOLEAN		Write(CVector<_SAMPLE>& psData);
-	void			Close();
+    bool        Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
+    bool        Write(CVector<_SAMPLE>& psData);
+    void        Close();
 #ifdef CLOCK_DRIFT_ADJ_ENABLED
 	pa_common *		GetCommonParamPtr() { return &cp; }
-	void			EnableClockDriftAdj(_BOOLEAN bEnable) { bNewClockDriftComp = bEnable; }
-	_BOOLEAN		IsClockDriftAdjEnabled() { return bNewClockDriftComp; }
+	void			EnableClockDriftAdj(bool bEnable) { bNewClockDriftComp = bEnable; }
+	bool		IsClockDriftAdjEnabled() { return bNewClockDriftComp; }
 #endif
 
-	_BOOLEAN		bPrebuffer;
-	_BOOLEAN		bSeek;
-	_BOOLEAN		bBufferingError;
-	_BOOLEAN		bMuteError;
+	bool		bPrebuffer;
+	bool		bSeek;
+	bool		bBufferingError;
+	bool		bMuteError;
 
 protected:
 	void			Init_HW();
@@ -160,7 +162,8 @@ protected:
 
 	int				iSampleRate;
 	int				iBufferSize;
-	_BOOLEAN		bBlockingPlay;
+    unsigned		timeToWait;
+	bool		bBlockingPlay;
 
 	pa_stream		*pa_s;
 	pa_stream_notify_cb_userdata_t pa_stream_notify_cb_userdata_underflow;
@@ -173,7 +176,7 @@ protected:
 	int				filter_stabilized;
 	int				wait_prebuffer;
 	CMatlibVector<CReal> B, A, X, Z;
-	_BOOLEAN		bNewClockDriftComp;
+	bool		bNewClockDriftComp;
 	pa_common		cp;
 	int				playback_usec; // DEBUG
 	int				clock; // DEBUG

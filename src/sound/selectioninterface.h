@@ -26,20 +26,18 @@
  *
 \******************************************************************************/
 
-#ifndef _SELECTIONINTERFACE_H
-#define _SELECTIONINTERFACE_H
+#ifndef SELECTIONINTERFACE_H
+#define SELECTIONINTERFACE_H
 
-#include "../GlobalDefinitions.h"
 #include <vector>
 #include <string>
 
 class CSelectionInterface
 {
 public:
-    virtual 			~CSelectionInterface() {}
-    virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions)=0;
-    virtual std::string		GetDev()=0;
+    virtual 			~CSelectionInterface();
+    virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)=0;
+    virtual std::string	GetDev()=0;
     virtual void		SetDev(std::string sNewDev)=0;
 };
-
 #endif

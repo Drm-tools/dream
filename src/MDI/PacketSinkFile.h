@@ -43,8 +43,8 @@ public:
 
 	virtual void SendPacket(const std::vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	virtual _BOOLEAN SetDestination(const std::string& strFName);
-	virtual _BOOLEAN GetDestination(std::string& strFName) { strFName = strFileName; return TRUE; }
+	virtual bool SetDestination(const std::string& strFName);
+	virtual bool GetDestination(std::string& strFName) { strFName = strFileName; return true; }
 	void StartRecording();
 	void StopRecording();
 
@@ -54,8 +54,8 @@ protected:
 	virtual void write(const std::vector<_BYTE>& vecbydata)=0;
 
 	FILE *pFile;
-	_BOOLEAN bIsRecording;
-	_BOOLEAN bChangeReceived;
+	bool bIsRecording;
+	bool bChangeReceived;
 	std::string strFileName;
 };
 

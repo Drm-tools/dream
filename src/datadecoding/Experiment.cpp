@@ -29,7 +29,7 @@
 #include <iostream>
 using namespace std;
 
-CExperiment::CExperiment() : dgdec(NULL)
+CExperiment::CExperiment() : dgdec(nullptr)
 {
 	/* Create decoder instance. Pass the pointer to this object. This is needed
 	   for the call-back functions! */
@@ -39,7 +39,7 @@ CExperiment::CExperiment() : dgdec(NULL)
 CExperiment::~CExperiment()
 {
 	/* Delete decoder instances */
-	if (dgdec != NULL)
+	if (dgdec != nullptr)
 		DAB_DATAGROUP_DECODER_deleteDec(dgdec);
 }
 

@@ -85,13 +85,9 @@ public:
         rNoiseEst(0.0), rSignalEst(0.0),
         rNoiseEstWMMAcc(0.0), rSignalEstWMMAcc(0.0), rNoiseEstWMFAcc(0.0),
         rSignalEstWMFAcc(0.0), rNoiseEstMERAcc(0.0),iCountMERAcc(0),
-        bInterfConsid(FALSE) {}
+        bInterfConsid(false) {}
 
     virtual ~CChannelEstimation() {}
-
-    enum ETypeIntFreq {FLINEAR, FDFTFILTER, FWIENER};
-    enum ETypeIntTime {TLINEAR, TWIENER};
-    enum ETypeSNREst {SNR_FAC, SNR_PIL};
 
     void GetTransferFunction(CVector<_REAL>& vecrData,
                              CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale);
@@ -115,21 +111,21 @@ public:
     void SetFreqInt(ETypeIntFreq eNewTy) {
         TypeIntFreq = eNewTy;
     }
-    ETypeIntFreq GetFreqInt() {
+    ETypeIntFreq GetFrequencyInterpolationAlgorithm() {
         return TypeIntFreq;
     }
     void SetTimeInt(ETypeIntTime eNewTy) {
         TypeIntTime = eNewTy;
         SetInitFlag();
     }
-    ETypeIntTime GetTimeInt() const {
+    ETypeIntTime GetTimeInterpolationAlgorithm() const {
         return TypeIntTime;
     }
 
-    void SetIntCons(const _BOOLEAN bNewIntCons) {
+    void SetIntCons(const bool bNewIntCons) {
         bInterfConsid = bNewIntCons;
     }
-    _BOOLEAN GetIntCons() {
+    bool GetIntCons() {
         return bInterfConsid;
     }
 
@@ -220,7 +216,7 @@ protected:
     _REAL					rNoiseEstMERAcc;
     int						iCountMERAcc;
 
-    _BOOLEAN				bInterfConsid;
+    bool				bInterfConsid;
 
     /* Needed for GetDelay() */
     _REAL					rLenPDSEst;
@@ -233,7 +229,7 @@ protected:
     int						iSNREstIniSigAvCnt;
     int						iSNREstIniNoiseAvCnt;
     int						iSNREstInitCnt;
-    _BOOLEAN				bSNRInitPhase;
+    bool				bSNRInitPhase;
     _REAL CalAndBoundSNR(const _REAL rSignalEst, const _REAL rNoiseEst);
 
     /* OPH: RSCI interference tag calculation */

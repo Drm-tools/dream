@@ -29,8 +29,8 @@
  *
 \******************************************************************************/
 
-#if !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
-#define DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
+#ifndef DRMRECEIVER_H
+#define DRMRECEIVER_H
 
 #include "GlobalDefinitions.h"
 #include <iostream>
@@ -41,7 +41,7 @@
 #include "util/Utilities.h"
 #include "DataIO.h"
 #include "OFDM.h"
-#include "DRMSignalIO.h"
+#include "creceivedata.h"
 #include "MSCMultiplexer.h"
 #include "InputResample.h"
 #include "datadecoding/DataDecoder.h"
@@ -59,7 +59,6 @@
 #include "sound/soundinterface.h"
 #include "PlotManager.h"
 #include "DrmTransceiver.h"
-
 
 /* Definitions ****************************************************************/
 /* Number of FAC frames until the acquisition is activated in case a signal
@@ -79,8 +78,8 @@
 
 
 /* Classes ********************************************************************/
-class CSettings;
 class CRig;
+class CSettings;
 
 class CSplitFAC : public CSplitModul<_BINARY>
 {
@@ -134,24 +133,41 @@ class CDRMReceiver : public CDRMTransceiver
 {
 public:
 
-    enum ESFStatus { SF_SNDCARDIN, SF_SNDFILEIN, SF_RSCIMDIIN };
-
-    CDRMReceiver(CSettings* pSettings=NULL);
+    CDRMReceiver(CSettings* pSettings=nullptr);
     virtual ~CDRMReceiver();
 
-    void					LoadSettings(); // can write to settings to set defaults
-    void					SaveSettings();
-    void					Start();
-    void					SetRsciInput(const string& rsciInput);
-    void					ClearRsciInput();
-    void					SetSoundFile(const string& soundFile);
-    void					ClearSoundFile();
-    void					SetInputFile(const string& inputFile);
-    void					ClearInputFile();
-    ESFStatus				GetInputStatus();
-    void					RequestNewAcquisition() {
-        bRestartFlag = TRUE;
+    virtual void			LoadSettings() override; // can write to settings to set defaults
+    virtual void			SaveSettings() override;
+
+    std::string GetInputDevice()
+    {
+        return ReceiveData.GetSoundInterface();
     }
+
+    std::string GetOutputDevice()
+    {
+        return WriteData.GetSoundInterface();
+    }
+    virtual void EnumerateInputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultInput) override;
+    virtual void EnumerateOutputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultOutput) override;
+    virtual void SetInputDevice(std::string) override;
+    virtual void SetOutputDevice(std::string) override;
+
+    virtual CSettings*GetSettings()  override{
+        return pSettings;
+    }
+
+    virtual void SetSettings(CSettings* pNewSettings) override {
+        pSettings = pNewSettings;
+    }
+
+    virtual CParameter*	GetParameters() override {
+        return &Parameters;
+    }
+
+    virtual bool IsReceiver() const override { return true; }
+    virtual bool IsTransmitter() const override  { return false; }
+
     EAcqStat				GetAcquiState() {
         return Parameters.GetAcquiState();
     }
@@ -168,7 +184,7 @@ public:
     {
         rInitResampleOffset = rNRO;
     }
-    void					SetAMDemodType(CAMDemodulation::EDemodType);
+    void					SetAMDemodType(EDemodType);
     void					SetAMFilterBW(int iBw);
     void					SetAMDemodAcq(_REAL rNewNorCen);
 #ifdef HAVE_LIBHAMLIB
@@ -180,56 +196,56 @@ public:
     int		 				GetFrequency() {
         return Parameters.GetFrequency();
     }
-    void					SetIQRecording(_BOOLEAN);
-    void					SetRSIRecording(_BOOLEAN, const char);
+    void					SetIQRecording(bool);
+    void					SetRSIRecording(bool, const char);
 
     /* Channel Estimation */
-    void SetFreqInt(CChannelEstimation::ETypeIntFreq eNewTy)
+    void SetFreqInt(ETypeIntFreq eNewTy)
     {
         ChannelEstimation.SetFreqInt(eNewTy);
     }
 
-    CChannelEstimation::ETypeIntFreq GetFreqInt()
+    ETypeIntFreq GetFrequencyInterpolationAlgorithm()
     {
-        return ChannelEstimation.GetFreqInt();
+        return ChannelEstimation.GetFrequencyInterpolationAlgorithm();
     }
 
-    void SetTimeInt(CChannelEstimation::ETypeIntTime eNewTy)
+    void SetTimeInt(ETypeIntTime eNewTy)
     {
         ChannelEstimation.SetTimeInt(eNewTy);
     }
 
-    CChannelEstimation::ETypeIntTime GetTimeInt() const
+    ETypeIntTime GetTimeInterpolationAlgorithm() const
     {
-        return ChannelEstimation.GetTimeInt();
+        return ChannelEstimation.GetTimeInterpolationAlgorithm();
     }
 
-    void SetIntCons(const _BOOLEAN bNewIntCons)
+    void SetIntCons(const bool bNewIntCons)
     {
         ChannelEstimation.SetIntCons(bNewIntCons);
     }
 
-    _BOOLEAN GetIntCons()
+    bool GetIntCons()
     {
         return ChannelEstimation.GetIntCons();
     }
 
-    void SetSNREst(CChannelEstimation::ETypeSNREst eNewTy)
+    void SetSNREst(ETypeSNREst eNewTy)
     {
         ChannelEstimation.SetSNREst(eNewTy);
     }
 
-    CChannelEstimation::ETypeSNREst GetSNREst()
+    ETypeSNREst GetSNREst()
     {
         return ChannelEstimation.GetSNREst();
     }
 
-    void SetTiSyncTracType(CTimeSyncTrack::ETypeTiSyncTrac eNewTy)
+    void SetTiSyncTracType(ETypeTiSyncTrac eNewTy)
     {
         ChannelEstimation.GetTimeSyncTrack()->SetTiSyncTracType(eNewTy);
     }
 
-    CTimeSyncTrack::ETypeTiSyncTrac GetTiSyncTracType()
+    ETypeTiSyncTrac GetTiSyncTracType()
     {
         return ChannelEstimation.GetTimeSyncTrack()->GetTiSyncTracType();
     }
@@ -307,28 +323,28 @@ public:
     void					InitsForSDCCodSche();
     void					InitsForMSC();
     void					InitsForMSCDemux();
+    void                    process();
+    void                    updatePosition();
+    void					InitReceiverMode();
+    void					SetInStartMode();
+    void                    CloseSoundInterfaces();
 
 protected:
 
-    void					SetInStartMode();
     void					SetInTrackingMode();
     void					SetInTrackingModeDelayed();
     void					InitsForAllModules();
-    void					Run();
-    void					SetInput();
-    void					ResetInput();
-    void					DemodulateDRM(_BOOLEAN&);
-    void					DecodeDRM(_BOOLEAN&, _BOOLEAN&);
-    void					UtilizeDRM(_BOOLEAN&);
-    void					DemodulateAM(_BOOLEAN&);
-    void					DecodeAM(_BOOLEAN&);
-    void					UtilizeAM(_BOOLEAN&);
-    void					DemodulateFM(_BOOLEAN&);
-    void					DecodeFM(_BOOLEAN&);
-    void					UtilizeFM(_BOOLEAN&);
+    void					DemodulateDRM(bool&);
+    void					DecodeDRM(bool&, bool&);
+    void					UtilizeDRM(bool&);
+    void					DemodulateAM(bool&);
+    void					DecodeAM(bool&);
+    void					UtilizeAM(bool&);
+    void					DemodulateFM(bool&);
+    void					DecodeFM(bool&);
+    void					UtilizeFM(bool&);
     void					DetectAcquiFAC();
     void					DetectAcquiSymbol();
-    void					InitReceiverMode();
     void					saveSDCtoFile();
 
     /* Modules */
@@ -397,9 +413,9 @@ protected:
     CSingleBuffer<_BINARY>			SDCSendBuf;
     CSingleBuffer<_BINARY>			MSCMLCDecBuf;
     CSingleBuffer<_BINARY>			RSIPacketBuf;
-    vector<CSingleBuffer<_BINARY> >	MSCDecBuf;
-    vector<CSingleBuffer<_BINARY> >	MSCUseBuf;
-    vector<CSingleBuffer<_BINARY> >	MSCSendBuf;
+    std::vector<CSingleBuffer<_BINARY> >	MSCDecBuf;
+    std::vector<CSingleBuffer<_BINARY> >	MSCUseBuf;
+    std::vector<CSingleBuffer<_BINARY> >	MSCSendBuf;
     CSingleBuffer<_BINARY>			EncAMAudioBuf;
     CCyclicBuffer<_SAMPLE>			AudSoDecBuf;
     CCyclicBuffer<_SAMPLE>			AMAudioBuf;
@@ -415,9 +431,6 @@ protected:
 
     int						iAudioStreamID;
     int						iDataStreamID;
-
-
-    _BOOLEAN				bRestartFlag;
 
     _REAL					rInitResampleOffset;
 
@@ -439,9 +452,10 @@ protected:
 #endif
 
     CPlotManager			PlotManager;
-    string					rsiOrigin;
-    string					sSoundFile;
+    std::string					rsiOrigin;
     int						iPrevSigSampleRate; /* sample rate before sound file */
+    CParameter&             Parameters;
+    CSettings*              pSettings;
 };
 
 

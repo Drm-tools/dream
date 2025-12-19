@@ -29,6 +29,8 @@
 #include "TableFAC.h"
 using namespace std;
 
+using namespace std;
+
 /* Definitions ****************************************************************/
 /* ETSI ES201980V2.1.1: page 115, 7.5.3: ...FAC shall use 4-QAM mapping. A
    fixed code rate shall be applied...R_all=0.6...
@@ -167,7 +169,7 @@ const struct elCountry TableCountryCode[LEN_TABLE_COUNTRY_CODE] = {
     {"cd", "Congo"},
     {"ck", "Cook Islands"},
     {"cr", "Costa Rica"},
-    {"ci", "Côte d'Ivoire"},
+    {"ci", "C?te d'Ivoire"},
     {"hr", "Croatia"},
     {"cu", "Cuba"},
     {"cy", "Cyprus"},
@@ -293,7 +295,7 @@ const struct elCountry TableCountryCode[LEN_TABLE_COUNTRY_CODE] = {
     {"pt", "Portugal"},
     {"pr", "Puerto Rico"},
     {"qa", "Qatar"},
-    {"re", "Réunion"},
+    {"re", "RÃ©union"},
     {"ro", "Romania"},
     {"ru", "Russian Federation"},
     {"rw", "Rwanda"},
@@ -556,7 +558,7 @@ const struct elLanguage TableISOLanguageCode[LEN_TABLE_ISO_LANGUAGE_CODE] = {
     {"grn", "Guarani"},
     {"gsw", "Alemani; Swiss German"},
     {"guj", "Gujarati"},
-    {"gwi", "Gwich´in"},
+    {"gwi", "Gwich'in"},
     {"hai", "Haida"},
     {"hat", "Haitian; Haitian Creole"},
     {"hau", "Hausa"},
@@ -705,7 +707,7 @@ const struct elLanguage TableISOLanguageCode[LEN_TABLE_ISO_LANGUAGE_CODE] = {
     {"nic", "Niger-Kordofanian (Other)"},
     {"niu", "Niuean"},
     {"nno", "Norwegian Nynorsk"},
-    {"nob", "Norwegian Bokmål"},
+    {"nob", "Norwegian BokmÃ¥l"},
     {"nog", "Nogai"},
     {"non", "Norse, Old"},
     {"nor", "Norwegian"},
@@ -718,7 +720,7 @@ const struct elLanguage TableISOLanguageCode[LEN_TABLE_ISO_LANGUAGE_CODE] = {
     {"nyn", "Nyankole"},
     {"nyo", "Nyoro"},
     {"nzi", "Nzima"},
-    {"oci", "Occitan (post 1500); Provençal"},
+    {"oci", "Occitan (post 1500); ProvenÃ§al"},
     {"oji", "Ojibwa"},
     {"ori", "Oriya"},
     {"orm", "Oromo"},
@@ -743,7 +745,7 @@ const struct elLanguage TableISOLanguageCode[LEN_TABLE_ISO_LANGUAGE_CODE] = {
     {"pon", "Pohnpeian"},
     {"por", "Portuguese"},
     {"pra", "Prakrit languages"},
-    {"pro", "Provençal, Old (to 1500)"},
+    {"pro", "ProvenÃ§al, Old (to 1500)"},
     {"pus", "Pushto"},
     {"que", "Quechua"},
     {"raj", "Rajasthani"},
@@ -857,7 +859,7 @@ const struct elLanguage TableISOLanguageCode[LEN_TABLE_ISO_LANGUAGE_CODE] = {
     {"vai", "Vai"},
     {"ven", "Venda"},
     {"vie", "Vietnamese"},
-    {"vol", "Volapük"},
+    {"vol", "VolapÃ¼k"},
     {"vot", "Votic"},
     {"wak", "Wakashan languages"},
     {"wal", "Walamo"},

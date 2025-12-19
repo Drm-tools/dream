@@ -127,24 +127,24 @@ class CMatlibVector
 {
 public:
 	/* Construction, Destruction -------------------------------------------- */
-	CMatlibVector() : eVType(VTY_CONST), iVectorLength(0), pData(NULL) {}
+	CMatlibVector() : eVType(VTY_CONST), iVectorLength(0), pData(nullptr) {}
 	CMatlibVector(const int iNLen, const EVecTy eNTy = VTY_CONST) :
-		eVType(eNTy), iVectorLength(0), pData(NULL) {Init(iNLen);}
+		eVType(eNTy), iVectorLength(0), pData(nullptr) {Init(iNLen);}
 	CMatlibVector(const int iNLen, const T tIniVal) :
-		eVType(VTY_CONST), iVectorLength(0), pData(NULL) {Init(iNLen, tIniVal);}
+		eVType(VTY_CONST), iVectorLength(0), pData(nullptr) {Init(iNLen, tIniVal);}
 #ifndef _MSC_VER
 	CMatlibVector(CMatlibVector<T>& vecI);
 #endif
 	CMatlibVector(const CMatlibVector<T>& vecI);
-	virtual ~CMatlibVector() {if (pData != NULL) delete[] pData;}
+	virtual ~CMatlibVector() {if (pData != nullptr) delete[] pData;}
 
 	CMatlibVector(const CMatlibVector<CReal>& fvReal, const CMatlibVector<CReal>& fvImag) :
-		eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(fvReal.GetSize()), pData(NULL)
+		eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(fvReal.GetSize()), pData(nullptr)
 	{
-		/* Allocate data block for vector */
+		/* Allocate data block for std::vector */
 		pData = new CComplex[iVectorLength];
 
-		/* Copy data from real-vectors in complex vector */
+		/* Copy data from real-std::vectors in complex std::vector */
 		for (int i = 0; i < iVectorLength; i++)
 			pData[i] = CComplex(fvReal[i], fvImag[i]);
 	}
@@ -381,52 +381,52 @@ CMatlibVector<CComplex> // c, Tv
 #ifndef _MSC_VER
 template<class T>
 CMatlibVector<T>::CMatlibVector(CMatlibVector<T>& vecI) :
-	 eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(vecI.GetSize()), pData(NULL)
+	 eVType(VTY_CONST/*VTY_TEMP*/), iVectorLength(vecI.GetSize()), pData(nullptr)
 {
-	/* The copy constructor for the constant vector is a real copying
+	/* The copy constructor for the constant std::vector is a real copying
 	   task. But in the case of a temporary buffer only the pointer
 	   of the temporary buffer is used. The buffer of the temporary
-	   vector is then destroyed!!! Therefore the usage of "VTY_TEMP"
-	   should be done if the vector IS NOT USED IN A FUNCTION CALL,
-	   otherwise this vector will be destroyed afterwards (if the
+	   std::vector is then destroyed!!! Therefore the usage of "VTY_TEMP"
+	   should be done if the std::vector IS NOT USED IN A FUNCTION CALL,
+	   otherwise this std::vector will be destroyed afterwards (if the
 	   function argument is not declared with "&") */
 	if (iVectorLength > 0)
 	{
 		if (vecI.eVType == VTY_CONST)
 		{
-			/* Allocate data block for vector */
+			/* Allocate data block for std::vector */
 			pData = new T[iVectorLength];
 
-			/* Copy vector */
+			/* Copy std::vector */
 			for (int i = 0; i < iVectorLength; i++)
 				pData[i] = vecI[i];
 		}
 		else
 		{
 			/* We can define the copy constructor as a destroying operator of
-			   the input vector for performance reasons. This
-			   saves us from always copy the entire vector */
-			/* Take data pointer from input vector (steal it) */
+			   the input std::vector for performance reasons. This
+			   saves us from always copy the entire std::vector */
+			/* Take data pointer from input std::vector (steal it) */
 			pData = vecI.pData;
 
-			/* Destroy other vector (temporary vectors only) */
-			vecI.pData = NULL;
+			/* Destroy other std::vector (temporary std::vectors only) */
+			vecI.pData = nullptr;
 		}
 	}
 }
 #endif
 
-/* Copy constructor for constant Matlib vectors */
+/* Copy constructor for constant Matlib std::vectors */
 template<class T>
 CMatlibVector<T>::CMatlibVector(const CMatlibVector<T>& vecI) :
-	eVType(VTY_CONST), iVectorLength(vecI.GetSize()), pData(NULL)
+	eVType(VTY_CONST), iVectorLength(vecI.GetSize()), pData(nullptr)
 {
 	if (iVectorLength > 0)
 	{
-		/* Allocate data block for vector */
+		/* Allocate data block for std::vector */
 		pData = new T[iVectorLength];
 
-		/* Copy vector */
+		/* Copy std::vector */
 		for (int i = 0; i < iVectorLength; i++)
 			pData[i] = vecI[i];
 	}
@@ -437,10 +437,10 @@ void CMatlibVector<T>::Init(const int iIniLen, const T tIniVal)
 {
 	iVectorLength = iIniLen;
 
-	/* Allocate data block for vector */
+	/* Allocate data block for std::vector */
 	if (iVectorLength > 0)
 	{
-		if (pData != NULL)
+		if (pData != nullptr)
 			delete[] pData;
 
 		pData = new T[iVectorLength];
@@ -551,11 +551,11 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 	const int iSizeA = vecA.GetSize();
 	const int iSizeB = vecB.GetSize();
 
-	/* Put first vector */
+	/* Put first std::vector */
 	for (i = 0; i < iSizeA; i++)
 		operator[](i) = vecA[i];
 	
-	/* Put second vector behind the first one, both
+	/* Put second std::vector behind the first one, both
 	   together must have length of *this */
 	for (i = 0; i < iSizeB; i++)
 		operator[](i + iSizeA) = vecB[i];
@@ -574,15 +574,15 @@ CMatlibVector<T>& CMatlibVector<T>::Merge(const CMatlibVector<T>& vecA,
 	const int iSizeC = vecC.GetSize();
 	const int iSizeAB = iSizeA + iSizeB;
 
-	/* Put first vector */
+	/* Put first std::vector */
 	for (i = 0; i < iSizeA; i++)
 		operator[](i) = vecA[i];
 	
-	/* Put second vector behind the first one */
+	/* Put second std::vector behind the first one */
 	for (i = 0; i < iSizeB; i++)
 		operator[](i + iSizeA) = vecB[i];
 
-	/* Put third vector behind previous put vectors */
+	/* Put third std::vector behind previous put std::vectors */
 	for (i = 0; i < iSizeC; i++)
 		operator[](i + iSizeAB) = vecC[i];
 
@@ -601,16 +601,16 @@ class CMatlibMatrix
 {
 public:
 	/* Construction, Destruction -------------------------------------------- */
-	CMatlibMatrix() : eVType(VTY_CONST), iRowSize(0), ppData(NULL) {}
+	CMatlibMatrix() : eVType(VTY_CONST), iRowSize(0), ppData(nullptr) {}
 	CMatlibMatrix(const int iNRowLen, const int iNColLen,
 		const EVecTy eNTy = VTY_CONST) :  eVType(eNTy),
-		iRowSize(0), ppData(NULL) {Init(iNRowLen, iNColLen);}
+		iRowSize(0), ppData(nullptr) {Init(iNRowLen, iNColLen);}
 	CMatlibMatrix(const int iNRowLen, const int iNColLen, const T tIniVal) :
-		eVType(VTY_CONST), iRowSize(0), ppData(NULL)
+		eVType(VTY_CONST), iRowSize(0), ppData(nullptr)
 		{Init(iNRowLen, iNColLen, tIniVal);}
 	CMatlibMatrix(const CMatlibMatrix<T>& matI);
 
-	virtual ~CMatlibMatrix() {if (ppData != NULL) delete[] ppData;}
+	virtual ~CMatlibMatrix() {if (ppData != nullptr) delete[] ppData;}
 
 	void Init(const int iNRowLen, const int iNColLen, const T tIniVal = 0);
 	inline int GetRowSize() const {return iRowSize;}
@@ -804,19 +804,19 @@ operator*(const CReal& rA, const CMatlibMatrix<CReal>& rmB)
    (the implementation of template classes must be in the header file!) */
 template<class T>
 CMatlibMatrix<T>::CMatlibMatrix(const CMatlibMatrix<T>& matI) :
-	eVType(VTY_CONST), iRowSize(matI.GetRowSize()), ppData(NULL)
+	eVType(VTY_CONST), iRowSize(matI.GetRowSize()), ppData(nullptr)
 {
 	if (iRowSize > 0)
 	{
-		/* Allocate data block for vector */
+		/* Allocate data block for std::vector */
 		ppData = new CMatlibVector<T>[iRowSize];
 
-		/* Init column vectors and copy */
+		/* Init column std::vectors and copy */
 		for (int i = 0; i < iRowSize; i++)
 		{
 			ppData[i].Init(matI.GetColSize());
 
-			/* Copy entire vector */
+			/* Copy entire std::vector */
 			ppData[i] = matI[i];
 		}
 	}
@@ -827,15 +827,15 @@ void CMatlibMatrix<T>::Init(const int iNRowLen, const int iNColLen, const T tIni
 {
 	iRowSize = iNRowLen;
 
-	/* Allocate data block for vector */
+	/* Allocate data block for std::vector */
 	if (iRowSize > 0)
 	{
-		if (ppData != NULL)
+		if (ppData != nullptr)
 			delete[] ppData;
 
 		ppData = new CMatlibVector<T>[iRowSize];
 
-		/* Init column vectors and set to init value */
+		/* Init column std::vectors and set to init value */
 		for (int i = 0; i < iRowSize; i++)
 			ppData[i].Init(iNColLen, tIniVal);
 	}
@@ -857,11 +857,5 @@ CMatlibMatrix<T> CMatlibMatrix<T>::operator()(const int iRowFrom, const int iRow
 
 	return matRet;
 }
-
-
-/* Include toolboxes after all type definitions */
-#include "MatlibStdToolbox.h"
-#include "MatlibSigProToolbox.h"
-
 
 #endif /* _MATLIB_H_ */

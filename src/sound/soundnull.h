@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#ifndef _SOUNDNULL_H
-#define _SOUNDNULL_H
+#ifndef SOUNDNULL_H
+#define SOUNDNULL_H
 
 #include "soundinterface.h"
 
@@ -36,50 +36,56 @@ class CSoundInNull : public CSoundInInterface
 {
 public:
     CSoundInNull() {}
-    virtual ~CSoundInNull() {}
-    virtual _BOOLEAN	Init(int, int, _BOOLEAN) {
-        return TRUE;
+    virtual ~CSoundInNull();
+    virtual bool	Init(int, int, bool) {
+        return true;
     }
-    virtual _BOOLEAN	Read(CVector<short>&) {
-        return FALSE;
+    virtual bool	Read(CVector<short>&) {
+        return false;
     }
-    virtual void		Enumerate(vector<string>&choices, vector<string>&) {
+    virtual void Enumerate(std::vector<std::string>&choices, std::vector<std::string>& desc, std::string&) {
         choices.push_back("(File or Network)");
+        desc.push_back("default");
     }
-    virtual string		GetDev() {
+    virtual std::string		GetDev() {
         return sDev;
     }
-    virtual void		SetDev(string sNewDev) {
+    virtual void		SetDev(std::string sNewDev) {
         sDev = sNewDev;
     }
     virtual void		Close() {}
+	virtual std::string		GetVersion() { return "no audio interface"; }
 private:
-    string sDev;
+    std::string sDev;
 };
 
 class CSoundOutNull : public CSoundOutInterface
 {
 public:
     CSoundOutNull() {}
-    virtual ~CSoundOutNull() {}
-    virtual _BOOLEAN	Init(int, int, _BOOLEAN) {
-        return TRUE;
+    virtual ~CSoundOutNull();
+    virtual bool	Init(int, int, bool) {
+        return true;
     }
-    virtual _BOOLEAN	Write(CVector<short>&) {
-        return FALSE;
+    virtual bool	Write(CVector<short>&) {
+        return false;
     }
-    virtual void		Enumerate(vector<string>& choices, vector<string>&) {
+
+    virtual void		Enumerate(std::vector<std::string>& choices, std::vector<std::string>& desc, std::string&){
         choices.push_back("(None)");
+        desc.push_back("");
     }
-    virtual string		GetDev() {
+
+    virtual std::string		GetDev() {
         return sDev;
     }
-    virtual void		SetDev(string sNewDev) {
+    virtual void		SetDev(std::string sNewDev) {
         sDev = sNewDev;
     }
     virtual void		Close() {}
+	virtual std::string		GetVersion() { return "no audio interface"; }
 private:
-    string sDev;
+    std::string sDev;
 };
 
 #endif

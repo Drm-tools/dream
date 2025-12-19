@@ -29,7 +29,7 @@
 #define __RIGDLG_H
 
 #include "../util/Utilities.h"
-#include "Rig.h"
+#include "../util-QT/Rig.h"
 #include "ui_RigDlg.h"
 #include <QDialog>
 #include <QTimer>
@@ -45,18 +45,19 @@ class RigDlg : public QDialog, public Ui_RigDlg
 	Q_OBJECT
 
 public:
-
-    RigDlg(CRig&, QWidget* parent = 0, Qt::WindowFlags f = 0);
+    RigDlg(CRig&, QWidget* parent = 0);
     virtual ~RigDlg();
 
 protected:
     void		showEvent(QShowEvent* pEvent);
     void		hideEvent(QHideEvent* pEvent);
+    QString		getComboBoxComPort();
 
     CRig&		rig;
     rig_model_t		prev_rig_model;
-    string		prev_port;
-    map<rig_model_t,string> rigmap;
+    std::string		prev_port;
+    map<rig_model_t,std::string> rigmap;
+    bool	bComboBoxPortMutex;
 
 public slots:
     void		on_rigTypes_itemSelectionChanged(); 
@@ -64,7 +65,7 @@ public slots:
     void		on_testRig_clicked();
     void		on_buttonBox_accepted();
     void		on_buttonBox_rejected();
-    void		on_comboBoxPort_currentIndexChanged(int);
+    void		on_comboBoxPort_editTextChanged(const QString &);
     void		onSigstr(double);
 };
 

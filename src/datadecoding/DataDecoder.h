@@ -68,9 +68,9 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 	    AT_JAVA, AT_EXPERIMENTAL
     };
 
-    _BOOLEAN GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
-    _BOOLEAN GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
-	CMOTDABDec *getApplication(int iPacketID) { return (iPacketID>=0 && iPacketID<3)?&MOTObject[iPacketID]:NULL; }
+    bool GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
+    bool GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
+	CMOTDABDec *getApplication(int iPacketID) { return (iPacketID>=0 && iPacketID<3)?&MOTObject[iPacketID]:nullptr; }
     void GetNews (const int iObjID, CNews & News);
     EAppType GetAppType ()
     {
@@ -82,14 +82,14 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     {
       public:
 	CVector < _BINARY > vecbiData;
-	_BOOLEAN bOK;
-	_BOOLEAN bReady;
+	bool bOK;
+	bool bReady;
 
 	void Reset ()
 	{
 	    vecbiData.Init (0);
-	    bOK = FALSE;
-	    bReady = FALSE;
+	    bOK = false;
+	    bReady = false;
 	}
     };
 
@@ -99,7 +99,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     int iServPacketID;
     CVector < int >veciCRCOk;
 
-    _BOOLEAN DoNotProcessData;
+    bool DoNotProcessData;
 
     int iContInd[MAX_NUM_PACK_PER_STREAM];
     CDataUnit DataUnit[MAX_NUM_PACK_PER_STREAM];

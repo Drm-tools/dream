@@ -1,12 +1,12 @@
 /******************************************************************************\
  * British Broadcasting Corporation
- * Copyright (c) 2007
+ * Copyright (c) 2007, 2012, 2013
  *
  * Author(s):
- *	Julian Cable
+ *	Julian Cable, David Flamand
  *
  * Decription:
- * Read a file at the correct rate
+ *  Read a file at the correct rate
  *
  ******************************************************************************
  *
@@ -31,7 +31,7 @@
 
 #include "soundinterface.h"
 #include "../util/Pacer.h"
-#include "../resample/Resample.h"
+#include "../resample/caudioresample.h"
 
 /* Classes ********************************************************************/
 class CAudioFileIn : public CSoundInInterface
@@ -40,15 +40,16 @@ public:
     CAudioFileIn();
     virtual ~CAudioFileIn();
 
-    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&) {}
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) {}
     virtual void		SetDev(std::string sNewDevice) {sCurrentDevice = sNewDevice;}
-    virtual std::string		GetDev() {return sCurrentDevice;}
+    virtual std::string GetDev() {return sCurrentDevice;}
     virtual void		SetFileName(const std::string& strFileName);
-    virtual int			GetSampleRate() {return iRequestedSampleRate;};
+    virtual int			GetSampleRate() {return iRequestedSampleRate;}
 
-    virtual _BOOLEAN	Init(int iNewSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
-    virtual _BOOLEAN 	Read(CVector<short>& psData);
+    virtual bool	Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
+    virtual bool 	Read(CVector<short>& psData);
     virtual void 		Close();
+	virtual std::string GetVersion() { return "Dream Audio File Reader"; }
 
 protected:
     std::string				strInFileName;
@@ -65,7 +66,6 @@ protected:
     CAudioResample*		ResampleObjL;
     CAudioResample*		ResampleObjR;
     short*				buffer;
-    int					iInBlockSize;
     int					iOutBlockSize;
     std::string				sCurrentDevice;
 };

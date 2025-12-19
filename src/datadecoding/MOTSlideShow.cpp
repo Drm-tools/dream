@@ -39,11 +39,11 @@ CMOTSlideShowEncoder::GetDataUnit (CVector < _BINARY > &vecbiNewData)
     /* Get new data group from MOT encoder. If the last MOT object was
        completely transmitted, this functions returns true. In this case, put
        a new picture to the MOT encoder object */
-    if (MOTDAB.GetDataGroup (vecbiNewData) == TRUE)
+    if (MOTDAB.GetDataGroup (vecbiNewData))
 	AddNextPicture ();
 }
 
-_BOOLEAN
+bool
 CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc) const
 {
 /*
@@ -52,10 +52,12 @@ CMOTSlideShowEncoder::GetTransStat (string & strCurPict, _REAL & rCurPerc) const
     strCurPict = strCurObjName;
     rCurPerc = MOTDAB.GetProgPerc ();
 
-    if (vecPicFileNames.Size () != 0)
-	return TRUE;
-    else
-	return FALSE;
+    if (vecPicFileNames.Size () != 0) {
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 string
@@ -133,7 +135,7 @@ CMOTSlideShowEncoder::AddNextPicture ()
 	  /* Try to open file binary */
 	  FILE *pFiBody = fopen (strCurObjName.c_str (), "rb");
 
-	  if (pFiBody != NULL)
+	  if (pFiBody != nullptr)
 	    {
 		CMOTObject MOTPicture;
 		_BYTE byIn;

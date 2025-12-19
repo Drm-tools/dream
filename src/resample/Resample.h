@@ -1,9 +1,9 @@
 /******************************************************************************\
  * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2002
+ * Copyright (c) 2002, 2012, 2013
  *
  * Author(s):
- *	Volker Fischer
+ *	Volker Fischer, David Flamand (added CSpectrumResample, speex resampler)
  *
  * Description:
  *	See Resampling.cpp
@@ -29,7 +29,6 @@
 #if !defined(RESAMPLE_H__3B0FEUFE7876F_FE8FE_CA63_4344_1912__INCLUDED_)
 #define RESAMPLE_H__3B0FEUFE7876F_FE8FE_CA63_4344_1912__INCLUDED_
 
-#include "ResampleFilter.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
 
@@ -39,11 +38,10 @@ class CResample
 {
 public:
 	CResample() {}
-	virtual ~CResample() {}
+    virtual ~CResample();
 
 	void Init(const int iNewInputBlockSize);
-	int Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
-				 _REAL rRation);
+    int Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput, _REAL rRatio);
 
 protected:
 	_REAL					rTStep;
@@ -54,38 +52,6 @@ protected:
 	int						iHistorySize;
 
 	int						iInputBlockSize;
-};
-
-class CAudioResample
-{
-public:
-	CAudioResample() {}
-	virtual ~CAudioResample() {}
-
-	void Init(int iNewInputBlockSize, _REAL rNewRation);
-	void Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput);
-
-protected:
-	_REAL					rRation;
-
-	CShiftRegister<_REAL>	vecrIntBuff;
-	int						iHistorySize;
-
-	int						iInputBlockSize;
-	int						iOutputBlockSize;
-};
-
-class CSpectrumResample
-{
-public:
-	CSpectrumResample() : iOutputBlockSize(0) {}
-	virtual ~CSpectrumResample() {}
-
-	void Resample(CVector<_REAL>* prInput, CVector<_REAL>** pprOutput, int iNewOutputBlockSize, _BOOLEAN bResample);
-
-protected:
-	CVector<_REAL>			vecrIntBuff;
-	int						iOutputBlockSize;
 };
 
 #endif // !defined(RESAMPLE_H__3B0FEUFE7876F_FE8FE_CA63_4344_1912__INCLUDED_)

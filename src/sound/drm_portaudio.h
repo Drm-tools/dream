@@ -39,14 +39,14 @@ public:
     CPaCommon(bool);
     virtual 		~CPaCommon();
 
-    virtual void	Enumerate(std::vector<std::string>& choices, std::vector<std::string>& descriptions);
+    virtual void	Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
     virtual void	SetDev(std::string sNewDevice);
     virtual std::string	GetDev();
 
-    _BOOLEAN		Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
+    bool		Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     void			ReInit();
-    _BOOLEAN		Read(CVector<short>& psData);
-    _BOOLEAN		Write(CVector<short>& psData);
+    bool		Read(CVector<short>& psData);
+    bool		Write(CVector<short>& psData);
     void			Close();
 
     PaUtilRingBuffer ringBuffer;
@@ -71,20 +71,27 @@ class CPaIn: public CSoundInInterface
 {
 public:
     CPaIn();
-    virtual 			~CPaIn();
-    virtual void		Enumerate(std::vector<std::string>& choices, std::vector<std::string>& descriptions) {
-        hw.Enumerate(choices, descriptions);
+    virtual 		~CPaIn();
+    virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+    {
+        hw.Enumerate(names, descriptions);
     }
-    virtual void		SetDev(std::string sNewDevice) {
+    virtual void	SetDev(std::string sNewDevice)
+    {
         hw.SetDev(sNewDevice);
     }
-    virtual std::string		GetDev() {
+    virtual std::string	GetDev()
+    {
         return hw.GetDev();
     }
+    virtual std::string	GetVersion()
+    {
+        return Pa_GetVersionInfo()->versionText;
+    }
 
-    virtual _BOOLEAN	Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
+    virtual bool	Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual void		Close();
-    virtual _BOOLEAN	Read(CVector<short>& psData);
+    virtual bool	Read(CVector<short>& psData);
 
 protected:
 
@@ -96,19 +103,25 @@ class CPaOut: public CSoundOutInterface
 public:
     CPaOut();
     virtual 			~CPaOut();
-    virtual void		Enumerate(std::vector<std::string>& choices, std::vector<std::string>& descriptions) {
-        hw.Enumerate(choices, descriptions);
+    virtual void	Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput)
+    {
+        hw.Enumerate(names, descriptions);
     }
-    virtual void		SetDev(std::string sNewDevice) {
+    virtual void	SetDev(std::string sNewDevice)
+    {
         hw.SetDev(sNewDevice);
     }
-    virtual std::string		GetDev() {
+    virtual std::string	GetDev()
+    {
         return hw.GetDev();
     }
-
-    virtual _BOOLEAN	Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking);
+    virtual std::string	GetVersion()
+    {
+        return Pa_GetVersionInfo()->versionText;
+    }
+    virtual bool	Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual void		Close();
-    virtual _BOOLEAN	Write(CVector<short>& psData);
+    virtual bool	Write(CVector<short>& psData);
 
 protected:
 

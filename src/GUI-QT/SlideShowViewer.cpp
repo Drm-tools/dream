@@ -27,23 +27,20 @@
 \******************************************************************************/
 
 #include "SlideShowViewer.h"
-#include "../util/Settings.h"
+#include "../util-QT/Util.h"
 #include "../datadecoding/DABMOT.h"
 #include "../datadecoding/DataDecoder.h"
 #include <QFileDialog>
 
-SlideShowViewer::SlideShowViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent):
-    QDialog(parent), Ui_SlideShowViewer(),
-    receiver(rec), settings(s), vecImages(), vecImageNames(), iCurImagePos(-1),
+SlideShowViewer::SlideShowViewer(CRx& nrx, CSettings& Settings, QWidget* parent):
+    CWindow(parent, Settings, "SlideShow"),
+    rx(nrx), vecImages(), vecImageNames(), iCurImagePos(-1),
     bClearMOTCache(false), iLastServiceID(0), bLastServiceValid(false)
 {
-    /* Enable minimize and maximize box for QDialog */
-	setWindowFlags(Qt::Window);
-
     setupUi(this);
 
     /* Get MOT save path */
-    CParameter& Parameters = *receiver.GetParameters();
+    CParameter& Parameters = *rx.GetParameters();
     Parameters.Lock();
     strCurrentSavePath = QString::fromUtf8(Parameters.GetDataDirectory("MOT").c_str());
     Parameters.Unlock();
@@ -100,15 +97,15 @@ void SlideShowViewer::OnTimer()
         break;
     }
 
-    CDataDecoder* DataDecoder = receiver.GetDataDecoder();
-    if (DataDecoder == NULL)
+    CDataDecoder* DataDecoder = rx.GetDataDecoder();
+    if (DataDecoder == nullptr)
     {
-        qDebug("can't get data decoder from receiver");
+        qDebug("can't get data decoder from rx");
         return;
     }
 
     CMOTDABDec* motdec = DataDecoder->getApplication(iPacketID);
-    if (motdec == NULL)
+    if (motdec == nullptr)
     {
         qDebug("can't get MOT decoder for short id %d, packetId %d", shortID, iPacketID);
         return;
@@ -214,17 +211,8 @@ void SlideShowViewer::OnClearAll()
     bClearMOTCache = true;
 }
 
-void SlideShowViewer::showEvent(QShowEvent* e)
+void SlideShowViewer::eventShow(QShowEvent*)
 {
-	EVENT_FILTER(e);
-
-    /* Get window geometry data and apply it */
-    CWinGeom g;
-    settings.Get("SlideShow", g);
-    const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
-    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-        setGeometry(WinGeom);
-
     /* Update window title */
     uint32_t iServiceID; bool bServiceValid; QString strLabel;
     GetServiceParams(&iServiceID, &bServiceValid, &strLabel);
@@ -237,21 +225,10 @@ void SlideShowViewer::showEvent(QShowEvent* e)
     Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void SlideShowViewer::hideEvent(QHideEvent* e)
+void SlideShowViewer::eventHide(QHideEvent*)
 {
-	EVENT_FILTER(e);
-
     /* Deactivate real-time timer so that it does not get new pictures */
     Timer.stop();
-
-    /* Save window geometry data */
-    QRect WinGeom = geometry();
-    CWinGeom c;
-    c.iXPos = WinGeom.x();
-    c.iYPos = WinGeom.y();
-    c.iHSize = WinGeom.height();
-    c.iWSize = WinGeom.width();
-    settings.Put("SlideShow", c);
 }
 
 void SlideShowViewer::SetImage(int pos)
@@ -341,7 +318,7 @@ void SlideShowViewer::ClearMOTCache(CMOTDABDec *motdec)
 
 void SlideShowViewer::GetServiceParams(uint32_t* iServiceID, bool* bServiceValid, QString* strLabel, ETypeRxStatus* eStatus, int* shortID, int* iPacketID)
 {
-    CParameter& Parameters = *receiver.GetParameters();
+    CParameter& Parameters = *rx.GetParameters();
     Parameters.Lock();
 
         /* Get current audio service */
@@ -353,7 +330,7 @@ void SlideShowViewer::GetServiceParams(uint32_t* iServiceID, bool* bServiceValid
         const CService service = Parameters.Service[iCurSelDataServ];
 
         if (eStatus)
-            *eStatus = Parameters.ReceiveStatus.MOT.GetStatus();
+            *eStatus = Parameters.DataComponentStatus[iCurSelDataServ].GetStatus();
         if (iPacketID)
             *iPacketID = Parameters.GetDataParam(iCurSelDataServ).iPacketID;
     Parameters.Unlock();

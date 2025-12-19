@@ -35,17 +35,9 @@
 #include <time.h>
 #include <map>
 #include <queue>
-#ifdef USE_QT_GUI
-# if QT_VERSION < 0x040000
-#  if QT_VERSION < 0x030000
-#   include <qthread.h>
-#  else
-#   include <qwaitcondition.h>
-#  endif
-# else
-#  include <QWaitCondition>
-#  include <QMutex>
-# endif
+#ifdef QT_CORE_LIB
+# include <QWaitCondition>
+# include <QMutex>
 #endif
 
 
@@ -121,7 +113,7 @@ class CDateAndTime
         seconds = 0;
     }
 
-	void dump(std::ostream& out);
+    void dump(std::ostream& out);
 
     int utc_flag, lto_flag, half_hours;
     uint16_t year;
@@ -150,36 +142,36 @@ class CSegmentTracker
 	return vecbHaveSegment.size ();
     }
 
-    _BOOLEAN Ready ()
+    bool Ready ()
     {
 	if (vecbHaveSegment.size () == 0)
-	    return FALSE;
+	    return false;
 	for (size_t i = 0; i < vecbHaveSegment.size (); i++)
 	  {
-	      if (vecbHaveSegment[i] == FALSE)
+	      if (vecbHaveSegment[i] == false)
 		{
-		    return FALSE;
+		    return false;
 		}
 	  }
-	return TRUE;
+	return true;
     }
 
     void AddSegment (int iSegNum)
     {
 	if ((iSegNum + 1) > int (vecbHaveSegment.size ()))
-	    vecbHaveSegment.resize (iSegNum + 1, FALSE);
-	vecbHaveSegment[iSegNum] = TRUE;
+	    vecbHaveSegment.resize (iSegNum + 1, false);
+	vecbHaveSegment[iSegNum] = true;
     }
 
-    _BOOLEAN HaveSegment (int iSegNum)
+    bool HaveSegment (int iSegNum)
     {
 	if (iSegNum < int (vecbHaveSegment.size ()))
 	    return vecbHaveSegment[iSegNum];
-	return FALSE;
+	return false;
     }
 
   protected:
-    std::vector < _BOOLEAN > vecbHaveSegment;
+    std::vector < bool > vecbHaveSegment;
 };
 
 class CReassembler
@@ -231,19 +223,19 @@ class CReassembler
 	iLastSegmentSize = -1;
 	iSegmentSize = 0;
 	Tracker.Reset ();
-	bReady = FALSE;
+	bReady = false;
     }
 
-    _BOOLEAN Ready ()
+    bool Ready ()
     {
 	return bReady;
     }
 
     void AddSegment (CVector < _BYTE > &vecDataIn,
-		     int iSegSize, int iSegNum, _BOOLEAN bLast = FALSE);
+		     int iSegSize, int iSegNum, bool bLast = false);
 
-    _BOOLEAN IsZipped () const;
-    _BOOLEAN uncompress();
+    bool IsZipped () const;
+    bool uncompress();
 
     CVector < _BYTE > vecData;
 
@@ -261,7 +253,7 @@ class CReassembler
     int iLastSegmentSize;
     size_t iSegmentSize;
     CSegmentTracker Tracker;
-    _BOOLEAN bReady;
+    bool bReady;
 };
 
 class CBitReassembler:public CReassembler
@@ -287,7 +279,7 @@ class CMOTObjectBase
 {
   public:
 
-    CMOTObjectBase ():TransportID(-1),ExpireTime(),bPermitOutdatedVersions(FALSE)
+    CMOTObjectBase ():TransportID(-1),ExpireTime(),bPermitOutdatedVersions(false)
     {
 		Reset ();
     }
@@ -298,7 +290,7 @@ class CMOTObjectBase
     {
 		TransportID = -1;
 		ExpireTime.Reset ();
-		bPermitOutdatedVersions = FALSE;
+		bPermitOutdatedVersions = false;
     }
 
     void decodeExtHeader (_BYTE & bParamId,
@@ -309,7 +301,7 @@ class CMOTObjectBase
 
     TTransportID TransportID;
     CDateAndTime ExpireTime;
-    _BOOLEAN bPermitOutdatedVersions;
+    bool bPermitOutdatedVersions;
 
 };
 
@@ -319,7 +311,7 @@ class CMOTDirectory:public CMOTObjectBase
 
     CMOTDirectory ():CMOTObjectBase(), iCarouselPeriod(0),
     iNumberOfObjects(0), iSegmentSize(0),
-    bCompressionFlag(FALSE), bSortedHeaderInformation(FALSE),
+    bCompressionFlag(false), bSortedHeaderInformation(false),
     DirectoryIndex(), vecObjects()
     {
     }
@@ -357,10 +349,10 @@ class CMOTDirectory:public CMOTObjectBase
 
     virtual void AddHeader (CVector < _BINARY > &vecbiHeader);
 
-	void dump(std::ostream&);
+    void dump(std::ostream&);
 
     int iCarouselPeriod, iNumberOfObjects, iSegmentSize;
-    _BOOLEAN bCompressionFlag, bSortedHeaderInformation;
+    bool bCompressionFlag, bSortedHeaderInformation;
     std::map < _BYTE, std::string > DirectoryIndex;
     std::vector < TTransportID > vecObjects;
 };
@@ -375,12 +367,12 @@ class CMOTObject:public CMOTObjectBase
   public:
 
     CMOTObject ():CMOTObjectBase(), vecbRawData(),
-    bComplete(FALSE), bHasHeader(FALSE), Body(),
+    bComplete(false), bHasHeader(false), Body(),
     strName(""), iBodySize(0), iCharacterSetForName(0), iCharacterSetForDescription(0),
     strFormat(""), strMimeType(""), iCompressionType(0), strContentDescription(""),
     iVersion(0), iUniqueBodyVersion(0), iContentType(0), iContentSubType(0),
     iPriority(0), iRetransmissionDistance(0), vecbProfileSubset(),
-    ScopeStart(), ScopeEnd(), iScopeId(0), bReady(FALSE)
+    ScopeStart(), ScopeEnd(), iScopeId(0), bReady(false)
     {
     }
 
@@ -451,8 +443,8 @@ class CMOTObject:public CMOTObjectBase
     void Reset ()
     {
         vecbRawData.Init (0);
-        bComplete = FALSE;
-        bHasHeader = FALSE;
+        bComplete = false;
+        bHasHeader = false;
         Body.Reset ();
         strFormat = "";
         strName = "";
@@ -474,14 +466,14 @@ class CMOTObject:public CMOTObjectBase
         iScopeId = 0;
     }
 
-	void dump(std::ostream&);
+    void dump(std::ostream&);
 
     void AddHeader (CVector < _BINARY > &header);
 
     /* for encoding */
     CVector < _BYTE > vecbRawData;
 
-    _BOOLEAN bComplete, bHasHeader;
+    bool bComplete, bHasHeader;
     CByteReassembler Body;
     std::string strName;
     int iBodySize;
@@ -502,7 +494,7 @@ class CMOTObject:public CMOTObjectBase
     int iScopeId;
 
   protected:
-    _BOOLEAN bReady;
+    bool bReady;
 };
 
 
@@ -511,7 +503,7 @@ class CMOTDABEnc
 {
   public:
     CMOTDABEnc ():MOTObject(), MOTObjSegments(),
-    iSegmCntHeader(0), iSegmCntBody(0), bCurSegHeader(FALSE),
+    iSegmCntHeader(0), iSegmCntBody(0), bCurSegHeader(false),
     iContIndexHeader(0), iContIndexBody(0), iTransportID(0)
     {
     }
@@ -521,7 +513,7 @@ class CMOTDABEnc
     }
 
     void Reset ();
-    _BOOLEAN GetDataGroup (CVector < _BINARY > &vecbiNewData);
+    bool GetDataGroup (CVector < _BINARY > &vecbiNewData);
     void SetMOTObject (CMOTObject & NewMOTObject);
     _REAL GetProgPerc () const;
 
@@ -539,16 +531,16 @@ class CMOTDABEnc
 			 const int iPartiSize);
 
     void GenMOTObj (CVector < _BINARY > &vecbiData,
-		    CVector < _BINARY > &vecbiSeg, const _BOOLEAN bHeader,
+		    CVector < _BINARY > &vecbiSeg, const bool bHeader,
 		    const int iSegNum, const int iTranspID,
-		    const _BOOLEAN bLastSeg);
+		    const bool bLastSeg);
 
     CMOTObject MOTObject;
     CMOTObjSegm MOTObjSegments;
 
     int iSegmCntHeader;
     int iSegmCntBody;
-    _BOOLEAN bCurSegHeader;
+    bool bCurSegHeader;
 
     int iContIndexHeader;
     int iContIndexBody;
@@ -581,7 +573,7 @@ class CMOTDABDec
         MOTDirectoryOut = MOTDirectory;
     }
 
-    _BOOLEAN NewObjectAvailable ();
+    bool NewObjectAvailable ();
 
     /* push from lower level */
     void AddDataUnit (CVector < _BINARY > &vecbiNewData);
@@ -604,7 +596,7 @@ class CMOTDABDec
     CMOTDirectory MOTDirectory;
     std::map < TTransportID, CMOTObject > MOTCarousel;
     std::queue < TTransportID > qiNewObjects;
-#ifdef USE_QT_GUI
+#ifdef QT_CORE_LIB
     QMutex guard;
     QWaitCondition blocker;
 #endif

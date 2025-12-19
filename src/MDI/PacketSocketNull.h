@@ -46,9 +46,9 @@ public:
 
 	virtual void poll();
 
-	_BOOLEAN SetDestination(const std::string&);
-	_BOOLEAN SetOrigin(const std::string&);
-	_BOOLEAN GetDestination(std::string&);
+	bool SetDestination(const std::string&);
+	bool SetOrigin(const std::string&);
+	bool GetDestination(std::string&);
 };
 
 #endif

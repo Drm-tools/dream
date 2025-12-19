@@ -29,16 +29,14 @@
 #ifndef __EVALUATIONDLG_H
 #define __EVALUATIONDLG_H
 
-#include <QMainWindow>
 #include "ui_systemevalDlgbase.h"
+#include "CWindow.h"
 #include "DRMPlot.h"
-
 #include "DialogUtil.h"
 #include "MultColorLED.h"
 #include "../GlobalDefinitions.h"
 #include "../util/Vector.h"
-#include "../DrmReceiver.h"
-#include "../util/Settings.h"
+#include "../main-Qt/crx.h"
 
 /* Definitions ****************************************************************/
 /* Define this macro if you prefer the QT-type of displaying date and time */
@@ -47,42 +45,31 @@
 
 /* Classes ********************************************************************/
 
-class systemevalDlgBase : public QDialog, public Ui::SystemEvaluationWindow
-{
-public:
-	systemevalDlgBase(QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WindowFlags f = 0):
-		QDialog(parent) {(void)name;(void)modal;(void)f; setWindowFlags(Qt::Window); setupUi(this);}
-	virtual ~systemevalDlgBase() {}
-};
-
-class systemevalDlg : public systemevalDlgBase
+class systemevalDlg : public CWindow, public Ui_SystemEvaluationWindow
 {
 	Q_OBJECT
 
 public:
-	systemevalDlg(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, Qt::WindowFlags f = 0);
-
+    systemevalDlg(CRx&, CSettings&, QWidget* parent = 0);
 	virtual ~systemevalDlg();
+
 	void SetStatus(CMultColorLED*, ETypeRxStatus);
 
 protected:
-	CDRMReceiver&	DRMReceiver;
-	CSettings&		Settings;
+    CRx&            rx;
 
 	QTimer			Timer;
 	CDRMPlot*		MainPlot;
 
-	virtual void	showEvent(QShowEvent* pEvent);
-	virtual void	hideEvent(QHideEvent* pEvent);
+	virtual void	eventShow(QShowEvent* pEvent);
+	virtual void	eventHide(QHideEvent* pEvent);
 	void			UpdateGPS(CParameter&);
 	void			UpdateControls();
 	void			AddWhatsThisHelp();
 	CDRMPlot*		OpenChartWin(CDRMPlot::ECharType eNewType);
 	QTreeWidgetItem* FindItemByECharType(CDRMPlot::ECharType eCharType);
-	string			ECharTypeToPlotName(CDRMPlot::ECharType eCharType);
-	CDRMPlot::ECharType PlotNameToECharType(const string& PlotName);
+	std::string			ECharTypeToPlotName(CDRMPlot::ECharType eCharType);
+	CDRMPlot::ECharType PlotNameToECharType(const std::string& PlotName);
 
 	QString			GetRobModeStr();
 	QString			GetSpecOccStr();
@@ -90,8 +77,7 @@ protected:
 	QMenu*			pTreeWidgetContextMenu;
 	CDRMPlot::ECharType eCurCharType, eNewCharType;
 	int				iPlotStyle;
-	vector<CDRMPlot*>	vecpDRMPlots;
-	CEventFilter	ef;
+	std::vector<CDRMPlot*>	vecpDRMPlots;
 
 public slots:
 	void OnTimer();

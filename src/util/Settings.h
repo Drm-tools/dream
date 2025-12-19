@@ -26,11 +26,13 @@
  *
 \******************************************************************************/
 
-#if !defined(SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_)
-#define SETTINGS_H__3B0BA660_DGEG56GE64B2B_23DSG9876D31912__INCLUDED_
+#ifndef SETTINGS_H
+#define SETTINGS_H
 
 #include "../GlobalDefinitions.h"
 #include <map>
+#include <string>
+
 
 /* Definitions ****************************************************************/
 #define DREAM_INIT_FILE_NAME		"Dream.ini"
@@ -42,7 +44,7 @@
 #define MAX_NUM_MLC_IT				4
 
 /* Maximum value of input/output channel selection */
-#define MAX_VAL_IN_CHAN_SEL			6
+#define MAX_VAL_IN_CHAN_SEL			9
 #define MAX_VAL_OUT_CHAN_SEL		4
 
 /* Minimum and maximum of initial sample rate offset parameter */
@@ -50,13 +52,13 @@
 #define MAX_SAM_OFFS_INI			200
 
 /* Maximum for frequency acqisition search window size and center frequency */
-#define MAX_FREQ_AQC_SE_WIN_SZ		(_REAL(DEFAULT_SOUNDCRD_SAMPLE_RATE) / 2)
-#define MAX_FREQ_AQC_SE_WIN_CT		(_REAL(DEFAULT_SOUNDCRD_SAMPLE_RATE) / 4)
+#define MAX_FREQ_AQC_SE_WIN_SZ		(+1e6)
+#define MAX_FREQ_AQC_SE_WIN_CT		(+1e6)
 
 /* Maximum carrier frequency  */
 # define MAX_RF_FREQ				30000 /* kHz */
 
-#ifdef USE_QT_GUI
+#ifdef QT_CORE_LIB
 /* Maximum minutes for delayed log file start */
 # define MAX_SEC_LOG_FI_START		3600 /* seconds */
 
@@ -129,9 +131,9 @@
 class CIniFile
 {
 public:
-	CIniFile() {}
-	virtual ~CIniFile() {}
-	void SaveIni(std::ostream&) const;
+    CIniFile();
+    virtual ~CIniFile();
+    void SaveIni(std::ostream&) const;
 	void SaveIni(const char*) const;
 	bool LoadIni(const char*);
 
@@ -147,8 +149,9 @@ protected:
 class CSettings: public CIniFile
 {
 public:
-	CSettings() {}
-	void Load(int argc, char** argv);
+    CSettings();
+    ~CSettings();
+    void Load(int argc, char** argv);
 	void Save();
 	void Clear();
 	std::string Get(const std::string& section, const std::string& key, const std::string& def="") const;
@@ -167,13 +170,13 @@ protected:
 	int IsReceiver(const char *argv0);
 	void ParseArguments(int argc, char** argv);
 	void FileArg(const std::string&);
-	_BOOLEAN GetFlagArgument(int argc, char** argv, int& i, std::string strShortOpt,
+	bool GetFlagArgument(int argc, char** argv, int& i, std::string strShortOpt,
 							 std::string strLongOpt);
-	_BOOLEAN GetNumericArgument(int argc, char** argv, int& i,
+	bool GetNumericArgument(int argc, char** argv, int& i,
 								std::string strShortOpt, std::string strLongOpt,
 								_REAL rRangeStart, _REAL rRangeStop,
 								_REAL& rValue);
-	_BOOLEAN GetStringArgument(int argc, char** argv, int& i,
+	bool GetStringArgument(int argc, char** argv, int& i,
 							   std::string strShortOpt, std::string strLongOpt,
 							   std::string& strArg);
 };

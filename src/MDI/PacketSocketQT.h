@@ -33,21 +33,11 @@
 #include "../util/Vector.h"
 #include "../util/Buffer.h"
 
-#if QT_VERSION < 0x040000
-# include <qsocketdevice.h>
-# include <qsocketnotifier.h> 
-# include <qstd::stringlist.h>
-#else
-# include <QUdpSocket>
-# include <QTcpSocket>
-# include <QHostAddress>
-# if QT_VERSION >= 0x040200
-#   include <QNetworkInterface>
-# endif
-# if QT_VERSION >= 0x040800
-#  include <QNetworkAddressEntry>
-# endif
-#endif
+#include <QUdpSocket>
+#include <QTcpSocket>
+#include <QHostAddress>
+#include <QNetworkInterface>
+#include <QNetworkAddressEntry>
 #include <qdatetime.h>
 
 /* Maximum number of bytes received from the network interface. Maximum data
@@ -56,17 +46,11 @@
    double of this size should be ok for all possible cases */
 #define MAX_SIZE_BYTES_NETW_BUF		10000
 
-#include "PacketInOut.h"
+#include "../MDI/PacketInOut.h"
 
 class CPacketSocketQT :
-#if QT_VERSION < 0x040000
-	public QObject,
-#endif
 	public CPacketSocket
 {
-#if QT_VERSION < 0x040000
-	Q_OBJECT
-#endif
 public:
 	CPacketSocketQT();
 	virtual ~CPacketSocketQT();
@@ -78,10 +62,10 @@ public:
 	// Send packet to the socket
 	void SendPacket(const std::vector<_BYTE>& vecbydata, uint32_t addr=0, uint16_t port=0);
 
-	virtual _BOOLEAN SetDestination(const std::string& str);
-	virtual _BOOLEAN SetOrigin(const std::string& str);
+	virtual bool SetDestination(const std::string& str);
+	virtual bool SetOrigin(const std::string& str);
 
-	virtual _BOOLEAN GetDestination(std::string& str);
+	virtual bool GetDestination(std::string& str);
 
 	void poll();
 
@@ -90,10 +74,8 @@ private:
 	void pollDatagram();
 
 	QStringList parseDest(const std::string & strNewAddr);
-	_BOOLEAN doSetSource(QHostAddress, QHostAddress, int, QHostAddress);
-#if QT_VERSION >= 0x040200
+	bool doSetSource(QHostAddress, QHostAddress, int, QHostAddress);
 	QNetworkInterface GetInterface(QHostAddress AddrInterface);
-#endif
 	CPacketSink *pPacketSink;
 
 	uint32_t	sourceAddr;
@@ -102,25 +84,7 @@ private:
 	std::vector<_BYTE>	writeBuf;
 	bool udp;
 
-#if QT_VERSION < 0x040000
-	QSocketDevice* pSocketDevice;
-	QSocketNotifier* pSn;
-private slots:
-	void OnActivated();
-#else
 	QUdpSocket* udpSocket;
 	QTcpSocket* tcpSocket;
-#endif
 };
-
-// stop compiler warning
-class CDummy_ :
-	public QObject
-{
-	Q_OBJECT
-public:
-	CDummy_() {};
-	~CDummy_() {};
-};
-
 #endif

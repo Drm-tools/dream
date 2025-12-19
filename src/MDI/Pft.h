@@ -48,7 +48,7 @@ protected:
 	bool DecodePFTPacketWithFEC(const std::vector<_BYTE>& vecIn, std::vector<_BYTE>& vecOut);
 
 	int iSource, iDest;
-	std::map<int,CReassemblerN> mapFragments;
+    std::map<int,CReassemblerN> mapFragments;
 	int iHeaderLen;
 	int iPseq;
 	int iFindex;

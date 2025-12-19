@@ -25,8 +25,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
-#ifndef __SOUNDCARDMENU_H
-#define __SOUNDCARDMENU_H
+#ifndef SOUNDCARDMENU_H
+#define SOUNDCARDMENU_H
 
 #include <QMenu>
 #include <QMenuBar>
@@ -35,12 +35,7 @@
 #include "../DrmReceiver.h"
 #include "../DrmTransceiver.h"
 #include "../sound/selectioninterface.h"
-
-
-/* undefine this if you want a separate
-   "Open Signal file..." "Open MDI/RSCI File..." */
-#define FILE_MENU_UNIFIED_OPEN_FILE
-
+#include "../main-Qt/ctrx.h"
 
 typedef struct CHANSEL {
     const char* Name;
@@ -54,32 +49,52 @@ class CSoundCardSelMenu : public QMenu
 
 public:
     CSoundCardSelMenu(
-        CDRMTransceiver& DRMTransceiver,
+        CTRx& ntrx,
         CFileMenu* pFileMenu,
         QWidget* parent = 0);
 
 protected:
-    CDRMTransceiver&	DRMTransceiver;
-    CParameter&			Parameters;
+    CTRx&               trx;
     QMenu*				menuSigInput;
-    QMenu*				menuSigDevice;
-    QMenu*				menuSigSampleRate;
-    const bool			bReceiver;
+    QMenu*				menuInputDev;
+    QMenu*				menuInputSampleRate;
+    QMenu*				menuOutputSampleRate;
+    QMenu*				menuOutputDev;
+    QMenu*              menuInputChannel;
+    QMenu*              menuOutputChannel;
 
-    QMenu* InitDevice(QMenu* self, QMenu* parent, const QString& text, bool bInput);
-    QMenu* InitChannel(QMenu* parent, const QString& text, const int iChanSel, const CHANSEL* ChanSel);
-    QMenu* InitSampleRate(QMenu* parent, const QString& text, const int iCurrentSampleRate, const int* SampleRate);
+    const bool			bReceiver;
+    QAction*            actionUpscale;
+
+    QMenu* InitChannel(QMenu* parent, const QString& text, const CHANSEL* ChanSel);
+    QMenu* InitSampleRate(QMenu* parent, const QString& text, const int* SampleRate);
+    void UpdateDeviceMenu(QMenu* menu, const std::vector<string>& names, const std::vector<string>& descriptions, const std::string& selected);
 
 public slots:
+    // slots connected to signals from user
     void OnSoundInChannel(QAction*);
     void OnSoundOutChannel(QAction*);
     void OnSoundInDevice(QAction*);
     void OnSoundOutDevice(QAction*);
     void OnSoundSampleRate(QAction*);
-    void OnSoundFileChanged(CDRMReceiver::ESFStatus);
+    void OnSoundSignalUpscale(bool);
+    void OnSoundFileChanged(QString);
+    // slots connected to signals from receiver
+    void OnSoundInDeviceChanged(QString);
+    void OnSoundOutDeviceChanged(QString);
+    void OnSoundInSampleRateChanged(int);
+    void OnSoundOutSampleRateChanged(int);
+    void OnSoundUpscaleRatioChanged(int);
+    void OnSoundInChannelChanged(int chan);
+    void OnSoundOutChannelChanged(int chan);
 
 signals:
-    void sampleRateChanged();
+    void soundSampleRateChanged(int);
+    void soundInDeviceChanged(QString);
+    void soundOutDeviceChanged(QString);
+    void soundInChannelChanged(int);
+    void soundOutChannelChanged(EOutChanSel);
+    void soundSignalUpscaleChanged(int);
 };
 
 class CFileMenu : public QMenu
@@ -87,39 +102,19 @@ class CFileMenu : public QMenu
     Q_OBJECT
 
 public:
-    CFileMenu(CDRMTransceiver& DRMTransceiver,
-        QMainWindow* parent, QMenu* menuInsertBefore,
-        bool bSignal = TRUE);
-    void UpdateMenu();
+    CFileMenu(CTRx& ntrx, QMainWindow* parent, QMenu* menuInsertBefore);
 
 protected:
-    CDRMTransceiver&	DRMTransceiver;
-#ifdef FILE_MENU_UNIFIED_OPEN_FILE
+    CTRx&               trx;
     QAction*			actionOpenFile;
     QAction*			actionCloseFile;
-#else
-    QAction*			actionOpenSignalFile;
-    QAction*			actionCloseSignalFile;
-    QAction*			actionOpenRsciFile;
-    QAction*			actionCloseRsciFile;
-#endif
-    const bool			bReceiver;
-	QString				strLastSoundPath;
-	QString				strLastRsciPath;
 
 public slots:
-#ifdef FILE_MENU_UNIFIED_OPEN_FILE
     void OnOpenFile();
     void OnCloseFile();
-#else
-    void OnOpenSignalFile();
-    void OnCloseSignalFile();
-    void OnOpenRsciFile();
-    void OnCloseRsciFile();
-#endif
 
 signals:
-    void soundFileChanged(CDRMReceiver::ESFStatus eStatus);
+    void soundFileChanged(QString);
 };
 
 #endif
