@@ -33,7 +33,9 @@
 #include <string>
 #include <cstdio>
 #include <limits>
-#define _USE_MATH_DEFINES // for C++ on Windows
+#ifndef _USE_MATH_DEFINES
+# define _USE_MATH_DEFINES // for C++ on Windows
+#endif
 #include <cmath>
 #include "tables/TableDRMGlobal.h"
 
