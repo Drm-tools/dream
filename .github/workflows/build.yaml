@@ -95,6 +95,7 @@ jobs:
         cp -r hamlib-w64-4.6.5/include/* include
         cp -r C:/vcpkg/installed/x64-windows/lib/* lib
         cp hamlib-w64-4.6.5/lib/msvc/* lib
+        ls -R lib
 
     - uses: ilammy/msvc-dev-cmd@v1
 
