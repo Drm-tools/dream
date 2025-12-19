@@ -188,7 +188,7 @@ void CTagItemGeneratorFracModJulDate::GenTag()
 {
 
     using namespace std::chrono;
-    const time_point<systrm_clock> now = system_clock::now();
+    const time_point<system_clock> now = system_clock::now();
     auto ms = (duration_cast<milliseconds>(now.time_since_epoch()) % 1000);
 
     auto timer = system_clock::to_time_t(now);
