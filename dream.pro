@@ -346,8 +346,7 @@ gps {
 hamlib {
      DEFINES += HAVE_LIBHAMLIB
      macx:LIBS += -framework IOKit
-     unix:LIBS += -lhamlib
-     win32:LIBS += -lhamlib -lusb-1.0
+     !macx:LIBS += -lhamlib
      HEADERS += src/util/Hamlib.h
      SOURCES += src/util/Hamlib.cpp
      contains(QT,core) {
