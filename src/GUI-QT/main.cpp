@@ -32,21 +32,15 @@
 #include <QThread>
 #include <QApplication>
 #include <QMessageBox>
-
-#ifdef _WIN32
-# include <windows.h>
-#else
-# include <csignal>
-#endif
+#include <csignal>
 #include <iostream>
-
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
 #include "../util/Settings.h"
-# include "fdrmdialog.h"
-# include "TransmDlg.h"
-# include "DialogUtil.h"
+#include "fdrmdialog.h"
+#include "TransmDlg.h"
+#include "DialogUtil.h"
 
 #ifdef HAVE_LIBHAMLIB
 # include "../util-QT/Rig.h"
@@ -83,6 +77,7 @@ main(int argc, char **argv)
 	app.addLibraryPath(app.applicationDirPath()+"../PlugIns");
 #endif
 #ifdef _WIN32
+	/* Initialize Winsock */
 	WSADATA wsaData;
 	(void)WSAStartup(MAKEWORD(2,2), &wsaData);
 #endif
