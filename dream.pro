@@ -183,7 +183,7 @@ unix {
     documentation.files = linux/dream.1
     INSTALLS += documentation
     INSTALLS += target
-    CONFIG += link_pkgconfig
+    CONFIG += link_pkgconfig fdk-aac
     LIBS += -lfftw3 -lz
     SOURCES += src/linux/Pacer.cpp
     DEFINES += HAVE_DLFCN_H \
@@ -320,7 +320,7 @@ win32 {
   }
 }
 fdk-aac {
-     DEFINES += HAVE_LIBFDK_AAC
+     DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
      LIBS += -lfdk-aac
      HEADERS += src/sourcedecoders/fdk_aac_codec.h
      SOURCES += src/sourcedecoders/fdk_aac_codec.cpp
@@ -383,7 +383,7 @@ hamlib {
 }
 qwt {
     message("with Qwt")
-    QT += svg concurrent
+    QT += svg
     macx {
         INCLUDEPATH += /Library/Frameworks/qwt.framework/Headers
         LIBS += -framework qwt

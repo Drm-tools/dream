@@ -29,6 +29,7 @@
 #if !defined(TABLE_FAC_H__3B0_CA63_4344_BGDEB2B_23E7912__INCLUDED_)
 #define TABLE_FAC_H__3B0_CA63_4344_BGDEB2B_23E7912__INCLUDED_
 
+#include <string>
 #include "../GlobalDefinitions.h"
 
 /* Definitions ****************************************************************/

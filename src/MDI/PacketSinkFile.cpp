@@ -28,7 +28,6 @@
 \******************************************************************************/
 
 #include "PacketSinkFile.h"
-using namespace std;
 
 /* include this here mostly for htonl */
 #ifdef _WIN32

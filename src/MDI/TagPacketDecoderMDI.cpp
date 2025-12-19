@@ -42,7 +42,7 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 ,	TagItemDecoderSDC()
 ,	TagItemDecoderRobMod()
 ,	TagItemDecoderStr()
-,	TagItemDecoderSDCChanInf()
+,	TagItemDecoderSDCChanInf(0)
 ,	TagItemDecoderInfo()
 ,	TagItemDecoderRxDemodMode()
 ,	TagItemDecoderAMAudio()
@@ -93,7 +93,8 @@ CTagPacketDecoderMDI::CTagPacketDecoderMDI()
 void CTagPacketDecoderMDI::SetParameterPtr(CParameter *pP)
 {
 	// Pass this pointer to all of the tag item decoders that need it, i.e. the RSCI-specific ones
-	TagItemDecoderRmer.SetParameterPtr(pP);
+    TagItemDecoderSDCChanInf.SetParameterPtr(pP);
+    TagItemDecoderRmer.SetParameterPtr(pP);
 	TagItemDecoderRwmf.SetParameterPtr(pP);
 	TagItemDecoderRwmm.SetParameterPtr(pP);
 	TagItemDecoderRdbv.SetParameterPtr(pP);
@@ -104,7 +105,7 @@ void CTagPacketDecoderMDI::SetParameterPtr(CParameter *pP)
 	TagItemDecoderRgps.SetParameterPtr(pP);
 }
 
-void CTagPacketDecoderMDI::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen)
+void CTagPacketDecoderMDI::DecodeTagPackets(CVectorEx<_BINARY>& vecbiPkt, int iPayloadLen)
 {
 	// Initialise all the decoders: this will set them to "not ready"
 	InitTagItemDecoders();
@@ -119,5 +120,5 @@ void CTagPacketDecoderMDI::DecodeTagPacket(CVectorEx<_BINARY>& vecbiPkt, int iPa
 
 	TagItemDecoderRobMod.Init();
 	// Call base class function to do the actual decoding
-	CTagPacketDecoder::DecodeTagPacket(vecbiPkt, iPayloadLen);
+	CTagPacketDecoder::DecodeTagPackets(vecbiPkt, iPayloadLen);
 }

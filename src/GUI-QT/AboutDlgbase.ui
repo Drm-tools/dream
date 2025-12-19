@@ -2,6 +2,9 @@
 <ui version="4.0">
  <class>CAboutDlgBase</class>
  <widget class="QDialog" name="CAboutDlgBase">
+  <property name="windowModality">
+   <enum>Qt::ApplicationModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -21,7 +24,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res/icons.qrc">
-    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
+    <normaloff>:/icons/MainIcon.svg</normaloff>:/icons/MainIcon.svg</iconset>
   </property>
   <property name="sizeGripEnabled">
    <bool>true</bool>

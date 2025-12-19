@@ -35,13 +35,6 @@
 #include "GlobalDefinitions.h"
 #include "Parameter.h"
 
-#ifdef USE_QT_GUI
-# include <qthread.h>
-# if QT_VERSION >= 0x030000
-#  include <qmutex.h>
-# endif
-#endif
-
 /* Definitions ****************************************************************/
 
 /* Length of the history for synchronization parameters (used for the plot) */
@@ -108,9 +101,7 @@ private:
     _REAL					rSumDopplerHist;
     _REAL					rSumSNRHist;
     int						iCurrentCDAud;
-#ifdef USE_QT_GUI
-    QMutex					MutexHist;
-#endif
+    CMutex					MutexHist;
 
 };
 

@@ -15,7 +15,7 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res/icons.qrc">
-    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
+    <normaloff>:/icons/MainIcon.svg</normaloff>:/icons/MainIcon.svg</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -6387,7 +6387,7 @@
   <customwidget>
    <class>CMultColorLED</class>
    <extends>QWidget</extends>
-   <header>MultColorLED.h</header>
+   <header location="global">MultColorLED.h</header>
   </customwidget>
  </customwidgets>
  <resources>

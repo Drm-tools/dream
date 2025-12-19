@@ -27,30 +27,23 @@
 
 #include "DialogUtil.h"
 #include "GeneralSettingsDlg.h"
-#include <qlineedit.h>
-#include <qpushbutton.h>
-#include <qvalidator.h>
-#include <qmessagebox.h>
-#include <qcheckbox.h>
-#if QT_VERSION < 0x040000
-# include <qwhatsthis.h>
-# define toString(s) s.latin1()
-# define toUpper(s) s.upper()
-#else
-# include <QShowEvent>
-# include <QHideEvent>
-# define toString(s) s.toUtf8().constData()
-# define toUpper(s) s.toUpper()
-#endif
-
+#include <QLineEdit>
+#include <QPushButton>
+#include <QValidator>
+#include <QMessageBox>
+#include <QCheckBox>
+#include <QShowEvent>
+#include <QHideEvent>
 
 /* Implementation *************************************************************/
 
 GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
-                                       QWidget* parent, const char* name, bool modal, Qt::WindowFlags f) :
-    CGeneralSettingsDlgBase(parent, name, modal, f),
-    Parameters(NParam),Settings(NSettings)
+    QWidget* parent) :
+    QDialog(parent), Parameters(NParam), Settings(NSettings)
 {
+    setAttribute(Qt::WA_QuitOnClose, false);
+    setupUi(this);
+
     /* Set the validators fro the receiver coordinate */
     EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
     EdtLongitudeDegrees->setValidator(new QIntValidator(0, 180, EdtLongitudeDegrees));
@@ -104,7 +97,7 @@ void GeneralSettingsDlg::CheckSN(const QString& NewText)
 {
     /* Only S or N char are accepted */
 
-    const QString sVal = toUpper(NewText);
+    const QString sVal = NewText.toUpper();
 
     if (sVal != "S" && sVal != "N" && sVal != "")
         EdtLatitudeNS->setText("");
@@ -116,7 +109,7 @@ void GeneralSettingsDlg::CheckEW(const QString& NewText)
 {
     /* Only E or W char are accepted */
 
-    const QString sVal = toUpper(NewText);
+    const QString sVal = NewText.toUpper();
 
     if (sVal != "E" && sVal != "W" && sVal != "")
         EdtLongitudeEW->setText("");
@@ -225,11 +218,11 @@ void GeneralSettingsDlg::ButtonOkClicked()
             Parameters.gps_data.set &= ~LATLON_SET;
         }
 
-        string host =  toString(LineEditGPSHost->text());
+        string host = LineEditGPSHost->text().toUtf8().constData();
         if(Parameters.gps_host != host)
             Parameters.restart_gpsd = true;
         Parameters.gps_host=host;
-        string port = toString(LineEditGPSPort->text());
+        string port = LineEditGPSPort->text().toUtf8().constData();
         if(Parameters.gps_port != port)
             Parameters.restart_gpsd = true;
         Parameters.gps_port=port;
@@ -363,10 +356,6 @@ void GeneralSettingsDlg::AddWhatsThisHelp()
            " of the target column if the receiver coordinates (latitude and longitude)"
            " are inside the target area of this transmission.<br>"
            "Receiver coordinates are also saved into the Log file.");
-#if QT_VERSION < 0x040000
-    QWhatsThis::add(this, str);
-#else
     setWhatsThis(str);
-#endif
 }
 

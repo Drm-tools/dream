@@ -31,7 +31,6 @@
 \******************************************************************************/
 
 #include "PacketSocketNull.h"
-using namespace std;
 
 // Set the sink which will receive the packets
 void CPacketSocketNull::SetPacketSink(CPacketSink*)

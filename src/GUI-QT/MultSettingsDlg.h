@@ -35,36 +35,21 @@
 #include <qvalidator.h>
 
 #include "../DrmReceiver.h"
-#include "../datadecoding/epg/epgutil.h"
+#include "../datadecoding/epgutil.h"
 #include "../util/Settings.h"
-#if QT_VERSION < 0x040000
-# include "MultSettingsDlgbase.h"
-#else
-# include <QDialog>
-# include "ui_MultSettingsDlgbase.h"
-#endif
+#include <QDialog>
+#include "ui_MultSettingsDlgbase.h"
 
 /* Definitions ****************************************************************/
 
 /* Classes ********************************************************************/
-#if QT_VERSION >= 0x040000
-class CMultSettingsDlgBase : public QDialog, public Ui_CMultSettingsDlgBase
-{
-public:
-	CMultSettingsDlgBase(QWidget* parent = 0, const char* name = 0,
-		bool modal = FALSE, Qt::WindowFlags f = 0):
-		QDialog(parent,f){(void)name;(void)modal;setupUi(this);}
-	virtual ~CMultSettingsDlgBase() {}
-};
-#endif
-class MultSettingsDlg : public CMultSettingsDlgBase
+
+class MultSettingsDlg : public QDialog, public Ui_CMultSettingsDlgBase
 {
 	Q_OBJECT
 
 public:
-
-	MultSettingsDlg(CParameter&, CSettings&, QWidget* parent = 0,
-		const char* name = 0, bool modal = FALSE, Qt::WindowFlags f = 0);
+	MultSettingsDlg(CParameter&, CSettings&, QWidget* parent = 0);
 	virtual ~MultSettingsDlg();
 
 protected:

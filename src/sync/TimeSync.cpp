@@ -610,7 +610,7 @@ void CTimeSync::InitInternal(CParameter& Parameters)
 	/* Set Hilbert-filter parameters according to sample rate */
 	switch (iSampleRate)
 	{
-#ifdef NUM_TAPS_HILB_FILT_24
+#if NUM_TAPS_HILB_FILT_24 > 0
 	case 24000:
 		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_24;
 # ifdef USE_10_KHZ_HILBFILT
@@ -620,7 +620,7 @@ void CTimeSync::InitInternal(CParameter& Parameters)
 # endif
 		break;
 #endif
-#ifdef NUM_TAPS_HILB_FILT_48
+#if NUM_TAPS_HILB_FILT_48 > 0
 	case 48000:
 		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_48;
 # ifdef USE_10_KHZ_HILBFILT
@@ -630,7 +630,7 @@ void CTimeSync::InitInternal(CParameter& Parameters)
 # endif
 		break;
 #endif
-#ifdef NUM_TAPS_HILB_FILT_96
+#if NUM_TAPS_HILB_FILT_96 > 0
 	case 96000:
 		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_96;
 # ifdef USE_10_KHZ_HILBFILT
@@ -640,13 +640,23 @@ void CTimeSync::InitInternal(CParameter& Parameters)
 # endif
 		break;
 #endif
-#ifdef NUM_TAPS_HILB_FILT_192
+#if NUM_TAPS_HILB_FILT_192 > 0
 	case 192000:
 		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_192;
 # ifdef USE_10_KHZ_HILBFILT
 		fHilLPProt = fHilLPProt10_192;
 # else
 		fHilLPProt = fHilLPProt5_192;
+# endif
+		break;
+#endif
+#if NUM_TAPS_HILB_FILT_384 > 0
+	case 384000:
+		iNumTapsHilbFilt = NUM_TAPS_HILB_FILT_384;
+# ifdef USE_10_KHZ_HILBFILT
+		fHilLPProt = fHilLPProt10_384;
+# else
+		fHilLPProt = fHilLPProt5_384;
 # endif
 		break;
 #endif

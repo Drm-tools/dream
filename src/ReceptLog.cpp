@@ -126,7 +126,7 @@ CShortLog::init()
 {
     Parameters.Lock();
     Parameters.ReceiveStatus.FAC.ResetCounts();
-    Parameters.ReceiveStatus.Audio.ResetCounts();
+    Parameters.ReceiveStatus.SLAudio.ResetCounts();
     Parameters.Unlock();
     /* initialise the minute count */
     iCount = 0;
@@ -164,8 +164,11 @@ CShortLog::writeHeader()
         return; /* allow updates when file closed */
 
     /* Beginning of new table (similar to DW DRM log file) */
-    File << endl << ">>>>" << endl << "Dream" << endl
-         << "Software Version " << dream_version_major << "." << dream_version_minor << dream_version_build << endl;
+    File << endl << ">>>>" << endl << "Dream" << endl << "Software Version ";
+    if (dream_version_patch == 0)
+        File << dream_version_major << "." << dream_version_minor << dream_version_build << endl;
+    else
+        File << dream_version_major << "." << dream_version_minor << "." << dream_version_patch << dream_version_build << endl;
 
     time_t now;
     (void) time(&now);
@@ -242,10 +245,10 @@ CShortLog::writeParameters()
 
     int iAverageSNR = (int) Round(Parameters.SNRstat.getMean());
     int iNumCRCOkFAC = Parameters.ReceiveStatus.FAC.GetOKCount();
-    int iNumCRCOkMSC = Parameters.ReceiveStatus.Audio.GetOKCount();
+    int iNumCRCOkMSC = Parameters.ReceiveStatus.SLAudio.GetOKCount();
 
     Parameters.ReceiveStatus.FAC.ResetCounts();
-    Parameters.ReceiveStatus.Audio.ResetCounts();
+    Parameters.ReceiveStatus.SLAudio.ResetCounts();
 
     int iTmpNumAAC=0, iRXL=0;
 
