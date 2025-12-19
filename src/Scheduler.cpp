@@ -31,9 +31,6 @@
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
-#ifdef _WIN32
-# include <windows.h>
-#endif
 
 #ifdef _WIN32
 # include "windows/platform_util.h"
