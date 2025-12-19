@@ -160,6 +160,7 @@ CAboutDlg::CAboutDlg(QWidget* parent):
 #else
 	QString(fftw_version)
 #endif
+    + ") <i>http://www.fftw.org</i></li>"
 #ifdef QT_CORE_LIB
         "<li><b>Qt</b> (" + QString(QT_VERSION_STR) + ") <i>http://qt-project.org</i></li>"
 #endif
