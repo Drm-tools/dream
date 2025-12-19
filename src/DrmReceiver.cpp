@@ -36,10 +36,8 @@
 #include "util/Settings.h"
 #include "util/Utilities.h"
 #include "util/FileTyper.h"
+#include "tuner.h"
 
-#include "sound/sound.h"
-#include "sound/soundnull.h"
-#include "sound/audiofilein.h"
 #ifdef QT_MULTIMEDIA_LIB
 # include <QAudioDeviceInfo>
 #endif
@@ -71,9 +69,7 @@ CDRMReceiver::CDRMReceiver(CSettings* nPsettings) : CDRMTransceiver(),
     rInitResampleOffset((_REAL) 0.0),
     iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
     time_keeper(0),
-#ifdef HAVE_LIBHAMLIB
-    pRig(nullptr),
-#endif
+    pTuner(nullptr),
     PlotManager(), iPrevSigSampleRate(0),Parameters(*(new CParameter())), pSettings(nPsettings)
 {
     Parameters.SetReceiver(this);
@@ -93,6 +89,7 @@ CDRMReceiver::~CDRMReceiver()
 void
 CDRMReceiver::SetReceiverMode(ERecMode eNewMode)
 {
+    cerr<<"New receiver mode: " << eNewMode<<endl;
     if (eReceiverMode!=eNewMode || eNewReceiverMode != RM_NONE)
         eNewReceiverMode = eNewMode;
 }
@@ -190,12 +187,21 @@ CDRMReceiver::SetInputDevice(string s)
     }
     switch(t) {
     case FileTyper::pcm:
+    {
         /* SetSyncInput to false, can be modified by pUpstreamRSCI */
         InputResample.SetSyncInput(false);
         SyncUsingPil.SetSyncInput(false);
         TimeSync.SetSyncInput(false);
         ReceiveData.SetSoundInterface(device); // audio input
+        CTuner *pTuner = ReceiveData.GetTuner();
+        fprintf(stderr, "Read pTuner = %x\n", pTuner);
+        if (pTuner)
+        {
+                SetTuner(pTuner);
+                pTuner->LoadSettings(*pSettings);
+        }
         break;
+    }
     case FileTyper::unrecognised: // includes rsi network
     case FileTyper::pcap:
     case FileTyper::file_framing:
@@ -356,7 +362,7 @@ CDRMReceiver::UtilizeDRM(bool& bEnoughData)
     /* Source decoding (audio) */
     if (iAudioStreamID != STREAM_ID_NOT_USED)
     {
-        //cerr << "audio processing" << endl;
+        //cerr << "audio processing. input buffer fill level="<<MSCUseBuf[iAudioStreamID].GetFillLevel() << endl;
         if (AudioSourceDecoder.ProcessData(Parameters,
                                            MSCUseBuf[iAudioStreamID],
                                            AudSoDecBuf))
@@ -981,7 +987,9 @@ CDRMReceiver::process()
                     if (iUnlockedCount < MAX_UNLOCKED_COUNT)
                         iUnlockedCount++;
                     else
+		    {
                         downstreamRSCI.SendUnlockedFrame(Parameters);
+		    }
                 }
             }
             else if (bFrameToSend)
@@ -1155,6 +1163,8 @@ CDRMReceiver::InitsForAllModules()
     AudSoDecBuf.Clear();
     AMAudioBuf.Clear();
     AMSoEncBuf.Clear();
+
+    //this->SetIQRecording(true);
 }
 
 /* -----------------------------------------------------------------------------
@@ -1326,12 +1336,8 @@ void CDRMReceiver::SetFrequency(int iNewFreqkHz)
         pUpstreamRSCI->SetFrequency(iNewFreqkHz);
     }
 
-#ifdef HAVE_LIBHAMLIB
-# ifdef QT_CORE_LIB // TODO should not have dependency to qt here
-    if(pRig)
-        pRig->SetFrequency(iNewFreqkHz);
-# endif
-#endif
+    if(pTuner)
+        pTuner->SetFrequency(iNewFreqkHz + int(Parameters.FrontEndParameters.rTunerFrequencyOffset));
 #if 0
     {
         FCD_MODE_ENUM fme;
@@ -1362,10 +1368,17 @@ void CDRMReceiver::SetFrequency(int iNewFreqkHz)
 void
 CDRMReceiver::SetIQRecording(bool bON)
 {
+    InitsForAllModules(); // the data path gets changed, so maybe best to reset all
     if (bON)
+    {
+        cout<<"Starting I/Q recording"<<endl;
         WriteIQFile.StartRecording(Parameters);
+    }
     else
+    {
+        cout<<"Stopping I/Q recording"<<endl;
         WriteIQFile.StopRecording();
+    }
 }
 
 void
@@ -1435,10 +1448,13 @@ CDRMReceiver::LoadSettings()
     Parameters.SetNewAudSampleRate(s.Get("Receiver", "samplerateaud", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
 
     /* Sound card signal sample rate, some settings below depends on this one */
-    Parameters.SetNewSigSampleRate(s.Get("Receiver", "sampleratesig", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
+    Parameters.SetNewSoundcardSigSampleRate(s.Get("Receiver", "sampleratesig", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
 
     /* Signal upscale ratio */
     Parameters.SetNewSigUpscaleRatio(s.Get("Receiver", "sigupratio", int(1)));
+
+    /* Signal upscale ratio */
+    Parameters.SetNewSigDownscaleRatio(s.Get("Receiver", "sigdownratio", int(1)));
 
     /* Fetch new sample rate if any */
     Parameters.FetchNewSampleRate();
@@ -1615,6 +1631,8 @@ CDRMReceiver::LoadSettings()
 
     FrontEndParameters.rIFCentreFreq = s.Get("FrontEnd", "ifcentrefrequency", (_REAL(DEFAULT_SOUNDCRD_SAMPLE_RATE) / 4));
 
+    FrontEndParameters.rTunerFrequencyOffset = s.Get("FrontEnd", "tunerfreqoffset", 0.0);
+
     /* Latitude string (used to be just for log file) */
     double latitude, longitude;
     latitude = s.Get("GPS", "latitude", s.Get("Logfile", "latitude", 1000.0));
@@ -1665,6 +1683,9 @@ CDRMReceiver::SaveSettings()
 
     /* Signal upscale ratio */
     s.Put("Receiver", "sigupratio", Parameters.GetSigUpscaleRatio());
+
+    /* Signal downscale ratio */
+    s.Put("Receiver", "sigdownratio", Parameters.GetSigDownscaleRatio());
 
     /* if 0 then only measure PSD when RSCI in use otherwise always measure it */
     s.Put("Receiver", "measurepsdalways", Parameters.bMeasurePSDAlways);
@@ -1757,6 +1778,10 @@ CDRMReceiver::SaveSettings()
 
     s.Put("FrontEnd", "ifcentrefrequency", int(Parameters.FrontEndParameters.rIFCentreFreq));
 
+    s.Put("FrontEnd", "tunerfreqoffset", int(Parameters.FrontEndParameters.rTunerFrequencyOffset));
+
+    if (pTuner)
+        pTuner->SaveSettings(s);
     /* Serial Number */
     s.Put("Receiver", "serialnumber", Parameters.sSerialNumber);
 

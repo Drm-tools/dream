@@ -257,6 +257,10 @@ unix:!cross_compile {
        CONFIG += speexdsp
       }
     }
+    exists(/usr/include/SoapySDR) | \
+    exists(/usr/local/include/SoapySDR) {
+       CONFIG += soapysdr
+    }
 }
 win32:cross_compile {
   message(win32 cross compile)
@@ -317,6 +321,7 @@ win32 {
     exists($$PWD/include/opus/opus.h) {
         CONFIG += opus
     }
+
   }
 }
 fdk-aac {
@@ -445,6 +450,14 @@ pulseaudio {
     }
     message("with pulseaudio")
 }
+soapysdr {
+    DEFINES += USE_SOAPYSDR
+	HEADERS += src/sound/drm_soapySDR.h
+	SOURCES += src/sound/drm_soapySDR.cpp
+    LIBS += -lSoapySDR
+    message("with SoapySDR")
+}
+
 HEADERS += \
     src/AMDemodulation.h \
     src/AMSSDemodulation.h \
@@ -530,7 +543,6 @@ HEADERS += \
     src/ServiceInformation.h \
     src/sound/audiofilein.h \
     src/sound/selectioninterface.h \
-    src/sound/sound.h \
     src/sound/soundinterface.h \
     src/sound/soundnull.h \
     src/sourcedecoders/aac_codec.h \
@@ -576,7 +588,10 @@ HEADERS += \
     src/resample/cspectrumresample.h \
     src/resample/caudioresample.h \
     src/sourcedecoders/reverb.h \
-    src/sourcedecoders/caudioreverb.h
+    src/sourcedecoders/caudioreverb.h \
+    src/tuner.h \
+    src/sound/soundinterfacefactory.h \
+    src/MDI/PacketSocketHTTP.h
 SOURCES += \
     src/AMDemodulation.cpp \
     src/AMSSDemodulation.cpp \
@@ -692,7 +707,10 @@ SOURCES += \
     src/resample/cspectrumresample.cpp \
     src/resample/caudioresample.cpp \
     src/sourcedecoders/reverb.cpp \
-    src/sourcedecoders/caudioreverb.cpp
+    src/sourcedecoders/caudioreverb.cpp \
+    src/tuner.cpp \
+    src/sound/soundinterfacefactory.cpp \
+    src/MDI/PacketSocketHTTP.cpp
 
 contains(QT,core) {
     HEADERS += \

@@ -124,8 +124,9 @@ CParameter::CParameter():
     iAudSampleRate(DEFAULT_SOUNDCRD_SAMPLE_RATE),
     iSigSampleRate(DEFAULT_SOUNDCRD_SAMPLE_RATE),
     iSigUpscaleRatio(1),
+    iSigDownscaleRatio(1),
     iNewAudSampleRate(0),
-    iNewSigSampleRate(0),
+    iNewSoundcardSigSampleRate(0),
     iNewSigUpscaleRatio(0),
     rSysSimSNRdB(0.0),
     iFrequency(0),
@@ -237,8 +238,9 @@ CParameter::CParameter(const CParameter& p):
     iAudSampleRate(p.iAudSampleRate),
     iSigSampleRate(p.iSigSampleRate),
     iSigUpscaleRatio(p.iSigUpscaleRatio),
+    iSigDownscaleRatio(p.iSigDownscaleRatio),
     iNewAudSampleRate(p.iNewAudSampleRate),
-    iNewSigSampleRate(p.iNewSigSampleRate),
+    iNewSoundcardSigSampleRate(p.iNewSoundcardSigSampleRate),
     iNewSigUpscaleRatio(p.iNewSigUpscaleRatio),
     rSysSimSNRdB(p.rSysSimSNRdB),
     iFrequency(p.iFrequency),
@@ -347,8 +349,9 @@ CParameter& CParameter::operator=(const CParameter& p)
     iAudSampleRate = p.iAudSampleRate;
     iSigSampleRate = p.iSigSampleRate;
     iSigUpscaleRatio = p.iSigUpscaleRatio;
+    iSigDownscaleRatio = p.iSigDownscaleRatio;
     iNewAudSampleRate = p.iNewAudSampleRate;
-    iNewSigSampleRate = p.iNewSigSampleRate;
+    iNewSoundcardSigSampleRate = p.iNewSoundcardSigSampleRate;
     iNewSigUpscaleRatio = p.iNewSigUpscaleRatio;
     rSysSimSNRdB = p.rSysSimSNRdB;
     iFrequency = p.iFrequency;
@@ -433,7 +436,7 @@ void CParameter::ResetServicesStreams()
         // Set up encoded AM audio parameters
         Service[0].AudioParam.strTextMessage = "";
         Service[0].AudioParam.iStreamID = 0;
-        Service[0].AudioParam.eAudioCoding = CAudioParam::AC_AAC;
+        Service[0].AudioParam.eAudioCoding = CAudioParam::AC_MPEGAAC;
         Service[0].AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
         Service[0].AudioParam.eAudioSamplRate = CAudioParam::AS_24KHZ;
         Service[0].AudioParam.bTextflag = false;
@@ -452,7 +455,7 @@ void CParameter::ResetServicesStreams()
         Service[0].strLabel = "";
 
         Stream[0].iLenPartA = 0;
-        Stream[0].iLenPartB = 1044;
+        Stream[0].iLenPartB = 7000; // enough for 128kbps
     }
 
     /* Reset alternative frequencies */

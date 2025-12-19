@@ -32,6 +32,8 @@
 #include "opus_codec.h"
 #ifdef HAVE_LIBFDK_AAC
 # include "fdk_aac_codec.h"
+#include <iostream>
+using namespace std;
 #endif
 
 CAudioCodec::CAudioCodec():pFile(nullptr)
@@ -59,6 +61,7 @@ CAudioCodec::InitCodecList()
 
 		/* AAC */
 #ifdef HAVE_LIBFDK_AAC
+cerr<<"Adding FDK codec"<<endl;
         CodecList.push_back(new FdkAacCodec);
 #endif
         CodecList.push_back(new AacCodec);

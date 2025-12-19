@@ -34,14 +34,15 @@
 # include <QAudioInput>
 # include <QSet>
 #endif
-#include "sound/sound.h"
+//#include "sound/sound.h"
+#include "sound/soundinterfacefactory.h"
 
 /* Implementation *************************************************************/
 /******************************************************************************\
 * MSC data                                                                    *
 \******************************************************************************/
 /* Transmitter -------------------------------------------------------------- */
-void CReadData::ProcessDataInternal(CParameter&)
+void CReadData::ProcessDataInternal(CParameter& Parameters)
 {
     /* Get data from sound interface */
     if (pSound == nullptr)
@@ -60,7 +61,7 @@ void CReadData::ProcessDataInternal(CParameter&)
     }
     else
     {
-        pSound->Read(vecsSoundBuffer);
+        pSound->Read(vecsSoundBuffer, Parameters);
     }
     /* Write data to output buffer */
     for (int i = 0; i < iOutputBlockSize; i++)
@@ -113,7 +114,7 @@ void CReadData::Enumerate(std::vector<std::string>& names, std::vector<std::stri
         descriptions.push_back("");
     }
 #else
-    if(pSound==nullptr) pSound = new CSoundIn;
+    if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundInInterface();
     pSound->Enumerate(names, descriptions, defaultInput);
 #endif
     cout << "default input is " << defaultInput << endl;
@@ -160,7 +161,7 @@ CReadData::SetSoundInterface(string device)
         delete pSound;
         pSound = nullptr;
     }
-    pSound = new CSoundIn();
+    pSound = CSoundInterfaceFactory::CreateSoundInInterface();
     pSound->SetDev(device);
 #endif
 }
@@ -206,7 +207,7 @@ void CWriteData::Enumerate(std::vector<std::string>& names, std::vector<std::str
         descriptions.push_back("");
     }
 #else
-    if(pSound==nullptr) pSound = new CSoundOut;
+    if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
     pSound->Enumerate(names, descriptions, defaultOutput);
 #endif
 }
@@ -245,7 +246,7 @@ CWriteData::SetSoundInterface(string device)
         delete pSound;
         pSound = nullptr;
     }
-    pSound = new CSoundOut();
+    pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
     pSound->SetDev(device);
 #endif
 }
@@ -425,7 +426,6 @@ void CWriteData::InitInternal(CParameter& Parameters)
     }
 #endif
     if(pSound!=nullptr) pSound->Init(iAudSampleRate, iAudFrameSize * 2 /* stereo */, bSoundBlocking); // might be a sound file
-
     /* Init intermediate buffer needed for different channel selections */
     vecsTmpAudData.Init(iAudFrameSize * 2 /* stereo */);
 

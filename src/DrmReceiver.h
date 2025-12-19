@@ -78,7 +78,7 @@
 
 
 /* Classes ********************************************************************/
-class CRig;
+class CTuner;
 class CSettings;
 
 class CSplitFAC : public CSplitModul<_BINARY>
@@ -120,6 +120,16 @@ protected:
     {
         this->iInputBlockSize = (int) ((_REAL) p.GetAudSampleRate() * (_REAL) 0.4 /* 400 ms */) * 2 /* stereo */;
     }
+    virtual void InitInternal(CParameter& Parameters)
+    {
+        this->SetInputBlockSize(Parameters);
+        this->iOutputBlockSize = this->iInputBlockSize;
+        this->iOutputBlockSize2 = this->iInputBlockSize;
+        this->iMaxOutputBlockSize2 = 2 * this->iInputBlockSize; // this makes the allocated buffer big enough to store two blocks, required because it's cyclic
+
+    }
+
+
 };
 
 class CConvertAudio : public CReceiverModul<_REAL,_SAMPLE>
@@ -174,6 +184,9 @@ public:
     ERecMode				GetReceiverMode() {
         return eReceiverMode;
     }
+    ERecMode GetNewReceiverMode() {
+        return eNewReceiverMode;
+    }
     bool GetDownstreamRSCIOutEnabled()
     {
         return downstreamRSCI.GetOutEnabled();
@@ -187,11 +200,9 @@ public:
     void					SetAMDemodType(EDemodType);
     void					SetAMFilterBW(int iBw);
     void					SetAMDemodAcq(_REAL rNewNorCen);
-#ifdef HAVE_LIBHAMLIB
-    void	 				SetRig(CRig* n) {
-        pRig=n;
+    void	 				SetTuner(CTuner* t) {
+        pTuner=t;
     }
-#endif
     void	 				SetFrequency(int);
     int		 				GetFrequency() {
         return Parameters.GetFrequency();
@@ -447,9 +458,7 @@ protected:
     int						iBwCW;
     int						iBwFM;
     time_t					time_keeper;
-#ifdef HAVE_LIBHAMLIB
-    CRig*					pRig;
-#endif
+    CTuner*					pTuner;
 
     CPlotManager			PlotManager;
     std::string					rsiOrigin;

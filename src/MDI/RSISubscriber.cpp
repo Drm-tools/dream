@@ -31,6 +31,7 @@
 \******************************************************************************/
 
 #include "PacketSocket.h"
+#include "PacketSocketHTTP.h"
 #include "RSISubscriber.h"
 #include "../DrmReceiver.h"
 #include "TagPacketGenerator.h"
@@ -102,21 +103,33 @@ void CRSISubscriber::SendPacket(const vector<_BYTE>& vecbydata, uint32_t, uint16
 /* TODO wrap a sendto in a class and store it in pPacketSink */
 CRSISubscriberSocket::CRSISubscriberSocket(CPacketSink *pSink):CRSISubscriber(pSink),pSocket(nullptr)
 {
-	pSocket = new CPacketSocketNative;
-	pPacketSink = pSocket;
+
 }
 
 CRSISubscriberSocket::~CRSISubscriberSocket()
 {
-	delete pSocket;
+    if (pSocket)
+        delete pSocket;
 }
 
 bool CRSISubscriberSocket::SetDestination(const string& dest)
 {
 	if(pSocket==nullptr)
-	{
-		return false;
+    {
+        delete pSocket;
 	}
+
+    if (dest.substr(0,5)=="http:" || dest.substr(0,6)=="https:")
+    {
+        cout<<"instantiating HTTP socket"<<endl;
+        pSocket = new CPacketSocketHTTP;
+    }
+    else
+    {
+        pSocket = new CPacketSocketNative;
+    }
+    pPacketSink = pSocket;
+
 	string d = dest;
 	if(d[0] == 'P' || d[0] == 'p')
 	{

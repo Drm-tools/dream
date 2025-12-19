@@ -168,6 +168,7 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
     iSymbolBlockSize = Parameters.CellMappingTable.iSymbolBlockSize;
     iAudSampleRate = Parameters.GetAudSampleRate();
     iSigSampleRate = Parameters.GetSigSampleRate();
+    _REAL rIFCentreFrequency = Parameters.FrontEndParameters.rIFCentreFreq;
     Parameters.Unlock();
 
     /* SetFilterBW() can be called before InitInternal() and iSigSampleRate is defined,
@@ -186,7 +187,15 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
 
     /* Init frequency offset acquisition (start new acquisition) */
     FreqOffsAcq.Init(iSymbolBlockSize);
+    if(bAutoFreqAcquIsEnabled) 
+    {
     FreqOffsAcq.Start((CReal) 0.0); /* Search entire bandwidth */
+    }
+    else
+    {
+      rNormCurMixFreqOffs = rIFCentreFrequency / iSigSampleRate;
+      
+    }
 
     /* Init AGC */
     AGC.Init(iSigSampleRate, iSymbolBlockSize);
@@ -250,7 +259,7 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
     /* The output buffer is a cyclic buffer, we have to specify the total
        buffer size */
     iMaxOutputBlockSize = (int) ((_REAL) iAudSampleRate *
-                                 (_REAL) 0.4 /* 400ms */ * 2 /* for stereo */);
+                                 (_REAL) 0.4 /* 400ms */ * 2 /* for stereo */ * 2 /* to allow for different write/read sizes */);
 
     iInputBlockSize = iSymbolBlockSize;
 
@@ -263,6 +272,7 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
     /* Init audio resampler */
     ResampleObj.Init(iSymbolBlockSize,
         (_REAL) iAudSampleRate / iSigSampleRate);
+cout<<"iAudSampleRate="<<iAudSampleRate<<", iSigSampleRate="<<iSigSampleRate<<endl;
     vecTempResBufIn.Init(iSymbolBlockSize, (_REAL) 0.0);
     vecTempResBufOut.Init(iResOutBlockSize, (_REAL) 0.0);
 

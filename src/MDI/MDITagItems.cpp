@@ -41,6 +41,8 @@
 #include "MDITagItems.h"
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include <ctime>
 using namespace std;
 
 #include "../util/LogPrint.h"
@@ -167,6 +169,61 @@ string
 CTagItemGeneratorLoFrCnt::GetProfiles()
 {
 	return "ABCDQM";
+}
+
+
+CTagItemGeneratorFracModJulDate::CTagItemGeneratorFracModJulDate()
+{
+
+
+}
+
+string
+CTagItemGeneratorFracModJulDate::GetTagName()
+{
+    return "fmjd";
+}
+
+void CTagItemGeneratorFracModJulDate::GenTag()
+{
+
+    using namespace std::chrono;
+    const time_point<systrm_clock> now = system_clock::now();
+    auto ms = (duration_cast<milliseconds>(now.time_since_epoch()) % 1000);
+
+    auto timer = system_clock::to_time_t(now);
+    std::tm bt = *std::gmtime(&timer);
+
+    // MJD calculation from TS 102 349, but with ceiling operator ignored
+    // move leap day virtual to end of year
+    unsigned int modified_month = ((unsigned(bt.tm_mon) + 10) % 12) + 3; /* month is 0..11 */
+    unsigned int modified_year = (unsigned(bt.tm_year)+1900) - 1 + ((unsigned(bt.tm_mon) + 8) / 10);
+    /* intermediate variables */
+    unsigned int n1 = modified_year / 100;
+    unsigned int n2 = modified_year % 100;
+    unsigned int ModifiedJulianDate = 1721029 /* offset January, 1st 4713 BCE */
+    - 2400001u /* correction from JD to MJD*/
+    + 146097 * (n1 / 4) /* days of elapsed 400-year-cycles */
+    + 36524 * (n1 % 4) /* days of elapsed 100-year-cycles */
+    + 1461 * (n2 / 4) /* days of elapsed 4-year-cycles */
+    + 365 * (n2 % 4) /* days of elapsed years */
+    + 30 * modified_month /* days of elapsed months in actual year */
+    + ((7 * (modified_month - 2)) / 12) /* days of unequal month-length */
+    + unsigned(bt.tm_mday); /* elapsed days in actual month */
+    unsigned int fractionalDay =((((unsigned(bt.tm_hour)*60)
+                                   +unsigned (bt.tm_min))*60
+                                  +unsigned(bt.tm_sec))*10000
+                                 +unsigned(ms.count())*10);
+
+    PrepareTag(64);
+    Enqueue(ModifiedJulianDate, 32);
+    Enqueue(fractionalDay, 32);
+}
+
+string
+CTagItemGeneratorFracModJulDate::GetProfiles()
+{
+    return "ABCDGQM";
 }
 
 void
@@ -1010,7 +1067,7 @@ CTagItemGeneratorGPS::GenTag(bool bIsValid, gps_data_t& gps_data)	// Long/Lat in
 		uint32_t source = 0xff; // GPS_SOURCE_NOT_AVAILABLE
 		PrepareTag(26 * SIZEOF__BYTE);
 		if(gps_data.set&STATUS_SET) {
-			switch(gps_data.status) {
+            switch(gps_data.status) {
 			case 0: source = 3; break; // manual
 			case 1: source = 1; break; // gps
 			case 2: source = 2; break; // differential
@@ -1104,7 +1161,7 @@ CTagItemGeneratorGPS::GenTag(bool bIsValid, gps_data_t& gps_data)	// Long/Lat in
 
 		if (gps_data.set&TIME_SET)
 		{
-			time_t time = (time_t)gps_data.fix.time;
+            time_t time = (time_t) gps_data.fix.time;
 			struct tm * ptm;
 			ptm = gmtime ( &time );
 			Enqueue((uint32_t) ptm->tm_hour, SIZEOF__BYTE);
@@ -1346,21 +1403,25 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 }
 
 void
-CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &AudioData)
+CTagItemGeneratorAMAudio::GenTagFieldsNonStandard(CParameter & Parameter, int iLenStrData)
+{
+        char mimeType[]="audio/aac";
+        int iMimeTypeLen = strlen(mimeType);
+
+	PrepareTag(iLenStrData + iMimeTypeLen*8 + 16);
+        Enqueue(224, 8); // Codec type = MIME defined
+        Enqueue(strlen(mimeType), 8); // MIME type length
+        for (int i=0; i<strlen(mimeType); i++)
+           Enqueue(mimeType[i], 8);
+}
+
+void
+CTagItemGeneratorAMAudio::GenTagFieldsStandard(CParameter & Parameter, int iLenStrData)
 {
 
-	const int iLenStrData =
-		SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB);
-	// Only generate this tag if stream input data is not of zero length
-	if (iLenStrData == 0)
-		return;
-
-	CVectorEx < _BINARY > *pvecbiStrData = AudioData.Get(iLenStrData);
-	// check we have data in the vector
-	if (iLenStrData != pvecbiStrData->Size())
-		return;
-
-	PrepareTag(iLenStrData + 16);
+	PrepareTag(iLenStrData + 32);
+	Enqueue(192, 8); // Codec type
+        Enqueue(2, 8); // Audio config lengths
 
 	// Send audio parameters
 
@@ -1371,11 +1432,11 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	case CAudioParam::AC_AAC:	// 00
 		iVal = 0;
 		break;
-    case CAudioParam::AC_OPUS:	// 01
+        case CAudioParam::AC_OPUS:	// 01
 		iVal = 1;
 		break;
-    case CAudioParam::AC_xHE_AAC:	// 11
-        iVal = 3;
+        case CAudioParam::AC_xHE_AAC:	// 11
+                iVal = 3;
 		break;
 	default:
 		iVal = 0;				// reserved
@@ -1437,6 +1498,39 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 
 	// coder field and some rfus (TODO: code the coder field correctly for all cases
 	Enqueue(0, 8);
+}
+
+void
+CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &AudioData)
+{
+	bool bStandardCodec = false;
+	switch (Parameter.Service[0].AudioParam.eAudioCoding) {
+          case CAudioParam::AC_AAC:
+          case CAudioParam::AC_OPUS:
+          case CAudioParam::AC_xHE_AAC:
+              bStandardCodec = true;
+              break;
+          default:
+              bStandardCodec = false; 
+
+        }
+
+	const int iLenStrData = (bStandardCodec ? SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB) : AudioData.GetFillLevel());
+
+	// Only generate this tag if stream input data is not of zero length
+	if (iLenStrData == 0)
+		return;
+
+	CVectorEx < _BINARY > *pvecbiStrData = AudioData.Get(iLenStrData);
+	// check we have data in the vector
+	if (bStandardCodec && iLenStrData != pvecbiStrData->Size())
+		return;
+
+	if (bStandardCodec)
+          GenTagFieldsStandard(Parameter, iLenStrData);
+        else
+          GenTagFieldsNonStandard(Parameter, iLenStrData);
+
 
 	// Now send the stream data
 	pvecbiStrData->ResetBitAccess();
