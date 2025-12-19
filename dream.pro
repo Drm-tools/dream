@@ -452,6 +452,8 @@ pulseaudio {
 }
 soapysdr {
     DEFINES += USE_SOAPYSDR
+	HEADERS += src/sound/drm_soapySDR.h
+	SOURCES += src/sound/drm_soapySDR.cpp
     LIBS += -lSoapySDR
     message("with SoapySDR")
 }
@@ -587,7 +589,6 @@ HEADERS += \
     src/resample/caudioresample.h \
     src/sourcedecoders/reverb.h \
     src/sourcedecoders/caudioreverb.h \
-    src/sound/drm_soapySDR.h \
     src/tuner.h \
     src/sound/soundinterfacefactory.h \
     src/MDI/PacketSocketHTTP.h
@@ -707,7 +708,6 @@ SOURCES += \
     src/resample/caudioresample.cpp \
     src/sourcedecoders/reverb.cpp \
     src/sourcedecoders/caudioreverb.cpp \
-    src/sound/drm_soapySDR.cpp \
     src/tuner.cpp \
     src/sound/soundinterfacefactory.cpp \
     src/MDI/PacketSocketHTTP.cpp
