@@ -33,6 +33,7 @@
 #include <string>
 #include <cstdio>
 #include <limits>
+#define _USE_MATH_DEFINES // for C++ on Windows
 #include <cmath>
 #include "tables/TableDRMGlobal.h"
 
