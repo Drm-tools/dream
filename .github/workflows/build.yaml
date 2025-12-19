@@ -111,12 +111,12 @@ jobs:
         copy C:/vcpkg/installed/x64-windows/bin/*.dll release
         copy hamlib-w64-4.6.5/bin/*.dll release
         # core gui network xml widgets svg
-        copy $QT_ROOT_DIR/bin/Qt5Core.dll release
-        copy $QT_ROOT_DIR/bin/Qt5Gui.dll release
-        copy $QT_ROOT_DIR/bin/Qt5Network.dll release
-        copy $QT_ROOT_DIR/bin/Qt5Xml.dll release
-        copy $QT_ROOT_DIR/bin/Qt5Widgets.dll release
-        copy $QT_ROOT_DIR/bin/Qt5Svg.dll release
+        copy $env:QT_ROOT_DIR/bin/Qt5Core.dll release
+        copy $env:QT_ROOT_DIR/bin/Qt5Gui.dll release
+        copy $env:QT_ROOT_DIR/bin/Qt5Network.dll release
+        copy $env:QT_ROOT_DIR/bin/Qt5Xml.dll release
+        copy $env:QT_ROOT_DIR/bin/Qt5Widgets.dll release
+        copy $env:QT_ROOT_DIR/bin/Qt5Svg.dll release
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
