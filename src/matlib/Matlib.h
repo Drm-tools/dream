@@ -29,7 +29,6 @@
 #define _MATLIB_H_
 
 #include <cstdlib>
-#include <math.h>
 #include <complex>
 using namespace std;
 #include "../GlobalDefinitions.h"

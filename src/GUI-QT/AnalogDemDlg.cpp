@@ -28,8 +28,6 @@
  *
 \******************************************************************************/
 
-#include "AnalogDemDlg.h"
-#include "DRMPlot.h"
 #include <QMessageBox>
 #include <QMenuBar>
 #include <QString>
@@ -52,9 +50,8 @@
 #include <qwt_dial.h>
 #include <qwt_dial_needle.h>
 #include <qwt_plot_layout.h>
-#if QWT_VERSION >= 0x060100
-# include <qwt_round_scale_draw.h>
-#endif
+#include <qwt_round_scale_draw.h>
+#include "AnalogDemDlg.h"
 
 /* Implementation *************************************************************/
 AnalogDemDlg::AnalogDemDlg(CRx& nrx, CSettings& Settings,

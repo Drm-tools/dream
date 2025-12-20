@@ -53,6 +53,7 @@ inline int inet_aton(const char*s, void * a) {
 }
 # define inet_pton(a, b, c) inet_aton(b, c)
 # define inet_ntop(a, b, c, d) inet_ntoa(*(in_addr*)b)
+# define MSG_DONTWAIT 0
 #else
 # include <arpa/inet.h>
 # include <sys/types.h>
@@ -118,7 +119,7 @@ CPacketSocketNative::SendPacket(const vector < _BYTE > &vecbydata, uint32_t, uin
         if (result<0)
         {
             cerr << "send() returned " << result <<endl;
-            close(s);
+            // close(s);
             s = INVALID_SOCKET;
             SetDestination(dest);
         }
