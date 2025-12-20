@@ -104,7 +104,7 @@ jobs:
         lib /def:lib/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
         qmake
         nmake
-        windeployqt --list target release
+        windeployqt -opengl -printsupport release
 
     - name: Copy DLLs to release folder
       run: |
