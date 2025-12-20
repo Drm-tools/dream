@@ -116,6 +116,8 @@ jobs:
         copy $QT_ROOT_DIR/bin/Qt5Xml.dll release
         copy $QT_ROOT_DIR/bin/Qt5Widgets.dll release
         copy $QT_ROOT_DIR/bin/Qt5Svg.dll release
+        copy $QT_ROOT_DIR/bin/Qt5OpenGL.dll release
+        copy $QT_ROOT_DIR/bin/Qt5PrintSupport.dll release
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
