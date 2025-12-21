@@ -148,6 +148,7 @@ jobs:
         tar zcf dream_3.0.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
         mkdir build
         cp -r debian build
+        cp README build
         cd build
         dpkg-buildpackage -us -uc
 
