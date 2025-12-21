@@ -145,15 +145,15 @@ jobs:
 
     - name: Package
       run: |
-        tar zcf dream_3.0.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
+        tar zcf dream_2.4-1.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
         mkdir build
         cp -r debian build
         cd build
-        tar xf ../dream_3.0.orig.tar.gz
+        tar xf ../dream_2.4-1.orig.tar.gz
         dpkg-buildpackage -us -uc -b
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: dream-${{ matrix.os }}
-        path: dream
+        name: dream_2.4-1_amd64_${{ matrix.os }}.deb
+        path: dream_2.4-1_amd64.deb
