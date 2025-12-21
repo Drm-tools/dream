@@ -2,10 +2,10 @@ name: Build
 
 permissions:
   packages: write
-#
+
 on:
   push:
-    branches: [ main, Windows-build, Debian-package ]
+    branches: [ main, Windows-build, Debian-packaging ]
   pull_request:
     branches: [ main ]
 
