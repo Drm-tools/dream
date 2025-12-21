@@ -145,7 +145,7 @@ jobs:
 
     - name: Package
       run: |
-        tar zcf dream_2.2.orig.tar.gz .
+        tar zcf dream_3.0.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO debian dream.pro libs linux macx src windows
         dpkg-buildpackage -us -uc
 
     - name: Upload artifact
