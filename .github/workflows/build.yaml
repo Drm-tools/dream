@@ -145,7 +145,7 @@ jobs:
 
     - name: Package
       run: |
-        dpkg-buildpackage -b
+        dpkg-buildpackage -us -uc
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
