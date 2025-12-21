@@ -143,10 +143,8 @@ jobs:
         sudo apt install -y libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5
         sudo apt install -y qtbase5-dev qtbase5-dev-tools qt5-qmake
 
-    - name: Build
+    - name: Package
       run: |
-        qmake
-        make
         dpkg-buildpackage -b
 
     - name: Upload artifact
