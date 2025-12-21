@@ -138,7 +138,7 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt update
-        sudo apt install -y libhamlib-dev libpulse-dev libfftw3-dev libopus-dev libsndfile-dev
+        sudo apt install -y libhamlib-dev libpulse-dev libfftw3-dev libopus-dev libsndfile-dev zlib1g-dev
         sudo apt install -y libspeexdsp-dev libgps-dev libpcap-dev libfdk-aac-dev libsoapysdr-dev
         sudo apt install -y libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5
         sudo apt install -y qtbase5-dev qtbase5-dev-tools qt5-qmake
