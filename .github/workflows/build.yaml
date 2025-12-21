@@ -149,7 +149,7 @@ jobs:
         mkdir build
         cp -r debian build
         cd build
-        tar xf dream_3.0.orig.tar.gz
+        tar xf ../dream_3.0.orig.tar.gz
         dpkg-buildpackage -us -uc -b
 
     - name: Upload artifact
