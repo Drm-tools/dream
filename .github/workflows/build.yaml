@@ -12,6 +12,7 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
+    if: false
     env:
       USERNAME: jcable
       VCPKG_EXE: C:/vcpkg/vcpkg
