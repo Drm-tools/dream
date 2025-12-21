@@ -1,4 +1,4 @@
-dream (2.4-1)) unstable; urgency=medium
+dream (2.4-1) unstable; urgency=medium
 
   * added support for soapySDR
 
