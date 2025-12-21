@@ -145,6 +145,7 @@ jobs:
 
     - name: Package
       run: |
+        tar zcf dream_2.2.orig.tar.gz .
         dpkg-buildpackage -us -uc
 
     - name: Upload artifact
