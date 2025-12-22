@@ -2,7 +2,7 @@
 [![Build for Linux](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yml/badge.svg)](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yml)
 
  * Parts (c) 2001-2003 Technische Universität Darmstadt, Institut für Fachbereich Übertragungstechnik
- * Parts Übertragungstechnik (c) 2003, 2004 Fraunhofer IIS, Erlangen, Germany
+ * Parts Copyright (c) 2003, 2004 Fraunhofer IIS, Erlangen, Germany
  * Parts Copyright (c) 2004 - 2009 British Broadcasting Corporation
  
  * Originally wriürr Fischer, Alexander Kurpiers
