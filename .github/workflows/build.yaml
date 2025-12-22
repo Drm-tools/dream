@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [ main, Windows-build ]
+    branches: [ main, Windows-build, Debian-packaging ]
   pull_request:
     branches: [ main ]
 
