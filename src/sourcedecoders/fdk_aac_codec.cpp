@@ -300,11 +300,11 @@ CAudioCodec::EDecError FdkAacCodec::Decode(const vector<uint8_t>& audio_frame, u
         //return nullptr; this breaks everything!
     }
 
-    //cerr << "Decode";
-    //logAOT(*pinfo);
-    //logFlags(*pinfo);
-    //logNumbers(*pinfo);
-    //cerr << endl;
+    cerr << "Decode";
+    logAOT(*pinfo);
+    logFlags(*pinfo);
+    logNumbers(*pinfo);
+    cerr << endl;
 
     if(pinfo->aacNumChannels == 0) {
         cerr << "zero output channels: " << err << endl;
