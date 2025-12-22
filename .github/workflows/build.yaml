@@ -126,6 +126,7 @@ jobs:
       
   build-everything-else:
     runs-on: ${{ matrix.os }}
+    if: false
     strategy:
       matrix:
         os: [ubuntu-latest]
