@@ -1,4 +1,4 @@
-build: Build_Linux
+name: Build_Linux
 
 permissions:
   packages: write
