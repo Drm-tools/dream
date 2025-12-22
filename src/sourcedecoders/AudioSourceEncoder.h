@@ -39,6 +39,7 @@
 #include "../datadecoding/DataEncoder.h"
 #include "../util/Utilities.h"
 #include "AudioCodec.h"
+#include "AudioCodecList.h"
 
 /* Definition */
 #define MAX_ENCODED_CHANNELS 2
@@ -86,6 +87,7 @@ protected:
 	int						iTotNumBitsForUsage;
 
 	CAudioCodec*			codec;
+	CAudioCodecList			codecs;
 
 	unsigned long			lNumSampEncIn;
 	unsigned long			lMaxBytesEncOut;
