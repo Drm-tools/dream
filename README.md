@@ -1,5 +1,6 @@
 # Dream
-[![Build for Linux](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yml/badge.svg)](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yml)
+[![Build for Linux](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yaml/badge.svg)](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yaml)
+[![Build for Linux](https://github.com/Drm-tools/dream/actions/workflows/build_windows.yaml/badge.svg)](https://github.com/Drm-tools/dream/actions/workflows/build_windows.yaml)
 
  * Parts (c) 2001-2003 Technische Universität Darmstadt, Institut für Fachbereich Übertragungstechnik
  * Parts Copyright (c) 2003, 2004 Fraunhofer IIS, Erlangen, Germany
