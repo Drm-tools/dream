@@ -1,4 +1,4 @@
-vcpkg: Build
+name: Build
 
 permissions:
   packages: write
