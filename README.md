@@ -5,7 +5,7 @@
  * Parts Copyright (c) 2003, 2004 Fraunhofer IIS, Erlangen, Germany
  * Parts Copyright (c) 2004 - 2009 British Broadcasting Corporation
  
- * Originally wriürr Fischer, Alexander Kurpiers
+ * Originally written by Volker Fischer, Alexander Kurpiers
  
  * Additional contributions by:
  * Stephane Fillod, Andrea Russo, Julian Cable, Andrew Murphy, Oliver Haffenden, Tomi Manninen, Robert Kesterson
