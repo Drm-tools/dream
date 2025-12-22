@@ -1,13 +1,11 @@
 # Dream
 [![Build for Linux](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yml/badge.svg)](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yml)
 
- * Parts (c) 2001-2003 Technische Universitaet Darmstadt, Institut fuer 
- * Nachrichtentechnik Fachbereich Uebertragungstechnik
+ * Parts (c) 2001-2003 Technische Universitaet Darmstadt, Institut für fuer Fachbereich Uebertragungstechnik
  * Parts Copyright (c) 2003, 2004 Fraunhofer IIS, Erlangen, Germany
  * Parts Copyright (c) 2004 - 2009 British Broadcasting Corporation
  
- * Originally written by:
- *  Volker Fischer, Alexander Kurpiers
+ * Originally wriürr Fischer, Alexander Kurpiers
  
  * Additional contributions by:
  * Stephane Fillod, Andrea Russo, Julian Cable, Andrew Murphy, Oliver Haffenden, Tomi Manninen, Robert Kesterson
