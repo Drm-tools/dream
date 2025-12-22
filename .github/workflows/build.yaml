@@ -1,4 +1,4 @@
-USERNAME: Build
+name: Build
 
 permissions:
   packages: write
