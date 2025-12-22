@@ -62,17 +62,16 @@ CAudioCodecList::~CAudioCodecList() {
 CAudioCodec*
 CAudioCodecList::GetDecoder(CAudioParam::EAudCod eAudioCoding, bool bCanReturnNullPtr)
 {
-    for (size_t i = 0; i < size; i++) {
+    for (size_t i = 0; i < CodecList.size(); i++) {
 	CAudioCodec* codec = CodecList[i];
-	cerr << i << "    " << codec->DevGetVersion() << "    " << codec->CanDecode(eAudioCoding) << endl;
+	cerr << i << "    " << codec->DecGetVersion() << "    " << codec->CanDecode(eAudioCoding) << endl;
     }
-    const int size = int(CodecList.size());
-    for (size_t i = 1; i < size; i++) {
-	CAudioCodec* codec = CodecList[i];
+    for (size_t i = 1; i < CodecList.size(); i++) {
+		CAudioCodec* codec = CodecList[i];
         if (codec->CanDecode(eAudioCoding)) {
-	    cerr << "using " << codec->DevGetVersion() << endl;
+	    	cerr << "using " << codec->DecGetVersion() << endl;
             return CodecList[unsigned(i)];
-	}
+		}
     }
 	/* Fallback to null codec */
     return bCanReturnNullPtr ? nullptr : CodecList[0]; // ie the null codec
