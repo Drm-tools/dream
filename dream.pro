@@ -521,6 +521,7 @@ HEADERS += \
     src/sound/soundnull.h \
     src/sourcedecoders/aac_codec.h \
     src/sourcedecoders/AudioCodec.h \
+    src/sourcedecoders/AudioCodecList.h \
     src/sourcedecoders/AudioSourceDecoder.h \
     src/sourcedecoders/AudioSourceEncoder.h \
     src/sourcedecoders/null_codec.h \
@@ -647,6 +648,7 @@ SOURCES += \
     src/sound/audiofilein.cpp \
     src/sourcedecoders/aac_codec.cpp \
     src/sourcedecoders/AudioCodec.cpp \
+    src/sourcedecoders/AudioCodecList.cpp \
     src/sourcedecoders/AudioSourceDecoder.cpp \
     src/sourcedecoders/AudioSourceEncoder.cpp \
     src/sourcedecoders/null_codec.cpp \

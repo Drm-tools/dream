@@ -32,9 +32,7 @@
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
 #include <string>
-#include <vector>
 
-#define AC_NULL ((CAudioParam::EAudCod)-1)
 
 enum EInitErr {ET_ALL, ET_AUDDECODER}; /* ET: Error type */
 
@@ -68,17 +66,11 @@ public:
 	virtual void EncSetBitrate(int iBitRate) = 0;
 	virtual void EncUpdate(CAudioParam& AudioParam) = 0;
 	/* Common */
-	static void InitCodecList();
-	static void UnrefCodecList();
-	static CAudioCodec* GetDecoder(CAudioParam::EAudCod eAudioCoding, bool bCanReturnNullPtr=false);
-	static CAudioCodec* GetEncoder(CAudioParam::EAudCod eAudioCoding, bool bCanReturnNullPtr=false);
     virtual void openFile(const CParameter& Parameters);
     virtual void closeFile();
     virtual void writeFile(const std::vector<uint8_t>& audio_frame);
     virtual std::string fileName(const CParameter& Parameters) const = 0;
 private:
-	static std::vector<CAudioCodec*> CodecList;
-	static int RefCount;
     FILE *pFile;
 };
 

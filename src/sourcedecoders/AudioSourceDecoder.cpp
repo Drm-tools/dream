@@ -46,10 +46,8 @@
 
 CAudioSourceDecoder::CAudioSourceDecoder()
     :	bWriteToFile(false), TextMessage(false),
-      bUseReverbEffect(true), codec(nullptr)
+      bUseReverbEffect(true), codec(nullptr),codecs()
 {
-    /* Initialize Audio Codec List */
-    CAudioCodec::InitCodecList();
 
     /* Needed by fdrmdialog.cpp to report missing codec */
     bCanDecodeAAC  = CAudioCodec::GetDecoder(CAudioParam::AC_AAC,  true) != nullptr;

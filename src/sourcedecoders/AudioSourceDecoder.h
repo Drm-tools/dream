@@ -35,6 +35,7 @@
 #include "../datadecoding/DataDecoder.h"
 #include "../util/Utilities.h"
 #include "AudioCodec.h"
+#include "AudioCodecList.h"
 #include "../MSC/audiosuperframe.h"
 #include "reverb.h"
 
@@ -120,6 +121,7 @@ protected:
     virtual void ProcessDataInternal(CParameter& Parameters);
     void CloseDecoder();
     Reverb reverb;
+    CAudioCodecList codecs;
 };
 
 #endif // AUDIOSOURCEDECODER_H

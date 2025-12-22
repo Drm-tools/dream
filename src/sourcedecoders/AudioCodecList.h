@@ -6,7 +6,7 @@
  *  David Flamand
  *
  * Description:
- *  Audio codec base class
+ *  See AudioCodec.cpp
  *
  ******************************************************************************
  *
@@ -26,57 +26,24 @@
  *
 \******************************************************************************/
 
+#ifndef AUDIOCODECLIST_H_
+#define AUDIOCODECLIST_H_
+
+#include <vector>
+#include "../Parameter.h"
 #include "AudioCodec.h"
-#include "null_codec.h"
-#include "aac_codec.h"
-#include "opus_codec.h"
-#ifdef HAVE_LIBFDK_AAC
-# include "fdk_aac_codec.h"
-#include <iostream>
-using namespace std;
-#endif
 
-CAudioCodec::CAudioCodec():pFile(nullptr)
+class CAudioCodecList
 {
+public:
+    CAudioCodecList();
+    virtual ~CAudioCodecList();
+    CAudioCodec* GetDecoder(CAudioParam::EAudCod eAudioCoding, bool bCanReturnNullPtr=false);
+    CAudioCodec* GetEncoder(CAudioParam::EAudCod eAudioCoding, bool bCanReturnNullPtr=false);
 
-}
+private:
+	std::vector<CAudioCodec*> CodecList;
+	int RefCount;
+};
 
-CAudioCodec::~CAudioCodec() {
-
-}
-
-void
-CAudioCodec::Init(const CAudioParam&, int)
-{
-}
-
-void
-CAudioCodec::openFile(const CParameter& Parameters)
-{
-    if(pFile != nullptr) {
-        fclose(pFile);
-        pFile = nullptr;
-    }
-    string fn = fileName(Parameters);
-    pFile = fopen(fn.c_str(), "wb");
-}
-
-void
-CAudioCodec::writeFile(const vector<uint8_t>& audio_frame)
-{
-    if (pFile!=nullptr)
-    {
-        size_t iNewFrL = size_t(audio_frame.size()) + 1;
-        fwrite(&iNewFrL, size_t(4), size_t(1), pFile);	// frame length
-        fwrite(&audio_frame[0], 1, iNewFrL, pFile);	// data
-        fflush(pFile);
-    }
-}
-
-void
-CAudioCodec::closeFile() {
-    if(pFile != nullptr) {
-        fclose(pFile);
-        pFile = nullptr;
-    }
-}
+#endif // _AUDIOCODECLIST_H_
