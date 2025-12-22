@@ -32,6 +32,7 @@
 #include <vector>
 #include "../Parameter.h"
 #include "AudioCodec.h"
+#define AC_NULL ((CAudioParam::EAudCod)-1)
 
 class CAudioCodecList
 {
