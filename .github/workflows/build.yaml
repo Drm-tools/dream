@@ -5,7 +5,7 @@ permissions:
 
 on:
   push:
-    branches: [ main, Windows-build ]
+    branches: [ main, Windows-build, Debian-packaging ]
   pull_request:
     branches: [ main ]
 
@@ -116,6 +116,7 @@ jobs:
       
   build-everything-else:
     runs-on: ${{ matrix.os }}
+    if: false
     strategy:
       matrix:
         os: [ubuntu-latest]
@@ -128,18 +129,23 @@ jobs:
       if: matrix.os == 'ubuntu-latest'
       run: |
         sudo apt update
-        sudo apt install -y libhamlib-dev libpulse-dev libfftw3-dev libopus-dev libsndfile-dev
+        sudo apt install -y libhamlib-dev libpulse-dev libfftw3-dev libopus-dev libsndfile-dev zlib1g-dev
         sudo apt install -y libspeexdsp-dev libgps-dev libpcap-dev libfdk-aac-dev libsoapysdr-dev
         sudo apt install -y libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5
-        sudo apt install -y qtbase5-dev qtbase5-dev-tools qt5-qmake
+        sudo apt install -y qtbase5-dev qtbase5-dev-tools qt5-qmake build-essential debhelper qtchooser fakeroot
 
-    - name: Build
+    - name: Package
       run: |
-        qmake
-        make
+        echo  ${{ github.ref_name }}
+        tar zcf dream_${{ github.ref_name }}-${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
+        mkdir build
+        cp -r debian build
+        cd build
+        tar xf ../dream_${{ github.ref_name }}-${{ github.run_id }}.orig.tar.gz
+        dpkg-buildpackage -us -uc -b
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: dream-${{ matrix.os }}
-        path: dream
+        name: dream_${{ github.ref_name }}-${{ github.run_id }}_amd64_${{ matrix.os }}.deb
+        path: dream_${{ github.ref_name }}-${{ github.run_id }}_amd64.deb
