@@ -493,7 +493,7 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
         iTotAudFraSizeBits -= SIZEOF__BYTE * NUM_BYTES_TEXT_MESS_IN_AUD_STR;
 
     /* Get encoder instance */
-    codec = CAudioCodec::GetEncoder(Parameters.Service[0].AudioParam.eAudioCoding);
+    codec = codecs.GetEncoder(Parameters.Service[0].AudioParam.eAudioCoding);
 
     switch (Parameters.Service[0].AudioParam.eAudioCoding) {
 
