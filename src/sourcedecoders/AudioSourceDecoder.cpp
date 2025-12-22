@@ -50,9 +50,9 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 {
 
     /* Needed by fdrmdialog.cpp to report missing codec */
-    bCanDecodeAAC  = CAudioCodec::GetDecoder(CAudioParam::AC_AAC,  true) != nullptr;
-    bCanDecodexHE_AAC = CAudioCodec::GetDecoder(CAudioParam::AC_xHE_AAC, true) != nullptr;
-    bCanDecodeOPUS = CAudioCodec::GetDecoder(CAudioParam::AC_OPUS, true) != nullptr;
+    bCanDecodeAAC  = codecs.GetDecoder(CAudioParam::AC_AAC,  true) != nullptr;
+    bCanDecodexHE_AAC = codecs.GetDecoder(CAudioParam::AC_xHE_AAC, true) != nullptr;
+    bCanDecodeOPUS = codecs.GetDecoder(CAudioParam::AC_OPUS, true) != nullptr;
 }
 
 CAudioSourceDecoder::~CAudioSourceDecoder()
