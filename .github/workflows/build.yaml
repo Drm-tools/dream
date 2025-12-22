@@ -1,4 +1,4 @@
-name: Build
+vcpkg: Build
 
 permissions:
   packages: write
@@ -14,7 +14,7 @@ jobs:
     runs-on: windows-latest
     if: false
     env:
-      USERNAME: jcable
+      USERNAME: ${{ github.actor }}
       VCPKG_EXE: C:/vcpkg/vcpkg
       FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
@@ -145,6 +145,7 @@ jobs:
 
     - name: Package
       run: |
+        echo  ${{ github.ref }}
         tar zcf dream_2.4-1.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
         mkdir build
         cp -r debian build
