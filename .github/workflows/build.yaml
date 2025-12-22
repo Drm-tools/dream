@@ -5,14 +5,13 @@ permissions:
 
 on:
   push:
-    branches: [ main, Windows-build, Debian-packaging ]
+    branches: [ main, Windows-build ]
   pull_request:
     branches: [ main ]
 
 jobs:
   build-windows:
     runs-on: windows-latest
-    if: false
     env:
       USERNAME: ${{ github.actor }}
       VCPKG_EXE: C:/vcpkg/vcpkg
@@ -32,9 +31,118 @@ jobs:
       shell: pwsh
       run: C:/vcpkg/bootstrap-vcpkg.bat
 
-    - name: Install python
-      uses: actions/setup-python@v6
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        version: '5.12.4'
 
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Add NuGet sources
+      shell: pwsh
+      run: |
+        .$(${{ env.VCPKG_EXE }} fetch nuget) `
+          sources add `
+          -Source "${{ env.FEED_URL }}" `
+          -StorePasswordInClearText `
+          -Name GitHubPackages `
+          -UserName "${{ env.USERNAME }}" `
+          -Password "${{ secrets.GITHUB_TOKEN }}"
+        .$(${{ env.VCPKG_EXE }} fetch nuget) `
+          setapikey "${{ secrets.GITHUB_TOKEN }}" `
+          -Source "${{ env.FEED_URL }}"
+
+    - name: Install dependencies with vcpkg
+      run: | # soapysdr
+        vcpkg install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac opus speexdsp --triplet x64-windows
+
+    - name: Download hamlib
+      uses: robinraju/release-downloader@v1
+      with:
+        repository: 'Hamlib/Hamlib'
+        tag: '4.6.5'
+        fileName: 'hamlib-w64-4.6.5.zip'
+        extract: true
+
+    - name: Download qwt src
+      uses: robinraju/release-downloader@v1
+      with:
+        repository: 'buaabyl/qwt_windows'
+        latest: true
+        zipBall: true
+        extract: true
+
+    - name: Download qwt bin
+      uses: robinraju/release-downloader@v1
+      with:
+        repository: 'buaabyl/qwt_windows'
+        tag: 'qtcreator-4.9-plugins'
+        fileName: 'qt-5.12.4-msvc2017_amd64.zip'
+        extract: true
+
+    - name: Move library files where dream.pro expects
+      shell: bash
+      run: |
+        mkdir -p include/qwt
+        mkdir lib
+        cp buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
+        cp qt-5.12.4-msvc2017_amd64/* lib
+        cp -r C:/vcpkg/installed/x64-windows/include/* include
+        cp -r hamlib-w64-4.6.5/include/* include
+        cp -r C:/vcpkg/installed/x64-windows/lib/* lib
+        cp hamlib-w64-4.6.5/lib/msvc/* lib
+
+    - uses: ilammy/msvc-dev-cmd@v1
+
+    - name: Build
+      run: |
+        lib /def:lib/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
+        qmake
+        nmake
+        windeployqt -opengl -printsupport release
+
+    - name: Copy DLLs to release folder
+      run: |
+        copy lib/*.dll release
+        copy C:/vcpkg/installed/x64-windows/bin/*.dll release
+        copy hamlib-w64-4.6.5/bin/*.dll release
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: dream-windows
+        path: release/*
+      
+  build-everything-else:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies (Ubuntu)
+      if: matrix.os == 'ubuntu-latest'
+      run: |
+        sudo apt update
+        sudo apt install -y libhamlib-dev libpulse-dev libfftw3-dev libopus-dev libsndfile-dev
+        sudo apt install -y libspeexdsp-dev libgps-dev libpcap-dev libfdk-aac-dev libsoapysdr-dev
+        sudo apt install -y libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5
+        sudo apt install -y qtbase5-dev qtbase5-dev-tools qt5-qmake
+
+    - name: Build
+      run: |
+        qmake
+        make
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: dream-${{ matrix.os }}
+        path: dream
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
