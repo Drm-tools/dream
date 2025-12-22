@@ -57,11 +57,7 @@ CAudioSourceDecoder::CAudioSourceDecoder()
 
 CAudioSourceDecoder::~CAudioSourceDecoder()
 {
-    /* Unreference Audio Codec List */
-    CAudioCodec::UnrefCodecList();
 }
-
-
 
 void
 CAudioSourceDecoder::ProcessDataInternal(CParameter & Parameters)
@@ -298,7 +294,7 @@ CAudioSourceDecoder::InitInternal(CParameter & Parameters)
             pAudioSuperFrame = p;
         }
         /* Get decoder instance */
-        codec = CAudioCodec::GetDecoder(eAudioCoding);
+        codec = codecs.GetDecoder(eAudioCoding);
 
         if (codec->CanDecode(eAudioCoding))
             audiodecoder = codec->DecGetVersion();
