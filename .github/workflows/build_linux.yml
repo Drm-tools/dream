@@ -1,4 +1,4 @@
-name: Build_Linux
+build: Build_Linux
 
 permissions:
   packages: write
@@ -43,4 +43,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: dream_${{ github.ref_name }}-${{ github.run_id }}_amd64_${{ matrix.os }}.deb
-        path: dream_${{ github.ref_name }}-${{ github.run_id }}_amd64.deb
+        path: dream_2.4.1-1_amd64.deb
