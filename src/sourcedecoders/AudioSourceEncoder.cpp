@@ -46,8 +46,6 @@ CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
 
 CAudioSourceEncoderImplementation::~CAudioSourceEncoderImplementation()
 {
-    /* Unreference Audio Codec List */
-    CAudioCodec::UnrefCodecList();
 }
 
 void
@@ -301,7 +299,7 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
         CAudioParam::EAudCod eAudioCoding = Parameters.Service[iCurSelServ].AudioParam.eAudioCoding;
 
         /* Get encoder instance */
-        codec = CAudioCodec::GetEncoder(eAudioCoding);
+        codec = codecs.GetEncoder(eAudioCoding);
 
         /* Total frame size is input block size minus the bytes for the text
            message (if text message is used) */
