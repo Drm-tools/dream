@@ -53,6 +53,22 @@
 #include "../main-Qt/crx.h"
 #include "../main-Qt/ctx.h"
 
+class redirect_outputs
+{
+	std::ostream& myStream;
+	std::streambuf *const myBuffer;
+public:
+	redirect_outputs ( std::ostream& lhs, std::ostream& rhs=std::cout )
+		: myStream(rhs), myBuffer(myStream.rdbuf())
+	{
+		myStream.rdbuf(lhs.rdbuf());
+	}
+
+	~redirect_outputs () {
+		myStream.rdbuf(myBuffer);
+	}
+};
+
 int
 main(int argc, char **argv)
 {
@@ -90,7 +106,19 @@ main(int argc, char **argv)
 	CSettings Settings;
 	/* Parse arguments and load settings from init-file */
 	Settings.Load(argc, argv);
-
+	
+    // Redirect standard output & error stream to log file.
+    std::ofstream log_file("dream.log", std::ios::binary);
+    if (!log_file.is_open()) {
+        std::cerr
+            << "Could not open log file for writing."
+            << std::endl;
+        return (EXIT_FAILURE);
+    }
+	
+    const redirect_outputs _(log_file);
+    const redirect_outputs _(log_file, std::cerr);
+	
 	try
 	{
 		string mode = Settings.Get("command", "mode", string());
