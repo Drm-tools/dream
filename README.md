@@ -1,11 +1,12 @@
 # Dream
-[![Build for Linux](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yml/badge.svg)](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yml)
+[![Build for Linux](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yaml/badge.svg)](https://github.com/Drm-tools/dream/actions/workflows/build_linux.yaml)
+[![Build for Windows](https://github.com/Drm-tools/dream/actions/workflows/build_windows.yaml/badge.svg)](https://github.com/Drm-tools/dream/actions/workflows/build_windows.yaml)
 
  * Parts (c) 2001-2003 Technische Universität Darmstadt, Institut für Fachbereich Übertragungstechnik
  * Parts Copyright (c) 2003, 2004 Fraunhofer IIS, Erlangen, Germany
  * Parts Copyright (c) 2004 - 2009 British Broadcasting Corporation
  
-Originally written by Volker Fischer and Stephane Kurpiers
+Originally written by Volker Fischer and Alexander Kurpiers
  
 Additional contributions by Stephane Fillod, Andrea Russo, Julian Cable, Andrew Murphy, Oliver Haffenden, Tomi Manninen, Robert Kesterson
    

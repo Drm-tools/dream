@@ -1,11 +1,11 @@
-name: Build_Linux
+name: Build Linux
 
 permissions:
   packages: write
 
 on:
   push:
-    branches: [ main, Debian-packaging ]
+    branches: [ '*' ]
   pull_request:
     branches: [ main ]
 
