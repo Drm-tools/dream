@@ -44,7 +44,7 @@ jobs:
         GH_TOKEN: ${{ github.token }}
       run: |
         echo RELEASE_TAG=`gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'` >> $GITHUB_ENV
-        truncate debian/changelog
+        truncate -s 0 debian/changelog
         for r in `gh release list --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'`
         do
           echo "dream ($r) unstable; urgency=medium" >> debian/changelog
