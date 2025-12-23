@@ -31,7 +31,7 @@ jobs:
           zlib1g-dev libspeexdsp-dev libgps-dev libpcap-dev libsoapysdr-dev \
           libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5 \
           qtbase5-dev qtbase5-dev-tools qt5-qmake build-essential \
-          debhelper qtchooser fakeroot
+          debhelper qtchooser fakeroot git2cl
 
     - name: Install dependencies (vcpkg)
       if: matrix.arch == 'x64'
@@ -41,8 +41,8 @@ jobs:
 
     - name: temp
       run: |
-       pkg-config fdk-aac --cflags
-       pkg-config fdk-aac --libs
+        git2cl
+        git log --pretty --numstat --summary 
 
     - name: Package
       run: |
