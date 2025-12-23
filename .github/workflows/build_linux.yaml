@@ -31,14 +31,14 @@ jobs:
           zlib1g-dev libspeexdsp-dev libgps-dev libpcap-dev libsoapysdr-dev \
           libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5 \
           qtbase5-dev qtbase5-dev-tools qt5-qmake build-essential \
-          debhelper qtchooser fakeroot \
+          debhelper qtchooser fakeroot
 
     - name: Install dependencies (vcpkg)
       if: matrix.arch == 'x64'
       run: |
        vcpkg install --triplet x64-linux fdk-aac[he-aac]
-       pkg_config libfdk-aac --cflags
-       pkg_config libfdk-aac --libs
+       pkg-config libfdk-aac --cflags
+       pkg-config libfdk-aac --libs
 
     - name: Package
       run: |
