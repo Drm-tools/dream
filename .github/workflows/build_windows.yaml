@@ -1,11 +1,11 @@
-name: Build
+name: Build Windows
 
 permissions:
   packages: write
 
 on:
   push:
-    branches: [ main, Windows-build, Debian-packaging ]
+    branches: [ '*' ]
   pull_request:
     branches: [ main ]
 
@@ -55,7 +55,7 @@ jobs:
 
     - name: Install dependencies with vcpkg
       run: | # soapysdr
-        vcpkg install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac opus speexdsp --triplet x64-windows
+        vcpkg install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp --triplet x64-windows
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
@@ -113,39 +113,3 @@ jobs:
       with:
         name: dream-windows
         path: release/*
-      
-  build-everything-else:
-    runs-on: ${{ matrix.os }}
-    if: false
-    strategy:
-      matrix:
-        os: [ubuntu-latest]
-
-    steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-
-    - name: Install dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: |
-        sudo apt update
-        sudo apt install -y libhamlib-dev libpulse-dev libfftw3-dev libopus-dev libsndfile-dev zlib1g-dev
-        sudo apt install -y libspeexdsp-dev libgps-dev libpcap-dev libfdk-aac-dev libsoapysdr-dev
-        sudo apt install -y libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5
-        sudo apt install -y qtbase5-dev qtbase5-dev-tools qt5-qmake build-essential debhelper qtchooser fakeroot
-
-    - name: Package
-      run: |
-        echo  ${{ github.ref_name }}
-        tar zcf dream_${{ github.ref_name }}-${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
-        mkdir build
-        cp -r debian build
-        cd build
-        tar xf ../dream_${{ github.ref_name }}-${{ github.run_id }}.orig.tar.gz
-        dpkg-buildpackage -us -uc -b
-
-    - name: Upload artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: dream_${{ github.ref_name }}-${{ github.run_id }}_amd64_${{ matrix.os }}.deb
-        path: dream_${{ github.ref_name }}-${{ github.run_id }}_amd64.deb
