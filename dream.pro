@@ -184,6 +184,7 @@ unix {
     INSTALLS += documentation
     INSTALLS += target
     CONFIG += link_pkgconfig fdk-aac
+    PKGCONFIG += fdk-aac
     LIBS += -lfftw3 -lz
     SOURCES += src/linux/Pacer.cpp
     DEFINES += HAVE_DLFCN_H \
