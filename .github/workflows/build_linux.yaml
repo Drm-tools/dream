@@ -35,7 +35,10 @@ jobs:
 
     - name: Install dependencies (vcpkg)
       if: matrix.arch == 'x64'
-      run: vcpkg install --triplet x64-linux fdk-aac[he-aac]
+      run: |
+       vcpkg install --triplet x64-linux fdk-aac[he-aac]
+       pkg_config libfdk-aac --cflags
+       pkg_config libfdk-aac --libs
 
     - name: Package
       run: |
