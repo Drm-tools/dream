@@ -2,7 +2,7 @@ Source: dream
 Section: hamradio
 Priority: optional
 Maintainer: Julian Cable <julian.cable@yahoo.com>
-Build-Depends: debhelper-compat (= 13), make, g++, zlib1g-dev, libhamlib-dev, libpulse-dev, libfftw3-dev, libopus-dev, libsndfile-dev, libspeexdsp-dev, libgps-dev, libpcap-dev, libfdk-aac-dev, libsoapysdr-dev, libqwt-qt5-dev, libqt5svg5-dev, libqt5opengl5-dev, libqt5gui5, libqt5widgets5, qtbase5-dev, qtbase5-dev-tools, qt5-qmake
+Build-Depends: debhelper-compat (= 13), make, g++, zlib1g-dev, libhamlib-dev, libpulse-dev, libfftw3-dev, libopus-dev, libsndfile-dev, libspeexdsp-dev, libgps-dev, libpcap-dev, libsoapysdr-dev, libqwt-qt5-dev, libqt5svg5-dev, libqt5opengl5-dev, libqt5gui5, libqt5widgets5, qtbase5-dev, qtbase5-dev-tools, qt5-qmake
 Standards-Version: 3.9.8
 Homepage: https://sourceforge.net/p/drm
 #Vcs-Git: https://anonscm.debian.org/collab-maint/dream.git
