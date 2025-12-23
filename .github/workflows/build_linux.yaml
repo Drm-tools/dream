@@ -40,9 +40,11 @@ jobs:
        echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
 
     - name: changelog
+      env:
+        GH_TOKEN: ${{ github.token }}
       run: |
         echo RELEASE_TAG=`gh release list --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'` >> $GITHUB_ENV
-        zero debian/changelog
+        truncate debian/changelog
         for r in `gh release list --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'`
         do
           echo "dream ($r) unstable; urgency=medium" >> debian/changelog
