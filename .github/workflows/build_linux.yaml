@@ -37,9 +37,12 @@ jobs:
       if: matrix.arch == 'x64'
       run: |
        vcpkg install --triplet x64-linux fdk-aac[he-aac]
-       env
-       KG_CONFIG_PATH=/usr/local/share/vcpkg/installed/x64-linux/lib/pkgconfig:$PKG_CONFIG_PATH pkg-config fdk-aac --cflags
-       PKG_CONFIG_PATH=/usr/local/share/vcpkg/installed/x64-linux/lib/pkgconfig:$PKG_CONFIG_PATH pkg-config fdk-aac --libs
+       echo "export PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux/lib/pkgconfig:\$PKG_CONFIG_PATH" >> $GITHUB_ENV
+
+    - name: temp
+      run: |
+       pkg-config fdk-aac --cflags
+       pkg-config fdk-aac --libs
 
     - name: Package
       run: |
