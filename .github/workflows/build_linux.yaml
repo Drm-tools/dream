@@ -39,11 +39,20 @@ jobs:
        vcpkg install --triplet x64-linux fdk-aac[he-aac]
        echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
 
-    - name: temp
+    - name: changelog
       run: |
-        git2cl
-        git log --pretty --numstat --summary 
-
+        echo RELEASE_TAG=`gh release list --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'` >> $GITHUB_ENV
+        zero debian/changelog
+        for r in `gh release list --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'`
+        do
+          echo "dream ($r) unstable; urgency=medium" >> debian/changelog
+          echo >> debian/changelog
+          git log -1 --format='  * %s' $r >> debian/changelog
+          echo >> debian/changelog
+          git log -1 --format='-- %an <%ae>  %aD' v2.1.1 >> debian/changelog
+        done
+        python3 -c "print(ARCH={'x64': 'amd64'}['${{matrix.arch}}])" >> $GITHUB_ENV
+  
     - name: Package
       run: |
         echo  ${{ github.ref_name }}
@@ -57,5 +66,5 @@ jobs:
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: dream_${{ github.run_id }}_amd64_${{ matrix.os }}.deb
-        path: dream_2.4-1_amd64.deb
+        name: dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
+        path: dream_${RELEASE_TAG}_${ARCH}.deb
