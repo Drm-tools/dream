@@ -43,7 +43,7 @@ jobs:
       env:
         GH_TOKEN: ${{ github.token }}
       run: |
-        echo RELEASE_TAG=`gh release list --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'` >> $GITHUB_ENV
+        echo RELEASE_TAG=`gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'` >> $GITHUB_ENV
         truncate debian/changelog
         for r in `gh release list --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'`
         do
@@ -51,7 +51,7 @@ jobs:
           echo >> debian/changelog
           git log -1 --format='  * %s' $r >> debian/changelog
           echo >> debian/changelog
-          git log -1 --format='-- %an <%ae>  %aD' v2.1.1 >> debian/changelog
+          git log -1 --format='-- %an <%ae>  %aD' $r >> debian/changelog
         done
         python3 -c "print(ARCH={'x64': 'amd64'}['${{matrix.arch}}])" >> $GITHUB_ENV
   
