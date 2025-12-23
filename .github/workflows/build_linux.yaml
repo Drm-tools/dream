@@ -49,9 +49,9 @@ jobs:
         do
           echo "dream ($r) unstable; urgency=medium" >> debian/changelog
           echo >> debian/changelog
-          git log -1 --format='  * %s' $r >> debian/changelog
+          git log -1 --format='  * %s' $r -- >> debian/changelog
           echo >> debian/changelog
-          git log -1 --format='-- %an <%ae>  %aD' $r >> debian/changelog
+          git log -1 --format='-- %an <%ae>  %aD' $r -- >> debian/changelog
         done
         python3 -c "print(ARCH={'x64': 'amd64'}['${{matrix.arch}}])" >> $GITHUB_ENV
   
