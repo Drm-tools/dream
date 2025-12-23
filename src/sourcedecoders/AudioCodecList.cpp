@@ -40,8 +40,8 @@ CAudioCodecList::CAudioCodecList():CodecList(),RefCount(0)
 	{
 		/* Null codec, MUST be the first */
 		CodecList.push_back(new NullCodec);
-        	CodecList.push_back(new AacCodec);
-        	CodecList.push_back(new FdkAacCodec);
+        CodecList.push_back(new FdkAacCodec);
+        // CodecList.push_back(new AacCodec);
 		CodecList.push_back(new OpusCodec);
 	}
 	RefCount ++;
