@@ -116,8 +116,8 @@ main(int argc, char **argv)
         return (EXIT_FAILURE);
     }
 	
-    const redirect_outputs _(log_file);
-    const redirect_outputs _(log_file, std::cerr);
+    const redirect_outputs _out(log_file);
+    const redirect_outputs _err(log_file, std::cerr);
 	
 	try
 	{
