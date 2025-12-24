@@ -75,7 +75,7 @@ jobs:
       if: ${{ github.event_name == 'push' }}
       uses: actions/upload-artifact@v4
       with:
-        name: dream_${ARCH}_${{ matrix.os }}
+        name: dream_${{ env.ARCH}}_${{ matrix.os }}
         path: artifacts
     
     - name: Upload release binaries
