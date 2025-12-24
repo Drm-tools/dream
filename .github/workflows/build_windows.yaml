@@ -83,8 +83,8 @@ jobs:
 
     - name: Move library files where dream.pro expects
       run: |
-        robocopy /s ${{ env.VCPKG_INSTALLATION_ROOT }}/installed/x64-windows/include include
-        robocopy /s ${{ env.VCPKG_INSTALLATION_ROOT }}/installed/x64-windows/lib lib
+        robocopy /s ${{ env:VCPKG_INSTALLATION_ROOT }}/installed/x64-windows/include include
+        robocopy /s ${{ env:VCPKG_INSTALLATION_ROOT }}/installed/x64-windows/lib lib
         mkdir include/qwt
         copy buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
         copy qt-5.12.4-msvc2017_amd64/* lib
@@ -104,7 +104,7 @@ jobs:
     - name: Copy DLLs to release folder
       run: |
         copy lib/*.dll release
-        copy ${{ env.VCPKG_INSTALLATION_ROOT  }}/installed/x64-windows/bin/*.dll release
+        copy ${{ env:VCPKG_INSTALLATION_ROOT  }}/installed/x64-windows/bin/*.dll release
         copy hamlib-w64-4.6.5/bin/*.dll release
 
     - name: Upload artifact
