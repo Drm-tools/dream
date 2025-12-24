@@ -76,9 +76,7 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ github.token }}
       with:
-        asset_paths:
-          - artifacts/dream_*
-          - artifacts/libfdk-aac2.so.*
+        asset_paths: '["artifacts/dream_*", "artifacts/libfdk-aac2.so.*"]'
 
     - name: Upload artifact
       if: ${{ github.event_name == 'push' }}
