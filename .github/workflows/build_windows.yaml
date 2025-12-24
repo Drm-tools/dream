@@ -55,7 +55,7 @@ jobs:
 
     - name: Install dependencies with vcpkg
       run: |
-        vcpkg install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp --triplet x64-windows soapysdr
+        vcpkg --triplet x64-windows install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp soapysdr
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
@@ -89,10 +89,11 @@ jobs:
         mkdir lib
         cp buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
         cp qt-5.12.4-msvc2017_amd64/* lib
-        cp -r C:/vcpkg/installed/x64-windows/include/* include
+        cp -r $VCPKG_INSTALLATION_ROOT/installed/x64-windows/include/* include
         cp -r hamlib-w64-4.6.5/include/* include
-        cp -r C:/vcpkg/installed/x64-windows/lib/* lib
+        cp -r $VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/* lib
         cp hamlib-w64-4.6.5/lib/msvc/* lib
+        find . include
 
     - uses: ilammy/msvc-dev-cmd@v1
 
@@ -106,7 +107,7 @@ jobs:
     - name: Copy DLLs to release folder
       run: |
         copy lib/*.dll release
-        copy C:/vcpkg/installed/x64-windows/bin/*.dll release
+        copy ${{ env.VCPKG_INSTALLATION_ROOT }}/installed/x64-windows/bin/*.dll release
         copy hamlib-w64-4.6.5/bin/*.dll release
 
     - name: Upload artifact
