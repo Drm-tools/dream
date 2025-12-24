@@ -91,7 +91,6 @@ jobs:
         copy qt-5.12.4-msvc2017_amd64/* lib
         robocopy /s hamlib-w64-4.6.5/include include
         copy hamlib-w64-4.6.5/lib/msvc/* lib
-        dir include
 
     - uses: ilammy/msvc-dev-cmd@v1
 
