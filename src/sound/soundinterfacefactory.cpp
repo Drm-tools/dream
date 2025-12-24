@@ -46,11 +46,6 @@
 #  include "drm_pulseaudio.h"
 # endif
 
-#ifdef USE_SOAPYSDR
-#include "drm_soapySDR.h"
-#endif
-
-
 # ifdef USE_PORTAUDIO
 #  include "drm_portaudio.h"
 
@@ -69,10 +64,9 @@
 
 #endif
 
-
-
-
-
+#ifdef USE_SOAPYSDR
+#  include "drm_soapySDR.h"
+#endif
 
 CSoundInterfaceFactory::CSoundInterfaceFactory()
 {

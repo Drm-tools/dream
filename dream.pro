@@ -258,10 +258,9 @@ unix:!cross_compile {
        CONFIG += speexdsp
       }
     }
-    exists(/usr/include/SoapySDR) | \
-    exists(/usr/local/include/SoapySDR) {
+}
+exists(/usr/include/SoapySDR) | exists(/usr/local/include/SoapySDR) | exists(include/SoapySDR) {
        CONFIG += soapysdr
-    }
 }
 win32:cross_compile {
   message(win32 cross compile)

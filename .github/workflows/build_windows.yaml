@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches: [ '*' ]
-  pull_request:
+  release:
     branches: [ main ]
 
 jobs:
@@ -15,6 +15,7 @@ jobs:
     env:
       USERNAME: ${{ github.actor }}
       VCPKG_EXE: C:/vcpkg/vcpkg
+      VCPKG_INSTALLATION_ROOT: C:/vcpkg
       FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
     
@@ -26,6 +27,8 @@ jobs:
         script: |
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+
+    - uses: ilammy/msvc-dev-cmd@v1
 
     - name: Bootstrap vcpkg
       shell: pwsh
@@ -54,8 +57,8 @@ jobs:
           -Source "${{ env.FEED_URL }}"
 
     - name: Install dependencies with vcpkg
-      run: | # soapysdr
-        vcpkg install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp --triplet x64-windows
+      run: |
+        vcpkg --triplet x64-windows install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp soapysdr
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
@@ -82,22 +85,17 @@ jobs:
         extract: true
 
     - name: Move library files where dream.pro expects
-      shell: bash
       run: |
-        mkdir -p include/qwt
-        mkdir lib
-        cp buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
-        cp qt-5.12.4-msvc2017_amd64/* lib
-        cp -r C:/vcpkg/installed/x64-windows/include/* include
-        cp -r hamlib-w64-4.6.5/include/* include
-        cp -r C:/vcpkg/installed/x64-windows/lib/* lib
-        cp hamlib-w64-4.6.5/lib/msvc/* lib
-
-    - uses: ilammy/msvc-dev-cmd@v1
+        robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/include include
+        robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib lib
+        robocopy /s hamlib-w64-4.6.5/include include
+        lib /def:hamlib-w64-4.6.5/lib/msvc/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
+        mkdir include/qwt
+        copy buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
+        copy qt-5.12.4-msvc2017_amd64/* lib
 
     - name: Build
       run: |
-        lib /def:lib/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
         qmake
         nmake
         windeployqt -opengl -printsupport release
@@ -105,7 +103,7 @@ jobs:
     - name: Copy DLLs to release folder
       run: |
         copy lib/*.dll release
-        copy C:/vcpkg/installed/x64-windows/bin/*.dll release
+        copy $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/*.dll release
         copy hamlib-w64-4.6.5/bin/*.dll release
 
     - name: Upload artifact
