@@ -28,6 +28,8 @@ jobs:
             core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
             core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
 
+    - uses: ilammy/msvc-dev-cmd@v1
+
     - name: Bootstrap vcpkg
       shell: pwsh
       run: C:/vcpkg/bootstrap-vcpkg.bat
@@ -91,8 +93,6 @@ jobs:
         mkdir include/qwt
         copy buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
         copy qt-5.12.4-msvc2017_amd64/* lib
-
-    - uses: ilammy/msvc-dev-cmd@v1
 
     - name: Build
       run: |
