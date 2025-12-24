@@ -71,15 +71,17 @@ jobs:
         mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
         cp $VCPKG_INSTALLATION_ROOT/installed/x64-linux/bin/libfdk-aac2.so.* artifacts/ || true
     
-    - name: Upload artifact for release
-      if: github.event_name == "release"
-      uses: actions/upload-artifact@v4
+    - name: Upload release binaries
+      uses: alexellis/upload-assets@0.4.0
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
       with:
-        name: dream_${ARCH}_${{ matrix.os }}  
-        path: artifacts
+        asset_paths:
+          - artifacts/dream_*
+          - artifacts/libfdk-aac2.so.*
 
     - name: Upload artifact
-      if: github.event_name == "push" 
+      if: ${{ github.event_name == 'push' }}
       uses: actions/upload-artifact@v4
       with:
         name: dream_${ARCH}_${{ matrix.os }}
