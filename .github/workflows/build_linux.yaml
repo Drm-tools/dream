@@ -70,6 +70,7 @@ jobs:
         mkdir artifacts
         mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
         cp $VCPKG_INSTALLATION_ROOT/installed/x64-linux/bin/libfdk-aac2.so.* artifacts/ || true
+        find $VCPKG_INSTALLATION_ROOT/installed/x64-linux|grep fdk
 
     - name: Upload artifact
       if: ${{ github.event_name == 'push' }}
