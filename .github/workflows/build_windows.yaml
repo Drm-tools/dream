@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches: [ '*' ]
-  pull_request:
+  release:
     branches: [ main ]
 
 jobs:
@@ -54,8 +54,8 @@ jobs:
           -Source "${{ env.FEED_URL }}"
 
     - name: Install dependencies with vcpkg
-      run: | # soapysdr
-        vcpkg install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp --triplet x64-windows
+      run: |
+        vcpkg install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp --triplet x64-windows soapysdr
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
@@ -84,6 +84,7 @@ jobs:
     - name: Move library files where dream.pro expects
       shell: bash
       run: |
+        echo $VCPKG_INSTALLATION_ROOT
         mkdir -p include/qwt
         mkdir lib
         cp buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
