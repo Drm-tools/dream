@@ -82,18 +82,17 @@ jobs:
         extract: true
 
     - name: Move library files where dream.pro expects
-      shell: bash
       run: |
-        echo $VCPKG_INSTALLATION_ROOT
-        mkdir -p include/qwt
+        mkdir include
         mkdir lib
-        cp buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
-        cp qt-5.12.4-msvc2017_amd64/* lib
-        cp -r $VCPKG_INSTALLATION_ROOT/installed/x64-windows/include/* include
-        cp -r hamlib-w64-4.6.5/include/* include
-        cp -r $VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/* lib
-        cp hamlib-w64-4.6.5/lib/msvc/* lib
-        find . include
+        mkdir include/qwt
+        copy buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
+        copy qt-5.12.4-msvc2017_amd64/* lib
+        robocopy /s $Env.VCPKG_INSTALLATION_ROOT/installed/x64-windows/include/* include
+        robocopy /s $Env.VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib/* lib
+        robocopy /s hamlib-w64-4.6.5/include/* include
+        copy hamlib-w64-4.6.5/lib/msvc/* lib
+        dir include
 
     - uses: ilammy/msvc-dev-cmd@v1
 
@@ -107,7 +106,7 @@ jobs:
     - name: Copy DLLs to release folder
       run: |
         copy lib/*.dll release
-        copy ${{ env.VCPKG_INSTALLATION_ROOT }}/installed/x64-windows/bin/*.dll release
+        copy $Env.VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/*.dll release
         copy hamlib-w64-4.6.5/bin/*.dll release
 
     - name: Upload artifact
