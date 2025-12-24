@@ -59,7 +59,6 @@ jobs:
 
     - name: Package
       run: |
-        echo  ${{ github.ref_name }}
         tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
         mkdir build
         cp -r debian build
@@ -69,8 +68,6 @@ jobs:
         cd ..
         mkdir artifacts
         mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
-        cp $VCPKG_INSTALLATION_ROOT/installed/x64-linux/bin/libfdk-aac2.so.* artifacts/ || true
-        find $VCPKG_INSTALLATION_ROOT/installed/x64-linux|grep fdk
 
     - name: Upload artifact
       if: ${{ github.event_name == 'push' }}
