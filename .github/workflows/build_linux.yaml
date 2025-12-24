@@ -68,10 +68,18 @@ jobs:
         dpkg-buildpackage -us -uc -b
         cd ..
         mkdir artifacts
-        mv dream_${RELEASE_TAG }_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH }_${{ matrix.os }}.deb
+        mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
         cp $VCPKG_INSTALLATION_ROOT/installed/x64-linux/bin/libfdk-aac2.so.* artifacts/ || true
     
+    - name: Upload artifact for release
+      if: github.event_name == "release"
+      uses: actions/upload-artifact@v4
+      with:
+        name: dream_${ARCH}_${{ matrix.os }}  
+        path: artifacts
+
     - name: Upload artifact
+      if: github.event_name == "push" 
       uses: actions/upload-artifact@v4
       with:
         name: dream_${ARCH}_${{ matrix.os }}
