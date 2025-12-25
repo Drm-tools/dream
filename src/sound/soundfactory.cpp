@@ -61,6 +61,7 @@
 #endif
 
 #include "soundnull.h"
+#include "audiofilein.h"
 
 CSoundFactory::CSoundFactory(): inDrivers(), outDrivers(), currentInDriver(0), currentOutDriver(0)
 {
@@ -85,23 +86,27 @@ CSoundFactory::CSoundFactory(): inDrivers(), outDrivers(), currentInDriver(0), c
 # endif
 
 # ifdef USE_PORTAUDIO
-
+    inDrivers.push_back(new CSoundInPaIn());
+    outDrivers.push_back(new CSoundOutPaOut());
 # endif
 
 # ifdef USE_OPENSL
-
+    inDrivers.push_back(new COpenSLESIn());
+    outDrivers.push_back(new COpenSLESOut());
 # endif
 
-
 #ifdef USE_SOAPYSDR
-
+    inDrivers.push_back(new CSoapySDRIn());
 #endif
-
-#include "soundnull.h"
+    inDrivers.push_back(new CAudioFileIn());
+    inDrivers.push_back(new CSoundInNull());
+    outDrivers.push_back(new CSoundOutNull());
 }
 
 CSoundFactory::~CSoundFactory()
 {
+    for(size_t i=0; i<inDrivers.size(); i++) delete inDrivers[i];
+    
 }
 
 void CSoundFactory::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
