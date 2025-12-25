@@ -35,9 +35,13 @@
 class CCompoundSelectionInterface: public CSelectionInterface
 {
 public:
-    CCompoundSelectionInterface(std::vector<CSelectionInterface*> physical):devices(physical),pDevice(nullptr)
+    CCompoundSelectionInterface():devices(),pDevice(nullptr)
     {
-        for(int i=0; i<devices.size(); i++) {
+    }
+    void Init(std::vector<CSelectionInterface*> ci)
+    {
+        devices = ci;
+        for(size_t i=0; i<devices.size(); i++) {
             std::vector<std::string> n, d;
             std::string dd;
             devices[i]->Enumerate(n, d, dd);
@@ -50,7 +54,7 @@ public:
     virtual ~CCompoundSelectionInterface() {}
     virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
     {
-        for(int i=0; i<devices.size(); i++) {
+        for(size_t i=0; i<devices.size(); i++) {
             std::vector<std::string> n, d;
             std::string dd;
             devices[i]->Enumerate(n, d, dd);
@@ -71,7 +75,7 @@ public:
                 return;
             }
         }
-        for(int i=0; i<devices.size(); i++) {
+        for(size_t i=0; i<devices.size(); i++) {
             std::vector<std::string> n, d;
             std::string dd;
             devices[i]->Enumerate(n, d, dd);
