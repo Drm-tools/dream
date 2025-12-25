@@ -307,7 +307,7 @@ void CSoundInMMSystem::Enumerate(vector<string>& names, vector<string>& descript
     }
 }
 
-string	CSoundInMMSystem::GetDev()
+string	CSoundInMMSystem::GetDevName()
 {
     return sCurDev;
 }

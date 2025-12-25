@@ -61,8 +61,10 @@ public:
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual bool Read(CVector<short> &psData, CParameter &);
     virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultInput);
-    virtual std::string GetDev();
+    virtual std::string GetDevName();
     virtual void SetDev(std::string sNewDev);
+    virtual CSoundInInterface* GetInDev() { return this; }
+    virtual CSoundOutInterface* GetOutDev() { return nullptr; }
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
 
@@ -98,8 +100,10 @@ public:
     virtual bool Write(CVector<short> &psData);
     virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultOutput);
 
-    virtual std::string GetDev();
+    virtual std::string GetDevName();
     virtual void SetDev(std::string sNewDev);
+    virtual CSoundInInterface* GetInDev() { return nullptr; }
+    virtual CSoundOutInterface GetOutDev() { return this; }
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
 
