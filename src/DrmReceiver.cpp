@@ -60,7 +60,7 @@ CDRMReceiver::CDRMReceiver(CSettings* nPsettings) : CDRMTransceiver(),
     time_keeper(0),
     pTuner(nullptr),
     PlotManager(), iPrevSigSampleRate(0),Parameters(*(new CParameter())), pSettings(nPsettings),
-    soundfactory()
+    soundinfactory(), soundoutfactory()
 {
     Parameters.SetReceiver(this);
     downstreamRSCI.SetReceiver(this);
@@ -158,7 +158,7 @@ CDRMReceiver::SetInputDevice(string s)
         vector<string> names;
         vector<string> descriptions;
         string def;
-        soundfactory.Enumerate(names, descriptions, def);
+        soundinfactory.Enumerate(names, descriptions, def);
         if (names.size() > 0) {
             if (device == "" || device == "default") {
                 device = def;
@@ -182,8 +182,8 @@ CDRMReceiver::SetInputDevice(string s)
         InputResample.SetSyncInput(false);
         SyncUsingPil.SetSyncInput(false);
         TimeSync.SetSyncInput(false);
-        soundfactory.SetDev(device);
-        ReceiveData.SetSoundInterface(soundfactory.GetInDev()); // audio input
+        soundinfactory.SetDev(device);
+        soundinfactory.SetSoundInterface(soundfactory.GetInDev()); // audio input
         CTuner *pTuner = ReceiveData.GetTuner();
         fprintf(stderr, "Read pTuner = %x\n", pTuner);
         if (pTuner)
@@ -212,22 +212,22 @@ CDRMReceiver::SetOutputDevice(string device)
 
 string CDRMReceiver::GetInputDevice()
 {
-    return soundfactory.GetDevName();
+    return soundinfactory.GetDevName();
 }
 
 string CDRMReceiver::GetOutputDevice()
 {
-    return soundfactory.GetDevName();
+    return soundoutfactory.GetDevName();
 }
 
 void CDRMReceiver::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)
 {
-    soundfactory.Enumerate(names, descriptions, defaultInput);
+    soundinfactory.Enumerate(names, descriptions, defaultInput);
 }
 
 void CDRMReceiver::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
 {
-    soundfactory.Enumerate(names, descriptions, defaultOutput);
+    soundoutfactory.Enumerate(names, descriptions, defaultOutput);
 }
 
 void

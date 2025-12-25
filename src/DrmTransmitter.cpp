@@ -27,10 +27,7 @@
 \******************************************************************************/
 
 #include "DrmTransmitter.h"
-#include <sstream>
-#ifdef QT_MULTIMEDIA_LIB
-# include <QAudioDeviceInfo>
-#endif
+#include <sstream
 
 /* Implementation *************************************************************/
 void CDRMTransmitter::Run()
@@ -140,36 +137,36 @@ bool CDRMTransmitter::CanSoftStopExit()
 
 void CDRMTransmitter::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)
 {
-    ReadData.Enumerate(names, descriptions, defaultInput);
+    soundinfactory.Enumerate(names, descriptions, defaultInput);
 }
 
 void CDRMTransmitter::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
 {
-    TransmitData.Enumerate(names, descriptions, defaultOutput);
+    soundoutfactory.Enumerate(names, descriptions, defaultOutput);
 }
 
 void CDRMTransmitter::doSetInputDevice()
 {
-    ReadData.SetSoundInterface(indev);
+    soundinfactory.SetDev(indev);
 }
 
 void CDRMTransmitter::doSetOutputDevice()
 {
-    TransmitData.SetSoundInterface(outdev);
+    soundoutfactory.SetSoundInterface(outdev);
 }
 
 void
 CDRMTransmitter::SetInputDevice(string device)
 {
     indev = device;
-    ReadData.SetSoundInterface(indev);
+    soundinfactory.SetDev(indev);
 }
 
 void
 CDRMTransmitter::SetOutputDevice(string device)
 {
     outdev = device;
-    TransmitData.SetSoundInterface(outdev);
+    soundoutfactory.SetDev(outdev);
 }
 
 CSettings* CDRMTransmitter::GetSettings()
@@ -231,7 +228,8 @@ CDRMTransmitter::CDRMTransmitter(CSettings* nPsettings) : CDRMTransceiver(),
         ReadData(), TransmitData(),
         rDefCarOffset(VIRTUAL_INTERMED_FREQ),
         // UEP only works with Dream receiver, FIXME! -> disabled for now
-        bUseUEP(false), Parameters(*(new CParameter())), pSettings(nPsettings)
+        bUseUEP(false), Parameters(*(new CParameter())), pSettings(nPsettings),
+        soundinfactory(), soundoutfactory()
 {
     /* Init streams */
     Parameters.ResetServicesStreams();

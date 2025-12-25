@@ -482,7 +482,7 @@ protected:
     int iPrevSigSampleRate; /* sample rate before sound file */
     CParameter &Parameters;
     CSettings *pSettings;
-    CSoundFactory soundfactory;
+    CSoundFactory soundinfactory, soundoutfactory;
 };
 
 #endif // !defined(DRMRECEIVER_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
