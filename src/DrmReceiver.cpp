@@ -38,17 +38,6 @@
 #include "util/FileTyper.h"
 #include "tuner.h"
 
-#ifdef QT_MULTIMEDIA_LIB
-# include <QAudioDeviceInfo>
-#endif
-#ifdef HAVE_LIBHAMLIB
-# ifdef QT_CORE_LIB // TODO should not have dependency to qt here
-#  include "util-QT/Rig.h"
-# endif
-#endif
-#if 0
-#include <fcd.h>
-#endif
 const int
 CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
@@ -70,7 +59,8 @@ CDRMReceiver::CDRMReceiver(CSettings* nPsettings) : CDRMTransceiver(),
     iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
     time_keeper(0),
     pTuner(nullptr),
-    PlotManager(), iPrevSigSampleRate(0),Parameters(*(new CParameter())), pSettings(nPsettings)
+    PlotManager(), iPrevSigSampleRate(0),Parameters(*(new CParameter())), pSettings(nPsettings),
+    soundfactory()
 {
     Parameters.SetReceiver(this);
     downstreamRSCI.SetReceiver(this);
@@ -168,7 +158,7 @@ CDRMReceiver::SetInputDevice(string s)
         vector<string> names;
         vector<string> descriptions;
         string def;
-        ReceiveData.Enumerate(names, descriptions, def);
+        soundfactory.Enumerate(names, descriptions, def);
         if (names.size() > 0) {
             if (device == "" || device == "default") {
                 device = def;
@@ -192,7 +182,8 @@ CDRMReceiver::SetInputDevice(string s)
         InputResample.SetSyncInput(false);
         SyncUsingPil.SetSyncInput(false);
         TimeSync.SetSyncInput(false);
-        ReceiveData.SetSoundInterface(device); // audio input
+        soundfactory.SetDev(device);
+        ReceiveData.SetSoundInterface(soundfactory.GetInDev()); // audio input
         CTuner *pTuner = ReceiveData.GetTuner();
         fprintf(stderr, "Read pTuner = %x\n", pTuner);
         if (pTuner)
