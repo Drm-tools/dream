@@ -87,7 +87,7 @@ public:
     }
 
     void SetSoundInterface(CSoundInInterface* device );
-    std::string GetSoundInterface() { return soundDevice; }
+
     void Stop();
 
     std::string GetSoundInterfaceVersion() { return pSound->GetVersion(); }

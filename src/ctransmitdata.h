@@ -73,15 +73,9 @@ public:
         rDefCarOffset = rNewCarOffset;
     }
 
-    void SetSoundInterface(std::string);
-    std::string GetSoundInterface() { return soundDevice; }
-    void Enumerate(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultOutput);
-    void Stop();
-#ifdef QT_MULTIMEDIA_LIB
-    std::string GetSoundInterfaceVersion() { return "QtMultimedia"; }
-#else
+    void SetSoundInterface(CSoundOutInterface* device) { pSound = device; }
+    void Stop() { if (pSound != nullptr) pSound->Close(); }
     std::string GetSoundInterfaceVersion() { return pSound->GetVersion(); }
-#endif
 
     void SetWriteToFile(const std::string strNFN)
     {
@@ -93,9 +87,6 @@ public:
 
 protected:
     FILE*			pFileTransmitter;
-#ifdef QT_MULTIMEDIA_LIB
-    QIODevice*      pIODevice;
-#endif
     CSoundOutInterface*	pSound;
     std::string     soundDevice;
     CVector<short>	vecsDataOut;

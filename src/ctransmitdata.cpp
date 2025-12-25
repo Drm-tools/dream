@@ -29,97 +29,16 @@
 #include "ctransmitdata.h"
 #include "Parameter.h"
 #include "IQInputFilter.h"
-#ifdef QT_MULTIMEDIA_LIB
-# include <QSet>
-# include <QAudioOutput>
-#else
-# include "sound/soundinterfacefactory.h"
-# include "sound/selectioninterface.h"
-#endif
+
 using namespace std;
 
 CTransmitData::CTransmitData() : pFileTransmitter(nullptr),
-#ifdef QT_MULTIMEDIA_LIB
-    pIODevice(nullptr),
-#endif
     pSound(nullptr),
     eOutputFormat(OF_REAL_VAL), rDefCarOffset(VIRTUAL_INTERMED_FREQ),
     strOutFileName("test/TransmittedData.txt"), bUseSoundcard(true),
     bAmplified(false), bHighQualityIQ(false)
 {
-
-}
-
-void CTransmitData::Stop()
-{
-#ifdef QT_MULTIMEDIA_LIB
-    if(pIODevice!=nullptr) pIODevice->close();
-#endif
-    if(pSound!=nullptr) pSound->Close();
-}
-
-void CTransmitData::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
-{
-#ifdef QT_MULTIMEDIA_LIB
-    QSet<QString> s;
-    QString def = QAudioDeviceInfo::defaultOutputDevice().deviceName();
-    defaultOutput = def.toStdString();
-cerr << "default output device is " << defaultOutput << endl;
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
-    {
-        s.insert(di.deviceName());
-    }
-    names.clear(); descriptions.clear();
-    foreach(const QString n, s) {
-cerr << "have output device " << n.toStdString() << endl;
-        names.push_back(n.toStdString());
-        if(n == def) {
-            descriptions.push_back("default");
-        }
-        else {
-            descriptions.push_back("");
-        }
-    }
-#else
-    if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
-    reinterpret_cast<CSelectionInterface*>(pSound)->Enumerate(names, descriptions, defaultOutput);    
-#endif
-    cout << "default output is " << defaultOutput << endl;
-}
-
-void CTransmitData::SetSoundInterface(string device)
-{
-    soundDevice = device;
-#ifdef QT_MULTIMEDIA_LIB
-    QAudioFormat format;
-    if(iSampleRate==0) iSampleRate = 48000; // TODO get initialisation order right
-    format.setSampleRate(iSampleRate);
-    format.setSampleSize(16);
-    format.setSampleType(QAudioFormat::SignedInt);
-    format.setChannelCount(2); // TODO
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setCodec("audio/pcm");
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
-    {
-        if(device == di.deviceName().toStdString()) {
-            QAudioFormat nearestFormat = di.nearestFormat(format);
-            QAudioOutput* pAudioOutput = new QAudioOutput(di, nearestFormat);
-            pAudioOutput->setBufferSize(1000000);
-            pIODevice = pAudioOutput->start();
-            if(pAudioOutput->error()!=QAudio::NoError)
-            {
-                qDebug("Can't open audio output");
-            }
-        }
-    }
-#else
-    if(pSound != nullptr) {
-        delete pSound;
-        pSound = nullptr;
-    }
-    pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
-    reinterpret_cast<CSelectionInterface*>(pSound)->SetDev(device);
-#endif
+    
 }
 
 void CTransmitData::ProcessDataInternal(CParameter&)
