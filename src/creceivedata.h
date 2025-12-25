@@ -34,8 +34,6 @@
 #include "util/Utilities.h"
 #include "spectrumanalyser.h"
 
-#endif
-
   /* Length of vector for input spectrum. We use approx. 0.2 sec
      of sampled data for spectrum calculation, this is 2^13 = 8192 to
      make the FFT work more efficient. Make sure that this number is not smaller
