@@ -25,12 +25,6 @@ public:
     virtual void Close();
     virtual std::string	GetVersion();
 
-    // CSelectionInterface methods
-    virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
-    virtual void		SetDev(std::string sNewDev);
-    virtual CSoundInInterface* GetInDev() override;
-    virtual CSoundOutInterface* GetOutDev() override;
-
     // CTuner methods
     virtual void SetFrequency(int);
     virtual void LoadSettings(CSettings&);
