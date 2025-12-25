@@ -115,7 +115,7 @@ void CReadData::Enumerate(std::vector<std::string>& names, std::vector<std::stri
     }
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundInInterface();
-    pSound->Enumerate(names, descriptions, defaultInput);
+    reinterpret_cast<CSelectionInterface*>(pSound)->Enumerate(names, descriptions, defaultInput);
 #endif
     cout << "default input is " << defaultInput << endl;
 }
@@ -162,7 +162,7 @@ CReadData::SetSoundInterface(string device)
         pSound = nullptr;
     }
     pSound = CSoundInterfaceFactory::CreateSoundInInterface();
-    pSound->SetDev(device);
+    reinterpret_cast<CSelectionInterface*>(pSound)->SetDev(device);
 #endif
 }
 
@@ -208,7 +208,7 @@ void CWriteData::Enumerate(std::vector<std::string>& names, std::vector<std::str
     }
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
-    pSound->Enumerate(names, descriptions, defaultOutput);
+    reinterpret_cast<CSelectionInterface*>(pSound)->Enumerate(names, descriptions, defaultOutput);
 #endif
 }
 
@@ -247,7 +247,7 @@ CWriteData::SetSoundInterface(string device)
         pSound = nullptr;
     }
     pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
-    pSound->SetDev(device);
+    reinterpret_cast<CSelectionInterface*>(pSound)->SetDev(device);
 #endif
 }
 
