@@ -30,100 +30,100 @@
 #define AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_
 
 #include "../sound/soundinterface.h"
+#include "../sound/selectioninterface.h"
 #include <windows.h>
 #include <mmsystem.h>
 
 /* Set this number as high as we have to prebuffer symbols for one MSC block.
    In case of robustness mode D we have 24 symbols */
-#define NUM_SOUND_BUFFERS_IN 24  /* Number of sound card buffers */
+#define NUM_SOUND_BUFFERS_IN 24 /* Number of sound card buffers */
 
 #ifdef USE_QT_GUI
-# if QT_VERSION >= 0x030000
-#  define NUM_SOUND_BUFFERS_OUT 6  /* Number of sound card buffers */
-# else
-#  define NUM_SOUND_BUFFERS_OUT 12  /* Number of sound card buffers */
-# endif
+#if QT_VERSION >= 0x030000
+#define NUM_SOUND_BUFFERS_OUT 6 /* Number of sound card buffers */
 #else
-# define NUM_SOUND_BUFFERS_OUT 3  /* Number of sound card buffers */
+#define NUM_SOUND_BUFFERS_OUT 12 /* Number of sound card buffers */
 #endif
-#define NUM_IN_OUT_CHANNELS  2  /* Stereo */
-#define BITS_PER_SAMPLE   16  /* Use all bits of the D/A-converter */
-#define BYTES_PER_SAMPLE  2  /* Number of bytes per sample */
+#else
+#define NUM_SOUND_BUFFERS_OUT 3 /* Number of sound card buffers */
+#endif
+#define NUM_IN_OUT_CHANNELS 2 /* Stereo */
+#define BITS_PER_SAMPLE 16    /* Use all bits of the D/A-converter */
+#define BYTES_PER_SAMPLE 2    /* Number of bytes per sample */
 
 /* Classes ********************************************************************/
-class CSoundInMMSystem : public CSoundInInterface
+class CSoundInMMSystem : public CSoundInInterface, public CSelectionInterface
 {
-    public:
+public:
     CSoundInMMSystem();
-virtual ~CSoundInMMSystem();
+    virtual ~CSoundInMMSystem();
 
-virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
-virtual bool Read(CVector<short>& psData, CParameter&);
-virtual void  Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultInput);
-virtual std::string GetDev();
-virtual void  SetDev(std::string sNewDev);
-virtual void  Close();
-virtual std::string GetVersion() { return ""; };
+    virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
+    virtual bool Read(CVector<short> &psData, CParameter &);
+    virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultInput);
+    virtual std::string GetDev();
+    virtual void SetDev(std::string sNewDev);
+    virtual void Close();
+    virtual std::string GetVersion() { return ""; };
 
 protected:
-void  OpenDevice();
-void  PrepareBuffer(int iBufNum);
-void  AddBuffer();
+    void OpenDevice();
+    void PrepareBuffer(int iBufNum);
+    void AddBuffer();
 
-std::vector<std::string> vecstrDevices;
-std::string   sCurDev;
-WAVEFORMATEX sWaveFormatEx;
-bool  bChangDev;
-HANDLE   m_WaveEvent;
-int   iSampleRate;
-int   iBufferSize;
-int   iWhichBuffer;
-bool  bBlocking;
+    std::vector<std::string> vecstrDevices;
+    std::string sCurDev;
+    WAVEFORMATEX sWaveFormatEx;
+    bool bChangDev;
+    HANDLE m_WaveEvent;
+    int iSampleRate;
+    int iBufferSize;
+    int iWhichBuffer;
+    bool bBlocking;
 
-/* Wave in */
-WAVEINCAPS  m_WaveInDevCaps;
-HWAVEIN   m_WaveIn;
-WAVEHDR   m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
-short*   psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
-
+    /* Wave in */
+    WAVEINCAPS m_WaveInDevCaps;
+    HWAVEIN m_WaveIn;
+    WAVEHDR m_WaveInHeader[NUM_SOUND_BUFFERS_IN];
+    short *psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
 };
 
-class CSoundOutMMSystem : public CSoundOutInterface
+class CSoundOutMMSystem : public CSoundOutInterface, public CSelectionInterface
 {
-    public:
+public:
     CSoundOutMMSystem();
-virtual ~CSoundOutMMSystem();
+    virtual ~CSoundOutMMSystem();
 
-virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
-virtual bool Write(CVector<short>& psData);
-virtual void  Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput);
+    virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
+    virtual bool Write(CVector<short> &psData);
+    virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultOutput);
 
-virtual std::string  GetDev();
-virtual void  SetDev(std::string sNewDev);
-virtual void  Close();
-virtual std::string  GetVersion() { return ""; };
+    virtual std::string GetDev();
+    virtual void SetDev(std::string sNewDev);
+    virtual void Close();
+    virtual std::string GetVersion() { return ""; };
 
 protected:
-void  OpenDevice();
-void  PrepareBuffer(int iBufNum);
-void  AddBuffer(int iBufNum);
-void  GetDoneBuffer(int& iCntPrepBuf, int& iIndexDoneBuf);
+    void OpenDevice();
+    void PrepareBuffer(int iBufNum);
+    void AddBuffer(int iBufNum);
+    void GetDoneBuffer(int &iCntPrepBuf, int &iIndexDoneBuf);
 
-std::vector<std::string> vecstrDevices;
-std::string   sCurDev;
-WAVEFORMATEX sWaveFormatEx;
-bool  bChangDev;
-HANDLE   m_WaveEvent;
-int   iSampleRate;
-int   iBufferSize;
-int   iWhichBuffer;
-bool  bBlocking;
+    std::vector<std::string> vecstrDevices;
+    std::string sCurDev;
+    WAVEFORMATEX sWaveFormatEx;
+    bool bChangDev;
+    HANDLE m_WaveEvent;
+    int iSampleRate;
+    int iBufferSize;
+    int iWhichBuffer;
+    bool bBlocking;
 
-/* Wave out */
-WAVEOUTCAPS  m_WaveOutDevCaps;
-HWAVEOUT  m_WaveOut;
-short*   psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
-WAVEHDR   m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
+    /* Wave out */
+    WAVEOUTCAPS m_WaveOutDevCaps;
+    HWAVEOUT m_WaveOut;
+    short *psPlaybackBuffer[NUM_SOUND_BUFFERS_OUT];
+    WAVEHDR m_WaveOutHeader[NUM_SOUND_BUFFERS_OUT];
 };
 
 #endif // !defined(AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_)

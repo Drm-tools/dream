@@ -1,12 +1,13 @@
 #ifndef DRM_SOAPYSDR_H
 #define DRM_SOAPYSDR_H
 
-#include "../sound/soundinterface.h"
+#include "soundinterface.h"
+#include "compoundselectioninterface.h"
 #include "../tuner.h"
 
 namespace SoapySDR {class Device; class Stream;};
 
-class CSoapySDRIn : public CSoundInInterface, public CTuner
+class CSoapySDRIn : public CSoundInInterface, public CTuner, public CCompoundSelectionInterface
 {
 public:
 
@@ -15,7 +16,7 @@ public:
     // CSoundInInterface methods
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual bool Read(CVector<short>& psData, CParameter &Parameters);
-    virtual void     Close();
+    virtual void Close();
     virtual std::string	GetVersion();
 
     // CSelectionInterface methods

@@ -29,21 +29,22 @@
 #ifndef _SHMSOUNDIN_H
 #define _SHMSOUNDIN_H
 
-#include "../soundinterface.h"
+#include "../sound/soundinterface.h"
+#include "../sound/selectioninterface.h"
 #include "pa_shm_ringbuffer.h"
 
-class CShmSoundIn: public CSoundInInterface
+class CShmSoundIn: public CSoundInInterface, public CSelectionInterface
 {
 public:
     CShmSoundIn();
     virtual 			~CShmSoundIn();
     virtual void		Enumerate(std::vector<std::string>& choices);
-    virtual void		SetDev(int);
-    virtual int			GetDev();
+    virtual void		SetDev(std::string sNewDev);
+    virtual std::string	GetDev();
 
     virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
     virtual void		Close();
-	virtual std::string		GetVersion() { return "linux shared memory audio input"; }
+	virtual std::string	GetVersion() { return "linux shared memory audio input"; }
     virtual bool	Read(CVector<short>& psData);
 
     void				SetShmPath(const std::string& p) {

@@ -35,7 +35,9 @@
 
 
 #include <pulse/pulseaudio.h>
-#include "../sound/soundinterface.h"
+#include "soundinterface.h"
+#include "selectioninterface.h"
+
 #if defined(PA_STREAM_VARIABLE_RATE) && defined(ENABLE_CLOCK_DRIFT_ADJ)
 # define CLOCK_DRIFT_ADJ_ENABLED
 #endif
@@ -89,7 +91,7 @@ protected:
 #endif
 };
 
-class CSoundInPulse : public CSoundPulse, public CSoundInInterface
+class CSoundInPulse : public CSoundPulse, public CSoundInInterface, public CSelectionInterface
 {
 public:
 	CSoundInPulse();
@@ -130,7 +132,7 @@ protected:
 #endif
 };
 
-class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface
+class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface, CSelectionInterface
 {
 public:
 	CSoundOutPulse();

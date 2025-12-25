@@ -16,7 +16,9 @@
 #include "../util/Settings.h"
 
 // Constructor(s)
-CSoapySDRIn::CSoapySDRIn() : currentDev(""), iSampleRate(96000), iBufferSize(0), iFrequency(0), pDevice(nullptr), pStream(nullptr)
+CSoapySDRIn::CSoapySDRIn() :
+  CSoundInInterface(), CTuner(), CCompoundSelectionInterface(),
+  currentDev(""), iSampleRate(96000), iBufferSize(0), iFrequency(0), pDevice(nullptr), pStream(nullptr)
 {
     //pFile = fopen("raw_input.iq", "w");
 }

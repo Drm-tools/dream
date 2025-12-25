@@ -30,11 +30,12 @@
 #define _AUDIOFILEIN
 
 #include "soundinterface.h"
+#include "selectioninterface.h"
 #include "../util/Pacer.h"
 #include "../resample/caudioresample.h"
 
 /* Classes ********************************************************************/
-class CAudioFileIn : public CSoundInInterface
+class CAudioFileIn : public CSoundInInterface, public CSelectionInterface
 {
 public:
     CAudioFileIn();

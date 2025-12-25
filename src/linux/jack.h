@@ -29,12 +29,8 @@
 #ifndef _JACK_H
 #define _JACK_H
 
-#include "../soundinterface.h"
-
-#ifdef _WIN32
-# include <windows.h>
-	typedef HANDLE pthread_t;
-#endif
+#include "../sound/soundinterface.h"
+#include "../sound/selectioninterface.h"
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
 #include <map>
@@ -65,7 +61,7 @@ protected:
     map<std::string, pair< std::string, std::string> > ports;
 };
 
-class CSoundInJack : public CSoundInInterface
+class CSoundInJack : public CSoundInInterface, public CSelectionInterface
 {
 public:
     CSoundInJack();
@@ -73,13 +69,13 @@ public:
     CSoundInJack(const CSoundInJack& e);
     CSoundInJack& operator=(const CSoundInJack& e);
 
-    virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
+    virtual void	Init(int iNewBufferSize, bool bNewBlocking = true);
     virtual bool	Read(CVector<short>& psData);
     virtual void		Enumerate(std::vector<std::string>&);
-    virtual int			GetDev();
-    virtual void		SetDev(int iNewDev);
+    virtual std::string			GetDev();
+    virtual void		SetDev(std::string sNewDev);
     virtual void		Close();
-	virtual std::string		GetVersion() { return "JACK audio input"; }
+	virtual std::string	GetVersion() { return "JACK audio input"; }
 protected:
     int iBufferSize;
     bool bBlocking;
@@ -89,7 +85,7 @@ protected:
     CJackPorts ports;
 };
 
-class CSoundOutJack : public CSoundOutInterface
+class CSoundOutJack : public CSoundOutInterface, public CSelectionInterface
 {
 public:
     CSoundOutJack();

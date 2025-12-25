@@ -30,9 +30,10 @@
 #define SOUNDNULL_H
 
 #include "soundinterface.h"
+#include "selectioninterface.h"
 
 /* Classes ********************************************************************/
-class CSoundInNull : public CSoundInInterface
+class CSoundInNull : public CSoundInInterface, public CSelectionInterface
 {
 public:
     CSoundInNull() {}
@@ -59,7 +60,7 @@ private:
     std::string sDev;
 };
 
-class CSoundOutNull : public CSoundOutInterface
+class CSoundOutNull : public CSoundOutInterface, public CSelectionInterface
 {
 public:
     CSoundOutNull() {}

@@ -29,11 +29,12 @@
 #ifndef _DRM_PORTAUDIO_H
 #define _DRM_PORTAUDIO_H
 
-#include "../sound/soundinterface.h"
+#include "soundinterface.h"
+#include "selectioninterface.h"
 #include <portaudio.h>
 #include "pa_ringbuffer.h"
 
-class CPaCommon: public CSelectionInterface
+class CPaCommon: public CSelectionInterface, public CSelectionInterface
 {
 public:
     CPaCommon(bool);
@@ -67,7 +68,7 @@ protected:
     static int pa_count;
 };
 
-class CPaIn: public CSoundInInterface
+class CPaIn: public CSoundInInterface, CSelectionInterface
 {
 public:
     CPaIn();

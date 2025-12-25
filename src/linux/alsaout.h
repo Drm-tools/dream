@@ -30,6 +30,7 @@
 #define _SOUNDOUT_H
 
 #include "../sound/soundinterface.h"
+#include "../sound/selectioninterface.h"
 #include "../util/Buffer.h"
 #include "alsacommon.h"
 
@@ -39,7 +40,7 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundOutAlsa : public CSoundOutInterface
+class CSoundOutAlsa : public CSoundOutInterface, public CSelectionInterface
 {
 public:
     CSoundOutAlsa();
