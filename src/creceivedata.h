@@ -31,6 +31,7 @@
 
 #include "util/Modul.h"
 #include "sound/soundinterface.h"
+#include "sound/selectioninterface.h"
 #include "util/Utilities.h"
 #include "spectrumanalyser.h"
 #ifdef QT_MULTIMEDIA_LIB
