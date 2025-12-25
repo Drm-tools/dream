@@ -7,17 +7,23 @@
 
 namespace SoapySDR {class Device; class Stream;};
 
-class CSoapySDRIn : public CSoundInInterface, public CTuner
+class CSoapySDRIn : public CSoundInInterface, public CTuner, public CSelectionInterface
 {
 public:
 
     CSoapySDRIn();
     virtual ~CSoapySDRIn();
+
     // CSoundInInterface methods
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual bool Read(CVector<short>& psData, CParameter &Parameters);
     virtual void Close();
     virtual std::string	GetVersion();
+
+    // CSelectionInterface methods
+    virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
+    virtual std::string	GetDev();
+    virtual void		SetDev(std::string sNewDev);
 
     // CTuner methods
     virtual void SetFrequency(int);

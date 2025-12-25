@@ -17,7 +17,7 @@
 
 // Constructor(s)
 CSoapySDRIn::CSoapySDRIn() :
-  CSoundInInterface(), CTuner(),
+  CSoundInInterface(), CTuner(), CSelectionInterface(),
   currentDev(""), iSampleRate(96000), iBufferSize(0), iFrequency(0), pDevice(nullptr), pStream(nullptr)
 {
     //pFile = fopen("raw_input.iq", "w");
@@ -174,7 +174,7 @@ std::string	CSoapySDRIn::GetVersion()
 {
     return "SoapySDR";
 }
-/*
+
 // CSelectionInterface methods
 void CSoapySDRIn::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
 {
@@ -210,7 +210,7 @@ void CSoapySDRIn::SetDev(std::string sNewDev)
 {
     currentDev = sNewDev;
 }
-*/
+
 void CSoapySDRIn::SetFrequency(int freq)
 {
     iFrequency = freq * 1000;
