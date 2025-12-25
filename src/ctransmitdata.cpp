@@ -34,6 +34,7 @@
 # include <QAudioOutput>
 #else
 # include "sound/soundinterfacefactory.h"
+# include "sound/selectioninterface.h"
 #endif
 using namespace std;
 
