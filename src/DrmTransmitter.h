@@ -78,8 +78,8 @@ public:
     {
         return rDefCarOffset;
     }
-    void GetInputDevice(std::string &s);
-    void GetOutputDevice(std::string &s);
+    std::string GetInputDevice();
+    std::string GetOutputDevice();
     void EnumerateInputs(std::vector<string> &names, std::vector<string> &descriptions, std::string &defaultInput);
     void EnumerateOutputs(std::vector<string> &names, std::vector<string> &descriptions, std::string &defaultOutput);
     void SetInputDevice(std::string);
