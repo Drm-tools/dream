@@ -81,7 +81,7 @@ cerr << "have output device " << n.toStdString() << endl;
     }
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
-    pSound->Enumerate(names, descriptions, defaultOutput);    
+    reinterpret_cast<CSelectionInterface*>(pSound)->Enumerate(names, descriptions, defaultOutput);    
 #endif
     cout << "default output is " << defaultOutput << endl;
 }
@@ -117,7 +117,7 @@ void CTransmitData::SetSoundInterface(string device)
         pSound = nullptr;
     }
     pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
-    pSound->SetDev(device);
+    reinterpret_cast<CSelectionInterface*>(pSound)->SetDev(device);
 #endif
 }
 

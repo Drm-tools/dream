@@ -107,7 +107,7 @@ void CReceiveData::Enumerate(vector<string>& names, vector<string>& descriptions
     }
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundInInterface();
-    pSound->Enumerate(names, descriptions, defaultInput);
+    reinterpret_cast<CSelectionInterface*>(pSound)->Enumerate(names, descriptions, defaultInput);
 #endif
 }
 
@@ -165,7 +165,7 @@ CReceiveData::SetSoundInterface(string device)
         }
 #else
         pSound = CSoundInterfaceFactory::CreateSoundInInterface();
-        pSound->SetDev(device);
+        reinterpret_cast<CSelectionInterface*>(pSound)->SetDev(device);
 #endif
     }
 }
