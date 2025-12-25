@@ -564,7 +564,7 @@ HEADERS += \
     src/sourcedecoders/reverb.h \
     src/sourcedecoders/caudioreverb.h \
     src/tuner.h \
-    src/sound/soundinterfacefactory.h \
+    src/sound/soundfactory.h \
     src/MDI/PacketSocketHTTP.h
 SOURCES += \
     src/AMDemodulation.cpp \
@@ -670,8 +670,6 @@ SOURCES += \
     src/Version.cpp \
     src/sound/soundnull.cpp \
     src/DrmTransceiver.cpp \
-    src/sound/soundinterface.cpp \
-    src/sound/selectioninterface.cpp \
     src/MSC/logicalframe.cpp \
     src/MSC/audiosuperframe.cpp \
     src/MSC/aacsuperframe.cpp \
@@ -683,7 +681,7 @@ SOURCES += \
     src/sourcedecoders/reverb.cpp \
     src/sourcedecoders/caudioreverb.cpp \
     src/tuner.cpp \
-    src/sound/soundinterfacefactory.cpp \
+    src/sound/soundfactory.cpp \
     src/MDI/PacketSocketHTTP.cpp
 
 contains(QT,core) {
