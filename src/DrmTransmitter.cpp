@@ -374,10 +374,10 @@ void CDRMTransmitter::LoadSettings()
     Parameters.FetchNewSampleRate();
 
     /* Sound card input device id */
-    ReadData.SetSoundInterface(s.Get(Transmitter, "snddevin", string()));
+    soundinfactory.SetDev(s.Get(Transmitter, "snddevin", string()));
 
     /* Sound card output device id */
-    TransmitData.SetSoundInterface(s.Get(Transmitter, "snddevout", string()));
+    soundoutfactory.SetDev(s.Get(Transmitter, "snddevout", string()));
 #if 0 // TODO
     /* Sound clock drift adjustment */
     bool bEnabled = s.Get(Transmitter, "sndclkadj", int(0));
@@ -520,10 +520,10 @@ void CDRMTransmitter::SaveSettings()
     s.Put(Transmitter, "sampleratesig", Parameters.GetSigSampleRate());
 
     /* Sound card input device id */
-    s.Put(Transmitter, "snddevin", indev);
+    s.Put(Transmitter, "snddevin", soundinfactory.GetDevName());
 
     /* Sound card output device id */
-    s.Put(Transmitter, "snddevout", outdev;
+    s.Put(Transmitter, "snddevout", soundoutfactory.GetDevName());
 #if 0 // TODO
     /* Sound clock drift adjustment */
     s.Put(Transmitter, "sndclkadj", int(((CSoundOutPulse*)pSoundOutInterface)->IsClockDriftAdjEnabled()));

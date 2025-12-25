@@ -183,7 +183,6 @@ CDRMReceiver::SetInputDevice(string s)
         SyncUsingPil.SetSyncInput(false);
         TimeSync.SetSyncInput(false);
         soundinfactory.SetDev(device);
-        soundinfactory.SetSoundInterface(soundfactory.GetInDev()); // audio input
         CTuner *pTuner = ReceiveData.GetTuner();
         fprintf(stderr, "Read pTuner = %x\n", pTuner);
         if (pTuner)
@@ -205,10 +204,9 @@ CDRMReceiver::SetInputDevice(string s)
 void
 CDRMReceiver::SetOutputDevice(string device)
 {
-    WriteData.SetSoundInterface(device);
+    soundoutfactory.SetDev(device);
     WriteData.Init(Parameters);
 }
-
 
 string CDRMReceiver::GetInputDevice()
 {
@@ -1723,14 +1721,14 @@ CDRMReceiver::SaveSettings()
     s.Put("Receiver", "modmetric", ChannelEstimation.GetIntCons());
 
     /* Sound In device - don't save files, only devices */
-    string indev = ReceiveData.GetSoundInterface();
+    string indev = GetInputDevice();
     FileTyper::type t = FileTyper::resolve(indev);
     if (t == FileTyper::unrecognised) {
         s.Put("Receiver", "snddevin", indev);
     }
 
     /* Sound Out device */
-    s.Put("Receiver", "snddevout", WriteData.GetSoundInterface());
+    s.Put("Receiver", "snddevout", GetOutputDevice());
     /* Number of iterations for MLC setting */
     s.Put("Receiver", "mlciter", MSCMLCDecoder.GetInitNumIterations());
 
