@@ -7,12 +7,6 @@
 
 namespace SoapySDR {class Device; class Stream;};
 
-class CSoapySDRInfo: public CSelectionInterface
-{
-public:
-
-}
-
 class CSoapySDRIn : public CSoundInInterface, public CTuner
 {
 public:
