@@ -98,15 +98,15 @@ CSoundFactory::CSoundFactory(): inDrivers(), outDrivers(), currentInDriver(0), c
 #ifdef USE_SOAPYSDR
     inDrivers.push_back(new CSoapySDRIn());
 #endif
-    inDrivers.push_back(new CAudioFileIn());
-    inDrivers.push_back(new CSoundInNull());
-    outDrivers.push_back(new CSoundOutNull());
+    inDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CAudioFileIn()));
+    inDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
+    outDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundOutNull()));
 }
 
 CSoundFactory::~CSoundFactory()
 {
     for(size_t i=0; i<inDrivers.size(); i++) delete inDrivers[i];
-    
+    for(size_t i=0; i<outDrivers.size(); i++) delete outDrivers[i];
 }
 
 void CSoundFactory::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
@@ -114,8 +114,14 @@ void CSoundFactory::Enumerate(std::vector<std::string>& names, std::vector<std::
     names.clear();
     descriptions.clear();
     defaultDevice = "null";
-    names.push_back("null");
-    descriptions.push_back("no audio interface");
+    for(size_t i=0; i<inDrivers.size(); i++) {
+        std::vector<std::string> n, d;
+        std::string dd;
+        inDrivers[i]->Enumerate(n, d, dd);
+        names.insert(names.end(), n.begin(), n.end());
+        descriptions.insert(descriptions.end(), d.begin(), d.end());
+        defaultDevice = dd;
+    }
 }
 
 std::string CSoundFactory::GetDevName()

@@ -15,8 +15,8 @@ public:
     CSoundOutInterface* GetOutDev() override;
 protected:
     std::string currentDevice;
-    std::vector<CSoundInInterface*> inDrivers;
-    std::vector<CSoundOutInterface*> outDrivers;
+    std::vector<CSelectionInterface*> inDrivers;
+    std::vector<CSelectionInterface*> outDrivers;
     size_t currentInDriver, currentOutDriver;
 };
 
