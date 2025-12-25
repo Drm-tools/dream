@@ -2,12 +2,18 @@
 #define DRM_SOAPYSDR_H
 
 #include "soundinterface.h"
-#include "compoundselectioninterface.h"
+#include "selectioninterface.h"
 #include "../tuner.h"
 
 namespace SoapySDR {class Device; class Stream;};
 
-class CSoapySDRIn : public CSoundInInterface, public CTuner, public CCompoundSelectionInterface
+class CSoapySDRInfo: public CSelectionInterface
+{
+public:
+
+}
+
+class CSoapySDRIn : public CSoundInInterface, public CTuner
 {
 public:
 
@@ -21,8 +27,9 @@ public:
 
     // CSelectionInterface methods
     virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
-    virtual std::string	GetDev();
     virtual void		SetDev(std::string sNewDev);
+    virtual CSoundInInterface* GetInDev() override;
+    virtual CSoundOutInterface* GetOutDev() override;
 
     // CTuner methods
     virtual void SetFrequency(int);
