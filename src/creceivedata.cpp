@@ -68,7 +68,7 @@ void CReceiveData::Stop()
 
 void CReceiveData::SetSoundInterface(CSoundInInterface* device)
 {
-    soundDevice = device;
+    //soundDevice = device;
     if(pSound != nullptr) {
         pSound->Close();
     }
