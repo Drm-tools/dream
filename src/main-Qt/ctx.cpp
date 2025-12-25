@@ -68,7 +68,7 @@ void CTx::SetOutputDevice(string s)
 
 std::string CTx::GetInputDevice()
 {
-    return tx.GetInputDevice(s);
+    return tx.GetInputDevice();
 }
 
 std::string CTx::GetOutputDevice()
