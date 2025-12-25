@@ -15,6 +15,8 @@ public:
     CSoundOutInterface* GetOutDev() override;
 protected:
     std::string currentDevice;
+    std::vector<CSelectionInterface*> inDrivers, outDrivers;
+    size_t currentInDriver, currentOutDriver;
 };
 
 #endif // SOUNDFACTORY_H
