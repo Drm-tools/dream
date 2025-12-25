@@ -30,7 +30,7 @@
 #define _COMPOUND_SELECTION_INTERFACE_H
 
 #include <algorithm>
-#include "soundinterface.h"
+#include "selectioninterface.h"
 
 class CCompoundSelectionInterface: public CSelectionInterface
 {
