@@ -174,6 +174,16 @@ CSettings* CDRMTransmitter::GetSettings()
     return pSettings;
 }
 
+string CDRMTransmitter::GetInputDevice()
+{
+   return  soundinfactory.GetDevName();
+}
+
+string CDRMTransmitter::GetOutputDevice()
+{
+    return soundoutfactory.GetDevName();
+}
+
 void CDRMTransmitter::Init()
 {
 
@@ -214,10 +224,6 @@ void CDRMTransmitter::Init()
     /* Initialize the soft stop */
     InitSoftStop();
 
-#ifdef QT_MULTIMEDIA_LIB
-    doSetInputDevice();
-    doSetOutputDevice();
-#endif
 }
 
 CDRMTransmitter::~CDRMTransmitter()
