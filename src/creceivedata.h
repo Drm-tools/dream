@@ -31,16 +31,9 @@
 
 #include "util/Modul.h"
 #include "sound/soundinterface.h"
-#include "sound/selectioninterface.h"
 #include "util/Utilities.h"
 #include "spectrumanalyser.h"
-#ifdef QT_MULTIMEDIA_LIB
-# include <QAudioInput>
-# include <QIODevice>
-#else
-# ifdef QT_CORE_LIB
-  class QIODevice;
-# endif
+
 #endif
 
   /* Length of vector for input spectrum. We use approx. 0.2 sec
@@ -93,15 +86,11 @@ public:
         mutexInpData.Unlock();
     }
 
-    void SetSoundInterface(std::string);
+    void SetSoundInterface(CSoundInInterface* device );
     std::string GetSoundInterface() { return soundDevice; }
-    void Enumerate(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultInput);
     void Stop();
-#ifdef QT_MULTIMEDIA_LIB
-    std::string GetSoundInterfaceVersion() { return "QtMultimedia"; }
-#else
+
     std::string GetSoundInterfaceVersion() { return pSound->GetVersion(); }
-#endif
     void SetInChanSel(const EInChanSel eNS) {
         eInChanSelection = eNS;
     }
@@ -119,10 +108,7 @@ public:
 protected:
     CSignalLevelMeter		SignalLevelMeter;
 
-#ifdef QT_MULTIMEDIA_LIB
-    QAudioInput*            pAudioInput;
-    QIODevice*              pIODevice;
-#endif
+
     CSoundInInterface*		pSound;
     CVector<_SAMPLE>		vecsSoundBuffer;
     std::string             soundDevice;

@@ -31,13 +31,16 @@
 
 #include <vector>
 #include <string>
+#include "soundinterface.h"
 
 class CSelectionInterface
 {
 public:
-    virtual 			~CSelectionInterface();
+    virtual 			~CSelectionInterface() {}
     virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)=0;
-    virtual std::string	GetDev()=0;
+    virtual std::string	GetDevName()=0;
+    virtual CSoundInInterface* GetInDev()=0;
+    virtual CSoundOutInterface* GetOutDev()=0;
     virtual void		SetDev(std::string sNewDev)=0;
 };
 #endif

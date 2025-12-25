@@ -36,7 +36,7 @@ class CParameter;
 class CSoundInInterface
 {
 public:
-    virtual 		~CSoundInInterface()=0;
+    virtual 		~CSoundInInterface() {}
 
     /* sound card interface - used by ReadData */
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking)=0;
@@ -49,7 +49,7 @@ public:
 class CSoundOutInterface
 {
 public:
-    virtual 		~CSoundOutInterface()=0;
+    virtual 		~CSoundOutInterface() {}
 
     /* sound card interface - used by WriteData */
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking)=0;

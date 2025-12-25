@@ -30,10 +30,9 @@
 #define SOUNDNULL_H
 
 #include "soundinterface.h"
-#include "selectioninterface.h"
 
 /* Classes ********************************************************************/
-class CSoundInNull : public CSoundInInterface, public CSelectionInterface
+class CSoundInNull : public CSoundInInterface
 {
 public:
     CSoundInNull() {}
@@ -44,23 +43,13 @@ public:
     virtual bool	Read(CVector<short>&, CParameter &Parameters) {
         return false;
     }
-    virtual void Enumerate(std::vector<std::string>&choices, std::vector<std::string>& desc, std::string&) {
-        choices.push_back("(File or Network)");
-        desc.push_back("default");
-    }
-    virtual std::string		GetDev() {
-        return sDev;
-    }
-    virtual void		SetDev(std::string sNewDev) {
-        sDev = sNewDev;
-    }
     virtual void		Close() {}
 	virtual std::string		GetVersion() { return "no audio interface"; }
 private:
     std::string sDev;
 };
 
-class CSoundOutNull : public CSoundOutInterface, public CSelectionInterface
+class CSoundOutNull : public CSoundOutInterface
 {
 public:
     CSoundOutNull() {}
@@ -72,17 +61,6 @@ public:
         return false;
     }
 
-    virtual void		Enumerate(std::vector<std::string>& choices, std::vector<std::string>& desc, std::string&){
-        choices.push_back("(None)");
-        desc.push_back("");
-    }
-
-    virtual std::string		GetDev() {
-        return sDev;
-    }
-    virtual void		SetDev(std::string sNewDev) {
-        sDev = sNewDev;
-    }
     virtual void		Close() {}
 	virtual std::string		GetVersion() { return "no audio interface"; }
 private:
