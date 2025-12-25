@@ -209,14 +209,25 @@ CDRMReceiver::SetOutputDevice(string device)
     WriteData.Init(Parameters);
 }
 
+
+string CDRMReceiver::GetInputDevice()
+{
+    return soundfactory.GetDevName();
+}
+
+string CDRMReceiver::GetOutputDevice()
+{
+    return soundfactory.GetDevName();
+}
+
 void CDRMReceiver::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)
 {
-    ReceiveData.Enumerate(names, descriptions, defaultInput);
+    soundfactory.Enumerate(names, descriptions, defaultInput);
 }
 
 void CDRMReceiver::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
 {
-    WriteData.Enumerate(names, descriptions, defaultOutput);
+    soundfactory.Enumerate(names, descriptions, defaultOutput);
 }
 
 void

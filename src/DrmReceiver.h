@@ -146,15 +146,8 @@ public:
     virtual void LoadSettings() override; // can write to settings to set defaults
     virtual void SaveSettings() override;
 
-    std::string GetInputDevice()
-    {
-        return ReceiveData.GetSoundInterface();
-    }
-
-    std::string GetOutputDevice()
-    {
-        return WriteData.GetSoundInterface();
-    }
+    std::string GetInputDevice();
+    std::string GetOutputDevice();
     virtual void EnumerateInputs(std::vector<string> &names, std::vector<string> &descriptions, std::string &defaultInput) override;
     virtual void EnumerateOutputs(std::vector<string> &names, std::vector<string> &descriptions, std::string &defaultOutput) override;
     virtual void SetInputDevice(std::string) override;
