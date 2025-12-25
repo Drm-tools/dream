@@ -37,7 +37,7 @@ bool CSoapySDRIn::Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking
     std::vector<std::string> names;
     std::vector<std::string> descriptions;
     std::string defaultDevice;
-    Enumerate(names, descriptions, defaultDevice);
+    //Enumerate(names, descriptions, defaultDevice);
 
     unsigned int deviceIndex= 0;
     for (unsigned int i=0; i<names.size(); i++)
