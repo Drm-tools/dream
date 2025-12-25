@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "DrmTransmitter.h"
-#include <sstream
+#include <sstream>
 
 /* Implementation *************************************************************/
 void CDRMTransmitter::Run()
@@ -152,7 +152,7 @@ void CDRMTransmitter::doSetInputDevice()
 
 void CDRMTransmitter::doSetOutputDevice()
 {
-    soundoutfactory.SetSoundInterface(outdev);
+    soundoutfactory.SetDev(outdev);
 }
 
 void
@@ -520,10 +520,10 @@ void CDRMTransmitter::SaveSettings()
     s.Put(Transmitter, "sampleratesig", Parameters.GetSigSampleRate());
 
     /* Sound card input device id */
-    s.Put(Transmitter, "snddevin", ReadData.GetSoundInterface());
+    s.Put(Transmitter, "snddevin", indev);
 
     /* Sound card output device id */
-    s.Put(Transmitter, "snddevout", TransmitData.GetSoundInterface());
+    s.Put(Transmitter, "snddevout", outdev;
 #if 0 // TODO
     /* Sound clock drift adjustment */
     s.Put(Transmitter, "sndclkadj", int(((CSoundOutPulse*)pSoundOutInterface)->IsClockDriftAdjEnabled()));
