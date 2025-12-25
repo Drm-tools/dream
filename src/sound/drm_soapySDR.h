@@ -3,6 +3,7 @@
 
 #include "soundinterface.h"
 #include "selectioninterface.h"
+#include "soundnull.h"
 #include "../tuner.h"
 
 namespace SoapySDR {class Device; class Stream;};
@@ -22,9 +23,10 @@ public:
 
     // CSelectionInterface methods
     virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
-    virtual std::string	GetDev();
+    virtual std::string	GetDevName();
     virtual void		SetDev(std::string sNewDev);
-
+    virtual CSoundInInterface* GetInDev() { return this; }
+    virtual CSoundOutInterface* GetOutDev() { return new CSoundOutNull(); }
     // CTuner methods
     virtual void SetFrequency(int);
     virtual void LoadSettings(CSettings&);

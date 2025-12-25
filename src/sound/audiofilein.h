@@ -31,6 +31,7 @@
 
 #include "soundinterface.h"
 #include "selectioninterface.h"
+#include "soundnull.h"
 #include "../util/Pacer.h"
 #include "../resample/caudioresample.h"
 
@@ -43,7 +44,9 @@ public:
 
     virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) {}
     virtual void		SetDev(std::string sNewDevice) {sCurrentDevice = sNewDevice;}
-    virtual std::string GetDev() {return sCurrentDevice;}
+    virtual std::string GetDevName() {return sCurrentDevice;}
+    virtual CSoundInInterface* GetInDev() { return this; }
+    virtual CSoundOutInterface* GetOutDev() { return new CSoundOutNull(); }
     virtual void		SetFileName(const std::string& strFileName);
     virtual int			GetSampleRate() {return iRequestedSampleRate;}
 

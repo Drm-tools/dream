@@ -81,7 +81,7 @@ public:
     {
         hw.SetDev(sNewDevice);
     }
-    virtual std::string	GetDev()
+    virtual std::string	GetDevName()
     {
         return hw.GetDev();
     }

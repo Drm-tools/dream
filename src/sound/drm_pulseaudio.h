@@ -97,7 +97,7 @@ public:
 	CSoundInPulse();
     virtual ~CSoundInPulse();
     void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) {CSoundPulse::Enumerate(names, descriptions, defaultDevice);}
-    std::string	GetDev() {return CSoundPulse::GetDev();}
+    std::string	GetDevName() {return CSoundPulse::GetDev();}
     void        SetDev(std::string sNewDevice) {CSoundPulse::SetDev(sNewDevice);}
     std::string GetVersion() { return pa_get_library_version(); }
 
