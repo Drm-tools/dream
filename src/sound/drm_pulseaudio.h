@@ -34,7 +34,6 @@
 
 #include <pulse/pulseaudio.h>
 #include "soundinterface.h"
-#include "selectioninterface.h"
 
 #if defined(PA_STREAM_VARIABLE_RATE) && defined(ENABLE_CLOCK_DRIFT_ADJ)
 #define CLOCK_DRIFT_ADJ_ENABLED
@@ -69,7 +68,7 @@ typedef struct pa_object
 } pa_object;
 
 /* Classes ********************************************************************/
-class CSoundPulse: public CSelectionInterface
+class CSoundPulse
 {
 public:
 	CSoundPulse(bool bPlayback);
@@ -92,6 +91,15 @@ class CSoundInPulse : public CSoundPulse, public CSoundInInterface
 public:
 	CSoundInPulse();
 	virtual ~CSoundInPulse();
+
+    void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+	            {
+					CSoundPulse::Enumerate(names, descriptions, defaultDevice);
+				}
+    void        SetItem(std::string sNewDevice) { CSoundPulse::SetItem(sNewDevice); }
+    std::string GetItemName() { return CSoundPulse::GetItemName(); }
+
+
 	std::string GetVersion() { return pa_get_library_version(); }
 
 	bool Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
@@ -130,7 +138,12 @@ class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface
 public:
 	CSoundOutPulse();
 	virtual ~CSoundOutPulse();
-
+    void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+	            {
+					CSoundPulse::Enumerate(names, descriptions, defaultDevice);
+				}
+    void        SetItem(std::string sNewDevice) { CSoundPulse::SetItem(sNewDevice); }
+    std::string GetItemName() { return CSoundPulse::GetItemName(); }
 	std::string GetVersion() { return pa_get_library_version(); }
 	bool Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
 	bool Write(CVector<_SAMPLE> &psData);
