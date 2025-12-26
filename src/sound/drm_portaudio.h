@@ -68,7 +68,7 @@ protected:
     static int pa_count;
 };
 
-class CPaIn: public CSoundInInterface, CSelectionInterface
+class CPaIn: public CSoundInInterface, CSelectionInterface<CSoundInInterface>
 {
 public:
     CPaIn();
@@ -99,7 +99,7 @@ protected:
     CPaCommon hw;
 };
 
-class CPaOut: public CSoundOutInterface
+class CPaOut: public CSoundOutInterface, CSelectionInterface<CSoundOutInterface>
 {
 public:
     CPaOut();

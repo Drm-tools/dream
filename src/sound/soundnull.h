@@ -37,14 +37,17 @@ class CSoundInNull : public CSoundInInterface
 public:
     CSoundInNull() {}
     virtual ~CSoundInNull();
-    virtual bool	Init(int, int, bool) {
+    virtual bool Init(int, int, bool)
+    {
         return true;
     }
-    virtual bool	Read(CVector<short>&, CParameter &Parameters) {
+    virtual bool Read(CVector<short> &, CParameter &Parameters)
+    {
         return false;
     }
-    virtual void		Close() {}
-	virtual std::string		GetVersion() { return "no audio interface"; }
+    virtual void Close() {}
+    virtual std::string GetVersion() { return "no audio interface"; }
+
 private:
     std::string sDev;
 };
@@ -54,15 +57,18 @@ class CSoundOutNull : public CSoundOutInterface
 public:
     CSoundOutNull() {}
     virtual ~CSoundOutNull();
-    virtual bool	Init(int, int, bool) {
+    virtual bool Init(int, int, bool)
+    {
         return true;
     }
-    virtual bool	Write(CVector<short>&) {
+    virtual bool Write(CVector<short> &)
+    {
         return false;
     }
 
-    virtual void		Close() {}
-	virtual std::string		GetVersion() { return "no audio interface"; }
+    virtual void Close() {}
+    virtual std::string GetVersion() { return "no audio interface"; }
+
 private:
     std::string sDev;
 };

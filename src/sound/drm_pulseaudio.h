@@ -91,7 +91,7 @@ protected:
 #endif
 };
 
-class CSoundInPulse : public CSoundPulse, public CSoundInInterface, public CSelectionInterface
+class CSoundInPulse : public CSoundPulse, public CSoundInInterface, public CSelectionInterface<CSoundInInterface>
 {
 public:
 	CSoundInPulse();
@@ -132,7 +132,7 @@ protected:
 #endif
 };
 
-class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface, CSelectionInterface
+class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface, CSelectionInterface<CSoundOutInterface>
 {
 public:
 	CSoundOutPulse();

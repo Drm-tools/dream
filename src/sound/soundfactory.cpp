@@ -94,41 +94,14 @@ void CSoundFactory<T>::SetItem(std::string sNewDev)
 {
     currentDevice = sNewDev;
 }
+
 CSoundInInterface* CSoundFactory<T>::GetItem()
 {
-    return new CSoundInNull();
+    if (drivers.size() == 0) return nullptr;
+    return drivers[currentDriver]->GetItem();
 }
 
 #if 0
-
-
-
-
-    void Init(std::vector<CSelectionInterface*> ci)
-    {
-        devices = ci;
-        for(size_t i=0; i<devices.size(); i++) {
-            std::vector<std::string> n, d;
-            std::string dd;
-            devices[i]->Enumerate(n, d, dd);
-	        if (n.size()>0) {
-                pDevice = devices[i];
-                break;
-	        }
-        }
-    }
-    virtual ~CCompoundSelectionInterface() {}
-    virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
-    {
-        for(size_t i=0; i<devices.size(); i++) {
-            std::vector<std::string> n, d;
-            std::string dd;
-            devices[i]->Enumerate(n, d, dd);
-            names.insert(names.end(), n.begin(), n.end());
-            descriptions.insert(descriptions.end(), d.begin(), d.end());
-            defaultDevice = dd;
-        }
-    }
 
     virtual void SetItem(std::string sNewDevice)
     {
@@ -151,15 +124,9 @@ CSoundInInterface* CSoundFactory<T>::GetItem()
             }
         }
     }
-
-    virtual std::string	GetItem()
-    {
-        if (pDevice != nullptr) return pDevice->GetItem();
-        return "";
-    }
 #endif
 
-CSoundFactory<CSoundInInterface>::CSoundFactory(): drivers(), currentDriver(0)
+CSoundFactory<CSoundInInterface>::CSoundFactory(): currentDevice(), drivers(), currentDriver(0)
 {
 #ifdef _WIN32
     drivers.push_back(new CSoundInMMSystem();

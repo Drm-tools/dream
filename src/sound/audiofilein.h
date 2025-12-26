@@ -36,7 +36,7 @@
 #include "../resample/caudioresample.h"
 
 /* Classes ********************************************************************/
-class CAudioFileIn : public CSoundInInterface, public CSelectionInterface
+class CAudioFileIn : public CSoundInInterface, public CSelectionInterface<CSoundInInterface>
 {
 public:
     CAudioFileIn();
