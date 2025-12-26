@@ -204,20 +204,14 @@ unix {
 unix:!cross_compile {
     DEFINES += HAVE_LIBPCAP
     LIBS += -lpcap
-    !sound {
-         # check for pulseaudio before portaudio
-         exists(/usr/include/pulse/pulseaudio.h) | \
-         exists(/usr/local/include/pulse/pulseaudio.h) {
-         #packagesExist(libpulse)
-          CONFIG += pulseaudio sound
-         }
-         else {
-           exists(/usr/include/portaudio.h) | \
-           exists(/usr/local/include/portaudio.h) {
-           #packagesExist(portaudio-2.0)
-              CONFIG += portaudio sound
-           }
-        }
+    packagesExist(libpulse) {
+        CONFIG += pulseaudio sound
+    }
+    packagesExist(portaudio-2.0) {
+        CONFIG += portaudio sound
+    }
+    packagesExist(jack) {
+        CONFIG += jack sound
     }
     qt5|contains(QT_VERSION, ^4\\.8.*) {
       packagesExist(sndfile) {
@@ -393,7 +387,7 @@ alsa {
     DEFINES += USE_ALSA
     HEADERS += src/linux/alsain.h src/linux/alsaout.h src/linux/alsacommon.h
     SOURCES += src/linux/alsain.cpp src/linux/alsaout.cpp src/linux/alsacommon.cpp
-    LIBS += -lasound
+    PKG_CONFIG += alsa
     message("with alsa")
 }
 portaudio {
@@ -423,6 +417,13 @@ pulseaudio {
         LIBS += -lpulse
     }
     message("with pulseaudio")
+}
+jack {
+    DEFINES += USE_JACK
+    PKG_CONFIG += jack
+    HEADERS += src/linux/jack.h
+    SOURCES += src/linux/jack.cpp
+    message("with jack")
 }
 soapysdr {
     DEFINES += USE_SOAPYSDR

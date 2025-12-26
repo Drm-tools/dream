@@ -99,14 +99,12 @@ capture_stereo(jack_nframes_t nframes, void *arg)
 }
 
 pair< string, string>
-CJackPorts::get_ports(int dev)
+CJackPorts::get_ports(string dev)
 {
-    const size_t n = devices.size();
-    if (n==0)
-        return pair<string,string>("","");
-    if (dev<0 || dev>=int(n))
-        return ports[devices[n-1]];
-    return ports[devices[dev]];
+    if (ports.contains(dev)) {
+        return ports.at(dev);
+    }
+    return pair<string,string>("","");
 }
 
 void
@@ -349,7 +347,7 @@ CSoundInJack::~CSoundInJack()
 }
 
 void
-CSoundInJack::Enumerate(vector<string>& choices)
+CSoundInJack::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultDev)
 {
     ports.load(data.client, JackPortIsOutput);
     choices = ports.devices;
@@ -362,11 +360,11 @@ CSoundInJack::GetItem()
 }
 
 void
-CSoundInJack::SetItem(int iNewDevice)
+CSoundInJack::SetItem(int sNewDevice)
 {
-    if (dev != iNewDevice)
+    if (dev != sNewDevice)
     {
-        dev = iNewDevice;
+        dev = sNewDevice;
         device_changed = true;
     }
 }
@@ -522,24 +520,24 @@ CSoundOutJack & CSoundOutJack::operator=(const CSoundOutJack & e)
 }
 
 void
-CSoundOutJack::Enumerate(vector<string>& choices)
+CSoundOutJack::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultDev)
 {
     ports.load(data.client, JackPortIsInput);
     choices = ports.devices;
 }
 
-int
-CSoundOutJack::GetItem()
+string
+CSoundOutJack::GetItemName()
 {
     return dev;
 }
 
 void
-CSoundOutJack::SetItem(int iNewDevice)
+CSoundOutJack::SetItem(string sNewDevice)
 {
-    if (dev != iNewDevice)
+    if (dev != sNewDevice)
     {
-        dev = iNewDevice;
+        dev = sNewDevice;
         device_changed = true;
     }
 }

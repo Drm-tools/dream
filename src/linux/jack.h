@@ -56,7 +56,7 @@ public:
     CJackPorts():devices(),ports() {}
     std::vector<std::string> devices;
     void load(jack_client_t * client, unsigned long flags);
-    pair< std::string, std::string>get_ports(int dev);
+    pair< std::string, std::string>get_ports(std::string dev);
 protected:
     map<std::string, pair< std::string, std::string> > ports;
 };
@@ -69,10 +69,10 @@ public:
     CSoundInJack(const CSoundInJack& e);
     CSoundInJack& operator=(const CSoundInJack& e);
 
-    virtual void	Init(int iNewBufferSize, bool bNewBlocking = true);
-    virtual bool	Read(CVector<short>& psData);
-    virtual void		Enumerate(std::vector<std::string>&);
-    virtual std::string			GetItem();
+    virtual void	    Init(int iNewBufferSize, bool bNewBlocking = true);
+    virtual bool	    Read(CVector<short>& psData);
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
+    virtual std::string	GetItemName();
     virtual void		SetItem(std::string sNewDev);
     virtual void		Close();
 	virtual std::string	GetVersion() { return "JACK audio input"; }
@@ -81,7 +81,7 @@ protected:
     bool bBlocking;
     bool device_changed;
     instance_data_t capture_data;
-    int dev;
+    std::string dev;
     CJackPorts ports;
 };
 
@@ -94,18 +94,18 @@ public:
     CSoundOutJack& operator=(const CSoundOutJack& e);
 
     virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
-    virtual bool	Write(CVector<short>& psData);
-    virtual void		Enumerate(std::vector<std::string>&);
-    virtual int			GetItem();
+    virtual bool	    Write(CVector<short>& psData);
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
+    virtual std::string	GetItemName();
     virtual void		SetItem(int iNewDev);
     virtual void		Close();
-	virtual std::string		GetVersion() { return "JACK audio output"; }
+	virtual std::string	GetVersion() { return "JACK audio output"; }
 protected:
     int iBufferSize;
     bool bBlocking;
     bool device_changed;
     instance_data_t play_data;
-    int dev;
+    std::string dev;
     CJackPorts ports;
 };
 

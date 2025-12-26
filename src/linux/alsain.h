@@ -51,7 +51,7 @@ public:
 
     virtual void Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
     virtual void SetItem(std::string sNewDevice);
-    virtual std::string GetItem();
+    virtual std::string GetItemName();
 
     bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking = true);
     bool Read(CVector<short>& psData, CParameter& Parameters);

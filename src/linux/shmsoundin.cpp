@@ -74,22 +74,23 @@ CShmSoundIn::Init(int iNewBufferSize, bool bNewBlocking)
 }
 
 void
-CShmSoundIn::Enumerate(vector < string > &choices)
+CShmSoundIn::Enumerate(vector <string> &names, vector<string>& descriptions, string& defaultDev)
 {
-    choices.clear();
+    names.clear();
     if (shmid==-1)
         return;
-    choices.push_back(name);
+    names.push_back(name);
+    descriptions.push_back("");
+    defaultDev = name;
 }
 
 void
-CShmSoundIn::SetItem(int iNewDevice)
+CShmSoundIn::SetItem(string)
 {
-    (void)iNewDevice;
 }
 
-int
-CShmSoundIn::GetItem()
+string
+CShmSoundIn::GetItemName()
 {
     if (shmid==-1)
         return -1;
