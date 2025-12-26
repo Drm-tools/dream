@@ -30,7 +30,6 @@
 #define _JACK_H
 
 #include "../sound/soundinterface.h"
-#include "../sound/selectioninterface.h"
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
 #include <map>
@@ -61,7 +60,7 @@ protected:
     map<std::string, pair< std::string, std::string> > ports;
 };
 
-class CSoundInJack : public CSoundInInterface, public CSelectionInterface
+class CSoundInJack : public CSoundInInterface
 {
 public:
     CSoundInJack();
@@ -85,7 +84,7 @@ protected:
     CJackPorts ports;
 };
 
-class CSoundOutJack : public CSoundOutInterface, public CSelectionInterface
+class CSoundOutJack : public CSoundOutInterface
 {
 public:
     CSoundOutJack();
