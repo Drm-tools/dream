@@ -93,19 +93,9 @@ std::string CSoundFactory<T>::GetItemName()
 void CSoundFactory<T>::SetItem(std::string sNewDev)
 {
     currentDevice = sNewDev;
-}
-
-CSoundInInterface* CSoundFactory<T>::GetItem()
-{
-    if (drivers.size() == 0) return nullptr;
-    return drivers[currentDriver]->GetItem();
-}
-
-#if 0
-
-    virtual void SetItem(std::string sNewDevice)
-    {
-        if (pDevice != nullptr) {
+    if (drivers.size() == 0) return;
+    auto pDevice = drivers[currentDriver];
+    if (pDevice != nullptr) {
             std::vector<std::string> n, d;
             std::string dd;
             pDevice->Enumerate(n, d, dd);
@@ -114,17 +104,23 @@ CSoundInInterface* CSoundFactory<T>::GetItem()
                 return;
             }
         }
-        for(size_t i=0; i<devices.size(); i++) {
+        for(size_t i=0; i<drivers.size(); i++) {
             std::vector<std::string> n, d;
             std::string dd;
-            devices[i]->Enumerate(n, d, dd);
+            drivers[i]->Enumerate(n, d, dd);
             if (std::fd(n.begin(), n.end(), sNewDevice) != n.end() ) {
-                pDevice = devices[i];
-                pDevice->SetItem(sNewDevice);
+                currentDriver = i;
+                drivers[i]->SetItem(sNewDevice);
+                break;
             }
         }
-    }
-#endif
+}
+
+CSoundInInterface* CSoundFactory<T>::GetItem()
+{
+    if (drivers.size() == 0) return nullptr;
+    return drivers[currentDriver]->GetItem();
+}
 
 CSoundFactory<CSoundInInterface>::CSoundFactory(): currentDevice(), drivers(), currentDriver(0)
 {
