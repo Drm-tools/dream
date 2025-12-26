@@ -52,7 +52,7 @@
 #define BYTES_PER_SAMPLE 2    /* Number of bytes per sample */
 
 /* Classes ********************************************************************/
-class CSoundInMMSystem : public CSoundInInterface, public CSelectionInterface<CSoundInInterface>
+class CSoundInMMSystem : public CSoundInInterface
 {
 public:
     CSoundInMMSystem();
@@ -89,7 +89,7 @@ protected:
     short *psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
 };
 
-class CSoundOutMMSystem : public CSoundOutInterface, public CSelectionInterface<CSoundOutInterface>
+class CSoundOutMMSystem : public CSoundOutInterface
 {
 public:
     CSoundOutMMSystem();
