@@ -30,7 +30,7 @@
 
 #ifdef _WIN32
 /* mmsystem sound interface */
-# include "../windows/Sound.h"
+# include "../wdows/Sound.h"
 #endif
 
 # ifdef USE_ALSA
@@ -136,7 +136,7 @@ CSoundInInterface* CSoundFactory<T>::GetItem()
             std::vector<std::string> n, d;
             std::string dd;
             pDevice->Enumerate(n, d, dd);
-            if ( std::find(n.begin(), n.end(), sNewDevice) != n.end() ) {
+            if ( std::fd(n.begin(), n.end(), sNewDevice) != n.end() ) {
                 pDevice->SetItem(sNewDevice);
                 return;
             }
@@ -145,7 +145,7 @@ CSoundInInterface* CSoundFactory<T>::GetItem()
             std::vector<std::string> n, d;
             std::string dd;
             devices[i]->Enumerate(n, d, dd);
-            if (std::find(n.begin(), n.end(), sNewDevice) != n.end() ) {
+            if (std::fd(n.begin(), n.end(), sNewDevice) != n.end() ) {
                 pDevice = devices[i];
                 pDevice->SetItem(sNewDevice);
             }
@@ -157,6 +157,7 @@ CSoundInInterface* CSoundFactory<T>::GetItem()
         if (pDevice != nullptr) return pDevice->GetItem();
         return "";
     }
+#endif
 
 CSoundFactory<CSoundInInterface>::CSoundFactory(): drivers(), currentDriver(0)
 {
@@ -165,30 +166,30 @@ CSoundFactory<CSoundInInterface>::CSoundFactory(): drivers(), currentDriver(0)
 #endif
 
 # ifdef USE_ALSA
-    inDrivers.push_back(new CSoundInAlsa());
+    drivers.push_back(new CSoundInAlsa());
 # endif
 
 # ifdef USE_JACK
-    inDrivers.push_back(new CSoundInJack();
+    drivers.push_back(new CSoundInJack();
 # endif
 
 # ifdef USE_PULSEAUDIO
-    inDrivers.push_back(new CSoundInPulse());
+    drivers.push_back(new CSoundInPulse());
 # endif
 
 # ifdef USE_PORTAUDIO
-    inDrivers.push_back(new CSoundInPaIn());
+    drivers.push_back(new CSoundInPaIn());
 # endif
 
 # ifdef USE_OPENSL
-    inDrivers.push_back(new COpenSLESIn());
+    drivers.push_back(new COpenSLESIn());
 # endif
 
 #ifdef USE_SOAPYSDR
-    inDrivers.push_back(new CSoapySDRIn());
+    drivers.push_back(new CSoapySDRIn());
 #endif
-    inDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CAudioFileIn()));
-    inDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
+    drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CAudioFileIn()));
+    drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
 }
 
 CSoundFactory<CSoundOutInterface>::CSoundFactory(): drivers(), currentDriver(0)
@@ -220,11 +221,3 @@ CSoundFactory<CSoundOutInterface>::CSoundFactory(): drivers(), currentDriver(0)
     outDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundOutNull()));
 }
 
-
-protected:
-
-    std::vector<CSelectionInterface*> devices;
-    CSelectionInterface *pDevice;
-};
-
-#endif
