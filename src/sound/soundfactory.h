@@ -2,6 +2,7 @@
 #define SOUNDFACTORY_H
 
 #include "selectioninterface.h"
+#include "soundinterface.h"
 
 template<class T>
 class CSoundFactory: public CSelectionInterface<T>
@@ -20,14 +21,14 @@ protected:
 };
 
 template<>
-class CSoundFactory<CSoundIn>
+class CSoundFactory<CSoundInInterface>
 {
 public:
     CSoundFactory();
 };
 
 template<>
-class CSoundFactory<CSoundOut>
+class CSoundFactory<CSoundOutInterface>
 {
 public:
     CSoundFactory();
