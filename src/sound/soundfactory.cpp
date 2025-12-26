@@ -61,45 +61,8 @@
 
 #include "soundnull.h"
 #include "audiofilein.h"
-
 CSoundFactory<T>::CSoundFactory(): drivers(), currentDriver(0)
 {
-#ifdef _WIN32
-    inDrivers.push_back(new CSoundInMMSystem);
-    outDrivers.push_back(new CSoundoutMMSystem);
-#endif
-
-# ifdef USE_ALSA
-    inDrivers.push_back(new CSoundInAlsa());
-    outDrivers.push_back(CSoundOutAlsa());
-# endif
-
-# ifdef USE_JACK
-    inDrivers.push_back(new CSoundInJack());
-    outDrivers.push_back(new CSoundOutJack());
-# endif
-
-# ifdef USE_PULSEAUDIO
-    inDrivers.push_back(new CSoundInPulse());
-    outDrivers.push_back(new CSoundOutPulse());
-# endif
-
-# ifdef USE_PORTAUDIO
-    inDrivers.push_back(new CSoundInPaIn());
-    outDrivers.push_back(new CSoundOutPaOut());
-# endif
-
-# ifdef USE_OPENSL
-    inDrivers.push_back(new COpenSLESIn());
-    outDrivers.push_back(new COpenSLESOut());
-# endif
-
-#ifdef USE_SOAPYSDR
-    inDrivers.push_back(new CSoapySDRIn());
-#endif
-    inDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CAudioFileIn()));
-    inDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
-    outDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundOutNull()));
 }
 
 CSoundFactory<T>::~CSoundFactory()
@@ -194,6 +157,69 @@ CSoundInInterface* CSoundFactory<T>::GetItem()
         if (pDevice != nullptr) return pDevice->GetItem();
         return "";
     }
+
+CSoundFactory<CSoundInInterface>::CSoundFactory(): drivers(), currentDriver(0)
+{
+#ifdef _WIN32
+    drivers.push_back(new CSoundInMMSystem();
+#endif
+
+# ifdef USE_ALSA
+    inDrivers.push_back(new CSoundInAlsa());
+# endif
+
+# ifdef USE_JACK
+    inDrivers.push_back(new CSoundInJack();
+# endif
+
+# ifdef USE_PULSEAUDIO
+    inDrivers.push_back(new CSoundInPulse());
+# endif
+
+# ifdef USE_PORTAUDIO
+    inDrivers.push_back(new CSoundInPaIn());
+# endif
+
+# ifdef USE_OPENSL
+    inDrivers.push_back(new COpenSLESIn());
+# endif
+
+#ifdef USE_SOAPYSDR
+    inDrivers.push_back(new CSoapySDRIn());
+#endif
+    inDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CAudioFileIn()));
+    inDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
+}
+
+CSoundFactory<CSoundOutInterface>::CSoundFactory(): drivers(), currentDriver(0)
+{
+#ifdef _WIN32
+    outDrivers.push_back(new CSoundoutMMSystem);
+#endif
+
+# ifdef USE_ALSA
+    outDrivers.push_back(new CSoundOutAlsa());
+# endif
+
+# ifdef USE_JACK
+    outDrivers.push_back(new CSoundOutJack());
+# endif
+
+# ifdef USE_PULSEAUDIO
+    outDrivers.push_back(new CSoundOutPulse());
+# endif
+
+# ifdef USE_PORTAUDIO
+    outDrivers.push_back(new CSoundOutPaOut());
+# endif
+
+# ifdef USE_OPENSL
+    outDrivers.push_back(new COpenSLESOut());
+# endif
+
+    outDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundOutNull()));
+}
+
 
 protected:
 
