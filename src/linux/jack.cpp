@@ -26,12 +26,15 @@
 */
 
 #define _POSIX_C_SOURCE 199309
-#include <time.h>
+#include <ctime>
 #include "jack.h"
 #include <sstream>
 #include <iostream>
 #include <cmath>
 #include <cstdlib>
+#include <map>
+#include <pair>
+
 using namespace std;
 
 instance_data_t::instance_data_t():num_channels(2),
@@ -451,8 +454,8 @@ CSoundInJack::Read(CVector<short>& psData)
 void
 CSoundInJack::Close()
 {
-    jack_port_disconnect(data.client, capture_data.left);
-    jack_port_disconnect(data.client, capture_data.right);
+    jack_port_disconnect(common_data.client, capture_data.left);
+    jack_port_disconnect(common_data.client, capture_data.right);
     device_changed = true;
 }
 
