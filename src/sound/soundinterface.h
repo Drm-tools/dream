@@ -30,10 +30,11 @@
 #define SOUNDINTERFACE_H
 
 #include "../util/Vector.h"
+#include "selectioninterface.h"
 
 class CParameter;
 
-class CSoundInInterface
+class CSoundInInterface: CSelectionInterface
 {
 public:
     virtual 		~CSoundInInterface() {}
@@ -46,7 +47,7 @@ public:
 
 };
 
-class CSoundOutInterface
+class CSoundOutInterface: CSelectionInterface
 {
 public:
     virtual 		~CSoundOutInterface() {}

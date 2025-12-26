@@ -30,13 +30,12 @@
 #define _AUDIOFILEIN
 
 #include "soundinterface.h"
-#include "selectioninterface.h"
 #include "soundnull.h"
 #include "../util/Pacer.h"
 #include "../resample/caudioresample.h"
 
 /* Classes ********************************************************************/
-class CAudioFileIn : public CSoundInInterface, public CSelectionInterface<CSoundInInterface>
+class CAudioFileIn : public CSoundInInterface
 {
 public:
     CAudioFileIn();
@@ -45,7 +44,6 @@ public:
     virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) {}
     virtual void		SetItem(std::string sNewDevice) {sCurrentDevice = sNewDevice;}
     virtual std::string GetItemName() {return sCurrentDevice;}
-    virtual CSoundInInterface* GetItem() { return this; }
     virtual void		SetFileName(const std::string& strFileName);
     virtual int			GetSampleRate() {return iRequestedSampleRate;}
 

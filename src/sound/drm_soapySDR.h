@@ -2,13 +2,12 @@
 #define DRM_SOAPYSDR_H
 
 #include "soundinterface.h"
-#include "selectioninterface.h"
 #include "soundnull.h"
 #include "../tuner.h"
 
 namespace SoapySDR {class Device; class Stream;};
 
-class CSoapySDRIn : public CSoundInInterface, public CTuner, public CSelectionInterface<CSoundInInterface>
+class CSoapySDRIn : public CSoundInInterface, public CTuner
 {
 public:
 

@@ -70,7 +70,7 @@ typedef struct pa_object
 
 /* Classes ********************************************************************/
 
-class CSoundPulse
+class CSoundPulse: CSelectionInterface
 {
 public:
 	CSoundPulse(bool bPlayback);
@@ -88,15 +88,11 @@ protected:
 #endif
 };
 
-class CSoundInPulse : public CSoundPulse, public CSoundInInterface, public CSelectionInterface<CSoundInInterface>
+class CSoundInPulse : public CSoundPulse, public CSoundInInterface
 {
 public:
 	CSoundInPulse();
 	virtual ~CSoundInPulse();
-	void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultDevice) { CSoundPulse::Enumerate(names, descriptions, defaultDevice); }
-	std::string GetItemName() { return CSoundPulse::GetItemName(); }
-	CSoundInInterface *GetItem() { return this; }
-	void SetItem(std::string sNewDevice) { CSoundPulse::SetItem(sNewDevice); }
 	std::string GetVersion() { return pa_get_library_version(); }
 
 	bool Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
@@ -130,20 +126,13 @@ protected:
 #endif
 };
 
-class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface, CSelectionInterface<CSoundOutInterface>
+class CSoundOutPulse : public CSoundPulse, public CSoundOutInterface
 {
 public:
 	CSoundOutPulse();
 	virtual ~CSoundOutPulse();
-	void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultDevice)
-	{
-		CSoundPulse::Enumerate(names, descriptions, defaultDevice);
-	}
-	std::string GetItemName() { return CSoundPulse::GetItemName(); }
-	CSoundOutInterface *GetItem() { return this; }
-	void SetItem(std::string sNewDevice) { CSoundPulse::SetItem(sNewDevice); }
-	std::string GetVersion() { return pa_get_library_version(); }
 
+	std::string GetVersion() { return pa_get_library_version(); }
 	bool Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
 	bool Write(CVector<_SAMPLE> &psData);
 	void Close();

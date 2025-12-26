@@ -32,14 +32,12 @@
 #include <vector>
 #include <string>
 
-template<class T>
 class CSelectionInterface
 {
 public:
     virtual 			~CSelectionInterface() {}
     virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)=0;
     virtual std::string	GetItemName()=0;
-    virtual T*          GetItem()=0;
     virtual void		SetItem(std::string sNewDev)=0;
 };
 #endif

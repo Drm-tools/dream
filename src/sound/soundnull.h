@@ -47,7 +47,9 @@ public:
     }
     virtual void Close() {}
     virtual std::string GetVersion() { return "no audio interface"; }
-
+    virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) {}
+    virtual std::string	GetDev() { return ""; }
+    virtual void		SetDev(std::string) {}
 private:
     std::string sDev;
 };
@@ -68,7 +70,9 @@ public:
 
     virtual void Close() {}
     virtual std::string GetVersion() { return "no audio interface"; }
-
+    virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) {}
+    virtual std::string	GetDev() { return ""; }
+    virtual void		SetDev(std::string) {}
 private:
     std::string sDev;
 };
