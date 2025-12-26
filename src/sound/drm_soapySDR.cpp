@@ -17,7 +17,7 @@
 
 // Constructor(s)
 CSoapySDRIn::CSoapySDRIn() :
-  CSoundInInterface(), CTuner(), CSelectionInterface(),
+  CSoundInInterface(), CTuner(),
   currentDev(""), iSampleRate(96000), iBufferSize(0), iFrequency(0), pDevice(nullptr), pStream(nullptr)
 {
     //pFile = fopen("raw_input.iq", "w");

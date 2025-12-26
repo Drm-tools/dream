@@ -34,7 +34,7 @@
 
 class CParameter;
 
-class CSoundInInterface: CSelectionInterface
+class CSoundInInterface: public CSelectionInterface
 {
 public:
     virtual 		~CSoundInInterface() {}
@@ -47,7 +47,7 @@ public:
 
 };
 
-class CSoundOutInterface: CSelectionInterface
+class CSoundOutInterface: public CSelectionInterface
 {
 public:
     virtual 		~CSoundOutInterface() {}
