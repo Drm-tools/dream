@@ -19,4 +19,17 @@ protected:
     size_t currentDriver;
 };
 
+template<>
+class CSoundFactory<CSoundIn>
+{
+public:
+    CSoundFactory();
+};
+
+template<>
+class CSoundFactory<CSoundOut>
+{
+public:
+    CSoundFactory();
+};
 #endif // SOUNDFACTORY_H
