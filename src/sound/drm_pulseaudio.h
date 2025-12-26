@@ -77,7 +77,7 @@ public:
 	virtual ~CSoundPulse();
 	void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultDevice);
 	void SetItem(std::string sNewDevice);
-	std::string GetItem();
+	std::string GetItemName();
 
 protected:
 	bool bPlayback;

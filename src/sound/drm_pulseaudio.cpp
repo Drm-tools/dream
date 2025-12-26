@@ -763,7 +763,7 @@ void CSoundPulse::SetItem(string sNewDevice)
     }
 }
 
-string CSoundPulse::GetItem()
+string CSoundPulse::GetItemName()
 {
     return sCurrentDevice;
 }

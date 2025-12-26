@@ -34,32 +34,31 @@
 #include <portaudio.h>
 #include "pa_ringbuffer.h"
 
-class CPaCommon: public CSelectionInterface, public CSelectionInterface
+class CPaCommon : public CSelectionInterface, public CSelectionInterface
 {
 public:
     CPaCommon(bool);
-    virtual 		~CPaCommon();
+    virtual ~CPaCommon();
 
-    virtual void	Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
-    virtual void	SetItem(std::string sNewDevice);
-    virtual std::string	GetItem();
+    virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultDevice);
+    virtual void SetItem(std::string sNewDevice);
+    virtual std::string GetItemName();
 
-    bool		Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
-    void			ReInit();
-    bool		Read(CVector<short>& psData);
-    bool		Write(CVector<short>& psData);
-    void			Close();
+    bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
+    void ReInit();
+    bool Read(CVector<short> &psData);
+    bool Write(CVector<short> &psData);
+    void Close();
 
     PaUtilRingBuffer ringBuffer;
     int xruns;
 
 protected:
-
     PaStream *stream;
     std::vector<std::string> names;
     std::vector<PaDeviceIndex> devices;
     std::string dev;
-    bool is_capture,blocking,device_changed,xrun;
+    bool is_capture, blocking, device_changed, xrun;
     int framesPerBuffer;
     int iBufferSize;
     char *ringBufferData;
@@ -68,64 +67,63 @@ protected:
     static int pa_count;
 };
 
-class CPaIn: public CSoundInInterface, CSelectionInterface<CSoundInInterface>
+class CPaIn : public CSoundInInterface, CSelectionInterface<CSoundInInterface>
 {
 public:
     CPaIn();
-    virtual 		~CPaIn();
-    virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+    virtual ~CPaIn();
+    virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultDevice)
     {
         hw.Enumerate(names, descriptions, defaultDevice);
     }
-    virtual void	SetItem(std::string sNewDevice)
+    virtual void SetItem(std::string sNewDevice)
     {
         hw.SetItem(sNewDevice);
     }
-    virtual std::string	GetItemName()
+    virtual std::string GetItemName()
     {
-        return hw.GetItem();
+        return hw.GetItemName();
     }
-    virtual std::string	GetVersion()
+    virtual std::string GetVersion()
     {
         return Pa_GetVersionInfo()->versionText;
     }
 
-    virtual bool	Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
-    virtual void		Close();
-    virtual bool	Read(CVector<short>& psData);
+    virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
+    virtual void Close();
+    virtual bool Read(CVector<short> &psData);
 
 protected:
-
     CPaCommon hw;
 };
 
-class CPaOut: public CSoundOutInterface, CSelectionInterface<CSoundOutInterface>
+class CPaOut : public CSoundOutInterface, CSelectionInterface<CSoundOutInterface>
 {
 public:
     CPaOut();
-    virtual 			~CPaOut();
-    virtual void	Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput)
+    virtual ~CPaOut();
+    virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultOutput)
     {
         hw.Enumerate(names, descriptions, defaultOutput);
     }
-    virtual void	SetItem(std::string sNewDevice)
+    virtual void SetItem(std::string sNewDevice)
     {
         hw.SetItem(sNewDevice);
     }
-    virtual std::string	GetItem()
+    virtual std::string GetItemName()
     {
-        return hw.GetItem();
+        return hw.GetItemName();
     }
-    virtual std::string	GetVersion()
+    virtual CSoundOutInterface* GetItem() { return this; a}
+    virtual std::string GetVersion()
     {
         return Pa_GetVersionInfo()->versionText;
     }
-    virtual bool	Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
-    virtual void		Close();
-    virtual bool	Write(CVector<short>& psData);
+    virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
+    virtual void Close();
+    virtual bool Write(CVector<short> &psData);
 
 protected:
-
     CPaCommon hw;
 };
 
