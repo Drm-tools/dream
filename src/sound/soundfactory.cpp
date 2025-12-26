@@ -30,56 +30,58 @@
 
 #ifdef _WIN32
 /* mmsystem sound interface */
-# include "../wdows/Sound.h"
+#include "../wdows/Sound.h"
 #endif
 
-# ifdef USE_ALSA
-#  include "../linux/alsain.h"
-#  include "../linux/alsaout.h"
-# endif
+#ifdef USE_ALSA
+#include "../linux/alsain.h"
+#include "../linux/alsaout.h"
+#endif
 
-# ifdef USE_JACK
-#  include "../linux/jack.h"
-# endif
+#ifdef USE_JACK
+#include "../linux/jack.h"
+#endif
 
-# ifdef USE_PULSEAUDIO
-#  include "drm_pulseaudio.h"
-# endif
+#ifdef USE_PULSEAUDIO
+#include "drm_pulseaudio.h"
+#endif
 
-# ifdef USE_PORTAUDIO
-#  include "drm_portaudio.h"
-# endif
+#ifdef USE_PORTAUDIO
+#include "drm_portaudio.h"
+#endif
 
-# ifdef USE_OPENSL
-#  include "../android/soundin.h"
-#  include "../android/soundout.h"
-# endif
+#ifdef USE_OPENSL
+#include "../android/soundin.h"
+#include "../android/soundout.h"
+#endif
 
 #ifdef USE_SOAPYSDR
-#  include "drm_soapySDR.h"
+#include "drm_soapySDR.h"
 #endif
 
 #include "soundnull.h"
 #include "audiofilein.h"
 
-template<typename T>
-CSoundFactory<T>::CSoundFactory(): currentDevice(), drivers(), currentDriver(0)
+template <typename T>
+CSoundFactory<T>::CSoundFactory() : currentDevice(), drivers(), currentDriver(0)
 {
 }
 
-template<typename T>
+template <typename T>
 CSoundFactory<T>::~CSoundFactory()
 {
-    for(size_t i=0; i<drivers.size(); i++) delete drivers[i];
+    for (size_t i = 0; i < drivers.size(); i++)
+        delete drivers[i];
 }
 
-template<typename T>
-void CSoundFactory<T>::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+template <typename T>
+void CSoundFactory<T>::Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultDevice)
 {
     names.clear();
     descriptions.clear();
     defaultDevice = "null";
-    for(size_t i=0; i<drivers.size(); i++) {
+    for (size_t i = 0; i < drivers.size(); i++)
+    {
         std::vector<std::string> n, d;
         std::string dd;
         drivers[i]->Enumerate(n, d, dd);
@@ -89,72 +91,78 @@ void CSoundFactory<T>::Enumerate(std::vector<std::string>& names, std::vector<st
     }
 }
 
-template<typename T>
+template <typename T>
 std::string CSoundFactory<T>::GetItemName()
 {
     return currentDevice;
 }
 
-template<typename T>
-void CSoundFactory<T>::SetItem(std::string sNewDev)
+template <typename T>
+void CSoundFactory<T>::SetItem(std::string sNewDevice)
 {
     currentDevice = sNewDev;
-    if (drivers.size() == 0) return;
+    if (drivers.size() == 0)
+        return;
     auto pDevice = drivers[currentDriver];
-    if (pDevice != nullptr) {
-            std::vector<std::string> n, d;
-            std::string dd;
-            pDevice->Enumerate(n, d, dd);
-            if ( std::fd(n.begin(), n.end(), sNewDevice) != n.end() ) {
-                pDevice->SetItem(sNewDevice);
-                return;
-            }
+    if (pDevice != nullptr)
+    {
+        std::vector<std::string> n, d;
+        std::string dd;
+        pDevice->Enumerate(n, d, dd);
+        if (std::find(n.begin(), n.end(), sNewDevice) != n.end())
+        {
+            pDevice->SetItem(sNewDevice);
+            return;
         }
-        for(size_t i=0; i<drivers.size(); i++) {
-            std::vector<std::string> n, d;
-            std::string dd;
-            drivers[i]->Enumerate(n, d, dd);
-            if (std::fd(n.begin(), n.end(), sNewDevice) != n.end() ) {
-                currentDriver = i;
-                drivers[i]->SetItem(sNewDevice);
-                break;
-            }
+    }
+    for (size_t i = 0; i < drivers.size(); i++)
+    {
+        std::vector<std::string> n, d;
+        std::string dd;
+        drivers[i]->Enumerate(n, d, dd);
+        if (std::find(n.begin(), n.end(), sNewDevice) != n.end())
+        {
+            currentDriver = i;
+            drivers[i]->SetItem(sNewDevice);
+            break;
         }
+    }
 }
 
-template<typename T>
-T* CSoundFactory<T>::GetItem()
+template <typename T>
+T *CSoundFactory<T>::GetItem()
 {
-    if (drivers.size() == 0) return nullptr;
+    if (drivers.size() == 0)
+        return nullptr;
     return drivers[currentDriver]->GetItem();
 }
 
-template<typename CSoundInInterface>
-CSoundFactory<CSoundInInterface>::CSoundFactory(): currentDevice(), drivers(), currentDriver(0)
+template <typename CSoundInInterface>
+CSoundFactory<CSoundInInterface>::CSoundFactory() : currentDevice(), drivers(), currentDriver(0)
 {
 #ifdef _WIN32
     drivers.push_back(new CSoundInMMSystem();
 #endif
 
-# ifdef USE_ALSA
+#ifdef USE_ALSA
     drivers.push_back(new CSoundInAlsa());
-# endif
+#endif
 
-# ifdef USE_JACK
+#ifdef USE_JACK
     drivers.push_back(new CSoundInJack();
-# endif
+#endif
 
-# ifdef USE_PULSEAUDIO
+#ifdef USE_PULSEAUDIO
     drivers.push_back(new CSoundInPulse());
-# endif
+#endif
 
-# ifdef USE_PORTAUDIO
+#ifdef USE_PORTAUDIO
     drivers.push_back(new CSoundInPaIn());
-# endif
+#endif
 
-# ifdef USE_OPENSL
+#ifdef USE_OPENSL
     drivers.push_back(new COpenSLESIn());
-# endif
+#endif
 
 #ifdef USE_SOAPYSDR
     drivers.push_back(new CSoapySDRIn());
@@ -163,33 +171,32 @@ CSoundFactory<CSoundInInterface>::CSoundFactory(): currentDevice(), drivers(), c
     drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
 }
 
-template<typename CSoundOutInterface>
-CSoundFactory<CSoundOutInterface>::CSoundFactory(): drivers(), currentDriver(0)
+template <typename CSoundOutInterface>
+CSoundFactory<CSoundOutInterface>::CSoundFactory() : drivers(), currentDriver(0)
 {
 #ifdef _WIN32
     outDrivers.push_back(new CSoundoutMMSystem);
 #endif
 
-# ifdef USE_ALSA
+#ifdef USE_ALSA
     outDrivers.push_back(new CSoundOutAlsa());
-# endif
+#endif
 
-# ifdef USE_JACK
+#ifdef USE_JACK
     outDrivers.push_back(new CSoundOutJack());
-# endif
+#endif
 
-# ifdef USE_PULSEAUDIO
+#ifdef USE_PULSEAUDIO
     outDrivers.push_back(new CSoundOutPulse());
-# endif
+#endif
 
-# ifdef USE_PORTAUDIO
+#ifdef USE_PORTAUDIO
     outDrivers.push_back(new CSoundOutPaOut());
-# endif
+#endif
 
-# ifdef USE_OPENSL
+#ifdef USE_OPENSL
     outDrivers.push_back(new COpenSLESOut());
-# endif
+#endif
 
-    drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundOutNull()));
+    drivers.push_back(reinterpret_cast<CSelectionInterface *>(new CSoundOutNull()));
 }
-
