@@ -101,7 +101,7 @@ public:
 
     virtual std::string GetItemName();
     virtual void SetItem(std::string sNewDev);
-    virtual CSoundOutInterface GetItem() { return this; }
+    virtual CSoundOutInterface* GetItem() { return this; }
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
 
