@@ -100,7 +100,7 @@ std::string CSoundFactory<T>::GetItemName()
 template <typename T>
 void CSoundFactory<T>::SetItem(std::string sNewDevice)
 {
-    currentDevice = sNewDev;
+    currentDevice = sNewDevice;
     if (drivers.size() == 0)
         return;
     auto pDevice = drivers[currentDriver];
