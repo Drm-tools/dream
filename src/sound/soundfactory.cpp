@@ -141,7 +141,7 @@ template <>
 CSoundFactory<CSoundInInterface>::CSoundFactory() : currentDevice(), drivers(), currentDriver(0)
 {
 #ifdef _WIN32
-    drivers.push_back(new CSoundInMMSystem();
+    drivers.push_back(new CSoundInMMSystem());
 #endif
 
 #ifdef USE_ALSA
