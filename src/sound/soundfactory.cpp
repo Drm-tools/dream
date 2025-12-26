@@ -175,7 +175,7 @@ template <>
 CSoundFactory<CSoundOutInterface>::CSoundFactory() : drivers(), currentDriver(0)
 {
 #ifdef _WIN32
-    drivers.push_back(new CSoundoutMMSystem());
+    drivers.push_back(new CSoundOutMMSystem());
 #endif
 
 #ifdef USE_ALSA
