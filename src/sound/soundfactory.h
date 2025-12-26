@@ -16,9 +16,9 @@ public:
     T* GetItem() override;
 
     template <>
-    CSoundFactory<CSoundInInterface>();
+    CSoundFactory<CSoundInInterface>::CSoundFactory();
     template<>
-    CSoundFactory<CSoundOutInterface>();
+    CSoundFactory<CSoundOutInterface>::CSoundFactory();
 protected:
     std::string currentDevice;
     std::vector< CSelectionInterface<T> > drivers;
