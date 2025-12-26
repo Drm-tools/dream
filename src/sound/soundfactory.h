@@ -4,7 +4,7 @@
 #include "selectioninterface.h"
 #include "soundinterface.h"
 
-template<class T>
+template<typename T>
 class CSoundFactory: public CSelectionInterface<T>
 {
 public:
@@ -14,11 +14,6 @@ public:
     std::string GetItemName() override;
     void SetItem(std::string sNewDev) override;
     T* GetItem() override;
-
-    template <>
-    CSoundFactory<CSoundInInterface>::CSoundFactory();
-    template<>
-    CSoundFactory<CSoundOutInterface>::CSoundFactory();
 protected:
     std::string currentDevice;
     std::vector< CSelectionInterface<T> > drivers;

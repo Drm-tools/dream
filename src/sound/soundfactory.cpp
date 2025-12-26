@@ -61,15 +61,19 @@
 
 #include "soundnull.h"
 #include "audiofilein.h"
-CSoundFactory<T>::CSoundFactory(): drivers(), currentDriver(0)
+
+template<typename T>
+CSoundFactory<T>::CSoundFactory(): currentDevice(), drivers(), currentDriver(0)
 {
 }
 
+template<typename T>
 CSoundFactory<T>::~CSoundFactory()
 {
     for(size_t i=0; i<drivers.size(); i++) delete drivers[i];
 }
 
+template<typename T>
 void CSoundFactory<T>::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
 {
     names.clear();
@@ -85,11 +89,13 @@ void CSoundFactory<T>::Enumerate(std::vector<std::string>& names, std::vector<st
     }
 }
 
+template<typename T>
 std::string CSoundFactory<T>::GetItemName()
 {
     return currentDevice;
 }
 
+template<typename T>
 void CSoundFactory<T>::SetItem(std::string sNewDev)
 {
     currentDevice = sNewDev;
@@ -116,12 +122,14 @@ void CSoundFactory<T>::SetItem(std::string sNewDev)
         }
 }
 
-CSoundInInterface* CSoundFactory<T>::GetItem()
+template<typename T>
+T* CSoundFactory<T>::GetItem()
 {
     if (drivers.size() == 0) return nullptr;
     return drivers[currentDriver]->GetItem();
 }
 
+template<typename CSoundInInterface>
 CSoundFactory<CSoundInInterface>::CSoundFactory(): currentDevice(), drivers(), currentDriver(0)
 {
 #ifdef _WIN32
@@ -155,6 +163,7 @@ CSoundFactory<CSoundInInterface>::CSoundFactory(): currentDevice(), drivers(), c
     drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
 }
 
+template<typename CSoundOutInterface>
 CSoundFactory<CSoundOutInterface>::CSoundFactory(): drivers(), currentDriver(0)
 {
 #ifdef _WIN32
@@ -181,6 +190,6 @@ CSoundFactory<CSoundOutInterface>::CSoundFactory(): drivers(), currentDriver(0)
     outDrivers.push_back(new COpenSLESOut());
 # endif
 
-    outDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundOutNull()));
+    drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundOutNull()));
 }
 
