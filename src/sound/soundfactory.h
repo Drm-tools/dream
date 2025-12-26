@@ -16,7 +16,7 @@ public:
     T* GetItem() override;
 protected:
     std::string currentDevice;
-    std::vector<CSelectionInterface*> drivers;
+    std::vector< CSelectionInterface<T> > drivers;
     size_t currentDriver;
 };
 
