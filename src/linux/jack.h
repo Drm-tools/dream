@@ -72,8 +72,8 @@ public:
     virtual void	Init(int iNewBufferSize, bool bNewBlocking = true);
     virtual bool	Read(CVector<short>& psData);
     virtual void		Enumerate(std::vector<std::string>&);
-    virtual std::string			GetDev();
-    virtual void		SetDev(std::string sNewDev);
+    virtual std::string			GetItem();
+    virtual void		SetItem(std::string sNewDev);
     virtual void		Close();
 	virtual std::string	GetVersion() { return "JACK audio input"; }
 protected:
@@ -96,8 +96,8 @@ public:
     virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
     virtual bool	Write(CVector<short>& psData);
     virtual void		Enumerate(std::vector<std::string>&);
-    virtual int			GetDev();
-    virtual void		SetDev(int iNewDev);
+    virtual int			GetItem();
+    virtual void		SetItem(int iNewDev);
     virtual void		Close();
 	virtual std::string		GetVersion() { return "JACK audio output"; }
 protected:

@@ -356,13 +356,13 @@ CSoundInJack::Enumerate(vector<string>& choices)
 }
 
 int
-CSoundInJack::GetDev()
+CSoundInJack::GetItem()
 {
     return dev;
 }
 
 void
-CSoundInJack::SetDev(int iNewDevice)
+CSoundInJack::SetItem(int iNewDevice)
 {
     if (dev != iNewDevice)
     {
@@ -529,13 +529,13 @@ CSoundOutJack::Enumerate(vector<string>& choices)
 }
 
 int
-CSoundOutJack::GetDev()
+CSoundOutJack::GetItem()
 {
     return dev;
 }
 
 void
-CSoundOutJack::SetDev(int iNewDevice)
+CSoundOutJack::SetItem(int iNewDevice)
 {
     if (dev != iNewDevice)
     {

@@ -544,7 +544,7 @@ void CSoundIn::Close()
 
 #endif
 
-void CSoundIn::SetDev(int iNewDevice)
+void CSoundIn::SetItem(int iNewDevice)
 {
     /* Change only in case new device id is not already active */
     if (iNewDevice != iCurrentDevice)
@@ -555,7 +555,7 @@ void CSoundIn::SetDev(int iNewDevice)
 }
 
 
-int CSoundIn::GetDev()
+int CSoundIn::GetItem()
 {
     return iCurrentDevice;
 }

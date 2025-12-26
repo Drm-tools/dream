@@ -23,8 +23,8 @@ public:
 
     // CSelectionInterface methods
     virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
-    virtual std::string	GetDevName();
-    virtual void		SetDev(std::string sNewDev);
+    virtual std::string	GetItemName();
+    virtual void		SetItem(std::string sNewDev);
     virtual CSoundInInterface* GetInDev() { return this; }
     virtual CSoundOutInterface* GetOutDev() { return new CSoundOutNull(); }
     // CTuner methods

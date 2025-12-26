@@ -147,26 +147,26 @@ void CDRMTransmitter::EnumerateOutputs(vector<string>& names, vector<string>& de
 
 void CDRMTransmitter::doSetInputDevice()
 {
-    soundinfactory.SetDev(indev);
+    soundinfactory.SetItem(indev);
 }
 
 void CDRMTransmitter::doSetOutputDevice()
 {
-    soundoutfactory.SetDev(outdev);
+    soundoutfactory.SetItem(outdev);
 }
 
 void
 CDRMTransmitter::SetInputDevice(string device)
 {
     indev = device;
-    soundinfactory.SetDev(indev);
+    soundinfactory.SetItem(indev);
 }
 
 void
 CDRMTransmitter::SetOutputDevice(string device)
 {
     outdev = device;
-    soundoutfactory.SetDev(outdev);
+    soundoutfactory.SetItem(outdev);
 }
 
 CSettings* CDRMTransmitter::GetSettings()
@@ -176,12 +176,12 @@ CSettings* CDRMTransmitter::GetSettings()
 
 string CDRMTransmitter::GetInputDevice()
 {
-   return  soundinfactory.GetDevName();
+   return  soundinfactory.GetItemName();
 }
 
 string CDRMTransmitter::GetOutputDevice()
 {
-    return soundoutfactory.GetDevName();
+    return soundoutfactory.GetItemName();
 }
 
 void CDRMTransmitter::Init()
@@ -380,10 +380,10 @@ void CDRMTransmitter::LoadSettings()
     Parameters.FetchNewSampleRate();
 
     /* Sound card input device id */
-    soundinfactory.SetDev(s.Get(Transmitter, "snddevin", string()));
+    soundinfactory.SetItem(s.Get(Transmitter, "snddevin", string()));
 
     /* Sound card output device id */
-    soundoutfactory.SetDev(s.Get(Transmitter, "snddevout", string()));
+    soundoutfactory.SetItem(s.Get(Transmitter, "snddevout", string()));
 #if 0 // TODO
     /* Sound clock drift adjustment */
     bool bEnabled = s.Get(Transmitter, "sndclkadj", int(0));
@@ -526,10 +526,10 @@ void CDRMTransmitter::SaveSettings()
     s.Put(Transmitter, "sampleratesig", Parameters.GetSigSampleRate());
 
     /* Sound card input device id */
-    s.Put(Transmitter, "snddevin", soundinfactory.GetDevName());
+    s.Put(Transmitter, "snddevin", soundinfactory.GetItemName());
 
     /* Sound card output device id */
-    s.Put(Transmitter, "snddevout", soundoutfactory.GetDevName());
+    s.Put(Transmitter, "snddevout", soundoutfactory.GetItemName());
 #if 0 // TODO
     /* Sound clock drift adjustment */
     s.Put(Transmitter, "sndclkadj", int(((CSoundOutPulse*)pSoundOutInterface)->IsClockDriftAdjEnabled()));

@@ -200,13 +200,13 @@ void CSoapySDRIn::Enumerate(std::vector<std::string>& names, std::vector<std::st
     defaultDevice = names[0];
 }
 
-std::string	CSoapySDRIn::GetDevName()
+std::string	CSoapySDRIn::GetItemName()
 {
     return currentDev;
 
 }
 
-void CSoapySDRIn::SetDev(std::string sNewDev)
+void CSoapySDRIn::SetItem(std::string sNewDev)
 {
     currentDev = sNewDev;
 }

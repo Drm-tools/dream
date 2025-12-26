@@ -182,7 +182,7 @@ CDRMReceiver::SetInputDevice(string s)
         InputResample.SetSyncInput(false);
         SyncUsingPil.SetSyncInput(false);
         TimeSync.SetSyncInput(false);
-        soundinfactory.SetDev(device);
+        soundinfactory.SetItem(device);
         CTuner *pTuner = ReceiveData.GetTuner();
         fprintf(stderr, "Read pTuner = %x\n", pTuner);
         if (pTuner)
@@ -204,18 +204,18 @@ CDRMReceiver::SetInputDevice(string s)
 void
 CDRMReceiver::SetOutputDevice(string device)
 {
-    soundoutfactory.SetDev(device);
+    soundoutfactory.SetItem(device);
     WriteData.Init(Parameters);
 }
 
 string CDRMReceiver::GetInputDevice()
 {
-    return soundinfactory.GetDevName();
+    return soundinfactory.GetItemName();
 }
 
 string CDRMReceiver::GetOutputDevice()
 {
-    return soundoutfactory.GetDevName();
+    return soundoutfactory.GetItemName();
 }
 
 void CDRMReceiver::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)

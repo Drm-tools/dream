@@ -44,12 +44,12 @@ void COpenSLESOut::Enumerate(vector<string>& names, vector<string>& descriptions
     }
 }
 
-void COpenSLESOut::SetDev(string sNewDevice)
+void COpenSLESOut::SetItem(string sNewDevice)
 {
     currentDevice = sNewDevice;
 }
 
-string COpenSLESOut::GetDev()
+string COpenSLESOut::GetItem()
 {
     return currentDevice;
 }

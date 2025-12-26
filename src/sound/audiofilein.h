@@ -43,8 +43,8 @@ public:
     virtual ~CAudioFileIn();
 
     virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) {}
-    virtual void		SetDev(std::string sNewDevice) {sCurrentDevice = sNewDevice;}
-    virtual std::string GetDevName() {return sCurrentDevice;}
+    virtual void		SetItem(std::string sNewDevice) {sCurrentDevice = sNewDevice;}
+    virtual std::string GetItemName() {return sCurrentDevice;}
     virtual CSoundInInterface* GetInDev() { return this; }
     virtual CSoundOutInterface* GetOutDev() { return new CSoundOutNull(); }
     virtual void		SetFileName(const std::string& strFileName);

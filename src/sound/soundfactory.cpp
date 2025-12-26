@@ -62,7 +62,7 @@
 #include "soundnull.h"
 #include "audiofilein.h"
 
-CSoundFactory::CSoundFactory(): inDrivers(), outDrivers(), currentInDriver(0), currentOutDriver(0)
+CSoundFactory<T>::CSoundFactory(): drivers(), currentDriver(0)
 {
 #ifdef _WIN32
     inDrivers.push_back(new CSoundInMMSystem);
@@ -123,12 +123,12 @@ void CSoundFactory::Enumerate(std::vector<std::string>& names, std::vector<std::
     }
 }
 
-std::string CSoundFactory::GetDevName()
+std::string CSoundFactory::GetItemName()
 {
     return currentDevice;
 }
 
-void CSoundFactory::SetDev(std::string sNewDev)
+void CSoundFactory::SetItem(std::string sNewDev)
 {
     currentDevice = sNewDev;
 }
@@ -173,14 +173,14 @@ CSoundOutInterface* CSoundFactory::GetOutDev()
         }
     }
 
-    virtual void SetDev(std::string sNewDevice)
+    virtual void SetItem(std::string sNewDevice)
     {
         if (pDevice != nullptr) {
             std::vector<std::string> n, d;
             std::string dd;
             pDevice->Enumerate(n, d, dd);
             if ( std::find(n.begin(), n.end(), sNewDevice) != n.end() ) {
-                pDevice->SetDev(sNewDevice);
+                pDevice->SetItem(sNewDevice);
                 return;
             }
         }
@@ -190,14 +190,14 @@ CSoundOutInterface* CSoundFactory::GetOutDev()
             devices[i]->Enumerate(n, d, dd);
             if (std::find(n.begin(), n.end(), sNewDevice) != n.end() ) {
                 pDevice = devices[i];
-                pDevice->SetDev(sNewDevice);
+                pDevice->SetItem(sNewDevice);
             }
         }
     }
 
-    virtual std::string	GetDev()
+    virtual std::string	GetItem()
     {
-        if (pDevice != nullptr) return pDevice->GetDev();
+        if (pDevice != nullptr) return pDevice->GetItem();
         return "";
     }
 

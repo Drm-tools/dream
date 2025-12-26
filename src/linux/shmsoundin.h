@@ -39,8 +39,8 @@ public:
     CShmSoundIn();
     virtual 			~CShmSoundIn();
     virtual void		Enumerate(std::vector<std::string>& choices);
-    virtual void		SetDev(std::string sNewDev);
-    virtual std::string	GetDev();
+    virtual void		SetItem(std::string sNewDev);
+    virtual std::string	GetItem();
 
     virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
     virtual void		Close();

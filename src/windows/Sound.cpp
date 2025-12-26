@@ -281,7 +281,7 @@ void CSoundInMMSystem::OpenDevice()
                       "usually occurs if another application blocks the sound in.");
 }
 
-void CSoundInMMSystem::SetDev(string sNewDev)
+void CSoundInMMSystem::SetItem(string sNewDev)
 {
     /* Change only in case new device id is not already active */
     if (sNewDev != sCurDev)
@@ -307,7 +307,7 @@ void CSoundInMMSystem::Enumerate(vector<string>& names, vector<string>& descript
     }
 }
 
-string	CSoundInMMSystem::GetDevName()
+string	CSoundInMMSystem::GetItemName()
 {
     return sCurDev;
 }
@@ -626,12 +626,12 @@ void CSoundOutMMSystem::Enumerate(vector<string>& names, vector<string>& descrip
     }
 }
 
-string CSoundOutMMSystem::GetDev()
+string CSoundOutMMSystem::GetItem()
 {
     return sCurDev;
 }
 
-void CSoundOutMMSystem::SetDev(string sNewDev)
+void CSoundOutMMSystem::SetItem(string sNewDev)
 {
     /* Change only in case new device id is not already active */
     if (sNewDev != sCurDev)

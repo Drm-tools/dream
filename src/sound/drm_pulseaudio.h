@@ -80,8 +80,8 @@ public:
 	CSoundPulse(bool bPlayback);
     virtual ~CSoundPulse();
     void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
-    void        SetDev(std::string sNewDevice);
-    std::string GetDev();
+    void        SetItem(std::string sNewDevice);
+    std::string GetItem();
 protected:
 	bool		bPlayback;
     std::string sCurrentDevice;
@@ -97,8 +97,8 @@ public:
 	CSoundInPulse();
     virtual ~CSoundInPulse();
     void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) {CSoundPulse::Enumerate(names, descriptions, defaultDevice);}
-    std::string	GetDevName() {return CSoundPulse::GetDev();}
-    void        SetDev(std::string sNewDevice) {CSoundPulse::SetDev(sNewDevice);}
+    std::string	GetItemName() {return CSoundPulse::GetItem();}
+    void        SetItem(std::string sNewDevice) {CSoundPulse::SetItem(sNewDevice);}
     std::string GetVersion() { return pa_get_library_version(); }
 
     bool        Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
@@ -139,8 +139,8 @@ public:
     virtual ~CSoundOutPulse();
     void        Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
         {CSoundPulse::Enumerate(names, descriptions, defaultDevice);}
-    std::string GetDev() {return CSoundPulse::GetDev();}
-    void        SetDev(std::string sNewDevice) {CSoundPulse::SetDev(sNewDevice);}
+    std::string GetItem() {return CSoundPulse::GetItem();}
+    void        SetItem(std::string sNewDevice) {CSoundPulse::SetItem(sNewDevice);}
     std::string GetVersion() { return pa_get_library_version(); }
 
     bool        Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);

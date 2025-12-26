@@ -755,7 +755,7 @@ void CSoundPulse::Enumerate(vector<string>& names, vector<string>& descriptions,
     }
 }
 
-void CSoundPulse::SetDev(string sNewDevice)
+void CSoundPulse::SetItem(string sNewDevice)
 {
     if (sNewDevice != sCurrentDevice)
     {
@@ -763,7 +763,7 @@ void CSoundPulse::SetDev(string sNewDevice)
     }
 }
 
-string CSoundPulse::GetDev()
+string CSoundPulse::GetItem()
 {
     return sCurrentDevice;
 }

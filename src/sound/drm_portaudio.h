@@ -41,8 +41,8 @@ public:
     virtual 		~CPaCommon();
 
     virtual void	Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
-    virtual void	SetDev(std::string sNewDevice);
-    virtual std::string	GetDev();
+    virtual void	SetItem(std::string sNewDevice);
+    virtual std::string	GetItem();
 
     bool		Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     void			ReInit();
@@ -77,13 +77,13 @@ public:
     {
         hw.Enumerate(names, descriptions, defaultDevice);
     }
-    virtual void	SetDev(std::string sNewDevice)
+    virtual void	SetItem(std::string sNewDevice)
     {
-        hw.SetDev(sNewDevice);
+        hw.SetItem(sNewDevice);
     }
-    virtual std::string	GetDevName()
+    virtual std::string	GetItemName()
     {
-        return hw.GetDev();
+        return hw.GetItem();
     }
     virtual std::string	GetVersion()
     {
@@ -108,13 +108,13 @@ public:
     {
         hw.Enumerate(names, descriptions, defaultOutput);
     }
-    virtual void	SetDev(std::string sNewDevice)
+    virtual void	SetItem(std::string sNewDevice)
     {
-        hw.SetDev(sNewDevice);
+        hw.SetItem(sNewDevice);
     }
-    virtual std::string	GetDev()
+    virtual std::string	GetItem()
     {
-        return hw.GetDev();
+        return hw.GetItem();
     }
     virtual std::string	GetVersion()
     {

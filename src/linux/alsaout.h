@@ -47,8 +47,8 @@ public:
     virtual ~CSoundOutAlsa() {}
 
     virtual void Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
-    virtual void SetDev(std::string sNewDevice);
-    virtual std::string GetDev();
+    virtual void SetItem(std::string sNewDevice);
+    virtual std::string GetItem();
 
     bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking = false);
     bool Write(CVector<short>& psData);
