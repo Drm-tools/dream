@@ -1,5 +1,3 @@
-#include "soundfactory.h"
-
 /******************************************************************************\
  * British Broadcasting Corporation
  * Copyright (c) 2007-2024
@@ -27,6 +25,8 @@
  * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
  *
 \******************************************************************************/
+#include <algorithm>
+#include "soundfactory.h"
 
 #ifdef _WIN32
 /* mmsystem sound interface */
@@ -54,7 +54,6 @@
 #  include "../android/soundin.h"
 #  include "../android/soundout.h"
 # endif
-
 
 #ifdef USE_SOAPYSDR
 #  include "drm_soapySDR.h"
@@ -143,44 +142,11 @@ CSoundOutInterface* CSoundFactory::GetOutDev()
     return new CSoundOutNull();
 }
 
-/*
- * British Broadcasting Corporation
- * Copyright (c) 2025
- *
- * Author(s):
- *	Julian Cable
- *
- * Decription:
- * compound selection interface
- *
- ******************************************************************************
- *
- * This program is free software; you can redistribute it and/or modify it under
- * the terms of the GNU General Public License as published by the Free Software
- * Foundation; either version 2 of the License, or (at your option) any later
- * version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
- * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
- * details.
- *
- * You should have received a copy of the GNU General Public License along with
- * this program; if not, write to the Free Software Foundation, Inc.,
- * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
- *
-\******************************************************************************/
-
 #if 0
-#include <algorithm>
-#include "selectioninterface.h"
 
-class CCompoundSelectionInterface: public CSelectionInterface
-{
-public:
-    CCompoundSelectionInterface():devices(),pDevice(nullptr)
-    {
-    }
+
+
+
     void Init(std::vector<CSelectionInterface*> ci)
     {
         devices = ci;
