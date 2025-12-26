@@ -30,7 +30,7 @@
 
 #ifdef _WIN32
 /* mmsystem sound interface */
-#include "../wdows/Sound.h"
+#include "../windows/Sound.h"
 #endif
 
 #ifdef USE_ALSA
