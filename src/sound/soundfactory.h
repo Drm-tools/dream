@@ -4,7 +4,7 @@
 #include "soundinterface.h"
 
 template<typename T>
-class CSoundFactory: public CSelectionInterface<T>
+class CSoundFactory: public CSelectionInterface
 {
 public:
     CSoundFactory();

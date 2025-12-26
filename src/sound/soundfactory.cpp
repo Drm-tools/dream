@@ -134,7 +134,7 @@ T *CSoundFactory<T>::GetItem()
 {
     if (drivers.size() == 0)
         return nullptr;
-    return drivers[currentDriver]->GetItem();
+    return drivers[currentDriver];
 }
 
 template <>
@@ -175,27 +175,27 @@ template <>
 CSoundFactory<CSoundOutInterface>::CSoundFactory() : drivers(), currentDriver(0)
 {
 #ifdef _WIN32
-    outDrivers.push_back(new CSoundoutMMSystem);
+    drivers.push_back(new CSoundoutMMSystem);
 #endif
 
 #ifdef USE_ALSA
-    outDrivers.push_back(new CSoundOutAlsa());
+    drivers.push_back(new CSoundOutAlsa());
 #endif
 
 #ifdef USE_JACK
-    outDrivers.push_back(new CSoundOutJack());
+    drivers.push_back(new CSoundOutJack());
 #endif
 
 #ifdef USE_PULSEAUDIO
-    outDrivers.push_back(new CSoundOutPulse());
+    drivers.push_back(new CSoundOutPulse());
 #endif
 
 #ifdef USE_PORTAUDIO
-    outDrivers.push_back(new CSoundOutPaOut());
+    drivers.push_back(new CSoundOutPaOut());
 #endif
 
 #ifdef USE_OPENSL
-    outDrivers.push_back(new COpenSLESOut());
+    drivers.push_back(new COpenSLESOut());
 #endif
 
     drivers.push_back(new CSoundOutNull());
