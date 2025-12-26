@@ -69,8 +69,7 @@ typedef struct pa_object
 } pa_object;
 
 /* Classes ********************************************************************/
-
-class CSoundPulse: CSelectionInterface
+class CSoundPulse: public CSelectionInterface
 {
 public:
 	CSoundPulse(bool bPlayback);
