@@ -102,44 +102,38 @@ CSoundFactory<T>::CSoundFactory(): drivers(), currentDriver(0)
     outDrivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundOutNull()));
 }
 
-CSoundFactory::~CSoundFactory()
+CSoundFactory<T>::~CSoundFactory()
 {
-    for(size_t i=0; i<inDrivers.size(); i++) delete inDrivers[i];
-    for(size_t i=0; i<outDrivers.size(); i++) delete outDrivers[i];
+    for(size_t i=0; i<drivers.size(); i++) delete drivers[i];
 }
 
-void CSoundFactory::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+void CSoundFactory<T>::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
 {
     names.clear();
     descriptions.clear();
     defaultDevice = "null";
-    for(size_t i=0; i<inDrivers.size(); i++) {
+    for(size_t i=0; i<drivers.size(); i++) {
         std::vector<std::string> n, d;
         std::string dd;
-        inDrivers[i]->Enumerate(n, d, dd);
+        drivers[i]->Enumerate(n, d, dd);
         names.insert(names.end(), n.begin(), n.end());
         descriptions.insert(descriptions.end(), d.begin(), d.end());
         defaultDevice = dd;
     }
 }
 
-std::string CSoundFactory::GetItemName()
+std::string CSoundFactory<T>::GetItemName()
 {
     return currentDevice;
 }
 
-void CSoundFactory::SetItem(std::string sNewDev)
+void CSoundFactory<T>::SetItem(std::string sNewDev)
 {
     currentDevice = sNewDev;
 }
-CSoundInInterface* CSoundFactory::GetInDev()
+CSoundInInterface* CSoundFactory<T>::GetItem()
 {
     return new CSoundInNull();
-}   
-
-CSoundOutInterface* CSoundFactory::GetOutDev()
-{
-    return new CSoundOutNull();
 }
 
 #if 0
