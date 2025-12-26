@@ -14,23 +14,15 @@ public:
     std::string GetItemName() override;
     void SetItem(std::string sNewDev) override;
     T* GetItem() override;
+
+    template <>
+    CSoundFactory<CSoundInInterface>();
+    template<>
+    CSoundFactory<CSoundOutInterface>();
 protected:
     std::string currentDevice;
     std::vector< CSelectionInterface<T> > drivers;
     size_t currentDriver;
 };
 
-template<>
-class CSoundFactory<CSoundInInterface>
-{
-public:
-    CSoundFactory();
-};
-
-template<>
-class CSoundFactory<CSoundOutInterface>
-{
-public:
-    CSoundFactory();
-};
 #endif // SOUNDFACTORY_H
