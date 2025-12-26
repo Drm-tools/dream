@@ -167,8 +167,8 @@ CSoundFactory<CSoundInInterface>::CSoundFactory() : currentDevice(), drivers(), 
 #ifdef USE_SOAPYSDR
     drivers.push_back(new CSoapySDRIn());
 #endif
-    drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CAudioFileIn()));
-    drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
+    drivers.push_back(new CAudioFileIn());
+    drivers.push_back(new CSoundInNull());
 }
 
 template <>
@@ -198,5 +198,5 @@ CSoundFactory<CSoundOutInterface>::CSoundFactory() : drivers(), currentDriver(0)
     outDrivers.push_back(new COpenSLESOut());
 #endif
 
-    drivers.push_back(reinterpret_cast<CSelectionInterface *>(new CSoundOutNull()));
+    drivers.push_back(new CSoundOutNull());
 }
