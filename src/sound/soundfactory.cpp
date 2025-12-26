@@ -137,7 +137,7 @@ T *CSoundFactory<T>::GetItem()
     return drivers[currentDriver]->GetItem();
 }
 
-template <typename CSoundInInterface>
+template <>
 CSoundFactory<CSoundInInterface>::CSoundFactory() : currentDevice(), drivers(), currentDriver(0)
 {
 #ifdef _WIN32
@@ -171,7 +171,7 @@ CSoundFactory<CSoundInInterface>::CSoundFactory() : currentDevice(), drivers(), 
     drivers.push_back(reinterpret_cast<CSelectionInterface*>(new CSoundInNull()));
 }
 
-template <typename CSoundOutInterface>
+template <>
 CSoundFactory<CSoundOutInterface>::CSoundFactory() : drivers(), currentDriver(0)
 {
 #ifdef _WIN32
