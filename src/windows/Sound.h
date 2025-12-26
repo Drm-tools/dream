@@ -98,10 +98,9 @@ public:
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual bool Write(CVector<short> &psData);
     virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultOutput);
-
-    virtual std::string GetItemName();
+    virtual std::string GetItemName() { return sCurDev; }
     virtual void SetItem(std::string sNewDev);
-    virtual CSoundOutInterface* GetItem() { return this; }
+
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
 

@@ -307,11 +307,6 @@ void CSoundInMMSystem::Enumerate(vector<string>& names, vector<string>& descript
     }
 }
 
-string	CSoundInMMSystem::GetItemName()
-{
-    return sCurDev;
-}
-
 void CSoundInMMSystem::Close()
 {
     int			i;
