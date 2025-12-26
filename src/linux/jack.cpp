@@ -60,7 +60,7 @@ struct CJackCommon
     void terminate();
 };
 
-static CJackCommon data;
+static CJackCommon common_data;
 
 static int
 capture_stereo(jack_nframes_t nframes, void *arg)
@@ -277,20 +277,20 @@ void CJackCommon::terminate()
 
 CSoundInJack::CSoundInJack():iBufferSize(0), bBlocking(true), capture_data(), dev(-1),ports()
 {
-    if (data.client==NULL)
-        data.initialise();
+    if (common_data.client==NULL)
+        common_data.initialise();
 
-    if (data.is_active && jack_deactivate(data.client))
+    if (common_data.is_active && jack_deactivate(common_data.client))
     {
         throw "Jack: cannot deactivate client";
     }
-    data.is_active = false;
+    common_data.is_active = false;
 
     capture_data.left =
-        jack_port_register(data.client, "input_0", JACK_DEFAULT_AUDIO_TYPE,
+        jack_port_register(common_data.client, "input_0", JACK_DEFAULT_AUDIO_TYPE,
                            JackPortIsInput, 0);
     capture_data.right =
-        jack_port_register(data.client, "input_1", JACK_DEFAULT_AUDIO_TYPE,
+        jack_port_register(common_data.client, "input_1", JACK_DEFAULT_AUDIO_TYPE,
                            JackPortIsInput, 0);
 
     if ((capture_data.left == NULL) || (capture_data.right == NULL))
@@ -300,15 +300,15 @@ CSoundInJack::CSoundInJack():iBufferSize(0), bBlocking(true), capture_data(), de
 
     jack_ringbuffer_reset(capture_data.buff);
 
-    data.capture_data = &capture_data;
+    common_data.capture_data = &capture_data;
 
-    ports.load(data.client, JackPortIsOutput);
+    ports.load(common_data.client, JackPortIsOutput);
 
-    if (jack_activate(data.client))
+    if (jack_activate(common_data.client))
     {
         throw "Jack: cannot activate client";
     }
-    data.is_active = true;
+    common_data.is_active = true;
 }
 
 CSoundInJack::CSoundInJack(const CSoundInJack & e):
@@ -330,27 +330,29 @@ CSoundInJack & CSoundInJack::operator=(const CSoundInJack & e)
 CSoundInJack::~CSoundInJack()
 {
     Close();
-    if (data.client==NULL)
+    if (common_data.client==NULL)
         return;
 
-    if (data.is_active && jack_deactivate(data.client))
+    if (common_data.is_active && jack_deactivate(common_data.client))
     {
         throw "Jack: cannot deactivate client";
     }
-    data.is_active = false;
-    data.capture_data = NULL;
-    if (jack_activate(data.client))
+    common_data.is_active = false;
+    common_data.capture_data = NULL;
+    if (jack_activate(common_data.client))
     {
         throw "Jack: cannot activate client";
     }
-    data.is_active = true;
+    common_data.is_active = true;
 }
 
 void
 CSoundInJack::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultDev)
 {
-    ports.load(data.client, JackPortIsOutput);
-    choices = ports.devices;
+    ports.load(common_data.client, JackPortIsOutput);
+    names = ports.devices;
+    descriptions = names;
+    defaultDev = "";
 }
 
 int
@@ -457,20 +459,20 @@ CSoundInJack::Close()
 CSoundOutJack::CSoundOutJack():iBufferSize(0), bBlocking(true), device_changed(true),
         play_data(), dev(-1), ports()
 {
-    if (data.client==NULL)
-        data.initialise();
+    if (common_data.client==NULL)
+        common_data.initialise();
 
-    if (data.is_active && jack_deactivate(data.client))
+    if (common_data.is_active && jack_deactivate(common_data.client))
     {
         throw "Jack: cannot deactivate client";
     }
-    data.is_active = false;
+    common_data.is_active = false;
 
     play_data.left =
-        jack_port_register(data.client, "output_0", JACK_DEFAULT_AUDIO_TYPE,
+        jack_port_register(common_data.client, "output_0", JACK_DEFAULT_AUDIO_TYPE,
                            JackPortIsOutput, 0);
     play_data.right =
-        jack_port_register(data.client, "output_1", JACK_DEFAULT_AUDIO_TYPE,
+        jack_port_register(common_data.client, "output_1", JACK_DEFAULT_AUDIO_TYPE,
                            JackPortIsOutput, 0);
 
     if ((play_data.left == NULL) || (play_data.right == NULL))
@@ -478,30 +480,30 @@ CSoundOutJack::CSoundOutJack():iBufferSize(0), bBlocking(true), device_changed(t
         throw "Jack: no more ports available";
     }
 
-    data.play_data = &play_data;
-    ports.load(data.client, JackPortIsInput);
+    common_data.play_data = &play_data;
+    ports.load(common_data.client, JackPortIsInput);
 
-    if (jack_activate(data.client))
+    if (jack_activate(common_data.client))
     {
         throw "Jack: cannot activate client";
     }
-    data.is_active = true;
+    common_data.is_active = true;
 }
 
 CSoundOutJack::~CSoundOutJack()
 {
     Close();
-    if (data.is_active && jack_deactivate(data.client))
+    if (common_data.is_active && jack_deactivate(common_data.client))
     {
         throw "Jack: cannot deactivate client";
     }
-    data.is_active = false;
-    data.capture_data = NULL;
-    if (jack_activate(data.client))
+    common_data.is_active = false;
+    common_data.capture_data = NULL;
+    if (jack_activate(common_data.client))
     {
         throw "Jack: cannot activate client";
     }
-    data.is_active = true;
+    common_data.is_active = true;
 }
 
 CSoundOutJack::CSoundOutJack(const CSoundOutJack & e):
@@ -522,8 +524,10 @@ CSoundOutJack & CSoundOutJack::operator=(const CSoundOutJack & e)
 void
 CSoundOutJack::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultDev)
 {
-    ports.load(data.client, JackPortIsInput);
-    choices = ports.devices;
+    ports.load(common_data.client, JackPortIsInput);
+    names = ports.devices;
+    descriptions = names;
+    defaultDev = "";
 }
 
 string
@@ -591,7 +595,7 @@ CSoundOutJack::Write(CVector<short>& psData)
 void
 CSoundOutJack::Close()
 {
-    jack_port_disconnect(data.client, play_data.left);
-    jack_port_disconnect(data.client, play_data.right);
+    jack_port_disconnect(common_data.client, play_data.left);
+    jack_port_disconnect(common_data.client, play_data.right);
     device_changed = true;
 }
