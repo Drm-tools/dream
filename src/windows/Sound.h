@@ -52,7 +52,7 @@
 #define BYTES_PER_SAMPLE 2    /* Number of bytes per sample */
 
 /* Classes ********************************************************************/
-class CSoundInMMSystem : public CSoundInInterface, public CSelectionInterface
+class CSoundInMMSystem : public CSoundInInterface, public CSelectionInterface<CSoundInInterface>
 {
 public:
     CSoundInMMSystem();
@@ -63,8 +63,7 @@ public:
     virtual void Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultInput);
     virtual std::string GetItemName();
     virtual void SetItem(std::string sNewDev);
-    virtual CSoundInInterface* GetInDev() { return this; }
-    virtual CSoundOutInterface* GetOutDev() { return nullptr; }
+    virtual CSoundInInterface* GetItem() { return this; }
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
 
@@ -90,7 +89,7 @@ protected:
     short *psSoundcardBuffer[NUM_SOUND_BUFFERS_IN];
 };
 
-class CSoundOutMMSystem : public CSoundOutInterface, public CSelectionInterface
+class CSoundOutMMSystem : public CSoundOutInterface, public CSelectionInterface<CSoundOutInterface>
 {
 public:
     CSoundOutMMSystem();
@@ -102,8 +101,7 @@ public:
 
     virtual std::string GetItemName();
     virtual void SetItem(std::string sNewDev);
-    virtual CSoundInInterface* GetInDev() { return nullptr; }
-    virtual CSoundOutInterface GetOutDev() { return this; }
+    virtual CSoundOutInterface GetItem() { return this; }
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
 

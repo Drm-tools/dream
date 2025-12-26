@@ -45,8 +45,7 @@ public:
     virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) {}
     virtual void		SetItem(std::string sNewDevice) {sCurrentDevice = sNewDevice;}
     virtual std::string GetItemName() {return sCurrentDevice;}
-    virtual CSoundInInterface* GetInDev() { return this; }
-    virtual CSoundOutInterface* GetOutDev() { return new CSoundOutNull(); }
+    virtual CSoundInInterface* GetItem() { return this; }
     virtual void		SetFileName(const std::string& strFileName);
     virtual int			GetSampleRate() {return iRequestedSampleRate;}
 
