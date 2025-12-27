@@ -21,7 +21,7 @@ public:
     virtual void SetItem(std::string sNewDev) override;
 
     // CSoundInInterface
-    virtual bool Init(int iSampleRate, size_t iNewBufferSize, bool) override;
+    virtual bool Init(int iSampleRate, int iNewBufferSize, bool) override;
     virtual bool Read(CVector<short>& psData, CParameter&) override;
     virtual void Close() override;
     virtual std::string GetVersion() override;
@@ -54,7 +54,7 @@ public:
     virtual void SetItem(std::string sNewDev) override;
 
     // CSoundOutInterface
-    virtual bool Init(int sampleRate, size_t bufferSize, bool) override;
+    virtual bool Init(int sampleRate, int bufferSize, bool) override;
     virtual bool Write(CVector<short>& psData) override;
     virtual void Close() override;
     virtual std::string GetVersion() override;
