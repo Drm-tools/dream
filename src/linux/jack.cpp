@@ -49,7 +49,7 @@ void CJackSoundIn::Enumerate(std::vector<std::string>& names, std::vector<std::s
             // Try to get port alias as friendly name
             jack_port_t* port = jack_port_by_name(temp_client, ports[i]);
             if (port) {
-                char aliases[2][jack_port_name_size()];
+                const char aliases[2][jack_port_name_size()];
                 int num_aliases = jack_port_get_aliases(port, aliases);
                 if (num_aliases > 0) {
                     descriptions.push_back(aliases[0]);
