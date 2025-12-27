@@ -33,6 +33,7 @@
 #include <jack/jack.h>
 #include <jack/ringbuffer.h>
 #include <map>
+#include <utility>
 
 /* Classes ********************************************************************/
 
@@ -57,7 +58,7 @@ public:
     void load(jack_client_t * client, unsigned long flags);
     pair< std::string, std::string>get_ports(std::string dev);
 protected:
-    map<std::string, pair< std::string, std::string> > ports;
+    std::map<std::string, std::pair< std::string, std::string> > ports;
 };
 
 class CSoundInJack : public CSoundInInterface
