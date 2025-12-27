@@ -96,7 +96,7 @@ public:
     virtual bool	    Write(CVector<short>& psData);
     virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
     virtual std::string	GetItemName();
-    virtual void		SetItem(int iNewDev);
+    virtual void		SetItem(std::string);
     virtual void		Close();
 	virtual std::string	GetVersion() { return "JACK audio output"; }
 protected:
