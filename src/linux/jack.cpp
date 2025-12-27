@@ -78,12 +78,12 @@ void CJackSoundIn::Enumerate(std::vector<std::string>& names, std::vector<std::s
     jack_client_close(temp_client);
 }
 
-std::string CJackSoundIn::GetDev()
+std::string CJackSoundIn::GetItemName()
 {
     return device_name_;
 }
 
-void CJackSoundIn::SetDev(std::string sNewDev)
+void CJackSoundIn::SetItem(std::string sNewDev)
 {
     if (!initialized_ || !client_ || !input_port_) {
         device_name_ = sNewDev;
