@@ -74,6 +74,20 @@ CSoundFactory<T>::~CSoundFactory()
         delete drivers[i];
 }
 
+template <>
+CSoundFactory<CSoundFactoryIn>::~CSoundFactory()
+{
+    for (size_t i = 0; i < drivers.size(); i++)
+        delete drivers[i];
+}
+
+template <>
+CSoundFactory<CSoundFactoryOut>::~CSoundFactory()
+{
+    for (size_t i = 0; i < drivers.size(); i++)
+        delete drivers[i];
+}
+
 template <typename T>
 void CSoundFactory<T>::Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultDevice)
 {
