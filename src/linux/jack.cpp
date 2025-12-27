@@ -1,5 +1,3 @@
-#ifndef JACK_AUDIO_H
-#define JACK_AUDIO_H
 
 #include <queue>
 #include <mutex>
@@ -195,7 +193,7 @@ void CJackSoundIn::ProcessAudio(jack_nframes_t nframes)
     }
 }
 
-bool CJackSoundIn::Read(std::vector<uint16_t>& data)
+bool CJackSoundIn::Read(CVector<short>& data)
 {
     std::lock_guard<std::mutex> lock(queue_mutex_);
     
@@ -325,12 +323,12 @@ void CJackSoundOut::Enumerate(std::vector<std::string>& names, std::vector<std::
     jack_client_close(temp_client);
 }
 
-std::string CJackSoundOut::GetDev()
+std::string CJackSoundOut::GetItemName()
 {
     return device_name_;
 }
 
-void CJackSoundOut::SetDev(std::string sNewDev)
+void CJackSoundOut::SetItem(std::string sNewDev)
 {
     if (!initialized_ || !client_ || !output_port_) {
         device_name_ = sNewDev;
@@ -439,7 +437,7 @@ void CJackSoundOut::ProcessAudio(jack_nframes_t nframes)
     audio_queue_.pop();
 }
 
-bool CJackSoundOut::Write(std::vector<uint16_t>& data)
+bool CJackSoundOut::Write(CVector<short>& data)
 {
     std::vector<int16_t> buffer(data.size());
     std::memcpy(buffer.data(), data.data(), data.size() * sizeof(int16_t));
@@ -493,5 +491,3 @@ std::string CJackSoundOut::GetVersion()
     
     return std::string(version_str);
 }
-
-#endif // JACK_AUDIO_H

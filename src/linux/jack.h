@@ -17,8 +17,8 @@ public:
 
     // CSelectionInterface
     virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) override;
-    virtual std::string GetDev() override;
-    virtual void SetDev(std::string sNewDev) override;
+    virtual std::string GetItemName() override;
+    virtual void SetItem(std::string sNewDev) override;
 
     // CSoundInInterface
     virtual bool Init(int iSampleRate, size_t iNewBufferSize) override;
