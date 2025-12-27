@@ -257,7 +257,7 @@ void CJackCommon::initialise()
        there is work to be done.
      */
 
-    jack_set_process_callback(client, process_callback, &data);
+    jack_set_process_callback(client, process_callback, &common_data);
 
     /* tell the Jack server to call `jack_shutdown()' if
        it ever shuts down, either entirely, or if it
