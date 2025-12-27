@@ -352,8 +352,8 @@ void CSoundCardSelMenu::OnSoundFileChanged(QString filename)
         case FileTyper::raw_af:
         case FileTyper::raw_pft:
         case FileTyper::pcm:
-            menuSigInput->setEnabled(false);
-            menuInputDev->setEnabled(false);
+            // menuSigInput->setEnabled(false);
+            // menuInputDev->setEnabled(false);
             menuInputSampleRate->setEnabled(false);
         }
     }
