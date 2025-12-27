@@ -1,5 +1,5 @@
-#ifndef JACK_AUDIO_H
-#define JACK_AUDIO_H
+#ifndef JACK_AUDIO_1_H
+#define JACK_AUDIO_1_H
 
 #include <jack/jack.h>
 #include <vector>

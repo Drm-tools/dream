@@ -4,7 +4,7 @@
 #include <queue>
 #include <mutex>
 #include <cstring>
-#include "jack.h
+#include "jack.h"
 
 // ============================================================================
 // CJackSoundIn Implementation
