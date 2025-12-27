@@ -75,14 +75,14 @@ CSoundFactory<T>::~CSoundFactory()
 }
 
 template <>
-CSoundFactory<CSoundFactoryIn>::~CSoundFactory()
+CSoundFactory<CSoundInInterface>::~CSoundFactory()
 {
     for (size_t i = 0; i < drivers.size(); i++)
         delete drivers[i];
 }
 
 template <>
-CSoundFactory<CSoundFactoryOut>::~CSoundFactory()
+CSoundFactory<CSoundOutInterface>::~CSoundFactory()
 {
     for (size_t i = 0; i < drivers.size(); i++)
         delete drivers[i];
