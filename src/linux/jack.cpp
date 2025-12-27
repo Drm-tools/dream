@@ -266,10 +266,10 @@ void CJackCommon::initialise()
 
     jack_on_shutdown(client, jack_shutdown, 0);
 
-    if (jack_get_sample_rate(client) != Parameters.GetSampleRate())
-    {
-        throw "Jack: jack is running with the wrong sample rate";
-    }
+    //if (jack_get_sample_rate(client) != Parameters.GetSampleRate())
+    //{
+        //throw "Jack: jack is running with the wrong sample rate";
+    //}
 }
 
 void CJackCommon::terminate()
@@ -278,7 +278,7 @@ void CJackCommon::terminate()
     client = NULL;
 }
 
-CSoundInJack::CSoundInJack():iBufferSize(0), bBlocking(true), capture_data(), dev(-1),ports()
+CSoundInJack::CSoundInJack():iBufferSize(0), bBlocking(true), capture_data(), dev(""),ports()
 {
     if (common_data.client==NULL)
         common_data.initialise();
