@@ -1,604 +1,599 @@
-/******************************************************************************\
-* British Broadcasting Corporation
-* Copyright (c) 2007
-*
-* Author(s):
-*	Julian Cable
-*
-* Description:
-*	Jack sound classes
-*
-******************************************************************************
-*
-* This program is free software; you can redistribute it and/or modify it under
-* the terms of the GNU General Public License as published by the Free Software
-* Foundation; either version 2 of the License, or (at your option) any later
-* version.
-*
-* This program is distributed in the hope that it will be useful, but WITHOUT
-* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-* FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
-* details.
-*
-* You should have received a copy of the GNU General Public License along with
-* this program; if not, write to the Free Software Foundation, Inc.,
-* 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-*/
+#ifndef JACK_AUDIO_H
+#define JACK_AUDIO_H
 
-#define _POSIX_C_SOURCE 199309
-#include <ctime>
-#include "jack.h"
-#include <sstream>
-#include <iostream>
-#include <cmath>
-#include <cstdlib>
-#include <map>
-#include <utility>
+#include <jack/jack.h>
+#include <vector>
+#include <string>
+#include <queue>
+#include <mutex>
+#include <cstring>
 
-using namespace std;
-
-instance_data_t::instance_data_t():num_channels(2),
-        left(NULL), right(NULL), buff(NULL), underruns(0), overruns(0),
-        peer_left(),peer_right()
+// Forward declarations of your interface classes
+class CSelectionInterface
 {
-    buff =
-        jack_ringbuffer_create(
-            8 * sizeof(short) * 48 * 400 * num_channels
-        );
-}
-
-instance_data_t::~instance_data_t()
-{
-    jack_ringbuffer_free(buff);
-}
-
-struct CJackCommon
-{
-    CJackCommon():client(NULL),is_active(false),capture_data(NULL),play_data(NULL) {}
-    jack_client_t * client;
-    volatile bool is_active;
-    instance_data_t *capture_data;
-    instance_data_t *play_data;
-    void initialise();
-    void terminate();
+public:
+    virtual ~CSelectionInterface() {}
+    virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) = 0;
+    virtual std::string GetDev() = 0;
+    virtual void SetDev(std::string sNewDev) = 0;
 };
 
-static CJackCommon common_data;
-
-static int
-capture_stereo(jack_nframes_t nframes, void *arg)
+class CSoundInInterface : public CSelectionInterface
 {
-    instance_data_t& data = *(instance_data_t *) arg;
-    if (arg==NULL)
-    {
-        return 0;
-    }
-    if (data.left==NULL || data.right == NULL)
-    {
-        return 0;
-    }
-    jack_default_audio_sample_t *in[2];
-    in[0] = (jack_default_audio_sample_t *) jack_port_get_buffer(data.left, nframes);
-    in[1] = (jack_default_audio_sample_t *) jack_port_get_buffer(data.right, nframes);
-    if (in[0]==NULL || in[1]==NULL)
-    {
-        return 0;
-    }
-    if (data.buff==NULL)
-    {
-        return 0;
-    }
-    for (jack_nframes_t i = 0; i < nframes; i++)
-    {
-        short sample[2];
-        size_t bytes = sizeof(short)*2;
-        /* interleave samples for encoder */
-        for (int chn = 0; chn < 2; chn++)
-            sample[chn] = short (32768.0 * in[chn][i]);
-        if (jack_ringbuffer_write (data.buff, (char *) sample, bytes) < bytes)
-            data.overruns++;
-    }
-    return 0;
+public:
+    virtual ~CSoundInInterface() {}
+    virtual bool Init(int iSampleRate, size_t iNewBufferSize) = 0;
+    virtual bool Read(std::vector<uint16_t>& data) = 0;
+    virtual void Close() = 0;
+    virtual std::string GetVersion() = 0;
+};
+
+class CSoundOutInterface : public CSelectionInterface
+{
+public:
+    virtual ~CSoundOutInterface() {}
+    virtual bool Init(int sampleRate, size_t bufferSize) = 0;
+    virtual bool Write(std::vector<uint16_t>& data) = 0;
+    virtual void Close() = 0;
+    virtual std::string GetVersion() = 0;
+};
+
+// JACK Input Implementation
+class CJackSoundIn : public CSoundInInterface
+{
+public:
+    CJackSoundIn();
+    virtual ~CJackSoundIn();
+
+    // CSelectionInterface
+    virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) override;
+    virtual std::string GetDev() override;
+    virtual void SetDev(std::string sNewDev) override;
+
+    // CSoundInInterface
+    virtual bool Init(int iSampleRate, size_t iNewBufferSize) override;
+    virtual bool Read(std::vector<uint16_t>& data) override;
+    virtual void Close() override;
+    virtual std::string GetVersion() override;
+
+private:
+    static int process_callback(jack_nframes_t nframes, void* arg);
+    void ProcessAudio(jack_nframes_t nframes);
+
+    jack_client_t* client_;
+    jack_port_t* input_port_;
+    std::string device_name_;
+    size_t buffer_size_;
+    int sample_rate_;
+    
+    std::queue<std::vector<int16_t>> audio_queue_;
+    std::mutex queue_mutex_;
+    bool initialized_;
+};
+
+// JACK Output Implementation
+class CJackSoundOut : public CSoundOutInterface
+{
+public:
+    CJackSoundOut();
+    virtual ~CJackSoundOut();
+
+    // CSelectionInterface
+    virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) override;
+    virtual std::string GetDev() override;
+    virtual void SetDev(std::string sNewDev) override;
+
+    // CSoundOutInterface
+    virtual bool Init(int sampleRate, size_t bufferSize) override;
+    virtual bool Write(std::vector<uint16_t>& data) override;
+    virtual void Close() override;
+    virtual std::string GetVersion() override;
+
+private:
+    static int process_callback(jack_nframes_t nframes, void* arg);
+    void ProcessAudio(jack_nframes_t nframes);
+
+    jack_client_t* client_;
+    jack_port_t* output_port_;
+    std::string device_name_;
+    size_t buffer_size_;
+    int sample_rate_;
+    
+    std::queue<std::vector<int16_t>> audio_queue_;
+    std::mutex queue_mutex_;
+    bool initialized_;
+};
+
+//
+// Implementation
+//
+
+// ============================================================================
+// CJackSoundIn Implementation
+// ============================================================================
+
+CJackSoundIn::CJackSoundIn()
+    : client_(nullptr)
+    , input_port_(nullptr)
+    , device_name_("default")
+    , buffer_size_(0)
+    , sample_rate_(0)
+    , initialized_(false)
+{
 }
 
-pair< string, string>
-CJackPorts::get_ports(string dev)
+CJackSoundIn::~CJackSoundIn()
 {
-    if (ports.find(dev) != ports.end()) {
-        return ports.at(dev);
-    }
-    return pair<string,string>("","");
+    Close();
 }
 
-void
-CJackPorts::load(jack_client_t * client, unsigned long flags)
+void CJackSoundIn::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
 {
-    const char **port_names = jack_get_ports(client, ".*", NULL, flags);
-    string client_name = jack_get_client_name(client);
-    ports.clear();
-    devices.clear();
-    map<string, vector<string> > device_ports;
-    if (port_names)
-    {
-        for (size_t i=0; port_names[i]; i++)
-        {
-            string port = port_names[i];
-            if (port.substr(0, client_name.length())!=client_name)
-            {
-                size_t p = port.find(':');
-                string dev = port.substr(0, p);
-                device_ports[dev].push_back(port);
-            }
-            //free(port_names[i]);
-        }
-    }
-    free(port_names);
-    for (map<string, vector<string> >::iterator i = device_ports.begin(); i!=device_ports.end(); i++)
-    {
-        switch (i->second.size())
-        {
-        case 0:
-            break; // should not happen
-        case 1:
-            ports[i->first].first = i->second[0];
-            ports[i->first].second = i->second[0];
-            devices.push_back(i->first);
-            break;
-        case 2:
-            ports[i->first].first = i->second[0];
-            ports[i->first].second = i->second[1];
-            devices.push_back(i->first);
-            break;
-        default:
-            for (size_t j=0; j<i->second.size()/2; j++)
-            {
-                stringstream dev;
-                dev << i->first << "(" << 2*j << "," << 2*j+1 << ")";
-                ports[dev.str()].first = i->second[2*j];
-                ports[dev.str()].second = i->second[2*j+1];
-                devices.push_back(dev.str());
-            }
-            if (i->second.size() % 2 == 1)
-            {
-                size_t j = i->second.size()-1;
-                stringstream dev;
-                dev << i->first << "(" << j << ")";
-                ports[dev.str()].first = i->second[j];
-                ports[dev.str()].second = i->second[j];
-                devices.push_back(dev.str());
-            }
-        }
-    }
-}
-
-static int
-play_stereo(jack_nframes_t nframes, void *arg)
-{
-    if (arg==NULL)
-    {
-        return 0;
-    }
-    instance_data_t& data = *(instance_data_t *) arg;
-    if (data.left==NULL || data.right == NULL)
-    {
-        return 0;
-    }
-    jack_default_audio_sample_t *out[2];
-    out[0] = (jack_default_audio_sample_t *) jack_port_get_buffer(data.left, nframes);
-    out[1] = (jack_default_audio_sample_t *) jack_port_get_buffer(data.right, nframes);
-    if (out[0]==NULL || out[1]==NULL)
-    {
-        return 0;
-    }
-    if (data.buff==NULL)
-    {
-        return 0;
-    }
-    for (jack_nframes_t i = 0; i < nframes; i++)
-    {
-        short buffer[2];
-        size_t bytes = sizeof(short)*2;
-        size_t n = jack_ringbuffer_read(data.buff, (char*)buffer, bytes);
-        if (n < bytes)
-            data.underruns++;
-        /* de-interleave samples from decoder */
-        for (int chn = 0; chn < 2; chn++)
-            out[chn][i] = jack_default_audio_sample_t(double(buffer[chn])/32768.0);
-    }
-    return 0;
-}
-
-static int
-process_callback(jack_nframes_t nframes, void *arg)
-{
-    CJackCommon *This = (CJackCommon *) arg;
-    if (This->capture_data)
-        capture_stereo(nframes, This->capture_data);
-    if (This->play_data)
-        play_stereo(nframes, This->play_data);
-    return 0;
-}
-
-static void
-jack_shutdown(void *arg)
-{
-    cout << "jack shut down" << endl;
-}
-
-void CJackCommon::initialise()
-{
-    jack_options_t options = jack_options_t(JackNullOption | JackServerName);
+    names.clear();
+    descriptions.clear();
+    
+    // Need a temporary client to query ports
+    jack_client_t* temp_client = nullptr;
     jack_status_t status;
-    string server = "default";
-
-    /* open a client connection to the Jack server */
-
-    client = jack_client_open("dream", options, &status, server.c_str());
-    if (client == NULL)
-    {
-        cerr << "jack_client_open() failed, status = " << ((long unsigned)
-                status) << endl;
-        if (status & JackServerFailed)
-        {
-            throw "Unable to connect to Jack server";
+    temp_client = jack_client_open("temp_enum", JackNullOption, &status);
+    
+    if (!temp_client) {
+        defaultDevice = "";
+        return;
+    }
+    
+    // Get all capture ports (physical outputs that we can capture from)
+    const char** ports = jack_get_ports(temp_client, nullptr, JACK_DEFAULT_AUDIO_TYPE, 
+                                       JackPortIsOutput);
+    
+    if (ports) {
+        for (int i = 0; ports[i] != nullptr; i++) {
+            names.push_back(ports[i]);
+            
+            // Try to get port alias as friendly name
+            jack_port_t* port = jack_port_by_name(temp_client, ports[i]);
+            if (port) {
+                char aliases[2][jack_port_name_size()];
+                int num_aliases = jack_port_get_aliases(port, aliases);
+                if (num_aliases > 0) {
+                    descriptions.push_back(aliases[0]);
+                } else {
+                    descriptions.push_back(ports[i]);
+                }
+            } else {
+                descriptions.push_back(ports[i]);
+            }
         }
+        jack_free(ports);
     }
-    if (status & JackServerStarted)
-    {
-        cout << "Jack server started" << endl;
+    
+    // Set default to first physical capture port if available
+    const char** physical_ports = jack_get_ports(temp_client, nullptr, JACK_DEFAULT_AUDIO_TYPE,
+                                                 JackPortIsPhysical | JackPortIsOutput);
+    if (physical_ports && physical_ports[0]) {
+        defaultDevice = physical_ports[0];
+        jack_free(physical_ports);
+    } else if (!names.empty()) {
+        defaultDevice = names[0];
+    } else {
+        defaultDevice = "";
     }
-    if (status & JackNameNotUnique)
-    {
-        char *client_name = jack_get_client_name(client);
-        cout << "Jack unique name `" << client_name << "' assigned" << endl;
-    }
-
-    /* tell the CSoundInJack server to call `process()' whenever
-       there is work to be done.
-     */
-
-    jack_set_process_callback(client, process_callback, &common_data);
-
-    /* tell the Jack server to call `jack_shutdown()' if
-       it ever shuts down, either entirely, or if it
-       just decides to stop calling us.
-     */
-
-    jack_on_shutdown(client, jack_shutdown, 0);
-
-    //if (jack_get_sample_rate(client) != Parameters.GetSampleRate())
-    //{
-        //throw "Jack: jack is running with the wrong sample rate";
-    //}
+    
+    jack_client_close(temp_client);
 }
 
-void CJackCommon::terminate()
+std::string CJackSoundIn::GetDev()
 {
-    jack_client_close(client);
-    client = NULL;
+    return device_name_;
 }
 
-CSoundInJack::CSoundInJack():iBufferSize(0), bBlocking(true), capture_data(), dev(""),ports()
+void CJackSoundIn::SetDev(std::string sNewDev)
 {
-    if (common_data.client==NULL)
-        common_data.initialise();
-
-    if (common_data.is_active && jack_deactivate(common_data.client))
-    {
-        throw "Jack: cannot deactivate client";
+    if (!initialized_ || !client_ || !input_port_) {
+        device_name_ = sNewDev;
+        return;
     }
-    common_data.is_active = false;
-
-    capture_data.left =
-        jack_port_register(common_data.client, "input_0", JACK_DEFAULT_AUDIO_TYPE,
-                           JackPortIsInput, 0);
-    capture_data.right =
-        jack_port_register(common_data.client, "input_1", JACK_DEFAULT_AUDIO_TYPE,
-                           JackPortIsInput, 0);
-
-    if ((capture_data.left == NULL) || (capture_data.right == NULL))
-    {
-        throw "Jack: no more ports available";
+    
+    // Disconnect all existing connections to our input port
+    const char** connections = jack_port_get_all_connections(client_, input_port_);
+    if (connections) {
+        for (int i = 0; connections[i] != nullptr; i++) {
+            jack_disconnect(client_, connections[i], jack_port_name(input_port_));
+        }
+        jack_free(connections);
     }
-
-    jack_ringbuffer_reset(capture_data.buff);
-
-    common_data.capture_data = &capture_data;
-
-    ports.load(common_data.client, JackPortIsOutput);
-
-    if (jack_activate(common_data.client))
-    {
-        throw "Jack: cannot activate client";
+    
+    // Connect to the new source port
+    if (!sNewDev.empty()) {
+        if (jack_connect(client_, sNewDev.c_str(), jack_port_name(input_port_)) == 0) {
+            device_name_ = sNewDev;
+        }
+    } else {
+        device_name_ = "";
     }
-    common_data.is_active = true;
 }
 
-CSoundInJack::CSoundInJack(const CSoundInJack & e):
-        iBufferSize(e.iBufferSize), bBlocking(e.bBlocking), device_changed(true),
-        capture_data(e.capture_data), dev(e.dev), ports(e.ports)
+bool CJackSoundIn::Init(int iSampleRate, size_t iNewBufferSize)
+{
+    if (initialized_) {
+        Close();
+    }
+
+    sample_rate_ = iSampleRate;
+    buffer_size_ = iNewBufferSize;
+
+    // Open JACK client
+    jack_status_t status;
+    client_ = jack_client_open("audio_capture", JackNullOption, &status);
+    if (!client_) {
+        return false;
+    }
+
+    // Check sample rate
+    jack_nframes_t jack_sr = jack_get_sample_rate(client_);
+    if ((int)jack_sr != iSampleRate) {
+        // JACK is running at different rate - you may want to handle this
+    }
+
+    // Register input port
+    input_port_ = jack_port_register(client_, "input", JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput, 0);
+    if (!input_port_) {
+        jack_client_close(client_);
+        client_ = nullptr;
+        return false;
+    }
+
+    // Set process callback
+    jack_set_process_callback(client_, process_callback, this);
+
+    // Activate client
+    if (jack_activate(client_) != 0) {
+        jack_client_close(client_);
+        client_ = nullptr;
+        return false;
+    }
+
+    // Optionally auto-connect to system capture ports
+    const char** ports = jack_get_ports(client_, nullptr, nullptr, JackPortIsPhysical | JackPortIsOutput);
+    if (ports && ports[0]) {
+        jack_connect(client_, ports[0], jack_port_name(input_port_));
+        device_name_ = ports[0];  // Store the connected port name
+    }
+    if (ports) {
+        jack_free(ports);
+    }
+
+    initialized_ = true;
+    return true;
+}
+
+int CJackSoundIn::process_callback(jack_nframes_t nframes, void* arg)
+{
+    CJackSoundIn* self = static_cast<CJackSoundIn*>(arg);
+    self->ProcessAudio(nframes);
+    return 0;
+}
+
+void CJackSoundIn::ProcessAudio(jack_nframes_t nframes)
+{
+    jack_default_audio_sample_t* in = (jack_default_audio_sample_t*)jack_port_get_buffer(input_port_, nframes);
+    
+    // Convert float samples to int16_t
+    std::vector<int16_t> buffer(nframes);
+    for (size_t i = 0; i < nframes; i++) {
+        float sample = in[i];
+        if (sample > 1.0f) sample = 1.0f;
+        if (sample < -1.0f) sample = -1.0f;
+        buffer[i] = static_cast<int16_t>(sample * 32767.0f);
+    }
+
+    // Store in queue
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    audio_queue_.push(buffer);
+    
+    // Limit queue size to prevent unbounded growth
+    while (audio_queue_.size() > 100) {
+        audio_queue_.pop();
+    }
+}
+
+bool CJackSoundIn::Read(std::vector<uint16_t>& data)
+{
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    
+    if (audio_queue_.empty()) {
+        data.clear();
+        return false;
+    }
+
+    const std::vector<int16_t>& buffer = audio_queue_.front();
+    data.resize(buffer.size());
+    std::memcpy(data.data(), buffer.data(), buffer.size() * sizeof(int16_t));
+    audio_queue_.pop();
+    
+    return true;
+}
+
+void CJackSoundIn::Close()
+{
+    if (client_) {
+        jack_deactivate(client_);
+        jack_client_close(client_);
+        client_ = nullptr;
+        input_port_ = nullptr;
+    }
+    
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    while (!audio_queue_.empty()) {
+        audio_queue_.pop();
+    }
+    
+    initialized_ = false;
+}
+
+std::string CJackSoundIn::GetVersion()
+{
+    jack_client_t* temp_client = nullptr;
+    jack_status_t status;
+    temp_client = jack_client_open("temp_version", JackNullOption, &status);
+    
+    if (!temp_client) {
+        return "JACK (version unknown)";
+    }
+    
+    int major, minor, micro, proto;
+    jack_get_version(&major, &minor, &micro, &proto);
+    
+    jack_client_close(temp_client);
+    
+    char version_str[64];
+    snprintf(version_str, sizeof(version_str), "JACK %d.%d.%d (protocol %d)", 
+             major, minor, micro, proto);
+    
+    return std::string(version_str);
+}
+
+// ============================================================================
+// CJackSoundOut Implementation
+// ============================================================================
+
+CJackSoundOut::CJackSoundOut()
+    : client_(nullptr)
+    , output_port_(nullptr)
+    , device_name_("default")
+    , buffer_size_(0)
+    , sample_rate_(0)
+    , initialized_(false)
 {
 }
 
-CSoundInJack & CSoundInJack::operator=(const CSoundInJack & e)
-{
-    iBufferSize = e.iBufferSize;
-    bBlocking = e.bBlocking;
-    capture_data = e.capture_data;
-    dev = e.dev;
-    ports = e.ports;
-    return *this;
-}
-
-CSoundInJack::~CSoundInJack()
+CJackSoundOut::~CJackSoundOut()
 {
     Close();
-    if (common_data.client==NULL)
+}
+
+void CJackSoundOut::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+{
+    names.clear();
+    descriptions.clear();
+    
+    // Need a temporary client to query ports
+    jack_client_t* temp_client = nullptr;
+    jack_status_t status;
+    temp_client = jack_client_open("temp_enum", JackNullOption, &status);
+    
+    if (!temp_client) {
+        defaultDevice = "";
         return;
-
-    if (common_data.is_active && jack_deactivate(common_data.client))
-    {
-        throw "Jack: cannot deactivate client";
     }
-    common_data.is_active = false;
-    common_data.capture_data = NULL;
-    if (jack_activate(common_data.client))
-    {
-        throw "Jack: cannot activate client";
+    
+    // Get all playback ports (physical inputs that we can send to)
+    const char** ports = jack_get_ports(temp_client, nullptr, JACK_DEFAULT_AUDIO_TYPE,
+                                       JackPortIsInput);
+    
+    if (ports) {
+        for (int i = 0; ports[i] != nullptr; i++) {
+            names.push_back(ports[i]);
+            
+            // Try to get port alias as friendly name
+            jack_port_t* port = jack_port_by_name(temp_client, ports[i]);
+            if (port) {
+                char aliases[2][jack_port_name_size()];
+                int num_aliases = jack_port_get_aliases(port, aliases);
+                if (num_aliases > 0) {
+                    descriptions.push_back(aliases[0]);
+                } else {
+                    descriptions.push_back(ports[i]);
+                }
+            } else {
+                descriptions.push_back(ports[i]);
+            }
+        }
+        jack_free(ports);
     }
-    common_data.is_active = true;
-}
-
-void
-CSoundInJack::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultDev)
-{
-    ports.load(common_data.client, JackPortIsOutput);
-    names = ports.devices;
-    descriptions = names;
-    defaultDev = "";
-}
-
-string
-CSoundInJack::GetItem()
-{
-    return dev;
-}
-
-void
-CSoundInJack::SetItem(string sNewDevice)
-{
-    if (dev != sNewDevice)
-    {
-        dev = sNewDevice;
-        device_changed = true;
+    
+    // Set default to first physical playback port if available
+    const char** physical_ports = jack_get_ports(temp_client, nullptr, JACK_DEFAULT_AUDIO_TYPE,
+                                                 JackPortIsPhysical | JackPortIsInput);
+    if (physical_ports && physical_ports[0]) {
+        defaultDevice = physical_ports[0];
+        jack_free(physical_ports);
+    } else if (!names.empty()) {
+        defaultDevice = names[0];
+    } else {
+        defaultDevice = "";
     }
+    
+    jack_client_close(temp_client);
 }
 
-void
-CSoundInJack::Init(int iNewBufferSize, bool bNewBlocking)
+std::string CJackSoundOut::GetDev()
 {
-    if (device_changed == false)
+    return device_name_;
+}
+
+void CJackSoundOut::SetDev(std::string sNewDev)
+{
+    if (!initialized_ || !client_ || !output_port_) {
+        device_name_ = sNewDev;
         return;
+    }
+    
+    // Disconnect all existing connections from our output port
+    const char** connections = jack_port_get_all_connections(client_, output_port_);
+    if (connections) {
+        for (int i = 0; connections[i] != nullptr; i++) {
+            jack_disconnect(client_, jack_port_name(output_port_), connections[i]);
+        }
+        jack_free(connections);
+    }
+    
+    // Connect to the new destination port
+    if (!sNewDev.empty()) {
+        if (jack_connect(client_, jack_port_name(output_port_), sNewDev.c_str()) == 0) {
+            device_name_ = sNewDev;
+        }
+    } else {
+        device_name_ = "";
+    }
+}
 
-    iBufferSize = iNewBufferSize;
-    bBlocking = bNewBlocking;
-
-    const char ** l = jack_port_get_connections(capture_data.left);
-    const char ** r = jack_port_get_connections(capture_data.right);
-    if (l || r)
+bool CJackSoundOut::Init(int sampleRate, size_t bufferSize)
+{
+    if (initialized_) {
         Close();
-
-    if (l) free(l);
-    if (r) free(r);
-
-    pair<string,string> source = ports.get_ports(dev);
-
-    int err = jack_connect (data.client, source.first.c_str(), jack_port_name(capture_data.left));
-    if (err)
-    {
-        cout << "err " << err << " can't connect " << source.first << " to " << jack_port_name(capture_data.left) << endl;
     }
 
-    err = jack_connect (data.client, source.second.c_str(), jack_port_name(capture_data.right));
-    if (err)
-    {
-        cout << "err " << err << " can't connect " << source.second << " to " << jack_port_name(capture_data.right) << endl;
+    sample_rate_ = sampleRate;
+    buffer_size_ = bufferSize;
+
+    // Open JACK client
+    jack_status_t status;
+    client_ = jack_client_open("audio_playback", JackNullOption, &status);
+    if (!client_) {
+        return false;
     }
-    device_changed = false;
+
+    // Register output port
+    output_port_ = jack_port_register(client_, "output", JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput, 0);
+    if (!output_port_) {
+        jack_client_close(client_);
+        client_ = nullptr;
+        return false;
+    }
+
+    // Set process callback
+    jack_set_process_callback(client_, process_callback, this);
+
+    // Activate client
+    if (jack_activate(client_) != 0) {
+        jack_client_close(client_);
+        client_ = nullptr;
+        return false;
+    }
+
+    // Optionally auto-connect to system playback ports
+    const char** ports = jack_get_ports(client_, nullptr, nullptr, JackPortIsPhysical | JackPortIsInput);
+    if (ports && ports[0]) {
+        jack_connect(client_, jack_port_name(output_port_), ports[0]);
+        device_name_ = ports[0];  // Store the connected port name
+    }
+    if (ports) {
+        jack_free(ports);
+    }
+
+    initialized_ = true;
+    return true;
 }
 
-bool
-CSoundInJack::Read(CVector<short>& psData)
+int CJackSoundOut::process_callback(jack_nframes_t nframes, void* arg)
 {
-    if (device_changed)
-        Init(iBufferSize, bBlocking);
-
-    size_t bytes = iBufferSize * sizeof(short);
-    const int delay_ms = 100;
-#ifdef _WIN32
-    while (jack_ringbuffer_read_space(capture_data.buff) < bytes)
-    {
-        Sleep(delay_ms);
-    }
-#else
-    timespec delay;
-    delay.tv_sec = 0;
-    const long one_ms = 1000000L; // nanoseconds
-    delay.tv_nsec = delay_ms*one_ms;
-    while (jack_ringbuffer_read_space(capture_data.buff) < bytes)
-    {
-        nanosleep(&delay, NULL);
-    }
-#endif
-    char *buffer = (char *) &psData[0];
-    //short buffer[16384];
-    size_t n = jack_ringbuffer_read(capture_data.buff, (char*)&buffer[0], bytes);
-    /*
-    short smax=-32767, smin=32767;
-    for(int i=0; i<iBufferSize; i++)
-    {
-    	if(smax<buffer[i]) smax = buffer[i];
-    	if(smin>buffer[i]) smin = buffer[i];
-    }
-    cout << iBufferSize << " " << setw(8) << smin << " " << setw(8) << smax << endl;
-    */
-    if (n != bytes)
-    {
-        capture_data.underruns++;
-        cerr << "jack read " << n << " wanted " << bytes << endl;
-        return true;
-    }
-    return false;
+    CJackSoundOut* self = static_cast<CJackSoundOut*>(arg);
+    self->ProcessAudio(nframes);
+    return 0;
 }
 
-void
-CSoundInJack::Close()
+void CJackSoundOut::ProcessAudio(jack_nframes_t nframes)
 {
-    jack_port_disconnect(common_data.client, capture_data.left);
-    jack_port_disconnect(common_data.client, capture_data.right);
-    device_changed = true;
-}
-
-CSoundOutJack::CSoundOutJack():iBufferSize(0), bBlocking(true), device_changed(true),
-        play_data(), dev(-1), ports()
-{
-    if (common_data.client==NULL)
-        common_data.initialise();
-
-    if (common_data.is_active && jack_deactivate(common_data.client))
-    {
-        throw "Jack: cannot deactivate client";
-    }
-    common_data.is_active = false;
-
-    play_data.left =
-        jack_port_register(common_data.client, "output_0", JACK_DEFAULT_AUDIO_TYPE,
-                           JackPortIsOutput, 0);
-    play_data.right =
-        jack_port_register(common_data.client, "output_1", JACK_DEFAULT_AUDIO_TYPE,
-                           JackPortIsOutput, 0);
-
-    if ((play_data.left == NULL) || (play_data.right == NULL))
-    {
-        throw "Jack: no more ports available";
-    }
-
-    common_data.play_data = &play_data;
-    ports.load(common_data.client, JackPortIsInput);
-
-    if (jack_activate(common_data.client))
-    {
-        throw "Jack: cannot activate client";
-    }
-    common_data.is_active = true;
-}
-
-CSoundOutJack::~CSoundOutJack()
-{
-    Close();
-    if (common_data.is_active && jack_deactivate(common_data.client))
-    {
-        throw "Jack: cannot deactivate client";
-    }
-    common_data.is_active = false;
-    common_data.capture_data = NULL;
-    if (jack_activate(common_data.client))
-    {
-        throw "Jack: cannot activate client";
-    }
-    common_data.is_active = true;
-}
-
-CSoundOutJack::CSoundOutJack(const CSoundOutJack & e):
-        iBufferSize(e.iBufferSize), bBlocking(e.bBlocking),dev(e.dev)
-{
-}
-
-CSoundOutJack & CSoundOutJack::operator=(const CSoundOutJack & e)
-{
-    iBufferSize = e.iBufferSize;
-    bBlocking = e.bBlocking;
-    play_data = e.play_data;
-    dev = e.dev;
-    ports = e.ports;
-    return *this;
-}
-
-void
-CSoundOutJack::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultDev)
-{
-    ports.load(common_data.client, JackPortIsInput);
-    names = ports.devices;
-    descriptions = names;
-    defaultDev = "";
-}
-
-string
-CSoundOutJack::GetItemName()
-{
-    return dev;
-}
-
-void
-CSoundOutJack::SetItem(string sNewDevice)
-{
-    if (dev != sNewDevice)
-    {
-        dev = sNewDevice;
-        device_changed = true;
-    }
-}
-
-void
-CSoundOutJack::Init(int iNewBufferSize, bool bNewBlocking)
-{
-    if (device_changed == false)
+    jack_default_audio_sample_t* out = (jack_default_audio_sample_t*)jack_port_get_buffer(output_port_, nframes);
+    
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    
+    if (audio_queue_.empty()) {
+        // No data available - output silence
+        std::memset(out, 0, nframes * sizeof(jack_default_audio_sample_t));
         return;
-
-    iBufferSize = iNewBufferSize;
-    bBlocking = bNewBlocking;
-
-    const char ** l = jack_port_get_connections(play_data.left);
-    const char ** r = jack_port_get_connections(play_data.right);
-    if (l || r)
-        Close();
-
-    if (l) free(l);
-
-    pair<string,string> sink = ports.get_ports(dev);
-
-    int err = jack_connect (data.client, jack_port_name(play_data.left), sink.first.c_str());
-    if (err)
-    {
-        cout << "err " << err << " can't connect " << jack_port_name(play_data.left) << " to " << sink.first << endl;
     }
-    err = jack_connect (data.client, jack_port_name(play_data.right), sink.second.c_str());
-    if (err)
-    {
-        cout << "err " << err << " can't connect " << jack_port_name(play_data.right) << " to " << sink.second << endl;
+
+    const std::vector<int16_t>& buffer = audio_queue_.front();
+    size_t samples_to_copy = std::min((size_t)nframes, buffer.size());
+    
+    // Convert int16_t to float
+    for (size_t i = 0; i < samples_to_copy; i++) {
+        out[i] = buffer[i] / 32768.0f;
     }
-    device_changed = false;
+    
+    // Fill remainder with silence if needed
+    if (samples_to_copy < nframes) {
+        std::memset(out + samples_to_copy, 0, (nframes - samples_to_copy) * sizeof(jack_default_audio_sample_t));
+    }
+    
+    audio_queue_.pop();
 }
 
-bool
-CSoundOutJack::Write(CVector<short>& psData)
+bool CJackSoundOut::Write(std::vector<uint16_t>& data)
 {
-    if (device_changed)
-        Init(iBufferSize, bBlocking);
-
-    size_t bytes = psData.Size()*sizeof(short);
-    if (jack_ringbuffer_write (play_data.buff, (char *) &psData[0], bytes) < bytes)
-    {
-        play_data.overruns++;
-        return true;
+    std::vector<int16_t> buffer(data.size());
+    std::memcpy(buffer.data(), data.data(), data.size() * sizeof(int16_t));
+    
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    audio_queue_.push(buffer);
+    
+    // Limit queue size
+    while (audio_queue_.size() > 100) {
+        audio_queue_.pop();
     }
-    return false;
+    
+    return true;
 }
 
-void
-CSoundOutJack::Close()
+void CJackSoundOut::Close()
 {
-    jack_port_disconnect(common_data.client, play_data.left);
-    jack_port_disconnect(common_data.client, play_data.right);
-    device_changed = true;
+    if (client_) {
+        jack_deactivate(client_);
+        jack_client_close(client_);
+        client_ = nullptr;
+        output_port_ = nullptr;
+    }
+    
+    std::lock_guard<std::mutex> lock(queue_mutex_);
+    while (!audio_queue_.empty()) {
+        audio_queue_.pop();
+    }
+    
+    initialized_ = false;
 }
+
+std::string CJackSoundOut::GetVersion()
+{
+    jack_client_t* temp_client = nullptr;
+    jack_status_t status;
+    temp_client = jack_client_open("temp_version", JackNullOption, &status);
+    
+    if (!temp_client) {
+        return "JACK (version unknown)";
+    }
+    
+    int major, minor, micro, proto;
+    jack_get_version(&major, &minor, &micro, &proto);
+    
+    jack_client_close(temp_client);
+    
+    char version_str[64];
+    snprintf(version_str, sizeof(version_str), "JACK %d.%d.%d (protocol %d)", 
+             major, minor, micro, proto);
+    
+    return std::string(version_str);
+}
+
+#endif // JACK_AUDIO_H
