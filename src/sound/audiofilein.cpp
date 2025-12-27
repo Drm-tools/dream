@@ -59,8 +59,8 @@ CAudioFileIn::Enumerate(std::vector<std::string>& names, std::vector<std::string
     descriptions.clear();
     if (!defaultName.empty()) {
         names.push_back(defaultName);
-        descriptions.push_back("file");
-        if (strInFileName != defaultName) {
+        descriptions.push_back("file");        
+        if ((!strInFileName.empty()) && strInFileName != defaultName) {
             names.push_back(strInFileName);
             descriptions.push_back("file");
         }

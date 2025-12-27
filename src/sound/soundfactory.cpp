@@ -59,107 +59,92 @@
 #include "drm_soapySDR.h"
 #endif
 
-#include "soundnull.h"
 #include "audiofilein.h"
+#include "soundnull.h"
+
 
 template <typename T>
-CSoundFactory<T>::CSoundFactory() : currentDevice(), drivers(), currentDriver(0)
-{
+CSoundFactory<T>::CSoundFactory()
+    : currentDevice(), drivers(), currentDriver(0) {}
+
+template <typename T> CSoundFactory<T>::~CSoundFactory() {
+  for (size_t i = 0; i < drivers.size(); i++)
+    delete drivers[i];
 }
 
-template <typename T>
-CSoundFactory<T>::~CSoundFactory()
-{
-    for (size_t i = 0; i < drivers.size(); i++)
-        delete drivers[i];
+template <> CSoundFactory<CSoundInInterface>::~CSoundFactory() {
+  for (size_t i = 0; i < drivers.size(); i++)
+    delete drivers[i];
 }
 
-template <>
-CSoundFactory<CSoundInInterface>::~CSoundFactory()
-{
-    for (size_t i = 0; i < drivers.size(); i++)
-        delete drivers[i];
-}
-
-template <>
-CSoundFactory<CSoundOutInterface>::~CSoundFactory()
-{
-    for (size_t i = 0; i < drivers.size(); i++)
-        delete drivers[i];
+template <> CSoundFactory<CSoundOutInterface>::~CSoundFactory() {
+  for (size_t i = 0; i < drivers.size(); i++)
+    delete drivers[i];
 }
 
 template <typename T>
-void CSoundFactory<T>::Enumerate(std::vector<std::string> &names, std::vector<std::string> &descriptions, std::string &defaultDevice)
-{
-    names.clear();
-    descriptions.clear();
-    defaultDevice = "null";
-    for (size_t i = 0; i < drivers.size(); i++)
-    {
-        std::vector<std::string> n, d;
-        std::string dd;
-        drivers[i]->Enumerate(n, d, dd);
-        names.insert(names.end(), n.begin(), n.end());
-        descriptions.insert(descriptions.end(), d.begin(), d.end());
-        defaultDevice = dd;
-    }
-}
-
-template <typename T>
-std::string CSoundFactory<T>::GetItemName()
-{
-    return currentDevice;
-}
-
-template <typename T>
-void CSoundFactory<T>::SetItem(std::string sNewDevice)
-{
-    currentDevice = sNewDevice;
-    if (drivers.size() == 0)
-        return;
-    auto pDevice = drivers[currentDriver];
+void CSoundFactory<T>::Enumerate(std::vector<std::string> &names,
+                                 std::vector<std::string> &descriptions,
+                                 std::string &defaultDevice) {
+  names.clear();
+  descriptions.clear();
+  for (size_t i = 0; i < drivers.size(); i++) {
     std::vector<std::string> n, d;
     std::string dd;
-    if (pDevice != nullptr)
-    {
-        dd = sNewDevice; // allows Enumerate to know what we are looking for
-        pDevice->Enumerate(n, d, dd);
-        if (std::find(n.begin(), n.end(), sNewDevice) != n.end())
-        {
-            pDevice->SetItem(sNewDevice);
-            return;
-        }
-    }
-    for (size_t i = 0; i < drivers.size(); i++)
-    {
-        dd = sNewDevice; // allows Enumerate to know what we are looking for
-        drivers[i]->Enumerate(n, d, dd);
-        if (std::find(n.begin(), n.end(), sNewDevice) != n.end())
-        {
-            currentDriver = i;
-            drivers[i]->SetItem(sNewDevice);
-            break;
-        }
-    }
+    drivers[i]->Enumerate(n, d, dd);
+    names.insert(names.end(), n.begin(), n.end());
+    descriptions.insert(descriptions.end(), d.begin(), d.end());
+    defaultDevice = dd;
+  }
 }
 
-template <typename T>
-T *CSoundFactory<T>::GetItem()
-{
-    if (drivers.size() == 0)
-        return nullptr;
-    return drivers[currentDriver];
+template <typename T> std::string CSoundFactory<T>::GetItemName() {
+  return currentDevice;
+}
+
+template <typename T> void CSoundFactory<T>::SetItem(std::string sNewDevice) {
+  currentDevice = sNewDevice;
+  if (drivers.size() == 0)
+    return;
+  auto pDevice = drivers[currentDriver];
+  std::vector<std::string> n, d;
+  std::string dd;
+  if (pDevice != nullptr) {
+    dd = sNewDevice; // allows Enumerate to know what we are looking for
+    pDevice->Enumerate(n, d, dd);
+    if (std::find(n.begin(), n.end(), sNewDevice) != n.end()) {
+      pDevice->SetItem(sNewDevice);
+      return;
+    }
+  }
+  for (size_t i = 0; i < drivers.size(); i++) {
+    if (i != currentDriver) { // already checked
+      dd = sNewDevice; // allows Enumerate to know what we are looking for
+      drivers[i]->Enumerate(n, d, dd);
+      if (std::find(n.begin(), n.end(), sNewDevice) != n.end()) {
+        currentDriver = i;
+        drivers[i]->SetItem(sNewDevice);
+        return;
+      }
+    }
+  }
+}
+
+template <typename T> T *CSoundFactory<T>::GetItem() {
+  if (drivers.size() == 0)
+    return nullptr;
+  return drivers[currentDriver];
 }
 
 template <>
-CSoundFactory<CSoundInInterface>::CSoundFactory() : currentDevice(), drivers(), currentDriver(0)
-{
+CSoundFactory<CSoundInInterface>::CSoundFactory()
+    : currentDevice(), drivers(), currentDriver(0) {
 #ifdef _WIN32
-    drivers.push_back(new CSoundInMMSystem());
+  drivers.push_back(new CSoundInMMSystem());
 #endif
 
 #ifdef USE_ALSA
-    drivers.push_back(new CSoundInAlsa());
+  drivers.push_back(new CSoundInAlsa());
 #endif
 
 #ifdef USE_JACK
@@ -186,31 +171,31 @@ CSoundFactory<CSoundInInterface>::CSoundFactory() : currentDevice(), drivers(), 
 }
 
 template <>
-CSoundFactory<CSoundOutInterface>::CSoundFactory() : drivers(), currentDriver(0)
-{
+CSoundFactory<CSoundOutInterface>::CSoundFactory()
+    : drivers(), currentDriver(0) {
 #ifdef _WIN32
-    drivers.push_back(new CSoundOutMMSystem());
+  drivers.push_back(new CSoundOutMMSystem());
 #endif
 
 #ifdef USE_ALSA
-    drivers.push_back(new CSoundOutAlsa());
+  drivers.push_back(new CSoundOutAlsa());
 #endif
 
 #ifdef USE_JACK
-    drivers.push_back(new CSoundOutJack());
+  drivers.push_back(new CSoundOutJack());
 #endif
 
 #ifdef USE_PULSEAUDIO
-    drivers.push_back(new CSoundOutPulse());
+  drivers.push_back(new CSoundOutPulse());
 #endif
 
 #ifdef USE_PORTAUDIO
-    drivers.push_back(new CSoundOutPaOut());
+  drivers.push_back(new CSoundOutPaOut());
 #endif
 
 #ifdef USE_OPENSL
-    drivers.push_back(new COpenSLESOut());
+  drivers.push_back(new COpenSLESOut());
 #endif
 
-    drivers.push_back(new CSoundOutNull());
+  drivers.push_back(new CSoundOutNull());
 }
