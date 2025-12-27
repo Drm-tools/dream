@@ -104,7 +104,7 @@ capture_stereo(jack_nframes_t nframes, void *arg)
 pair< string, string>
 CJackPorts::get_ports(string dev)
 {
-    if (ports.contains(dev)) {
+    if (ports.find(dev) != ports.end()) {
         return ports.at(dev);
     }
     return pair<string,string>("","");
