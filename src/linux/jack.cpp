@@ -358,14 +358,14 @@ CSoundInJack::Enumerate(vector<string>& names, vector<string>& descriptions, str
     defaultDev = "";
 }
 
-int
+string
 CSoundInJack::GetItem()
 {
     return dev;
 }
 
 void
-CSoundInJack::SetItem(int sNewDevice)
+CSoundInJack::SetItem(string sNewDevice)
 {
     if (dev != sNewDevice)
     {
