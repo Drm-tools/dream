@@ -109,7 +109,7 @@ void CJackSoundIn::SetDev(std::string sNewDev)
     }
 }
 
-bool CJackSoundIn::Init(int iSampleRate, size_t iNewBufferSize)
+bool CJackSoundIn::Init(int iSampleRate, size_t iNewBufferSize, bool)
 {
     if (initialized_) {
         Close();
@@ -354,7 +354,7 @@ void CJackSoundOut::SetItem(std::string sNewDev)
     }
 }
 
-bool CJackSoundOut::Init(int sampleRate, size_t bufferSize)
+bool CJackSoundOut::Init(int sampleRate, size_t bufferSize, bool)
 {
     if (initialized_) {
         Close();
