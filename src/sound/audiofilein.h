@@ -41,10 +41,9 @@ public:
     CAudioFileIn();
     virtual ~CAudioFileIn();
 
-    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) {}
-    virtual void		SetItem(std::string sNewDevice) {sCurrentDevice = sNewDevice;}
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
+    virtual void		SetItem(std::string sNewDevice);
     virtual std::string GetItemName() {return sCurrentDevice;}
-    virtual void		SetFileName(const std::string& strFileName);
     virtual int			GetSampleRate() {return iRequestedSampleRate;}
 
     virtual bool	Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);

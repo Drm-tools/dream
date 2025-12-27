@@ -53,7 +53,22 @@ CAudioFileIn::~CAudioFileIn()
 }
 
 void
-CAudioFileIn::SetFileName(const string& strFileName)
+CAudioFileIn::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultName)
+{
+    names.clear();
+    descriptions.clear();
+    if (!defaultName.empty()) {
+        names.push_back(defaultName);
+        descriptions.push_back("file");
+        if (strInFileName != defaultName) {
+            names.push_back(strInFileName);
+            descriptions.push_back("file");
+        }
+    }
+}
+
+void
+CAudioFileIn::SetItem(string strFileName)
 {
     strInFileName = strFileName;
     string ext;
