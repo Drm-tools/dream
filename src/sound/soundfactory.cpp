@@ -118,10 +118,11 @@ void CSoundFactory<T>::SetItem(std::string sNewDevice)
     if (drivers.size() == 0)
         return;
     auto pDevice = drivers[currentDriver];
+    std::vector<std::string> n, d;
+    std::string dd;
     if (pDevice != nullptr)
     {
-        std::vector<std::string> n, d;
-        std::string dd;
+        dd = sNewDevice; // allows Enumerate to know what we are looking for
         pDevice->Enumerate(n, d, dd);
         if (std::find(n.begin(), n.end(), sNewDevice) != n.end())
         {
@@ -131,8 +132,7 @@ void CSoundFactory<T>::SetItem(std::string sNewDevice)
     }
     for (size_t i = 0; i < drivers.size(); i++)
     {
-        std::vector<std::string> n, d;
-        std::string dd;
+        dd = sNewDevice; // allows Enumerate to know what we are looking for
         drivers[i]->Enumerate(n, d, dd);
         if (std::find(n.begin(), n.end(), sNewDevice) != n.end())
         {
