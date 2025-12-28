@@ -78,14 +78,6 @@ public:
     {
         return rDefCarOffset;
     }
-    std::string GetInputDevice();
-    std::string GetOutputDevice();
-    void EnumerateInputs(std::vector<string> &names, std::vector<string> &descriptions, std::string &defaultInput);
-    void EnumerateOutputs(std::vector<string> &names, std::vector<string> &descriptions, std::string &defaultOutput);
-    void SetInputDevice(std::string);
-    void SetOutputDevice(std::string);
-    void doSetInputDevice();
-    void doSetOutputDevice();
     virtual bool IsReceiver() const { return false; }
     virtual bool IsTransmitter() const { return true; }
     virtual CSettings *GetSettings();
