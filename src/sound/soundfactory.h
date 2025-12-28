@@ -19,4 +19,12 @@ protected:
     size_t currentDriver;
 };
 
+class CSoundFactoryIn: public CSoundFactory<
+{
+    CSoundFactoryIn();
+}
+class CSoundFactoryOut: public CSoundFactory<
+{
+    CSoundFactoryOut();
+}
 #endif // SOUNDFACTORY_H
