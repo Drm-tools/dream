@@ -296,17 +296,17 @@ void CJackSoundOut::Enumerate(std::vector<std::string>& names, std::vector<std::
             // Try to get port alias as friendly name
             jack_port_t* port = jack_port_by_name(temp_client, ports[i]);
             if (port) {
-                char aliases[2];
+                char* aliases[2];
                 aliases[0] = new char[jack_port_name_size()];
 			    aliases[1] = new char[jack_port_name_size()];
                 int num_aliases = jack_port_get_aliases(port, aliases);
                 if (num_aliases > 0) {
-                    descriptions.push_back(aliases[0]);
+                    descriptions.push_back(std::string(aliases[0]));
                 } else {
-                    descriptions.push_back(ports[i]);
+                    descriptions.push_back(std::string(ports[i]));
                 }
             } else {
-                descriptions.push_back(ports[i]);
+                descriptions.push_back(std::string(ports[i]));
             }
         }
         jack_free(ports);
