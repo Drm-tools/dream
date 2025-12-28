@@ -88,6 +88,7 @@ public:
     {
         return Pa_GetVersionInfo()->versionText;
     }
+    virtual CSoundInInterface* GetItem() { return this; }
 
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual void Close();
@@ -119,6 +120,7 @@ public:
     {
         return Pa_GetVersionInfo()->versionText;
     }
+    virtual CSoundOutInterface* GetItem() { return this; }
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual void Close();
     virtual bool Write(CVector<short> &psData);
