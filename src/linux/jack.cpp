@@ -195,7 +195,7 @@ void CJackSoundIn::ProcessAudio(jack_nframes_t nframes)
     }
 }
 
-bool CJackSoundIn::Read(CVector<short>& data)
+bool CJackSoundIn::Read(CVector<short>& data, CParameter&)
 {
     std::lock_guard<std::mutex> lock(queue_mutex_);
     
@@ -296,7 +296,9 @@ void CJackSoundOut::Enumerate(std::vector<std::string>& names, std::vector<std::
             // Try to get port alias as friendly name
             jack_port_t* port = jack_port_by_name(temp_client, ports[i]);
             if (port) {
-                char aliases[2][jack_port_name_size()];
+                char aliases[2];
+                aliases[0] = new char[jack_port_name_size()];
+			    aliases[1] = new char[jack_port_name_size()];
                 int num_aliases = jack_port_get_aliases(port, aliases);
                 if (num_aliases > 0) {
                     descriptions.push_back(aliases[0]);
