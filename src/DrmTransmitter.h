@@ -80,9 +80,7 @@ public:
     }
     virtual bool IsReceiver() const { return false; }
     virtual bool IsTransmitter() const { return true; }
-    virtual CSettings *GetSettings();
-    virtual void SetSettings(CSettings *pNewSettings) { pSettings = pNewSettings; }
-    virtual CParameter *GetParameters() { return &Parameters; }
+
     void Run();
     void Close()
     {
