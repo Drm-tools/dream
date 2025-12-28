@@ -30,7 +30,6 @@
 #define AFX_SOUNDIN_H__9518A621_7F78_11D3_8C0D_EEBF182CF549__INCLUDED_
 
 #include "../sound/soundinterface.h"
-#include "../sound/selectioninterface.h"
 #include <windows.h>
 #include <mmsystem.h>
 
@@ -66,6 +65,7 @@ public:
     virtual CSoundInInterface *GetItem() { return this; }
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
+    virtual CSoundInInterface* GetItem() { return this; }
 
 protected:
     void OpenDevice();
@@ -103,6 +103,7 @@ public:
 
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
+    virtual CSoundOutInterface* GetItem() { return this; }
 
 protected:
     void OpenDevice();
