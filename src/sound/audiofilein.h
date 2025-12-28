@@ -1,4 +1,4 @@
-/******************************************************************************\
+int************************************************************************\
  * British Broadcasting Corporation
  * Copyright (c) 2007, 2012, 2013
  *
@@ -63,7 +63,7 @@ protected:
     int					iBufferSize;
     int					iFileSampleRate;
     int					iFileChannels;
-    int.                iOutputBlockSize;
+    int                iOutputBlockSize;
     CPacer*				pacer;
     CAudioResample*		ResampleObjL;
     CAudioResample*		ResampleObjR;
