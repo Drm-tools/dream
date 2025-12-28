@@ -57,6 +57,7 @@ public:
     bool Read(CVector<short>& psData, CParameter& Parameters);
     void Close();
     virtual std::string		GetVersion() { return "alsa audio input"; }
+    virtual CSoundInInterface* GetItem() override { return this; }
 
 protected:
     void Init_HW();
