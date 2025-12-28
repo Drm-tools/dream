@@ -183,7 +183,7 @@ CDRMReceiver::SetInputDevice(string s)
         SyncUsingPil.SetSyncInput(false);
         TimeSync.SetSyncInput(false);
         soundinfactory.SetItem(device);
-        CTuner *pTuner = ReceiveData.GetTuner();
+        CTuner *pTuner = dynamic_cast<CTuner*>(soundinfactory.GetItem());
         fprintf(stderr, "Read pTuner = %x\n", pTuner);
         if (pTuner)
         {
