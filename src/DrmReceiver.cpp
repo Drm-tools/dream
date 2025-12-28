@@ -34,7 +34,6 @@
 
 #include "DrmReceiver.h"
 #include "util/Settings.h"
-#include "util/Utilities.h"
 #include "util/FileTyper.h"
 #include "tuner.h"
 
@@ -59,8 +58,7 @@ CDRMReceiver::CDRMReceiver(CSettings* nPsettings) : CDRMTransceiver(),
     iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
     time_keeper(0),
     pTuner(nullptr),
-    PlotManager(), iPrevSigSampleRate(0),Parameters(*(new CParameter())), pSettings(nPsettings),
-    soundinfactory(), soundoutfactory()
+    PlotManager(), iPrevSigSampleRate(0)
 {
     Parameters.SetReceiver(this);
     downstreamRSCI.SetReceiver(this);
@@ -184,7 +182,7 @@ CDRMReceiver::SetInputDevice(string s)
         TimeSync.SetSyncInput(false);
         soundinfactory.SetItem(device);
         CTuner *pTuner = dynamic_cast<CTuner*>(soundinfactory.GetItem());
-        fprintf(stderr, "Read pTuner = %x\n", pTuner);
+        fprintf(stderr, "Read pTuner = %p\n", pTuner);
         if (pTuner)
         {
                 SetTuner(pTuner);
@@ -204,28 +202,8 @@ CDRMReceiver::SetInputDevice(string s)
 void
 CDRMReceiver::SetOutputDevice(string device)
 {
-    soundoutfactory.SetItem(device);
+   CDRMTransceiver::SetOutputDevice(device);
     WriteData.Init(Parameters);
-}
-
-string CDRMReceiver::GetInputDevice()
-{
-    return soundinfactory.GetItemName();
-}
-
-string CDRMReceiver::GetOutputDevice()
-{
-    return soundoutfactory.GetItemName();
-}
-
-void CDRMReceiver::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)
-{
-    soundinfactory.Enumerate(names, descriptions, defaultInput);
-}
-
-void CDRMReceiver::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
-{
-    soundoutfactory.Enumerate(names, descriptions, defaultOutput);
 }
 
 void

@@ -136,10 +136,6 @@ protected:
     _REAL rDefCarOffset;
     bool bUseUEP;
     int iSoftStopSymbolCount;
-    CParameter &Parameters;
-    CSettings *pSettings;
-    CSoundFactoryIn soundinfactory;
-    CSoundFactoryOut soundoutfactory;
 };
 
 #endif // !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

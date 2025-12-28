@@ -124,14 +124,6 @@ void CSoundFactory<T>::SetItem(std::string sNewDevice)
   }
 }
 
-template <typename T>
-T* CSoundFactory<T>::GetItem()
-{
-  if (drivers.size() == 0)
-    return nullptr;
-  return drivers[currentDriver]->GetItem();
-}
-
 CSoundFactoryIn::CSoundFactoryIn():CSoundFactory<CSoundInInterface>()
 {
 #ifdef _WIN32

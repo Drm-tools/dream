@@ -135,55 +135,6 @@ bool CDRMTransmitter::CanSoftStopExit()
     return false; /* Signal to continue the normal operation */
 }
 
-void CDRMTransmitter::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)
-{
-    soundinfactory.Enumerate(names, descriptions, defaultInput);
-}
-
-void CDRMTransmitter::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
-{
-    soundoutfactory.Enumerate(names, descriptions, defaultOutput);
-}
-
-void CDRMTransmitter::doSetInputDevice()
-{
-    soundinfactory.SetItem(indev);
-}
-
-void CDRMTransmitter::doSetOutputDevice()
-{
-    soundoutfactory.SetItem(outdev);
-}
-
-void
-CDRMTransmitter::SetInputDevice(string device)
-{
-    indev = device;
-    soundinfactory.SetItem(indev);
-}
-
-void
-CDRMTransmitter::SetOutputDevice(string device)
-{
-    outdev = device;
-    soundoutfactory.SetItem(outdev);
-}
-
-CSettings* CDRMTransmitter::GetSettings()
-{
-    return pSettings;
-}
-
-string CDRMTransmitter::GetInputDevice()
-{
-   return  soundinfactory.GetItemName();
-}
-
-string CDRMTransmitter::GetOutputDevice()
-{
-    return soundoutfactory.GetItemName();
-}
-
 void CDRMTransmitter::Init()
 {
 
