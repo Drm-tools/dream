@@ -60,7 +60,7 @@ CAudioFileIn::Enumerate(std::vector<std::string>& names, std::vector<std::string
     if (!defaultName.empty()) {
 		recent.insert(defaultName);
 	}
-	for(auto itr = recent.begin(); itr != recent.end(); ++i) {
+	for(auto itr = recent.begin(); itr != recent.end(); ++itr) {
         names.push_back(*itr);
         descriptions.push_back("file");
     }
