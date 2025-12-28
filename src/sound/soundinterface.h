@@ -44,6 +44,7 @@ public:
     virtual bool Read(CVector<short>& psData, CParameter& Parameters)=0;
     virtual void Close()=0;
 	virtual std::string	GetVersion() = 0;
+ 	virtual CSoundInInterface* GetItem() = 0;
 
 };
 
@@ -57,6 +58,7 @@ public:
     virtual bool Write(CVector<short>& psData)=0;
     virtual void Close()=0;
 	virtual std::string	GetVersion() = 0;
+ 	virtual CSoundOutInterface* GetItem() = 0;
 };
 
 #endif
