@@ -25,6 +25,7 @@ public:
     virtual bool Read(CVector<short>& psData, CParameter&) override;
     virtual void Close() override;
     virtual std::string GetVersion() override;
+    virtual CSoundInInterface* GetItem() override { return this; }
 
 private:
     static int process_callback(jack_nframes_t nframes, void* arg);
@@ -58,6 +59,7 @@ public:
     virtual bool Write(CVector<short>& psData) override;
     virtual void Close() override;
     virtual std::string GetVersion() override;
+    virtual CSoundOutInterface* GetItem() override { return this; }
 
 private:
     static int process_callback(jack_nframes_t nframes, void* arg);
