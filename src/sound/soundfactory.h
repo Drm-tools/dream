@@ -19,11 +19,11 @@ protected:
     size_t currentDriver;
 };
 
-class CSoundFactoryIn: public CSoundFactory<
+class CSoundFactoryIn: public CSoundFactory<CSoundInInterface>
 {
     CSoundFactoryIn();
 }
-class CSoundFactoryOut: public CSoundFactory<
+class CSoundFactoryOut: public CSoundFactory<CSoundOutInterface>
 {
     CSoundFactoryOut();
 }
