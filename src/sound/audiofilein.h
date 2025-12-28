@@ -35,7 +35,7 @@
 #include "../resample/caudioresample.h"
 
 /* Classes ********************************************************************/
-class CAudioFileIn : public CSoundInInterface
+class CAudioFileIn : public 
 {
 public:
     CAudioFileIn();
@@ -50,7 +50,7 @@ public:
     virtual bool 	Read(CVector<short>& psData, CParameter &Parameters);
     virtual void 		Close();
 	virtual std::string GetVersion() { return "Dream Audio File Reader"; }
-	virtual std::string	GetVersion() { return "linux shared memory audio input"; }
+	virtual CSoundInInterface* GetItem() { return this; }
 
 protected:
     std::string				strInFileName;
