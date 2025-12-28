@@ -43,8 +43,9 @@ public:
 
     virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
     virtual void		Close();
-	virtual std::string	GetVersion() { return "linux shared memory audio input"; }
     virtual bool	    Read(CVector<short>& psData);
+	virtual std::string	GetVersion() { return "linux shared memory audio input"; }
+    virtual CSoundInInterface* GetItem() override { return this; }
 
     void				SetShmPath(const std::string& p) {
         shm_path = p;
