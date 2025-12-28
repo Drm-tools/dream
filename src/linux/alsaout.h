@@ -55,6 +55,7 @@ public:
 
     void Close();
 	virtual std::string		GetVersion() { return "alsa audio output"; }
+    virtual CSoundOutInterface* GetItem() override { return this; }
 
 protected:
     void Init_HW();
