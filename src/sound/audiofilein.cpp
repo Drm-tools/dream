@@ -58,12 +58,11 @@ CAudioFileIn::Enumerate(std::vector<std::string>& names, std::vector<std::string
     names.clear();
     descriptions.clear();
     if (!defaultName.empty()) {
-        names.push_back(defaultName);
-        descriptions.push_back("file");        
-        if ((!strInFileName.empty()) && strInFileName != defaultName) {
-            names.push_back(strInFileName);
-            descriptions.push_back("file");
-        }
+		recent.insert(defaultName);
+	}
+	for(auto itr = recent.begin(); itr != recent.end(); ++i) {
+        names.push_back(*itr);
+        descriptions.push_back("file");
     }
 }
 
@@ -182,6 +181,7 @@ CAudioFileIn::SetItem(string strFileName)
     else if (iRequestedSampleRate <= 48000) iRequestedSampleRate = 48000;
     else if (iRequestedSampleRate <= 96000) iRequestedSampleRate = 96000;
     else                                    iRequestedSampleRate = 192000;
+	recent.insert(strInFileName);
 }
 
 bool
