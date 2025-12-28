@@ -146,27 +146,8 @@ public:
     virtual void LoadSettings() override; // can write to settings to set defaults
     virtual void SaveSettings() override;
 
-    std::string GetInputDevice();
-    std::string GetOutputDevice();
-    virtual void EnumerateInputs(std::vector<string> &names, std::vector<string> &descriptions, std::string &defaultInput) override;
-    virtual void EnumerateOutputs(std::vector<string> &names, std::vector<string> &descriptions, std::string &defaultOutput) override;
     virtual void SetInputDevice(std::string) override;
     virtual void SetOutputDevice(std::string) override;
-
-    virtual CSettings *GetSettings() override
-    {
-        return pSettings;
-    }
-
-    virtual void SetSettings(CSettings *pNewSettings) override
-    {
-        pSettings = pNewSettings;
-    }
-
-    virtual CParameter *GetParameters() override
-    {
-        return &Parameters;
-    }
 
     virtual bool IsReceiver() const override { return true; }
     virtual bool IsTransmitter() const override { return false; }
