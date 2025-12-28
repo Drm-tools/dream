@@ -88,11 +88,15 @@ void CSoundFactory<T>::Enumerate(std::vector<std::string> &names,
   }
 }
 
-template <typename T> std::string CSoundFactory<T>::GetItemName() {
+template <typename T>
+std::string CSoundFactory<T>::GetItemName()
+{
   return currentDevice;
 }
 
-template <typename T> void CSoundFactory<T>::SetItem(std::string sNewDevice) {
+template <typename T>
+void CSoundFactory<T>::SetItem(std::string sNewDevice)
+{
   currentDevice = sNewDevice;
   if (drivers.size() == 0)
     return;
@@ -120,10 +124,12 @@ template <typename T> void CSoundFactory<T>::SetItem(std::string sNewDevice) {
   }
 }
 
-template <typename T> T *CSoundFactory<T>::GetItem() {
+template <typename T>
+T* CSoundFactory<T>::GetItem()
+{
   if (drivers.size() == 0)
     return nullptr;
-  return drivers[currentDriver];
+  return drivers[currentDriver]->GetItem();
 }
 
 CSoundFactoryIn::CSoundFactoryIn():CSoundFactory<CSoundInInterface>()
@@ -156,7 +162,7 @@ CSoundFactoryIn::CSoundFactoryIn():CSoundFactory<CSoundInInterface>()
     drivers.push_back(new CSoapySDRIn());
 #endif
     drivers.push_back(new CAudioFileIn());
-    drivers.push_back(new CSoundInNull());
+    // drivers.push_back(new CSoundInNull());
 }
 
 CSoundFactoryOut::CSoundFactoryOut():CSoundFactory<CSoundOutInterface>()
