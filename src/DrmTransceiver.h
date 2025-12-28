@@ -43,8 +43,14 @@ public:
 
   virtual void LoadSettings() = 0;
   virtual void SaveSettings() = 0;
+  std::string GetInputDevice() {
+    return soundinfactory.GetItemName();
+  };
   virtual void SetInputDevice(std::string name) {
     soundinfactory.SetItem(name);
+  };
+  std::string GetOutputDevice() {
+    return soundoutfactory.GetItemName();
   };
   virtual void SetOutputDevice(std::string name) {
     soundoutfactory.SetItem(name);
