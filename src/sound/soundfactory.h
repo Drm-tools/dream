@@ -21,11 +21,13 @@ protected:
 
 class CSoundFactoryIn: public CSoundFactory<CSoundInInterface>
 {
+public:
     CSoundFactoryIn();
 };
 
 class CSoundFactoryOut: public CSoundFactory<CSoundOutInterface>
 {
+public:
     CSoundFactoryOut();
 };
 #endif // SOUNDFACTORY_H
