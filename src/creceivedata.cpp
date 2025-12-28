@@ -28,12 +28,10 @@
 
 #include "creceivedata.h"
 #include "Parameter.h"
-#include "sound/audiofilein.h"
 #include "util/FileTyper.h"
 #include "IQInputFilter.h"
 #include "UpsampleFilter.h"
 #include "matlib/MatlibSigProToolbox.h"
-#include "tuner.h"
 
 using namespace std;
 
@@ -45,10 +43,7 @@ inline _REAL sample2real(_SAMPLE s) {
     return _REAL(s);
 }
 
-CReceiveData::CReceiveData() :
-#ifdef QT_MULTIMEDIA_LIB
-    pIODevice(nullptr),
-#endif
+CReceiveData::CReceiveData():
     pSound(nullptr),
     vecrInpData(INPUT_DATA_VECTOR_SIZE, 0.0),
     bFippedSpectrum(false), eInChanSelection(CS_MIX_CHAN), iPhase(0),spectrumAnalyser()
@@ -711,12 +706,6 @@ void CReceiveData::emitRSCIData(CParameter& Parameters)
     spectrumAnalyser.CalculateSigStrengthCorrection(Parameters, vecrData);
 
     spectrumAnalyser.CalculatePSDInterferenceTag(Parameters, vecrData);
-}
-
-CTuner * CReceiveData::GetTuner()
-{
-    fprintf(stderr, "CReceiveData::GetTuner() called, pSound=%x\n", pSound);
-    return dynamic_cast<CTuner *>(pSound);
 }
 
 
