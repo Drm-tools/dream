@@ -54,8 +54,6 @@
    I think the RSCI spec is slightly wrong - using 150 windows consumes just over 400ms, 149 would be exact */
 #define INPUT_DATA_VECTOR_SIZE (NUM_AV_BLOCKS_PSD_RSI * (LEN_PSD_AV_EACH_BLOCK_RSI-PSD_OVERLAP_RSI)+PSD_OVERLAP_RSI)
 
-class CTuner;
-
 enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_SUB_CHAN, CS_IQ_POS,
                    CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_IQ_POS_SPLIT, CS_IQ_NEG_SPLIT
                   };
@@ -85,10 +83,10 @@ public:
     }
 
     void SetSoundInterface(CSoundInInterface* device );
+    CSoundInInterface* GetSoundInterface() { return pSound; }
 
     void Stop();
 
-    std::string GetSoundInterfaceVersion() { return pSound->GetVersion(); }
     void SetInChanSel(const EInChanSel eNS) {
         eInChanSelection = eNS;
     }
@@ -100,8 +98,6 @@ public:
                      const int iLenPSDAvEachBlock = LEN_PSD_AV_EACH_BLOCK,
                      const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
                      const int iPSDOverlap = 0);
-
-    CTuner *GetTuner(void);
 
 protected:
     CSignalLevelMeter		SignalLevelMeter;
