@@ -29,7 +29,8 @@
 #include "DrmTransmitter.h"
 #include <sstream>
 
-CDRMTransmitter::CDRMTransmitter(CSettings* nPsettings) : CDRMTransceiver(),
+CDRMTransmitter::CDRMTransmitter(CSettings* nPsettings):
+        CDRMTransceiver(nPsettings),
         ReadData(), TransmitData(),
         rDefCarOffset(VIRTUAL_INTERMED_FREQ),
         // UEP only works with Dream receiver, FIXME! -> disabled for now

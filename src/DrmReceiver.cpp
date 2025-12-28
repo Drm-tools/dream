@@ -41,7 +41,8 @@ const int
 CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
 /* Implementation *************************************************************/
-CDRMReceiver::CDRMReceiver(CSettings* nPsettings) : CDRMTransceiver(),
+CDRMReceiver::CDRMReceiver(CSettings* nPsettings):
+    CDRMTransceiver(nPsettings),
     ReceiveData(), WriteData(),
     FreqSyncAcq(),
     ChannelEstimation(),

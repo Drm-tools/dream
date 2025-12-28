@@ -38,7 +38,7 @@ enum ERunState { STOPPED, RUNNING, STOP_REQUESTED, RESTART };
 
 class CDRMTransceiver {
 public:
-  CDRMTransceiver();
+  CDRMTransceiver(CSettings *pSettings = nullptr);
   virtual ~CDRMTransceiver();
 
   virtual void LoadSettings() = 0;
