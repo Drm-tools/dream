@@ -136,9 +136,9 @@ template <typename T> T *CSoundFactory<T>::GetItem() {
   return drivers[currentDriver];
 }
 
-template <>
-CSoundFactory<CSoundInInterface>::CSoundFactory()
-    : currentDevice(), drivers(), currentDriver(0) {
+CSoundFactoryIn::CSoundFactoryIn()
+    : currentDevice(), drivers(), currentDriver(0)
+{
 #ifdef _WIN32
   drivers.push_back(new CSoundInMMSystem());
 #endif
@@ -170,9 +170,9 @@ CSoundFactory<CSoundInInterface>::CSoundFactory()
     drivers.push_back(new CSoundInNull());
 }
 
-template <>
-CSoundFactory<CSoundOutInterface>::CSoundFactory()
-    : drivers(), currentDriver(0) {
+CSoundFactoryOut::CSoundFactoryOut()
+    : currentDevice(), drivers(), currentDriver(0)
+{
 #ifdef _WIN32
   drivers.push_back(new CSoundOutMMSystem());
 #endif
