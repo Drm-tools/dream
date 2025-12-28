@@ -65,7 +65,6 @@ public:
     virtual CSoundInInterface *GetItem() { return this; }
     virtual void Close();
     virtual std::string GetVersion() { return ""; };
-    virtual CSoundInInterface* GetItem() { return this; }
 
 protected:
     void OpenDevice();
