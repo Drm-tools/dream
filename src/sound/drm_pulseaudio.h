@@ -101,6 +101,7 @@ public:
 
 
 	std::string GetVersion() { return pa_get_library_version(); }
+    virtual CSoundInInterface* GetItem() { return this; }
 
 	bool Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
 	bool Read(CVector<_SAMPLE> &psData, CParameter &Parameters);
@@ -145,6 +146,7 @@ public:
     void        SetItem(std::string sNewDevice) { CSoundPulse::SetItem(sNewDevice); }
     std::string GetItemName() { return CSoundPulse::GetItemName(); }
 	std::string GetVersion() { return pa_get_library_version(); }
+    virtual CSoundOutInterface* GetItem() { return this; }
 	bool Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
 	bool Write(CVector<_SAMPLE> &psData);
 	void Close();
