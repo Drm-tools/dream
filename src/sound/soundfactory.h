@@ -22,9 +22,10 @@ protected:
 class CSoundFactoryIn: public CSoundFactory<CSoundInInterface>
 {
     CSoundFactoryIn();
-}
+};
+
 class CSoundFactoryOut: public CSoundFactory<CSoundOutInterface>
 {
     CSoundFactoryOut();
-}
+};
 #endif // SOUNDFACTORY_H
