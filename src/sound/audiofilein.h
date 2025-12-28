@@ -33,6 +33,7 @@
 #include "soundnull.h"
 #include "../util/Pacer.h"
 #include "../resample/caudioresample.h"
+#include <set>
 
 /* Classes ********************************************************************/
 class CAudioFileIn : public CSoundInInterface
@@ -68,6 +69,7 @@ protected:
     CAudioResample*		ResampleObjL;
     CAudioResample*		ResampleObjR;
     short*				buffer;
+	std::set<std::string> recent;
 };
 
 #endif
