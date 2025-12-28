@@ -43,7 +43,7 @@ public:
 
     virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
     virtual void		SetItem(std::string sNewDevice);
-    virtual std::string GetItemName() {return sCurrentDevice;}
+    virtual std::string GetItemName() {return strInFileName;}
     virtual int			GetSampleRate() {return iRequestedSampleRate;}
 
     virtual bool	Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
@@ -53,7 +53,7 @@ public:
 	virtual CSoundInInterface* GetItem() { return this; }
 
 protected:
-    std::string				strInFileName;
+    std::string			strInFileName;
     CVector<_REAL>		vecTempResBufIn;
     CVector<_REAL>		vecTempResBufOut;
     enum { fmt_txt, fmt_raw_mono, fmt_raw_stereo, fmt_other } eFmt;
@@ -67,8 +67,7 @@ protected:
     CAudioResample*		ResampleObjL;
     CAudioResample*		ResampleObjR;
     short*				buffer;
-    int					iOutBlockSize;
-    std::string				sCurrentDevice;
+    int					strInFileName;
 };
 
 #endif
