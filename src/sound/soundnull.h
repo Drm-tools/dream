@@ -47,6 +47,7 @@ public:
     }
     virtual void Close() {}
     virtual std::string GetVersion() { return "no audio interface"; }
+    virtual CSoundInInterface* GetItem() { return this; }
     virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) {}
     virtual std::string GetItemName() { return ""; }
     virtual void		SetItem(std::string) {}
