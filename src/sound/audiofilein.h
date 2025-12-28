@@ -63,6 +63,7 @@ protected:
     int					iBufferSize;
     int					iFileSampleRate;
     int					iFileChannels;
+    int.                iOutputBlockSize;
     CPacer*				pacer;
     CAudioResample*		ResampleObjL;
     CAudioResample*		ResampleObjR;
