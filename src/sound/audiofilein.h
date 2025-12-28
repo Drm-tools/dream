@@ -67,7 +67,6 @@ protected:
     CAudioResample*		ResampleObjL;
     CAudioResample*		ResampleObjR;
     short*				buffer;
-    int					strInFileName;
 };
 
 #endif
