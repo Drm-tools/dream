@@ -96,9 +96,14 @@ jobs:
 
     - name: Build
       run: |
+        qmake "CONFIG+=console"
+        nmake
+        copy release/dream.exe cdream.exe
+        nmake clean
         qmake
         nmake
         windeployqt -opengl -printsupport release
+        copy cdream.exe release
 
     - name: Copy DLLs to release folder
       run: |
