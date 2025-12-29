@@ -1,4 +1,4 @@
---find: test soapysdr on Linux
+name: test soapysdr on Linux
 
 permissions:
   packages: write
