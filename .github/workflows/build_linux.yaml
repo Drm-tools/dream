@@ -73,3 +73,8 @@ jobs:
       with:
         name: dream_${{ github.run_id }}_${{ env.ARCH }}_${{ matrix.os }}.deb
         path: dream_${{ env.RELEASE_TAG }}_${{ env.ARCH }}.deb
+
+    - name: build console
+      run: |
+        qmake "CONFIG+=console"
+        make
