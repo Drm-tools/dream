@@ -121,8 +121,13 @@ bool CRSISubscriberSocket::SetDestination(const string& dest)
 
     if (dest.substr(0,5)=="http:" || dest.substr(0,6)=="https:")
     {
-        cout<<"instantiating HTTP socket"<<endl;
+#ifdef NO_QT
+		cout << "HTTP not available in pure console. Try building with qtconsole" << endl;
+	    pSocket = new CPacketSocketNative;	
+#else
+        cout << "instantiating HTTP socket" << endl;
         pSocket = new CPacketSocketHTTP;
+#endif
     }
     else
     {
