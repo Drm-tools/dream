@@ -9,7 +9,7 @@
  *  David Flamand
  *
  * Description:
- *	Custom settings of the qwt-plot, Support Qwt version 5.0.0 to 6.0.1(+)
+ *	Custom settings of the qwt-plot, Support Qwt version 5.0.0 to 6.1.0(+)
  *
  ******************************************************************************
  *
@@ -33,12 +33,9 @@
 #define __DRMPLOT_QWT5_H
 
 /* Qt includes */
-#include <qobject.h>
-#if QT_VERSION < 0x040000
-# error QT_VERSION < 0x040000
-#endif
-#include <QPainter>
 #include <QTimer>
+#include <QObject>
+#include <QPainter>
 #include <QDialog>
 #include <QResizeEvent>
 #include <QPaintEvent>
@@ -68,10 +65,10 @@
 #endif
 
 /* Other includes */
-#include "../resample/Resample.h"
+#include "../resample/cspectrumresample.h"
 #include "../util/Vector.h"
 #include "../Parameter.h"
-#include "../DrmReceiver.h"
+#include "../main-Qt/crx.h"
 
 
 /* Definitions ****************************************************************/
@@ -108,8 +105,8 @@
 
 
 /* Maximum and minimum values of x-axis of input spectrum plots */
-#define MIN_VAL_INP_SPEC_Y_AXIS_DB				((double) -125.0)
-#define MAX_VAL_INP_SPEC_Y_AXIS_DB				((double) -25.0)
+#define MIN_VAL_INP_SPEC_Y_AXIS_DB				((double) -120.0)
+#define MAX_VAL_INP_SPEC_Y_AXIS_DB				((double) 0.0)
 
 /* Maximum and minimum values of x-axis of input PSD (shifted) */
 #define MIN_VAL_SHIF_PSD_Y_AXIS_DB				((double) -85.0)
@@ -142,6 +139,10 @@
 #define MARKER_STYLE Qt::DashLine
 
 
+/* Define the plot font size */
+#define PLOT_FONT_SIZE 8
+
+
 /* Sometime between Qwt version some name may change, we fix this */
 #if QWT_VERSION < 0x050200
 # define LOWERBOUND lBound
@@ -155,7 +156,13 @@
 #else
 # define SETDATA setSamples
 #endif
-
+#if QWT_VERSION < 0x060100
+# define SETMAJORPEN setMajPen
+# define SETMINORPEN setMinPen
+#else
+# define SETMAJORPEN setMajorPen
+# define SETMINORPEN setMinorPen
+#endif
 
 /* Set workaround flag for Qwt version 5.0.0 and 5.0.1 */
 /* QwtPlotCurve::Xfy seems broken on these versions */
@@ -275,17 +282,17 @@ public:
 	QwtPlot         *plot;
 
 	/* This function has to be called before chart can be used! */
-	void SetRecObj(CDRMReceiver* pNDRMRec) {pDRMRec = pNDRMRec;}
+    void SetRecObj(CRx* pNDRMRec) {pDRMRec = pNDRMRec;}
 
 	void SetupChart(const ECharType eNewType);
 	ECharType GetChartType() const { return CurCharType; }
-	void Update() { OnTimerChart(); }
+	void UpdateAnalogBWMarker();
 	void SetPlotStyle(const int iNewStyleID);
 
 	void setCaption(const QString& s) { if (DialogPlot) DialogPlot->setWindowTitle(s); }
 	void setIcon(const QIcon& s) { if (DialogPlot) DialogPlot->setWindowIcon(s); }
 	void setGeometry(const QRect& g) { if (DialogPlot) DialogPlot->setGeometry(g); }
-	bool isVisible() { if (DialogPlot) return DialogPlot->isVisible(); else return FALSE; }
+	bool isVisible() { if (DialogPlot) return DialogPlot->isVisible(); else return false; }
 	const QRect geometry() { if (DialogPlot) return DialogPlot->geometry(); else return QRect(); }
 	void close() { if (DialogPlot) delete this; }
 	void hide() { if (DialogPlot) DialogPlot->hide(); }
@@ -319,10 +326,11 @@ protected:
 
 	void PlotDefaults();
 	void PlotForceUpdate();
+	void PlotSetLegendFont();
 
 	void SetupAvIR();
 	void SetupTranFct();
-	void SetupAudioSpec(_BOOLEAN bAudioDecoder);
+	void SetupAudioSpec(bool bAudioDecoder);
 	void SetupFreqSamOffsHist();
 	void SetupDopplerDelayHist();
 	void SetupSNRAudHist();
@@ -333,7 +341,7 @@ protected:
 	void SetupSDCConst(const ECodScheme eNewCoSc);
 	void SetupMSCConst(const ECodScheme eNewCoSc);
 	void SetupAllConst();
-	void SetupInpPSD(_BOOLEAN bAnalog = FALSE);
+	void SetupInpPSD(bool bAnalog = false);
 	void SetupInpSpecWaterf();
 
 	void AddWhatsThisHelpChar(const ECharType NCharType);
@@ -356,7 +364,7 @@ protected:
 	ECharType		InitCharType;
 	ECodScheme		eLastSDCCodingScheme;
 	ECodScheme		eLastMSCCodingScheme;
-	_BOOLEAN		bLastAudioDecoder;
+	bool		bLastAudioDecoder;
 
 	QwtText			leftTitle, rightTitle, bottomTitle;
 
@@ -371,7 +379,7 @@ protected:
 	QwtLegend		*legend;
 
 	QTimer			TimerChart;
-	CDRMReceiver	*pDRMRec;
+    CRx             *pDRMRec;
 
 	/* Waterfall spectrum stuff */
 	QPixmap			Canvas;
@@ -385,6 +393,7 @@ protected:
 	int				iAudSampleRate;
 	int				iSigSampleRate;
 	int				iLastXoredSampleRate;
+	int				iLastChanMode;
 
 public slots:
 #if QWT_VERSION < 0x060000

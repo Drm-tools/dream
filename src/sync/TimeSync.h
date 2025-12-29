@@ -66,6 +66,7 @@
 # define NUM_TAPS_HILB_FILT_48			NUM_TAPS_HILB_FILT_10_48
 # define NUM_TAPS_HILB_FILT_96			NUM_TAPS_HILB_FILT_10_96
 # define NUM_TAPS_HILB_FILT_192			NUM_TAPS_HILB_FILT_10_192
+# define NUM_TAPS_HILB_FILT_384			NUM_TAPS_HILB_FILT_10_384
 # define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_10
 #else
 # define GRDCRR_DEC_FACT				8
@@ -73,6 +74,7 @@
 # define NUM_TAPS_HILB_FILT_48			NUM_TAPS_HILB_FILT_5_48
 # define NUM_TAPS_HILB_FILT_96			NUM_TAPS_HILB_FILT_5_96
 # define NUM_TAPS_HILB_FILT_192			NUM_TAPS_HILB_FILT_5_192
+# define NUM_TAPS_HILB_FILT_384			NUM_TAPS_HILB_FILT_5_384
 # define HILB_FILT_BNDWIDTH				HILB_FILT_BNDWIDTH_5
 #endif
 
@@ -90,11 +92,11 @@ public:
 	virtual ~CTimeSync() {}
 
 	/* To set the module up for synchronized DRM input data stream */
-	void SetSyncInput(const _BOOLEAN bNewS) {bSyncInput = bNewS;}
+	void SetSyncInput(const bool bNewS) {bSyncInput = bNewS;}
 
 	void StartAcquisition();
-	void StopTimingAcqu() {bTimingAcqu = FALSE;}
-	void StopRMDetAcqu() {bRobModAcqu = FALSE;}
+	void StopTimingAcqu() {bTimingAcqu = false;}
+	void StopRMDetAcqu() {bRobModAcqu = false;}
 
 protected:
 	int							iSampleRate;
@@ -128,12 +130,12 @@ protected:
 
 	int							iCenterOfBuf;
 
-	_BOOLEAN					bSyncInput;
+	bool					bSyncInput;
 
-	_BOOLEAN					bInitTimingAcqu;
-	_BOOLEAN					bTimingAcqu;
-	_BOOLEAN					bRobModAcqu;
-	_BOOLEAN					bAcqWasActive;
+	bool					bInitTimingAcqu;
+	bool					bTimingAcqu;
+	bool					bRobModAcqu;
+	bool					bAcqWasActive;
 
 	int							iTiSyncInitCnt;
 	int							iRobModInitCnt;

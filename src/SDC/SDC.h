@@ -31,8 +31,8 @@
  *
 \******************************************************************************/
 
-#if !defined(SDC_H__3B0BA660_CA63SDBOJKEWROBNER89NE877A0D312__INCLUDED_)
-#define SDC_H__3B0BA660_CA63SDBOJKEWROBNER89NE877A0D312__INCLUDED_
+#ifndef SDC_H
+#define SDC_H
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
@@ -50,7 +50,7 @@ class CSDCTransmit
 {
 public:
     CSDCTransmit() {}
-    virtual ~CSDCTransmit() {}
+    virtual ~CSDCTransmit();
 
     void SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
 
@@ -59,7 +59,7 @@ protected:
     void CommitFlush();
     void CommitLeave();
 
-    _BOOLEAN CanTransmitCurrentTime(CParameter& Parameter);
+    bool CanTransmitCurrentTime(CParameter& Parameter);
 
     void DataEntityType0(CVector<_BINARY>& vecbiData, CParameter& Parameter);
     void DataEntityType1(CVector<_BINARY>& vecbiData, int ServiceID,
@@ -89,7 +89,7 @@ public:
     enum ERetStatus {SR_OK, SR_BAD_CRC, SR_BAD_DATA};
     enum ESDCType {SDC_DRM, SDC_AMSS};
     CSDCReceive() : eSDCType(SDC_DRM) {}
-    virtual ~CSDCReceive() {}
+    virtual ~CSDCReceive();
 
     ERetStatus SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter);
     void SetSDCType(ESDCType sdcType) {
@@ -97,28 +97,28 @@ public:
     }
 
 protected:
-    _BOOLEAN DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-                             CParameter& Parameter, const _BOOLEAN bVersion);
-    _BOOLEAN DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+    bool DataEntityType0(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const bool bVersion);
+    bool DataEntityType1(CVector<_BINARY>* pbiData, const int iLengthOfBody,
                              CParameter& Parameter);
 // ...
-    _BOOLEAN DataEntityType3(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-                             CParameter& Parameter, const _BOOLEAN bVersion);
-    _BOOLEAN DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-                             CParameter& Parameter, const _BOOLEAN bVersion);
-    _BOOLEAN DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-                             CParameter& Parameter, const _BOOLEAN bVersion);
+    bool DataEntityType3(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const bool bVersion);
+    bool DataEntityType4(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const bool bVersion);
+    bool DataEntityType5(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const bool bVersion);
 // ...
-    _BOOLEAN DataEntityType7(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-                             CParameter& Parameter, const _BOOLEAN bVersion);
-    _BOOLEAN DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+    bool DataEntityType7(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const bool bVersion);
+    bool DataEntityType8(CVector<_BINARY>* pbiData, const int iLengthOfBody,
                              CParameter& Parameter);
-    _BOOLEAN DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-                             CParameter& Parameter, const _BOOLEAN bVersion);
+    bool DataEntityType9(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                             CParameter& Parameter, const bool bVersion);
 // ...
-    _BOOLEAN DataEntityType11(CVector<_BINARY>* pbiData, const int iLengthOfBody,
-                              CParameter& Parameter, const _BOOLEAN bVersion);
-    _BOOLEAN DataEntityType12(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+    bool DataEntityType11(CVector<_BINARY>* pbiData, const int iLengthOfBody,
+                              CParameter& Parameter, const bool bVersion);
+    bool DataEntityType12(CVector<_BINARY>* pbiData, const int iLengthOfBody,
                               CParameter& Parameter);
 
     CCRC		CRCObject;
@@ -126,4 +126,4 @@ protected:
 };
 
 
-#endif // !defined(SDC_H__3B0BA660_CA63SDBOJKEWROBNER89NE877A0D312__INCLUDED_)
+#endif // SDC_H

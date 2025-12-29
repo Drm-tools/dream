@@ -35,6 +35,7 @@
 # include <unistd.h>
 # include <sys/stat.h>
 # include "shmsoundin.h"
+using namespace std;
 
 CShmSoundIn::CShmSoundIn():ringBuffer(NULL),
         shmid(-1),shm(NULL),shm_path(),name("shm input"),shmChannels(1),wantedChannels(2)
@@ -50,7 +51,7 @@ CShmSoundIn::~CShmSoundIn()
  * 2 samples per frame
  */
 void
-CShmSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
+CShmSoundIn::Init(int iNewBufferSize, bool bNewBlocking)
 {
     // TODO decide if we should use the parameters
     (void)iNewBufferSize;
@@ -73,33 +74,34 @@ CShmSoundIn::Init(int iNewBufferSize, _BOOLEAN bNewBlocking)
 }
 
 void
-CShmSoundIn::Enumerate(vector < string > &choices)
+CShmSoundIn::Enumerate(vector <string> &names, vector<string>& descriptions, string& defaultDev)
 {
-    choices.clear();
+    names.clear();
     if (shmid==-1)
         return;
-    choices.push_back(name);
+    names.push_back(name);
+    descriptions.push_back("");
+    defaultDev = name;
 }
 
 void
-CShmSoundIn::SetDev(int iNewDevice)
+CShmSoundIn::SetItem(string)
 {
-    (void)iNewDevice;
 }
 
-int
-CShmSoundIn::GetDev()
+string
+CShmSoundIn::GetItemName()
 {
     if (shmid==-1)
         return -1;
     return 0;
 }
 
-_BOOLEAN
+bool
 CShmSoundIn::Read(CVector<short>& psData)
 {
     if (ringBuffer==NULL)
-        return FALSE;
+        return false;
 
     size_t frames;
     if (wantedChannels==2)
@@ -145,7 +147,7 @@ CShmSoundIn::Read(CVector<short>& psData)
         }
     }
 
-    return TRUE;
+    return true;
 }
 
 void

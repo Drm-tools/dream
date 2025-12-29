@@ -54,24 +54,24 @@ static opus_decoder_destroy_t *opus_decoder_destroy;
 static opus_get_version_string_t *opus_get_version_string;
 static opus_strerror_t *opus_strerror;
 static const LIBFUNC LibFuncs[] = {
-	{ "opus_decode",             (void**)&opus_decode,             (void*)NULL },
-	{ "opus_decoder_create",     (void**)&opus_decoder_create,     (void*)NULL },
-	{ "opus_decoder_ctl",        (void**)&opus_decoder_ctl,        (void*)NULL },
-	{ "opus_decoder_destroy",    (void**)&opus_decoder_destroy,    (void*)NULL },
-	{ "opus_encode",             (void**)&opus_encode,             (void*)NULL },
-	{ "opus_encoder_create",     (void**)&opus_encoder_create,     (void*)NULL },
-	{ "opus_encoder_ctl",        (void**)&opus_encoder_ctl,        (void*)NULL },
-	{ "opus_encoder_destroy",    (void**)&opus_encoder_destroy,    (void*)NULL },
-	{ "opus_get_version_string", (void**)&opus_get_version_string, (void*)NULL },
-	{ "opus_strerror",           (void**)&opus_strerror,           (void*)NULL },
-	{ NULL, NULL, NULL }
+	{ "opus_decode",             (void**)&opus_decode,             (void*)nullptr },
+	{ "opus_decoder_create",     (void**)&opus_decoder_create,     (void*)nullptr },
+	{ "opus_decoder_ctl",        (void**)&opus_decoder_ctl,        (void*)nullptr },
+	{ "opus_decoder_destroy",    (void**)&opus_decoder_destroy,    (void*)nullptr },
+	{ "opus_encode",             (void**)&opus_encode,             (void*)nullptr },
+	{ "opus_encoder_create",     (void**)&opus_encoder_create,     (void*)nullptr },
+	{ "opus_encoder_ctl",        (void**)&opus_encoder_ctl,        (void*)nullptr },
+	{ "opus_encoder_destroy",    (void**)&opus_encoder_destroy,    (void*)nullptr },
+	{ "opus_get_version_string", (void**)&opus_get_version_string, (void*)nullptr },
+	{ "opus_strerror",           (void**)&opus_strerror,           (void*)nullptr },
+	{ nullptr, nullptr, nullptr }
 };
 # if defined(_WIN32)
-static const char* LibNames[] = { "libopus-0.dll", "libopus.dll", "opus.dll", NULL };
+static const char* LibNames[] = { "libopus-0.dll", "libopus.dll", "opus.dll", nullptr };
 # elif defined(__APPLE__)
-static const char* LibNames[] = { "@executable_path/../Frameworks/libopus.dylib", NULL };
+static const char* LibNames[] = { "libopus.dylib", nullptr };
 # else
-static const char* LibNames[] = { "libopus.so.0", "libopus.so", NULL };
+static const char* LibNames[] = { "libopus.so.0", "libopus.so", nullptr };
 # endif
 #endif
 
@@ -138,13 +138,13 @@ opus_encoder *opusEncOpen(
 	enc = (opus_encoder*)calloc(1, sizeof(opus_encoder));
 	if (!enc)
 	{
-		return NULL;
+		return nullptr;
 	}
 	enc->CRCObject = new CCRC();
 	if (!enc->CRCObject)
 	{
 		free(enc);
-		return NULL;
+		return nullptr;
 	}
 
 	enc->samples_per_channel = OPUS_PCM_FRAME_SIZE;
@@ -338,7 +338,7 @@ void opusEncSetParam(opus_encoder *enc,
 
 	if (AudioParam.bOPUSRequestReset)
 	{
-		AudioParam.bOPUSRequestReset = FALSE;
+		AudioParam.bOPUSRequestReset = false;
 
 		/* Signal */
 		switch (AudioParam.eOPUSSignal)
@@ -389,7 +389,7 @@ opus_decoder *opusDecOpen(
 		if (!dec->CRCObject)
 		{
 			free(dec);
-			dec = NULL;
+			dec = nullptr;
 		}
 	}
 	return dec;
@@ -446,27 +446,27 @@ int opusDecInit(
 }
 
 void *opusDecDecode(
-	opus_decoder *dec,
-	CAudioCodec::EDecError *eDecError,
-	int *iChannels,
-	unsigned char *buffer,
-	unsigned long buffer_size
+    opus_decoder *dec,
+    CAudioCodec::EDecError& eDecError,
+    int& iChannels,
+    unsigned char *buffer,
+    unsigned long buffer_size
 	)
 {
 	int frames_per_packet, pcm_len, frame_bytes, sub_frame_bytes, i, pos, pcm_pos;
 	int crc_ok=0, corrupted=0;
-	int frame_extra_bytes = CRC_BYTES;
+    int frame_extra_bytes = CRC_BYTES;
 	frames_per_packet = 1;
-	frame_bytes = buffer_size - frame_extra_bytes;
+    frame_bytes = buffer_size - frame_extra_bytes;
 	if (frame_bytes>=1 && frame_bytes<=OPUS_MAX_DATA_FRAME)
 	{
 #if CRC_BYTES != 0
 		dec->CRCObject->Reset(8*CRC_BYTES);
-		for (i=CRC_BYTES; i<frame_bytes; i++)
+        for (i=CRC_BYTES; i<frame_bytes; i++)
 			dec->CRCObject->AddByte(buffer[i]);
 		int crc = dec->CRCObject->GetCRC();
 # if CRC_BYTES == 1
-		crc_ok = crc == buffer[0];
+        crc_ok = crc == buffer[0];
 # elif CRC_BYTES == 2
 		crc_ok = crc == ((buffer[0]<<8)|buffer[1]);
 # else
@@ -494,21 +494,21 @@ void *opusDecDecode(
 	{
 		memset(dec->out_pcm, 0, OPUS_PCM_FRAME_SIZE * sizeof(opus_int16) * dec->channels);
 		EPRINTF("opusDecDecode: DECODER_ERROR_CORRUPTED\n");
-		*eDecError =  CAudioCodec::DECODER_ERROR_CORRUPTED;
+        eDecError =  CAudioCodec::DECODER_ERROR_CORRUPTED;
 	}
 	else if (!crc_ok)
 	{
 		EPRINTF("opusDecDecode: DECODER_ERROR_CRC\n");
-		*eDecError =  CAudioCodec::DECODER_ERROR_CRC;
+        eDecError =  CAudioCodec::DECODER_ERROR_CRC;
 	}
 	else
 	{
-		*eDecError = CAudioCodec::DECODER_ERROR_OK;
+        eDecError = CAudioCodec::DECODER_ERROR_OK;
 		if (frame_bytes >= 1)
 			dec->last_good_toc = buffer[frame_extra_bytes];
 	}
 
-	*iChannels = dec->channels;
+    iChannels = dec->channels;
 	dec->changed = 1;
 	return dec->out_pcm;
 }
@@ -518,10 +518,10 @@ void *opusDecDecode(
 /* Implementation *************************************************************/
 
 OpusCodec::OpusCodec() :
-	hOpusDecoder(NULL), hOpusEncoder(NULL)
+	hOpusDecoder(nullptr), hOpusEncoder(nullptr)
 {
 #ifndef USE_OPUS_LIBRARY
-	if (hOpusLib == NULL)
+	if (hOpusLib == nullptr)
 	{
 		hOpusLib = CLibraryLoader::Load(LibNames, LibFuncs);
 		if (!hOpusLib)
@@ -539,6 +539,26 @@ OpusCodec::~OpusCodec()
 
 /******************************************************************************/
 /* Decoder Implementation *****************************************************/
+void
+OpusCodec::Init(const CAudioParam& AudioParam, int iInputBlockSize)
+{
+    CAudioCodec::Init(AudioParam, iInputBlockSize);
+
+    /* Init for OPUS decoding ---------------------------------------- */
+
+    //int iNumHeaderBytes = 0; // TODO check this
+
+    /* Number of audio frame */
+    //iNumAudioFrames = 20;
+
+    /* Number of borders */
+   // iNumBorders = iNumAudioFrames;
+   // iAudioPayloadLen = iTotalFrameSize / SIZEOF__BYTE - iNumHeaderBytes - iNumAudioFrames;
+
+    /* Check iAudioPayloadLen value, only positive values make sense */
+   // if (iAudioPayloadLen < 0)
+   //     throw CInitErr(ET_AUDDECODER);
+}
 
 string
 OpusCodec::DecGetVersion()
@@ -557,48 +577,101 @@ OpusCodec::CanDecode(CAudioParam::EAudCod eAudioCoding)
 }
 
 bool
-OpusCodec::DecOpen(CAudioParam& AudioParam, int *iAudioSampleRate, int *iLenDecOutPerChan)
+OpusCodec::DecOpen(const CAudioParam& AudioParam, int& iAudioSampleRate)
 {
 	(void)AudioParam;
 	const int iSampleRate = 48000;
-	if (hOpusDecoder == NULL)
+	if (hOpusDecoder == nullptr)
 		hOpusDecoder = opusDecOpen();
-	if (hOpusDecoder != NULL)
+	if (hOpusDecoder != nullptr)
 		opusDecInit(hOpusDecoder, iSampleRate, 2);
-	*iAudioSampleRate = iSampleRate;
-	*iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH;
-	return hOpusDecoder != NULL;
+    iAudioSampleRate = iSampleRate;
+	return hOpusDecoder != nullptr;
 }
 
-_SAMPLE*
-OpusCodec::Decode(CVector<uint8_t>& vecbyPrepAudioFrame, int *iChannels, CAudioCodec::EDecError *eDecError)
+
+CAudioCodec::EDecError
+OpusCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVector<_REAL>& left, CVector<_REAL>& right)
 {
-	_SAMPLE *sample = NULL;
-	if (hOpusDecoder != NULL)
-	{
-		sample = (_SAMPLE *)opusDecDecode(hOpusDecoder,
+    EDecError eDecError;
+    int iDecChannels;
+    bool bCurBlockOK = true;
+    /* Prepare data vector with CRC at the beginning (the definition with faad2 DRM interface) */
+    CVector<uint8_t> vecbyPrepAudioFrame(int(audio_frame.size()+1));
+    vecbyPrepAudioFrame[0] = aac_crc_bits;
+
+    for (size_t i = 0; i < audio_frame.size(); i++)
+        vecbyPrepAudioFrame[int(i + 1)] = audio_frame[i];
+    _SAMPLE *psDecOutSampleBuf = nullptr;
+	if (hOpusDecoder != nullptr)
+    {
+        psDecOutSampleBuf = (_SAMPLE *)opusDecDecode(hOpusDecoder,
 			eDecError,
-			iChannels,
-			&vecbyPrepAudioFrame[0],
-			vecbyPrepAudioFrame.size());
+            iDecChannels,
+            &vecbyPrepAudioFrame[0],
+            vecbyPrepAudioFrame.size()
+                );
 	}
-	return sample;
+
+    //========= TODO
+    int bUseReverbEffect;
+    int bCurBlockFaulty;
+    int iLenDecOutPerChan;
+    //========= END TODO
+
+    if (!(eDecError == CAudioCodec::DECODER_ERROR_CRC && bUseReverbEffect == false) && eDecError != CAudioCodec::DECODER_ERROR_OK)
+    {
+        //cerr << "Opus decode error" << endl;
+        bCurBlockOK = false;	/* Set error flag */
+    }
+    else
+    {
+        bCurBlockOK = true;
+        /* Opus can have FEC embeded, thus the audio frame is always OK */
+        if (eDecError != CAudioCodec::DECODER_ERROR_OK)
+            bCurBlockFaulty = true;
+
+        if(psDecOutSampleBuf) // might be dummy decoder
+        {
+            /* Conversion from _SAMPLE vector to _REAL vector for
+               resampling. ATTENTION: We use a vector which was
+               allocated inside the decoder! */
+            if (iDecChannels == 1)
+            {
+                /* Change type of data (short -> real) */
+                for (size_t i = 0; i < size_t(iLenDecOutPerChan); i++) {
+                    left[int(i)] = psDecOutSampleBuf[i];
+                    right[int(i)] = psDecOutSampleBuf[i];
+                }
+            }
+            else
+            {
+                /* Stereo */
+                for (size_t i = 0; i < size_t(iLenDecOutPerChan); i++)
+                {
+                    left[int(i)] = psDecOutSampleBuf[i * 2];
+                    right[int(i)] = psDecOutSampleBuf[i * 2 + 1];
+                }
+            }
+        }
+    }
+    return eDecError;
 }
 
 void
 OpusCodec::DecClose()
 {
-	if (hOpusDecoder != NULL)
+	if (hOpusDecoder != nullptr)
 	{
 		opusDecClose(hOpusDecoder);
-		hOpusDecoder = NULL;
+		hOpusDecoder = nullptr;
 	}
 }
 
 void
 OpusCodec::DecUpdate(CAudioParam& AudioParam)
 {
-	if (hOpusDecoder != NULL)
+	if (hOpusDecoder != nullptr)
 	{
         opusSetupParam(AudioParam, hOpusDecoder->last_good_toc);
 	}
@@ -620,18 +693,20 @@ OpusCodec::CanEncode(CAudioParam::EAudCod eAudioCoding)
 }
 
 bool
-OpusCodec::EncOpen(int iSampleRate, int iChannels, unsigned long *lNumSampEncIn, unsigned long *lMaxBytesEncOut)
+OpusCodec::EncOpen(const CAudioParam& AudioParam, unsigned long& lNumSampEncIn, unsigned long& lMaxBytesEncOut)
 {
+    unsigned long iSampleRate = 48000;
+    unsigned iChannels = 1;
 	hOpusEncoder = opusEncOpen(iSampleRate, iChannels,
-		0, lNumSampEncIn, lMaxBytesEncOut);
-	return hOpusEncoder != NULL;
+        0, &lNumSampEncIn, &lMaxBytesEncOut);
+	return hOpusEncoder != nullptr;
 }
 
 int
 OpusCodec::Encode(CVector<_SAMPLE>& vecsEncInData, unsigned long lNumSampEncIn, CVector<uint8_t>& vecsEncOutData, unsigned long lMaxBytesEncOut)
 {
 	int bytesEncoded = 0;
-	if (hOpusEncoder != NULL)
+	if (hOpusEncoder != nullptr)
 	{
 		bytesEncoded = opusEncEncode(hOpusEncoder,
 			(opus_int16 *) &vecsEncInData[0],
@@ -644,17 +719,17 @@ OpusCodec::Encode(CVector<_SAMPLE>& vecsEncInData, unsigned long lNumSampEncIn, 
 void
 OpusCodec::EncClose()
 {
-	if (hOpusEncoder != NULL)
+	if (hOpusEncoder != nullptr)
 	{
 		opusEncClose(hOpusEncoder);
-		hOpusEncoder = NULL;
+		hOpusEncoder = nullptr;
 	}
 }
 
 void
 OpusCodec::EncSetBitrate(int iBitRate)
 {
-	if (hOpusEncoder != NULL)
+	if (hOpusEncoder != nullptr)
 	{
 		hOpusEncoder->bytes_per_frame = iBitRate / SIZEOF__BYTE;
 	}
@@ -663,7 +738,7 @@ OpusCodec::EncSetBitrate(int iBitRate)
 void
 OpusCodec::EncUpdate(CAudioParam& AudioParam)
 {
-	if (hOpusEncoder != NULL)
+	if (hOpusEncoder != nullptr)
 	{
 		opusEncSetParam(hOpusEncoder, AudioParam);
 	}

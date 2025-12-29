@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#if !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
-#define DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
+#ifndef __DRMTRANSM_H
+#define __DRMTRANSM_H
 
 #include <iostream>
 #include "util/Buffer.h"
@@ -37,30 +37,33 @@
 #include "interleaver/SymbolInterleaver.h"
 #include "ofdmcellmapping/OFDMCellMapping.h"
 #include "OFDM.h"
-#include "DRMSignalIO.h"
+#include "ctransmitdata.h"
 #include "sourcedecoders/AudioSourceEncoder.h"
-#include "sound/soundinterface.h"
+#include "sound/soundfactory.h"
 #include "DrmTransceiver.h"
+#include "Parameter.h"
 
 /* Classes ********************************************************************/
 class CDRMTransmitter : public CDRMTransceiver
 {
 public:
-    CDRMTransmitter(CSettings* pSettings=NULL);
+    CDRMTransmitter(CSettings *pSettings = nullptr);
     virtual ~CDRMTransmitter();
 
     void LoadSettings();
     void SaveSettings();
     void Init();
-    void Start();
 
-    CAudioSourceEncoder*	GetAudSrcEnc() {
+    CAudioSourceEncoder *GetAudSrcEnc()
+    {
         return &AudioSourceEncoder;
     }
-    CTransmitData*			GetTransData() {
+    CTransmitData *GetTransData()
+    {
         return &TransmitData;
     }
-    CReadData*				GetReadData() {
+    CReadData *GetReadData()
+    {
         return &ReadData;
     }
 
@@ -71,48 +74,58 @@ public:
         TransmitData.SetCarOffset(rNewCarOffset);
         rDefCarOffset = rNewCarOffset;
     }
-    _REAL GetCarOffset() {
+    _REAL GetCarOffset()
+    {
         return rDefCarOffset;
+    }
+    virtual bool IsReceiver() const { return false; }
+    virtual bool IsTransmitter() const { return true; }
+
+    void Run();
+    void Close()
+    {
+        ReadData.Stop();
+        TransmitData.Stop();
     }
 
 protected:
-    void Run();
-    void InitSoftStop() { iSoftStopSymbolCount=0; };
-    _BOOLEAN CanSoftStopExit();
+    bool CanSoftStopExit();
+    void InitSoftStop() { iSoftStopSymbolCount = 0; }
 
+    std::string indev;
+    std::string outdev;
     /* Buffers */
-    CSingleBuffer<_SAMPLE>	DataBuf;
-    CSingleBuffer<_BINARY>	AudSrcBuf;
+    CSingleBuffer<_SAMPLE> DataBuf;
+    CSingleBuffer<_BINARY> AudSrcBuf;
 
-    CSingleBuffer<_COMPLEX>	MLCEncBuf;
-    CCyclicBuffer<_COMPLEX>	IntlBuf;
+    CSingleBuffer<_COMPLEX> MLCEncBuf;
+    CCyclicBuffer<_COMPLEX> IntlBuf;
 
-    CSingleBuffer<_BINARY>	GenFACDataBuf;
-    CCyclicBuffer<_COMPLEX>	FACMapBuf;
+    CSingleBuffer<_BINARY> GenFACDataBuf;
+    CCyclicBuffer<_COMPLEX> FACMapBuf;
 
-    CSingleBuffer<_BINARY>	GenSDCDataBuf;
-    CCyclicBuffer<_COMPLEX>	SDCMapBuf;
+    CSingleBuffer<_BINARY> GenSDCDataBuf;
+    CCyclicBuffer<_COMPLEX> SDCMapBuf;
 
-    CSingleBuffer<_COMPLEX>	CarMapBuf;
-    CSingleBuffer<_COMPLEX>	OFDMModBuf;
+    CSingleBuffer<_COMPLEX> CarMapBuf;
+    CSingleBuffer<_COMPLEX> OFDMModBuf;
 
     /* Modules */
-    CReadData				ReadData;
-    CAudioSourceEncoder		AudioSourceEncoder;
-    CMSCMLCEncoder			MSCMLCEncoder;
-    CSymbInterleaver		SymbInterleaver;
-    CGenerateFACData		GenerateFACData;
-    CFACMLCEncoder			FACMLCEncoder;
-    CGenerateSDCData		GenerateSDCData;
-    CSDCMLCEncoder			SDCMLCEncoder;
-    COFDMCellMapping		OFDMCellMapping;
-    COFDMModulation			OFDMModulation;
-    CTransmitData			TransmitData;
+    CReadData ReadData;
+    CAudioSourceEncoder AudioSourceEncoder;
+    CMSCMLCEncoder MSCMLCEncoder;
+    CSymbInterleaver SymbInterleaver;
+    CGenerateFACData GenerateFACData;
+    CFACMLCEncoder FACMLCEncoder;
+    CGenerateSDCData GenerateSDCData;
+    CSDCMLCEncoder SDCMLCEncoder;
+    COFDMCellMapping OFDMCellMapping;
+    COFDMModulation OFDMModulation;
+    CTransmitData TransmitData;
 
-    _REAL					rDefCarOffset;
-    _BOOLEAN				bUseUEP;
-    int						iSoftStopSymbolCount;
+    _REAL rDefCarOffset;
+    bool bUseUEP;
+    int iSoftStopSymbolCount;
 };
-
 
 #endif // !defined(DRMTRANSM_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)

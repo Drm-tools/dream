@@ -46,6 +46,7 @@ class CNews;
 #define MAX_NUM_PACK_PER_STREAM					4
 
 /* Define for application types */
+#define DAB_AT_DREAM_EXPERIMENTAL 1
 #define DAB_AT_MOTSLIDESHOW 2
 #define DAB_AT_BROADCASTWEBSITE 3
 #define DAB_AT_TPEG 4
@@ -53,8 +54,11 @@ class CNews;
 #define DAB_AT_TMC 	6
 #define DAB_AT_EPG 	7
 #define DAB_AT_JAVA 	8
+#define DAB_AT_DMB 	9
+#define DAB_AT_IPDC 	0xa
+#define DAB_AT_VOICE 	0xb
+#define DAB_AT_MIDDLEWARE 	0xc
 #define DAB_AT_JOURNALINE 0x44A
-#define DAB_AT_EXPERIMENTAL 0x44B
 
 class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
 {
@@ -65,12 +69,12 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     enum EAppType
     { AT_NOT_SUP, AT_MOTSLIDESHOW, AT_JOURNALINE,
 	AT_BROADCASTWEBSITE, AT_TPEG, AT_DGPS, AT_TMC, AT_EPG,
-	    AT_JAVA, AT_EXPERIMENTAL
+	    AT_JAVA, AT_EXPERIMENTAL, AT_DMB, AT_VOICE, AT_MIDDLEWARE, AT_IPDC
     };
 
-    _BOOLEAN GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
-    _BOOLEAN GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
-	CMOTDABDec *getApplication(int iPacketID) { return (iPacketID>=0 && iPacketID<3)?&MOTObject[iPacketID]:NULL; }
+    bool GetMOTObject (CMOTObject & NewPic, const EAppType eAppTypeReq);
+    bool GetMOTDirectory (CMOTDirectory & MOTDirectoryOut, const EAppType eAppTypeReq);
+	CMOTDABDec *getApplication(int iPacketID) { return (iPacketID>=0 && iPacketID<3)?&MOTObject[iPacketID]:nullptr; }
     void GetNews (const int iObjID, CNews & News);
     EAppType GetAppType ()
     {
@@ -82,14 +86,14 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     {
       public:
 	CVector < _BINARY > vecbiData;
-	_BOOLEAN bOK;
-	_BOOLEAN bReady;
+	bool bOK;
+	bool bReady;
 
 	void Reset ()
 	{
 	    vecbiData.Init (0);
-	    bOK = FALSE;
-	    bReady = FALSE;
+	    bOK = false;
+	    bReady = false;
 	}
     };
 
@@ -99,7 +103,7 @@ class CDataDecoder:public CReceiverModul < _BINARY, _BINARY >
     int iServPacketID;
     CVector < int >veciCRCOk;
 
-    _BOOLEAN DoNotProcessData;
+    bool DoNotProcessData;
 
     int iContInd[MAX_NUM_PACK_PER_STREAM];
     CDataUnit DataUnit[MAX_NUM_PACK_PER_STREAM];

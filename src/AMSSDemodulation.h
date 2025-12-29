@@ -125,7 +125,7 @@ public:
     virtual ~CAMSSPhaseDemod() {}
 
     void SetAcqFreq(const CReal rNewNormCenter);
-    _BOOLEAN GetPLLPhase(CReal& rPhaseOut);
+    bool GetPLLPhase(CReal& rPhaseOut);
 
 protected:
     virtual void InitInternal(CParameter& Parameters);
@@ -216,10 +216,6 @@ public:
         delete[] cCurrentBlockBits;
     }
 
-    /* AMSS status */
-    enum EAMSSBlockLockStat { NO_SYNC, RE_SYNC, DEF_SYNC, DEF_SYNC_BUT_DATA_CHANGED, POSSIBLE_LOSS_OF_SYNC };
-
-
     EAMSSBlockLockStat GetLockStatus() const {
         return eAMSSBlockLockStatus;
     }
@@ -237,7 +233,7 @@ public:
         return cCurrentBlockBits;
     }
 
-    _BOOLEAN GetBlock1Status() const {
+    bool GetBlock1Status() const {
         return blBlock1DataValid;
     }
 
@@ -260,7 +256,7 @@ protected:
     void			DecodeBlock2(CVector<_BINARY>& bBits);
 
     void			ApplyOffsetWord(CVector<_BINARY>& bBlockBits, CVector<_BINARY>& offset);
-    _BOOLEAN		CheckCRC(CVector<_BINARY>& bBits);
+    bool		CheckCRC(CVector<_BINARY>& bBits);
 
     void			ResetStatus(CParameter& ReveiverParam);
 
@@ -278,10 +274,10 @@ protected:
     CVector<_BINARY>	bBlock1Store;
     CVector<_BINARY>	bBlock2Store;
 
-    _BOOLEAN			blStoredBlock2Valid;
-    _BOOLEAN			bVersionFlag;
+    bool			blStoredBlock2Valid;
+    bool			bVersionFlag;
 
-    _BOOLEAN			blFirstEverBlock1;
+    bool			blFirstEverBlock1;
 
     CVector<_BINARY>	bDataEntityGroup;
 
@@ -290,7 +286,7 @@ protected:
     int					iBlock1FailCount;
     int					iBlock2FailCount;
 
-    _BOOLEAN			blBlock1DataValid;
+    bool			blBlock1DataValid;
 };
 
 

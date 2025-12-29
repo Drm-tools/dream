@@ -26,8 +26,8 @@
  *
 \******************************************************************************/
 
-#ifndef _SOUNDNULL_H
-#define _SOUNDNULL_H
+#ifndef SOUNDNULL_H
+#define SOUNDNULL_H
 
 #include "soundinterface.h"
 
@@ -36,50 +36,47 @@ class CSoundInNull : public CSoundInInterface
 {
 public:
     CSoundInNull() {}
-    virtual ~CSoundInNull() {}
-    virtual _BOOLEAN	Init(int, int, _BOOLEAN) {
-        return TRUE;
+    virtual ~CSoundInNull();
+    virtual bool Init(int, int, bool)
+    {
+        return true;
     }
-    virtual _BOOLEAN	Read(CVector<short>&) {
-        return FALSE;
+    virtual bool Read(CVector<short> &, CParameter &Parameters)
+    {
+        return false;
     }
-    virtual void		Enumerate(vector<string>&choices, vector<string>&) {
-        choices.push_back("(File or Network)");
-    }
-    virtual string		GetDev() {
-        return sDev;
-    }
-    virtual void		SetDev(string sNewDev) {
-        sDev = sNewDev;
-    }
-    virtual void		Close() {}
+    virtual void Close() {}
+    virtual std::string GetVersion() { return "no audio interface"; }
+    virtual CSoundInInterface* GetItem() { return this; }
+    virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) {}
+    virtual std::string GetItemName() { return ""; }
+    virtual void		SetItem(std::string) {}
 private:
-    string sDev;
+    std::string sDev;
 };
 
 class CSoundOutNull : public CSoundOutInterface
 {
 public:
     CSoundOutNull() {}
-    virtual ~CSoundOutNull() {}
-    virtual _BOOLEAN	Init(int, int, _BOOLEAN) {
-        return TRUE;
+    virtual ~CSoundOutNull();
+    virtual bool Init(int, int, bool)
+    {
+        return true;
     }
-    virtual _BOOLEAN	Write(CVector<short>&) {
-        return FALSE;
+    virtual bool Write(CVector<short> &)
+    {
+        return false;
     }
-    virtual void		Enumerate(vector<string>& choices, vector<string>&) {
-        choices.push_back("(None)");
-    }
-    virtual string		GetDev() {
-        return sDev;
-    }
-    virtual void		SetDev(string sNewDev) {
-        sDev = sNewDev;
-    }
-    virtual void		Close() {}
+
+    virtual void Close() {}
+    virtual std::string GetVersion() { return "no audio interface"; }
+    virtual CSoundOutInterface* GetItem() { return this; }
+    virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) {}
+    virtual std::string	GetItemName() { return ""; }
+    virtual void		SetItem(std::string) {}
 private:
-    string sDev;
+    std::string sDev;
 };
 
 #endif

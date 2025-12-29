@@ -30,17 +30,13 @@
 
 /* The mutex need to be application wide,
    only the execution routines are thread-safe */
-static CMutex* static_mutex = NULL;
-#define MUTEX_LOCK() static_mutex->Lock()
-#define MUTEX_UNLOCK() static_mutex->Unlock()
+static CMutex* _mutex = nullptr;
+#define MUTEX_LOCK() _mutex->Lock()
+#define MUTEX_UNLOCK() _mutex->Unlock()
 
-#ifdef HAVE_FFTW3_H
 # define PLANNER_FLAGS (FFTW_ESTIMATE | FFTW_DESTROY_INPUT)
 /* Warning: for testing purpose only */
 //# define PLANNER_FLAGS FFTW_EXHAUSTIVE
-#else
-# define PLANNER_FLAGS FFTW_ESTIMATE
-#endif
 
 
 /* Implementation *************************************************************/
@@ -295,7 +291,7 @@ if (row == iSize)
    Matlib internal calculations */
 CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 				   const CReal errorBound, CReal& integralBound,
-				   _BOOLEAN& integralError, const CReal ru)
+				   bool& integralError, const CReal ru)
 {
 /*
 	The following code (inclusive the actual Quad() function) is based on a
@@ -414,7 +410,7 @@ CComplex _integral(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 					if (left >= right)
 					{
 						/* The error bound specified is too small! */
-						integralError = TRUE;
+						integralError = true;
 						return _MAXREAL; /* NaN */
 					}
 
@@ -461,7 +457,7 @@ CComplex Quad(MATLIB_CALLBACK_QAUD f, const CReal a, const CReal b,
 	ru *= 2;
 
 	CReal integralBound = errorBound;
-	_BOOLEAN integralError = FALSE;
+	bool integralError = false;
 
 	/* Compute */
 	return _integral(f, a, b, errorBound, integralBound, integralError, ru);
@@ -491,28 +487,15 @@ CMatlibVector<CComplex> Fft(const CMatlibVector<CComplex>& cvI,
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
 	{
-#ifdef HAVE_FFTW3_H
 		pFftwComplexIn[i][0] = cvI[i].real();
 		pFftwComplexIn[i][1] = cvI[i].imag();
-#else
-		pFftwComplexIn[i].re = cvI[i].real();
-		pFftwComplexIn[i].im = cvI[i].imag();
-#endif
 	}
 
 	/* Actual fftw call */
-#ifdef HAVE_FFTW3_H
 	fftw_execute(FftPlans.FFTPlForw);
-#else
-	fftw_one(FftPlans.FFTPlForw, pFftwComplexIn, pFftwComplexOut);
-#endif
 
 	for (i = 0; i < n; i++)
-#ifdef HAVE_FFTW3_H
 		cvReturn[i] = CComplex(pFftwComplexOut[i][0], pFftwComplexOut[i][1]);
-#else
-		cvReturn[i] = CComplex(pFftwComplexOut[i].re, pFftwComplexOut[i].im);
-#endif
 
 	return cvReturn;
 }
@@ -541,32 +524,18 @@ CMatlibVector<CComplex> Ifft(const CMatlibVector<CComplex>& cvI,
 	/* fftw (Homepage: http://www.fftw.org/) */
 	for (i = 0; i < n; i++)
 	{
-#ifdef HAVE_FFTW3_H
 		pFftwComplexIn[i][0] = cvI[i].real();
 		pFftwComplexIn[i][1] = cvI[i].imag();
-#else
-		pFftwComplexIn[i].re = cvI[i].real();
-		pFftwComplexIn[i].im = cvI[i].imag();
-#endif
 	}
 
 	/* Actual fftw call */
-#ifdef HAVE_FFTW3_H
 	fftw_execute(FftPlans.FFTPlBackw);
-#else
-	fftw_one(FftPlans.FFTPlBackw, pFftwComplexIn, pFftwComplexOut);
-#endif
 	
 	const CReal scale = (CReal) 1.0 / n;
 	for (i = 0; i < n; i++)
 	{
-#ifdef HAVE_FFTW3_H
 		cvReturn[i] = CComplex(pFftwComplexOut[i][0] * scale,
 			pFftwComplexOut[i][1] * scale);
-#else
-		cvReturn[i] = CComplex(pFftwComplexOut[i].re * scale,
-			pFftwComplexOut[i].im * scale);
-#endif
 	}
 
 	return cvReturn;
@@ -576,13 +545,8 @@ CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI,
 							 CFftPlans& FftPlans)
 {
 	int			i;
-#ifdef HAVE_FFTW3_H
 	double* 	pFftwRealIn;
 	double* 	pFftwRealOut;
-#else
-	fftw_real*	pFftwRealIn;
-	fftw_real*	pFftwRealOut;
-#endif
 
 	const int	iSizeI = fvI.GetSize();
 	const int	iLongLength(iSizeI);
@@ -607,11 +571,7 @@ CMatlibVector<CComplex> rfft(const CMatlibVector<CReal>& fvI,
 		pFftwRealIn[i] = fvI[i];
 
 	/* Actual fftw call */
-#ifdef HAVE_FFTW3_H
 	fftw_execute(FftPlans.RFFTPlForw);
-#else
-	rfftw_one(FftPlans.RFFTPlForw, pFftwRealIn, pFftwRealOut);
-#endif
 
 	/* Now build complex output vector */
 	/* Zero frequency */
@@ -633,13 +593,8 @@ CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI,
 	This function only works with EVEN N!
 */
 	int			i;
-#ifdef HAVE_FFTW3_H
 	double*		pFftwRealIn;
 	double*		pFftwRealOut;
-#else
-	fftw_real*	pFftwRealIn;
-	fftw_real*	pFftwRealOut;
-#endif
 
 	const int	iShortLength(cvI.GetSize() - 1); /* Nyquist frequency! */
 	const int	iLongLength(iShortLength * 2);
@@ -667,11 +622,7 @@ CMatlibVector<CReal> rifft(const CMatlibVector<CComplex>& cvI,
 	pFftwRealIn[iShortLength] = cvI[iShortLength].real(); 
 
 	/* Actual fftw call */
-#ifdef HAVE_FFTW3_H
 	fftw_execute(FftPlans.RFFTPlBackw);
-#else
-	rfftw_one(FftPlans.RFFTPlBackw, pFftwRealIn, pFftwRealOut);
-#endif
 
 	/* Scale output vector */
 	const CReal scale = (CReal) 1.0 / iLongLength;
@@ -713,13 +664,12 @@ CMatlibVector<CReal> FftFilt(const CMatlibVector<CComplex>& rvH,
 
 /* FftPlans implementation -------------------------------------------------- */
 CFftPlans::CFftPlans(const int iFftSize) :
-	RFFTPlForw(NULL), RFFTPlBackw(NULL), pFftwRealIn(NULL), pFftwRealOut(NULL),
-	FFTPlForw(NULL), FFTPlBackw(NULL), pFftwComplexIn(NULL), pFftwComplexOut(NULL),
-	bInitialized(FALSE), bFixedSizeInit(FALSE), fftw_n(0)
+	RFFTPlForw(nullptr), RFFTPlBackw(nullptr), pFftwRealIn(nullptr), pFftwRealOut(nullptr),
+	FFTPlForw(nullptr), FFTPlBackw(nullptr), pFftwComplexIn(nullptr), pFftwComplexOut(nullptr),
+	bInitialized(false), bFixedSizeInit(false), fftw_n(0)
 {
 	/* Static initialization of CMutex not working on Mac OS X */
-	if (!static_mutex)
-		static_mutex = new CMutex();
+    if (!_mutex) _mutex = new CMutex();
 
 	/* If iFftSize is non zero then proceed to initialization */
 	if (iFftSize)
@@ -735,8 +685,8 @@ CFftPlans::~CFftPlans()
 void CFftPlans::Init(const int iFSi, EFFTPlan eFFTPlan)
 {
 	/* Init some flags */
-	_BOOLEAN bNeedPlanInit = FALSE;
-	_BOOLEAN bSizeChanged = FALSE;
+	bool bNeedPlanInit = false;
+	bool bSizeChanged = false;
 
 	/* If Init(const int iFSi) as been previously called
 	   then the fft size can't be changed here
@@ -765,32 +715,16 @@ void CFftPlans::Init(const int iFSi, EFFTPlan eFFTPlan)
 		switch (eFFTPlan)
 		{
 		case FP_RFFTPlForw:
-#ifdef HAVE_FFTW3_H
 			RFFTPlForw = fftw_plan_r2r_1d(fftw_n, pFftwRealIn, pFftwRealOut, FFTW_R2HC, PLANNER_FLAGS);
-#else
-			RFFTPlForw = rfftw_create_plan(fftw_n, FFTW_REAL_TO_COMPLEX, PLANNER_FLAGS);
-#endif
 			break;
 		case FP_RFFTPlBackw:
-#ifdef HAVE_FFTW3_H
 			RFFTPlBackw = fftw_plan_r2r_1d(fftw_n, pFftwRealIn, pFftwRealOut, FFTW_HC2R, PLANNER_FLAGS);
-#else
-			RFFTPlBackw = rfftw_create_plan(fftw_n, FFTW_COMPLEX_TO_REAL, PLANNER_FLAGS);
-#endif
 			break;
 		case FP_FFTPlForw:
-#ifdef HAVE_FFTW3_H
 			FFTPlForw = fftw_plan_dft_1d(fftw_n, pFftwComplexIn, pFftwComplexOut, FFTW_FORWARD, PLANNER_FLAGS);
-#else
-			FFTPlForw = fftw_create_plan(fftw_n, FFTW_FORWARD, PLANNER_FLAGS);
-#endif
 			break;
 		case FP_FFTPlBackw:
-#ifdef HAVE_FFTW3_H
 			FFTPlBackw = fftw_plan_dft_1d(fftw_n, pFftwComplexIn, pFftwComplexOut, FFTW_BACKWARD, PLANNER_FLAGS);
-#else
-			FFTPlBackw = fftw_create_plan(fftw_n, FFTW_BACKWARD, PLANNER_FLAGS);
-#endif
 			break;
 		}
 		MUTEX_UNLOCK();
@@ -801,37 +735,32 @@ void CFftPlans::Init(const int iFSi)
 {
 	/* The bFixedSizeInit flag isn't really needed,
 	   it only keep the original Init() behaviour */
-	bFixedSizeInit = TRUE;
+	bFixedSizeInit = true;
 	InitInternal(iFSi);
 }
 
-_BOOLEAN CFftPlans::InitInternal(const int iFSi)
+bool CFftPlans::InitInternal(const int iFSi)
 {
 	if (bInitialized)
 	{
 		/* No change, so return */
 		if (fftw_n == iFSi)
-			return FALSE; /* The fft size is the same */
+			return false; /* The fft size is the same */
 
 		/* Delete old plans and intermediate buffers */
 		Clean();
 	}
 
 // TODO intermediate buffers should be created only when needed
-	/* Create new intermediate buffers */
-#ifdef HAVE_FFTW3_H
+    /* Create new intermediate buffers */
 	pFftwRealIn = new double[iFSi];
 	pFftwRealOut = new double[iFSi];
-#else
-	pFftwRealIn = new fftw_real[iFSi];
-	pFftwRealOut = new fftw_real[iFSi];
-#endif
 	pFftwComplexIn = new fftw_complex[iFSi];
 	pFftwComplexOut = new fftw_complex[iFSi];
 
 	fftw_n = iFSi;
-	bInitialized = TRUE;
-	return TRUE; /* The fft size has changed */
+	bInitialized = true;
+	return true; /* The fft size has changed */
 }
 
 void CFftPlans::Clean()
@@ -840,13 +769,8 @@ void CFftPlans::Clean()
 	{
 		/* Delete old plans and intermediate buffers */
 		MUTEX_LOCK();
-#ifdef HAVE_FFTW3_H
 		if (RFFTPlForw)  fftw_destroy_plan(RFFTPlForw);
 		if (RFFTPlBackw) fftw_destroy_plan(RFFTPlBackw);
-#else
-		if (RFFTPlForw)  rfftw_destroy_plan(RFFTPlForw);
-		if (RFFTPlBackw) rfftw_destroy_plan(RFFTPlBackw);
-#endif
 		if (FFTPlForw)   fftw_destroy_plan(FFTPlForw);
 		if (FFTPlBackw)  fftw_destroy_plan(FFTPlBackw);
 		MUTEX_UNLOCK();
@@ -856,19 +780,19 @@ void CFftPlans::Clean()
 		delete[] pFftwComplexIn;
 		delete[] pFftwComplexOut;
 
-		pFftwRealIn = NULL;
-		pFftwRealOut = NULL;
-		pFftwComplexIn = NULL;
-		pFftwComplexOut = NULL;
+		pFftwRealIn = nullptr;
+		pFftwRealOut = nullptr;
+		pFftwComplexIn = nullptr;
+		pFftwComplexOut = nullptr;
 
-		RFFTPlForw = NULL;
-		RFFTPlBackw = NULL;
-		FFTPlForw = NULL;
-		FFTPlBackw = NULL;
+		RFFTPlForw = nullptr;
+		RFFTPlBackw = nullptr;
+		FFTPlForw = nullptr;
+		FFTPlBackw = nullptr;
 
 		fftw_n = 0;
 
-		bInitialized = FALSE;
+		bInitialized = false;
 	}
 }
 

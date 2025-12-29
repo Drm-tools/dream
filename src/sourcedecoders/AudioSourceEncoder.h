@@ -23,23 +23,26 @@
  *
 \******************************************************************************/
 
-#ifndef __AUDIOSOURCEENCODER_H
-# define __AUDIOSOURCEENCODER_H
+#ifndef _AUDIOSOURCEENCODER_H_INCLUDED_
+#define _AUDIOSOURCEENCODER_H_INCLUDED_
 
 #include "../GlobalDefinitions.h"
 #include "../Parameter.h"
 #include "../util/Modul.h"
 #include "../util/CRC.h"
 #include "../TextMessage.h"
-#include "../resample/Resample.h"
+#ifdef HAVE_SPEEX
+# include "../resample/speexresampler.h"
+#else
+# include "../resample/caudioresample.h"
+#endif
 #include "../datadecoding/DataEncoder.h"
 #include "../util/Utilities.h"
+#include "AudioCodec.h"
 
-#ifdef USE_FAAC_LIBRARY
-# include <faac.h>
-#else
-# include "faac_dll.h"
-#endif
+/* Definition */
+#define MAX_ENCODED_CHANNELS 2
+
 
 /* Classes ********************************************************************/
 class CAudioSourceEncoderImplementation
@@ -48,28 +51,41 @@ public:
 	CAudioSourceEncoderImplementation();
 	virtual ~CAudioSourceEncoderImplementation();
 
-	void SetTextMessage(const string& strText);
+	void SetTextMessage(const std::string& strText);
 	void ClearTextMessage();
 
-	void SetPicFileName(const string& strFileName, const string& strFormat)
+	void SetPicFileName(const std::string& strFileName, const std::string& strFormat)
 		{DataEncoder.GetSliShowEnc()->AddFileName(strFileName, strFormat);}
 	void ClearPicFileNames()
 		{DataEncoder.GetSliShowEnc()->ClearAllFileNames();}
-	void SetPathRemoval(_BOOLEAN bRemovePath)
+	void SetPathRemoval(bool bRemovePath)
 		{DataEncoder.GetSliShowEnc()->SetPathRemoval(bRemovePath);}
-	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
+	bool GetTransStat(std::string& strCPi, _REAL& rCPe)
 		{return DataEncoder.GetSliShowEnc()->GetTransStat(strCPi, rCPe);}
 
+    bool CanEncode(CAudioParam::EAudCod eAudCod) {
+        switch (eAudCod)
+        {
+        case CAudioParam::AC_NONE: return true;
+        case CAudioParam::AC_AAC:  return bCanEncodeAAC;
+        case CAudioParam::AC_OPUS: return bCanEncodeOPUS;
+        case CAudioParam::AC_xHE_AAC: return false;
+        case CAudioParam::AC_RESERVED: return false;
+        }
+        return false;
+    }
+
 protected:
+	void CloseEncoder();
+
 	CTextMessageEncoder		TextMessage;
-	_BOOLEAN				bUsingTextMessage;
+	bool				bUsingTextMessage;
 	CDataEncoder			DataEncoder;
 	int						iTotPacketSize;
-	_BOOLEAN				bIsDataService;
+	bool				bIsDataService;
 	int						iTotNumBitsForUsage;
 
-	faacEncHandle			hEncoder;
-	faacEncConfigurationPtr CurEncFormat;
+	CAudioCodec*			codec;
 
 	unsigned long			lNumSampEncIn;
 	unsigned long			lMaxBytesEncOut;
@@ -78,20 +94,28 @@ protected:
 	CVector<_SAMPLE>		vecsEncInData;
 	CMatrix<_BYTE>			audio_frame;
 	CVector<int>			veciFrameLength;
-	int						iNumAACFrames;
+	int						iNumChannels;
+	int						iNumAudioFrames;
+	int						iNumBorders;
 	int						iAudioPayloadLen;
 	int						iNumHigherProtectedBytes;
 
-	_BOOLEAN				bFaacCodecSupported;
-	CAudioResample			ResampleObj;
-	CVector<_REAL>			vecTempResBufIn;
-	CVector<_REAL>			vecTempResBufOut;
+#ifdef HAVE_SPEEX
+    SpeexResampler			ResampleObj[MAX_ENCODED_CHANNELS];
+#else
+    CAudioResample			ResampleObj[MAX_ENCODED_CHANNELS];
+#endif
+	CVector<_REAL>			vecTempResBufIn[MAX_ENCODED_CHANNELS];
+	CVector<_REAL>			vecTempResBufOut[MAX_ENCODED_CHANNELS];
+
+	bool				bCanEncodeAAC;
+	bool				bCanEncodeOPUS;
 
 public:
-		virtual void InitInternalTx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
-		virtual void InitInternalRx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
-		virtual void ProcessDataInternal(CParameter& Parameters, CVectorEx<_SAMPLE>* pvecInputData,
-						CVectorEx<_BINARY>* pvecOutputData, int &iInputBlockSize, int &iOutputBlockSize);
+	virtual void InitInternalTx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
+	virtual void InitInternalRx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);
+	virtual void ProcessDataInternal(CParameter& Parameters, CVectorEx<_SAMPLE>* pvecInputData,
+					CVectorEx<_BINARY>* pvecOutputData, int &iInputBlockSize, int &iOutputBlockSize);
 };
 
 class CAudioSourceEncoderRx : public CReceiverModul<_SAMPLE, _BINARY>
@@ -120,19 +144,22 @@ public:
 	CAudioSourceEncoder() {}
 	virtual ~CAudioSourceEncoder() {}
 
-	void SetTextMessage(const string& strText) {AudioSourceEncoderImpl.SetTextMessage(strText);}
+	void SetTextMessage(const std::string& strText) {AudioSourceEncoderImpl.SetTextMessage(strText);}
 	void ClearTextMessage() {AudioSourceEncoderImpl.ClearTextMessage();}
 
-	void SetPicFileName(const string& strFileName, const string& strFormat)
+	void SetPicFileName(const std::string& strFileName, const std::string& strFormat)
 			{AudioSourceEncoderImpl.SetPicFileName(strFileName, strFormat);}
 
 	void ClearPicFileNames() {AudioSourceEncoderImpl.ClearPicFileNames();}
 
-	void SetPathRemoval(_BOOLEAN bRemovePath)
+	void SetPathRemoval(bool bRemovePath)
 			{AudioSourceEncoderImpl.SetPathRemoval(bRemovePath);}
 
-	_BOOLEAN GetTransStat(string& strCPi, _REAL& rCPe)
+	bool GetTransStat(std::string& strCPi, _REAL& rCPe)
 			{return AudioSourceEncoderImpl.GetTransStat(strCPi, rCPe);}
+
+	bool CanEncode(CAudioParam::EAudCod eAudCod)
+			{return AudioSourceEncoderImpl.CanEncode(eAudCod);}
 
 protected:
 	CAudioSourceEncoderImplementation AudioSourceEncoderImpl;
@@ -149,4 +176,4 @@ protected:
 
 };
 
-#endif
+#endif // _AUDIOSOURCEENCODER_H_INCLUDED_

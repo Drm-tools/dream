@@ -27,13 +27,13 @@
 \******************************************************************************/
 
 #include "BWSViewer.h"
-#include "../DrmReceiver.h"
-#include "../util/Settings.h"
+#include "../main-Qt/crx.h"
+#include "../util-QT/Util.h"
 #include "../datadecoding/DataDecoder.h"
-
 #include <QDir>
 #include <QFile>
-#include <QWebHistory>
+#include <QMessageBox>
+#include <QWebEngineHistory>
 
 
 #define CACHE_HOST          "127.0.0.1" /* Not an actual server, MUST be set to "127.0.0.1" */
@@ -45,26 +45,22 @@
 #define ENABLE_HACK /* Do we really need these hack unless for vtc trial sample? */
 
 
-BWSViewer::BWSViewer(CDRMReceiver& rec, CSettings& s, QWidget* parent, Qt::WindowFlags):
-    QDialog(parent), Ui_BWSViewer(),
+BWSViewer::BWSViewer(CRx& nrx, CSettings& Settings, QWidget* parent):
+    CWindow(parent, Settings, "BWS"),
     nam(this, cache, waitobjs, bAllowExternalContent, strCacheHost),
-    receiver(rec), settings(s), decoder(NULL), bHomeSet(false), bPageLoading(false),
+    rx(nrx), decoder(nullptr), bHomeSet(false), bPageLoading(false),
     bSaveFileToDisk(false), bRestrictedProfile(false), bAllowExternalContent(true),
     bClearCacheOnNewService(true), bDirectoryIndexChanged(false),
     iLastAwaitingOjects(0), strCacheHost(CACHE_HOST),
     iLastServiceID(0), iCurrentDataServiceID(0), bLastServiceValid(false), iLastValidServiceID(0)
 {
-    /* Enable minimize and maximize box for QDialog */
-	setWindowFlags(Qt::Window);
-
     setupUi(this);
 
     /* Setup webView */
-    webView->page()->setNetworkAccessManager(&nam);
-    webView->pageAction(QWebPage::OpenLinkInNewWindow)->setVisible(false);
-    webView->pageAction(QWebPage::DownloadLinkToDisk)->setVisible(false);
-    webView->pageAction(QWebPage::OpenImageInNewWindow)->setVisible(false);
-    webView->pageAction(QWebPage::DownloadImageToDisk)->setVisible(false);
+    webView->pageAction(QWebEnginePage::OpenLinkInNewWindow)->setVisible(false);
+    webView->pageAction(QWebEnginePage::DownloadLinkToDisk)->setVisible(false);
+    webView->pageAction(QWebEnginePage::OpenLinkInNewWindow)->setVisible(false);
+    webView->pageAction(QWebEnginePage::DownloadImageToDisk)->setVisible(false);
  
     /* Update time for color LED */
     LEDStatus->SetUpdateTime(1000);
@@ -199,10 +195,10 @@ void BWSViewer::OnTimer()
         break;
     }
 
-    if (decoder == NULL)
+    if (decoder == nullptr)
     {
-        decoder = receiver.GetDataDecoder();
-        if (decoder == NULL)
+        decoder = rx.GetDataDecoder();
+        if (decoder == nullptr)
             qDebug("can't get data decoder from receiver");
     }
 
@@ -311,27 +307,18 @@ void BWSViewer::OnClearCacheOnNewService(bool isChecked)
     bClearCacheOnNewService = isChecked;
 }
 
-void BWSViewer::showEvent(QShowEvent* e)
+void BWSViewer::eventShow(QShowEvent*)
 {
-	EVENT_FILTER(e);
-    /* Get window geometry data and apply it */
-    CWinGeom g;
-    settings.Get("BWS", g);
-    const QRect WinGeom(g.iXPos, g.iYPos, g.iWSize, g.iHSize);
-
-    if (WinGeom.isValid() && !WinGeom.isEmpty() && !WinGeom.isNull())
-        setGeometry(WinGeom);
-
-    bAllowExternalContent = settings.Get("BWS", "allowexternalcontent", bAllowExternalContent);
+    bAllowExternalContent = getSetting("allowexternalcontent", bAllowExternalContent);
     actionAllow_External_Content->setChecked(bAllowExternalContent);
 
-    bSaveFileToDisk = settings.Get("BWS", "savefiletodisk", bSaveFileToDisk);
+    bSaveFileToDisk = getSetting("savefiletodisk", bSaveFileToDisk);
     actionSave_File_to_Disk->setChecked(bSaveFileToDisk);
 
-    bRestrictedProfile = settings.Get("BWS", "restrictedprofile", bRestrictedProfile);
+    bRestrictedProfile = getSetting("restrictedprofile", bRestrictedProfile);
     actionRestricted_Profile_Only->setChecked(bRestrictedProfile);
 
-    bClearCacheOnNewService = settings.Get("BWS", "clearcacheonnewservice", bClearCacheOnNewService);
+    bClearCacheOnNewService = getSetting("clearcacheonnewservice", bClearCacheOnNewService);
     actionClear_Cache_on_New_Service->setChecked(bClearCacheOnNewService);
 
     /* Update window title */
@@ -346,44 +333,33 @@ void BWSViewer::showEvent(QShowEvent* e)
     Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
-void BWSViewer::hideEvent(QHideEvent* e)
+void BWSViewer::eventHide(QHideEvent*)
 {
-	EVENT_FILTER(e);
     /* Deactivate real-time timer so that it does not get new pictures */
     Timer.stop();
 
-    /* Save window geometry data */
-    QRect WinGeom = geometry();
+    putSetting("savefiletodisk", bSaveFileToDisk);
 
-    CWinGeom c;
-    c.iXPos = WinGeom.x();
-    c.iYPos = WinGeom.y();
-    c.iHSize = WinGeom.height();
-    c.iWSize = WinGeom.width();
-    settings.Put("BWS", c);
+    putSetting("restrictedprofile", bRestrictedProfile);
 
-    settings.Put("BWS", "savefiletodisk", bSaveFileToDisk);
+    putSetting("allowexternalcontent", bAllowExternalContent);
 
-    settings.Put("BWS", "restrictedprofile", bRestrictedProfile);
-
-    settings.Put("BWS", "allowexternalcontent", bAllowExternalContent);
-
-    settings.Put("BWS", "clearcacheonnewservice", bClearCacheOnNewService);
+    putSetting("clearcacheonnewservice", bClearCacheOnNewService);
 }
 
 bool BWSViewer::Changed()
 {
     bool bChanged = false;
-    if (decoder != NULL)
+    if (decoder != nullptr)
     {
         CMOTObject obj;
 
         /* Poll the data decoder module for new object */
-        while (decoder->GetMOTObject(obj, CDataDecoder::AT_BROADCASTWEBSITE) == TRUE)
+        while (decoder->GetMOTObject(obj, CDataDecoder::AT_BROADCASTWEBSITE))
         {
             /* Get the current directory */
             CMOTDirectory MOTDir;
-            if (decoder->GetMOTDirectory(MOTDir, CDataDecoder::AT_BROADCASTWEBSITE) == TRUE)
+            if (decoder->GetMOTDirectory(MOTDir, CDataDecoder::AT_BROADCASTWEBSITE))
             {
                 /* ETSI TS 101 498-1 Section 5.5.1 */
 
@@ -449,7 +425,7 @@ void BWSViewer::SaveMOTObject(const QString& strObjName,
 
     /* Open file */
     QFile file(strFileName);
-    if (file.open(QIODevice::WriteOnly | QIODevice::Truncate))
+    if (file.open(QIODevice::WriteOnly))// | QIODevice::Truncate))
     {
         int i, written, size;
         size = vecbRawData.Size();
@@ -461,23 +437,27 @@ void BWSViewer::SaveMOTObject(const QString& strObjName,
         /* Close the file afterwards */
         file.close();
     }
+	else
+	{
+		QMessageBox::information(this, file.errorString(), strFileName);
+	}
 }
 
 void BWSViewer::SetupSavePath(QString& strSavePath)
 {
     /* Append service ID to MOT save path */
     strSavePath = strSavePath.setNum(iCurrentDataServiceID, 16).toUpper().rightJustified(8, '0');
-    strSavePath = QString::fromUtf8((*receiver.GetParameters()).GetDataDirectory("MOT").c_str()) + strSavePath + "/";
+    strSavePath = QString::fromUtf8((*rx.GetParameters()).GetDataDirectory("MOT").c_str()) + strSavePath + "/";
 }
 
 void BWSViewer::GetServiceParams(uint32_t* iServiceID, bool* bServiceValid, QString* strLabel, ETypeRxStatus* eStatus)
 {
-    CParameter& Parameters = *receiver.GetParameters();
+    CParameter& Parameters = *rx.GetParameters();
     Parameters.Lock();
         const int iCurSelDataServ = Parameters.GetCurSelDataService();
         const CService service = Parameters.Service[iCurSelDataServ];
         if (eStatus)
-            *eStatus = Parameters.ReceiveStatus.MOT.GetStatus();
+            *eStatus = Parameters.DataComponentStatus[iCurSelDataServ].GetStatus();
     Parameters.Unlock();
     if (iServiceID)
         *iServiceID = service.iServiceID;
@@ -503,7 +483,7 @@ void CWebsiteCache::GetObjectCountAndSize(unsigned int& count, unsigned int& siz
 void CWebsiteCache::ClearAll()
 {
     mutex.lock();
-        strDirectoryIndex = QString(); /* NULL string, not empty string! */
+        strDirectoryIndex = QString(); /* nullptr string, not empty string! */
         objects.clear();
         total_size = 0;
     mutex.unlock();
@@ -590,7 +570,7 @@ CWebsiteObject* CWebsiteCache::FindObject(const QString& strObjName)
 {
     map<QString,CWebsiteObject>::iterator it;
     it = objects.find(strObjName);
-    return it != objects.end() ? &it->second : NULL;
+    return it != objects.end() ? &it->second : nullptr;
 }
 
 bool CWebsiteCache::SetDirectoryIndex(const QString strNewDirectoryIndex)
@@ -670,7 +650,7 @@ void CNetworkReplyCache::CheckObject(QString strObjName)
         if (new_id)
         {
             id = new_id;
-            setRawHeader(QByteArray("Content-Type"), QByteArray(strContentType.toUtf8().constData()));
+            setRawHeader(QByteArray("Content-Type"), strContentType.toUtf8());
             emitted = true;
             emit readyRead(); /* needed for Qt 4.6 */
             emit finished();

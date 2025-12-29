@@ -29,7 +29,7 @@
 #ifndef _ALSA_H
 #define _ALSA_H
 
-#include "../../common/soundinterface.h"
+#include "../../sound/soundinterface.h"
 #include <alsa/asoundlib.h>
 
 class CAlsaSoundIn: public CSoundInInterface
@@ -39,8 +39,9 @@ public:
     virtual 			~CAlsaSoundIn();
 
     virtual void		Enumerate(vector<string>& choices);
-    virtual void		SetDev(int iNewDevice);
-    virtual int			GetDev();
+    virtual void		SetItem(int iNewDevice);
+    virtual int			GetItem();
+    virtual string      GetitemName();
     virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
     virtual _BOOLEAN	Read(CVector<short>& psData);
     virtual void		Close();
@@ -58,8 +59,8 @@ public:
     virtual 			~CAlsaSoundOut();
 
     virtual void		Enumerate(vector<string>& choices);
-    virtual void		SetDev(int iNewDevice);
-    virtual int			GetDev();
+    virtual void		SetItem(int iNewDevice);
+    virtual int			GetItem();
     virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
     virtual _BOOLEAN	Write(CVector<short>& psData);
     virtual void		Close();

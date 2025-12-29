@@ -35,16 +35,13 @@
 #  endif
 #  include <windows.h>
 #  include <setupapi.h>
-#  if defined(_MSC_VER) && (_MSC_VER < 1400)
-    DEFINE_GUID(GUID_DEVINTERFACE_COMPORT, 0x86e0d1e0L, 0x8089,
-    0x11d0, 0x9c, 0xe4, 0x08, 0x00, 0x3e, 0x30, 0x1f, 0x73);
-#  endif
 # endif
 #elif defined(__APPLE__)
 #include <CoreFoundation/CoreFoundation.h>
 #include <IOKit/IOKitLib.h>
 #include <IOKit/serial/IOSerialKeys.h>
 #endif
+#include "../matlib/MatlibSigProToolbox.h"
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -317,6 +314,7 @@ CModJulDate::Get(const uint32_t iYear, const uint32_t iMonth, const uint32_t iDa
 	uint32_t iJulDate = iDay + (153*m+2)/5 + 365*y + y/4 - y/100 + y/400 - 32045;
 	iModJulDate = iJulDate - 2400001;
 }
+<<<<<<< HEAD
 
 /******************************************************************************\
 * Audio Reverberation                                                          *
@@ -1164,3 +1162,5 @@ CHamlib::SetHamlibModelID(const rig_model_t model)
 	}
 }
 #endif
+=======
+>>>>>>> Fix-audio-file-in

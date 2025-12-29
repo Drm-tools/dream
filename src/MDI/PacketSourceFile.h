@@ -45,12 +45,13 @@ public:
 	void SetPacketSink(CPacketSink *pSink);
 	// Stop sending packets to the sink
 	void ResetPacketSink(void);
-	_BOOLEAN SetOrigin(const std::string& str);
+	bool SetOrigin(const std::string& str);
+	bool GetOrigin(std::string& str) { (void)str; return false; }
 	void poll();
 
 private:
 
-    void readRawAF(std::vector<_BYTE>& vecbydata, int& interval);
+    int readRawAF(std::vector<_BYTE>& vecbydata, int& interval);
     void readRawPFT(std::vector<_BYTE>& vecbydata, int& interval);
     void readFF(std::vector<_BYTE>& vecbydata, int& interval);
 

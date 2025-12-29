@@ -49,8 +49,8 @@ public:
     virtual void				Enumerate(vector<string>& choices) {
         choices = names;
     }
-    virtual void				SetDev(int iNewDevice);
-    virtual int					GetDev();
+    virtual void				SetItem(int iNewDevice);
+    virtual int					GetItem();
 
     void Init(int iNewBufferSize, _BOOLEAN bNewBlocking = FALSE);
     _BOOLEAN Write(CVector<short>& psData);

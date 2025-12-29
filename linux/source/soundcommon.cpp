@@ -185,7 +185,7 @@ void CSoundIn::Close()
     bChangDev = TRUE;
 }
 
-void CSoundIn::SetDev(int iNewDevice)
+void CSoundIn::SetItem(int iNewDevice)
 {
     /* Change only in case new device id is not already active */
     if (iNewDevice != iCurrentDevice)
@@ -195,7 +195,7 @@ void CSoundIn::SetDev(int iNewDevice)
     }
 }
 
-int CSoundIn::GetDev()
+int CSoundIn::GetItem()
 {
     return iCurrentDevice;
 }
@@ -347,7 +347,7 @@ void CSoundOut::Close()
     bChangDev = TRUE;
 }
 
-void CSoundOut::SetDev(int iNewDevice)
+void CSoundOut::SetItem(int iNewDevice)
 {
     /* Change only in case new device id is not already active */
     if (iNewDevice != iCurrentDevice)
@@ -357,7 +357,7 @@ void CSoundOut::SetDev(int iNewDevice)
     }
 }
 
-int CSoundOut::GetDev()
+int CSoundOut::GetItem()
 {
     return iCurrentDevice;
 }

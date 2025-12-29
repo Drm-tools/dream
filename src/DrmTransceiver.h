@@ -26,68 +26,58 @@
  *
 \******************************************************************************/
 
-#ifndef _DRM_TRANSCEIVER_H_
-#define _DRM_TRANSCEIVER_H_
+#ifndef DRM_TRANSCEIVER_H
+#define DRM_TRANSCEIVER_H
 
-#include "Parameter.h"
-#include "util/Settings.h"
-#include "sound/soundinterface.h"
+#include "sound/soundfactory.h"
+#include <vector>
 
-class CDRMTransceiver
-{
+class CSettings;
+class CParameter;
+enum ERunState { STOPPED, RUNNING, STOP_REQUESTED, RESTART };
+
+class CDRMTransceiver {
 public:
-	CDRMTransceiver(CSettings* pSettings, CSoundInInterface* pSoundIn, CSoundOutInterface* pSoundOut, _BOOLEAN bTransmitter = FALSE)
-	: pSettings(pSettings), pSoundInInterface(pSoundIn), pSoundOutInterface(pSoundOut), bTransmitter(bTransmitter) {};
-	virtual ~CDRMTransceiver() {};
+  CDRMTransceiver(CSettings *pSettings = nullptr);
+  virtual ~CDRMTransceiver();
 
-    virtual void LoadSettings() = 0;
-    virtual void SaveSettings() = 0;
-    virtual void Start() = 0;
-
-    virtual void Restart()
-    {
-        if (Parameters.eRunState == CParameter::RUNNING)
-            Parameters.eRunState = CParameter::RESTART;
-    }
-    virtual void Stop()
-    {
-        Parameters.eRunState = CParameter::STOP_REQUESTED;
-    }
-    virtual CSettings*				GetSettings() {
-        return pSettings;
-    }
-    virtual void					SetSettings(CSettings* pNewSettings) {
-        pSettings = pNewSettings;
-    }
-    virtual CParameter*				GetParameters() {
-        return &Parameters;
-    }
-    virtual CSoundInInterface*		GetSoundInInterface() {
-        return pSoundInInterface;
-    }
-    virtual CSoundOutInterface*		GetSoundOutInterface() {
-        return pSoundOutInterface;
-    }
-	virtual _BOOLEAN				IsReceiver() const {
-		return !bTransmitter;
-	}
-	virtual _BOOLEAN				IsTransmitter() const {
-		return bTransmitter;
-	}
+  virtual void LoadSettings() = 0;
+  virtual void SaveSettings() = 0;
+  std::string GetInputDevice() {
+    return soundinfactory.GetItemName();
+  };
+  virtual void SetInputDevice(std::string name) {
+    soundinfactory.SetItem(name);
+  };
+  std::string GetOutputDevice() {
+    return soundoutfactory.GetItemName();
+  };
+  virtual void SetOutputDevice(std::string name) {
+    soundoutfactory.SetItem(name);
+  };
+  virtual void EnumerateInputs(std::vector<std::string> &names,
+                               std::vector<std::string> &descriptions,
+                               std::string &defaultInput) {
+    return soundinfactory.Enumerate(names, descriptions, defaultInput);
+  };
+  virtual void EnumerateOutputs(std::vector<std::string> &names,
+                                std::vector<std::string> &descriptions,
+                                std::string &defaultOutput) {
+    return soundoutfactory.Enumerate(names, descriptions, defaultOutput);
+  };
+  virtual CSettings *GetSettings() { return pSettings; };
+  virtual void SetSettings(CSettings *pNewSettings) {
+    pSettings = pNewSettings;
+  };
+  virtual CParameter *GetParameters() { return &Parameters; };
+  virtual bool IsReceiver() const = 0;
+  virtual bool IsTransmitter() const = 0;
 
 protected:
-    virtual void CloseSoundInterfaces()
-    {
-        pSoundInInterface->Close();
-        pSoundOutInterface->Close();
-    }
-	CSettings*				pSettings;
-    CParameter				Parameters;
-    CSoundInInterface*		pSoundInInterface;
-    CSoundOutInterface*		pSoundOutInterface;
-
-private:
-	const _BOOLEAN bTransmitter;
+  CParameter &Parameters;
+  CSettings *pSettings;
+  CSoundFactoryIn soundinfactory;
+  CSoundFactoryOut soundoutfactory;
 };
 
 #endif

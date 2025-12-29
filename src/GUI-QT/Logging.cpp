@@ -38,9 +38,6 @@ CLogging::CLogging(CParameter& Parameters) :
     shortLog(Parameters), longLog(Parameters),
     iLogDelay(0), iLogCount(0), state(off)
 {
-#if QT_VERSION >= 0x040000
-    TimerLogFileStart.setSingleShot(true);
-#endif
     connect(&TimerLogFile, SIGNAL(timeout()), this, SLOT(OnTimerLogFile()));
     connect(&TimerLogFileStart, SIGNAL(timeout()), this, SLOT(OnTimerLogFileStart()));
 }
@@ -48,7 +45,7 @@ CLogging::CLogging(CParameter& Parameters) :
 void CLogging::LoadSettings(CSettings& Settings)
 {
     /* log file flag for storing signal strength in long log */
-    _BOOLEAN logrxl = Settings.Get("Logfile", "enablerxl", FALSE);
+    bool logrxl = Settings.Get("Logfile", "enablerxl", false);
     shortLog.SetRxlEnabled(logrxl);
     longLog.SetRxlEnabled(logrxl);
 
@@ -67,11 +64,7 @@ void CLogging::LoadSettings(CSettings& Settings)
 void CLogging::start()
 {
     /* One shot timer */
-    TimerLogFileStart.start(iLogDelay * 1000 /* ms */
-#if QT_VERSION < 0x040000
-	, true
-#endif
-    );
+    TimerLogFileStart.start(iLogDelay * 1000 /* ms */);
 }
 
 void CLogging::SaveSettings(CSettings& Settings)
@@ -104,6 +97,8 @@ void CLogging::OnTimerLogFileStart()
 {
     iLogCount = 0;
     state = on;
+	/* stop this timer! */
+	TimerLogFileStart.stop();
     /* Start logging (if not already done) */
     TimerLogFile.start(1000); /* Every second */
     /* Open log files */

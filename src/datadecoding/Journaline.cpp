@@ -33,12 +33,11 @@
 #endif
 
 #include "journaline/newssvcdec_impl.h" // for log variables
-using namespace std;
 
-CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
+CJournaline::CJournaline() : dgdec(nullptr), newsdec(nullptr)
 {
 	/* This will be the first call to the Journaline decoder open function, the
-	   pointer to the decoders must have a defined value (NULL) to avoid
+	   pointer to the decoders must have a defined value (nullptr) to avoid
 	   unpredictable behaviour in the "ResetOpenJournalineDecoder()" function */
 	ResetOpenJournalineDecoder();
 }
@@ -46,10 +45,10 @@ CJournaline::CJournaline() : dgdec(NULL), newsdec(NULL)
 CJournaline::~CJournaline()
 {
 	/* Delete decoder instances */
-	if (newsdec != NULL)
+	if (newsdec != nullptr)
 		NEWS_SVC_DEC_deleteDec(newsdec);
 
-	if (dgdec != NULL)
+	if (dgdec != nullptr)
 		DAB_DATAGROUP_DECODER_deleteDec(dgdec);
 }
 
@@ -65,10 +64,10 @@ void CJournaline::ResetOpenJournalineDecoder()
 	unsigned long extended_header_len = 0;
 
 	/* If decoder was initialized before, delete old instance */
-	if (newsdec != NULL)
+	if (newsdec != nullptr)
 		NEWS_SVC_DEC_deleteDec(newsdec);
 
-	if (dgdec != NULL)
+	if (dgdec != nullptr)
 		DAB_DATAGROUP_DECODER_deleteDec(dgdec);
 
 	/* Create decoder instance. Pass the pointer to this object. This is needed
@@ -78,7 +77,7 @@ void CJournaline::ResetOpenJournalineDecoder()
 		extended_header_len, this);
 }
 
-void CJournaline::AddFile(const string filename)
+void CJournaline::AddFile(const std::string filename)
 {
 	FILE *f = fopen(filename.c_str(), "rb");
 	bool err=false;

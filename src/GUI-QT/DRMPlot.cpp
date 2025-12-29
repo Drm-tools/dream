@@ -9,7 +9,7 @@
  *  David Flamand
  *
  * Description:
- *	Custom settings of the qwt-plot, Support Qwt version 5.0.0 to 6.0.1(+)
+ *	Custom settings of the qwt-plot, Support Qwt version 5.0.0 to 6.1.0(+)
  *
  ******************************************************************************
  *
@@ -30,20 +30,22 @@
 \******************************************************************************/
 
 #include "DRMPlot.h"
+#include "../PlotManager.h"
 #include <cmath>
 #include <algorithm>
-
+#include "../matlib/MatlibSigProToolbox.h"
 
 /* Implementation *************************************************************/
 CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
-	SuppliedPlot(SuppliedPlot), DialogPlot(NULL), bActive(FALSE),
+	SuppliedPlot(SuppliedPlot), DialogPlot(nullptr), bActive(false),
 	CurCharType(NONE_OLD), InitCharType(NONE_OLD),
 	eLastSDCCodingScheme((ECodScheme)-1), eLastMSCCodingScheme((ECodScheme)-1),
-	bLastAudioDecoder(FALSE), pDRMRec(NULL),
-	WaterfallWidget(NULL), iAudSampleRate(0), iSigSampleRate(0), iLastXoredSampleRate(0)
+	bLastAudioDecoder(false), pDRMRec(nullptr),
+	WaterfallWidget(nullptr), iAudSampleRate(0), iSigSampleRate(0),
+	iLastXoredSampleRate(0), iLastChanMode(-1)
 {
 	/* Create new plot if none is supplied */
-	if (SuppliedPlot == NULL)
+	if (SuppliedPlot == nullptr)
 	{
 		DialogPlot = new QwtPlotDialog(parent);
 		plot = DialogPlot->GetPlot();
@@ -55,8 +57,15 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 	plot->setAutoDelete(false);
 	plot->setAutoReplot(false);
 
+	/* Base font */
+	QFont basefont;
+	basefont.setPointSize(PLOT_FONT_SIZE);
+	basefont.setStyleHint(QFont::SansSerif, QFont::PreferOutline);
+
 	/* Legend creation */
-	QwtLegend* legend = new QwtLegend();
+	legend = new QwtLegend();
+	QFont legendfont(basefont);
+	legend->setFont(legendfont);
 	plot->insertLegend(legend, QwtPlot::RightLegend);
 
 	/* Curve defaults (other curves are set by PlotDefaults) */
@@ -82,17 +91,14 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 #endif
 
 	/* Grid */
-	grid.enableXMin(FALSE);
-	grid.enableYMin(FALSE);
+	grid.enableXMin(false);
+	grid.enableYMin(false);
 	grid.attach(plot);
 
-	/* Fonts */
-	QFont axisfont;
-	axisfont.setPointSize(8);
-	axisfont.setStyleHint(QFont::SansSerif, QFont::PreferOutline);
-	QFont titlefont(axisfont);
+	/* Axis and title fonts */
+	QFont axisfont(basefont);
+	QFont titlefont(basefont);
 	titlefont.setWeight(QFont::Bold);
-
 	plot->setAxisFont(QwtPlot::xBottom, axisfont);
 	plot->setAxisFont(QwtPlot::yLeft, axisfont);
 	plot->setAxisFont(QwtPlot::yRight, axisfont);
@@ -103,29 +109,35 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 	/* Axis titles */
 	bottomTitle.setFont(axisfont);
 	plot->setAxisTitle(QwtPlot::xBottom, bottomTitle);
-
 	leftTitle.setFont(axisfont);
 	plot->setAxisTitle(QwtPlot::yLeft, leftTitle);
-
 	rightTitle.setFont(axisfont);
 	plot->setAxisTitle(QwtPlot::yRight, rightTitle);
 
 	/* Global frame */
 	plot->setFrameStyle(QFrame::Plain|QFrame::NoFrame);
-	((QFrame*)plot->canvas())->setLineWidth(0);
+	plot->setLineWidth(0);
 	plot->setContentsMargins(
 		WINDOW_MARGIN, WINDOW_MARGIN,
 		WINDOW_MARGIN, WINDOW_MARGIN);
 
 	/* Canvas */
+#if QWT_VERSION < 0x060100
+	plot->setCanvasLineWidth(0);
+#else
 	((QFrame*)plot->canvas())->setLineWidth(0);
+#endif
 	plot->canvas()->setBackgroundRole(QPalette::Window);
 
 	/* Picker */
 	picker = new QwtPlotPicker(plot->canvas());
+#if QWT_VERSION < 0x060000
+	picker->setSelectionFlags(QwtPicker::PointSelection | QwtPicker::ClickSelection);
+#else
 	picker->initMousePattern(1);
 	QwtPickerClickPointMachine *machine = new QwtPickerClickPointMachine();
 	picker->setStateMachine(machine);
+#endif
 
 	/* Set default style */
 	SetPlotStyle(0);
@@ -139,7 +151,7 @@ CDRMPlot::CDRMPlot(QWidget* parent, QwtPlot* SuppliedPlot) :
 	connect(picker, SIGNAL(selected(const QPointF &)),
 		this, SLOT(OnSelected(const QPointF &)));
 #endif
-	if (DialogPlot != NULL)
+	if (DialogPlot != nullptr)
 	{
 		connect(DialogPlot, SIGNAL(activate()), this, SLOT(activate()));
 		connect(DialogPlot, SIGNAL(deactivate()), this, SLOT(deactivate()));
@@ -150,16 +162,27 @@ CDRMPlot::~CDRMPlot()
 {
 	deactivate();
 	/* Delete DialogPlot if exist */
-	if (DialogPlot != NULL)
+	if (DialogPlot != nullptr)
 		delete DialogPlot;
 }
 
-void CDRMPlot::OnTimerChart()
+void CDRMPlot::UpdateAnalogBWMarker()
+{
+	if (CurCharType == INPUT_SIG_PSD_ANALOG)
+	{
+		_REAL rCenterFreq, rBandwidth;
+		/* Get data and parameters from modules */
+        pDRMRec->GetAMBWParameters(rCenterFreq, rBandwidth);
+		/* Prepare graph and set data */
+        SetDCCarrier(pDRMRec->GetAMMixerFrequencyOffset());
+		SetBWMarker(rCenterFreq, rBandwidth);
+		plot->replot();
+	}
+}
+
+void CDRMPlot::OnTimerChart() // TODO make sure timer stopped when receiver not running
 {
 	CParameter& Parameters = *pDRMRec->GetParameters();
-	/* Update only performed when running */
-	if (Parameters.eRunState != CParameter::RUNNING)
-		return;
 
 	/* CHART ******************************************************************/
 	CVector<_REAL>	vecrData;
@@ -171,28 +194,31 @@ void CDRMPlot::OnTimerChart()
 	_REAL		rPDSBegin, rPDSEnd;
 	_REAL		rFreqAcquVal;
 	_REAL		rCenterFreq, rBandwidth;
-	int			iXoredSampleRate;
 
 	Parameters.Lock();
 	_REAL rDCFrequency = Parameters.GetDCFrequency();
 	ECodScheme eSDCCodingScheme = Parameters.eSDCCodingScheme;
 	ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
-	_BOOLEAN bAudioDecoder = !Parameters.audiodecoder.empty();
+	bool bAudioDecoder = !Parameters.audiodecoder.empty();
 	iAudSampleRate = Parameters.GetAudSampleRate();
 	iSigSampleRate = Parameters.GetSigSampleRate();
+    int iChanMode = pDRMRec->GetInChanSel();
 	Parameters.Unlock();
 
 	/* Needed to detect sample rate change */
-	iXoredSampleRate = iAudSampleRate ^ iSigSampleRate;
+	const int iXoredSampleRate = iAudSampleRate ^ iSigSampleRate;
 
 	CPlotManager& PlotManager = *pDRMRec->GetPlotManager();
 
 	/* First check if plot must be set up */
 	bool change = false;
-	if (InitCharType != CurCharType || iLastXoredSampleRate != iXoredSampleRate)
+	if (InitCharType != CurCharType ||
+		iLastXoredSampleRate != iXoredSampleRate ||
+		iLastChanMode != iChanMode)
 	{
-		iLastXoredSampleRate = iXoredSampleRate;
 		InitCharType = CurCharType;
+		iLastXoredSampleRate = iXoredSampleRate;
+		iLastChanMode = iChanMode;
 		change = true;
 		PlotDefaults();
 	}
@@ -227,16 +253,16 @@ void CDRMPlot::OnTimerChart()
 		SetData(vecrData, vecrData2, vecrScale);
 		break;
 
-	case POWER_SPEC_DENSITY:
+    case POWER_SPEC_DENSITY: // "Shifted PSD" - works for file input, displaced on sound card input
 		/* Get data from module */
-		pDRMRec->GetOFDMDemod()->GetPowDenSpec(vecrData, vecrScale);
+        pDRMRec->GetPowDenSpec(vecrData, vecrScale);
 
 		if (change) SetupPSD();
 		/* Set data */
 		SetData(vecrData, vecrScale);
 		break;
 
-	case SNR_SPECTRUM:
+    case SNR_SPECTRUM: // "SNR Spectrum"
 		/* Get data from module */
 		PlotManager.GetSNRProfile(vecrData, vecrScale);
 
@@ -246,9 +272,9 @@ void CDRMPlot::OnTimerChart()
 		SetData(vecrData, vecrScale);
 		break;
 
-	case INPUTSPECTRUM_NO_AV:
+    case INPUTSPECTRUM_NO_AV: // "Input Spectrum" - broken
 		/* Get data from module */
-		pDRMRec->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
+        pDRMRec->GetInputSpec(vecrData, vecrScale);
 
 		if (change) SetupInpSpec();
 		/* Prepare graph and set data */
@@ -256,16 +282,16 @@ void CDRMPlot::OnTimerChart()
 		SetData(vecrData, vecrScale);
 		break;
 
-	case INP_SPEC_WATERF:
+    case INP_SPEC_WATERF: // "Waterfall"
 		/* Get data from module */
-		pDRMRec->GetReceiveData()->GetInputSpec(vecrData, vecrScale);
+        pDRMRec->GetInputSpec(vecrData, vecrScale);
 
 		if (change) SetupInpSpecWaterf();
 		/* Set data */
 		SetInpSpecWaterf(vecrData, vecrScale);
 		break;
 
-	case INPUT_SIG_PSD:
+    case INPUT_SIG_PSD: // "Input PSD" - broken
 		/* Get data from module */
 		PlotManager.GetInputPSD(vecrData, vecrScale);
 
@@ -277,19 +303,19 @@ void CDRMPlot::OnTimerChart()
 
 	case INPUT_SIG_PSD_ANALOG:
 		/* Get data and parameters from modules */
-		pDRMRec->GetReceiveData()->GetInputPSD(vecrData, vecrScale);
-		pDRMRec->GetAMDemod()->GetBWParameters(rCenterFreq, rBandwidth);
+        pDRMRec->GetInputPSD(vecrData, vecrScale);
+        pDRMRec->GetAMBWParameters(rCenterFreq, rBandwidth);
 
-		if (change) SetupInpPSD(TRUE);
+		if (change) SetupInpPSD(true);
 		/* Prepare graph and set data */
-		SetDCCarrier(pDRMRec->GetAMDemod()->GetCurMixFreqOffs());
+        SetDCCarrier(pDRMRec->GetAMMixerFrequencyOffset());
 		SetBWMarker(rCenterFreq, rBandwidth);
 		SetData(vecrData, vecrScale);
 		break;
 
 	case AUDIO_SPECTRUM:
 		/* Get data from module */
-		pDRMRec->GetWriteData()->GetAudioSpec(vecrData, vecrScale);
+        pDRMRec->GetAudioSpec(vecrData, vecrScale);
 
 		if (change || bLastAudioDecoder != bAudioDecoder)
 		{
@@ -307,7 +333,9 @@ void CDRMPlot::OnTimerChart()
 
 		if (change) SetupFreqSamOffsHist();
 		/* Prepare graph and set data */
-		plot->setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ") + QString().setNum(rFreqAcquVal) + " Hz");
+		plot->setAxisTitle(QwtPlot::yLeft, tr("Freq. Offset [Hz] rel. to ")
+            + QString().setNum(pDRMRec->ConvertFrequency(rFreqAcquVal))
+			+ " Hz");
 		AutoScale(vecrData, vecrData2, vecrScale);
 		SetData(vecrData, vecrData2, vecrScale);
 		break;
@@ -334,7 +362,7 @@ void CDRMPlot::OnTimerChart()
 
 	case FAC_CONSTELLATION:
 		/* Get data vector */
-		pDRMRec->GetFACMLC()->GetVectorSpace(veccData1);
+        pDRMRec->GetFACMLCVectorSpace(veccData1);
 
 		if (change) SetupFACConst();
 		/* Set data */
@@ -343,7 +371,7 @@ void CDRMPlot::OnTimerChart()
 
 	case SDC_CONSTELLATION:
 		/* Get data vector */
-		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData1);
+        pDRMRec->GetSDCMLCVectorSpace(veccData1);
 
 		if (change || eLastSDCCodingScheme != eSDCCodingScheme)
 		{
@@ -356,7 +384,7 @@ void CDRMPlot::OnTimerChart()
 
 	case MSC_CONSTELLATION:
 		/* Get data vector */
-		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
+        pDRMRec->GetMSCMLCVectorSpace(veccData1);
 
 		if (change || eLastMSCCodingScheme != eMSCCodingScheme)
 		{
@@ -369,9 +397,9 @@ void CDRMPlot::OnTimerChart()
 
 	case ALL_CONSTELLATION:
 		/* Get data vectors */
-		pDRMRec->GetMSCMLC()->GetVectorSpace(veccData1);
-		pDRMRec->GetSDCMLC()->GetVectorSpace(veccData2);
-		pDRMRec->GetFACMLC()->GetVectorSpace(veccData3);
+        pDRMRec->GetMSCMLCVectorSpace(veccData1);
+        pDRMRec->GetSDCMLCVectorSpace(veccData2);
+        pDRMRec->GetFACMLCVectorSpace(veccData3);
 
 		if (change) SetupAllConst();
 		/* Set data */
@@ -439,7 +467,7 @@ void CDRMPlot::SetupChart(const ECharType eNewType)
 void CDRMPlot::activate()
 {
 	/* Set active flag */
-	bActive = TRUE;
+	bActive = true;
 
 	/* Force re-initialization */
 	InitCharType = NONE_OLD;
@@ -458,7 +486,7 @@ void CDRMPlot::deactivate()
 	PlotDefaults();
 
 	/* Clear active flag */
-	bActive = FALSE;
+	bActive = false;
 }
 
 void CDRMPlot::SetPlotStyle(const int iNewStyleID)
@@ -498,8 +526,8 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 	}
 
 	/* Apply colors */
-	grid.setMajorPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
-	grid.setMinorPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.SETMAJORPEN(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.SETMINORPEN(QPen(MainGridColorPlot, 0, Qt::DotLine));
 	vcurvegrid.setPen(QPen(MainGridColorPlot, 1, Qt::DotLine));
 	hcurvegrid.setPen(QPen(MainGridColorPlot, 1, Qt::DotLine));
 	plot->setCanvasBackground(QColor(BckgrdColorPlot));
@@ -511,16 +539,16 @@ void CDRMPlot::SetPlotStyle(const int iNewStyleID)
 void CDRMPlot::SetData(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
 	const int size = vecrData.Size();
-	main1curve.SETDATA(size ? &vecrScale[0] : NULL, size ? &vecrData[0] : NULL, size);
+	main1curve.SETDATA(size ? &vecrScale[0] : nullptr, size ? &vecrData[0] : nullptr, size);
 }
 
 void CDRMPlot::SetData(CVector<_REAL>& vecrData1, CVector<_REAL>& vecrData2,
                        CVector<_REAL>& vecrScale)
 {
 	const int size1 = vecrData1.Size();
-	main1curve.SETDATA(size1 ? &vecrScale[0] : NULL, size1 ? &vecrData1[0] : NULL, size1);
+	main1curve.SETDATA(size1 ? &vecrScale[0] : nullptr, size1 ? &vecrData1[0] : nullptr, size1);
 	const int size2 = vecrData2.Size();
-	main2curve.SETDATA(size2 ? &vecrScale[0] : NULL, size2 ? &vecrData2[0] : NULL, size2);
+	main2curve.SETDATA(size2 ? &vecrScale[0] : nullptr, size2 ? &vecrData2[0] : nullptr, size2);
 }
 
 void CDRMPlot::SetData(QwtPlotCurve& curve, CVector<_COMPLEX>& veccData)
@@ -537,7 +565,7 @@ void CDRMPlot::SetData(QwtPlotCurve& curve, CVector<_COMPLEX>& veccData)
 		curve.SETDATA(&r[0], &im[0], size);
 	}
 	else
-		curve.SETDATA(NULL, NULL, 0);
+		curve.SETDATA(nullptr, nullptr, 0);
 }
 
 void CDRMPlot::SetData(CVector<_COMPLEX>& veccData)
@@ -568,42 +596,50 @@ void CDRMPlot::PlotDefaults()
 	vcurvegrid.detach();
 	main1curve.detach();
 	main2curve.detach();
-	curve1.SETDATA(NULL, NULL, 0);
-	curve2.SETDATA(NULL, NULL, 0);
-	curve3.SETDATA(NULL, NULL, 0);
-	curve4.SETDATA(NULL, NULL, 0);
-	curve5.SETDATA(NULL, NULL, 0);
-	hcurvegrid.SETDATA(NULL, NULL, 0);
-	vcurvegrid.SETDATA(NULL, NULL, 0);
-	main1curve.SETDATA(NULL, NULL, 0);
-	main2curve.SETDATA(NULL, NULL, 0);
+	curve1.SETDATA(nullptr, nullptr, 0);
+	curve2.SETDATA(nullptr, nullptr, 0);
+	curve3.SETDATA(nullptr, nullptr, 0);
+	curve4.SETDATA(nullptr, nullptr, 0);
+	curve5.SETDATA(nullptr, nullptr, 0);
+	hcurvegrid.SETDATA(nullptr, nullptr, 0);
+	vcurvegrid.SETDATA(nullptr, nullptr, 0);
+	main1curve.SETDATA(nullptr, nullptr, 0);
+	main2curve.SETDATA(nullptr, nullptr, 0);
 #if QWT_VERSION < 0x060000
 	curve1.setSymbol(QwtSymbol());
-	curve2.setSymbol(QwtSymbol());
+    curve2.setSymbol(QwtSymbol());
 	curve3.setSymbol(QwtSymbol());
 #else
-	curve1.setSymbol(NULL);
-	curve2.setSymbol(NULL);
-	curve3.setSymbol(NULL);
+	curve1.setSymbol(nullptr);
+	curve2.setSymbol(nullptr);
+	curve3.setSymbol(nullptr);
 	curve1.setLegendAttribute(QwtPlotCurve::LegendShowSymbol, false);
 	curve2.setLegendAttribute(QwtPlotCurve::LegendShowSymbol, false);
 	curve3.setLegendAttribute(QwtPlotCurve::LegendShowSymbol, false);
 #endif
-	grid.enableX(TRUE);
-	grid.enableY(TRUE);
-	grid.setMajorPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
-	grid.setMinorPen(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.enableX(true);
+	grid.enableY(true);
+	grid.SETMAJORPEN(QPen(MainGridColorPlot, 0, Qt::DotLine));
+	grid.SETMINORPEN(QPen(MainGridColorPlot, 0, Qt::DotLine));
 	curve1.setItemAttribute(QwtPlotItem::Legend, false);
 	curve2.setItemAttribute(QwtPlotItem::Legend, false);
 	curve3.setItemAttribute(QwtPlotItem::Legend, false);
 	main1curve.setItemAttribute(QwtPlotItem::Legend, false);
 	main2curve.setItemAttribute(QwtPlotItem::Legend, false);
 	plot->setCanvasBackground(QColor(BckgrdColorPlot));
-	if (WaterfallWidget != NULL)
+	if (WaterfallWidget != nullptr)
 	{
 		delete WaterfallWidget;
-		WaterfallWidget = NULL;
+		WaterfallWidget = nullptr;
 	}
+}
+
+void CDRMPlot::PlotSetLegendFont()
+{
+#if QWT_VERSION < 0x060100
+	foreach(QWidget* item, legend->legendItems())
+		item->setFont(legend->font());
+#endif
 }
 
 void CDRMPlot::PlotForceUpdate()
@@ -644,9 +680,9 @@ void CDRMPlot::SetupAvIR()
 {
 	/* Init chart for averaged impulse response */
 	plot->setTitle(tr("Channel Impulse Response"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Time [ms]"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("IR [dB]"));
 
 	/* Curves color */
@@ -724,7 +760,7 @@ void CDRMPlot::SetupTranFct()
 	plot->setTitle(tr("Channel Transfer Function / Group Delay"));
 	plot->enableAxis(QwtPlot::yRight);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("TF [dB]"));
 
 	plot->setAxisTitle(QwtPlot::yRight, tr("Group Delay [ms]"));
@@ -747,9 +783,10 @@ void CDRMPlot::SetupTranFct()
 	main2curve.setTitle(tr("Group Del."));
 	main2curve.setYAxis(QwtPlot::yRight);
 	main2curve.attach(plot);
+	PlotSetLegendFont();
 }
 
-void CDRMPlot::SetupAudioSpec(_BOOLEAN bAudioDecoder)
+void CDRMPlot::SetupAudioSpec(bool bAudioDecoder)
 {
 	/* Init chart for audio spectrum */
 	if (bAudioDecoder)
@@ -757,11 +794,11 @@ void CDRMPlot::SetupAudioSpec(_BOOLEAN bAudioDecoder)
 	else
 	{
 		plot->setTitle(tr("No audio decoding possible"));
-		main1curve.SETDATA(NULL, NULL, 0);
+		main1curve.SETDATA(nullptr, nullptr, 0);
 	}
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, "AS [dB]");
 
 	/* Fixed scale */
@@ -786,7 +823,7 @@ void CDRMPlot::SetupFreqSamOffsHist()
 	plot->setTitle(tr("Rel. Frequency Offset / Sample Rate Offset History"));
 	plot->enableAxis(QwtPlot::yRight);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Time [s]"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yRight, tr("Sample Rate Offset [Hz]"));
 
 	/* Curve colors */
@@ -805,6 +842,7 @@ void CDRMPlot::SetupFreqSamOffsHist()
 	main2curve.setTitle(tr("Samp."));
 	main2curve.setYAxis(QwtPlot::yRight);
 	main2curve.attach(plot);
+	PlotSetLegendFont();
 }
 
 void CDRMPlot::AutoScale(CVector<_REAL>& vecrData,
@@ -851,7 +889,7 @@ void CDRMPlot::SetupDopplerDelayHist()
 	plot->setTitle(tr("Delay / Doppler History"));
 	plot->enableAxis(QwtPlot::yRight);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Delay [ms]"));
 	plot->setAxisTitle(QwtPlot::yRight, tr("Doppler [Hz]"));
 
@@ -875,6 +913,7 @@ void CDRMPlot::SetupDopplerDelayHist()
 	main2curve.setTitle(tr("Doppler"));
 	main2curve.setYAxis(QwtPlot::yRight);
 	main2curve.attach(plot);
+	PlotSetLegendFont();
 }
 
 void CDRMPlot::SetupSNRAudHist()
@@ -883,7 +922,7 @@ void CDRMPlot::SetupSNRAudHist()
 	plot->setTitle(tr("SNR / Correctly Decoded Audio History"));
 	plot->enableAxis(QwtPlot::yRight);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Time [min]"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("SNR [dB]"));
 	plot->setAxisTitle(QwtPlot::yRight, tr("Corr. Dec. Audio / DRM-Frame"));
 
@@ -903,6 +942,7 @@ void CDRMPlot::SetupSNRAudHist()
 	main2curve.setTitle(tr("Audio"));
 	main2curve.setYAxis(QwtPlot::yRight);
 	main2curve.attach(plot);
+	PlotSetLegendFont();
 }
 
 void CDRMPlot::AutoScale2(CVector<_REAL>& vecrData,
@@ -980,9 +1020,9 @@ void CDRMPlot::SetupPSD()
 {
 	/* Init chart for power spectram density estimation */
 	plot->setTitle(tr("Shifted Power Spectral Density of Input Signal"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("PSD [dB]"));
 
 	/* Fixed scale */
@@ -993,7 +1033,7 @@ void CDRMPlot::SetupPSD()
 		MAX_VAL_SHIF_PSD_Y_AXIS_DB);
 
 	double dX[2], dY[2];
-	dX[0] = dX[1] = (_REAL) VIRTUAL_INTERMED_FREQ / 1000;
+    dX[0] = dX[1] = VIRTUAL_INTERMED_FREQ / 1000.0;
 
 	/* Take the min-max values from scale to get vertical line */
 	dY[0] = MIN_VAL_SHIF_PSD_Y_AXIS_DB;
@@ -1018,9 +1058,9 @@ void CDRMPlot::SetupSNRSpectrum()
 {
 	/* Init chart for power spectram density estimation */
 	plot->setTitle(tr("SNR Spectrum (Weighted MER on MSC Cells)"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Carrier Index"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("WMER [dB]"));
 
 	/* Curve color */
@@ -1036,14 +1076,15 @@ void CDRMPlot::SetupInpSpec()
 {
 	/* Init chart for power spectram density estimation */
 	plot->setTitle(tr("Input Spectrum"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input Spectrum [dB]"));
 
 	/* Fixed scale */
-	plot->setAxisScale(QwtPlot::xBottom,
-	(double) 0.0, (double) iSigSampleRate / 2000);
+    const double dXScaleMin = pDRMRec->ConvertFrequency((_REAL) 0.0) / 1000;
+    const double dXScaleMax = pDRMRec->ConvertFrequency((_REAL) iSigSampleRate / 2) / 1000;
+	plot->setAxisScale(QwtPlot::xBottom, dXScaleMin, dXScaleMax);
 
 	plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
 		MAX_VAL_INP_SPEC_Y_AXIS_DB);
@@ -1065,7 +1106,8 @@ void CDRMPlot::SetDCCarrier(const _REAL rDCFreq)
 {
 	/* Insert line for DC carrier */
 	double dX[2], dY[2];
-	dX[0] = dX[1] = rDCFreq / 1000;
+	dX[0] = dX[1] =
+        pDRMRec->ConvertFrequency(rDCFreq) / 1000;
 
 	/* Take the min-max values from scale to get vertical line */
 	dY[0] = MIN_VAL_INP_SPEC_Y_AXIS_DB;
@@ -1074,21 +1116,21 @@ void CDRMPlot::SetDCCarrier(const _REAL rDCFreq)
 	curve1.SETDATA(dX, dY, 2);
 }
 
-void CDRMPlot::SetupInpPSD(_BOOLEAN bAnalog)
+void CDRMPlot::SetupInpPSD(bool bAnalog)
 {
 	/* Init chart for power spectram density estimation */
 	plot->setTitle(tr("Input PSD"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 
 	/* Fixed scale */
-	const double dXScaleMax = (double) iSigSampleRate / 2000;
-	plot->setAxisScale(QwtPlot::xBottom, (double) 0.0, dXScaleMax);
+    const double dXScaleMin = pDRMRec->ConvertFrequency((_REAL) 0.0) / 1000;
+    const double dXScaleMax = pDRMRec->ConvertFrequency((_REAL) iSigSampleRate / 2) / 1000;
+	plot->setAxisScale(QwtPlot::xBottom, dXScaleMin, dXScaleMax);
 
-	plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB,
-		MAX_VAL_INP_SPEC_Y_AXIS_DB);
+    plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_INP_SPEC_Y_AXIS_DB, MAX_VAL_INP_SPEC_Y_AXIS_DB);
 
 	/* Insert line for bandwidth marker */
 	if (bAnalog)
@@ -1121,8 +1163,10 @@ void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 	/* Insert marker for filter bandwidth if required */
 	if (rBWWidth != (_REAL) 0.0)
 	{
-		dX[0] = (rBWCenter - rBWWidth / 2) * (double)iSigSampleRate / 1000.0;
-		dX[1] = (rBWCenter + rBWWidth / 2) * (double)iSigSampleRate / 1000.0;
+        dX[0] = pDRMRec->ConvertFrequency(
+			(rBWCenter - rBWWidth / 2) * (double)iSigSampleRate) / 1000.0;
+        dX[1] = pDRMRec->ConvertFrequency(
+			(rBWCenter + rBWWidth / 2) * (double)iSigSampleRate) / 1000.0;
 
 		/* Take the min-max values from scale to get vertical line */
 		dY[0] = MAX_VAL_INP_SPEC_Y_AXIS_DB;//MIN_VAL_INP_SPEC_Y_AXIS_DB;
@@ -1131,21 +1175,21 @@ void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 		curve2.SETDATA(dX, dY, 2);
 	}
 	else
-		curve2.SETDATA(NULL, NULL, 0);
+		curve2.SETDATA(nullptr, nullptr, 0);
 }
 
 void CDRMPlot::SetupInpSpecWaterf()
 {
 	/* Init chart for waterfall input spectrum */
 	plot->setTitle(tr("Waterfall Input Spectrum"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Frequency [kHz]"));
-	plot->enableAxis(QwtPlot::yLeft, FALSE);
-	grid.enableX(FALSE);
-	grid.enableY(FALSE);
+	plot->enableAxis(QwtPlot::yLeft, false);
+	grid.enableX(false);
+	grid.enableY(false);
 
 	/* Create a new waterfall widget if not exists */
-	if (WaterfallWidget == NULL)
+	if (WaterfallWidget == nullptr)
 		WaterfallWidget = new CWidget(plot, Canvas);
 
 	/* Set plot background color */
@@ -1153,18 +1197,19 @@ void CDRMPlot::SetupInpSpecWaterf()
 	plot->setCanvasBackground(palette.color(QPalette::Window));
 
 	/* Fixed scale */
-	plot->setAxisScale(QwtPlot::xBottom,
-		(double) 0.0, (double) iSigSampleRate / 2000);
+    const double dXScaleMin = pDRMRec->ConvertFrequency((_REAL) 0.0) / 1000;
+    const double dXScaleMax = pDRMRec->ConvertFrequency((_REAL) iSigSampleRate / 2) / 1000;
+	plot->setAxisScale(QwtPlot::xBottom, dXScaleMin, dXScaleMax);
 }
 
 void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 {
 	/* No WaterfallWidget so return */
-	if (WaterfallWidget == NULL)
+	if (WaterfallWidget == nullptr)
 		return;
 
 	/* Check if the canvas size has changed */
-	_BOOLEAN bWidthChanged, bHeightChanged;
+	bool bWidthChanged, bHeightChanged;
 	QSize CanvSize(Canvas.size());
 #if QWT_VERSION >= 0x060000
 	QRect PlotCanvRect(plot->plotLayout()->canvasRect().toRect());
@@ -1209,7 +1254,7 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 
 	/* Resample input data */
 	CVector<_REAL> *pvecrResampledData;
-	Resample.Resample(&vecrData, &pvecrResampledData, scaleWidth, TRUE);
+	Resample.Resample(&vecrData, &pvecrResampledData, scaleWidth, true);
 
 	/* The scaling factor */
 	const _REAL rScale = _REAL(pvecrResampledData->Size()) / scaleWidth;
@@ -1248,19 +1293,12 @@ void CDRMPlot::SetInpSpecWaterf(CVector<_REAL>& vecrData, CVector<_REAL>&)
 		imageData[i] = color.rgb();
 	}
 
-#if QT_VERSION >= 0x040600
 	/* Scroll Canvas */
 	Canvas.scroll(0, 1, 0, 0, CanvSize.width(), CanvSize.height(), 0);
-#endif
 
 	/* Paint new line (top line) */
 	QPainter Painter;
 	if (Painter.begin(&Canvas)) {
-#if QT_VERSION < 0x040600
-		/* Scroll Canvas */
-		QPixmap tmpCanvas = Canvas;
-		Painter.drawPixmap(0, 1, tmpCanvas, 0, 0, CanvSize.width(), CanvSize.height()-1);
-#endif
 		/* Draw pixel line to canvas */
 		Painter.drawImage(0, 0, Image);
 
@@ -1274,9 +1312,9 @@ void CDRMPlot::SetupFACConst()
 {
 	/* Init chart for FAC constellation */
 	plot->setTitle(tr("FAC Constellation"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Set fixed scale */
@@ -1304,9 +1342,9 @@ void CDRMPlot::SetupSDCConst(const ECodScheme eNewCoSc)
 {
 	/* Init chart for SDC constellation */
 	plot->setTitle(tr("SDC Constellation"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Set fixed scale */
@@ -1334,9 +1372,9 @@ void CDRMPlot::SetupMSCConst(const ECodScheme eNewCoSc)
 {
 	/* Init chart for MSC constellation */
 	plot->setTitle(tr("MSC Constellation"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Set fixed scale */
@@ -1364,9 +1402,9 @@ void CDRMPlot::SetupAllConst()
 {
 	/* Init chart for constellation */
 	plot->setTitle(tr("MSC / SDC / FAC Constellation"));
-	plot->enableAxis(QwtPlot::yRight, FALSE);
+	plot->enableAxis(QwtPlot::yRight, false);
 	plot->setAxisTitle(QwtPlot::xBottom, tr("Real"));
-	plot->enableAxis(QwtPlot::yLeft, TRUE);
+	plot->enableAxis(QwtPlot::yLeft, true);
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Imaginary"));
 
 	/* Set fixed scale */
@@ -1425,6 +1463,7 @@ void CDRMPlot::SetupAllConst()
 	curve1.attach(plot);
 	curve2.attach(plot);
 	curve3.attach(plot);
+	PlotSetLegendFont();
 }
 
 void CDRMPlot::SetGrid(double div, int step, int substep)
@@ -1488,7 +1527,11 @@ void CDRMPlot::OnSelected(const QPointF &pos)
 #endif
 {
 	/* Send normalized frequency to receiver */
-	const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom).upperBound();
+#if QWT_VERSION < 0x060100
+	const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom)->UPPERBOUND();
+#else
+	const double dMaxxBottom = plot->axisScaleDiv(QwtPlot::xBottom).UPPERBOUND();
+#endif
 
 	/* Check if dMaxxBottom is valid */
 	if (dMaxxBottom > 0.0)
@@ -1497,7 +1540,9 @@ void CDRMPlot::OnSelected(const QPointF &pos)
 		double dFreq = pos.x();
 
 		/* Emit signal containing normalized selected frequency */
-		emit xAxisValSet(dFreq / dMaxxBottom);
+		emit xAxisValSet(
+            pDRMRec->ConvertFrequency(dFreq * 1000, true) /
+            pDRMRec->ConvertFrequency(dMaxxBottom * 1000, true));
 	}
 }
 
@@ -1652,9 +1697,5 @@ void CDRMPlot::AddWhatsThisHelpChar(const ECharType NCharType)
 	}
 
 	/* Main plot */
-#if QT_VERSION < 0x040000
-	QWhatsThis::add(plot, strCurPlotHelp);
-#else
 	plot->setWhatsThis(strCurPlotHelp);
-#endif
 }

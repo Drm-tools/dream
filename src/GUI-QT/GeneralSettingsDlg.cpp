@@ -27,30 +27,23 @@
 
 #include "DialogUtil.h"
 #include "GeneralSettingsDlg.h"
-#include <qlineedit.h>
-#include <qpushbutton.h>
-#include <qvalidator.h>
-#include <qmessagebox.h>
-#include <qcheckbox.h>
-#if QT_VERSION < 0x040000
-# include <qwhatsthis.h>
-# define toString(s) s.latin1()
-# define toUpper(s) s.upper()
-#else
-# include <QShowEvent>
-# include <QHideEvent>
-# define toString(s) s.toUtf8().constData()
-# define toUpper(s) s.toUpper()
-#endif
-
+#include <QLineEdit>
+#include <QPushButton>
+#include <QValidator>
+#include <QMessageBox>
+#include <QCheckBox>
+#include <QShowEvent>
+#include <QHideEvent>
 
 /* Implementation *************************************************************/
 
 GeneralSettingsDlg::GeneralSettingsDlg(CParameter& NParam, CSettings& NSettings,
-                                       QWidget* parent, const char* name, bool modal, Qt::WindowFlags f) :
-    CGeneralSettingsDlgBase(parent, name, modal, f),
-    Parameters(NParam),Settings(NSettings)
+    QWidget* parent) :
+    QDialog(parent), Parameters(NParam), Settings(NSettings)
 {
+    setAttribute(Qt::WA_QuitOnClose, false);
+    setupUi(this);
+
     /* Set the validators fro the receiver coordinate */
     EdtLatitudeDegrees->setValidator(new QIntValidator(0, 90, EdtLatitudeDegrees));
     EdtLongitudeDegrees->setValidator(new QIntValidator(0, 180, EdtLongitudeDegrees));
@@ -104,7 +97,7 @@ void GeneralSettingsDlg::CheckSN(const QString& NewText)
 {
     /* Only S or N char are accepted */
 
-    const QString sVal = toUpper(NewText);
+    const QString sVal = NewText.toUpper();
 
     if (sVal != "S" && sVal != "N" && sVal != "")
         EdtLatitudeNS->setText("");
@@ -116,7 +109,7 @@ void GeneralSettingsDlg::CheckEW(const QString& NewText)
 {
     /* Only E or W char are accepted */
 
-    const QString sVal = toUpper(NewText);
+    const QString sVal = NewText.toUpper();
 
     if (sVal != "E" && sVal != "W" && sVal != "")
         EdtLongitudeEW->setText("");
@@ -135,38 +128,38 @@ void GeneralSettingsDlg::OnCheckBoxUseGPS()
 
 void GeneralSettingsDlg::ButtonOkClicked()
 {
-    _BOOLEAN bOK = TRUE;
-    _BOOLEAN bAllEmpty = TRUE;
-    _BOOLEAN bAllCompiled = FALSE;
+    bool bOK = true;
+    bool bAllEmpty = true;
+    bool bAllCompiled = false;
 
     /* Check the values and close the dialog */
 
-    if (ValidInput(EdtLatitudeDegrees) == FALSE)
+    if (ValidInput(EdtLatitudeDegrees) == false)
     {
-        bOK = FALSE;
+        bOK = false;
         QMessageBox::information(this, "Dream",
                                  tr("Latitude value must be in the range 0 to 90")
                                  ,QMessageBox::Ok);
     }
-    else if (ValidInput(EdtLongitudeDegrees) == FALSE)
+    else if (ValidInput(EdtLongitudeDegrees) == false)
     {
-        bOK = FALSE;
+        bOK = false;
 
         QMessageBox::information(this, "Dream",
                                  tr("Longitude value must be in the range 0 to 180")
                                  ,QMessageBox::Ok);
     }
-    else if (ValidInput(EdtLongitudeMinutes) == FALSE
-             || ValidInput(EdtLatitudeMinutes) == FALSE)
+    else if (ValidInput(EdtLongitudeMinutes) == false
+             || ValidInput(EdtLatitudeMinutes) == false)
     {
-        bOK = FALSE;
+        bOK = false;
 
         QMessageBox::information(this, "Dream",
                                  tr("Minutes value must be in the range 0 to 59")
                                  ,QMessageBox::Ok);
     }
 
-    if (bOK == TRUE)
+    if (bOK)
     {
         /* Check if all coordinates are empty */
 
@@ -189,7 +182,7 @@ void GeneralSettingsDlg::ButtonOkClicked()
 
         if (!bAllEmpty && !bAllCompiled)
         {
-            bOK = FALSE;
+            bOK = false;
 
             QMessageBox::information(this, "Dream",
                                      tr("Compile all fields on receiver coordinates")
@@ -197,7 +190,7 @@ void GeneralSettingsDlg::ButtonOkClicked()
         }
     }
 
-    if (bOK == TRUE)
+    if (bOK)
     {
         /* save current settings */
 
@@ -225,11 +218,11 @@ void GeneralSettingsDlg::ButtonOkClicked()
             Parameters.gps_data.set &= ~LATLON_SET;
         }
 
-        string host =  toString(LineEditGPSHost->text());
+        string host = LineEditGPSHost->text().toUtf8().constData();
         if(Parameters.gps_host != host)
             Parameters.restart_gpsd = true;
         Parameters.gps_host=host;
-        string port = toString(LineEditGPSPort->text());
+        string port = LineEditGPSPort->text().toUtf8().constData();
         if(Parameters.gps_port != port)
             Parameters.restart_gpsd = true;
         Parameters.gps_port=port;
@@ -240,7 +233,7 @@ void GeneralSettingsDlg::ButtonOkClicked()
     }
 }
 
-_BOOLEAN GeneralSettingsDlg::ValidInput(const QLineEdit* le)
+bool GeneralSettingsDlg::ValidInput(const QLineEdit* le)
 {
     QString sText;
 
@@ -249,7 +242,7 @@ _BOOLEAN GeneralSettingsDlg::ValidInput(const QLineEdit* le)
     sText = le->text();
 
     if (sText == "")
-        return TRUE;
+        return true;
     else
     {
         int iPosCursor = 0;
@@ -262,22 +255,22 @@ QString GeneralSettingsDlg::ExtractDigits(const QString strStr, const int iStart
 {
     QString sVal;
     QChar ch;
-    _BOOLEAN bStop;
+    bool bStop;
 
     /* Extract the first iDigits from position iStart */
 
     sVal = "";
-    bStop = FALSE;
+    bStop = false;
 
     for (int i = iStart - 1 ; i <= iStart + iDigits - 1; i++)
     {
-        if (bStop == FALSE)
+        if (bStop == false)
         {
             ch = strStr.at(i);
-            if (ch.isDigit() == TRUE)
+            if (ch.isDigit())
                 sVal = sVal + ch;
             else
-                bStop = TRUE;
+                bStop = true;
         }
     }
     return sVal;
@@ -363,10 +356,6 @@ void GeneralSettingsDlg::AddWhatsThisHelp()
            " of the target column if the receiver coordinates (latitude and longitude)"
            " are inside the target area of this transmission.<br>"
            "Receiver coordinates are also saved into the Log file.");
-#if QT_VERSION < 0x040000
-    QWhatsThis::add(this, str);
-#else
     setWhatsThis(str);
-#endif
 }
 

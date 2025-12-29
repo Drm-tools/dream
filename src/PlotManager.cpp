@@ -77,9 +77,7 @@ CPlotManager::UpdateParamHistories(ERecState eReceiverState)
         _REAL rMeanDelay = (Parameters.rMinDelay +	Parameters.rMaxDelay) / 2.0;
         Parameters.Unlock();
 
-#ifdef USE_QT_GUI
-        MutexHist.lock();
-#endif
+        MutexHist.Lock();
 
         /* Frequency offset tracking values */
         vecrFreqSyncValHist.AddEnd(rFreqOffsetTrack * Parameters.GetSigSampleRate());
@@ -116,9 +114,7 @@ CPlotManager::UpdateParamHistories(ERecState eReceiverState)
             rSumSNRHist = (_REAL) 0.0;
         }
 
-#ifdef USE_QT_GUI
-        MutexHist.unlock();
-#endif
+        MutexHist.Unlock();
     }
 }
 
@@ -137,9 +133,7 @@ CPlotManager::UpdateParamHistoriesRSIIn()
     _REAL rRdop = Parameters.rRdop;
     Parameters.Unlock();
 
-#ifdef USE_QT_GUI
-    MutexHist.lock();
-#endif
+    MutexHist.Lock();
 
     /* Apply averaged values to the history vectors */
     vecrLenIRHist.AddEnd(rDelay);
@@ -156,9 +150,7 @@ CPlotManager::UpdateParamHistoriesRSIIn()
     rSumDopplerHist = (_REAL) 0.0;
     rSumSNRHist = (_REAL) 0.0;
 
-#ifdef USE_QT_GUI
-    MutexHist.unlock();
-#endif
+    MutexHist.Unlock();
 }
 
 void
@@ -182,9 +174,7 @@ CPlotManager::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
     vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
     /* Lock resources */
-#ifdef USE_QT_GUI
-    MutexHist.lock();
-#endif
+    MutexHist.Lock();
 
     /* Simply copy history buffers in output buffers */
     vecrFreqOffs = vecrFreqSyncValHist;
@@ -195,9 +185,7 @@ CPlotManager::GetFreqSamOffsHist(CVector < _REAL > &vecrFreqOffs,
         vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rTs;
 
     /* Release resources */
-#ifdef USE_QT_GUI
-    MutexHist.unlock();
-#endif
+    MutexHist.Unlock();
 }
 
 void
@@ -220,9 +208,7 @@ CPlotManager::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
     Parameters.Unlock();
 
     /* Lock resources */
-#ifdef USE_QT_GUI
-    MutexHist.lock();
-#endif
+    MutexHist.Lock();
 
     /* Simply copy history buffers in output buffers */
     vecrLenIR = vecrLenIRHist;
@@ -234,9 +220,7 @@ CPlotManager::GetDopplerDelHist(CVector < _REAL > &vecrLenIR,
         vecrScale[i] = (i - LEN_HIST_PLOT_SYNC_PARMS + 1) * rDRMFrameDur / 60;
 
     /* Release resources */
-#ifdef USE_QT_GUI
-    MutexHist.unlock();
-#endif
+    MutexHist.Unlock();
 }
 
 void
@@ -258,9 +242,7 @@ CPlotManager::GetSNRHist(CVector < _REAL > &vecrSNR,
     vecrScale.Init(LEN_HIST_PLOT_SYNC_PARMS, (_REAL) 0.0);
 
     /* Lock resources */
-#ifdef USE_QT_GUI
-    MutexHist.lock();
-#endif
+    MutexHist.Lock();
 
     /* Simply copy history buffer in output buffer */
     vecrSNR = vecrSNRHist;
@@ -277,9 +259,7 @@ CPlotManager::GetSNRHist(CVector < _REAL > &vecrSNR,
     }
 
     /* Release resources */
-#ifdef USE_QT_GUI
-    MutexHist.unlock();
-#endif
+    MutexHist.Unlock();
 }
 
 void
@@ -300,8 +280,8 @@ CPlotManager::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 
         // starting frequency and frequency step as defined in TS 102 349
         // plot expects the scale values in kHz
-        _REAL f = _REAL(-7.875) + VIRTUAL_INTERMED_FREQ/_REAL(1000.0);
-        const _REAL fstep =_REAL(0.1875);
+        _REAL f = -7.875 + VIRTUAL_INTERMED_FREQ / 1000.0;
+        const _REAL fstep = 0.1875;
 
         for (int i=0; i<iVectorLen; i++)
         {

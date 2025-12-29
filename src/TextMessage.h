@@ -96,18 +96,18 @@ protected:
 class CTextMessSegment
 {
 public:
-    CTextMessSegment() : byData(BYTES_PER_SEG_TEXT_MESS), bIsOK(FALSE),
+    CTextMessSegment() : byData(BYTES_PER_SEG_TEXT_MESS), bIsOK(false),
             iNumBytes(0) {}
 
     CVector<_BYTE>	byData;
-    _BOOLEAN		bIsOK;
+    bool		bIsOK;
     int				iNumBytes;
 };
 
 class CTextMessageDecoder
 {
 public:
-    CTextMessageDecoder() {}
+    CTextMessageDecoder(bool b):decodeSpecial(b) {}
     virtual ~CTextMessageDecoder() {}
 
     void Decode(CVector<_BINARY>& pData);
@@ -121,24 +121,26 @@ protected:
 
     CVector<_BINARY>	biStreamBuffer;
 
-    std::string*			pstrText;
+    bool		decodeSpecial;
 
-    _BINARY				biCommandFlag;
+    std::string*		pstrText;
 
-    _BINARY				biFirstFlag;
-    _BINARY				biLastFlag;
-    _BYTE				byCommand;
-    _BYTE				bySegmentID;
-    _BINARY				biToggleBit;
-    _BYTE				byLengthBody;
-    int					iBitCount;
-    int					iNumSegments;
+    _BINARY		biCommandFlag;
 
-    _BINARY				biOldToggleBit;
+    _BINARY		biFirstFlag;
+    _BINARY		biLastFlag;
+    _BYTE		byCommand;
+    _BYTE		bySegmentID;
+    _BINARY		biToggleBit;
+    _BYTE		byLengthBody;
+    int			iBitCount;
+    int			iNumSegments;
+
+    _BINARY		biOldToggleBit;
 
     CTextMessSegment	Segment[MAX_NUM_SEG_TEXT_MESSAGE];
 
-    CCRC				CRCObject;
+    CCRC		CRCObject;
 };
 
 

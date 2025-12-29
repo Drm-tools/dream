@@ -74,7 +74,7 @@ void CTagItemDecoderProTy::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
 	protocols.push_back(p);
 
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 string CTagItemDecoderLoFrCnt::GetTagName(void) {return "dlfc";}
@@ -86,7 +86,7 @@ void CTagItemDecoderLoFrCnt::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLe
 
 	dlfc = (uint32_t) vecbiTag.Separate(32);
 
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 
@@ -108,7 +108,7 @@ void CTagItemDecoderFAC::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
 
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 
@@ -133,7 +133,7 @@ void CTagItemDecoderSDC::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	for (int i = 0; i < iSDCDataSize; i++)
 		vecbidata.Enqueue(vecbiTag.Separate(1), 1);
 
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 
@@ -168,7 +168,7 @@ void CTagItemDecoderRobMod::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen
 		break;
 	}
 
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 
@@ -182,7 +182,7 @@ string CTagItemDecoderStr::GetTagName(void)
 	case 3: return "str3";
 	default: return "str?";
 	}
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 void CTagItemDecoderStr::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -196,7 +196,7 @@ void CTagItemDecoderStr::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 		vecbidata.
 			Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 	}
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 
@@ -216,21 +216,25 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 	vecbiTag.Separate(4);
 
 	/* Protection level for part A */ // TODO
-	vecbiTag.Separate(2);
+    CMSCProtLev MSCProtLev;
+    MSCProtLev.iPartA = vecbiTag.Separate(2);
 
 	/* Protection level for part B */ // TODO
-	vecbiTag.Separate(2);
+    MSCProtLev.iPartB = vecbiTag.Separate(2);
 
 	/* Get stream parameters */
 
 	/* Determine if hierarchical modulation is used */ // TODO
-	_BOOLEAN bHierarchical = FALSE;
+	bool bHierarchical = false;
 
+    // don't store these if sdci tag packet signals zero length - dr111 bug
+    // rely on the sdc_ tag packet to do something sensible.
+    pParameter->Lock();
 	for (int i = 0; i < iNumStreams; i++)
 	{
 		/* In case of hirachical modulation stream 0 describes the protection
 		   level and length of hierarchical data */
-		if ((i == 0) && (bHierarchical == TRUE))
+		if ((i == 0) && (bHierarchical))
 		{
 			/* Protection level for hierarchical */ // TODO
 			vecbiTag.Separate(2);
@@ -238,19 +242,28 @@ void CTagItemDecoderSDCChanInf::DecodeTag(CVector<_BINARY>& vecbiTag, const int 
 			/* rfu */
 			vecbiTag.Separate(10);
 
-			/* Data length for hierarchical */ // TODO
-			vecbiTag.Separate(12);
-		}
+            /* Data length for hierarchical */
+            int iLenPartB = vecbiTag.Separate(12);
+
+            /* Set new parameters in global struct. Length of part A is zero
+               with hierarchical modulation */
+            if(iLenPartB>0)
+                pParameter->SetStreamLen(i, 0, iLenPartB);
+        }
 		else
 		{
-			/* Data length for part A */ // TODO
-			vecbiTag.Separate(12);
+            /* Data length for part A */
+            int iLenPartA = vecbiTag.Separate(12);
 
-			/* Data length for part B */ // TODO
-			vecbiTag.Separate(12);
-		}
+            /* Data length for part B */
+            int iLenPartB = vecbiTag.Separate(12);
+
+            if(iLenPartA>0 || iLenPartB>0)
+                pParameter->SetStreamLen(i, iLenPartA, iLenPartB);
+        }
 	}
-	SetReady(TRUE);
+    pParameter->Unlock();
+	SetReady(true);
 }
 
 string CTagItemDecoderRxDemodMode::GetTagName(void) {return "rdmo";}
@@ -269,7 +282,7 @@ void CTagItemDecoderRxDemodMode::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 	else
 		eMode = RM_AM;
 
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 string CTagItemDecoderAMAudio::GetTagName(void) { return "rama";}
@@ -278,20 +291,10 @@ void CTagItemDecoderAMAudio::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 {
 
 	/* Audio coding */
-	int iVal = vecbiTag.Separate(2);
-	switch (iVal)
-	{
-		case 0: AudioParams.eAudioCoding = CAudioParam::AC_AAC;
-			break;
-		case 1: AudioParams.eAudioCoding = CAudioParam::AC_CELP; /* 01 */
-			break;
-		case 2: AudioParams.eAudioCoding = CAudioParam::AC_HVXC; /* 10 */
-			break;
-		default: AudioParams.eAudioCoding = CAudioParam::AC_AAC;/* reserved */
-	}
+    AudioParams.eAudioCoding = CAudioParam::EAudCod(vecbiTag.Separate(2));
 
 	/* SBR flag */
-	iVal = vecbiTag.Separate(1);
+    uint32_t iVal = vecbiTag.Separate(1);
 	AudioParams.eSBRFlag = (iVal == 1 ? CAudioParam::SB_USED : CAudioParam::SB_NOT_USED);
 	/* Audio mode */
 	iVal = vecbiTag.Separate(2);
@@ -304,14 +307,32 @@ void CTagItemDecoderAMAudio::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 	}
 	/* Audio sampling rate */
 	iVal = vecbiTag.Separate(3);
-	switch (iVal)
-	{
-		case 0: AudioParams.eAudioSamplRate = CAudioParam::AS_8_KHZ; break;
-		case 1: AudioParams.eAudioSamplRate = CAudioParam::AS_12KHZ; break;
-		case 2: AudioParams.eAudioSamplRate = CAudioParam::AS_16KHZ; break;
-		case 3: AudioParams.eAudioSamplRate = CAudioParam::AS_24KHZ; break;
-		default: AudioParams.eAudioSamplRate = CAudioParam::AS_24KHZ;
-	}
+    if(AudioParams.eAudioCoding == CAudioParam::AC_xHE_AAC) {
+        switch (iVal)
+        {
+            case 0: AudioParams.eAudioSamplRate = CAudioParam::AS_9_6KHZ; break;
+            case 1: AudioParams.eAudioSamplRate = CAudioParam::AS_12KHZ; break;
+            case 2: AudioParams.eAudioSamplRate = CAudioParam::AS_16KHZ; break;
+            case 3: AudioParams.eAudioSamplRate = CAudioParam::AS_19_2KHZ; break;
+            case 4: AudioParams.eAudioSamplRate = CAudioParam::AS_24KHZ; break;
+            case 5: AudioParams.eAudioSamplRate = CAudioParam::AS_32KHZ; break;
+            case 6: AudioParams.eAudioSamplRate = CAudioParam::AS_38_4KHZ; break;
+            case 7: AudioParams.eAudioSamplRate = CAudioParam::AS_48KHZ; break;
+        }
+    }
+    else {
+        switch (iVal)
+        {
+            case 1: AudioParams.eAudioSamplRate = CAudioParam::AS_12KHZ; break;
+            case 3: AudioParams.eAudioSamplRate = CAudioParam::AS_24KHZ; break;
+            case 5: AudioParams.eAudioSamplRate = CAudioParam::AS_48KHZ; break;
+            case 7: // Old OPUS EXPERIMENTAL
+                AudioParams.eAudioCoding = CAudioParam::AC_OPUS;
+                AudioParams.eAudioMode = CAudioParam::AM_STEREO;
+                AudioParams.eAudioSamplRate = CAudioParam::AS_48KHZ;
+                break;
+        }
+    }
 	// coder field and some rfus (TODO: code the coder field correctly for all cases)
 	vecbiTag.Separate(8);
 	/* Copy stream data */
@@ -320,7 +341,7 @@ void CTagItemDecoderAMAudio::DecodeTag(CVector<_BINARY>& vecbiTag, int iLen)
 	for (int i = 0; i < (iLen-16) / SIZEOF__BYTE; i++)
 		vecbidata.Enqueue(vecbiTag.Separate(SIZEOF__BYTE), SIZEOF__BYTE);
 
-	SetReady(TRUE);
+	SetReady(true);
 }
 
 string CTagItemDecoderInfo::GetTagName(void) {return "info";}
@@ -332,5 +353,5 @@ void CTagItemDecoderInfo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 	for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
 		strInfo += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 
-	SetReady(TRUE);
+	SetReady(true);
 }

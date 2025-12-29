@@ -64,26 +64,16 @@ void CTagItemDecoderRsta::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 {
     if (iLen != 32)
         return;
-    uint8_t sync = (uint8_t)vecbiTag.Separate(8);
-    uint8_t fac = (uint8_t)vecbiTag.Separate(8);
-    uint8_t sdc = (uint8_t)vecbiTag.Separate(8);
-    uint8_t audio = (uint8_t)vecbiTag.Separate(8);
-    if(sync==0)
-        pParameter->ReceiveStatus.TSync.SetStatus(RX_OK);
-    else
-        pParameter->ReceiveStatus.TSync.SetStatus(CRC_ERROR);
-    if(fac==0)
-        pParameter->ReceiveStatus.FAC.SetStatus(RX_OK);
-    else
-        pParameter->ReceiveStatus.FAC.SetStatus(CRC_ERROR);
-    if(sdc==0)
-        pParameter->ReceiveStatus.SDC.SetStatus(RX_OK);
-    else
-        pParameter->ReceiveStatus.SDC.SetStatus(CRC_ERROR);
-    if(audio==0)
-        pParameter->ReceiveStatus.Audio.SetStatus(RX_OK);
-    else
-        pParameter->ReceiveStatus.Audio.SetStatus(CRC_ERROR);
+    uint8_t sync = uint8_t(vecbiTag.Separate(8));
+    uint8_t fac = uint8_t(vecbiTag.Separate(8));
+    uint8_t sdc = uint8_t(vecbiTag.Separate(8));
+    uint8_t audio = uint8_t(vecbiTag.Separate(8));
+    pParameter->ReceiveStatus.TSync.SetStatus((sync==0)?RX_OK:CRC_ERROR);
+    pParameter->ReceiveStatus.FAC.SetStatus((fac==0)?RX_OK:CRC_ERROR);
+    pParameter->ReceiveStatus.SDC.SetStatus((sdc==0)?RX_OK:CRC_ERROR);
+
+    unsigned iShortID = unsigned(pParameter->GetCurSelAudioService());
+    pParameter->AudioComponentStatus[iShortID].SetStatus((audio==0)?RX_OK:CRC_ERROR);
 }
 
 void CTagItemDecoderRwmf::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
@@ -182,19 +172,19 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
         break;
     case 1:
         gps_data.set=STATUS_SET;
-        gps_data.status=1;
+        gps_data.fix.status=1;
         break;
     case 2:
         gps_data.set=STATUS_SET;
-        gps_data.status=2;
+        gps_data.fix.status=2;
         break;
     case 3:
         gps_data.set=STATUS_SET;
-        gps_data.status=0;
+        gps_data.fix.status=0;
         break;
     case 0xff:
         gps_data.set=0;
-        gps_data.status=0;
+        gps_data.fix.status=0;
         break;
     default:
         cerr << "error decoding rgps" << endl;
@@ -265,7 +255,8 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
         else
             unsetenv("TZ");
 #endif
-        gps_data.fix.time = t;
+        gps_data.fix.time.tv_sec = t;
+        gps_data.fix.time.tv_nsec = 0;
         gps_data.set |= TIME_SET;
     }
 
@@ -293,7 +284,7 @@ void CTagItemDecoderCact::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
 
     const int iNewState = vecbiTag.Separate(8) - '0';
 
-    if (pDRMReceiver == NULL)
+    if (pDRMReceiver == nullptr)
         return;
 
     // TODO pDRMReceiver->SetState(iNewState);
@@ -306,7 +297,7 @@ void CTagItemDecoderCfre::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     if (iLen != 32)
         return;
 
-    if (pDRMReceiver == NULL)
+    if (pDRMReceiver == nullptr)
         return;
 
     const int iNewFrequency = vecbiTag.Separate(32);
@@ -323,7 +314,7 @@ void CTagItemDecoderCdmo::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     for (int i = 0; i < iLen / SIZEOF__BYTE; i++)
         s += (_BYTE) vecbiTag.Separate(SIZEOF__BYTE);
 
-    if (pDRMReceiver == NULL)
+    if (pDRMReceiver == nullptr)
         return;
 
     if(s == "drm_")
@@ -345,7 +336,7 @@ void CTagItemDecoderCrec::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     char c3 = (char) vecbiTag.Separate(SIZEOF__BYTE);
     char c4 = (char) vecbiTag.Separate(SIZEOF__BYTE);
 
-    if (pDRMReceiver == NULL)
+    if (pDRMReceiver == nullptr)
         return;
 
     if(s == "st")
@@ -360,7 +351,7 @@ void CTagItemDecoderCpro::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
         return;
 
     char c = char(vecbiTag.Separate(SIZEOF__BYTE));
-    if (pRSISubscriber != NULL)
+    if (pRSISubscriber != nullptr)
         pRSISubscriber->SetProfile(c);
 }
 /* TODO: other control tag items */

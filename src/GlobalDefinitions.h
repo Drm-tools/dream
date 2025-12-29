@@ -26,19 +26,15 @@
  *
 \******************************************************************************/
 
-#if !defined(DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_)
-#define DEF_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
+#ifndef GLOBALDEFINITIONS_H
+#define GLOBALDEFINITIONS_H
 
 #include <complex>
 #include <string>
 #include <cstdio>
+#include <limits>
 #include <cmath>
-#ifdef HAVE_CONFIG_H
-# include "config.h"
-#endif
-
 #include "tables/TableDRMGlobal.h"
-
 
 /* Definitions ****************************************************************/
 /* When you define the following flag, a directory called
@@ -47,29 +43,15 @@
 #define _DEBUG_
 #undef _DEBUG_
 
-#ifdef _WIN32 /* For Windows set flags here, otherwise it is set by configure */
-
-# undef NOMINMAX
-# define NOMINMAX 1
-
-# define DLL_EXPORT 1
-//# undef DLL_EXPORT 1
-
-#endif /* _WIN32 */
-
 /* set sensible defaults for QT */
-#ifndef USE_NO_QT
+#ifdef QT_CORE_LIB
 # include <qglobal.h>
+# if QT_VERSION < 0x040600
+#  error Qt version too old, need at least Qt 4.6
+# endif
+#else
+# define qDebug(...) do {} while (0)
 #endif
-
-/* Standard definitions */
-#ifndef TRUE
-# define TRUE							1
-#endif
-#ifndef FALSE
-# define FALSE							0
-#endif
-
 
 /* Choose algorithms -------------------------------------------------------- */
 /* There are two algorithms available for frequency offset estimation for
@@ -103,59 +85,20 @@
    are used as new pilots, too */
 #undef USE_DD_WIENER_FILT_TIME
 
-
 /* Define the application specific data-types ------------------------------- */
 typedef	double							_REAL;
-typedef	std::complex<_REAL>					_COMPLEX;
+typedef	std::complex<_REAL>				_COMPLEX;
 typedef short							_SAMPLE;
 typedef unsigned char					_BYTE;
-typedef bool							_BOOLEAN;
 
 // bool seems not to work with linux TODO: Fix Me!
 typedef unsigned char/*bool*/			_BINARY;
 
-#if HAVE_STDINT_H
-# include <stdint.h>
-#elif HAVE_INTTYPES_H
-# include <inttypes.h>
-#elif defined(_WIN32)
-# ifndef HAVE_INT8_T
-#  define HAVE_INT8_T 1
-typedef signed char int8_t;
-# endif
-# ifndef HAVE_INT16_T
-#  define HAVE_INT16_T 1
-typedef signed __int16 int16_t;
-# endif
-# ifndef HAVE_INT32_T
-#  define HAVE_INT32_T 1
-typedef signed __int32 int32_t;
-# endif
-typedef unsigned char uint8_t;
-# ifndef HAVE_U_INT16_T
-#  define HAVE_U_INT16_T 1
-typedef unsigned __int16 uint16_t;
-# endif
-# ifndef HAVE_U_INT32_T
-#  define HAVE_U_INT32_T 1
-typedef unsigned __int32 uint32_t;
-# endif
-typedef signed __int64 int64_t;
-typedef unsigned __int64 uint64_t;
-#else
-typedef signed char int8_t;
-typedef unsigned char uint8_t;
-typedef signed int int16_t;
-typedef unsigned int uint16_t;
-typedef signed long int32_t;
-typedef unsigned long uint32_t;
-typedef signed long long int64_t;
-typedef unsigned long long uint64_t;
-#endif
+#include <cstdint>
 
 /* Define type-specific information */
 #define SIZEOF__BYTE					8
-#define _MAXSHORT						32767
+#define _MAXSHORT						std::numeric_limits<int16_t>::max()
 #define _MAXREAL						((_REAL) 3.4e38) /* Max for float */
 
 #ifdef USE_ERASURE_FOR_FASTER_ACQ
@@ -200,21 +143,17 @@ typedef unsigned int					_MESSAGE_IDENT;
 enum ESpecOcc {SO_0, SO_1, SO_2, SO_3, SO_4, SO_5}; /* SO: Spectrum Occupancy */
 enum ERobMode {RM_ROBUSTNESS_MODE_A, RM_ROBUSTNESS_MODE_B,
                RM_ROBUSTNESS_MODE_C, RM_ROBUSTNESS_MODE_D,
+               RM_ROBUSTNESS_MODE_E,
                RM_NO_MODE_DETECTED
               }; /* RM: Robustness Mode */
 
-
 /* Constants ---------------------------------------------------------------- */
-const _REAL crPi = ((_REAL) 3.14159265358979323846);
-
+const _REAL crPi = M_PI;
 
 #define S9_DBUV 34.0 /* S9 in dBuV for converting HamLib S-meter readings to RSCI format */
 
 /* Define a number for the case: log10(0), which would lead to #inf */
-#define RET_VAL_LOG_0					((_REAL) -200.0)
-
-
-
+#define RET_VAL_LOG_0					(-200.0)
 
 /* Classes ********************************************************************/
 /* For metric */
@@ -238,18 +177,10 @@ public:
 };
 
 
-#if QT_VERSION >= 0x040000 || defined(USE_QT_GUI)
-#if QT_VERSION < 0x040000
-# if QT_VERSION < 0x030000
-#  include <qthread.h>
-# else
-#  include <qmutex.h>
-#  include <qwaitcondition.h>
-# endif
-#else
+#ifdef QT_CORE_LIB
 # include <QMutex>
 # include <QWaitCondition>
-#endif
+
 /* Mutex object to access data safely from different threads */
 
 class CMutex
@@ -272,7 +203,7 @@ public:
     void WakeOne() {
         WaitCond.wakeOne();
     }
-    _BOOLEAN Wait(CMutex* mutex, unsigned long time) {
+    bool Wait(CMutex* mutex, unsigned long time) {
         return WaitCond.wait(&mutex->Mutex, time);
     }
 protected:
@@ -293,7 +224,7 @@ class CWaitCondition
 {
 public:
     void WakeOne() {}
-    _BOOLEAN Wait(CMutex*, unsigned long) {return TRUE;}
+    bool Wait(CMutex*, unsigned long) {return true;}
 };
 
 #endif
@@ -320,22 +251,6 @@ public:
 };
 typedef CChanSimData<_REAL>		CChanSimDataMod; /* OFDM modulated signals */
 typedef CChanSimData<_COMPLEX>	CChanSimDataDemod; /* Demodulated signals */
-
-/* Path for simulation output and status files */
-#define SIM_OUT_FILES_PATH				"test/"
-
-
-/* Prototypes for global functions ********************************************/
-/* Posting a window message */
-//void PostWinMessage(const _MESSAGE_IDENT MessID, const int iMessageParam = 0);
-
-/* Debug error handling */
-void DebugError(const char* pchErDescr, const char* pchPar1Descr,
-                const double dPar1, const char* pchPar2Descr,
-                const double dPar2);
-
-void ErrorMessage(std::string strErrorString);
-
 
 /* Global functions ***********************************************************/
 /* Converting _REAL to _SAMPLE */

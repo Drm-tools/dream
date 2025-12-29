@@ -43,9 +43,9 @@ CAMDemodulation::CAMDemodulation() :
     rBPNormCentOffsTot(0.0),
     rvecZAM(), rvecADC(), rvecBDC(), rvecZFM(), rvecAFM(), rvecBFM(),
     iSymbolBlockSize(0),
-    bPLLIsEnabled(FALSE), bAutoFreqAcquIsEnabled(FALSE), eDemodType(DT_AM),
-    cOldVal(),
-    PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(), NoiRedType(NR_OFF),
+    bPLLIsEnabled(false), bAutoFreqAcquIsEnabled(false), eDemodType(DT_AM),
+    cOldVal(), eNoiRedType(NR_OFF), iNoiRedLevel(-12),
+    PLL(), Mixer(), FreqOffsAcq(), AGC(), NoiseReduction(),
     iFreeSymbolCounter(0), iAudSampleRate(0), iSigSampleRate(0), iBandwidth(0),
     iResOutBlockSize(0)
 {
@@ -85,7 +85,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& Parameters)
 
 
     /* Phase lock loop (PLL) ------------------------------------------------ */
-    if (bPLLIsEnabled == TRUE)
+    if (bPLLIsEnabled)
     {
         PLL.Process(rvecInpTmp);
 
@@ -139,7 +139,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& Parameters)
 
 
     /* Noise reduction -------------------------------------------------- */
-    if (NoiRedType != NR_OFF)
+    if (eNoiRedType != NR_OFF)
         NoiseReduction.Process(rvecInpTmp);
 
 
@@ -168,6 +168,7 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
     iSymbolBlockSize = Parameters.CellMappingTable.iSymbolBlockSize;
     iAudSampleRate = Parameters.GetAudSampleRate();
     iSigSampleRate = Parameters.GetSigSampleRate();
+    _REAL rIFCentreFrequency = Parameters.FrontEndParameters.rIFCentreFreq;
     Parameters.Unlock();
 
     /* SetFilterBW() can be called before InitInternal() and iSigSampleRate is defined,
@@ -186,7 +187,15 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
 
     /* Init frequency offset acquisition (start new acquisition) */
     FreqOffsAcq.Init(iSymbolBlockSize);
+    if(bAutoFreqAcquIsEnabled) 
+    {
     FreqOffsAcq.Start((CReal) 0.0); /* Search entire bandwidth */
+    }
+    else
+    {
+      rNormCurMixFreqOffs = rIFCentreFrequency / iSigSampleRate;
+      
+    }
 
     /* Init AGC */
     AGC.Init(iSigSampleRate, iSymbolBlockSize);
@@ -250,7 +259,7 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
     /* The output buffer is a cyclic buffer, we have to specify the total
        buffer size */
     iMaxOutputBlockSize = (int) ((_REAL) iAudSampleRate *
-                                 (_REAL) 0.4 /* 400ms */ * 2 /* for stereo */);
+                                 (_REAL) 0.4 /* 400ms */ * 2 /* for stereo */ * 2 /* to allow for different write/read sizes */);
 
     iInputBlockSize = iSymbolBlockSize;
 
@@ -263,6 +272,7 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
     /* Init audio resampler */
     ResampleObj.Init(iSymbolBlockSize,
         (_REAL) iAudSampleRate / iSigSampleRate);
+cout<<"iAudSampleRate="<<iAudSampleRate<<", iSigSampleRate="<<iSigSampleRate<<endl;
     vecTempResBufIn.Init(iSymbolBlockSize, (_REAL) 0.0);
     vecTempResBufOut.Init(iResOutBlockSize, (_REAL) 0.0);
 
@@ -374,7 +384,7 @@ void CAMDemodulation::SetAcqFreq(const CReal rNewNormCenter)
     /* Lock resources */
     Lock();
     {
-        if (bAutoFreqAcquIsEnabled == TRUE)
+        if (bAutoFreqAcquIsEnabled)
             FreqOffsAcq.Start(rNewNormCenter);
         else
             SetNormCurMixFreqOffs(rNewNormCenter / 2);
@@ -413,7 +423,7 @@ void CAMDemodulation::SetFilterBW(const int iNewBW)
     Unlock();
 }
 
-void CAMDemodulation::SetAGCType(const CAGC::EType eNewType)
+void CAMDemodulation::SetAGCType(const EAmAgcType eNewType)
 {
     /* Lock resources */
     Lock();
@@ -428,50 +438,48 @@ void CAMDemodulation::SetNoiRedType(const ENoiRedType eNewType)
     /* Lock resources */
     Lock();
     {
-        NoiRedType = eNewType;
+        eNoiRedType = eNewType;
 
-        switch (NoiRedType)
+        switch (eNoiRedType)
         {
+        case NR_OFF:
+            break;
+
         case NR_LOW:
-            NoiseReduction.SetNoiRedSpeex(false);
             NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_LOW);
             break;
 
         case NR_MEDIUM:
-            NoiseReduction.SetNoiRedSpeex(false);
             NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
             break;
 
         case NR_HIGH:
-            NoiseReduction.SetNoiRedSpeex(false);
             NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
             break;
 
-        case NR_SPEEX_LOW:
-            NoiseReduction.SetNoiRedSpeex(true);
-            NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
-            break;
-
-        case NR_SPEEX_MEDIUM:
-            NoiseReduction.SetNoiRedSpeex(true);
-            NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_MEDIUM);
-            break;
-
-        case NR_SPEEX_HIGH:
-            NoiseReduction.SetNoiRedSpeex(true);
-            NoiseReduction.SetNoiRedDegree(CNoiseReduction::NR_HIGH);
-            break;
-
-        case NR_OFF:
+        case NR_SPEEX:
+            NoiseReduction.SetNoiRedDegree((CNoiseReduction::ENoiRedDegree)iNoiRedLevel);
             break;
         }
     }
     Unlock();
 }
 
-_BOOLEAN CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
+void CAMDemodulation::SetNoiRedLevel(const int iNewLevel)
 {
-    _BOOLEAN bReturn;
+    /* Lock resources */
+    Lock();
+    {
+        iNoiRedLevel = iNewLevel;
+        if (eNoiRedType == NR_SPEEX)
+            NoiseReduction.SetNoiRedDegree((CNoiseReduction::ENoiRedDegree)iNoiRedLevel);
+    }
+    Unlock();
+}
+
+bool CAMDemodulation::GetPLLPhase(CReal& rPhaseOut)
+{
+    bool bReturn;
 
     /* Lock resources */
     Lock();
@@ -622,7 +630,7 @@ void CAGC::Init(int iNewSampleRate, int iNewBlockSize)
     rAvAmplEst = DES_AV_AMPL_AM_SIGNAL / AM_AMPL_CORR_FACTOR;
 }
 
-void CAGC::SetType(const EType eNewType)
+void CAGC::SetType(const EAmAgcType eNewType)
 {
     /* Set internal parameter */
     eType = eNewType;
@@ -656,13 +664,13 @@ void CAGC::SetType(const EType eNewType)
 /******************************************************************************\
 * Frequency offset acquisition                                                 *
 \******************************************************************************/
-_BOOLEAN CFreqOffsAcq::Run(const CVector<_REAL>& vecrInpData)
+bool CFreqOffsAcq::Run(const CVector<_REAL>& vecrInpData)
 {
     /* Init return flag */
-    _BOOLEAN bNewAcqResAvailable = FALSE;
+    bool bNewAcqResAvailable = false;
 
     /* Only do new acquisition if requested */
-    if (bAcquisition == TRUE)
+    if (bAcquisition)
     {
         /* Add new symbol in history (shift register) */
         vecrFFTHistory.AddEnd(vecrInpData, iBlockSize);
@@ -693,8 +701,8 @@ _BOOLEAN CFreqOffsAcq::Run(const CVector<_REAL>& vecrInpData)
 
             /* Reset acquisition flag and Set return flag to show that new
                result is available*/
-            bAcquisition = FALSE;
-            bNewAcqResAvailable = TRUE;
+            bAcquisition = false;
+            bNewAcqResAvailable = true;
         }
     }
 
@@ -749,7 +757,7 @@ void CFreqOffsAcq::Start(const CReal rNewNormCenter)
     }
 
     /* Set flag for aquisition */
-    bAcquisition = TRUE;
+    bAcquisition = true;
     iAquisitionCounter = NUM_BLOCKS_CARR_ACQUISITION;
 }
 
@@ -770,58 +778,55 @@ void CFreqOffsAcq::Start(const CReal rNewNormCenter)
 	Robert Turnbull added the capability to use the one from the SPEEX codec
 */
 
-void CNoiseReduction::SetNoiRedSpeex(bool b)
+CNoiseReduction::~CNoiseReduction()
 {
-#if HAVE_SPEEX
-    use_speex_denoise = b;
-#else
-    (void)b;
+#ifdef HAVE_SPEEX
+    if (preprocess_state)
+        speex_preprocess_state_destroy(preprocess_state);
+    if (speex_data)
+        free(speex_data);
 #endif
 }
 
 void CNoiseReduction::SetNoiRedDegree(const ENoiRedDegree eNND)
 {
     eNoiRedDegree = eNND;
-#if HAVE_SPEEX
-    if(use_speex_denoise) {
-        spx_int32_t supressionLevel;
-        switch(eNoiRedDegree) {
-        case NR_LOW:
-            supressionLevel = -10;
-            break;
-        case NR_MEDIUM:
-            supressionLevel = -15;
-            break;
-        case NR_HIGH:
-            supressionLevel = -20;
-            break;
-        }
-        speex_preprocess_ctl(preprocess_state, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &supressionLevel);
-    }
+#ifdef HAVE_SPEEX
+    supression_level = (spx_int32_t)eNND;
 #endif
 }
 
 void CNoiseReduction::Process(CRealVector& vecrIn)
 {
-#if HAVE_SPEEX
-    if(use_speex_denoise) {
-        static spx_int16_t* speexData = {NULL};
+#ifdef HAVE_SPEEX
+    if ((int)eNoiRedDegree <= 0) {
         int i;
-        double* vectorData = &( vecrIn[0] );
-        int vectorSz = vecrIn.Size();
-        if (preprocess_state == NULL)
+        CReal* vectorData = &vecrIn[0];
+        int vectorSz = vecrIn.GetSize();
+        if (sample_rate)
         {
-            preprocess_state = speex_preprocess_state_init(vectorSz, iSampleRate);
-            speexData = (spx_int16_t*)malloc(vectorSz*sizeof(spx_int16_t));
+            if (preprocess_state)
+                speex_preprocess_state_destroy(preprocess_state);
+            if (speex_data)
+                free(speex_data);
+            preprocess_state = speex_preprocess_state_init(vectorSz, sample_rate);
+            speex_data = (spx_int16_t*)malloc(vectorSz*sizeof(spx_int16_t));
+            supression_level = (spx_int32_t)eNoiRedDegree;
+            sample_rate = 0;
+        }
+        if (supression_level)
+        {
+            speex_preprocess_ctl(preprocess_state, SPEEX_PREPROCESS_SET_NOISE_SUPPRESS, &supression_level);
+            supression_level = 0;
         }
         for (i=0; i<vectorSz; i++)
         {
-            speexData[i] = (spx_int16_t)vectorData[i];
+            speex_data[i] = (spx_int16_t)vectorData[i];
         }
-        speex_preprocess(preprocess_state, speexData, NULL);
+        speex_preprocess(preprocess_state, speex_data, nullptr);
         for (i=0; i<vectorSz; i++)
         {
-            vectorData[i] = (double)speexData[i];
+            vectorData[i] = (CReal)speex_data[i];
         }
     } else {
 #endif
@@ -874,7 +879,7 @@ void CNoiseReduction::Process(CRealVector& vecrIn)
 
         /* Overlap and add operation */
         vecrIn = vecrFiltResult + vecrOutSig1;
-#if HAVE_SPEEX
+#ifdef HAVE_SPEEX
     }
 #endif
 }
@@ -986,4 +991,8 @@ void CNoiseReduction::Init(int iSampleRate, int iNewBlockLen)
     /* Init window for overlap and add */
     vecrTriangWin.Init(iBlockLen);
     vecrTriangWin = Triang(iBlockLen);
+
+#ifdef HAVE_SPEEX
+    sample_rate = iSampleRate;
+#endif
 }

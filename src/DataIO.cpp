@@ -1,9 +1,9 @@
 /******************************************************************************\
- * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
- * Copyright (c) 2001-2006
+ * Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik & BBC
+ * Copyright (c) 2001-2019
  *
  * Author(s):
- *	Volker Fischer
+ * Volker Fischer, Julian Cable, Mark J Fine
  *
  * Description:
  *
@@ -28,18 +28,24 @@
 
 #include "DataIO.h"
 #include <iomanip>
-#include <time.h>
+#include <ctime>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
-* MSC data																	   *
+* MSC data                                                                    *
 \******************************************************************************/
 /* Transmitter -------------------------------------------------------------- */
-void CReadData::ProcessDataInternal(CParameter&)
+void CReadData::ProcessDataInternal(CParameter& Parameters)
 {
     /* Get data from sound interface */
-    pSound->Read(vecsSoundBuffer);
-
+    if (pSound == nullptr)
+    {
+        return;
+    }
+    else
+    {
+        pSound->Read(vecsSoundBuffer, Parameters);
+    }
     /* Write data to output buffer */
     for (int i = 0; i < iOutputBlockSize; i++)
         (*pvecOutputData)[i] = vecsSoundBuffer[i];
@@ -51,7 +57,7 @@ void CReadData::ProcessDataInternal(CParameter&)
 void CReadData::InitInternal(CParameter& Parameters)
 {
     /* Get audio sample rate */
-    const int iSampleRate = Parameters.GetAudSampleRate();
+    iSampleRate = Parameters.GetAudSampleRate();
 
     /* Define block-size for output, an audio frame always corresponds
        to 400 ms. We use always stereo blocks */
@@ -59,7 +65,7 @@ void CReadData::InitInternal(CParameter& Parameters)
                               (_REAL) 0.4 /* 400 ms */ * 2 /* stereo */);
 
     /* Init sound interface and intermediate buffer */
-    pSound->Init(iSampleRate, iOutputBlockSize, FALSE);
+    if(pSound) pSound->Init(iSampleRate, iOutputBlockSize, false);
     vecsSoundBuffer.Init(iOutputBlockSize);
 
     /* Init level meter */
@@ -67,6 +73,17 @@ void CReadData::InitInternal(CParameter& Parameters)
 }
 
 /* Receiver ----------------------------------------------------------------- */
+CWriteData::CWriteData() :
+    pSound(nullptr), /* Sound interface */
+    bMuteAudio(false), bDoWriteWaveFile(false),
+    bSoundBlocking(false), bNewSoundBlocking(false),
+    eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
+    iAudSampleRate(0), iNumSmpls4AudioSprectrum(0), iNumBlocksAvAudioSpec(0),
+    iMaxAudioFrequency(MAX_SPEC_AUDIO_FREQUENCY)
+{
+    /* Constructor */
+}
+
 void CWriteData::ProcessDataInternal(CParameter& Parameters)
 {
     int i;
@@ -133,7 +150,7 @@ void CWriteData::ProcessDataInternal(CParameter& Parameters)
         break;
     }
 
-    if (bMuteAudio == TRUE)
+    if (bMuteAudio)
     {
         /* Clear both channels if muted */
         for (i = 0; i < iInputBlockSize; i++)
@@ -141,23 +158,24 @@ void CWriteData::ProcessDataInternal(CParameter& Parameters)
     }
 
     /* Put data to sound card interface. Show sound card state on GUI */
-    const _BOOLEAN bBad = pSound->Write(vecsTmpAudData);
+    const bool bBad = pSound->Write(vecsTmpAudData);
+
     Parameters.Lock();
     Parameters.ReceiveStatus.InterfaceO.SetStatus(bBad ? DATA_ERROR : RX_OK); /* Yellow light */
     Parameters.Unlock();
 
     /* Write data as wave in file */
-    if (bDoWriteWaveFile == TRUE)
+    if (bDoWriteWaveFile)
     {
         /* Write audio data to file only if it is not zero */
-        _BOOLEAN bDoNotWrite = TRUE;
+        bool bDoNotWrite = true;
         for (i = 0; i < iInputBlockSize; i++)
         {
             if ((*pvecInputData)[i] != 0)
-                bDoNotWrite = FALSE;
+                bDoNotWrite = false;
         }
 
-        if (bDoNotWrite == FALSE)
+        if (bDoNotWrite == false)
         {
             for (i = 0; i < iInputBlockSize; i += 2)
             {
@@ -177,22 +195,20 @@ void CWriteData::InitInternal(CParameter& Parameters)
     iAudSampleRate = Parameters.GetAudSampleRate();
 
     /* Set maximum audio frequency */
-	iMaxAudioFrequency = MAX_SPEC_AUDIO_FREQUENCY;
-	if (iMaxAudioFrequency > iAudSampleRate/2)
-		iMaxAudioFrequency = iAudSampleRate/2;
+    iMaxAudioFrequency = MAX_SPEC_AUDIO_FREQUENCY;
+    if (iMaxAudioFrequency > iAudSampleRate/2)
+        iMaxAudioFrequency = iAudSampleRate/2;
 
     /* Length of vector for audio spectrum. We use a power-of-two length to
-       make the FFT work more efficient, need to be scaled from sample rate to
+       make the FFT work more efficiently, need to be scaled from sample rate to
        keep the same frequency resolution */
     iNumSmpls4AudioSprectrum = ADJ_FOR_SRATE(1024, iAudSampleRate);
 
     /* Number of blocks for averaging the audio spectrum */
-    iNumBlocksAvAudioSpec = Ceil(((_REAL) iAudSampleRate *
-        TIME_AV_AUDIO_SPECT_MS / 1000 / iNumSmpls4AudioSprectrum));
+    iNumBlocksAvAudioSpec = int(ceil(_REAL(iAudSampleRate * TIME_AV_AUDIO_SPECT_MS) / 1000.0 / _REAL(iNumSmpls4AudioSprectrum)));
 
     /* Inits for audio spectrum plotting */
-    vecsOutputData.Init((int) iNumBlocksAvAudioSpec * iNumSmpls4AudioSprectrum *
-                   2 /* stereo */, 0); /* Init with zeros */
+    vecsOutputData.Init(iNumBlocksAvAudioSpec * iNumSmpls4AudioSprectrum * 2 /* stereo */, 0); /* Init with zeros */
     FftPlan.Init(iNumSmpls4AudioSprectrum);
     veccFFTInput.Init(iNumSmpls4AudioSprectrum);
     veccFFTOutput.Init(iNumSmpls4AudioSprectrum);
@@ -200,16 +216,14 @@ void CWriteData::InitInternal(CParameter& Parameters)
 
     /* An audio frame always corresponds to 400 ms.
        We use always stereo blocks */
-    const int iAudFrameSize = (int) ((_REAL) iAudSampleRate *
-                                     (_REAL) 0.4 /* 400 ms */);
+    const int iAudFrameSize = int(_REAL(iAudSampleRate) * 0.4 /* 400 ms */);
 
     /* Check if blocking behaviour of sound interface shall be changed */
     if (bNewSoundBlocking != bSoundBlocking)
         bSoundBlocking = bNewSoundBlocking;
 
     /* Init sound interface with blocking or non-blocking behaviour */
-    pSound->Init(iAudSampleRate, iAudFrameSize * 2 /* stereo */, bSoundBlocking);
-
+    if(pSound!=nullptr) pSound->Init(iAudSampleRate, iAudFrameSize * 2 /* stereo */, bSoundBlocking); // might be a sound file
     /* Init intermediate buffer needed for different channel selections */
     vecsTmpAudData.Init(iAudFrameSize * 2 /* stereo */);
 
@@ -221,23 +235,13 @@ void CWriteData::InitInternal(CParameter& Parameters)
     iInputBlockSize = iAudFrameSize * 2 /* stereo */;
 }
 
-CWriteData::CWriteData(CSoundOutInterface* pNS) : pSound(pNS), /* Sound interface */
-        bMuteAudio(FALSE), bDoWriteWaveFile(FALSE),
-        bSoundBlocking(FALSE), bNewSoundBlocking(FALSE),
-        eOutChanSel(CS_BOTH_BOTH), rMixNormConst(MIX_OUT_CHAN_NORM_CONST),
-        iAudSampleRate(0), iNumSmpls4AudioSprectrum(0), iNumBlocksAvAudioSpec(0),
-        iMaxAudioFrequency(MAX_SPEC_AUDIO_FREQUENCY)
-{
-    /* Constructor */
-}
-
 void CWriteData::StartWriteWaveFile(const string& strFileName)
 {
     /* No Lock(), Unlock() needed here */
-    if (bDoWriteWaveFile == FALSE)
+    if (bDoWriteWaveFile == false)
     {
         WaveFileAudio.Open(strFileName, iAudSampleRate);
-        bDoWriteWaveFile = TRUE;
+        bDoWriteWaveFile = true;
     }
 }
 
@@ -246,7 +250,7 @@ void CWriteData::StopWriteWaveFile()
     Lock();
 
     WaveFileAudio.Close();
-    bDoWriteWaveFile = FALSE;
+    bDoWriteWaveFile = false;
 
     Unlock();
 }
@@ -317,11 +321,11 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
         const _REAL rNormPowSpec = veccAvSpectrum[i] / rNormData;
 
         if (rNormPowSpec > 0)
-            vecrData[i] = (_REAL) 10.0 * log10(rNormPowSpec);
+            vecrData[i] = 10.0 * log10(rNormPowSpec);
         else
             vecrData[i] = RET_VAL_LOG_0;
 
-        vecrScale[i] = (_REAL) i * rFactorScale;
+        vecrScale[i] = _REAL(i) * rFactorScale;
     }
 
     /* Release resources */
@@ -329,329 +333,8 @@ void CWriteData::GetAudioSpec(CVector<_REAL>& vecrData,
 }
 
 
-/* Simulation --------------------------------------------------------------- */
-void CGenSimData::ProcessDataInternal(CParameter& TransmParam)
-{
-    int			i;
-    uint32_t	iTempShiftRegister1;
-    _BINARY		biPRBSbit;
-    uint32_t	iShiftRegister;
-    FILE*		pFileCurPos;
-    time_t		tiElTi;
-    long int	lReTi;
-    _REAL		rReDays;
-
-    /* Get elapsed time since this run was started (seconds) */
-    tiElTi = time(NULL) - tiStartTime;
-
-    /* Stop simulation if stop condition is true */
-    iCounter++;
-    switch (eCntType)
-    {
-    case CT_TIME:
-        try
-        {
-            /* Estimate remaining time */
-            lReTi = (long int) (((_REAL) iNumSimBlocks - iCounter) /
-                                iCounter * tiElTi);
-
-            /* Store current counter position in file */
-            pFileCurPos = fopen(strFileName.c_str(), "w");
-            if (pFileCurPos != NULL)
-            {
-                fprintf(pFileCurPos,
-                        "%d / %d (%ld min elapsed, estimated time remaining: %ld min)",
-                        iCounter, iNumSimBlocks,
-                        tiElTi / 60, lReTi / 60);
-
-                /* Write current paramter value */
-                _REAL rCurParamVal;
-                switch (TransmParam.eSimType)
-                {
-                case CParameter::ST_SYNC_PARAM:
-                    rCurParamVal = TransmParam.rSyncTestParam;
-                    break;
-
-                case CParameter::ST_SINR:
-                    rCurParamVal = TransmParam.rSINR;
-                    break;
-
-                default:
-                    rCurParamVal = TransmParam.rBitErrRate;
-                    break;
-                }
-                fprintf(pFileCurPos, "\n%e %e",
-                        TransmParam.GetNominalSNRdB(), rCurParamVal);
-
-                fclose(pFileCurPos);
-            }
-        }
-
-        catch (...)
-        {
-            /* Catch all file errors to avoid stopping the simulation */
-        }
-
-        if (iCounter == iNumSimBlocks)
-        {
-		TransmParam.eRunState = CParameter::STOP_REQUESTED;
-		iCounter = 0;
-        }
-        break;
-
-    case CT_ERRORS:
-        try
-        {
-            if (iCounter >= iMinNumBlocks)
-            {
-                /* Estimate remaining time */
-                lReTi = (long int)
-                        (((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
-                         TransmParam.iNumBitErrors * tiElTi);
-
-                /* Estimated remaining days ( x / (60 * 60 * 24) ) */
-                rReDays = (_REAL) lReTi / 86400;
-
-                /* Store current counter position in file */
-                pFileCurPos = fopen(strFileName.c_str(), "w");
-                if (pFileCurPos != NULL)
-                {
-                    fprintf(pFileCurPos,
-                            "%d / %d (%ld min elapsed, estimated time remaining: %ld min [%.1f days])",
-                            TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
-                            lReTi / 60, rReDays);
-
-                    /* Add current value of BER */
-                    fprintf(pFileCurPos, "\n%e %e", TransmParam.
-                            GetNominalSNRdB(), TransmParam.rBitErrRate);
-                    fclose(pFileCurPos);
-                }
-            }
-            else
-            {
-                /* Estimate remaining time */
-                lReTi = (long int)
-                        (((_REAL) iMinNumBlocks - iCounter) / iCounter * tiElTi);
-
-                /* Store current counter position in file */
-                pFileCurPos = fopen(strFileName.c_str(), "w");
-                if (pFileCurPos != NULL)
-                {
-                    fprintf(pFileCurPos,
-                            "%d / %d (%ld min elapsed, estimated minimum"
-                            " time remaining: %ld min)\n",
-                            iCounter, iMinNumBlocks, tiElTi / 60, lReTi / 60);
-
-                    lReTi = (long int)
-                            (((_REAL) iNumErrors - TransmParam.iNumBitErrors) /
-                             TransmParam.iNumBitErrors * tiElTi);
-                    fprintf(pFileCurPos,
-                            "%d / %d (%ld min elapsed, estimated time remaining: %ld min)",
-                            TransmParam.iNumBitErrors, iNumErrors, tiElTi / 60,
-                            lReTi / 60);
-
-                    /* Add current value of BER */
-                    fprintf(pFileCurPos, "\n%e %e", TransmParam.
-                            GetNominalSNRdB(), TransmParam.rBitErrRate);
-                    fclose(pFileCurPos);
-                }
-            }
-        }
-
-        catch (...)
-        {
-            /* Catch all file errors to avoid stopping the simulation */
-        }
-
-        if (TransmParam.iNumBitErrors >= iNumErrors)
-        {
-            /* A minimum simulation time must be elapsed */
-            if (iCounter >= iMinNumBlocks)
-            {
-		TransmParam.eRunState = CParameter::STOP_REQUESTED;
-                iCounter = 0;
-            }
-        }
-        break;
-    }
-
-    /* Generate a pseudo-noise test-signal (PRBS) */
-    /* Init shift register with an arbitrary number (Must be known at the
-       receiver AND transmitter!) */
-    iShiftRegister = (uint32_t) (time(NULL) + rand());
-    TransmParam.RawSimDa.Add(iShiftRegister);
-
-    for (i = 0; i < iOutputBlockSize; i++)
-    {
-        /* Calculate new PRBS bit */
-        iTempShiftRegister1 = iShiftRegister;
-
-        /* P(X) = X^9 + X^5 + 1,
-           in this implementation we have to shift n-1! */
-        biPRBSbit = _BINARY(((iTempShiftRegister1 >> 4) & 1) ^
-                            ((iTempShiftRegister1 >> 8) & 1));
-
-        /* Shift bits in shift register and add new bit */
-        iShiftRegister <<= 1;
-        iShiftRegister |= (biPRBSbit & 1);
-
-        /* Use PRBS output */
-        (*pvecOutputData)[i] = biPRBSbit;
-    }
-}
-
-void CGenSimData::InitInternal(CParameter& TransmParam)
-{
-    /* Define output block size */
-    iOutputBlockSize = TransmParam.iNumDecodedBitsMSC;
-
-    /* Minimum simulation time depends on the selected channel */
-    switch (TransmParam.iDRMChannelNum)
-    {
-    case 1:
-        /* AWGN: No fading */
-        iMinNumBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
-        break;
-
-    case 2:
-        /* Rice with delay: 0.1 Hz */
-        iMinNumBlocks = (int) ((_REAL) 5000.0 / (_REAL) 0.4);
-        break;
-
-    case 3:
-        /* US Consortium: slowest 0.1 Hz */
-        iMinNumBlocks = (int) ((_REAL) 15000.0 / (_REAL) 0.4);
-        break;
-
-    case 4:
-        /* CCIR Poor: 1 Hz */
-        iMinNumBlocks = (int) ((_REAL) 4000.0 / (_REAL) 0.4);
-        break;
-
-    case 5:
-        /* Channel no 5: 2 Hz -> 30 sec */
-        iMinNumBlocks = (int) ((_REAL) 3000.0 / (_REAL) 0.4);
-        break;
-
-    case 6:
-        /* Channel no 6: same as case "2" */
-        iMinNumBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
-        break;
-
-    default:
-        /* My own channels */
-        iMinNumBlocks = (int) ((_REAL) 2000.0 / (_REAL) 0.4);
-        break;
-    }
-
-    /* Prepare shift register used for storing the start values of the PRBS
-       shift register */
-    TransmParam.RawSimDa.Reset();
-
-    /* Init start time */
-    tiStartTime = time(NULL);
-}
-
-void CGenSimData::SetSimTime(int iNewTi, string strNewFileName)
-{
-    /* One MSC frame is 400 ms long */
-    iNumSimBlocks = (int) ((_REAL) iNewTi /* sec */ / (_REAL) 0.4);
-
-    /* Set simulation count type */
-    eCntType = CT_TIME;
-
-    /* Reset counter */
-    iCounter = 0;
-
-    /* Set file name */
-    strFileName = string(SIM_OUT_FILES_PATH) +
-                  strNewFileName + "__SIMTIME" + string(".dat");
-}
-
-void CGenSimData::SetNumErrors(int iNewNE, string strNewFileName)
-{
-    iNumErrors = iNewNE;
-
-    /* Set simulation count type */
-    eCntType = CT_ERRORS;
-
-    /* Reset counter, because we also use it at the beginning of a run */
-    iCounter = 0;
-
-    /* Set file name */
-    strFileName = string(SIM_OUT_FILES_PATH) +
-                  strNewFileName + "__SIMTIME" + string(".dat");
-}
-
-void CEvaSimData::ProcessDataInternal(CParameter& Parameters)
-{
-    uint32_t	iTempShiftRegister1;
-    _BINARY		biPRBSbit;
-    uint32_t	iShiftRegister;
-    int			iNumBitErrors;
-    int			i;
-
-    /* -------------------------------------------------------------------------
-       Generate a pseudo-noise test-signal (PRBS) for comparison with
-       received signal */
-    /* Init shift register with an arbitrary number (Must be known at the
-       receiver AND transmitter!) */
-    iShiftRegister = Parameters.RawSimDa.Get();
-
-    iNumBitErrors = 0;
-
-    for (i = 0; i < iInputBlockSize; i++)
-    {
-        /* Calculate new PRBS bit */
-        iTempShiftRegister1 = iShiftRegister;
-
-        /* P(X) = X^9 + X^5 + 1,
-           in this implementation we have to shift n-1! */
-        biPRBSbit = _BINARY(((iTempShiftRegister1 >> 4) & 1) ^
-                            ((iTempShiftRegister1 >> 8) & 1));
-
-        /* Shift bits in shift register and add new bit */
-        iShiftRegister <<= 1;
-        iShiftRegister |= (biPRBSbit & 1);
-
-        /* Count bit errors */
-        if (biPRBSbit != (*pvecInputData)[i])
-            iNumBitErrors++;
-    }
-
-    /* Save bit error rate, debar initialization blocks */
-    if (iIniCnt > 0)
-        iIniCnt--;
-    else
-    {
-        rAccBitErrRate += (_REAL) iNumBitErrors / iInputBlockSize;
-        iNumAccBitErrRate++;
-
-        Parameters.rBitErrRate = rAccBitErrRate / iNumAccBitErrRate;
-        Parameters.iNumBitErrors += iNumBitErrors;
-    }
-}
-
-void CEvaSimData::InitInternal(CParameter& Parameters)
-{
-    /* Reset bit error rate parameters */
-    rAccBitErrRate = (_REAL) 0.0;
-    iNumAccBitErrRate = 0;
-
-    /* Number of blocks at the beginning we do not want to use */
-    iIniCnt = 10;
-
-    /* Init global parameters */
-    Parameters.rBitErrRate = (_REAL) 0.0;
-    Parameters.iNumBitErrors = 0;
-
-    /* Define block-size for input */
-    iInputBlockSize = Parameters.iNumDecodedBitsMSC;
-}
-
-
 /******************************************************************************\
-* FAC data																	   *
+* FAC data                                                                    *
 \******************************************************************************/
 /* Transmitter */
 void CGenerateFACData::ProcessDataInternal(CParameter& TransmParam)
@@ -671,7 +354,7 @@ void CGenerateFACData::InitInternal(CParameter& TransmParam)
 void CUtilizeFACData::ProcessDataInternal(CParameter& Parameters)
 {
     /* Do not use received FAC data in case of simulation */
-    if (bSyncInput == FALSE)
+    if (bSyncInput == false)
     {
         bCRCOk = FACReceive.FACParam(pvecInputData, Parameters);
         /* Set FAC status for RSCI, log file & GUI */
@@ -681,7 +364,7 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& Parameters)
             Parameters.ReceiveStatus.FAC.SetStatus(CRC_ERROR);
     }
 
-    if ((bSyncInput == TRUE) || (bCRCOk == FALSE))
+    if ((bSyncInput) || (bCRCOk == false))
     {
         /* If FAC CRC check failed we should increase the frame-counter
            manually. If only FAC data was corrupted, the others can still
@@ -697,13 +380,13 @@ void CUtilizeFACData::ProcessDataInternal(CParameter& Parameters)
 void CUtilizeFACData::InitInternal(CParameter& Parameters)
 {
 
-// This should be in FAC class in an Init() routine which has to be defined, this
-// would be cleaner code! TODO
+    // This should be in FAC class in an Init() routine which has to be defined, this
+    // would be cleaner code! TODO
     /* Init frame ID so that a "0" comes after increasing the init value once */
     Parameters.iFrameIDReceiv = NUM_FRAMES_IN_SUPERFRAME - 1;
 
     /* Reset flag */
-    bCRCOk = FALSE;
+    bCRCOk = false;
 
     /* Define block-size for input */
     iInputBlockSize = NUM_FAC_BITS_PER_BLOCK;
@@ -711,7 +394,7 @@ void CUtilizeFACData::InitInternal(CParameter& Parameters)
 
 
 /******************************************************************************\
-* SDC data																	   *
+* SDC data                                                                    *
 \******************************************************************************/
 /* Transmitter */
 void CGenerateSDCData::ProcessDataInternal(CParameter& TransmParam)
@@ -728,7 +411,7 @@ void CGenerateSDCData::InitInternal(CParameter& TransmParam)
 /* Receiver */
 void CUtilizeSDCData::ProcessDataInternal(CParameter& Parameters)
 {
-//    _BOOLEAN bSDCOK = FALSE;
+    //    bool bSDCOK = false;
 
     /* Decode SDC block and return CRC status */
     CSDCReceive::ERetStatus eStatus = SDCReceive.SDCParam(pvecInputData, Parameters);
@@ -738,7 +421,7 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& Parameters)
     {
     case CSDCReceive::SR_OK:
         Parameters.ReceiveStatus.SDC.SetStatus(RX_OK);
-//        bSDCOK = TRUE;
+        //        bSDCOK = true;
         break;
 
     case CSDCReceive::SR_BAD_CRC:
@@ -750,7 +433,7 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& Parameters)
            speed up the DRM signal acqisition. But quite often it is the
            case that the parameters are not correct. In this case do not
            show a red light if SDC CRC was not ok */
-        if (bFirstBlock == FALSE)
+        if (bFirstBlock == false)
             Parameters.ReceiveStatus.SDC.SetStatus(CRC_ERROR);
         break;
 
@@ -762,13 +445,13 @@ void CUtilizeSDCData::ProcessDataInternal(CParameter& Parameters)
     Parameters.Unlock();
 
     /* Reset "first block" flag */
-    bFirstBlock = FALSE;
+    bFirstBlock = false;
 }
 
 void CUtilizeSDCData::InitInternal(CParameter& Parameters)
 {
     /* Init "first block" flag */
-    bFirstBlock = TRUE;
+    bFirstBlock = true;
 
     /* Define block-size for input */
     iInputBlockSize = Parameters.iNumSDCBitsPerSFrame;
@@ -777,7 +460,7 @@ void CUtilizeSDCData::InitInternal(CParameter& Parameters)
 
 /* CWriteIQFile : module for writing an IQ or IF file */
 
-CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0), bIsRecording(FALSE), bChangeReceived(FALSE)
+CWriteIQFile::CWriteIQFile() : pFile(0), iFrequency(0), bIsRecording(false), bChangeReceived(false)
 {
 }
 
@@ -789,8 +472,8 @@ CWriteIQFile::~CWriteIQFile()
 
 void CWriteIQFile::StartRecording(CParameter&)
 {
-    bIsRecording = TRUE;
-    bChangeReceived = TRUE;
+    bIsRecording = true;
+    bChangeReceived = true;
 }
 
 void CWriteIQFile::OpenFile(CParameter& Parameters)
@@ -817,8 +500,8 @@ void CWriteIQFile::OpenFile(CParameter& Parameters)
 
 void CWriteIQFile::StopRecording()
 {
-    bIsRecording = FALSE;
-    bChangeReceived = TRUE;
+    bIsRecording = false;
+    bChangeReceived = true;
 }
 
 void CWriteIQFile::NewFrequency(CParameter &)
@@ -895,21 +578,21 @@ void CWriteIQFile::ProcessDataInternal(CParameter& Parameters)
 
     if (bChangeReceived) // file is open but we want to start a new one
     {
-        bChangeReceived = FALSE;
-        if (pFile != NULL)
+        bChangeReceived = false;
+        if (pFile != nullptr)
         {
             fclose(pFile);
         }
-        pFile = 0;
+        pFile = nullptr;
     }
 
     // is recording switched on?
     if (!bIsRecording)
     {
-        if (pFile != NULL)
+        if (pFile != nullptr)
         {
             fclose(pFile); // close file if currently open
-            pFile = NULL;
+            pFile = nullptr;
         }
         return;
     }
@@ -922,10 +605,10 @@ void CWriteIQFile::ProcessDataInternal(CParameter& Parameters)
     {
         iFrequency = iNewFrequency;
         // If file is currently open, close it
-        if (pFile != NULL)
+        if (pFile != nullptr)
         {
             fclose(pFile);
-            pFile = NULL;
+            pFile = nullptr;
         }
     }
     // Now open the file with correct name if it isn't currently open

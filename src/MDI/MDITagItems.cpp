@@ -41,30 +41,33 @@
 #include "MDITagItems.h"
 #include <iostream>
 #include <fstream>
+#include <chrono>
+#include <ctime>
 using namespace std;
 
 #include "../util/LogPrint.h"
+#include "../matlib/MatlibStdToolbox.h"
 
 CTagItemGeneratorWithProfiles::CTagItemGeneratorWithProfiles()
 {
 }
 
-_BOOLEAN
+bool
 CTagItemGeneratorWithProfiles::IsInProfile(char cProfile)
 {
 	string strProfiles = GetProfiles();
 
 	for (size_t i = 0; i < strProfiles.length(); i++)
 		if (strProfiles[i] == char (toupper(cProfile)))
-			return TRUE;
+			return true;
 
-	return FALSE;
+	return false;
 }
 
-_BOOLEAN
+bool
 CTagItemGenerator::IsInProfile(char)
 {
-	return TRUE;
+	return true;
 }
 
 /* Default implementation: unless otherwise specified, tag will be in all RSCI profiles, but not MDI */
@@ -168,10 +171,65 @@ CTagItemGeneratorLoFrCnt::GetProfiles()
 	return "ABCDQM";
 }
 
+
+CTagItemGeneratorFracModJulDate::CTagItemGeneratorFracModJulDate()
+{
+
+
+}
+
+string
+CTagItemGeneratorFracModJulDate::GetTagName()
+{
+    return "fmjd";
+}
+
+void CTagItemGeneratorFracModJulDate::GenTag()
+{
+
+    using namespace std::chrono;
+    const time_point<system_clock> now = system_clock::now();
+    auto ms = (duration_cast<milliseconds>(now.time_since_epoch()) % 1000);
+
+    auto timer = system_clock::to_time_t(now);
+    std::tm bt = *std::gmtime(&timer);
+
+    // MJD calculation from TS 102 349, but with ceiling operator ignored
+    // move leap day virtual to end of year
+    unsigned int modified_month = ((unsigned(bt.tm_mon) + 10) % 12) + 3; /* month is 0..11 */
+    unsigned int modified_year = (unsigned(bt.tm_year)+1900) - 1 + ((unsigned(bt.tm_mon) + 8) / 10);
+    /* intermediate variables */
+    unsigned int n1 = modified_year / 100;
+    unsigned int n2 = modified_year % 100;
+    unsigned int ModifiedJulianDate = 1721029 /* offset January, 1st 4713 BCE */
+    - 2400001u /* correction from JD to MJD*/
+    + 146097 * (n1 / 4) /* days of elapsed 400-year-cycles */
+    + 36524 * (n1 % 4) /* days of elapsed 100-year-cycles */
+    + 1461 * (n2 / 4) /* days of elapsed 4-year-cycles */
+    + 365 * (n2 % 4) /* days of elapsed years */
+    + 30 * modified_month /* days of elapsed months in actual year */
+    + ((7 * (modified_month - 2)) / 12) /* days of unequal month-length */
+    + unsigned(bt.tm_mday); /* elapsed days in actual month */
+    unsigned int fractionalDay =((((unsigned(bt.tm_hour)*60)
+                                   +unsigned (bt.tm_min))*60
+                                  +unsigned(bt.tm_sec))*10000
+                                 +unsigned(ms.count())*10);
+
+    PrepareTag(64);
+    Enqueue(ModifiedJulianDate, 32);
+    Enqueue(fractionalDay, 32);
+}
+
+string
+CTagItemGeneratorFracModJulDate::GetProfiles()
+{
+    return "ABCDGQM";
+}
+
 void
 CTagItemGeneratorFAC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &FACData)
 {
-	if (Parameter.ReceiveStatus.FAC.GetStatus() == FALSE)
+	if (Parameter.ReceiveStatus.FAC.GetStatus() == false)
 	{
 		/* Empty tag if FAC is invalid */
 		PrepareTag(0);
@@ -207,7 +265,7 @@ CTagItemGeneratorFAC::GetProfiles()
 void
 CTagItemGeneratorSDC::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &SDCData)
 {
-	if (Parameter.ReceiveStatus.SDC.GetStatus() == FALSE)
+	if (Parameter.ReceiveStatus.SDC.GetStatus() == false)
 	{
 		PrepareTag(0);
 		SDCData.Clear();
@@ -452,11 +510,11 @@ CTagItemGeneratorStr::GetTagName()
 }
 
 void
-CTagItemGeneratorMERFormat::GenTag(_BOOLEAN bIsValid, _REAL rMER)
+CTagItemGeneratorMERFormat::GenTag(bool bIsValid, _REAL rMER)
 {
 	/* Common routine for rmer, rwmf, rwmm tags (all have the same format) */
 	/* If no MER value is available, set tag length to zero */
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		/* Length: 0 byte */
 		PrepareTag(0);
@@ -527,10 +585,10 @@ CTagItemGeneratorRDOP::GetProfiles()
 }
 
 void
-CTagItemGeneratorRDEL::GenTag(_BOOLEAN bIsValid, const CRealVector & vecrThresholds, const CRealVector & vecrIntervals)
+CTagItemGeneratorRDEL::GenTag(bool bIsValid, const CRealVector & vecrThresholds, const CRealVector & vecrIntervals)
 {
 	/* If no value is available, set tag length to zero */
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		/* Length: 0 byte */
 		PrepareTag(0);
@@ -614,12 +672,12 @@ CTagItemGeneratorRAFS::GetProfiles()
 }
 
 void
-CTagItemGeneratorRINT::GenTag(_BOOLEAN bIsValid, CReal rIntFreq, CReal rINR, CReal rICR)
+CTagItemGeneratorRINT::GenTag(bool bIsValid, CReal rIntFreq, CReal rINR, CReal rICR)
 {
 
 	/* Use Bint (BBC proprietary tag name) until tag is accepted by SE group */
 	/* If no value is available, set tag length to zero */
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		/* Length: 0 byte */
 		PrepareTag(0);
@@ -661,11 +719,11 @@ CTagItemGeneratorRINT::GetProfiles()
 }
 
 void
-CTagItemGeneratorRNIP::GenTag(_BOOLEAN bIsValid, CReal rIntFreq, CReal rISR)
+CTagItemGeneratorRNIP::GenTag(bool bIsValid, CReal rIntFreq, CReal rISR)
 {
 
 	/* If no value is available, set tag length to zero */
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		/* Length: 0 byte */
 		PrepareTag(0);
@@ -697,9 +755,9 @@ CTagItemGeneratorRNIP::GetProfiles()
 }
 
 void
-CTagItemGeneratorSignalStrength::GenTag(_BOOLEAN bIsValid, _REAL rSigStrength)
+CTagItemGeneratorSignalStrength::GenTag(bool bIsValid, _REAL rSigStrength)
 {
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		PrepareTag(0);
 	}
@@ -729,7 +787,8 @@ CTagItemGeneratorReceiverStatus::GenTag(CParameter & Parameter)
 	Enqueue(Parameter.ReceiveStatus.TSync.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
 	Enqueue(Parameter.ReceiveStatus.FAC.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
 	Enqueue(Parameter.ReceiveStatus.SDC.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
-	Enqueue(Parameter.ReceiveStatus.Audio.GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
+	int iShortID = Parameter.GetCurSelAudioService();
+	Enqueue(Parameter.AudioComponentStatus[iShortID].GetStatus() == RX_OK ? 0 : 1, SIZEOF__BYTE);	/* 0=ok, 1=bad */
 }
 
 string
@@ -810,9 +869,9 @@ CTagItemGeneratorRxDemodMode::GetProfiles()
 }
 
 void
-CTagItemGeneratorRxFrequency::GenTag(_BOOLEAN bIsValid, int iFrequency)	// Frequency in kHz
+CTagItemGeneratorRxFrequency::GenTag(bool bIsValid, int iFrequency)	// Frequency in kHz
 {
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		PrepareTag(0);
 	}
@@ -836,10 +895,10 @@ CTagItemGeneratorRxFrequency::GetProfiles()
 }
 
 void
-CTagItemGeneratorRxActivated::GenTag(_BOOLEAN bActivated)
+CTagItemGeneratorRxActivated::GenTag(bool bActivated)
 {
 	PrepareTag(SIZEOF__BYTE);
-	Enqueue(bActivated == TRUE ? '0' : '1', SIZEOF__BYTE);
+	Enqueue(bActivated ? '0' : '1', SIZEOF__BYTE);
 }
 
 string
@@ -855,9 +914,9 @@ CTagItemGeneratorRxActivated::GetProfiles()
 }
 
 void
-CTagItemGeneratorRxBandwidth::GenTag(_BOOLEAN bIsValid, _REAL rBandwidth)
+CTagItemGeneratorRxBandwidth::GenTag(bool bIsValid, _REAL rBandwidth)
 {
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		PrepareTag(0);
 	}
@@ -881,9 +940,9 @@ CTagItemGeneratorRxBandwidth::GetProfiles()
 }
 
 void
-CTagItemGeneratorRxService::GenTag(_BOOLEAN bIsValid, int iService)
+CTagItemGeneratorRxService::GenTag(bool bIsValid, int iService)
 {
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		PrepareTag(0);
 	}
@@ -997,9 +1056,9 @@ CTagItemGenerator::Enqueue(uint32_t iInformation, int iNumOfBits)
 
 //andrewm - 2006-12-08
 void
-CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, gps_data_t& gps_data)	// Long/Lat in degrees
+CTagItemGeneratorGPS::GenTag(bool bIsValid, gps_data_t& gps_data)	// Long/Lat in degrees
 {
-	if (bIsValid == FALSE)
+	if (bIsValid == false)
 	{
 		PrepareTag(0);
 	}
@@ -1008,7 +1067,7 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, gps_data_t& gps_data)	// Long/La
 		uint32_t source = 0xff; // GPS_SOURCE_NOT_AVAILABLE
 		PrepareTag(26 * SIZEOF__BYTE);
 		if(gps_data.set&STATUS_SET) {
-			switch(gps_data.status) {
+            switch(gps_data.fix.status) {
 			case 0: source = 3; break; // manual
 			case 1: source = 1; break; // gps
 			case 2: source = 2; break; // differential
@@ -1102,7 +1161,7 @@ CTagItemGeneratorGPS::GenTag(_BOOLEAN bIsValid, gps_data_t& gps_data)	// Long/La
 
 		if (gps_data.set&TIME_SET)
 		{
-			time_t time = (time_t)gps_data.fix.time;
+            time_t time = (time_t) gps_data.fix.time.tv_sec;
 			struct tm * ptm;
 			ptm = gmtime ( &time );
 			Enqueue((uint32_t) ptm->tm_hour, SIZEOF__BYTE);
@@ -1344,21 +1403,25 @@ CTagItemGeneratorPilots::GenTag(CParameter & Parameter)
 }
 
 void
-CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &AudioData)
+CTagItemGeneratorAMAudio::GenTagFieldsNonStandard(CParameter & Parameter, int iLenStrData)
+{
+        char mimeType[]="audio/aac";
+        int iMimeTypeLen = strlen(mimeType);
+
+	PrepareTag(iLenStrData + iMimeTypeLen*8 + 16);
+        Enqueue(224, 8); // Codec type = MIME defined
+        Enqueue(strlen(mimeType), 8); // MIME type length
+        for (int i=0; i<strlen(mimeType); i++)
+           Enqueue(mimeType[i], 8);
+}
+
+void
+CTagItemGeneratorAMAudio::GenTagFieldsStandard(CParameter & Parameter, int iLenStrData)
 {
 
-	const int iLenStrData =
-		SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB);
-	// Only generate this tag if stream input data is not of zero length
-	if (iLenStrData == 0)
-		return;
-
-	CVectorEx < _BINARY > *pvecbiStrData = AudioData.Get(iLenStrData);
-	// check we have data in the vector
-	if (iLenStrData != pvecbiStrData->Size())
-		return;
-
-	PrepareTag(iLenStrData + 16);
+	PrepareTag(iLenStrData + 32);
+	Enqueue(192, 8); // Codec type
+        Enqueue(2, 8); // Audio config lengths
 
 	// Send audio parameters
 
@@ -1369,11 +1432,11 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	case CAudioParam::AC_AAC:	// 00
 		iVal = 0;
 		break;
-	case CAudioParam::AC_CELP:	// 01
+        case CAudioParam::AC_OPUS:	// 01
 		iVal = 1;
 		break;
-	case CAudioParam::AC_HVXC:	// 10
-		iVal = 2;
+        case CAudioParam::AC_xHE_AAC:	// 11
+                iVal = 3;
 		break;
 	default:
 		iVal = 0;				// reserved
@@ -1401,29 +1464,73 @@ CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY
 	}
 	Enqueue(iVal, 2);
 
-	// Audio sampling rate
-	switch (Parameter.Service[0].AudioParam.eAudioSamplRate)
-	{
-	case CAudioParam::AS_8_KHZ:
-		iVal = 0;
-		break;
-	case CAudioParam::AS_12KHZ:
-		iVal = 1;
-		break;
-	case CAudioParam::AS_16KHZ:
-		iVal = 2;
-		break;
-	case CAudioParam::AS_24KHZ:
-		iVal = 3;
-		break;
-	default:
-		iVal = 3;
-	}
+    // Audio sampling rate AS_9_6_KHZ, AS_12KHZ, AS_16KHZ, AS_19_2KHZ, AS_24KHZ, AS_32KHZ, AS_38_4KHZ, AS_48KHZ
+    switch (Parameter.Service[0].AudioParam.eAudioSamplRate)
+    {
+    case CAudioParam::AS_9_6KHZ:
+        iVal = 0;
+        break;
+    case CAudioParam::AS_12KHZ:
+        iVal = 1;
+        break;
+    case CAudioParam::AS_16KHZ:
+        iVal = 2;
+        break;
+    case CAudioParam::AS_19_2KHZ:
+        iVal = 2;
+        break;
+    case CAudioParam::AS_24KHZ:
+        iVal = (Parameter.Service[0].AudioParam.eAudioCoding==CAudioParam::AC_xHE_AAC)?4:3;
+        break;
+    case CAudioParam::AS_32KHZ:
+        iVal = 2;
+        break;
+    case CAudioParam::AS_38_4KHZ:
+        iVal = 2;
+        break;
+    case CAudioParam::AS_48KHZ:
+        iVal = (Parameter.Service[0].AudioParam.eAudioCoding==CAudioParam::AC_xHE_AAC)?7:5;
+        break;
+    }
+
 
 	Enqueue(iVal, 3);
 
 	// coder field and some rfus (TODO: code the coder field correctly for all cases
 	Enqueue(0, 8);
+}
+
+void
+CTagItemGeneratorAMAudio::GenTag(CParameter & Parameter, CSingleBuffer < _BINARY > &AudioData)
+{
+	bool bStandardCodec = false;
+	switch (Parameter.Service[0].AudioParam.eAudioCoding) {
+          case CAudioParam::AC_AAC:
+          case CAudioParam::AC_OPUS:
+          case CAudioParam::AC_xHE_AAC:
+              bStandardCodec = true;
+              break;
+          default:
+              bStandardCodec = false; 
+
+        }
+
+	const int iLenStrData = (bStandardCodec ? SIZEOF__BYTE * (Parameter.Stream[0].iLenPartA + Parameter.Stream[0].iLenPartB) : AudioData.GetFillLevel());
+
+	// Only generate this tag if stream input data is not of zero length
+	if (iLenStrData == 0)
+		return;
+
+	CVectorEx < _BINARY > *pvecbiStrData = AudioData.Get(iLenStrData);
+	// check we have data in the vector
+	if (bStandardCodec && iLenStrData != pvecbiStrData->Size())
+		return;
+
+	if (bStandardCodec)
+          GenTagFieldsStandard(Parameter, iLenStrData);
+        else
+          GenTagFieldsNonStandard(Parameter, iLenStrData);
+
 
 	// Now send the stream data
 	pvecbiStrData->ResetBitAccess();

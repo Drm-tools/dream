@@ -38,8 +38,8 @@ public:
     CShmSoundIn();
     virtual 			~CShmSoundIn();
     virtual void		Enumerate(vector<string>& choices);
-    virtual void		SetDev(int);
-    virtual int			GetDev();
+    virtual void		SetItem(int);
+    virtual int			GetItem();
 
     virtual void		Init(int iNewBufferSize, _BOOLEAN bNewBlocking = TRUE);
     virtual void		Close();

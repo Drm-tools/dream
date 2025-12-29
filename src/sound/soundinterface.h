@@ -26,33 +26,39 @@
  *
 \******************************************************************************/
 
-#ifndef _SOUNDINTERFACE_H
-#define _SOUNDINTERFACE_H
+#ifndef SOUNDINTERFACE_H
+#define SOUNDINTERFACE_H
 
-#include "selectioninterface.h"
 #include "../util/Vector.h"
+#include "selectioninterface.h"
 
-class CSoundInInterface : public CSelectionInterface
+class CParameter;
+
+class CSoundInInterface: public CSelectionInterface
 {
 public:
     virtual 		~CSoundInInterface() {}
 
     /* sound card interface - used by ReadData */
-    virtual _BOOLEAN Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)=0;
-    virtual _BOOLEAN Read(CVector<short>& psData)=0;
-    virtual void     Close()=0;
+    virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking)=0;
+    virtual bool Read(CVector<short>& psData, CParameter& Parameters)=0;
+    virtual void Close()=0;
+	virtual std::string	GetVersion() = 0;
+ 	virtual CSoundInInterface* GetItem() = 0;
 
 };
 
-class CSoundOutInterface : public CSelectionInterface
+class CSoundOutInterface: public CSelectionInterface
 {
 public:
     virtual 		~CSoundOutInterface() {}
 
     /* sound card interface - used by WriteData */
-    virtual _BOOLEAN Init(int iSampleRate, int iNewBufferSize, _BOOLEAN bNewBlocking)=0;
-    virtual _BOOLEAN Write(CVector<short>& psData)=0;
-    virtual void     Close()=0;
+    virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking)=0;
+    virtual bool Write(CVector<short>& psData)=0;
+    virtual void Close()=0;
+	virtual std::string	GetVersion() = 0;
+ 	virtual CSoundOutInterface* GetItem() = 0;
 };
 
 #endif

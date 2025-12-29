@@ -28,6 +28,10 @@
 
 #include "SDC.h"
 
+CSDCTransmit::~CSDCTransmit()
+{
+
+}
 
 /* Implementation *************************************************************/
 void CSDCTransmit::SDCParam(CVector<_BINARY>* pbiData, CParameter& Parameter)
@@ -147,12 +151,12 @@ void CSDCTransmit::CommitLeave()
 }
 
 
-_BOOLEAN CSDCTransmit::CanTransmitCurrentTime(CParameter& Parameter)
+bool CSDCTransmit::CanTransmitCurrentTime(CParameter& Parameter)
 {
     if (Parameter.eTransmitCurrentTime != CParameter::CT_OFF)
     {
         /* Get current UTC time */
-        time_t t = time(NULL);
+        time_t t = time(nullptr);
         if (t != ((time_t)-1))
         {
             struct tm *gtm, *ltm = localtime(&t);
@@ -161,7 +165,7 @@ _BOOLEAN CSDCTransmit::CanTransmitCurrentTime(CParameter& Parameter)
             case CParameter::CT_UTC_OFFSET:
 #ifndef _WIN32
 				/* Extract time zone info */
-                if (ltm != NULL)
+                if (ltm != nullptr)
                 {
                     const int iTimeZone = ltm->tm_gmtoff; /* offset in seconds */
                     /* Set local time offset in half hour */
@@ -181,7 +185,7 @@ _BOOLEAN CSDCTransmit::CanTransmitCurrentTime(CParameter& Parameter)
                     gtm = ltm;
                 else
                     gtm = gmtime(&t);
-                if (gtm != NULL)
+                if (gtm != nullptr)
                 {
                     /* Time info is only transmitted at minute edge see 6.4.3.9 */
                     if (iLastMinuteTransmitted != gtm->tm_min)
@@ -194,7 +198,7 @@ _BOOLEAN CSDCTransmit::CanTransmitCurrentTime(CParameter& Parameter)
                         Parameter.iUTCHour = (int)gtm->tm_hour;
                         Parameter.iUTCMin = (int)gtm->tm_min;
                         Parameter.Unlock();
-                        return TRUE;
+                        return true;
                     }
                 }
                 break;
@@ -203,7 +207,7 @@ _BOOLEAN CSDCTransmit::CanTransmitCurrentTime(CParameter& Parameter)
             }
         }
     }
-    return FALSE;
+    return false;
 }
 
 
@@ -437,7 +441,7 @@ void CSDCTransmit::DataEntityType8(CVector<_BINARY>& vecbiData, int ServiceID,
                                       CParameter& Parameter)
 {
     (void)ServiceID;
-    const _BOOLEAN bTransmitOffset =
+    const bool bTransmitOffset =
         Parameter.bValidUTCOffsetAndSense &&
         Parameter.eTransmitCurrentTime == CParameter::CT_UTC_OFFSET;
     const int iNumBitsTotal = 28 + (bTransmitOffset ? 8 : 0);
@@ -484,11 +488,15 @@ void CSDCTransmit::DataEntityType8(CVector<_BINARY>& vecbiData, int ServiceID,
 /******************************************************************************\
 * Data entity Type 9 (Audio information data entity)						   *
 \******************************************************************************/
+
 void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
                                    CParameter& Parameter)
 {
     /* Set total number of bits */
-    const int iNumBitsTotal = 20;
+    int iNumBitsTotal = 20;
+    if(Parameter.Service[ServiceID].AudioParam.eAudioCoding==CAudioParam::AC_xHE_AAC) {
+        iNumBitsTotal += (Parameter.Service[ServiceID].AudioParam.xHE_AAC_config.size())*SIZEOF__BYTE;
+    }
 
     /* Init return vector (storing this data block) */
     vecbiData.Init(iNumBitsTotal + NUM_BITS_HEADER_SDC);
@@ -504,166 +512,13 @@ void CSDCTransmit::DataEntityType9(CVector<_BINARY>& vecbiData, int ServiceID,
     /* Data entity type */
     vecbiData.Enqueue((uint32_t) 9, 4); /* Type 09 */
 
-
     /* Actual body ---------------------------------------------------------- */
     /* Short Id */
     vecbiData.Enqueue((uint32_t) ServiceID, 2);
 
     /* Stream Id */
-    vecbiData.Enqueue((uint32_t) Parameter.Service[ServiceID].AudioParam.
-                      iStreamID, 2);
+    vecbiData.Enqueue((uint32_t) Parameter.Service[ServiceID].AudioParam.iStreamID, 2);
 
-    /* Audio coding */
-    switch (Parameter.Service[ServiceID].AudioParam.eAudioCoding)
-    {
-    case CAudioParam::AC_AAC:
-        vecbiData.Enqueue(0 /* 00 */, 2);
-        break;
-
-    case CAudioParam::AC_CELP:
-        vecbiData.Enqueue(1 /* 01 */, 2);
-        break;
-
-    case CAudioParam::AC_HVXC:
-        vecbiData.Enqueue(2 /* 10 */, 2);
-        break;
-    }
-
-    /* SBR flag */
-    switch (Parameter.Service[ServiceID].AudioParam.eSBRFlag)
-    {
-    case CAudioParam::SB_NOT_USED:
-        vecbiData.Enqueue(0 /* 0 */, 1);
-        break;
-
-    case CAudioParam::SB_USED:
-        vecbiData.Enqueue(1 /* 1 */, 1);
-        break;
-    }
-
-    /* Audio mode */
-    switch (Parameter.Service[ServiceID].AudioParam.eAudioCoding)
-    {
-    case CAudioParam::AC_AAC:
-        /* Channel type */
-        switch (Parameter.Service[ServiceID].AudioParam.eAudioMode)
-        {
-        case CAudioParam::AM_MONO:
-            vecbiData.Enqueue(0 /* 00 */, 2);
-            break;
-
-        case CAudioParam::AM_P_STEREO:
-            vecbiData.Enqueue(1 /* 01 */, 2);
-            break;
-
-        case CAudioParam::AM_STEREO:
-            vecbiData.Enqueue(2 /* 10 */, 2);
-            break;
-        }
-        break;
-
-    case CAudioParam::AC_CELP:
-        /* rfa */
-        vecbiData.Enqueue((uint32_t) 0, 1);
-
-        /* CELP_CRC */
-        switch (Parameter.Service[ServiceID].AudioParam.bCELPCRC)
-        {
-        case FALSE:
-            vecbiData.Enqueue(0 /* 0 */, 1);
-            break;
-
-        case TRUE:
-            vecbiData.Enqueue(1 /* 1 */, 1);
-            break;
-        }
-        break;
-
-    case CAudioParam::AC_HVXC:
-        /* HVXC_rate */
-        switch (Parameter.Service[ServiceID].AudioParam.eHVXCRate)
-        {
-        case CAudioParam::HR_2_KBIT:
-            vecbiData.Enqueue(0 /* 0 */, 1);
-            break;
-
-        case CAudioParam::HR_4_KBIT:
-            vecbiData.Enqueue(1 /* 1 */, 1);
-            break;
-        }
-
-        /* HVXC CRC */
-        switch (Parameter.Service[ServiceID].AudioParam.bHVXCCRC)
-        {
-        case FALSE:
-            vecbiData.Enqueue(0 /* 0 */, 1);
-            break;
-
-        case TRUE:
-            vecbiData.Enqueue(1 /* 1 */, 1);
-            break;
-        }
-        break;
-    }
-
-    /* Audio sampling rate */
-    switch (Parameter.Service[ServiceID].AudioParam.eAudioSamplRate)
-    {
-    case CAudioParam::AS_8_KHZ:
-        vecbiData.Enqueue(0 /* 000 */, 3);
-        break;
-
-    case CAudioParam::AS_12KHZ:
-        vecbiData.Enqueue(1 /* 001 */, 3);
-        break;
-
-    case CAudioParam::AS_16KHZ:
-        vecbiData.Enqueue(2 /* 010 */, 3);
-        break;
-
-    case CAudioParam::AS_24KHZ:
-        vecbiData.Enqueue(3 /* 011 */, 3);
-        break;
-    }
-
-    /* Text flag */
-    switch (Parameter.Service[ServiceID].AudioParam.bTextflag)
-    {
-    case FALSE:
-        vecbiData.Enqueue(0 /* 0 */, 1);
-        break;
-
-    case TRUE:
-        vecbiData.Enqueue(1 /* 1 */, 1);
-        break;
-    }
-
-    /* Enhancement flag */
-    switch (Parameter.Service[ServiceID].AudioParam.bEnhanceFlag)
-    {
-    case FALSE:
-        vecbiData.Enqueue(0 /* 0 */, 1);
-        break;
-
-    case TRUE:
-        vecbiData.Enqueue(1 /* 1 */, 1);
-        break;
-    }
-
-    /* Coder field */
-    if (Parameter.Service[ServiceID].AudioParam.
-            eAudioCoding == CAudioParam::AC_CELP)
-    {
-        /* CELP index */
-        vecbiData.Enqueue(
-            (uint32_t) Parameter.Service[ServiceID].AudioParam.iCELPIndex, 5);
-    }
-    else
-    {
-        /* rfa 5 bit */
-        vecbiData.Enqueue((uint32_t) 0, 5);
-    }
-
-    /* rfa 1 bit */
-    vecbiData.Enqueue((uint32_t) 0, 1);
+    /* rest of entity */
+    Parameter.Service[ServiceID].AudioParam.EnqueueType9(vecbiData);
 }

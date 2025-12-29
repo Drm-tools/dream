@@ -31,28 +31,12 @@
 #include <sstream>
 #include <cstdlib>
 #include <ctime>
-#ifdef _WIN32
-# include <windows.h>
-#endif
 
 #ifdef _WIN32
-time_t timegm(struct tm *tm)
-{
-	SYSTEMTIME st;
-	st.wYear = tm->tm_year+1900;
-	st.wMonth = tm->tm_mon+1;
-	st.wDay = tm->tm_mday;
-	st.wHour = 0;
-	st.wMinute = 0;
-	st.wSecond = 0;
-	st.wMilliseconds = 0;
-	FILETIME ft;
-	SystemTimeToFileTime(&st, &ft);
-	ULARGE_INTEGER uli;
-	uli.LowPart = ft.dwLowDateTime;
-	uli.HighPart = ft.dwHighDateTime;
-	return (time_t)(uli.QuadPart/10000000 - 11644473600);
-}
+# include "windows/platform_util.h"
+#endif
+#ifdef __ANDROID_API__
+# include "android/platform_util.h"
 #endif
 
 // get next event
@@ -111,7 +95,7 @@ bool CScheduler::LoadSchedule(const string& filename)
 
 void CScheduler::fill()
 {
-	time_t dt = time(NULL); // daytime
+	time_t dt = time(nullptr); // daytime
 	struct tm dts;
 	dts = *gmtime(&dt);
 	dts.tm_hour = 0;
@@ -169,7 +153,7 @@ string CScheduler::format(const struct tm& g)
 
 void CScheduler::before()
 {
-	time_t t = time(NULL);
+	time_t t = time(nullptr);
 	t += 10;
 	iniFile.PutIniSetting("Settings", "StartTime1", format(t));
 	t += 30;

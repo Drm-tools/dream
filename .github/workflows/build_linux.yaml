@@ -30,10 +30,18 @@ jobs:
 
         sudo apt-get install -y \
           libhamlib-dev libpulse-dev libfftw3-dev libopus-dev libsndfile-dev \
+<<<<<<< HEAD
           zlib1g-dev libspeexdsp-dev libpcap-dev \
           libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5 \
           qtbase5-dev qtbase5-dev-tools qt5-qmake build-essential \
           debhelper qtchooser fakeroot git2cl
+=======
+          zlib1g-dev libspeexdsp-dev libgps-dev libpcap-dev libsoapysdr-dev \
+          libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5 \
+          qtbase5-dev qtbase5-dev-tools qt5-qmake build-essential \
+          debhelper qtchooser fakeroot git2cl \
+          libjack-jackd2-dev libasound2-dev
+>>>>>>> Fix-audio-file-in
 
     - name: Install dependencies (vcpkg)
       if: matrix.arch == 'x64'
@@ -41,13 +49,46 @@ jobs:
        vcpkg install --triplet x64-linux fdk-aac[he-aac]
        echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
 
+<<<<<<< HEAD
     - name: build
       run: |
         qmake
         make
+=======
+    - name: changelog
+      env:
+        GH_TOKEN: ${{ github.token }}
+      run: |
+        echo RELEASE_TAG=`gh release list --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'` >> $GITHUB_ENV
+        truncate -s 0 debian/changelog
+        for r in `gh release list --exclude-drafts --exclude-pre-releases --json tagName --jq '.[].tagName'`
+        do
+          echo "dream ($r) unstable; urgency=medium" >> debian/changelog
+          echo >> debian/changelog
+          git log -1 --format='  * %s' $r -- >> debian/changelog
+          echo >> debian/changelog
+          git log -1 --format=' -- %an <%ae>  %aD' $r -- >> debian/changelog
+        done
+        python3 -c "print('ARCH='+{'x64': 'amd64'}['${{matrix.arch}}'])" >> $GITHUB_ENV
+
+    - name: Package
+      run: |
+        echo  ${{ github.ref_name }}
+        tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
+        mkdir build
+        cp -r debian build
+        cd build
+        tar xf ../dream_${{ github.run_id }}.orig.tar.gz
+        dpkg-buildpackage -us -uc -b
+>>>>>>> Fix-audio-file-in
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
+<<<<<<< HEAD
         name: dream
         path: dream
+=======
+        name: dream_${{ github.run_id }}_${{ env.ARCH }}_${{ matrix.os }}.deb
+        path: dream_${{ env.RELEASE_TAG }}_${{ env.ARCH }}.deb
+>>>>>>> Fix-audio-file-in

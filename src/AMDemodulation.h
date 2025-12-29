@@ -32,10 +32,10 @@
 #include "Parameter.h"
 #include "util/Modul.h"
 #include "util/Vector.h"
-#include "matlib/Matlib.h"
-#include "resample/Resample.h"
+#include "matlib/MatlibSigProToolbox.h"
+#include "resample/caudioresample.h"
 #ifdef HAVE_SPEEX
- #include <speex/speex_preprocess.h>
+# include <speex/speex_preprocess.h>
 #endif
 
 
@@ -98,24 +98,17 @@ class CNoiseReduction
 public:
     CNoiseReduction() : eNoiRedDegree(NR_MEDIUM)
 #ifdef HAVE_SPEEX
-	 ,preprocess_state(NULL),use_speex_denoise(false)
+    , preprocess_state(nullptr), speex_data(nullptr)
+    , supression_level(0), sample_rate(0)
 #endif
-	{
-	}
-    virtual ~CNoiseReduction() {}
+    {}
+    virtual ~CNoiseReduction();
 
-    enum ENoiRedDegree {NR_LOW, NR_MEDIUM, NR_HIGH};
+    enum ENoiRedDegree {NR_LOW=1, NR_MEDIUM=2, NR_HIGH=3};
 
     void Init(int iSampleRate, int iNewBlockLen);
     void Process(CRealVector& vecrIn /* in/out */);
-
-    void SetNoiRedSpeex(bool);
-
     void SetNoiRedDegree(const ENoiRedDegree eNND);
-
-    ENoiRedDegree GetNoiRedDegree() {
-        return eNoiRedDegree;
-    }
 
 protected:
     void UpdateNoiseEst(CRealVector& vecrNoisePSD,
@@ -148,7 +141,9 @@ protected:
     ENoiRedDegree	eNoiRedDegree;
 #ifdef HAVE_SPEEX
     SpeexPreprocessState *preprocess_state;
-    bool		use_speex_denoise;
+    spx_int16_t*	speex_data;
+    spx_int32_t		supression_level;
+    int				sample_rate;
 #endif
 };
 
@@ -157,9 +152,9 @@ protected:
 class CFreqOffsAcq
 {
 public:
-    CFreqOffsAcq() : bAcquisition(FALSE), rCurNormFreqOffset((CReal) 0.0) {}
+    CFreqOffsAcq() : bAcquisition(false), rCurNormFreqOffset((CReal) 0.0) {}
     void Init(const int iNewBlockSize);
-    _BOOLEAN Run(const CVector<_REAL>& vecrInpData);
+    bool Run(const CVector<_REAL>& vecrInpData);
 
     void Start(const CReal rNewNormCenter);
     CReal GetCurResult() {
@@ -177,7 +172,7 @@ protected:
     CRealVector				vecrPSD;
     int						iSearchWinStart;
     int						iSearchWinEnd;
-    _BOOLEAN				bAcquisition;
+    bool				bAcquisition;
 
     CReal					rNormCenter;
     CReal					rCurNormFreqOffset;
@@ -188,21 +183,20 @@ protected:
 class CAGC
 {
 public:
-    enum EType {AT_NO_AGC, AT_SLOW, AT_MEDIUM, AT_FAST};
 
     CAGC() : eType(AT_MEDIUM) {}
     void Init(int iSampleRate, int iNewBlockSize);
     void Process(CRealVector& vecrIn /* in/out */);
 
-    void SetType(const EType eNewType);
-    EType GetType() {
+    void SetType(const EAmAgcType eNewType);
+    EAmAgcType GetType() {
         return eType;
     }
 
 protected:
     int		iSampleRate;
     int		iBlockSize;
-    EType	eType;
+    EAmAgcType	eType;
     CReal	rAttack, rDecay;
     CReal	rAvAmplEst;
 };
@@ -264,23 +258,20 @@ public:
     CAMDemodulation();
     virtual ~CAMDemodulation() {}
 
-    enum EDemodType {DT_AM, DT_LSB, DT_USB, DT_CW, DT_FM};
-    enum ENoiRedType {NR_OFF, NR_LOW, NR_MEDIUM, NR_HIGH, NR_SPEEX_LOW, NR_SPEEX_MEDIUM, NR_SPEEX_HIGH};
-
     void SetAcqFreq(const CReal rNewNormCenter);
 
-    void EnableAutoFreqAcq(const _BOOLEAN bNewEn)
+    void EnableAutoFreqAcq(const bool bNewEn)
     {
         bAutoFreqAcquIsEnabled = bNewEn;
     }
-    _BOOLEAN AutoFreqAcqEnabled() {
+    bool AutoFreqAcqEnabled() {
         return bAutoFreqAcquIsEnabled;
     }
 
-    void EnablePLL(const _BOOLEAN bNewEn) {
+    void EnablePLL(const bool bNewEn) {
         bPLLIsEnabled = bNewEn;
     }
-    _BOOLEAN PLLEnabled() {
+    bool PLLEnabled() {
         return bPLLIsEnabled;
     }
 
@@ -294,21 +285,26 @@ public:
         return (int) (rBPNormBW * iSigSampleRate);
     }
 
-    void SetAGCType(const CAGC::EType eNewType);
-    CAGC::EType GetAGCType() {
+    void SetAGCType(const EAmAgcType eNewType);
+    EAmAgcType GetAGCType() {
         return AGC.GetType();
     }
 
     void SetNoiRedType(const ENoiRedType eNewType);
     ENoiRedType GetNoiRedType() {
-        return NoiRedType;
+        return eNoiRedType;
     }
 
-    _BOOLEAN haveSpeex() {
+    void SetNoiRedLevel(const int iNewLevel);
+    int GetNoiRedLevel() {
+        return iNoiRedLevel;
+    }
+
+    bool haveSpeex() {
 #ifdef HAVE_SPEEX
-        return TRUE;
+        return true;
 #else
-        return FALSE;
+        return false;
 #endif
     }
 
@@ -318,13 +314,13 @@ public:
         rBW = rBPNormBW;
     }
 
-    _BOOLEAN GetPLLPhase(CReal& rPhaseOut);
+    bool GetPLLPhase(CReal& rPhaseOut);
     CReal GetCurMixFreqOffs() const
     {
         return rNormCurMixFreqOffs * iSigSampleRate;
     }
 
-    _BOOLEAN GetFrameBoundary() {
+    bool GetFrameBoundary() {
         return iFreeSymbolCounter==0;
     }
 
@@ -359,8 +355,8 @@ protected:
 
     int							iSymbolBlockSize;
 
-    _BOOLEAN					bPLLIsEnabled;
-    _BOOLEAN					bAutoFreqAcquIsEnabled;
+    bool					bPLLIsEnabled;
+    bool					bAutoFreqAcquIsEnabled;
 
     EDemodType					eDemodType;
 
@@ -369,13 +365,15 @@ protected:
     CVector<_REAL>				vecTempResBufIn;
     CVector<_REAL>				vecTempResBufOut;
 
+    ENoiRedType					eNoiRedType;
+    int							iNoiRedLevel;
+
     /* Objects */
     CPLL						PLL;
     CMixer						Mixer;
     CFreqOffsAcq				FreqOffsAcq;
     CAGC						AGC;
     CNoiseReduction				NoiseReduction;
-    ENoiRedType					NoiRedType;
     CAudioResample				ResampleObj;
 
     /* OPH: counter to count symbols within a frame in order to generate */

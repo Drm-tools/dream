@@ -35,6 +35,7 @@
 #define TAG_ITEM_DECODER_H_INCLUDED
 
 #include "../GlobalDefinitions.h"
+#include "../Parameter.h"
 #include "MDIDefinitions.h"
 #include "../util/Vector.h"
 
@@ -50,19 +51,32 @@ public:
 	virtual std::string GetTagName(void) = 0;
 	virtual ~CTagItemDecoder() {}
 
-	CTagItemDecoder() : bIsReady(FALSE) {};
+	CTagItemDecoder() : bIsReady(false) {};
 	// initialise any internal state variables. TODO: Make this pure to force implementer to think?
-	virtual void Init(void) {bIsReady = FALSE;}
+	virtual void Init(void) {bIsReady = false;}
 
-	virtual _BOOLEAN IsReady(void) {return bIsReady;}
+	virtual bool IsReady(void) {return bIsReady;}
 
 protected:
-	void SetReady(_BOOLEAN bReady) {bIsReady = bReady;}
+	void SetReady(bool bReady) {bIsReady = bReady;}
 
 private:
-	_BOOLEAN bIsReady;
+	bool bIsReady;
 
 };
 
+// RSCI Status
+class CTagItemDecoderRSI : public CTagItemDecoder
+{
+public:
+    CTagItemDecoderRSI(CParameter* pP, const std::string& s) : pParameter(pP), tag(s) {}
+    void SetParameterPtr(CParameter *pP) {pParameter = pP;}
+    virtual std::string GetTagName() { return tag; }
+protected:
+
+    _REAL decodeDb(CVector<_BINARY>& vecbiTag);
+    CParameter *pParameter;
+    std::string tag;
+};
 
 #endif

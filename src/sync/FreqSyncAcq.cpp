@@ -30,6 +30,7 @@
 \******************************************************************************/
 
 #include "FreqSyncAcq.h"
+#include "../matlib/MatlibSigProToolbox.h"
 
 /* Implementation *************************************************************/
 void CFreqSyncAcq::ProcessDataInternal(CParameter& Parameters)
@@ -40,7 +41,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& Parameters)
 	int			iNumDetPeaks;
 	//int			iDiffTemp;
 	//CReal		rLevDiff;
-	_BOOLEAN	bNoPeaksLeft;
+	bool	bNoPeaksLeft;
 	CRealVector	vecrPSDPilPoin(3);
 
 	Parameters.Lock(); 
@@ -50,9 +51,10 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& Parameters)
 	if (iFreeSymbolCounter >= Parameters.CellMappingTable.iNumSymPerFrame)
 	{
 		iFreeSymbolCounter = 0;
+        bUnlockedFrameBoundary = true;
 	}
 
-	if (bAquisition == TRUE)
+	if (bAquisition)
 	{
 
 		/* Do not transfer any data to the next block if no frequency
@@ -227,13 +229,13 @@ fclose(pFile2);
 					/* First, get the first valid peak entry and init the
 					   maximum with this value. We also detect, if a peak is
 					   left */
-					bNoPeaksLeft = TRUE;
+					bNoPeaksLeft = true;
 					for (i = 0; i < iNumDetPeaks; i++)
 					{
 						if (vecbFlagVec[i] == 1)
 						{
 							/* At least one peak is left */
-							bNoPeaksLeft = FALSE;
+							bNoPeaksLeft = false;
 
 							/* Init max value */
 							iMaxIndex = veciPeakIndex[i];
@@ -241,7 +243,7 @@ fclose(pFile2);
 						}
 					}
 
-					if (bNoPeaksLeft == FALSE)
+					if (bNoPeaksLeft == false)
 					{
 						/* Actual maximum detection, take the remaining peak
 						   which has the highest value */
@@ -286,13 +288,13 @@ fclose(pFile1);
 							(_REAL) iMaxIndex / iFrAcFFTSize;
 
 						/* Reset acquisition flag */
-						bAquisition = FALSE;
+						bAquisition = false;
 
 
 						/* Send out the data stored for FFT calculation ----- */
 						/* This does not work for bandpass filter. TODO: make
 						   this possible for bandpass filter, too */
-						if (bUseRecFilter == FALSE)
+						if (bUseRecFilter == false)
 						{
 							iOutputBlockSize = iHistBufSize;
 
@@ -325,7 +327,7 @@ fclose(pFile1);
 		/* If synchronized DRM input stream is used, overwrite the detected
 		   frequency offest estimate by the desired frequency, because we know
 		   this value */
-		if (bSyncInput == TRUE)
+		if (bSyncInput)
 		{
 			Parameters.rFreqOffsetAcqui =
 				(_REAL) Parameters.CellMappingTable.iIndexDCFreq / Parameters.CellMappingTable.iFFTSizeN;
@@ -361,7 +363,7 @@ fclose(pFile1);
 
 
 		/* Bandpass filter -------------------------------------------------- */
-		if (bUseRecFilter == TRUE)
+		if (bUseRecFilter)
 			BPFilter.Process(*pvecOutputData);
 
 	}
@@ -481,6 +483,8 @@ void CFreqSyncAcq::InitInternal(CParameter& Parameters)
 
 	/* OPH: init free-running symbol counter */
 	iFreeSymbolCounter = 0;
+    bUnlockedFrameBoundary = false;
+
 
 	Parameters.Unlock(); 
 }
@@ -498,7 +502,7 @@ void CFreqSyncAcq::SetSearchWindow(_REAL rNewCenterFreq, _REAL rNewWinSize)
 void CFreqSyncAcq::StartAcquisition()
 {
 	/* Set flag so that the actual acquisition routine is entered */
-	bAquisition = TRUE;
+	bAquisition = true;
 
 	/* Reset (or init) counters */
 	iAquisitionCounter = NUM_BLOCKS_4_FREQ_ACQU;
@@ -506,4 +510,14 @@ void CFreqSyncAcq::StartAcquisition()
 
 	/* Reset FFT-history */
 	vecrFFTHistory.Reset((_REAL) 0.0);
+}
+
+bool CFreqSyncAcq::GetUnlockedFrameBoundary()
+{
+    if (bUnlockedFrameBoundary)
+    {
+        bUnlockedFrameBoundary = false;
+        return true;
+    }
+    return false;
 }

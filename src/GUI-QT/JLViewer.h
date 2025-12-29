@@ -29,31 +29,28 @@
 #ifndef _JLVIEWER_H
 #define _JLVIEWER_H
 
-#include <QTextDocument>
 #include "ui_JLViewer.h"
-#include "DialogUtil.h"
-#include "../DrmReceiver.h"
+#include "CWindow.h"
+#include "../main-Qt/crx.h"
+#include <QTextDocument>
 #include <string>
 
-class CSettings;
-
-class JLViewer : public QDialog, Ui_JLViewer
+class JLViewer : public CWindow, public Ui_JLViewer
 {
     Q_OBJECT
 
 public:
-    JLViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0,
-             const char* name = 0, Qt::WindowFlags f = 0);
+    JLViewer(CRx&, CSettings&, QWidget* parent = 0);
     virtual ~JLViewer();
 
 protected:
+    virtual void eventShow(QShowEvent*);
+    virtual void eventHide(QHideEvent*);
     QTimer Timer;
     QTextDocument           document;
-//    QString                 strCurrentSavePath;
-    CDRMReceiver&           receiver;
-    CSettings&              settings;
+//    QString               strCurrentSavePath;
+    CRx&                    rx;
     bool                    decoderSet;
-    CEventFilter            ef;
 
 public slots:
     void OnTimer();
@@ -62,8 +59,6 @@ public slots:
     void OnSaveAll();
     void OnClearAll();
     void OnSetFont();
-    void showEvent(QShowEvent*);
-    void hideEvent(QHideEvent*);
 };
 
 #endif

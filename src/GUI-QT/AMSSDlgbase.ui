@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>CAMSSDlgBase</class>
- <widget class="QDialog" name="CAMSSDlgBase">
+ <widget class="QMainWindow" name="CAMSSDlgBase">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>716</width>
-    <height>297</height>
+    <width>724</width>
+    <height>305</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -21,12 +21,10 @@
   </property>
   <property name="windowIcon">
    <iconset resource="res/icons.qrc">
-    <normaloff>:/icons/MainIcon.png</normaloff>:/icons/MainIcon.png</iconset>
+    <normaloff>:/icons/MainIcon.svg</normaloff>:/icons/MainIcon.svg</iconset>
   </property>
-  <property name="sizeGripEnabled">
-   <bool>true</bool>
-  </property>
-  <layout class="QVBoxLayout">
+  <widget class="QWidget" name="centralwidget">
+  <layout class="QVBoxLayout" name="verticalLayout">
    <item>
     <widget class="QGroupBox" name="GroupBoxAMSS">
      <property name="sizePolicy">
@@ -3675,6 +3673,12 @@
             <height>70</height>
            </size>
           </property>
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
+          <property name="lineWidth">
+           <number>4</number>
+          </property>
          </widget>
         </item>
        </layout>
@@ -3683,6 +3687,7 @@
     </widget>
    </item>
   </layout>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>

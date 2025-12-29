@@ -30,28 +30,29 @@
 #define _SLIDESHOWVIEWER_H
 
 #include "ui_SlideShowViewer.h"
-#include "../DrmReceiver.h"
-#include "DialogUtil.h"
-class CSettings;
+#include "CWindow.h"
+#include "../main-Qt/crx.h"
+#include "../datadecoding/DABMOT.h"
 
-class SlideShowViewer : public QDialog, Ui_SlideShowViewer
+class SlideShowViewer : public CWindow, public Ui_SlideShowViewer
 {
     Q_OBJECT
 
 public:
-    SlideShowViewer(CDRMReceiver&, CSettings&, QWidget* parent = 0);
+    SlideShowViewer(CRx&, CSettings&, QWidget* parent = 0);
     virtual ~SlideShowViewer();
 
 protected:
+    virtual void            eventShow(QShowEvent*);
+    virtual void            eventHide(QHideEvent*);
     void                    SetImage(int);
     void                    UpdateButtons();
     void                    ClearMOTCache(CMOTDABDec *motdec);
-    void                    GetServiceParams(uint32_t* iServiceID, bool* bServiceValid, QString* strLabel, ETypeRxStatus* eStatus=NULL, int* shortID=NULL, int* iPacketID=NULL);
+    void                    GetServiceParams(uint32_t* iServiceID, bool* bServiceValid, QString* strLabel, ETypeRxStatus* eStatus=nullptr, int* shortID=nullptr, int* iPacketID=nullptr);
     void                    UpdateWindowTitle(const uint32_t iServiceID, const bool bServiceValid, QString strLabel);
     QTimer                  Timer;
     QString                 strCurrentSavePath;
-    CDRMReceiver&           receiver;
-    CSettings&              settings;
+    CRx&                    rx;
     std::vector<QPixmap>    vecImages;
     std::vector<QString>    vecImageNames;
     int                     iCurImagePos;
@@ -60,7 +61,6 @@ protected:
     uint32_t                iCurrentDataServiceID;
     bool                    bLastServiceValid;
     QString                 strLastLabel;
-    CEventFilter            ef;
 
 public slots:
     void OnTimer();
@@ -71,8 +71,6 @@ public slots:
     void OnSave();
     void OnSaveAll();
     void OnClearAll();
-    void showEvent(QShowEvent*);
-    void hideEvent(QHideEvent*);
 };
 
 #endif

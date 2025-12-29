@@ -32,7 +32,7 @@
 #include <qfile.h>
 #include <qdir.h>
 #include <qtextstream.h>
-#include <qregexp.h>
+#include <qdatetime.h>
 #include <iostream>
 #include <cstdlib>
 #include <sys/stat.h>
@@ -40,9 +40,8 @@
 # include <windows.h>
 #endif
 
-const
-EPG::gl
-EPG::genre_list[] = {
+static const struct gl { const char *genre; const char* desc; } genre_list[]
+ = {
     {"1", "Audio-Video"},
     {"1.0", "Proprietary"},
     {"1.1", "PlayRecording"},
@@ -1489,7 +1488,7 @@ EPG::loadChannels (const QString & fileName)
             }
             if (name != "")
             {
-                addChannel (name, sid.toUInt (NULL, 16));
+                addChannel (name, sid.toUInt (nullptr, 16));
             }
         }
         n = n.nextSibling ();
@@ -1500,85 +1499,9 @@ time_t EPG::parseTime(const QString & time)
 {
     if (time=="")
         return 0; // invalid
-    QRegExp q("[-T:+Z]");
-#if QT_VERSION >= 0x040000
-    QStringList sl = time.split(q);
-#else
-    QStringList sl = QStringList::split(q, time);
-#endif
-#ifdef _WIN32
-    SYSTEMTIME st;
-    st.wYear = 1970;
-    st.wMonth = 1;
-    st.wDay = 1;
-    st.wDayOfWeek = 0;
-    st.wHour = 0;
-    st.wMinute = 0;
-    st.wSecond = 0;
-    st.wMilliseconds = 0;
-    FILETIME zero;
-    SystemTimeToFileTime(&st, &zero);
-    ULARGE_INTEGER unix_zero;
-    unix_zero.LowPart = zero.dwLowDateTime;
-    unix_zero.HighPart = zero.dwHighDateTime;
-    // its  116444736000000000
-    st.wYear = sl[0].toUInt();
-    st.wMonth = sl[1].toUInt();
-    st.wDay = sl[2].toUInt();
-    st.wDayOfWeek = 0;
-    st.wHour = sl[3].toUInt();
-    st.wMinute = sl[4].toUInt();
-    st.wSecond = sl[5].toUInt();
-    st.wMilliseconds = 0;
-    FILETIME to;
-    SystemTimeToFileTime(&st, &to);
-    ULARGE_INTEGER ft;
-    ft.LowPart = to.dwLowDateTime;
-    ft.HighPart = to.dwHighDateTime;
-    time_t t = time_t((ft.QuadPart - unix_zero.QuadPart)/10000000L);
 
-    if (sl.count()==8)
-    {
-        int hh = sl[6].toInt();
-        int mm = sl[7].toInt();
-        time_t offset = 60*(60*hh+mm);
-        if (time[19]=='+') // + offset means UTC is earlier
-            t -= offset;
-        else
-            t += offset;
-    }
-#else
-    tm bdt;
-    bdt.tm_year = sl[0].toUInt()-1900;
-    bdt.tm_mon = sl[1].toUInt()-1;
-    bdt.tm_mday = sl[2].toUInt();
-    bdt.tm_hour = sl[3].toUInt();
-    bdt.tm_min = sl[4].toUInt();
-    bdt.tm_sec = sl[5].toUInt();
-    string se;
-    char *e = getenv("TZ");
-    if (e)
-        se = e;
-    putenv(const_cast<char*>("TZ=UTC"));
-    tzset();
-    time_t t = mktime(&bdt);
-    if (e)
-        setenv("TZ", se.c_str(), 1);
-    else
-        unsetenv("TZ");
-    // time zone offset
-    if (sl.count()==8)
-    {
-        int hh = sl[6].toInt();
-        int mm = sl[7].toInt();
-        int secs = 60*(60*hh+mm);
-        if (time[19]=='+') // + offset means UTC is earlier
-            t -= secs;
-        else
-            t += secs;
-    }
-#endif
-    return t;
+    QDateTime dateTime = QDateTime::fromString(time, "yyyy-MM-ddThh:mm:ss.zzzZ");
+    return dateTime.toSecsSinceEpoch();
 }
 
 int EPG::parseDuration (const QString& duration)
