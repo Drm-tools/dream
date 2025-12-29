@@ -59,7 +59,7 @@ CDRMReceiver::CDRMReceiver(CSettings* nPsettings):
     iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
     time_keeper(0),
     pTuner(nullptr),
-    PlotManager(), iPrevSigSampleRate(0)
+    PlotManager(), iPrevSigSampleRate(0), initialised(false)
 {
     Parameters.SetReceiver(this);
     downstreamRSCI.SetReceiver(this);
@@ -823,6 +823,13 @@ CDRMReceiver::SetInTrackingModeDelayed()
 void
 CDRMReceiver::process()
 {
+    if(!initialised) {
+        InitReceiverMode();
+        SetInStartMode();
+        initialised = true;
+        cerr << "DRMReceiver initialised" << endl;
+    }
+
     bool bFrameToSend = false;
     bool bEnoughData = true;
 

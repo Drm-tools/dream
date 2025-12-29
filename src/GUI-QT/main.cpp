@@ -31,9 +31,9 @@
 #include <QTranslator>
 #include <QThread>
 #include <QApplication>
+#include <QTimer>
 #include <QMessageBox>
 #include <csignal>
-#include <iostream>
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
@@ -91,6 +91,8 @@ main(int argc, char **argv)
 	/* Parse arguments and load settings from init-file */
 	Settings.Load(argc, argv);
 
+    QThread workerThread;
+
 	try
 	{
 		string mode = Settings.Get("command", "mode", string());
@@ -123,11 +125,18 @@ main(int argc, char **argv)
             rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
 
 			/* Start working thread */
-            rx.start();
+            rx.moveToThread(&workerThread);
+
+            auto *timer = new QTimer();
+            timer->callOnTimeout(&rx, &CRx::doWork);
+            timer->start(0);
+
+            workerThread.start();
 
 			/* Set main window */
 			app.exec();
-
+            workerThread.quit();
+            workerThread.wait();
 #ifdef HAVE_LIBHAMLIB
 			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
 			{
@@ -146,8 +155,11 @@ main(int argc, char **argv)
             tx.LoadSettings(); // load settings after GUI initialised so LoadSettings signals get captured
             /* Show dialog */
 			pMainDlg->show();
-            tx.start();
+            tx.moveToThread(&workerThread);
+            workerThread.start();
 			app.exec();
+            workerThread.quit();
+            workerThread.wait();
             tx.SaveSettings();
         }
 		else

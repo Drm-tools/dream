@@ -13,9 +13,8 @@ class CRx : public CTRx
 {
     Q_OBJECT
 public:
-    explicit CRx(CDRMReceiver& nRx, CTRx *parent = nullptr);
+    explicit CRx(CDRMReceiver&);
     virtual ~CRx() override;
-    void run() override;
 
     virtual void    GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
     virtual void    GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
@@ -108,11 +107,9 @@ public slots:
     virtual void onSoundOutChannelChanged(EOutChanSel);
     virtual void onSoundSampleRateChanged(int);
     virtual void SetSoundSignalUpscale(int) override;
-
-private:
-    CDRMReceiver& rx;
-    ERunState eRunState;
-
+    void doWork();
+    void doRestart();
+    void finished() {}
 signals:
     void inputSampleRateChanged(int);
     void outputSampleRateChanged(int);
@@ -157,6 +154,8 @@ signals:
     void drmModeStarted();
     void amModeStarted();
     void fmModeStarted();
+protected:
+    CDRMReceiver& rx;
 };
 
 #endif // CRX_H

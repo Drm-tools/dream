@@ -5,7 +5,7 @@
 
 #include "../DrmReceiver.h"
 
-CRx::CRx(CDRMReceiver& nRx, CTRx *trx): CTRx(trx), rx(nRx), eRunState(STOPPED)
+CRx::CRx(CDRMReceiver& nrx): CTRx(), rx(nrx)
 {
 }
 
@@ -14,72 +14,30 @@ CRx::~CRx()
 }
 
 void
-CRx::run()
+CRx::doRestart()
 {
     qDebug("Working thread started");
-    try
-    {
-        // set the frequency from the command line or ini file
-        int iFreqkHz = rx.GetParameters()->GetFrequency();
-        if (iFreqkHz != -1)
-            rx.SetFrequency(iFreqkHz);
 
-#ifdef USE_CONSOLEIO
-        CConsoleIO::Enter(&rx);
-#endif
-        // emit any initial state needed by UI and not otherwise set
-        emit InputChannelChanged(int(rx.GetReceiveData()->GetInChanSel()));
-        emit OutputChannelChanged(int(rx.GetWriteData()->GetOutChanSel()));
-
-        do
-        {
-            rx.InitReceiverMode();
-            rx.SetInStartMode();
-
-            ERecMode rxMode = rx.GetReceiverMode();
-            switch(rx.GetReceiverMode()) {
-            case RM_DRM: emit drmModeStarted(); break;
-            case RM_AM: emit amModeStarted(); break;
-            case RM_FM: emit fmModeStarted(); break;
-            case RM_NONE:;
-            }
-
-            /* Set run flag so that the thread can work */
-            eRunState = RUNNING;
-            do
-            {
-                rx.updatePosition();
-                rx.process();
-		if (rx.GetNewReceiverMode() != rxMode && rx.GetNewReceiverMode() != RM_NONE)
-		  eRunState = RESTART;
-
-#ifdef USE_CONSOLEIO
-                eRunState = CConsoleIO::Update();
-#endif
-            }
-            while (eRunState == RUNNING);
-
-            /* Restore some parameter previously set by SetInput() */
-        }
-        while (eRunState == RESTART);
-
-        rx.CloseSoundInterfaces();
-
-#ifdef USE_CONSOLEIO
-        CConsoleIO::Leave();
-#endif
-
-        eRunState = STOPPED;
+    int iFreqkHz = rx.GetParameters()->GetFrequency();
+    if (iFreqkHz != -1) {
+        rx.SetFrequency(iFreqkHz);
     }
-    catch (CGenErr GenErr)
-    {
-        qDebug("%s", GenErr.strError.c_str());
-    }
-    catch (string strError)
-    {
-        qDebug("%s", strError.c_str());
-    }
-    qDebug("Receiver working thread complete");
+#ifdef USE_CONSOLEIO
+    CConsoleIO::Enter(&rx);
+#endif
+    // emit any initial state needed by UI and not otherwise set
+    emit InputChannelChanged(int(rx.GetReceiveData()->GetInChanSel()));
+    emit OutputChannelChanged(int(rx.GetWriteData()->GetOutChanSel()));
+
+    rx.InitReceiverMode();
+    rx.SetInStartMode();
+}
+
+void
+CRx::doWork()
+{
+        rx.updatePosition();
+        rx.process();
 }
 
 void CRx::LoadSettings()
@@ -108,7 +66,6 @@ void CRx::SetInputDevice(QString s)
 void CRx::SetInputDevice(string s)
 {
     rx.SetInputDevice(s);
-    eRunState = RESTART;
     QString id = QString::fromStdString(rx.GetInputDevice());
     emit InputDeviceChanged(id);
     emit soundFileChanged(id); // TODO only send if it is a file!!!
@@ -138,8 +95,6 @@ void CRx::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, 
 
 void CRx::Start()
 {
-    if (eRunState == RUNNING)
-        eRunState = RESTART;
 }
 
 void CRx::Restart()
@@ -149,7 +104,6 @@ void CRx::Restart()
 
 void CRx::Stop()
 {
-    eRunState = STOP_REQUESTED;
 }
 
 CSettings* CRx::GetSettings()
@@ -421,7 +375,6 @@ void CRx::SetFlipSpectrum(bool b)
 void CRx::SetFrequencySyncAcquisitionFilter(bool b)
 {
     rx.GetFreqSyncAcq()->SetRecFilter(b);
-    eRunState = RESTART;
 }
 
 void CRx::SetConsiderInterferer(bool b)
@@ -442,7 +395,6 @@ void CRx::SetReverberationEffect(bool b)
 void CRx::SetReceiverMode(ERecMode e)
 {
     rx.SetReceiverMode(e);
-    eRunState = RESTART;
 }
 
 void CRx::SetAMDemodulationType(EDemodType e)

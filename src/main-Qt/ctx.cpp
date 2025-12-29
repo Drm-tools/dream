@@ -2,7 +2,7 @@
 
 #include "../DrmTransmitter.h"
 
-CTx::CTx(CDRMTransmitter& nTx, CTRx *parent): CTRx(parent), tx(nTx), eRunState(STOPPED)
+CTx::CTx(CDRMTransmitter& nTx, CTRx *): CTRx(), tx(nTx), eRunState(STOPPED)
 {
 
 }
@@ -13,7 +13,7 @@ CTx::~CTx()
 }
 
 void
-CTx::run()
+CTx::doWork()
 {
     qDebug("Working thread started");
     try

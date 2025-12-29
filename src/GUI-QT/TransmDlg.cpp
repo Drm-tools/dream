@@ -573,7 +573,7 @@ void TransmDialog::OnTimer()
 
 void TransmDialog::OnTimerStop()
 {
-    if (tx.isRunning())
+    if (false) // tx.isRunning())
 	{
         cerr << "transmitter thread is running on timer stop - retrying" << endl;
         /* Request a transmitter stop */
@@ -652,7 +652,7 @@ void TransmDialog::OnButtonStartStop()
 				}
 			}
 
-            tx.start();
+            //tx.start();
 
 			ButtonStartStop->setText(tr("&Stop"));
 			if (pActionStartStop)

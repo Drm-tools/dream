@@ -12,12 +12,11 @@ class CTx : public CTRx
 public:
     explicit CTx(CDRMTransmitter& nRx, CTRx *parent = nullptr);
     virtual ~CTx() override;
-    void run() override;
 
     virtual std::string GetInputDevice();
     virtual std::string GetOutputDevice();
-    virtual void EnumerateInputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultInput);
-    virtual void EnumerateOutputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput);
+    virtual void EnumerateInputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultInput) override;
+    virtual void EnumerateOutputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput) override;
     virtual CSettings*				GetSettings() override;
     virtual CParameter*				GetParameters() override;
     virtual bool				IsReceiver() const override { return false;}
@@ -49,6 +48,7 @@ public slots:
     virtual void SetCarrierOffset(_REAL);
     virtual void SetIQOutput(int);
     virtual void SetFrequency(int) override;
+    virtual void doWork();
 private:
     CDRMTransmitter& tx;
     ERunState eRunState;
