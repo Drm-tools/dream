@@ -59,16 +59,11 @@ jobs:
 
     - name: Package
       run: |
-        echo  ${{ github.ref_name }}
-        tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
-        mkdir build
-        cp -r debian build
-        cd build
-        tar xf ../dream_${{ github.run_id }}.orig.tar.gz
-        dpkg-buildpackage -us -uc -b
+        qmake
+        make
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: dream_${{ github.run_id }}_${{ env.ARCH }}_${{ matrix.os }}.deb
-        path: dream_${{ env.RELEASE_TAG }}_${{ env.ARCH }}.deb
+        name: dream
+        path: dream
