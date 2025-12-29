@@ -1,4 +1,4 @@
-name: test soapysdr on Linux
+--find: test soapysdr on Linux
 
 permissions:
   packages: write
@@ -28,4 +28,4 @@ jobs:
     - name: test
       run: |
         SoapySDRUtil --find
-        true
+        echo $?e
