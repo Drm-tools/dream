@@ -565,8 +565,8 @@ HEADERS += \
     src/sourcedecoders/reverb.h \
     src/sourcedecoders/caudioreverb.h \
     src/tuner.h \
-    src/sound/soundfactory.h \
-    src/MDI/PacketSocketHTTP.h
+    src/sound/soundfactory.h
+
 SOURCES += \
     src/AMDemodulation.cpp \
     src/AMSSDemodulation.cpp \
@@ -682,8 +682,7 @@ SOURCES += \
     src/sourcedecoders/reverb.cpp \
     src/sourcedecoders/caudioreverb.cpp \
     src/tuner.cpp \
-    src/sound/soundfactory.cpp \
-    src/MDI/PacketSocketHTTP.cpp
+    src/sound/soundfactory.cpp
 
 contains(QT,core) {
     HEADERS += \
@@ -693,7 +692,8 @@ contains(QT,core) {
         src/util-QT/Util.h \
         src/main-Qt/ctrx.h \
         src/main-Qt/crx.h \
-        src/main-Qt/ctx.h
+        src/main-Qt/ctx.h \
+		src/MDI/PacketSocketHTTP.h
 
     SOURCES += \
         src/GUI-QT/Logging.cpp \
@@ -702,7 +702,8 @@ contains(QT,core) {
         src/util-QT/Util.cpp \
         src/main-Qt/ctrx.cpp \
         src/main-Qt/crx.cpp \
-        src/main-Qt/ctx.cpp
+        src/main-Qt/ctx.cpp \
+		src/MDI/PacketSocketHTTP.cpp
 }
 !sound {
     error("no usable audio interface found - install pulseaudio or portaudio dev package")
