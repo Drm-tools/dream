@@ -22,6 +22,7 @@ console {
     UI_MESSAGE = console mode
     VERSION_MESSAGE = No Qt
     SOURCES += src/main.cpp
+	DEFINES += NO_QT
 	unix:!cross_compile {
 		HEADERS += src/linux/ConsoleIO.h
 		SOURCES += src/linux/ConsoleIO.cpp
