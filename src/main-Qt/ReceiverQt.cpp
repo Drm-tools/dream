@@ -1,17 +1,43 @@
 #include "ReceiverQt.h"
-#ifdef USE_CONSOLEIO
-#include "../linux/ConsoleIO.h"
-#endif
+using namespace std;
 
 CReceiverQt::CReceiverQt() : CTransceiverQt() {}
 
 CReceiverQt::~CReceiverQt() {}
-void CReceiverQt::EnumerateInputs(std::vector<std::string> &names,
-                                  std::vector<std::string> &descriptions,
-                                  std::string &defaultInput) {}
-void CReceiverQt::EnumerateOutputs(std::vector<std::string> &names,
-                                   std::vector<std::string> &descriptions,
-                                   std::string &defaultOutput) {}
+
+void CReceiverQt::EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput)
+{
+    names.removeAll();
+    descriptions.removeAll();
+    defaultInput = "";
+    vector<string> n, d;
+    string def;
+    CDRMTransceiver::EnumerateInputs(n, d, def);
+
+    for(size_t i=0; i<n.size(); i++)
+    {
+        names.append(QString::fromStdString(n[i]));
+        descriptions.append(QString::fromStdString(d[i]));
+    }
+    defaultInput = QString::fromStdString(def);
+}
+
+void CReceiverQt::EnumerateOutputs(QStringList& names, QStringList& descriptions, QString& defaultOutput)
+{
+    names.removeAll();
+    descriptions.removeAll();
+    defaultOutput = "";
+    vector<string> n, d;
+    string def;
+    CDRMTransceiver::EnumerateInputs(n, d, def);
+
+    for(size_t i=0; i<n.size(); i++)
+    {
+        names.append(QString::fromStdString(n[i]));
+        descriptions.append(QString::fromStdString(d[i]));
+    }
+    defaultOutput = QString::fromStdString(def);
+}
 
 void CReceiverQt::LoadSettings() {
   CDRMReceiver::LoadSettings();
@@ -46,18 +72,6 @@ void CReceiverQt::SetOutputDevice(string s) {
   cerr << "CReceiverQt::SetOutputDevice " << s << endl;
   CDRMReceiver::SetOutputDevice(s);
   emit OutputDeviceChanged(QString::fromStdString(GetOutputDevice()));
-}
-
-void CReceiverQt::EnumerateInputs(vector<string> &names,
-                                  vector<string> &descriptions,
-                                  string &defaultInput) {
-  CDRMReceiver::EnumerateInputs(names, descriptions, defaultInput);
-}
-
-void CReceiverQt::EnumerateOutputs(vector<string> &names,
-                                   vector<string> &descriptions,
-                                   string &defaultOutput) {
-  CDRMReceiver::EnumerateOutputs(names, descriptions, defaultOutput);
 }
 
 void CReceiverQt::Start() {}

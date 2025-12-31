@@ -2,6 +2,7 @@
 #define TRANSCEIVERQT_H
 
 #include <QObject>
+#include <QStringList>
 
 class CTransceiverQt : public QObject
 {
@@ -10,8 +11,8 @@ public:
     explicit CTransceiverQt(QObject *parent = nullptr);
     virtual ~CTransceiverQt() {}
     virtual bool IsReceiver() const { return true; } // will be overridden in transmitter
-    virtual void EnumerateInputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultInput);
-    virtual void EnumerateOutputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput);
+    virtual void EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput)=0;
+    virtual void EnumerateOutputs(QStringList& names, QStringList& descriptions, QString& defaultOutput)=0;
 
 signals:
 };

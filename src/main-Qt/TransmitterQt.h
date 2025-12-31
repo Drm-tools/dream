@@ -11,8 +11,8 @@ public:
     explicit CTransmitterQt();
     virtual ~CTransmitterQt() override {}
     virtual bool IsReceiver() const override { return false; }
-    virtual void EnumerateInputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultInput) override;
-    virtual void EnumerateOutputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput) override;
+    virtual void EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput) override;
+    virtual void EnumerateOutputs(QStringList& names, QStringList& descriptions, QString& defaultOutput) override;
 
 public slots:
     virtual void LoadSettings() override;
