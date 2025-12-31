@@ -21,8 +21,8 @@ void CTransmitterQt::Stop()
 
 void CTransmitterQt::EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput)
 {
-    names.removeAll();
-    descriptions.removeAll();
+    names = QStringList();
+    descriptions = QStringList();
     defaultInput = "";
     vector<string> n, d;
     string def;
@@ -38,8 +38,8 @@ void CTransmitterQt::EnumerateInputs(QStringList& names, QStringList& descriptio
 
 void CTransmitterQt::EnumerateOutputs(QStringList& names, QStringList& descriptions, QString& defaultOutput)
 {
-    names.removeAll();
-    descriptions.removeAll();
+    names = QStringList();
+    descriptions = QStringList();
     defaultOutput = "";
     vector<string> n, d;
     string def;

@@ -7,8 +7,8 @@ CReceiverQt::~CReceiverQt() {}
 
 void CReceiverQt::EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput)
 {
-    names.removeAll();
-    descriptions.removeAll();
+    names = QStringList();
+    descriptions = QStringList();
     defaultInput = "";
     vector<string> n, d;
     string def;
@@ -24,8 +24,8 @@ void CReceiverQt::EnumerateInputs(QStringList& names, QStringList& descriptions,
 
 void CReceiverQt::EnumerateOutputs(QStringList& names, QStringList& descriptions, QString& defaultOutput)
 {
-    names.removeAll();
-    descriptions.removeAll();
+    names = QStringList();
+    descriptions = QStringList();
     defaultOutput = "";
     vector<string> n, d;
     string def;
