@@ -965,7 +965,7 @@ void TransmDialog::OnComboBoxTextMessageActivated(int iID)
 	if (iID != 0)
 	{
 		/* Write stored text in multi line edit control */
-		MultiLineEditTextMessage->setText(TextMesages[iID]);
+		MultiLineEditTextMessage->setText(TextMessages[iID]);
 	}
 }
 
