@@ -66,7 +66,7 @@ protected:
 
     QMenu* InitChannel(QMenu* parent, const QString& text, const CHANSEL* ChanSel);
     QMenu* InitSampleRate(QMenu* parent, const QString& text, const int* SampleRate);
-    void UpdateDeviceMenu(QMenu* menu, const std::vector<std::string>& names, const std::vector<std::string>& descriptions, const std::string& selected);
+    void UpdateDeviceMenu(QMenu* menu, const QStringList& names, const QStringList& descriptions, const QString& selected);
 
 public slots:
     // slots connected to signals from user
