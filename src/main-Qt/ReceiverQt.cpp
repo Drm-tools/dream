@@ -81,7 +81,7 @@ void CReceiverQt::Restart() { Start(); }
 void CReceiverQt::Stop() {}
 
 void CReceiverQt::StartWriteWaveFile(QString s) {
-  CDRMReceiver::StartWriteWaveFile(s.tostdString());
+  CDRMReceiver::StartWriteWaveFile(s.toStdString());
 }
 
 void CReceiverQt::StopWriteWaveFile() {  CDRMReceiver::StopWriteWaveFile(); }
