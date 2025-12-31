@@ -361,8 +361,7 @@ TransmDialog::TransmDialog(CTx& ntx, QWidget* parent)
 	CheckBoxEnableTextMessage->setChecked(true);
 
 	/* Add example text in internal container */
-	vecstrTextMessage.Add(
-		tr("Dream DRM Transmitter\x0B\x0AThis is a test transmission").toUtf8().constData());
+	TextMessages.append(tr("Dream DRM Transmitter\x0B\x0AThis is a test transmission"));
 
 	/* Insert item in combo box, display text and set item to our text */
 	ComboBoxTextMessage->insertItem(1, QString().setNum(1));
@@ -626,8 +625,8 @@ void TransmDialog::OnButtonStartStop()
 			/* Set text message */
             tx.ClearTextMessage();
 
-			for (i = 1; i < vecstrTextMessage.Size(); i++)
-                tx.SetTextMessage(vecstrTextMessage[i]);
+			for (i = 1; i < TextMessages.size(); i++)
+                tx.SetTextMessage(TextMessages[i]);
 
 			/* Set file names for data application */
             tx.ClearPicFileNames();
@@ -648,11 +647,9 @@ void TransmDialog::OnButtonStartStop()
 					QFileInfo FileInfo(strFileName);
 					const QString strFormat = FileInfo.suffix();
 
-                    tx.SetPicFileName(strFileName.toStdString(), strFormat.toStdString());
+                    tx.SetPicFileName(strFileName, strFormat);
 				}
 			}
-
-            //tx.start();
 
 			ButtonStartStop->setText(tr("&Stop"));
 			if (pActionStartStop)
@@ -681,7 +678,7 @@ void TransmDialog::OnToggleCheckBoxEnableTextMessage(bool bState)
 	EnableTextMessage(bState);
 }
 
-void TransmDialog::EnableTextMessage(const bool bFlag)
+void TransmDialog::EnableTextMessage(bool bFlag)
 {
     CParameter& Parameters = *tx.GetParameters();
 
@@ -733,7 +730,7 @@ void TransmDialog::OnToggleCheckBoxEnableAudio(bool bState)
 	}
 }
 
-void TransmDialog::EnableAudio(const bool bFlag)
+void TransmDialog::EnableAudio(bool bFlag)
 {
 	if (bFlag)
 	{
@@ -788,7 +785,7 @@ void TransmDialog::OnToggleCheckBoxEnableData(bool bState)
 	}
 }
 
-void TransmDialog::EnableData(const bool bFlag)
+void TransmDialog::EnableData(bool bFlag)
 {
 	/* Enable/Disable data controls */
 	CheckBoxRemovePath->setEnabled(bFlag);
@@ -825,7 +822,7 @@ void TransmDialog::EnableData(const bool bFlag)
 	}
 }
 
-bool TransmDialog::GetMessageText(const int iID)
+bool TransmDialog::GetMessageText(int iID)
 {
 	bool bTextIsNotEmpty = true;
 
@@ -858,10 +855,10 @@ void TransmDialog::OnPushButtonAddText()
 	if (iIDCurrentText == 0)
 	{
 		/* Add new message */
-		if (GetMessageText(vecstrTextMessage.Size()))
+		if (GetMessageText(TextMessages.size()))
 		{
 			/* If text was not empty, add new text in combo box */
-			const int iNewID = vecstrTextMessage.Size() - 1;
+			const int iNewID = TextMessages.size() - 1;
 			ComboBoxTextMessage->insertItem(iNewID, QString().setNum(iNewID));
 			/* Clear added text */
 			MultiLineEditTextMessage->clear();
@@ -967,11 +964,8 @@ void TransmDialog::OnComboBoxTextMessageActivated(int iID)
 	MultiLineEditTextMessage->clear();
 	if (iID != 0)
 	{
-		/* Get the text */
-		QString text = QString::fromUtf8(vecstrTextMessage[iID].c_str());
-
 		/* Write stored text in multi line edit control */
-		MultiLineEditTextMessage->setText(text);
+		MultiLineEditTextMessage->setText(TextMesages[iID]);
 	}
 }
 
