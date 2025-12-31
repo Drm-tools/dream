@@ -1106,7 +1106,7 @@ void systemevalDlg::OnCheckSaveAudioWAV()
         if (!strFileName.isEmpty())
         {
             DRMReceiver.GetWriteData()->
-            StartWriteWaveFile(strFileName.latin1());
+            StartWriteWaveFile(strFileName);
         }
         else
         {

@@ -924,8 +924,7 @@ void systemevalDlg::OnCheckSaveAudioWAV()
         /* Check if user not hit the cancel button */
         if (!strFileName.isEmpty())
         {
-			string s = strFileName.toUtf8().constData();
-            rx.StartWriteWaveFile(s);
+            rx.StartWriteWaveFile(strFileName);
         }
         else
         {

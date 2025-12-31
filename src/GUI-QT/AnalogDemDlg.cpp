@@ -562,7 +562,7 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 		/* Check if user not hit the cancel button */
 		if (!strFileName.isEmpty())
 		{
-            rx.StartWriteWaveFile(strFileName.toLocal8Bit().constData());
+            rx.StartWriteWaveFile(strFileName);
 		}
 		else
 		{
