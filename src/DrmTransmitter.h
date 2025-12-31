@@ -155,6 +155,8 @@ public:
 
     bool CanSoftStopExit();
 
+    void SetFrequency(int) {}
+
 protected:
     void InitSoftStop() { iSoftStopSymbolCount = 0; }
 
