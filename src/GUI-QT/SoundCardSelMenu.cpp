@@ -209,7 +209,7 @@ void CSoundCardSelMenu::OnSoundOutDeviceChanged(QString s)
     cerr << "CSoundCardSelMenu::OnSoundOutDeviceChanged " << s.toStdString() << endl;
     QStringList names;
     QStringList descriptions;
-    Qstring def;
+    Qtring def;
     trx.EnumerateOutputs(names, descriptions, def);
     cerr << "output device changed in trx " << s.toStdString() << " soundcard default is " << def.toStdString() << endl;
     UpdateDeviceMenu(menuOutputDev, names, descriptions, s);
