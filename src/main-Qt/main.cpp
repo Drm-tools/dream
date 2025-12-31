@@ -46,8 +46,8 @@
 #include <QTranslator>
 #include <QThread>
 
-#include "../main-Qt/ReceiverQt.h"
-#include "../main-Qt/TransmitterQt.h"
+#include "ReceiverQt.h"
+#include "TransmitterQt.h"
 
 int
 main(int argc, char **argv)
