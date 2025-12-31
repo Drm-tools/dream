@@ -17,14 +17,14 @@ public:
 public slots:
     virtual void LoadSettings() override;
     virtual void SaveSettings() override;
-    virtual void SetInputDevice(std::string) override;
-    virtual void SetOutputDevice(std::string) override;
+    virtual void SetInputDevice(QString);
+    virtual void SetOutputDevice(QString);
     virtual void Restart();
     virtual void Stop();
     virtual void SetSettings(CSettings* pNewSettings) override;
-    virtual void SetTextMessage(std::string);
+    virtual void SetTextMessage(QString);
     virtual void ClearTextMessage();
-    virtual void SetPicFileName(std::string, std::string);
+    virtual void SetPicFileName(QString, QString);
     virtual void SetPathRemoval(bool);
     virtual void ClearPicFileNames();
     virtual void SetHighQualityIQ(bool);

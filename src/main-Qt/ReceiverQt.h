@@ -23,8 +23,7 @@ public slots:
     virtual void Start();
     virtual void Stop();
     virtual void Restart();
-    virtual void SetSettings(CSettings* pNewSettings) override;
-    virtual void StartWriteWaveFile(std::string);
+    virtual void StartWriteWaveFile(QString);
     virtual void StopWriteWaveFile();
     virtual void SetTimeInterpolationAlgorithm(ETypeIntTime);
     virtual void SetFrequencyInterpolationAlgorithm(ETypeIntFreq);

@@ -1,54 +1,88 @@
 #include "TransmitterQt.h"
-#include <vector>
 #include <string>
+#include <vector>
+
 
 using namespace std;
 
-CTransmitterQt::CTransmitterQt(): eRunState(STOPPED)
-{
+CTransmitterQt::CTransmitterQt() : eRunState(STOPPED) {}
 
+void CTransmitterQt::CTransmitterQt::Restart() { eRunState = RESTART; }
+
+void CTransmitterQt::CTransmitterQt::Stop() { eRunState = STOP_REQUESTED; }
+
+void CTransmitterQt::EnumerateInputs(QStringList &names,
+                                     QStringList &descriptions,
+                                     QString &defaultInput) {
+  names = QStringList();
+  descriptions = QStringList();
+  defaultInput = "";
+  vector<string> n, d;
+  string def;
+  CDRMTransceiver::EnumerateInputs(n, d, def);
+
+  for (size_t i = 0; i < n.size(); i++) {
+    names.append(QString::fromStdString(n[i]));
+    descriptions.append(QString::fromStdString(d[i]));
+  }
+  defaultInput = QString::fromStdString(def);
 }
 
-void CTransmitterQt::Restart()
-{
-    eRunState = RESTART;
+void CTransmitterQt::EnumerateOutputs(QStringList &names,
+                                      QStringList &descriptions,
+                                      QString &defaultOutput) {
+  names = QStringList();
+  descriptions = QStringList();
+  defaultOutput = "";
+  vector<string> n, d;
+  string def;
+  CDRMTransceiver::EnumerateInputs(n, d, def);
+
+  for (size_t i = 0; i < n.size(); i++) {
+    names.append(QString::fromStdString(n[i]));
+    descriptions.append(QString::fromStdString(d[i]));
+  }
+  defaultOutput = QString::fromStdString(def);
 }
 
-void CTransmitterQt::Stop()
-{
-    eRunState = STOP_REQUESTED;
+void CTransmitterQt::LoadSettings() { CDRMTransmitter::LoadSettings(); }
+void CTransmitterQt::SaveSettings() { CDRMTransmitter::SaveSettings(); }
+void CTransmitterQt::SetInputDevice(QString) {
+  CDRMTransmitter::SetInputDevice(input.toStdString());
+}
+void CTransmitterQt::SetOutputDevice(QString) {
+  CDRMTransmitter::SetOutputDevice(output.toStdString());
+}
+void CTransmitterQt::SetSettings(CSettings *pNewSettings) {
+  CDRMTransmitter::SetSettings(pNewSettings);
+}
+void CTransmitterQt::SetTextMessage(QString) {
+  CDRMTransmitter::SetTextMessage(text.toStdString());
+}
+void CTransmitterQt::ClearTextMessage() { CDRMTransmitter::ClearTextMessage(); }
+void CTransmitterQt::SetPicFileName(QString picFileName, QString caption) {
+  CDRMTransmitter::SetPicFileName(picFileName.toStdString(),
+                                  caption.toStdString());
+}
+void CTransmitterQt::SetPathRemoval(bool) {
+  CDRMTransmitter::SetPathRemoval(bPathRemoval);
+}
+void CTransmitterQt::ClearPicFileNames() {
+  CDRMTransmitter::ClearPicFileNames();
 }
 
-void CTransmitterQt::EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput)
-{
-    names = QStringList();
-    descriptions = QStringList();
-    defaultInput = "";
-    vector<string> n, d;
-    string def;
-    CDRMTransceiver::EnumerateInputs(n, d, def);
-
-    for(size_t i=0; i<n.size(); i++)
-    {
-        names.append(QString::fromStdString(n[i]));
-        descriptions.append(QString::fromStdString(d[i]));
-    }
-    defaultInput = QString::fromStdString(def);
+void CTransmitterQt::SetHighQualityIQ(bool bHighQualityIQ) {
+  CDRMTransmitter::SetHighQualityIQ(bHighQualityIQ);
 }
-
-void CTransmitterQt::EnumerateOutputs(QStringList& names, QStringList& descriptions, QString& defaultOutput)
-{
-    names = QStringList();
-    descriptions = QStringList();
-    defaultOutput = "";
-    vector<string> n, d;
-    string def;
-    CDRMTransceiver::EnumerateInputs(n, d, def);
-
-    for(size_t i=0; i<n.size(); i++)
-    {
-        names.append(QString::fromStdString(n[i]));
-        descriptions.append(QString::fromStdString(d[i]));
-    }
-    defaultOutput = QString::fromStdString(def);
+void CTransmitterQt::SetOutputAmplified(bool bOutputAmplified) {
+  CDRMTransmitter::SetOutputAmplified(bOutputAmplified);
+}
+void CTransmitterQt::SetCarrierOffset(_REAL dCarrierOffset) {
+  CDRMTransmitter::SetCarrierOffset(dCarrierOffset);
+}
+void CTransmitterQt::SetIQOutput(int iIQOutput) {
+  CDRMTransmitter::SetIQOutput(iIQOutput);
+}
+void CTransmitterQt::SetFrequency(int iFrequency) {
+  CDRMTransmitter::SetFrequency(iFrequency);
 }

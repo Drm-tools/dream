@@ -288,12 +288,10 @@ public:
 
     virtual bool CanDecode(int);
 
-    virtual ETypeIntFreq GetFrequencyInterpolationAlgorithm() const;
     virtual ETypeTiSyncTrac GetTimeSyncTrackingType();
 
     virtual bool GetReverbEffect();
     virtual EAcqStat GetAcquisitionState();
-    virtual CSettings* GetSettings() override;
 
     virtual void GetTransferFunction(CVector<_REAL>& vecrData,
                                            CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale)

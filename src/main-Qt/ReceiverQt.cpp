@@ -80,11 +80,11 @@ void CReceiverQt::Restart() { Start(); }
 
 void CReceiverQt::Stop() {}
 
-void CReceiverQt::StartWriteWaveFile(string s) {
-  WriteData.StartWriteWaveFile(s);
+void CReceiverQt::StartWriteWaveFile(QString s) {
+  CDRMReceiver::StartWriteWaveFile(s.tostdString());
 }
 
-void CReceiverQt::StopWriteWaveFile() { WriteData.StopWriteWaveFile(); }
+void CReceiverQt::StopWriteWaveFile() {  CDRMReceiver::StopWriteWaveFile(); }
 
 void CReceiverQt::SetTimeInterpolationAlgorithm(ETypeIntTime e) {
   SetTimeInt(e);
