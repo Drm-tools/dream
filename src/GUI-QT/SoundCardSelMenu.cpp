@@ -196,38 +196,39 @@ void CSoundCardSelMenu::OnSoundSignalUpscale(bool bChecked)
 
 void CSoundCardSelMenu::OnSoundInDeviceChanged(QString s)
 {
-    vector<string> names;
-    vector<string> descriptions;
-    string def;
+    QStringList names;
+    QStringList descriptions;
+    Qstring def;
     trx.EnumerateInputs(names, descriptions, def);
-    cerr << "input device changed in trx " << s.toStdString() << " soundcard default is " << def << endl;
-    UpdateDeviceMenu(menuInputDev, names, descriptions, s.toStdString());
+    cerr << "input device changed in trx " << s.toStdString() << " soundcard default is " << def.toStdString() << endl;
+    UpdateDeviceMenu(menuInputDev, names, descriptions, s);
 }
 
 void CSoundCardSelMenu::OnSoundOutDeviceChanged(QString s)
 {
     cerr << "CSoundCardSelMenu::OnSoundOutDeviceChanged " << s.toStdString() << endl;
-    vector<string> names;
-    vector<string> descriptions;
-    string def;
+    QStringList names;
+    QStringList descriptions;
+    Qstring def;
     trx.EnumerateOutputs(names, descriptions, def);
-    cerr << "output device changed in trx " << s.toStdString() << " soundcard default is " << def << endl;
-    UpdateDeviceMenu(menuOutputDev, names, descriptions, s.toStdString());
+    cerr << "output device changed in trx " << s.toStdString() << " soundcard default is " << def.toStdString() << endl;
+    UpdateDeviceMenu(menuOutputDev, names, descriptions, s);
 }
 
-void CSoundCardSelMenu::UpdateDeviceMenu(QMenu* menu, const vector<string>& names, const vector<string>& descriptions, const string& selected)
+void CSoundCardSelMenu::UpdateDeviceMenu(QMenu* menu, const QStringList& names, const QStringList& descriptions, const QString& selected)
 {
     menu->clear();
     QActionGroup* group = nullptr;
     cerr << "UpdateDeviceMenu " << menu->title().toStdString() << " selected (" << selected << ")" << endl;
     for (int i = 0; i < int(names.size()); i++)
     {
-      cerr << "enum " << names[i] << " desc " <<  descriptions[i] << endl;
-        QString name(QString::fromStdString(names[i]));
-        QString desc(QString::fromStdString(descriptions[i]));
+      cerr << "enum " << names[i].toStdString() << " desc " <<  descriptions[i].toStdString() << endl;
+        QString name(names[i]);
+        QString desc(descriptions[i]);
         if(name.size()==0) {
-		name = tr("[default]");
-	}
+            name = tr("[default]");
+            desc = tr("System default sound device");
+        }
         QString t = name;
         if(desc.size()>0) t += " [" + desc + "]";
         QAction* m = menu->addAction(t);
