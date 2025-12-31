@@ -164,55 +164,67 @@ CDRMTransmitter::~CDRMTransmitter()
 {
 }
 
-void CDRMTransmitter::Run()
+void CDRMTransmitter::process()
 {
     /*
-    	The hand over of data is done via an intermediate-buffer. The calling
-    	convention is always "input-buffer, output-buffer". Additional, the
-    	DRM-parameters are fed to the function
+        The hand over of data is done via an intermediate-buffer. The calling
+        convention is always "input-buffer, output-buffer". Additional, the
+        DRM-parameters are fed to the function
     */
+
+    /* MSC ****************************************************************/
+    /* Read the source signal */
+    ReadData.ReadData(Parameters, DataBuf);
+
+    /* Audio source encoder */
+    AudioSourceEncoder.ProcessData(Parameters, DataBuf, AudSrcBuf);
+
+    /* MLC-encoder */
+    MSCMLCEncoder.ProcessData(Parameters, AudSrcBuf, MLCEncBuf);
+
+    /* Convolutional interleaver */
+    SymbInterleaver.ProcessData(Parameters, MLCEncBuf, IntlBuf);
+
+
+    /* FAC ****************************************************************/
+    GenerateFACData.ReadData(Parameters, GenFACDataBuf);
+    FACMLCEncoder.ProcessData(Parameters, GenFACDataBuf, FACMapBuf);
+
+
+    /* SDC ****************************************************************/
+    GenerateSDCData.ReadData(Parameters, GenSDCDataBuf);
+    SDCMLCEncoder.ProcessData(Parameters, GenSDCDataBuf, SDCMapBuf);
+
+
+    /* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
+    OFDMCellMapping.ProcessData(Parameters, IntlBuf, FACMapBuf, SDCMapBuf,
+                                CarMapBuf);
+
+
+    /* OFDM-modulation ****************************************************/
+    OFDMModulation.ProcessData(Parameters, CarMapBuf, OFDMModBuf);
+
+
+    /* Soft stop **********************************************************/
+    // if (CanSoftStopExit())
+    //     break;
+
+    /* Transmit the signal ************************************************/
+    TransmitData.WriteData(Parameters, OFDMModBuf);
+}
+
+void CDRMTransmitter::Run()
+{
     for (;;)
     {
-        /* MSC ****************************************************************/
-        /* Read the source signal */
-        ReadData.ReadData(Parameters, DataBuf);
-
-        /* Audio source encoder */
-        AudioSourceEncoder.ProcessData(Parameters, DataBuf, AudSrcBuf);
-
-        /* MLC-encoder */
-        MSCMLCEncoder.ProcessData(Parameters, AudSrcBuf, MLCEncBuf);
-
-        /* Convolutional interleaver */
-        SymbInterleaver.ProcessData(Parameters, MLCEncBuf, IntlBuf);
-
-
-        /* FAC ****************************************************************/
-        GenerateFACData.ReadData(Parameters, GenFACDataBuf);
-        FACMLCEncoder.ProcessData(Parameters, GenFACDataBuf, FACMapBuf);
-
-
-        /* SDC ****************************************************************/
-        GenerateSDCData.ReadData(Parameters, GenSDCDataBuf);
-        SDCMLCEncoder.ProcessData(Parameters, GenSDCDataBuf, SDCMapBuf);
-
-
-        /* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
-        OFDMCellMapping.ProcessData(Parameters, IntlBuf, FACMapBuf, SDCMapBuf,
-                                    CarMapBuf);
-
-
-        /* OFDM-modulation ****************************************************/
-        OFDMModulation.ProcessData(Parameters, CarMapBuf, OFDMModBuf);
-
-
-        /* Soft stop **********************************************************/
-        if (CanSoftStopExit())
-            break;
-
-        /* Transmit the signal ************************************************/
-        TransmitData.WriteData(Parameters, OFDMModBuf);
+        process();
     }
+}
+
+void CDRMTransmitter::Close()
+{
+    ReadData.Stop();
+    TransmitData.Stop();
 }
 
 bool CDRMTransmitter::CanSoftStopExit()
@@ -379,7 +391,7 @@ void CDRMTransmitter::LoadSettings()
     else if (value == "CS_2_SM") { Parameters.eSDCCodingScheme = CS_2_SM; }
 
     /* IF frequency */
-    SetCarOffset(s.Get(Transmitter, "iffreq", double(GetCarOffset())));
+    SetCarOffset(s.Get(Transmitter, "iffreq", double(GetCarrierOffset())));
 
     /* IF format */
     value = s.Get(Transmitter, "ifformat", string("OF_REAL_VAL"));
@@ -531,7 +543,7 @@ void CDRMTransmitter::SaveSettings()
     s.Put(Transmitter, "sdc", value);
 
     /* IF frequency */
-    s.Put(Transmitter, "iffreq", double(GetCarOffset()));
+    s.Put(Transmitter, "iffreq", double(GetCarrierOffset()));
 
     /* IF format */
     switch (GetTransData()->GetIQOutput()) {

@@ -26,13 +26,13 @@
  *
 \******************************************************************************/
 
+#include "src/matlib/MatlibStdToolbox.h"
 #if !defined(AMDEMOD_H__3B0BEVJBN8LKH2934BGF4344_BB27912__INCLUDED_)
 #define AMDEMOD_H__3B0BEVJBN8LKH2934BGF4344_BB27912__INCLUDED_
 
 #include "Parameter.h"
 #include "util/Modul.h"
 #include "util/Vector.h"
-#include "matlib/MatlibSigProToolbox.h"
 #include "resample/caudioresample.h"
 #ifdef HAVE_SPEEX
 # include <speex/speex_preprocess.h>
@@ -189,7 +189,7 @@ public:
     void Process(CRealVector& vecrIn /* in/out */);
 
     void SetType(const EAmAgcType eNewType);
-    EAmAgcType GetType() {
+    EAmAgcType GetType() const {
         return eType;
     }
 
@@ -271,7 +271,7 @@ public:
     void EnablePLL(const bool bNewEn) {
         bPLLIsEnabled = bNewEn;
     }
-    bool PLLEnabled() {
+    bool PLLEnabled() const {
         return bPLLIsEnabled;
     }
 
@@ -286,7 +286,7 @@ public:
     }
 
     void SetAGCType(const EAmAgcType eNewType);
-    EAmAgcType GetAGCType() {
+    EAmAgcType GetAGCType() const {
         return AGC.GetType();
     }
 

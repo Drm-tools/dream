@@ -34,8 +34,6 @@
 #include "OpusCodecParams.h"
 #include "DialogUtil.h"
 #include "CWindow.h"
-#include "../DrmTransmitter.h"
-#include "../Parameter.h"
 #include <QPushButton>
 #include <QString>
 #include <QLabel>
@@ -53,11 +51,9 @@
 #include <QMainWindow>
 #include <QMenu>
 #include <qwt_thermo.h>
-
+#include "../main-Qt/TransmitterQt.h"
 
 /* Classes ********************************************************************/
-class CTx;
-
 class TransmDialog : public CWindow, public Ui_TransmDlgBase
 {
 	Q_OBJECT

@@ -54,7 +54,7 @@
 #include "AnalogDemDlg.h"
 
 /* Implementation *************************************************************/
-AnalogDemDlg::AnalogDemDlg(CRx& nrx, CSettings& Settings,
+AnalogDemDlg::AnalogDemDlg(CReceiverQt& nrx, CSettings& Settings,
 	CFileMenu* pFileMenu, CSoundCardSelMenu* pSoundCardMenu, QWidget* parent) :
 	CWindow(parent, Settings, "AM"),
     rx(nrx),
@@ -761,7 +761,7 @@ void AnalogDemDlg::AddWhatsThisHelp()
 
 	Added phase offset display for AMSS demodulation loop.
 */
-CAMSSDlg::CAMSSDlg(CRx& NDRMR, CSettings& Settings, QWidget* parent) :
+CAMSSDlg::CAMSSDlg(CReceiverQt& NDRMR, CSettings& Settings, QWidget* parent) :
 	CWindow(parent, Settings, "AMSS"),
     rx(NDRMR)
 {

@@ -87,7 +87,7 @@ public:
 	bool GetAcquisition() {return bAquisition;}
 
 	void SetRecFilter(const bool bNewF) {bUseRecFilter = bNewF;}
-	bool GetRecFilter() {return bUseRecFilter;}
+    bool GetRecFilter() const {return bUseRecFilter;}
     bool GetUnlockedFrameBoundary();
 
 	/* To set the module up for synchronized DRM input data stream */

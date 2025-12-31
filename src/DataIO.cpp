@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "DataIO.h"
+#include "src/matlib/MatlibSigProToolbox.h"
 #include <iomanip>
 #include <ctime>
 

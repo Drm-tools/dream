@@ -36,11 +36,12 @@
 #include <csignal>
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
-#include "../DrmTransmitter.h"
 #include "../util/Settings.h"
 #include "fdrmdialog.h"
 #include "TransmDlg.h"
 #include "DialogUtil.h"
+#include "src/main-Qt/receiverworker.h"
+#include "src/main-Qt/transmitterworker.h"
 
 #ifdef HAVE_LIBHAMLIB
 # include "../util-QT/Rig.h"
@@ -50,8 +51,8 @@
   SLObjectItf engineObject = nullptr;
 #endif
 
-#include "../main-Qt/crx.h"
-#include "../main-Qt/ctx.h"
+#include "../main-Qt/ReceiverQt.h"
+#include "../main-Qt/TransmitterQt.h"
 
 int
 main(int argc, char **argv)
@@ -91,8 +92,6 @@ main(int argc, char **argv)
 	/* Parse arguments and load settings from init-file */
 	Settings.Load(argc, argv);
 
-    QThread workerThread;
-
 	try
 	{
 		string mode = Settings.Get("command", "mode", string());
@@ -108,12 +107,12 @@ main(int argc, char **argv)
 			CRig rig(DRMReceiver.GetParameters());
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
-            CRx rx(DRMReceiver);
+            CReceiverQt rx;
 
 #ifdef HAVE_LIBHAMLIB
-            DRMReceiver.SetTuner(&rig);
+            rx.SetTuner(&rig);
 
-			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
+            if(rx.GetDownstreamRSCIOutEnabled())
 			{
 				rig.subscribe();
 			}
@@ -124,12 +123,10 @@ main(int argc, char **argv)
 			(void)pMainDlg;
             rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
 
+            CReceiverWorker workerThread(&rx);
+
 			/* Start working thread */
             rx.moveToThread(&workerThread);
-
-            auto *timer = new QTimer();
-            timer->callOnTimeout(&rx, &CRx::doWork);
-            timer->start(0);
 
             workerThread.start();
 
@@ -148,13 +145,15 @@ main(int argc, char **argv)
 		}
 		else if(mode == "transmit")
 		{
-            CDRMTransmitter DRMTransmitter(&Settings);
-            CTx tx(DRMTransmitter);
+            CTransmitterQt tx;
+
             TransmDialog* pMainDlg = new TransmDialog(tx);
 
             tx.LoadSettings(); // load settings after GUI initialised so LoadSettings signals get captured
             /* Show dialog */
 			pMainDlg->show();
+            CTransmitterWorker workerThread(&tx);
+
             tx.moveToThread(&workerThread);
             workerThread.start();
 			app.exec();

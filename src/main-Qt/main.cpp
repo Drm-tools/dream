@@ -42,15 +42,12 @@
 #include "../util/Settings.h"
 #include <iostream>
 
-#ifdef HAVE_LIBHAMLIB
-# include "../util-QT/Rig.h"
-#endif
 #include <QCoreApplication>
 #include <QTranslator>
 #include <QThread>
 
-#include "../main-Qt/crx.h"
-#include "../main-Qt/ctx.h"
+#include "../main-Qt/ReceiverQt.h"
+#include "../main-Qt/TransmitterQt.h"
 
 int
 main(int argc, char **argv)
@@ -70,12 +67,11 @@ main(int argc, char **argv)
         if (mode == "receive")
         {
             CDRMSimulation DRMSimulation;
-            CDRMReceiver DRMReceiver(&Settings);
+            CReceiverQt receiver(&Settings);
 
             DRMSimulation.SimScript();
-            DRMReceiver.LoadSettings();
+            receiver.LoadSettings();
 
-            CRx rx(DRMReceiver);
 
             QObject::connect(&rx, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
 

@@ -28,6 +28,7 @@
 \******************************************************************************/
 
 #include "AMDemodulation.h"
+#include "src/matlib/MatlibSigProToolbox.h"
 #include "AMSSDemodulation.h"
 
 #include <fstream>

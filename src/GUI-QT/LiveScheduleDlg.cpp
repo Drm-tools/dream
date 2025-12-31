@@ -327,7 +327,7 @@ CDRMLiveSchedule::LoadAFSInformations(const CAltFreqSign& AltFreqSign)
     }
 }
 
-LiveScheduleDlg::LiveScheduleDlg(CRx& nrx, CSettings& Settings,
+LiveScheduleDlg::LiveScheduleDlg(CReceiverQt& nrx, CSettings& Settings,
                                  QMap<QWidget*,QString>& parents):
     CWindow(parents, Settings, "Live Schedule"),
     rx(nrx),

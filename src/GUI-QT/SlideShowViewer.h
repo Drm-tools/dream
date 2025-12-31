@@ -31,7 +31,7 @@
 
 #include "ui_SlideShowViewer.h"
 #include "CWindow.h"
-#include "../main-Qt/crx.h"
+#include "../main-Qt/ReceiverQt.h"
 #include "../datadecoding/DABMOT.h"
 
 class SlideShowViewer : public CWindow, public Ui_SlideShowViewer
@@ -39,7 +39,7 @@ class SlideShowViewer : public CWindow, public Ui_SlideShowViewer
     Q_OBJECT
 
 public:
-    SlideShowViewer(CRx&, CSettings&, QWidget* parent = 0);
+    SlideShowViewer(CReceiverQt&, CSettings&, QWidget* parent = 0);
     virtual ~SlideShowViewer();
 
 protected:
@@ -52,7 +52,7 @@ protected:
     void                    UpdateWindowTitle(const uint32_t iServiceID, const bool bServiceValid, QString strLabel);
     QTimer                  Timer;
     QString                 strCurrentSavePath;
-    CRx&                    rx;
+    CReceiverQt&                    rx;
     std::vector<QPixmap>    vecImages;
     std::vector<QString>    vecImageNames;
     int                     iCurImagePos;

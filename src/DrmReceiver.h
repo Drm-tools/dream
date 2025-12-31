@@ -33,12 +33,10 @@
 #define DRMRECEIVER_H
 
 #include "GlobalDefinitions.h"
-#include <iostream>
 #include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
 #include "MDI/MDIDecode.h"
 #include "Parameter.h"
 #include "util/Buffer.h"
-#include "util/Utilities.h"
 #include "DataIO.h"
 #include "OFDM.h"
 #include "creceivedata.h"
@@ -59,7 +57,6 @@
 #include "sound/soundinterface.h"
 #include "PlotManager.h"
 #include "DrmTransceiver.h"
-#include "sound/soundfactory.h"
 
 /* Definitions ****************************************************************/
 /* Number of FAC frames until the acquisition is activated in case a signal
@@ -149,9 +146,6 @@ public:
     virtual void SetInputDevice(std::string) override;
     virtual void SetOutputDevice(std::string) override;
 
-    virtual bool IsReceiver() const override { return true; }
-    virtual bool IsTransmitter() const override { return false; }
-
     EAcqStat GetAcquiState()
     {
         return Parameters.GetAcquiState();
@@ -240,89 +234,6 @@ public:
         return ChannelEstimation.GetTimeSyncTrack()->GetTiSyncTracType();
     }
 
-    /* Get pointer to internal modules */
-    CUtilizeFACData *GetFAC()
-    {
-        return &UtilizeFACData;
-    }
-    CUtilizeSDCData *GetSDC()
-    {
-        return &UtilizeSDCData;
-    }
-    CTimeSync *GetTimeSync()
-    {
-        return &TimeSync;
-    }
-    CFACMLCDecoder *GetFACMLC()
-    {
-        return &FACMLCDecoder;
-    }
-    CSDCMLCDecoder *GetSDCMLC()
-    {
-        return &SDCMLCDecoder;
-    }
-    CMSCMLCDecoder *GetMSCMLC()
-    {
-        return &MSCMLCDecoder;
-    }
-    CReceiveData *GetReceiveData()
-    {
-        return &ReceiveData;
-    }
-    COFDMDemodulation *GetOFDMDemod()
-    {
-        return &OFDMDemodulation;
-    }
-    CSyncUsingPil *GetSyncUsPil()
-    {
-        return &SyncUsingPil;
-    }
-    CWriteData *GetWriteData()
-    {
-        return &WriteData;
-    }
-    CDataDecoder *GetDataDecoder()
-    {
-        return &DataDecoder;
-    }
-    CAMDemodulation *GetAMDemod()
-    {
-        return &AMDemodulation;
-    }
-    CAMSSPhaseDemod *GetAMSSPhaseDemod()
-    {
-        return &AMSSPhaseDemod;
-    }
-    CAMSSDecode *GetAMSSDecode()
-    {
-        return &AMSSDecode;
-    }
-    CFreqSyncAcq *GetFreqSyncAcq()
-    {
-        return &FreqSyncAcq;
-    }
-    CAudioSourceDecoder *GetAudSorceDec()
-    {
-        return &AudioSourceDecoder;
-    }
-    CUpstreamDI *GetRSIIn()
-    {
-        return pUpstreamRSCI;
-    }
-    CDownstreamDI *GetRSIOut()
-    {
-        return &downstreamRSCI;
-    }
-    CChannelEstimation *GetChannelEstimation()
-    {
-        return &ChannelEstimation;
-    }
-
-    CPlotManager *GetPlotManager()
-    {
-        return &PlotManager;
-    }
-
     void InitsForWaveMode();
     void InitsForSpectrumOccup();
     void InitsForNoDecBitsSDC();
@@ -338,6 +249,74 @@ public:
     void InitReceiverMode();
     void SetInStartMode();
     void CloseSoundInterfaces();
+
+    virtual void    GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    virtual void    GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    virtual void    GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    virtual void    GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale);
+    virtual void    GetAMBWParameters(double& rCenterFreq, double& rBW);
+    virtual int     GetAMNoiseReductionLevel();
+    virtual ENoiRedType GetAMNoiseReductionType();
+    virtual EDemodType  GetAMDemodulationType();
+    virtual EAmAgcType GetAMAGCType();
+    virtual int GetAMFilterBW();
+    virtual double GetAMMixerFrequencyOffset() const;
+    virtual bool GetAMPLLPhase(_REAL&);
+
+    virtual int GetInChanSel();
+    virtual int GetMSCMLInitNumIterations();
+    _REAL ConvertFrequency(_REAL rFrequency, bool bInvert=false) const;
+    virtual void GetMSCMLCVectorSpace(CVector<_COMPLEX>&);
+    virtual void GetSDCMLCVectorSpace(CVector<_COMPLEX>&);
+    virtual void GetFACMLCVectorSpace(CVector<_COMPLEX>&);
+
+    virtual bool inputIsRSCI();
+    virtual bool isWriteWaveFile();
+    virtual bool isAudioMuted();
+    virtual bool isIntefererConsiderationEnabled();
+    virtual bool isFrequencySyncAcquisitionFilterEnabled() const;
+    virtual bool isSpectrumFlipped();
+    virtual bool isAMAutoFrequencyAcquisitionEnabled();
+    virtual bool isAMPLLEnabled();
+    virtual bool GetAMSSPLLPhase(_REAL&);
+    virtual int GetAMSSPercentageDataEntityGroupComplete();
+    virtual char* GetAMSSDataEntityGroupStatus();
+    virtual int GetAMSSCurrentBlock();
+    virtual char* GetAMSSCurrentBlockBits();
+    virtual bool GetAMSSBlock1Status();
+    virtual EAMSSBlockLockStat GetAMSSLockStatus();
+    virtual bool isAMPLLEnabled() const;
+
+    virtual bool CanDecode(int);
+
+    virtual ETypeIntFreq GetFrequencyInterpolationAlgorithm() const;
+    virtual ETypeTiSyncTrac GetTimeSyncTrackingType();
+
+    virtual bool GetReverbEffect();
+    virtual EAcqStat GetAcquisitionState();
+    virtual void EnumerateInputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultInput) override;
+    virtual void EnumerateOutputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultOutput) override;
+    virtual CSettings* GetSettings() override;
+
+    virtual void GetTransferFunction(CVector<_REAL>& vecrData,
+                                           CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale)
+    {
+        ChannelEstimation.GetTransferFunction(vecrData, vecrGrpDly, vecrScale);
+    }
+
+    virtual void GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+    {
+        ChannelEstimation.GetSNRProfile(vecrData, vecrScale);
+    }
+    void GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale,
+                     _REAL& rLowerBound, _REAL& rHigherBound,
+                     _REAL& rStartGuard, _REAL& rEndGuard, _REAL& rPDSBegin,
+                     _REAL& rPDSEnd) {
+        ChannelEstimation.GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
+                                     rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
+    }
+    CDataDecoder* GetDataDecoder() { return &DataDecoder; }
+    CPlotManager* GetPlotManager() { return &PlotManager; }
 
 protected:
     void SetInTrackingMode();
@@ -446,7 +425,7 @@ protected:
     CVectorEx<_BINARY> vecbiMostRecentSDC;
 
     /* number of frames without FAC data before generating free-running RSCI */
-    static const int MAX_UNLOCKED_COUNT;
+    static const int MAX_UNLOCKED_COUNT = 0;
 
     /* Counter for unlocked frames, to keep generating RSCI even when unlocked */
     int iUnlockedCount;

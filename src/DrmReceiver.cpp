@@ -37,9 +37,6 @@
 #include "util/FileTyper.h"
 #include "tuner.h"
 
-const int
-CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
-
 /* Implementation *************************************************************/
 CDRMReceiver::CDRMReceiver(CSettings* nPsettings):
     CDRMTransceiver(nPsettings),
@@ -1798,4 +1795,180 @@ void CConvertAudio::ProcessDataInternal(CParameter& Parameters)
         (*this->pvecOutputData)[2*i] = _SAMPLE((*this->pvecInputData)[i]);
         (*this->pvecOutputData)[2*i+1] = _SAMPLE((*this->pvecInputData)[i]);
     }
+}
+
+void    CDRMReceiver::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+{
+    ReceiveData.GetInputPSD(vecrData, vecrScale);
+}
+
+void    CDRMReceiver::GetPowDenSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+{
+    OFDMDemodulation.GetPowDenSpec(vecrData, vecrScale);
+}
+
+void    CDRMReceiver::GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+{
+    ReceiveData.GetInputSpec(vecrData, vecrScale);
+}
+
+void    CDRMReceiver::GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
+{
+    WriteData.GetAudioSpec(vecrData, vecrScale);
+}
+
+
+int CDRMReceiver::GetInChanSel()
+{
+    return int(ReceiveData.GetInChanSel());
+}
+
+int CDRMReceiver::GetMSCMLInitNumIterations()
+{
+    return MSCMLCDecoder.GetInitNumIterations();
+}
+
+_REAL CDRMReceiver::ConvertFrequency(_REAL rFrequency, bool bInvert) const
+{
+    return ReceiveData.ConvertFrequency(rFrequency, bInvert);
+}
+
+void CDRMReceiver::GetMSCMLCVectorSpace(CVector<_COMPLEX>& v)
+{
+    MSCMLCDecoder.GetVectorSpace(v);
+}
+
+void CDRMReceiver::GetSDCMLCVectorSpace(CVector<_COMPLEX>& v)
+{
+    SDCMLCDecoder.GetVectorSpace(v);
+}
+
+void CDRMReceiver::GetFACMLCVectorSpace(CVector<_COMPLEX>& v)
+{
+    FACMLCDecoder.GetVectorSpace(v);
+}
+
+bool CDRMReceiver::inputIsRSCI()
+{
+    return pUpstreamRSCI->GetInEnabled();
+}
+
+bool CDRMReceiver::isWriteWaveFile()
+{
+    return WriteData.GetIsWriteWaveFile();
+}
+
+bool CDRMReceiver::isAudioMuted()
+{
+    return WriteData.GetMuteAudio();
+}
+
+bool CDRMReceiver::isFrequencySyncAcquisitionFilterEnabled() const
+{
+    return FreqSyncAcq.GetRecFilter();
+}
+
+bool CDRMReceiver::isSpectrumFlipped()
+{
+    return ReceiveData.GetFlippedSpectrum();
+}
+
+void CDRMReceiver::GetAMBWParameters(double& rCenterFreq, double& rBW)
+{
+    AMDemodulation.GetBWParameters(rCenterFreq, rBW);
+}
+
+double CDRMReceiver::GetAMMixerFrequencyOffset() const
+{
+    return AMDemodulation.GetCurMixFreqOffs();
+}
+
+int     CDRMReceiver::GetAMNoiseReductionLevel()
+{
+    return AMDemodulation.GetNoiRedLevel();
+}
+
+ENoiRedType CDRMReceiver::GetAMNoiseReductionType()
+{
+    return AMDemodulation.GetNoiRedType();
+}
+
+EDemodType  CDRMReceiver::GetAMDemodulationType()
+{
+    return AMDemodulation.GetDemodType();
+}
+
+EAmAgcType CDRMReceiver::GetAMAGCType()
+{
+    return AMDemodulation.GetAGCType();
+}
+
+int CDRMReceiver::GetAMFilterBW()
+{
+    return AMDemodulation.GetFilterBW();
+}
+
+bool CDRMReceiver::GetAMPLLPhase(_REAL& r)
+{
+    return AMDemodulation.GetPLLPhase(r);
+}
+
+bool CDRMReceiver::isAMAutoFrequencyAcquisitionEnabled()
+{
+    return AMDemodulation.AutoFreqAcqEnabled();
+}
+
+bool CDRMReceiver::isAMPLLEnabled() const
+{
+    return AMDemodulation.PLLEnabled();
+}
+
+bool CDRMReceiver::GetAMSSPLLPhase(_REAL& r)
+{
+    return AMSSPhaseDemod.GetPLLPhase(r);
+}
+
+int CDRMReceiver::GetAMSSPercentageDataEntityGroupComplete()
+{
+    return AMSSDecode.GetPercentageDataEntityGroupComplete();
+}
+
+char* CDRMReceiver::GetAMSSDataEntityGroupStatus()
+{
+    return AMSSDecode.GetDataEntityGroupStatus();
+}
+
+int CDRMReceiver::GetAMSSCurrentBlock()
+{
+    return AMSSDecode.GetCurrentBlock();
+}
+
+char* CDRMReceiver::GetAMSSCurrentBlockBits()
+{
+    return AMSSDecode.GetCurrentBlockBits();
+}
+
+bool CDRMReceiver::GetAMSSBlock1Status()
+{
+    return AMSSDecode.GetBlock1Status();
+}
+
+EAMSSBlockLockStat CDRMReceiver::GetAMSSLockStatus()
+{
+    return AMSSDecode.GetLockStatus();
+}
+
+bool CDRMReceiver::CanDecode(int n)
+{
+    return AudioSourceDecoder.CanDecode(CAudioParam::EAudCod(n));
+}
+
+ETypeTiSyncTrac CDRMReceiver::GetTimeSyncTrackingType()
+{
+    return GetTiSyncTracType();
+}
+
+bool CDRMReceiver::GetReverbEffect()
+{
+    return AudioSourceDecoder.GetReverbEffect();
 }

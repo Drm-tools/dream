@@ -58,7 +58,7 @@ FDRMDialog::FDRMDialog(CTRx* pRx, CSettings& Settings, QWidget* parent)
 #endif
     :
     CWindow(parent, Settings, "DRM"),
-    rx(*reinterpret_cast<CRx*>(pRx)),
+    rx(*static_cast<CReceiverQt*>(pRx)),
     done(false),
     serviceLabels(4), pLogging(nullptr),
     pSysTray(nullptr), pCurrentWindow(this),

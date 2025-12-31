@@ -39,7 +39,7 @@
 #include <QShowEvent>
 
 /* Implementation *************************************************************/
-systemevalDlg::systemevalDlg(CRx& nrx, CSettings& Settings,
+systemevalDlg::systemevalDlg(CReceiverQt& nrx, CSettings& Settings,
                              QWidget* parent) :
     CWindow(parent, Settings, "System Evaluation"),
     rx(nrx),
@@ -563,8 +563,7 @@ void systemevalDlg::OnTimer()
 
 #ifdef _DEBUG_
         TextFreqOffset->setText("DC: " +
-                                QString().setNum(rx.GetReceiveData()->
-                                        ConvertFrequency(Parameters.GetDCFrequency()), 'f', 3) + " Hz ");
+                                QString().setNum(rx.ConvertFrequency(Parameters.GetDCFrequency()), 'f', 3) + " Hz ");
 
         /* Metric values */
         ValueFreqOffset->setText(tr("Metrics [dB]: MSC: ") +

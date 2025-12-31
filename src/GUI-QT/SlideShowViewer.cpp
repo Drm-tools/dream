@@ -32,7 +32,7 @@
 #include "../datadecoding/DataDecoder.h"
 #include <QFileDialog>
 
-SlideShowViewer::SlideShowViewer(CRx& nrx, CSettings& Settings, QWidget* parent):
+SlideShowViewer::SlideShowViewer(CReceiverQt& nrx, CSettings& Settings, QWidget* parent):
     CWindow(parent, Settings, "SlideShow"),
     rx(nrx), vecImages(), vecImageNames(), iCurImagePos(-1),
     bClearMOTCache(false), iLastServiceID(0), bLastServiceValid(false)

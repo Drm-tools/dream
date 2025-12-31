@@ -60,10 +60,7 @@
 #include "GeneralSettingsDlg.h"
 #include "MultColorLED.h"
 #include "Logging.h"
-#include "../main-Qt/crx.h"
-#include "../DrmReceiver.h"
-#include "../util/Vector.h"
-#include "../datadecoding/DataDecoder.h"
+#include "../main-Qt/ReceiverQt.h"
 
 /* Classes ********************************************************************/
 class BWSViewer;
@@ -84,7 +81,7 @@ public:
     virtual ~FDRMDialog();
 
 protected:
-    CRx&                rx;
+    CReceiverQt&                rx;
     bool                done;
     QTimer				Timer;
     std::vector<QLabel*>		serviceLabels;

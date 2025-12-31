@@ -30,7 +30,7 @@
 
 #include "ui_LiveScheduleWindow.h"
 #include "CWindow.h"
-#include "../main-Qt/crx.h"
+#include "../main-Qt/ReceiverQt.h"
 #include <QSignalMapper>
 #include <QDialog>
 #include <QTreeWidget>
@@ -143,7 +143,7 @@ class LiveScheduleDlg : public CWindow, public Ui_LiveScheduleWindow
 	Q_OBJECT
 
 public:
-    LiveScheduleDlg(CRx&, CSettings&, QMap<QWidget*,QString>&);
+    LiveScheduleDlg(CReceiverQt&, CSettings&, QMap<QWidget*,QString>&);
 	virtual ~LiveScheduleDlg();
 
 protected:
@@ -163,7 +163,7 @@ protected:
 	bool			showAll();
 	int				currentSortColumn();
 
-    CRx&            rx;
+    CReceiverQt&            rx;
 	CDRMLiveSchedule	DRMSchedule;
 	QTimer			TimerList;
 	QTimer			TimerUTCLabel;

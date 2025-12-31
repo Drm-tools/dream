@@ -31,7 +31,7 @@
 #include "../datadecoding/DataDecoder.h"
 #include <QFontDialog>
 
-JLViewer::JLViewer(CRx& nrx, CSettings& Settings, QWidget* parent):
+JLViewer::JLViewer(CReceiverQt& nrx, CSettings& Settings, QWidget* parent):
     CWindow(parent, Settings, "Journaline"),
     rx(nrx), decoderSet(false)
 {

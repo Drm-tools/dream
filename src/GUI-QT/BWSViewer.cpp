@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "BWSViewer.h"
-#include "../main-Qt/crx.h"
+#include "../main-Qt/ReceiverQt.h"
 #include "../util-QT/Util.h"
 #include "../datadecoding/DataDecoder.h"
 #include <QDir>
@@ -45,7 +45,7 @@
 #define ENABLE_HACK /* Do we really need these hack unless for vtc trial sample? */
 
 
-BWSViewer::BWSViewer(CRx& nrx, CSettings& Settings, QWidget* parent):
+BWSViewer::BWSViewer(CReceiverQt& nrx, CSettings& Settings, QWidget* parent):
     CWindow(parent, Settings, "BWS"),
     nam(this, cache, waitobjs, bAllowExternalContent, strCacheHost),
     rx(nrx), decoder(nullptr), bHomeSet(false), bPageLoading(false),

@@ -31,7 +31,7 @@
 
 #include "ui_JLViewer.h"
 #include "CWindow.h"
-#include "../main-Qt/crx.h"
+#include "../main-Qt/ReceiverQt.h"
 #include <QTextDocument>
 #include <string>
 
@@ -40,7 +40,7 @@ class JLViewer : public CWindow, public Ui_JLViewer
     Q_OBJECT
 
 public:
-    JLViewer(CRx&, CSettings&, QWidget* parent = 0);
+    JLViewer(CReceiverQt&, CSettings&, QWidget* parent = 0);
     virtual ~JLViewer();
 
 protected:
@@ -49,7 +49,7 @@ protected:
     QTimer Timer;
     QTextDocument           document;
 //    QString               strCurrentSavePath;
-    CRx&                    rx;
+    CReceiverQt&                    rx;
     bool                    decoderSet;
 
 public slots:

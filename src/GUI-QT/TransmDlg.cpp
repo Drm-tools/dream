@@ -35,7 +35,7 @@
 #include <QProgressBar>
 #include <QHeaderView>
 #include <QWhatsThis>
-#include "../main-Qt/ctx.h"
+#include "../main-Qt/TransmitterQt.h"
 
 TransmDialog::TransmDialog(CTx& ntx, QWidget* parent)
 	:

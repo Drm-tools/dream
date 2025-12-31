@@ -45,7 +45,7 @@
 #include "DialogUtil.h"
 #include "CWindow.h"
 #include "MultColorLED.h"
-#include "../main-Qt/crx.h"
+#include "../main-Qt/ReceiverQt.h"
 #include "../util/Vector.h"
 
 /* Classes ********************************************************************/
@@ -59,7 +59,7 @@ public:
 	QWidget* parent = 0);
 
 protected:
-    CRx&                rx;
+    CReceiverQt&                rx;
 
 	QMenuBar*			pMenu;
 	QMenu*				pReceiverModeMenu;

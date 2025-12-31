@@ -473,6 +473,9 @@ HEADERS += \
     src/interleaver/BlockInterleaver.h \
     src/interleaver/SymbolInterleaver.h \
     src/IQInputFilter.h \
+    src/main-Qt/receiverworker.h \
+    src/main-Qt/transceiverqt.h \
+    src/main-Qt/transmitterworker.h \
     src/matlib/Matlib.h \
     src/matlib/MatlibSigProToolbox.h \
     src/matlib/MatlibStdToolbox.h \
@@ -602,6 +605,9 @@ SOURCES += \
     src/interleaver/BlockInterleaver.cpp \
     src/interleaver/SymbolInterleaver.cpp \
     src/IQInputFilter.cpp \
+    src/main-Qt/receiverworker.cpp \
+    src/main-Qt/transceiverqt.cpp \
+    src/main-Qt/transmitterworker.cpp \
     src/matlib/MatlibSigProToolbox.cpp \
     src/matlib/MatlibStdToolbox.cpp \
     src/MDI/AFPacketGenerator.cpp \
@@ -688,22 +694,20 @@ SOURCES += \
 contains(QT,core) {
     HEADERS += \
         src/GUI-QT/Logging.h \
+    src/main-Qt/ReceiverQt.h \
+    src/main-Qt/TransmitterQt.h \
         src/util-QT/epgdec.h \
         src/util-QT/EPG.h \
         src/util-QT/Util.h \
-        src/main-Qt/ctrx.h \
-        src/main-Qt/crx.h \
-        src/main-Qt/ctx.h \
 		src/MDI/PacketSocketHTTP.h
 
     SOURCES += \
         src/GUI-QT/Logging.cpp \
+    src/main-Qt/ReceiverQt.cpp \
+    src/main-Qt/TransmitterQt.cpp \
         src/util-QT/EPG.cpp \
         src/util-QT/epgdec.cpp \
         src/util-QT/Util.cpp \
-        src/main-Qt/ctrx.cpp \
-        src/main-Qt/crx.cpp \
-        src/main-Qt/ctx.cpp \
 		src/MDI/PacketSocketHTTP.cpp
 }
 !sound {

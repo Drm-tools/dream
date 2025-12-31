@@ -70,8 +70,6 @@ public:
     pSettings = pNewSettings;
   };
   virtual CParameter *GetParameters() { return &Parameters; };
-  virtual bool IsReceiver() const = 0;
-  virtual bool IsTransmitter() const = 0;
 
 protected:
   CParameter &Parameters;

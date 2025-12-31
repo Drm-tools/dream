@@ -32,10 +32,8 @@
 #include <QMenuBar>
 #include <QActionGroup>
 #include <QMainWindow>
-#include "../DrmReceiver.h"
-#include "../DrmTransceiver.h"
-#include "../sound/selectioninterface.h"
-#include "../main-Qt/ctrx.h"
+#include "../Parameter.h"
+# include "../main-Qt/transceiverqt.h"
 
 typedef struct CHANSEL {
     const char* Name;
@@ -68,7 +66,7 @@ protected:
 
     QMenu* InitChannel(QMenu* parent, const QString& text, const CHANSEL* ChanSel);
     QMenu* InitSampleRate(QMenu* parent, const QString& text, const int* SampleRate);
-    void UpdateDeviceMenu(QMenu* menu, const std::vector<string>& names, const std::vector<string>& descriptions, const std::string& selected);
+    void UpdateDeviceMenu(QMenu* menu, const std::vector<std::string>& names, const std::vector<std::string>& descriptions, const std::string& selected);
 
 public slots:
     // slots connected to signals from user
@@ -102,7 +100,7 @@ class CFileMenu : public QMenu
     Q_OBJECT
 
 public:
-    CFileMenu(CTRx& ntrx, QMainWindow* parent, QMenu* menuInsertBefore);
+    CFileMenu(CTRx& trx, QMainWindow* parent, QMenu* menuInsertBefore);
 
 protected:
     CTRx&               trx;

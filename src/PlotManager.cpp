@@ -267,7 +267,7 @@ CPlotManager::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
     CParameter& Parameters = *pReceiver->GetParameters();
 
-    if (pReceiver->GetRSIIn()->GetInEnabled())
+    if (pReceiver->inputIsRSCI())
     {
         // read it from the parameter structure
         Parameters.Lock();
@@ -293,14 +293,14 @@ CPlotManager::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
     }
     else
     {
-        pReceiver->GetReceiveData()->GetInputPSD(vecrData, vecrScale);
+        pReceiver->GetInputPSD(vecrData, vecrScale);
     }
 }
 
 void CPlotManager::GetTransferFunction(CVector<_REAL>& vecrData,
                                        CVector<_REAL>& vecrGrpDly,	CVector<_REAL>& vecrScale)
 {
-    pReceiver->GetChannelEstimation()->GetTransferFunction(vecrData, vecrGrpDly, vecrScale);
+    pReceiver->GetTransferFunction(vecrData, vecrGrpDly, vecrScale);
 }
 
 
@@ -311,7 +311,7 @@ void CPlotManager::GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrSca
 {
     CParameter& Parameters = *pReceiver->GetParameters();
 
-    if (pReceiver->GetRSIIn()->GetInEnabled())
+    if (pReceiver->inputIsRSCI())
     {
         // read it from the parameter structure
         Parameters.Lock();
@@ -346,13 +346,13 @@ void CPlotManager::GetAvPoDeSp(CVector<_REAL>& vecrData, CVector<_REAL>& vecrSca
     }
     else
     {
-        pReceiver->GetChannelEstimation()->GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
+        pReceiver->GetAvPoDeSp(vecrData, vecrScale, rLowerBound, rHigherBound,
                 rStartGuard, rEndGuard, rPDSBegin, rPDSEnd);
     }
 }
 
 void CPlotManager::GetSNRProfile(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
-    pReceiver->GetChannelEstimation()->GetSNRProfile(vecrData, vecrScale);
+    pReceiver->GetSNRProfile(vecrData, vecrScale);
 }
 

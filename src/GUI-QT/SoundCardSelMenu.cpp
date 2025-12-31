@@ -26,15 +26,10 @@
  *
 \******************************************************************************/
 #include "../Parameter.h"
-#include "../DataIO.h"
-#include "../DrmReceiver.h"
-#include "../DrmTransmitter.h"
 #include "SoundCardSelMenu.h"
-#include "DialogUtil.h"
 #include <QFileDialog>
-#include "../util-QT/Util.h"
 #include "../util/FileTyper.h"
-#include "../main-Qt/crx.h"
+#include "src/creceivedata.h"
 
 #ifdef QT_MULTIMEDIA_LIB
 # include <QAudioDeviceInfo>
@@ -97,7 +92,7 @@ static const int SignalSampleRateTable[] =
 
 /* CSoundCardSelMenu **********************************************************/
 
-CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
+CSoundCardSelMenu::CSoundCardSelMenu(CTransceiverQt& ntrx,
     CFileMenu* pFileMenu, QWidget* parent) : QMenu(parent),
     trx(ntrx),
     menuSigInput(nullptr), menuInputDev(nullptr),
@@ -135,8 +130,8 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
         connect(this, SIGNAL(soundOutChannelChanged(EOutChanSel)), &trx, SLOT(onSoundOutChannelChanged(EOutChanSel)));
         connect(this, SIGNAL(soundSignalUpscaleChanged(int)), &trx, SLOT(SetSoundSignalUpscale(int)));
 
-        connect(reinterpret_cast<CRx*>(&trx), SIGNAL(InputChannelChanged(int)), this, SLOT(OnSoundInChannelChanged(int)));
-        connect(reinterpret_cast<CRx*>(&trx), SIGNAL(OutputChannelChanged(int)), this, SLOT(OnSoundOutChannelChanged(int)));
+        connect(&trx, SIGNAL(InputChannelChanged(int)), this, SLOT(OnSoundInChannelChanged(int)));
+        connect(&trx, SIGNAL(OutputChannelChanged(int)), this, SLOT(OnSoundOutChannelChanged(int)));
 
         connect(&trx, SIGNAL(InputDeviceChanged(QString)), this, SLOT(OnSoundInDeviceChanged(QString)));
 
@@ -363,7 +358,7 @@ void CSoundCardSelMenu::OnSoundFileChanged(QString filename)
 /* CFileMenu ******************************************************************/
 // TODO DRMTransmitter
 
-CFileMenu::CFileMenu(CTRx& ntrx, QMainWindow* parent,
+CFileMenu::CFileMenu(CTransceiverQt& ntrx, QMainWindow* parent,
     QMenu* menuInsertBefore)
     : QMenu(parent), trx(ntrx)
 {

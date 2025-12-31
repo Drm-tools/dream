@@ -43,11 +43,11 @@
 
 /* Implementation *************************************************************/
 #ifdef HAVE_LIBHAMLIB
-StationsDlg::StationsDlg(CRx& nrx, CSettings& Settings, CRig& Rig, QMap<QWidget*,QString>& parents):
+StationsDlg::StationsDlg(CReceiverQt& nrx, CSettings& Settings, CRig& Rig, QMap<QWidget*,QString>& parents):
 CWindow(parents, Settings, "Stations"),
 rx(nrx), Rig(Rig),
 #else
-StationsDlg::StationsDlg(CRx& rx, CSettings& Settings, QMap<QWidget*,QString>& parents):
+StationsDlg::StationsDlg(CReceiverQt& rx, CSettings& Settings, QMap<QWidget*,QString>& parents):
 CWindow(parents, Settings, "Stations"),
 rx(rx),
 #endif

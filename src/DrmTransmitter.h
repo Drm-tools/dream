@@ -29,9 +29,7 @@
 #ifndef __DRMTRANSM_H
 #define __DRMTRANSM_H
 
-#include <iostream>
 #include "util/Buffer.h"
-#include "Parameter.h"
 #include "DataIO.h"
 #include "mlc/MLC.h"
 #include "interleaver/SymbolInterleaver.h"
@@ -39,9 +37,7 @@
 #include "OFDM.h"
 #include "ctransmitdata.h"
 #include "sourcedecoders/AudioSourceEncoder.h"
-#include "sound/soundfactory.h"
 #include "DrmTransceiver.h"
-#include "Parameter.h"
 
 /* Classes ********************************************************************/
 class CDRMTransmitter : public CDRMTransceiver
@@ -53,6 +49,9 @@ public:
     void LoadSettings();
     void SaveSettings();
     void Init();
+    void Run();
+    void Close();
+    void process();
 
     CAudioSourceEncoder *GetAudSrcEnc()
     {
@@ -74,22 +73,89 @@ public:
         TransmitData.SetCarOffset(rNewCarOffset);
         rDefCarOffset = rNewCarOffset;
     }
-    _REAL GetCarOffset()
+    _REAL GetCarrierOffset()
     {
         return rDefCarOffset;
     }
-    virtual bool IsReceiver() const { return false; }
-    virtual bool IsTransmitter() const { return true; }
 
-    void Run();
-    void Close()
+    int GetIQOutput()
     {
-        ReadData.Stop();
-        TransmitData.Stop();
+        return GetTransData()->GetIQOutput();
     }
 
-protected:
+    bool isHighQualityIQ()
+    {
+        return GetTransData()->GetHighQualityIQ();
+    }
+
+    bool isOutputAmplified()
+    {
+        return GetTransData()->GetAmplifiedOutput();
+    }
+
+    bool CanEncode(int n)
+    {
+        return GetAudSrcEnc()->CanEncode(CAudioParam::EAudCod(n));
+    }
+
+    int GetLevelMeter()
+    {
+        return GetReadData()->GetLevelMeter();
+    }
+
+    bool GetTransmissionStatus(string s, _REAL r)
+    {
+        return GetAudSrcEnc()->GetTransStat(s, r);
+    }
+
+    void SetTextMessage(string s)
+    {
+        GetAudSrcEnc()->SetTextMessage(s);
+    }
+
+    void ClearTextMessage()
+    {
+        GetAudSrcEnc()->ClearTextMessage();
+    }
+
+    void SetPicFileName(string s, string f)
+    {
+        GetAudSrcEnc()->SetPicFileName(s, f);
+    }
+
+    void SetPathRemoval(bool b)
+    {
+        GetAudSrcEnc()->SetPathRemoval(b);
+    }
+
+    void ClearPicFileNames()
+    {
+        GetAudSrcEnc()->ClearPicFileNames();
+    }
+
+    void SetHighQualityIQ(bool b)
+    {
+        GetTransData()->SetHighQualityIQ(b);
+    }
+
+    void SetOutputAmplified(bool b)
+    {
+        GetTransData()->SetAmplifiedOutput(b);
+    }
+
+    void SetCarrierOffset(_REAL r)
+    {
+        GetTransData()->SetCarOffset(r);
+    }
+
+    void SetIQOutput(int n)
+    {
+        GetTransData()->SetIQOutput(CTransmitData::EOutFormat(n));
+    }
+
     bool CanSoftStopExit();
+
+protected:
     void InitSoftStop() { iSoftStopSymbolCount = 0; }
 
     std::string indev;

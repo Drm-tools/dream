@@ -32,7 +32,7 @@
 
 #include "ui_EPGDlgbase.h"
 #include "CWindow.h"
-#include "../main-Qt/crx.h"
+#include "../main-Qt/ReceiverQt.h"
 #include "../util-QT/EPG.h"
 #include <QWidget>
 #include <QDateTime>
@@ -69,7 +69,7 @@ class EPGDlg : public CWindow, public Ui_CEPGDlgbase
     Q_OBJECT
 
 public:
-    EPGDlg(CRx&, CSettings&, QWidget* parent = 0);
+    EPGDlg(CReceiverQt&, CSettings&, QWidget* parent = 0);
     virtual ~EPGDlg();
 
     void select();
@@ -87,7 +87,7 @@ protected:
 
     bool    do_updates;
     EPG     epg;
-    CRx&    rx;
+    CReceiverQt&    rx;
     QTimer	Timer;
     map<QString,uint32_t> sids;
     QIcon		greenCube;

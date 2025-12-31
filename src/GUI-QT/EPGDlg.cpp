@@ -37,7 +37,7 @@
 #include <QPixmap>
 #include <QMetaObject>
 
-EPGDlg::EPGDlg(CRx& nrx, CSettings& Settings, QWidget* parent):
+EPGDlg::EPGDlg(CReceiverQt& nrx, CSettings& Settings, QWidget* parent):
     CWindow(parent, Settings, "EPG"),
     do_updates(false),
     epg(*nrx.GetParameters()),

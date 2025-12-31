@@ -36,7 +36,7 @@
 #include "SoundCardSelMenu.h"
 #include "DRMPlot.h"
 #include "../GlobalDefinitions.h"
-#include "../main-Qt/crx.h"
+#include "../main-Qt/ReceiverQt.h"
 #include "../tables/TableAMSS.h"
 #include <QTimer>
 #include <QDialog>
@@ -57,10 +57,10 @@ class CAMSSDlg : public CWindow, public Ui_CAMSSDlgBase
 	Q_OBJECT
 
 public:
-    CAMSSDlg(CRx&, CSettings&, QWidget* parent = 0);
+    CAMSSDlg(CReceiverQt&, CSettings&, QWidget* parent = 0);
 
 protected:
-    CRx&            rx;
+    CReceiverQt&            rx;
 
 	QTimer			Timer;
 	QTimer			TimerPLLPhaseDial;
@@ -80,11 +80,11 @@ class AnalogDemDlg : public CWindow, public Ui_AMMainWindow
 	Q_OBJECT
 
 public:
-    AnalogDemDlg(CRx&, CSettings&, CFileMenu*, CSoundCardSelMenu*,
+    AnalogDemDlg(CReceiverQt&, CSettings&, CFileMenu*, CSoundCardSelMenu*,
 	QWidget* parent = 0);
 
 protected:
-    CRx&        		rx;
+    CReceiverQt&        		rx;
 
 	QTimer				Timer;
 	QTimer				TimerPLLPhaseDial;
