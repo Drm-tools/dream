@@ -35,7 +35,6 @@
 #include "DialogUtil.h"
 #include "CWindow.h"
 #include <QPushButton>
-#include <QSttingList>
 #include <QString>
 #include <QLabel>
 #include <QRadioButton>
