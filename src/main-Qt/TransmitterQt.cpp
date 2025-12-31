@@ -47,7 +47,7 @@ void CTransmitterQt::EnumerateOutputs(QStringList &names,
 
 void CTransmitterQt::LoadSettings() { CDRMTransmitter::LoadSettings(); }
 void CTransmitterQt::SaveSettings() { CDRMTransmitter::SaveSettings(); }
-void CTransmitterQt::SetInputDevice(QString) {
+void CTransmitterQt::SetInputDevice(QString input) {
   CDRMTransmitter::SetInputDevice(input.toStdString());
 }
 void CTransmitterQt::SetOutputDevice(QString output) {
