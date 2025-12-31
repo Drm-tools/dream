@@ -1,7 +1,7 @@
 #ifndef RECEIVERWORKER_H
 #define RECEIVERWORKER_H
 
-#include "src/main-Qt/ReceiverQt.h"
+#include "ReceiverQt.h"
 #include <QThread>
 
 class CReceiverWorker : public QThread

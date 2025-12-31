@@ -1,7 +1,7 @@
 #ifndef TRANSMITTERWORKER_H
 #define TRANSMITTERWORKER_H
 
-#include "src/main-Qt/TransmitterQt.h"
+#include "TransmitterQt.h"
 #include <QObject>
 #include <QThread>
 
