@@ -50,13 +50,13 @@ void CTransmitterQt::SaveSettings() { CDRMTransmitter::SaveSettings(); }
 void CTransmitterQt::SetInputDevice(QString) {
   CDRMTransmitter::SetInputDevice(input.toStdString());
 }
-void CTransmitterQt::SetOutputDevice(QString) {
+void CTransmitterQt::SetOutputDevice(QString output) {
   CDRMTransmitter::SetOutputDevice(output.toStdString());
 }
 void CTransmitterQt::SetSettings(CSettings *pNewSettings) {
   CDRMTransmitter::SetSettings(pNewSettings);
 }
-void CTransmitterQt::SetTextMessage(QString) {
+void CTransmitterQt::SetTextMessage(QString text) {
   CDRMTransmitter::SetTextMessage(text.toStdString());
 }
 void CTransmitterQt::ClearTextMessage() { CDRMTransmitter::ClearTextMessage(); }
@@ -64,7 +64,7 @@ void CTransmitterQt::SetPicFileName(QString picFileName, QString caption) {
   CDRMTransmitter::SetPicFileName(picFileName.toStdString(),
                                   caption.toStdString());
 }
-void CTransmitterQt::SetPathRemoval(bool) {
+void CTransmitterQt::SetPathRemoval(bool bPathRemoval) {
   CDRMTransmitter::SetPathRemoval(bPathRemoval);
 }
 void CTransmitterQt::ClearPicFileNames() {
