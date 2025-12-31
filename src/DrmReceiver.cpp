@@ -1978,9 +1978,8 @@ bool CDRMReceiver::isIntefererConsiderationEnabled()
     return ChannelEstimation.GetIntCons();
 }
 
-
 EAcqStat CDRMReceiver::GetAcquisitionState()
 {
-    return FreqSyncAcq.GetAcquisitionState();
+    return Parameters.GetAcquiState();
 }   
 
