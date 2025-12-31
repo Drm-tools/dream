@@ -277,7 +277,6 @@ public:
     virtual bool isFrequencySyncAcquisitionFilterEnabled() const;
     virtual bool isSpectrumFlipped();
     virtual bool isAMAutoFrequencyAcquisitionEnabled();
-    virtual bool isAMPLLEnabled();
     virtual bool GetAMSSPLLPhase(_REAL&);
     virtual int GetAMSSPercentageDataEntityGroupComplete();
     virtual char* GetAMSSDataEntityGroupStatus();
@@ -294,8 +293,6 @@ public:
 
     virtual bool GetReverbEffect();
     virtual EAcqStat GetAcquisitionState();
-    virtual void EnumerateInputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultInput) override;
-    virtual void EnumerateOutputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultOutput) override;
     virtual CSettings* GetSettings() override;
 
     virtual void GetTransferFunction(CVector<_REAL>& vecrData,

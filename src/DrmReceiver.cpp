@@ -1972,3 +1972,15 @@ bool CDRMReceiver::GetReverbEffect()
 {
     return AudioSourceDecoder.GetReverbEffect();
 }
+
+bool CDRMReceiver::isIntefererConsiderationEnabled()
+{
+    return ChannelEstimation.GetIntCons();
+}
+
+
+EAcqStat CDRMReceiver::GetAcquisitionState()
+{
+    return FreqSyncAcq.GetAcquisitionState();
+}   
+
