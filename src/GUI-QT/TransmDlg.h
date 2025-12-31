@@ -35,6 +35,7 @@
 #include "DialogUtil.h"
 #include "CWindow.h"
 #include <QPushButton>
+#include <QSttingList>
 #include <QString>
 #include <QLabel>
 #include <QRadioButton>
@@ -72,25 +73,25 @@ protected:
 	CAboutDlg			AboutDlg;
 	QTimer				Timer;
 	QTimer				TimerStop;
-	CVector<string>		vecstrTextMessage;
+	QStringList		    TextMessages;
 	QMenu*				pSettingsMenu;
     AACCodecParams*		pAACCodecDlg;
     OpusCodecParams*	pOpusCodecDlg;
     CSysTray*           pSysTray;
 	QAction*			pActionStartStop;
 
-	bool			bIsStarted;
+	bool			    bIsStarted;
 	int					iIDCurrentText;
 	int					iServiceDescr;
-	bool			bCloseRequested;
+	bool			    bCloseRequested;
 	int					iButtonCodecState;
 
 	void				ShowButtonCodec(bool bShow, int iKey);
-	bool			GetMessageText(const int iID);
+	bool			    GetMessageText(int iID);
 	void				UpdateMSCProtLevCombo();
-	void				EnableTextMessage(const bool bFlag);
-	void				EnableAudio(const bool bFlag);
-	void				EnableData(const bool bFlag);
+	void				EnableTextMessage(bool bFlag);
+	void				EnableAudio(bool bFlag);
+	void				EnableData(bool bFlag);
 	void				AddWhatsThisHelp();
 
 public slots:
