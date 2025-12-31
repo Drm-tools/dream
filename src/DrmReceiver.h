@@ -270,6 +270,8 @@ public:
     virtual void GetSDCMLCVectorSpace(CVector<_COMPLEX>&);
     virtual void GetFACMLCVectorSpace(CVector<_COMPLEX>&);
 
+    void StartWriteWaveFile(std::string s) { WriteData.StartWriteWaveFile(s); }
+    void StopWriteWaveFile() { WriteData.StopWriteWaveFile(); }
     virtual bool inputIsRSCI();
     virtual bool isWriteWaveFile();
     virtual bool isAudioMuted();
