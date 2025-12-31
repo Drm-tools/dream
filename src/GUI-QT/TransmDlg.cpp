@@ -41,7 +41,7 @@ TransmDialog::TransmDialog(CTx& ntx, QWidget* parent)
 	:
     CWindow(parent, *ntx.GetSettings(), "Transmit"),
     tx(ntx),
-	vecstrTextMessage(1) /* 1 for new text */,
+	TextMessages("") /* 1 for new text */,
     pAACCodecDlg(nullptr),pOpusCodecDlg(nullptr), pSysTray(nullptr),
 	pActionStartStop(nullptr), bIsStarted(false),
 	iIDCurrentText(0), iServiceDescr(0),
@@ -830,8 +830,8 @@ bool TransmDialog::GetMessageText(int iID)
 	if (!MultiLineEditTextMessage->toPlainText().isEmpty())
 	{
 		/* Check size of container. If not enough space, enlarge */
-		if (iID == vecstrTextMessage.Size())
-			vecstrTextMessage.Enlarge(1);
+		if (iID == TextMessages.size())
+			TextMessages.append("");
 
 		/* DF: I did some test on both Qt3 and Qt4, and
 		   UTF8 char are well preserved */
@@ -842,7 +842,7 @@ bool TransmDialog::GetMessageText(int iID)
 		   so no special processing is further required */
 
 		/* Save the text */
-		vecstrTextMessage[iID] = text.toUtf8().constData();
+		TextMessages[iID] = text;
 
 	}
 	else
@@ -874,7 +874,7 @@ void TransmDialog::OnPushButtonAddText()
 void TransmDialog::OnButtonClearAllText()
 {
 	/* Clear container */
-	vecstrTextMessage.Init(1);
+	TextMessages = QStringList("");
 	iIDCurrentText = 0;
 
 	/* Clear combo box */
