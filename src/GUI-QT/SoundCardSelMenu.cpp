@@ -219,7 +219,7 @@ void CSoundCardSelMenu::UpdateDeviceMenu(QMenu* menu, const QStringList& names, 
 {
     menu->clear();
     QActionGroup* group = nullptr;
-    cerr << "UpdateDeviceMenu " << menu->title().toStdString() << " selected (" << selected << ")" << endl;
+    cerr << "UpdateDeviceMenu " << menu->title().toStdString() << " selected (" << selected.toStdString() << ")" << endl;
     for (int i = 0; i < int(names.size()); i++)
     {
       cerr << "enum " << names[i].toStdString() << " desc " <<  descriptions[i].toStdString() << endl;
