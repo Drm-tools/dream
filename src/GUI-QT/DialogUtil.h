@@ -48,11 +48,8 @@
 #include <qwt_thermo.h> /* S-Meter */
 
 class CRig;
-<<<<<<< HEAD
+
 typedef uint32_t rig_model_t;
-=======
-//typedef int rig_model_t;
->>>>>>> Fix-audio-file-in
 
 /* Definitions ****************************************************************/
 
