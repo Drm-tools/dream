@@ -264,6 +264,7 @@ public:
     virtual bool GetAMPLLPhase(_REAL&);
 
     virtual int GetInChanSel();
+    virtual int GetOutChanSel();
     virtual int GetMSCMLInitNumIterations();
     _REAL ConvertFrequency(_REAL rFrequency, bool bInvert=false) const;
     virtual void GetMSCMLCVectorSpace(CVector<_COMPLEX>&);

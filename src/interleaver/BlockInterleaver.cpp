@@ -26,6 +26,7 @@
 \******************************************************************************/
 
 #include "BlockInterleaver.h"
+#include <iostream>
 
 
 /* Implementation *************************************************************/
@@ -57,7 +58,7 @@ void CBlockInterleaver::MakeTable(CVector<int>& veciIntTable, int iFrameSize,
 	}
 
 	iq = is / 4 - 1;
-
+    std::cerr << "MLC INIT " << veciIntTable.Size() << " " << veciIntTable.size() << "" << iFrameSize << std::endl;
 	veciIntTable[0] = 0;
 
 	for (i = 1; i < iFrameSize; i++)

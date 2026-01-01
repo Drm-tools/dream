@@ -1823,6 +1823,11 @@ int CDRMReceiver::GetInChanSel()
     return int(ReceiveData.GetInChanSel());
 }
 
+int CDRMReceiver::GetOutChanSel()
+{
+    return WriteData.GetOutChanSel();
+}
+
 int CDRMReceiver::GetMSCMLInitNumIterations()
 {
     return MSCMLCDecoder.GetInitNumIterations();
