@@ -693,14 +693,14 @@ void StationsDlg::SetFrequencyFromGUI(int iFreq)
 		if (eCurrentMode != RM_DRM)
             rx.SetReceiverMode(RM_DRM);
 		if (bReInitOnFrequencyChange)
-            rx.Restart();
+            rx.StartNewAcquisition(); // TODO convert to signal
 		break;
 
 	case CSchedule::SM_ANALOG:
 		if (eCurrentMode != RM_AM)
             rx.SetReceiverMode(RM_AM);
 		if (bReInitOnFrequencyChange)
-            rx.Restart();
+            rx.StartNewAcquisition(); // todo convert to signal
 		break;
 	}
 }

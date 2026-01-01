@@ -1,7 +1,8 @@
 #include "ReceiverQt.h"
+#include "qdebug.h"
 using namespace std;
 
-CReceiverQt::CReceiverQt() : CTransceiverQt() {}
+CReceiverQt::CReceiverQt() : CTransceiverQt(), ended(false) {}
 
 CReceiverQt::~CReceiverQt() {}
 
@@ -54,11 +55,8 @@ void CReceiverQt::LoadSettings() {
 void CReceiverQt::SaveSettings() { CDRMReceiver::SaveSettings(); }
 
 void CReceiverQt::SetInputDevice(QString s) {
+  qDebug() << "CReceiverQt::SetInputDevice " << s << Qt::endl;
   CDRMReceiver::SetInputDevice(s.toStdString());
-}
-
-void CReceiverQt::SetInputDevice(string s) {
-  CDRMReceiver::SetInputDevice(s);
   QString id = QString::fromStdString(GetInputDevice());
   emit InputDeviceChanged(id);
   emit soundFileChanged(id); // TODO only send if it is a file!!!
@@ -66,19 +64,9 @@ void CReceiverQt::SetInputDevice(string s) {
 
 void CReceiverQt::SetOutputDevice(QString s) {
   CDRMReceiver::SetOutputDevice(s.toStdString());
-}
-
-void CReceiverQt::SetOutputDevice(string s) {
-  cerr << "CReceiverQt::SetOutputDevice " << s << endl;
-  CDRMReceiver::SetOutputDevice(s);
+  cerr << "CReceiverQt::SetOutputDevice " << s.toStdString() << endl;
   emit OutputDeviceChanged(QString::fromStdString(GetOutputDevice()));
 }
-
-void CReceiverQt::Start() {}
-
-void CReceiverQt::Restart() { Start(); }
-
-void CReceiverQt::Stop() {}
 
 void CReceiverQt::StartWriteWaveFile(QString s) {
   CDRMReceiver::StartWriteWaveFile(s.toStdString());
@@ -158,12 +146,24 @@ void CReceiverQt::onSoundOutChannelChanged(EOutChanSel e) {
 
 void CReceiverQt::onSoundSampleRateChanged(int n) {
   GetParameters()->SetNewAudSampleRate(n);
-  Restart();
+  SetInStartMode();
   emit outputSampleRateChanged(n);
 }
 
 void CReceiverQt::SetSoundSignalUpscale(int n) {
   GetParameters()->SetNewSigUpscaleRatio(n);
-  Restart();
+  SetInStartMode();
   emit soundUpscaleRatioChanged(n);
+}
+
+void CReceiverQt::StartNewAcquisition()
+{
+    SetInStartMode();
+}
+
+void CReceiverQt::Stop()
+{
+    qDebug("STOP");
+    ended = true;
+    emit finished();
 }

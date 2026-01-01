@@ -10,19 +10,14 @@ class CReceiverQt : public CTransceiverQt, public CDRMReceiver
 public:
     explicit CReceiverQt();
     virtual ~CReceiverQt() override;
-   virtual void EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput) override;
+    virtual void EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput) override;
     virtual void EnumerateOutputs(QStringList& names, QStringList& descriptions, QString& defaultOutput) override;
 
 public slots:
     virtual void LoadSettings() override;
     virtual void SaveSettings() override;
-    virtual void SetInputDevice(std::string) override;
-    virtual void SetOutputDevice(std::string) override;
     virtual void SetInputDevice(QString);
     virtual void SetOutputDevice(QString);
-    virtual void Start();
-    virtual void Stop();
-    virtual void Restart();
     virtual void StartWriteWaveFile(QString);
     virtual void StopWriteWaveFile();
     virtual void SetTimeInterpolationAlgorithm(ETypeIntTime);
@@ -48,6 +43,8 @@ public slots:
     virtual void onSoundOutChannelChanged(EOutChanSel);
     virtual void onSoundSampleRateChanged(int);
     virtual void SetSoundSignalUpscale(int);
+    virtual void StartNewAcquisition();
+    virtual void Stop();
 
 signals:
     void inputSampleRateChanged(int);
@@ -93,6 +90,9 @@ signals:
     void drmModeStarted();
     void amModeStarted();
     void fmModeStarted();
+    void finished();
+public:
+    bool ended;
 };
 
 using CRx = CReceiverQt; // transitional

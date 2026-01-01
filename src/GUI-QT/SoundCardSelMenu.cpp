@@ -29,7 +29,10 @@
 #include "SoundCardSelMenu.h"
 #include <QFileDialog>
 #include "../util/FileTyper.h"
+#include "qdebug.h"
 #include "src/creceivedata.h"
+#include "src/main-Qt/ReceiverQt.h"
+#include "src/main-Qt/TransmitterQt.h"
 
 #ifdef QT_MULTIMEDIA_LIB
 # include <QAudioDeviceInfo>
@@ -103,8 +106,13 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTransceiverQt& ntrx,
     setTitle(tr("Sound Card"));
 
 
-    if (bReceiver)
+    auto pRx = dynamic_cast<CReceiverQt*>(&trx);
+    auto pTx = dynamic_cast<CTransmitterQt*>(&trx);
+
+    if (pRx)
     {   /* Receiver */
+
+
         menuSigInput = addMenu(tr("Signal Input"));
         menuInputDev = menuSigInput->addMenu(tr("Device"));
         connect(menuInputDev, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInDevice(QAction*)));
@@ -123,28 +131,29 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTransceiverQt& ntrx,
         connect(menuOutputSampleRate, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundSampleRate(QAction*)));
         actionUpscale = menuSigInput->addAction(tr("2:1 upscale"));
         connect(actionUpscale, SIGNAL(toggled(bool)), this, SLOT(OnSoundSignalUpscale(bool)));
-        connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
-        connect(this, SIGNAL(soundSampleRateChanged(int)), &trx, SLOT(onSoundSampleRateChanged(int)));
-        connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
-        connect(this, SIGNAL(soundInChannelChanged(int)), &trx, SLOT(onSoundInChannelChanged(int)));
-        connect(this, SIGNAL(soundOutChannelChanged(EOutChanSel)), &trx, SLOT(onSoundOutChannelChanged(EOutChanSel)));
-        connect(this, SIGNAL(soundSignalUpscaleChanged(int)), &trx, SLOT(SetSoundSignalUpscale(int)));
+        connect(this, SIGNAL(soundInDeviceChanged(QString)), pRx, SLOT(SetInputDevice(QString)), Qt::QueuedConnection);
+        connect(this, SIGNAL(soundSampleRateChanged(int)), pRx, SLOT(onSoundSampleRateChanged(int)));
+        // connect(this, SIGNAL(soundInDeviceChanged(QString)), pRx, SLOT(SetInputDevice(QString)));
+        connect(this, SIGNAL(soundInChannelChanged(int)), pRx, SLOT(onSoundInChannelChanged(int)));
+        connect(this, SIGNAL(soundOutChannelChanged(EOutChanSel)), pRx, SLOT(onSoundOutChannelChanged(EOutChanSel)));
+        connect(this, SIGNAL(soundSignalUpscaleChanged(int)), pRx, SLOT(SetSoundSignalUpscale(int)));
 
-        connect(&trx, SIGNAL(InputChannelChanged(int)), this, SLOT(OnSoundInChannelChanged(int)));
-        connect(&trx, SIGNAL(OutputChannelChanged(int)), this, SLOT(OnSoundOutChannelChanged(int)));
+        connect(pRx, SIGNAL(InputChannelChanged(int)), this, SLOT(OnSoundInChannelChanged(int)));
+        connect(pRx, SIGNAL(OutputChannelChanged(int)), this, SLOT(OnSoundOutChannelChanged(int)));
 
-        connect(&trx, SIGNAL(InputDeviceChanged(QString)), this, SLOT(OnSoundInDeviceChanged(QString)));
+        connect(pRx, SIGNAL(InputDeviceChanged(QString)), this, SLOT(OnSoundInDeviceChanged(QString)));
 
-        connect(&trx, SIGNAL(inputSampleRateChanged(int)), this, SLOT(OnSoundInSampleRateChanged(int)));
-        connect(&trx, SIGNAL(outputSampleRateChanged(int)), this, SLOT(OnSoundOutSampleRateChanged(int)));
+        connect(pRx, SIGNAL(inputSampleRateChanged(int)), this, SLOT(OnSoundInSampleRateChanged(int)));
+        connect(pRx, SIGNAL(outputSampleRateChanged(int)), this, SLOT(OnSoundOutSampleRateChanged(int)));
 
-        connect(&trx, SIGNAL(soundUpscaleRatioChanged(int)), this, SLOT(OnSoundUpscaleRatioChanged(int)));
+        connect(pRx, SIGNAL(soundUpscaleRatioChanged(int)), this, SLOT(OnSoundUpscaleRatioChanged(int)));
 
         if (pFileMenu != nullptr) {
             connect(pFileMenu, SIGNAL(soundFileChanged(QString)), this, SLOT(OnSoundFileChanged(QString)));
         }
     }
-    else
+
+    if(pTx)
     {   /* Transmitter */    
         QMenu* menuAudio = addMenu(tr("Audio Input"));
         menuInputDev = menuAudio->addMenu(tr("Device"));
@@ -353,6 +362,7 @@ void CSoundCardSelMenu::OnSoundFileChanged(QString filename)
             menuInputSampleRate->setEnabled(false);
         }
     }
+    qDebug() << "sound card sel " << filename << Qt::endl;
     emit soundInDeviceChanged(filename);
 }
 

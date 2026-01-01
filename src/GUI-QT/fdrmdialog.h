@@ -150,7 +150,6 @@ public slots:
     void OnSelectDataService(int);
     void OnViewMultimediaDlg();
     void OnMenuSetDisplayColor();
-    void OnNewAcquisition();
     void OnSwitchMode(int);
     void OnSwitchToFM();
     void OnSwitchToAM();
@@ -164,6 +163,7 @@ public slots:
     void ChangeGUIModeToFM();
 signals:
     void plotStyleChanged(int);
+    void Stop();
 };
 
 #endif // _FDRMDIALOG_H_

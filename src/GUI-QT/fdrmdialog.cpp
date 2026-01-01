@@ -27,7 +27,6 @@
 \******************************************************************************/
 
 #include "fdrmdialog.h"
-#include <iostream>
 #include <QFileInfo>
 #include <QWhatsThis>
 #include <QHideEvent>
@@ -82,6 +81,7 @@ FDRMDialog::FDRMDialog(CTRx* pRx, CSettings& Settings, QWidget* parent)
     menu_Settings->addMenu(pSoundCardMenu);
     connect(&rx, SIGNAL(soundFileChanged(QString)), this, SLOT(OnSoundFileChanged(QString)));
     connect(&rx, SIGNAL(finished()), this, SLOT(OnWorkingThreadFinished()));
+    connect(this, SIGNAL(Stop()), &rx, SLOT(Stop()));
 
     /* Analog demodulation window */
     pAnalogDemDlg = new AnalogDemDlg(rx, Settings, pFileMenu, pSoundCardMenu);
@@ -228,15 +228,19 @@ FDRMDialog::FDRMDialog(CTRx* pRx, CSettings& Settings, QWidget* parent)
     CLED_MSC->SetUpdateTime(600);
 
     connect(pAnalogDemDlg, SIGNAL(SwitchMode(int)), this, SLOT(OnSwitchMode(int)));
-    connect(pAnalogDemDlg, SIGNAL(NewAMAcquisition()), this, SLOT(OnNewAcquisition()));
+    connect(pAnalogDemDlg, SIGNAL(SwitchMode(int)), &rx, SLOT(SetReceiverMode(int)));
+    connect(pAnalogDemDlg, SIGNAL(NewAMAcquisition()), &rx, SLOT(StartNewAcquisition()));
     connect(pAnalogDemDlg, SIGNAL(ViewStationsDlg()), pStationsDlg, SLOT(show()));
     connect(pAnalogDemDlg, SIGNAL(ViewLiveScheduleDlg()), pLiveScheduleDlg, SLOT(show()));
     connect(pAnalogDemDlg, SIGNAL(Closed()), this, SLOT(close()));
 
     connect(pFMDlg, SIGNAL(SwitchMode(int)), this, SLOT(OnSwitchMode(int)));
+    connect(pFMDlg, SIGNAL(SwitchMode(int)), &rx, SLOT(SetReceiverMode(int)));
     connect(pFMDlg, SIGNAL(Closed()), this, SLOT(close()));
     connect(pFMDlg, SIGNAL(ViewStationsDlg()), pStationsDlg, SLOT(show()));
     connect(pFMDlg, SIGNAL(ViewLiveScheduleDlg()), pLiveScheduleDlg, SLOT(show()));
+
+    connect(this, SIGNAL(SwitchMode(int)), &rx, SLOT(SetReceiverMode(int)));
 
     connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
@@ -258,7 +262,7 @@ FDRMDialog::FDRMDialog(CTRx* pRx, CSettings& Settings, QWidget* parent)
         SLOT(OnSysTrayActivated(QSystemTrayIcon::ActivationReason)),
         SLOT(OnSysTrayTimer()),
         ":/icons/MainIcon.svg");
-    CSysTray::AddAction(pSysTray, tr("&New Acquisition"), this, SLOT(OnNewAcquisition()));
+    CSysTray::AddAction(pSysTray, tr("&New Acquisition"), &rx, SLOT(StartNewAcquisition()));
     CSysTray::AddSeparator(pSysTray);
     CSysTray::AddAction(pSysTray, tr("&Exit"), this, SLOT(close()));
 
@@ -963,14 +967,11 @@ void FDRMDialog::eventHide(QHideEvent*)
     Timer.stop();
 }
 
-void FDRMDialog::OnNewAcquisition()
-{
-    rx.Restart();
-}
+
 
 void FDRMDialog::OnSwitchMode(int newMode)
 {
-    rx.SetReceiverMode(ERecMode(newMode));
+    // rx.SetReceiverMode(ERecMode(newMode));
     Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
 
@@ -1097,7 +1098,7 @@ void FDRMDialog::eventClose(QCloseEvent* ce)
     }
     else {
         /* Request that the working thread stops */
-        rx.Stop();
+        emit Stop();
 
         /* Stop real-time timer */
         Timer.stop();

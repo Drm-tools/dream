@@ -382,6 +382,7 @@ void AnalogDemDlg::OnSampleRateChanged(int)
 
 void AnalogDemDlg::OnSoundFileChanged(QString)
 {
+    qDebug("AnalogDemDlg::OnSoundFileChanged");
 	UpdateSliderBandwidth();
 }
 

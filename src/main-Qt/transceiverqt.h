@@ -13,8 +13,6 @@ public:
     virtual bool IsReceiver() const { return true; } // will be overridden in transmitter
     virtual void EnumerateInputs(QStringList& names, QStringList& descriptions, QString& defaultInput)=0;
     virtual void EnumerateOutputs(QStringList& names, QStringList& descriptions, QString& defaultOutput)=0;
-
-signals:
 };
 
 using CTRx = CTransceiverQt; // transitional
