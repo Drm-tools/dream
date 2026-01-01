@@ -6,7 +6,7 @@ permissions:
 on:
   push:
     branches: [ '*' ]
-  pull_request:
+  release:
     branches: [ main ]
 
 jobs:
@@ -39,8 +39,8 @@ jobs:
     - name: Install dependencies (vcpkg)
       if: matrix.arch == 'x64'
       run: |
-       vcpkg install --triplet x64-linux fdk-aac[he-aac]
-       echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/x64-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+       vcpkg install --triplet ${{ matrix.arch }}-linux fdk-aac[he-aac]
+       echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.arch }}-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
 
     - name: changelog
       env:
@@ -60,21 +60,28 @@ jobs:
 
     - name: Package
       run: |
-        echo  ${{ github.ref_name }}
         tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
         mkdir build
         cp -r debian build
         cd build
         tar xf ../dream_${{ github.run_id }}.orig.tar.gz
         dpkg-buildpackage -us -uc -b
+        cd ..
+        mkdir artifacts
+        mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
 
     - name: Upload artifact
+      if: ${{ github.event_name == 'push' }}
       uses: actions/upload-artifact@v4
       with:
-        name: dream_${{ github.run_id }}_${{ env.ARCH }}_${{ matrix.os }}.deb
-        path: dream_${{ env.RELEASE_TAG }}_${{ env.ARCH }}.deb
-
-    - name: build console
-      run: |
-        qmake "CONFIG+=console"
-        make
+        name: dream_${{ env.ARCH}}_${{ matrix.os }}
+        path: artifacts
+    
+    - name: Upload release binaries
+      if: ${{ github.event_name == 'release' }}
+      uses: svenstaro/upload-release-action@v2
+      with:
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: artifacts/*
+        file_glob: true
+        tag: ${{ github.ref }}
