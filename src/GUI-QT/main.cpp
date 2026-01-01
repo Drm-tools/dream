@@ -125,7 +125,7 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
                    Qt::QueuedConnection);
 
   rx.start();
-  return app.exec();
+  app.exec();
 }
 
 void consoletx(CSettings &Settings, QCoreApplication &app) {
