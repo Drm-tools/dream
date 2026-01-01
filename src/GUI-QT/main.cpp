@@ -37,12 +37,13 @@
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
+#include "../DrmSimulation.h"
 #include "../util/Settings.h"
 #include "fdrmdialog.h"
 #include "TransmDlg.h"
 #include "DialogUtil.h"
 
-usingusing namespace std;
+using namespace std;
 
 #ifdef HAVE_LIBHAMLIB
 #include "../util-QT/Rig.h"
@@ -178,7 +179,13 @@ int main(int argc, char **argv) {
   QTranslator translator(nullptr);
 
   try {
-    string gui = Settings.Get("command", "gui", string());
+    string gui;
+    {
+   CSettings *CSettings 
+   QCoreApplication app(argc, argv);
+     Settings.Load(argc, argv); 
+ gui = Settings.Get("command", "gui", string());
+    }
     if (gui == "true") {
       QApplication app(argc, argv);
 #if defined(__APPLE__)
