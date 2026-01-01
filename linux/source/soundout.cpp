@@ -522,7 +522,7 @@ void CSoundOut::Close()
 CSoundOut::CSoundOut():names(),iCurrentDevice(-1) {}
 #endif
 
-void CSoundOut::SetDev(int iNewDevice)
+void CSoundOut::SetItem(int iNewDevice)
 {
     /* Change only in case new device id is not already active */
     if (iNewDevice != iCurrentDevice)
@@ -532,7 +532,7 @@ void CSoundOut::SetDev(int iNewDevice)
     }
 }
 
-int CSoundOut::GetDev()
+int CSoundOut::GetItem()
 {
     return iCurrentDevice;
 }

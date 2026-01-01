@@ -28,210 +28,13 @@
 
 #include "DrmTransmitter.h"
 #include <sstream>
-#ifdef QT_MULTIMEDIA_LIB
-# include <QAudioDeviceInfo>
-#endif
 
-/* Implementation *************************************************************/
-void CDRMTransmitter::Run()
-{
-    /*
-    	The hand over of data is done via an intermediate-buffer. The calling
-    	convention is always "input-buffer, output-buffer". Additional, the
-    	DRM-parameters are fed to the function
-    */
-    for (;;)
-    {
-        /* MSC ****************************************************************/
-        /* Read the source signal */
-        ReadData.ReadData(Parameters, DataBuf);
-
-        /* Audio source encoder */
-        AudioSourceEncoder.ProcessData(Parameters, DataBuf, AudSrcBuf);
-
-        /* MLC-encoder */
-        MSCMLCEncoder.ProcessData(Parameters, AudSrcBuf, MLCEncBuf);
-
-        /* Convolutional interleaver */
-        SymbInterleaver.ProcessData(Parameters, MLCEncBuf, IntlBuf);
-
-
-        /* FAC ****************************************************************/
-        GenerateFACData.ReadData(Parameters, GenFACDataBuf);
-        FACMLCEncoder.ProcessData(Parameters, GenFACDataBuf, FACMapBuf);
-
-
-        /* SDC ****************************************************************/
-        GenerateSDCData.ReadData(Parameters, GenSDCDataBuf);
-        SDCMLCEncoder.ProcessData(Parameters, GenSDCDataBuf, SDCMapBuf);
-
-
-        /* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
-        OFDMCellMapping.ProcessData(Parameters, IntlBuf, FACMapBuf, SDCMapBuf,
-                                    CarMapBuf);
-
-
-        /* OFDM-modulation ****************************************************/
-        OFDMModulation.ProcessData(Parameters, CarMapBuf, OFDMModBuf);
-
-
-        /* Soft stop **********************************************************/
-        if (CanSoftStopExit())
-            break;
-
-        /* Transmit the signal ************************************************/
-        TransmitData.WriteData(Parameters, OFDMModBuf);
-    }
-}
-
-bool CDRMTransmitter::CanSoftStopExit()
-{
-    /* Set new symbol flag */
-    const bool bNewSymbol = OFDMModBuf.GetFillLevel() != 0;
-
-    if (bNewSymbol)
-    {
-        /* Number of symbol by frame */
-        const int iSymbolPerFrame = Parameters.CellMappingTable.iNumSymPerFrame;
-
-        /* Set stop requested flag */
-        const bool bStopRequested = false;//Parameters.eRunState != CParameter::RUNNING;
-
-#if true
-        /* Flavour 1: Stop at the frame boundary (worst case delay one frame) */
-        /* The soft stop is always started at the beginning of a new frame */
-        if ((bStopRequested && iSoftStopSymbolCount == 0) || iSoftStopSymbolCount < 0)
-        {
-            /* Data in OFDM buffer are set to zero */
-            OFDMModBuf.QueryWriteBuffer()->Reset(_COMPLEX());
-
-            /* The zeroing will continue until the frame end */
-            if (--iSoftStopSymbolCount < -iSymbolPerFrame)
-                return true; /* End of frame reached, signal that loop exit must be done */
-        }
-#else
-        /* Flavour 2: Stop at the symbol boundary (worst case delay two frame) */
-        /* Check if stop is requested */
-        if (bStopRequested || iSoftStopSymbolCount < 0)
-        {
-            /* Reset the counter if positif */
-            if (iSoftStopSymbolCount > 0)
-                iSoftStopSymbolCount = 0;
-
-            /* Data in OFDM buffer are set to zero */
-            OFDMModBuf.QueryWriteBuffer()->Reset(_COMPLEX());
-
-            /* Zeroing only this symbol, the next symbol will be an exiting one */
-            if (--iSoftStopSymbolCount < -1)
-            {
-                TransmitData.FlushData();
-                return true; /* Signal that a loop exit must be done */
-            }
-#endif
-        else
-        {
-            /* Update the symbol counter to keep track of frame beginning */
-            if (++iSoftStopSymbolCount >= iSymbolPerFrame)
-                iSoftStopSymbolCount = 0;
-        }
-    }
-    return false; /* Signal to continue the normal operation */
-}
-
-void CDRMTransmitter::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)
-{
-    ReadData.Enumerate(names, descriptions, defaultInput);
-}
-
-void CDRMTransmitter::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
-{
-    TransmitData.Enumerate(names, descriptions, defaultOutput);
-}
-
-void CDRMTransmitter::doSetInputDevice()
-{
-    ReadData.SetSoundInterface(indev);
-}
-
-void CDRMTransmitter::doSetOutputDevice()
-{
-    TransmitData.SetSoundInterface(outdev);
-}
-
-void
-CDRMTransmitter::SetInputDevice(string device)
-{
-    indev = device;
-    ReadData.SetSoundInterface(indev);
-}
-
-void
-CDRMTransmitter::SetOutputDevice(string device)
-{
-    outdev = device;
-    TransmitData.SetSoundInterface(outdev);
-}
-
-CSettings* CDRMTransmitter::GetSettings()
-{
-    return pSettings;
-}
-
-void CDRMTransmitter::Init()
-{
-
-   /* Fetch new sample rate if any */
-    Parameters.FetchNewSampleRate();
-
-    /* Init cell mapping table */
-    Parameters.InitCellMapTable(Parameters.GetWaveMode(), Parameters.GetSpectrumOccup());
-
-    /* Defines number of cells, important! */
-    OFDMCellMapping.Init(Parameters, CarMapBuf);
-
-    /* Defines number of SDC bits per super-frame */
-    SDCMLCEncoder.Init(Parameters, SDCMapBuf);
-
-    MSCMLCEncoder.Init(Parameters, MLCEncBuf);
-    SymbInterleaver.Init(Parameters, IntlBuf);
-    GenerateFACData.Init(Parameters, GenFACDataBuf);
-    FACMLCEncoder.Init(Parameters, FACMapBuf);
-    GenerateSDCData.Init(Parameters, GenSDCDataBuf);
-    OFDMModulation.Init(Parameters, OFDMModBuf);
-    AudioSourceEncoder.Init(Parameters, AudSrcBuf);
-    ReadData.Init(Parameters, DataBuf);
-    TransmitData.Init(Parameters);
-
-    /* (Re)Initialization of the buffers */
-    CarMapBuf.Clear();
-    SDCMapBuf.Clear();
-    MLCEncBuf.Clear();
-    IntlBuf.Clear();
-    GenFACDataBuf.Clear();
-    FACMapBuf.Clear();
-    GenSDCDataBuf.Clear();
-    OFDMModBuf.Clear();
-    AudSrcBuf.Clear();
-    DataBuf.Clear();
-
-    /* Initialize the soft stop */
-    InitSoftStop();
-
-#ifdef QT_MULTIMEDIA_LIB
-    doSetInputDevice();
-    doSetOutputDevice();
-#endif
-}
-
-CDRMTransmitter::~CDRMTransmitter()
-{
-}
-
-CDRMTransmitter::CDRMTransmitter(CSettings* nPsettings) : CDRMTransceiver(),
+CDRMTransmitter::CDRMTransmitter(CSettings* nPsettings):
+        CDRMTransceiver(nPsettings),
         ReadData(), TransmitData(),
         rDefCarOffset(VIRTUAL_INTERMED_FREQ),
         // UEP only works with Dream receiver, FIXME! -> disabled for now
-        bUseUEP(false), Parameters(*(new CParameter())), pSettings(nPsettings)
+        bUseUEP(false)
 {
     /* Init streams */
     Parameters.ResetServicesStreams();
@@ -357,6 +160,157 @@ CDRMTransmitter::CDRMTransmitter(CSettings* nPsettings) : CDRMTransceiver(),
     }
 }
 
+CDRMTransmitter::~CDRMTransmitter()
+{
+}
+
+void CDRMTransmitter::Run()
+{
+    /*
+    	The hand over of data is done via an intermediate-buffer. The calling
+    	convention is always "input-buffer, output-buffer". Additional, the
+    	DRM-parameters are fed to the function
+    */
+    for (;;)
+    {
+        /* MSC ****************************************************************/
+        /* Read the source signal */
+        ReadData.ReadData(Parameters, DataBuf);
+
+        /* Audio source encoder */
+        AudioSourceEncoder.ProcessData(Parameters, DataBuf, AudSrcBuf);
+
+        /* MLC-encoder */
+        MSCMLCEncoder.ProcessData(Parameters, AudSrcBuf, MLCEncBuf);
+
+        /* Convolutional interleaver */
+        SymbInterleaver.ProcessData(Parameters, MLCEncBuf, IntlBuf);
+
+
+        /* FAC ****************************************************************/
+        GenerateFACData.ReadData(Parameters, GenFACDataBuf);
+        FACMLCEncoder.ProcessData(Parameters, GenFACDataBuf, FACMapBuf);
+
+
+        /* SDC ****************************************************************/
+        GenerateSDCData.ReadData(Parameters, GenSDCDataBuf);
+        SDCMLCEncoder.ProcessData(Parameters, GenSDCDataBuf, SDCMapBuf);
+
+
+        /* Mapping of the MSC, FAC, SDC and pilots on the carriers ************/
+        OFDMCellMapping.ProcessData(Parameters, IntlBuf, FACMapBuf, SDCMapBuf,
+                                    CarMapBuf);
+
+
+        /* OFDM-modulation ****************************************************/
+        OFDMModulation.ProcessData(Parameters, CarMapBuf, OFDMModBuf);
+
+
+        /* Soft stop **********************************************************/
+        if (CanSoftStopExit())
+            break;
+
+        /* Transmit the signal ************************************************/
+        TransmitData.WriteData(Parameters, OFDMModBuf);
+    }
+}
+
+bool CDRMTransmitter::CanSoftStopExit()
+{
+    /* Set new symbol flag */
+    const bool bNewSymbol = OFDMModBuf.GetFillLevel() != 0;
+
+    if (bNewSymbol)
+    {
+        /* Number of symbol by frame */
+        const int iSymbolPerFrame = Parameters.CellMappingTable.iNumSymPerFrame;
+
+        /* Set stop requested flag */
+        const bool bStopRequested = false;//Parameters.eRunState != CParameter::RUNNING;
+
+#if true
+        /* Flavour 1: Stop at the frame boundary (worst case delay one frame) */
+        /* The soft stop is always started at the beginning of a new frame */
+        if ((bStopRequested && iSoftStopSymbolCount == 0) || iSoftStopSymbolCount < 0)
+        {
+            /* Data in OFDM buffer are set to zero */
+            OFDMModBuf.QueryWriteBuffer()->Reset(_COMPLEX());
+
+            /* The zeroing will continue until the frame end */
+            if (--iSoftStopSymbolCount < -iSymbolPerFrame)
+                return true; /* End of frame reached, signal that loop exit must be done */
+        }
+#else
+        /* Flavour 2: Stop at the symbol boundary (worst case delay two frame) */
+        /* Check if stop is requested */
+        if (bStopRequested || iSoftStopSymbolCount < 0)
+        {
+            /* Reset the counter if positif */
+            if (iSoftStopSymbolCount > 0)
+                iSoftStopSymbolCount = 0;
+
+            /* Data in OFDM buffer are set to zero */
+            OFDMModBuf.QueryWriteBuffer()->Reset(_COMPLEX());
+
+            /* Zeroing only this symbol, the next symbol will be an exiting one */
+            if (--iSoftStopSymbolCount < -1)
+            {
+                TransmitData.FlushData();
+                return true; /* Signal that a loop exit must be done */
+            }
+#endif
+        else
+        {
+            /* Update the symbol counter to keep track of frame beginning */
+            if (++iSoftStopSymbolCount >= iSymbolPerFrame)
+                iSoftStopSymbolCount = 0;
+        }
+    }
+    return false; /* Signal to continue the normal operation */
+}
+
+void CDRMTransmitter::Init()
+{
+
+   /* Fetch new sample rate if any */
+    Parameters.FetchNewSampleRate();
+
+    /* Init cell mapping table */
+    Parameters.InitCellMapTable(Parameters.GetWaveMode(), Parameters.GetSpectrumOccup());
+
+    /* Defines number of cells, important! */
+    OFDMCellMapping.Init(Parameters, CarMapBuf);
+
+    /* Defines number of SDC bits per super-frame */
+    SDCMLCEncoder.Init(Parameters, SDCMapBuf);
+
+    MSCMLCEncoder.Init(Parameters, MLCEncBuf);
+    SymbInterleaver.Init(Parameters, IntlBuf);
+    GenerateFACData.Init(Parameters, GenFACDataBuf);
+    FACMLCEncoder.Init(Parameters, FACMapBuf);
+    GenerateSDCData.Init(Parameters, GenSDCDataBuf);
+    OFDMModulation.Init(Parameters, OFDMModBuf);
+    AudioSourceEncoder.Init(Parameters, AudSrcBuf);
+    ReadData.Init(Parameters, DataBuf);
+    TransmitData.Init(Parameters);
+
+    /* (Re)Initialization of the buffers */
+    CarMapBuf.Clear();
+    SDCMapBuf.Clear();
+    MLCEncBuf.Clear();
+    IntlBuf.Clear();
+    GenFACDataBuf.Clear();
+    FACMapBuf.Clear();
+    GenSDCDataBuf.Clear();
+    OFDMModBuf.Clear();
+    AudSrcBuf.Clear();
+    DataBuf.Clear();
+
+    /* Initialize the soft stop */
+    InitSoftStop();
+
+}
+
 void CDRMTransmitter::LoadSettings()
 {
     if (pSettings == nullptr) return;
@@ -376,10 +330,10 @@ void CDRMTransmitter::LoadSettings()
     Parameters.FetchNewSampleRate();
 
     /* Sound card input device id */
-    ReadData.SetSoundInterface(s.Get(Transmitter, "snddevin", string()));
+    soundinfactory.SetItem(s.Get(Transmitter, "snddevin", string()));
 
     /* Sound card output device id */
-    TransmitData.SetSoundInterface(s.Get(Transmitter, "snddevout", string()));
+    soundoutfactory.SetItem(s.Get(Transmitter, "snddevout", string()));
 #if 0 // TODO
     /* Sound clock drift adjustment */
     bool bEnabled = s.Get(Transmitter, "sndclkadj", int(0));
@@ -522,10 +476,10 @@ void CDRMTransmitter::SaveSettings()
     s.Put(Transmitter, "sampleratesig", Parameters.GetSigSampleRate());
 
     /* Sound card input device id */
-    s.Put(Transmitter, "snddevin", ReadData.GetSoundInterface());
+    s.Put(Transmitter, "snddevin", soundinfactory.GetItemName());
 
     /* Sound card output device id */
-    s.Put(Transmitter, "snddevout", TransmitData.GetSoundInterface());
+    s.Put(Transmitter, "snddevout", soundoutfactory.GetItemName());
 #if 0 // TODO
     /* Sound clock drift adjustment */
     s.Put(Transmitter, "sndclkadj", int(((CSoundOutPulse*)pSoundOutInterface)->IsClockDriftAdjEnabled()));

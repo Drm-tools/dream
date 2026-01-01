@@ -34,26 +34,15 @@
 
 #include "DrmReceiver.h"
 #include "util/Settings.h"
-#include "util/Utilities.h"
 #include "util/FileTyper.h"
 #include "tuner.h"
 
-#ifdef QT_MULTIMEDIA_LIB
-# include <QAudioDeviceInfo>
-#endif
-#ifdef HAVE_LIBHAMLIB
-# ifdef QT_CORE_LIB // TODO should not have dependency to qt here
-#  include "util-QT/Rig.h"
-# endif
-#endif
-#if 0
-#include <fcd.h>
-#endif
 const int
 CDRMReceiver::MAX_UNLOCKED_COUNT = 2;
 
 /* Implementation *************************************************************/
-CDRMReceiver::CDRMReceiver(CSettings* nPsettings) : CDRMTransceiver(),
+CDRMReceiver::CDRMReceiver(CSettings* nPsettings):
+    CDRMTransceiver(nPsettings),
     ReceiveData(), WriteData(),
     FreqSyncAcq(),
     ChannelEstimation(),
@@ -70,7 +59,7 @@ CDRMReceiver::CDRMReceiver(CSettings* nPsettings) : CDRMTransceiver(),
     iBwAM(10000), iBwLSB(5000), iBwUSB(5000), iBwCW(150), iBwFM(6000),
     time_keeper(0),
     pTuner(nullptr),
-    PlotManager(), iPrevSigSampleRate(0),Parameters(*(new CParameter())), pSettings(nPsettings)
+    PlotManager(), iPrevSigSampleRate(0)
 {
     Parameters.SetReceiver(this);
     downstreamRSCI.SetReceiver(this);
@@ -168,7 +157,7 @@ CDRMReceiver::SetInputDevice(string s)
         vector<string> names;
         vector<string> descriptions;
         string def;
-        ReceiveData.Enumerate(names, descriptions, def);
+        soundinfactory.Enumerate(names, descriptions, def);
         if (names.size() > 0) {
             if (device == "" || device == "default") {
                 device = def;
@@ -192,9 +181,11 @@ CDRMReceiver::SetInputDevice(string s)
         InputResample.SetSyncInput(false);
         SyncUsingPil.SetSyncInput(false);
         TimeSync.SetSyncInput(false);
-        ReceiveData.SetSoundInterface(device); // audio input
-        CTuner *pTuner = ReceiveData.GetTuner();
-        fprintf(stderr, "Read pTuner = %x\n", pTuner);
+        soundinfactory.SetItem(device);
+        CSoundInInterface* pSound = soundinfactory.GetItem();
+        ReceiveData.SetSoundInterface(pSound);
+        CTuner *pTuner = dynamic_cast<CTuner*>(pSound);
+        fprintf(stderr, "Read pTuner = %p\n", pTuner);
         if (pTuner)
         {
                 SetTuner(pTuner);
@@ -214,18 +205,9 @@ CDRMReceiver::SetInputDevice(string s)
 void
 CDRMReceiver::SetOutputDevice(string device)
 {
-    WriteData.SetSoundInterface(device);
+    soundoutfactory.SetItem(device);
+    WriteData.SetSoundInterface(soundoutfactory.GetItem());
     WriteData.Init(Parameters);
-}
-
-void CDRMReceiver::EnumerateInputs(vector<string>& names, vector<string>& descriptions, string& defaultInput)
-{
-    ReceiveData.Enumerate(names, descriptions, defaultInput);
-}
-
-void CDRMReceiver::EnumerateOutputs(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
-{
-    WriteData.Enumerate(names, descriptions, defaultOutput);
 }
 
 void
@@ -1721,14 +1703,14 @@ CDRMReceiver::SaveSettings()
     s.Put("Receiver", "modmetric", ChannelEstimation.GetIntCons());
 
     /* Sound In device - don't save files, only devices */
-    string indev = ReceiveData.GetSoundInterface();
+    string indev = GetInputDevice();
     FileTyper::type t = FileTyper::resolve(indev);
     if (t == FileTyper::unrecognised) {
         s.Put("Receiver", "snddevin", indev);
     }
 
     /* Sound Out device */
-    s.Put("Receiver", "snddevout", WriteData.GetSoundInterface());
+    s.Put("Receiver", "snddevout", GetOutputDevice());
     /* Number of iterations for MLC setting */
     s.Put("Receiver", "mlciter", MSCMLCDecoder.GetInitNumIterations());
 

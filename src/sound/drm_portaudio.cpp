@@ -139,7 +139,7 @@ CPaCommon::Enumerate(vector < string > &choices, vector < string > &descriptions
 }
 
 void
-CPaCommon::SetDev(string sNewDevice)
+CPaCommon::SetItem(string sNewDevice)
 {
     if (dev != sNewDevice)
     {
@@ -149,7 +149,7 @@ CPaCommon::SetDev(string sNewDevice)
 }
 
 string
-CPaCommon::GetDev()
+CPaCommon::GetItem()
 {
     return dev;
 }

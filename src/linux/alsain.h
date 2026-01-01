@@ -30,6 +30,7 @@
 #define _SOUNDIN_H
 
 #include "../sound/soundinterface.h"
+#include "../sound/selectioninterface.h"
 #include "../util/Buffer.h"
 #include "alsacommon.h"
 
@@ -42,20 +43,21 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundInAlsa : public CSoundInInterface
+class CSoundInAlsa : public CSoundInInterface, public CSelectionInterface
 {
 public:
     CSoundInAlsa();
     virtual ~CSoundInAlsa() {}
 
     virtual void Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
-    virtual void SetDev(std::string sNewDevice);
-    virtual std::string GetDev();
+    virtual void SetItem(std::string sNewDevice);
+    virtual std::string GetItemName();
 
     bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking = true);
     bool Read(CVector<short>& psData, CParameter& Parameters);
     void Close();
     virtual std::string		GetVersion() { return "alsa audio input"; }
+    virtual CSoundInInterface* GetItem() override { return this; }
 
 protected:
     void Init_HW();

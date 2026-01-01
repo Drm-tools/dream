@@ -27,6 +27,13 @@
 \******************************************************************************/
 
 #include "DrmTransceiver.h"
+#include "Parameter.h"
+
+CDRMTransceiver::CDRMTransceiver(CSettings* nPsettings):
+    Parameters(*(new CParameter())), pSettings(nPsettings),
+    soundinfactory(), soundoutfactory()
+{
+}
 
 CDRMTransceiver::~CDRMTransceiver()
 {

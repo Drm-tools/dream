@@ -187,7 +187,7 @@ void CSoundOutAlsa::Close()
     bChangDev = true;
 }
 
-void CSoundOutAlsa::SetDev(string sNewDevice)
+void CSoundOutAlsa::SetItem(string sNewDevice)
 {
     /* Change only in case new device id is not already active */
     if (sNewDevice != sCurrentDevice)
@@ -197,7 +197,7 @@ void CSoundOutAlsa::SetDev(string sNewDevice)
     }
 }
 
-string CSoundOutAlsa::GetDev()
+string CSoundOutAlsa::GetItem()
 {
     return sCurrentDevice;
 }

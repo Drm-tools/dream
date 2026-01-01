@@ -532,7 +532,7 @@ void CSoundOutPulse::Init_HW()
           nullptr,								// Initial volume, or nullptr for default
           nullptr								// Synchronize this stream with the specified one, or nullptr for a standalone stream
           );
-    if (pa_s_sync(&pa_obj, pa_s, ret) != PA_OK)
+    if (pa_s_sync(&pa_obj, pa_s, ret) != PA_OK) {
         DEBUG_MSG("CSoundOutPulse::Init_HW pa_stream_connect_playback failed\n");
 
         pa_stream_notify_cb_userdata_underflow.SoundOutPulse = this;
@@ -547,9 +547,9 @@ void CSoundOutPulse::Init_HW()
         A.Init(1, 1.0);
         B.Init(NUM_TAPS_LATENCY_FILT);
         for (int i = 0; i < NUM_TAPS_LATENCY_FILT; i++)
-B[i] = dLatFilt[i];
+            B[i] = dLatFilt[i];
 #endif
-
+    }
 /* Clear mute error flag */
 bMuteError = false;
 
@@ -755,7 +755,7 @@ void CSoundPulse::Enumerate(vector<string>& names, vector<string>& descriptions,
     }
 }
 
-void CSoundPulse::SetDev(string sNewDevice)
+void CSoundPulse::SetItem(string sNewDevice)
 {
     if (sNewDevice != sCurrentDevice)
     {
@@ -763,7 +763,7 @@ void CSoundPulse::SetDev(string sNewDevice)
     }
 }
 
-string CSoundPulse::GetDev()
+string CSoundPulse::GetItemName()
 {
     return sCurrentDevice;
 }

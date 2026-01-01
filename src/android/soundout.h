@@ -11,8 +11,8 @@ public:
     virtual ~COpenSLESOut();
 
     virtual void		Enumerate(std::vector<string>&, std::vector<string>&);
-    virtual void		SetDev(std::string sNewDevice);
-    virtual std::string		GetDev();
+    virtual void		SetItem(std::string sNewDevice);
+    virtual std::string		GetItem();
     virtual int			GetSampleRate();
 
     virtual bool	Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);

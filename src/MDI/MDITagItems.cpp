@@ -37,12 +37,14 @@
  *
 \******************************************************************************/
 
-#include <time.h>
 #include "MDITagItems.h"
 #include <iostream>
 #include <fstream>
 #include <chrono>
 #include <ctime>
+#include <cstring>
+#include <time.h>
+
 using namespace std;
 
 #include "../util/LogPrint.h"

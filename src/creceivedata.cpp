@@ -28,20 +28,10 @@
 
 #include "creceivedata.h"
 #include "Parameter.h"
-#ifdef QT_MULTIMEDIA_LIB
-# include <QSet>
-# include <QThread>
-# include <QTimer>
-# include <QEventLoop>
-#else
-# include "sound/soundinterfacefactory.h"
-#endif
-#include "sound/audiofilein.h"
 #include "util/FileTyper.h"
 #include "IQInputFilter.h"
 #include "UpsampleFilter.h"
 #include "matlib/MatlibSigProToolbox.h"
-#include "tuner.h"
 
 using namespace std;
 
@@ -53,10 +43,7 @@ inline _REAL sample2real(_SAMPLE s) {
     return _REAL(s);
 }
 
-CReceiveData::CReceiveData() :
-#ifdef QT_MULTIMEDIA_LIB
-    pIODevice(nullptr),
-#endif
+CReceiveData::CReceiveData():
     pSound(nullptr),
     vecrInpData(INPUT_DATA_VECTOR_SIZE, 0.0),
     bFippedSpectrum(false), eInChanSelection(CS_MIX_CHAN), iPhase(0),spectrumAnalyser()
@@ -68,106 +55,19 @@ CReceiveData::~CReceiveData()
 
 void CReceiveData::Stop()
 {
-#ifdef QT_MULTIMEDIA_LIB
-    if(pIODevice!=nullptr) {
-        pIODevice->close();
-        pIODevice = nullptr;
-    }
-    if(pAudioInput != nullptr) {
-        pAudioInput->stop();
-        delete pAudioInput;
-        pAudioInput = nullptr;
-    }
-#endif
     if(pSound!=nullptr) {
         pSound->Close();
         pSound = nullptr;
     }
 }
 
-void CReceiveData::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultInput)
+void CReceiveData::SetSoundInterface(CSoundInInterface* device)
 {
-#ifdef QT_MULTIMEDIA_LIB
-    QSet<QString> s;
-    QString def = QAudioDeviceInfo::defaultInputDevice().deviceName();
-    defaultInput = def.toStdString();
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
-    {
-        s.insert(di.deviceName());
-    }
-    names.clear(); descriptions.clear();
-    foreach(const QString n, s) {
-        names.push_back(n.toStdString());
-        if(n == def) {
-            descriptions.push_back("default");
-        }
-        else {
-            descriptions.push_back("");
-        }
-    }
-#else
-    if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundInInterface();
-    pSound->Enumerate(names, descriptions, defaultInput);
-#endif
-}
-
-void
-CReceiveData::SetSoundInterface(string device)
-{
-    soundDevice = device;
+    //soundDevice = device;
     if(pSound != nullptr) {
         pSound->Close();
-        delete pSound;
-        pSound = nullptr;
     }
-    if(FileTyper::resolve(device) != FileTyper::unrecognised) {
-        CAudioFileIn* pAudioFileIn = new CAudioFileIn();
-        pAudioFileIn->SetFileName(device);
-        int sr = pAudioFileIn->GetSampleRate();
-        if(iSampleRate!=sr) {
-            // TODO
-            cerr << "file sample rate is " << sr << endl;
-            iSampleRate = sr;
-        }
-        pSound = pAudioFileIn;
-#ifdef QT_MULTIMEDIA_LIB
-        if(pIODevice!=nullptr) {
-            pIODevice->close();
-            pIODevice = nullptr;
-        }
-        if(pAudioInput != nullptr) {
-            pAudioInput->stop();
-            delete pAudioInput;
-            pAudioInput = nullptr;
-        }
-#endif
-    }
-    else {
-#ifdef QT_MULTIMEDIA_LIB
-        QAudioFormat format;
-        if(iSampleRate==0) iSampleRate = 48000; // TODO get order of initialisation correct
-        format.setSampleRate(iSampleRate);
-        format.setSampleSize(16);
-        format.setSampleType(QAudioFormat::SignedInt);
-        format.setChannelCount(2); // TODO
-        format.setByteOrder(QAudioFormat::LittleEndian);
-        format.setCodec("audio/pcm");
-        foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
-        {
-            if(device == di.deviceName().toStdString()) {
-                QAudioFormat nearestFormat = di.nearestFormat(format);
-                pAudioInput = new QAudioInput(di, nearestFormat);
-                break;
-            }
-        }
-        if(pAudioInput == nullptr) {
-            qDebug("can't find audio input %s", device.c_str());
-        }
-#else
-        pSound = CSoundInterfaceFactory::CreateSoundInInterface();
-        pSound->SetDev(device);
-#endif
-    }
+    pSound = device;
 }
 
 void CReceiveData::ProcessDataInternal(CParameter& Parameters)
@@ -188,64 +88,14 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
     }
     Parameters.Unlock();
 
-
     /* Get data from sound interface. The read function must be a
        blocking function! */
 
-#ifdef QT_MULTIMEDIA_LIB
-    bool bBad = false;
-    if(pIODevice)
-    {
-#if 0
-
-        QTimer timer;
-        timer.setSingleShot(true);
-        QEventLoop loop;
-        QObject::connect(pIODevice,  SIGNAL(readyRead()), &loop, SLOT(quit()) );
-        QObject::connect(&timer, SIGNAL(timeout()), &loop, SLOT(quit()));
-        timer.start(1000);
-        loop.exec();
-
-        if(timer.isActive()) {
-            //qDebug("data from sound card");
-            qint64 n = 2*vecsSoundBuffer.Size();
-            qint64 r = pIODevice->read(reinterpret_cast<char*>(&vecsSoundBuffer[0]), n);
-            if(r!=n) {
-                cerr << "short read" << endl;
-            }
-        }
-        else {
-            qDebug("timeout");
-        }
-
-#else
-        qint64 n = 2*vecsSoundBuffer.Size();
-        char *p = reinterpret_cast<char*>(&vecsSoundBuffer[0]);
-        do {
-            qint64 r = pIODevice->read(p, n);
-            if(r>0) {
-                p += r;
-                n -= r;
-            }
-            else {
-                QThread::msleep(100);
-            }
-        } while (n>0);
-#endif
-    }
-    else if (pSound != nullptr) { // for audio files
-        bBad = pSound->Read(vecsSoundBuffer, Parameters);
-    }
-    else {
-      bBad = true;
-    }
-#else
     bool bBad = true;
     if (pSound != nullptr)
     {
         bBad = pSound->Read(vecsSoundBuffer, Parameters);
     }
-#endif
 
     Parameters.Lock();
     Parameters.ReceiveStatus.InterfaceI.SetStatus(bBad ? CRC_ERROR : RX_OK); /* Red light */
@@ -520,13 +370,8 @@ void CReceiveData::InitInternal(CParameter& Parameters)
            has to taken care about the buffering data of a whole MSC block.
            Use stereo input (* 2) */
 
-#ifdef QT_MULTIMEDIA_LIB
-    if (pSound == nullptr && pAudioInput == nullptr)
-        return;
-#else
     if (pSound == nullptr)
         return;
-#endif
 
     Parameters.Lock();
     /* We define iOutputBlockSize as half the iSymbolBlockSize because
@@ -553,24 +398,8 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         bool bChanged = false;
         int wantedBufferSize = iOutputBlockSize * 2 * iDownscaleRatio / iUpscaleRatio; // samples
 
-#ifdef QT_MULTIMEDIA_LIB
-        if(pSound) { // must be sound file
-            bChanged = (pSound==nullptr)?true:pSound->Init(iSampleRate / iUpscaleRatio, wantedBufferSize, true);
-        }
-        else {
-            pAudioInput->setBufferSize(2*wantedBufferSize); // bytes * expected frame imput size
-            pIODevice = pAudioInput->start();
-            cerr << "sound card buffer size requested " << 2*wantedBufferSize << " actual " << pAudioInput->bufferSize() << endl;
-            if(pAudioInput->error()!=QAudio::NoError)
-            {
-                qDebug("Can't open audio input");
-            }
-            bChanged = true; // TODO
-        }
 
-#else
         bChanged = (pSound==nullptr)?true:pSound->Init(iSampleRate * iDownscaleRatio / iUpscaleRatio, wantedBufferSize, true);
-#endif
         /* Clear input data buffer on change samplerate change */
         if (bChanged)
             ClearInputData();
@@ -877,12 +706,6 @@ void CReceiveData::emitRSCIData(CParameter& Parameters)
     spectrumAnalyser.CalculateSigStrengthCorrection(Parameters, vecrData);
 
     spectrumAnalyser.CalculatePSDInterferenceTag(Parameters, vecrData);
-}
-
-CTuner * CReceiveData::GetTuner()
-{
-    fprintf(stderr, "CReceiveData::GetTuner() called, pSound=%x\n", pSound);
-    return dynamic_cast<CTuner *>(pSound);
 }
 
 

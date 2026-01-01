@@ -1,4 +1,4 @@
-/******************************************************************************\
+/***********************************************************************\
  * British Broadcasting Corporation
  * Copyright (c) 2007, 2012, 2013
  *
@@ -30,8 +30,10 @@
 #define _AUDIOFILEIN
 
 #include "soundinterface.h"
+#include "soundnull.h"
 #include "../util/Pacer.h"
 #include "../resample/caudioresample.h"
+#include <set>
 
 /* Classes ********************************************************************/
 class CAudioFileIn : public CSoundInInterface
@@ -40,19 +42,19 @@ public:
     CAudioFileIn();
     virtual ~CAudioFileIn();
 
-    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) {}
-    virtual void		SetDev(std::string sNewDevice) {sCurrentDevice = sNewDevice;}
-    virtual std::string GetDev() {return sCurrentDevice;}
-    virtual void		SetFileName(const std::string& strFileName);
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
+    virtual void		SetItem(std::string sNewDevice);
+    virtual std::string GetItemName() {return strInFileName;}
     virtual int			GetSampleRate() {return iRequestedSampleRate;}
 
     virtual bool	Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual bool 	Read(CVector<short>& psData, CParameter &Parameters);
     virtual void 		Close();
 	virtual std::string GetVersion() { return "Dream Audio File Reader"; }
+	virtual CSoundInInterface* GetItem() { return this; }
 
 protected:
-    std::string				strInFileName;
+    std::string			strInFileName;
     CVector<_REAL>		vecTempResBufIn;
     CVector<_REAL>		vecTempResBufOut;
     enum { fmt_txt, fmt_raw_mono, fmt_raw_stereo, fmt_other } eFmt;
@@ -62,12 +64,12 @@ protected:
     int					iBufferSize;
     int					iFileSampleRate;
     int					iFileChannels;
+    int                iOutBlockSize;
     CPacer*				pacer;
     CAudioResample*		ResampleObjL;
     CAudioResample*		ResampleObjR;
     short*				buffer;
-    int					iOutBlockSize;
-    std::string				sCurrentDevice;
+	std::set<std::string> recent;
 };
 
 #endif

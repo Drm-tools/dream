@@ -78,13 +78,13 @@ void COpenSLESIn::Enumerate(vector<string>& names, vector<string>& descriptions)
 
 }
 
-void COpenSLESIn::SetDev(string sNewDevice)
+void COpenSLESIn::SetItem(string sNewDevice)
 {
     currentDevice = sNewDevice;
 
 }
 
-string COpenSLESIn::GetDev()
+string COpenSLESIn::GetItem()
 {
     return currentDevice;
 }

@@ -29,34 +29,36 @@
 #ifndef SOUNDINTERFACE_H
 #define SOUNDINTERFACE_H
 
-#include "selectioninterface.h"
 #include "../util/Vector.h"
+#include "selectioninterface.h"
 
 class CParameter;
 
-class CSoundInInterface : public CSelectionInterface
+class CSoundInInterface: public CSelectionInterface
 {
 public:
-    virtual 		~CSoundInInterface()=0;
+    virtual 		~CSoundInInterface() {}
 
     /* sound card interface - used by ReadData */
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking)=0;
     virtual bool Read(CVector<short>& psData, CParameter& Parameters)=0;
-    virtual void     Close()=0;
+    virtual void Close()=0;
 	virtual std::string	GetVersion() = 0;
+ 	virtual CSoundInInterface* GetItem() = 0;
 
 };
 
-class CSoundOutInterface : public CSelectionInterface
+class CSoundOutInterface: public CSelectionInterface
 {
 public:
-    virtual 		~CSoundOutInterface()=0;
+    virtual 		~CSoundOutInterface() {}
 
     /* sound card interface - used by WriteData */
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking)=0;
     virtual bool Write(CVector<short>& psData)=0;
-    virtual void     Close()=0;
+    virtual void Close()=0;
 	virtual std::string	GetVersion() = 0;
+ 	virtual CSoundOutInterface* GetItem() = 0;
 };
 
 #endif

@@ -26,14 +26,15 @@
  *
 \******************************************************************************/
 
-#ifdef _WIN32
-# include <windows.h>
-#endif
 #if defined(__unix__) && !defined(__APPLE__)
 # include <csignal>
 #endif
-#ifdef USE_CONSOLEIO
-# include "linux/ConsoleIO.h"
+#ifdef _WIN32
+// # include <windows.h>
+#else
+# ifdef USE_CONSOLEIO
+#  include "linux/ConsoleIO.h"
+# endif
 #endif
 #include "GlobalDefinitions.h"
 #include "DrmReceiver.h"

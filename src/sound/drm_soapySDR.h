@@ -1,7 +1,8 @@
 #ifndef DRM_SOAPYSDR_H
 #define DRM_SOAPYSDR_H
 
-#include "../sound/soundinterface.h"
+#include "soundinterface.h"
+#include "soundnull.h"
 #include "../tuner.h"
 
 namespace SoapySDR {class Device; class Stream;};
@@ -12,17 +13,18 @@ public:
 
     CSoapySDRIn();
     virtual ~CSoapySDRIn();
+
     // CSoundInInterface methods
     virtual bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking);
     virtual bool Read(CVector<short>& psData, CParameter &Parameters);
-    virtual void     Close();
+    virtual void Close();
     virtual std::string	GetVersion();
 
     // CSelectionInterface methods
     virtual void		Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice);
-    virtual std::string	GetDev();
-    virtual void		SetDev(std::string sNewDev);
-
+    virtual std::string	GetItemName();
+    virtual void		SetItem(std::string sNewDev);
+    virtual CSoundInInterface* GetItem() { return this; }
     // CTuner methods
     virtual void SetFrequency(int);
     virtual void LoadSettings(CSettings&);

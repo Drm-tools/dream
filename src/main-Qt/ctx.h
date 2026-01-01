@@ -14,8 +14,8 @@ public:
     virtual ~CTx() override;
     void run() override;
 
-    virtual void GetInputDevice(std::string&);
-    virtual void GetOutputDevice(std::string&);
+    virtual std::string GetInputDevice();
+    virtual std::string GetOutputDevice();
     virtual void EnumerateInputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultInput);
     virtual void EnumerateOutputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput);
     virtual CSettings*				GetSettings() override;

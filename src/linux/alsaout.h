@@ -30,6 +30,7 @@
 #define _SOUNDOUT_H
 
 #include "../sound/soundinterface.h"
+#include "../sound/selectioninterface.h"
 #include "../util/Buffer.h"
 #include "alsacommon.h"
 
@@ -39,21 +40,22 @@
 //#define FRAGSIZE 1024
 
 /* Classes ********************************************************************/
-class CSoundOutAlsa : public CSoundOutInterface
+class CSoundOutAlsa : public CSoundOutInterface, public CSelectionInterface
 {
 public:
     CSoundOutAlsa();
     virtual ~CSoundOutAlsa() {}
 
     virtual void Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
-    virtual void SetDev(std::string sNewDevice);
-    virtual std::string GetDev();
+    virtual void SetItem(std::string sNewDevice);
+    virtual std::string GetItemName();
 
     bool Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking = false);
     bool Write(CVector<short>& psData);
 
     void Close();
 	virtual std::string		GetVersion() { return "alsa audio output"; }
+    virtual CSoundOutInterface* GetItem() override { return this; }
 
 protected:
     void Init_HW();

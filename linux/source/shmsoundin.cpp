@@ -82,13 +82,13 @@ CShmSoundIn::Enumerate(vector < string > &choices)
 }
 
 void
-CShmSoundIn::SetDev(int iNewDevice)
+CShmSoundIn::SetItem(int iNewDevice)
 {
     (void)iNewDevice;
 }
 
 int
-CShmSoundIn::GetDev()
+CShmSoundIn::GetItem()
 {
     if (shmid==-1)
         return -1;

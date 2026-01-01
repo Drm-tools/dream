@@ -33,10 +33,6 @@
 #define DATA_H__3B0BA660_CA63_4344_BB2B_23E7A0D31912__INCLUDED_
 
 #include "sound/soundinterface.h"
-#ifdef QT_MULTIMEDIA_LIB
-#include <QIODevice>
-#include <QAudioOutput>
-#endif
 #include "Parameter.h"
 #include "util/Modul.h"
 #include "FAC/FAC.h"
@@ -72,28 +68,14 @@ public:
     _REAL GetLevelMeter() {
         return SignalLevelMeter.Level();
     }
-    void SetSoundInterface(std::string);
-    std::string GetSoundInterface() {
-        return soundDevice;
-    }
-    void Enumerate(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultInput);
-    void Stop();
-#ifdef QT_MULTIMEDIA_LIB
-    std::string GetSoundInterfaceVersion() {
-        return "QtMultimedia";
-    }
-#else
+    void SetSoundInterface(CSoundInInterface* device) { pSound = device; }
+    void Stop() { if (pSound != nullptr) pSound->Close(); }
     std::string GetSoundInterfaceVersion() {
         return pSound->GetVersion();
     }
-#endif
 
 protected:
-#ifdef QT_MULTIMEDIA_LIB
-    QIODevice*          pIODevice;
-#endif
     CSoundInInterface*  pSound;
-    std::string              soundDevice;
     CVector<_SAMPLE> vecsSoundBuffer;
     CSignalLevelMeter SignalLevelMeter;
     int iSampleRate;
@@ -135,29 +117,14 @@ public:
     EOutChanSel GetOutChanSel() {
         return eOutChanSel;
     }
-    void SetSoundInterface(std::string);
-    std::string GetSoundInterface() {
-        return soundDevice;
-    }
-    void Enumerate(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultOutput);
-    void Stop();
-#ifdef QT_MULTIMEDIA_LIB
-    std::string GetSoundInterfaceVersion() {
-        return "QtMultimedia";
-    }
-#else
+    void SetSoundInterface(CSoundOutInterface* device) { pSound = device; }
+    void Stop() { if (pSound != nullptr) pSound->Close(); }
     std::string GetSoundInterfaceVersion() {
         return pSound->GetVersion();
     }
-#endif
 
 protected:
-#ifdef QT_MULTIMEDIA_LIB
-    QAudioOutput* pAudioOutput;
-    QIODevice* pIODevice;
-#endif
     CSoundOutInterface* pSound;
-    std::string                  soundDevice;
     bool bMuteAudio;
     CWaveFile WaveFileAudio;
     bool bDoWriteWaveFile;

@@ -28,14 +28,7 @@
 
 #include "DataIO.h"
 #include <iomanip>
-#include <time.h>
-#ifdef QT_MULTIMEDIA_LIB
-# include <QAudioOutput>
-# include <QAudioInput>
-# include <QSet>
-#endif
-//#include "sound/sound.h"
-#include "sound/soundinterfacefactory.h"
+#include <ctime>
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -47,17 +40,7 @@ void CReadData::ProcessDataInternal(CParameter& Parameters)
     /* Get data from sound interface */
     if (pSound == nullptr)
     {
-#ifdef QT_MULTIMEDIA_LIB
-        if(pIODevice)
-        {
-            qint64 n = 2*vecsSoundBuffer.Size();
-            pIODevice->read(reinterpret_cast<char*>(&vecsSoundBuffer[0]), n);
-        }
-        else
-            return;
-#else
         return;
-#endif
     }
     else
     {
@@ -89,89 +72,8 @@ void CReadData::InitInternal(CParameter& Parameters)
     SignalLevelMeter.Init(0);
 }
 
-void CReadData::Stop()
-{
-#ifdef QT_MULTIMEDIA_LIB
-    if(pIODevice!=nullptr) pIODevice->close();
-#endif
-    if(pSound!=nullptr) pSound->Close();
-}
-
-void CReadData::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, string& defaultInput)
-{
-#ifdef QT_MULTIMEDIA_LIB
-    QString def = QAudioDeviceInfo::defaultInputDevice().deviceName();
-    defaultInput = def.toStdString();
-    QSet<QString> s;
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
-    {
-        s.insert(di.deviceName());
-    }
-    names.clear();
-    descriptions.clear();
-    foreach(const QString n, s) {
-        names.push_back(n.toStdString());
-        descriptions.push_back("");
-    }
-#else
-    if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundInInterface();
-    pSound->Enumerate(names, descriptions, defaultInput);
-#endif
-    cout << "default input is " << defaultInput << endl;
-}
-
-void
-CReadData::SetSoundInterface(string device)
-{
-    soundDevice = device;
-#ifdef QT_MULTIMEDIA_LIB
-    QAudioFormat format;
-    if(iSampleRate==0) iSampleRate = 48000; // TODO get order of initialisation correct
-    format.setSampleRate(iSampleRate);
-    format.setSampleSize(16);
-    format.setSampleType(QAudioFormat::SignedInt);
-    format.setChannelCount(2); // TODO
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setCodec("audio/pcm");
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
-    {
-        if(device == di.deviceName().toStdString()) {
-            QAudioFormat nearestFormat = di.nearestFormat(format);
-            QAudioInput* pAudioInput = new QAudioInput(di, nearestFormat);
-            pIODevice = pAudioInput->start();
-            if(pAudioInput->error()==QAudio::NoError)
-            {
-                if(pIODevice->open(QIODevice::ReadOnly))
-                {
-                    qDebug("audio input open");
-                }
-                else {
-                    qDebug("audio input open");
-                }
-            }
-            else
-            {
-                qDebug("Can't open audio input");
-            }
-        }
-        break;
-    }
-#else
-    if(pSound != nullptr) {
-        delete pSound;
-        pSound = nullptr;
-    }
-    pSound = CSoundInterfaceFactory::CreateSoundInInterface();
-    pSound->SetDev(device);
-#endif
-}
-
-
 /* Receiver ----------------------------------------------------------------- */
 CWriteData::CWriteData() :
-#ifdef QT_MULTIMEDIA_LIB
-    pAudioOutput(nullptr), pIODevice(nullptr),
-#endif
     pSound(nullptr), /* Sound interface */
     bMuteAudio(false), bDoWriteWaveFile(false),
     bSoundBlocking(false), bNewSoundBlocking(false),
@@ -180,75 +82,6 @@ CWriteData::CWriteData() :
     iMaxAudioFrequency(MAX_SPEC_AUDIO_FREQUENCY)
 {
     /* Constructor */
-}
-
-void CWriteData::Stop()
-{
-#ifdef QT_MULTIMEDIA_LIB
-    if(pAudioOutput!=nullptr) pIODevice->close();
-#endif
-    if(pSound!=nullptr) pSound->Close();
-}
-
-void CWriteData::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, string& defaultOutput)
-{
-#ifdef QT_MULTIMEDIA_LIB
-    QString def = QAudioDeviceInfo::defaultOutputDevice().deviceName();
-    defaultOutput = def.toStdString();
-    QSet<QString> s;
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
-    {
-        s.insert(di.deviceName());
-    }
-    names.clear();
-    descriptions.clear();
-    foreach(const QString n, s) {
-        names.push_back(n.toStdString());
-        descriptions.push_back("");
-    }
-#else
-    if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
-    pSound->Enumerate(names, descriptions, defaultOutput);
-#endif
-}
-
-void
-CWriteData::SetSoundInterface(string device)
-{
-    soundDevice = device;
-#ifdef QT_MULTIMEDIA_LIB
-    QAudioFormat format;
-    if(iAudSampleRate==0) iAudSampleRate = 48000; // TODO get order of initialisation correct
-    format.setSampleRate(iAudSampleRate);
-    format.setSampleSize(16);
-    format.setSampleType(QAudioFormat::SignedInt);
-    format.setChannelCount(2); // TODO
-    format.setByteOrder(QAudioFormat::LittleEndian);
-    format.setCodec("audio/pcm");
-    if(pAudioOutput != nullptr && pAudioOutput->state() == QAudio::ActiveState) {
-        pAudioOutput->stop();
-        delete pAudioOutput;
-        pAudioOutput = nullptr;
-    }
-    foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
-    {
-        if(device == di.deviceName().toStdString()) {
-            QAudioFormat nearestFormat = di.nearestFormat(format);
-            pAudioOutput = new QAudioOutput(di, nearestFormat);
-            break;
-        }
-    }
-    if(pAudioOutput == nullptr) {
-        qDebug("Can't find audio output %s", device.c_str());
-    }
-#else
-    if(pSound != nullptr) {
-        delete pSound;
-        pSound = nullptr;
-    }
-    pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
-    pSound->SetDev(device);
-#endif
 }
 
 void CWriteData::ProcessDataInternal(CParameter& Parameters)
@@ -325,30 +158,8 @@ void CWriteData::ProcessDataInternal(CParameter& Parameters)
     }
 
     /* Put data to sound card interface. Show sound card state on GUI */
-
-#ifdef QT_MULTIMEDIA_LIB
-    bool bBad = true;
-    if(pIODevice)
-    {
-        int n = 2*vecsTmpAudData.Size(); // bytes to write 2 = sizeof(_SAMPLE)
-        char* buf = reinterpret_cast<char*>(&vecsTmpAudData[0]);
-        while(n>0) {
-            int bytesToWrite = pAudioOutput->bytesFree();
-            if(bytesToWrite == 0) {
-                pIODevice->waitForBytesWritten(-1);
-            }
-            if(n < bytesToWrite) {
-                bytesToWrite = n;
-            }
-            qint64 w = pIODevice->write(buf, bytesToWrite);
-            n -= w;
-            buf += w;
-        }
-        bBad = false;
-    }
-#else
     const bool bBad = pSound->Write(vecsTmpAudData);
-#endif
+
     Parameters.Lock();
     Parameters.ReceiveStatus.InterfaceO.SetStatus(bBad ? DATA_ERROR : RX_OK); /* Yellow light */
     Parameters.Unlock();
@@ -412,19 +223,6 @@ void CWriteData::InitInternal(CParameter& Parameters)
         bSoundBlocking = bNewSoundBlocking;
 
     /* Init sound interface with blocking or non-blocking behaviour */
-#ifdef QT_MULTIMEDIA_LIB
-    if(pAudioOutput != nullptr) {
-
-        pAudioOutput->setBufferSize(2 * 2 * 2 * iAudFrameSize); // room for two frames * bytes per sample * stereo
-        pIODevice = pAudioOutput->start();
-        cerr << "buffer size " << pAudioOutput->bufferSize() << endl;
-        cerr << "period size " << pAudioOutput->periodSize() << endl;
-        if(pAudioOutput->error()!=QAudio::NoError)
-        {
-            qDebug("Can't open audio output");
-        }
-    }
-#endif
     if(pSound!=nullptr) pSound->Init(iAudSampleRate, iAudFrameSize * 2 /* stereo */, bSoundBlocking); // might be a sound file
     /* Init intermediate buffer needed for different channel selections */
     vecsTmpAudData.Init(iAudFrameSize * 2 /* stereo */);

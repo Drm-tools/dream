@@ -53,7 +53,21 @@ CAudioFileIn::~CAudioFileIn()
 }
 
 void
-CAudioFileIn::SetFileName(const string& strFileName)
+CAudioFileIn::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultName)
+{
+    names.clear();
+    descriptions.clear();
+    if (!defaultName.empty()) {
+		recent.insert(defaultName);
+	}
+	for(auto itr = recent.begin(); itr != recent.end(); ++itr) {
+        names.push_back(*itr);
+        descriptions.push_back("file");
+    }
+}
+
+void
+CAudioFileIn::SetItem(string strFileName)
 {
     strInFileName = strFileName;
     string ext;
@@ -167,6 +181,7 @@ CAudioFileIn::SetFileName(const string& strFileName)
     else if (iRequestedSampleRate <= 48000) iRequestedSampleRate = 48000;
     else if (iRequestedSampleRate <= 96000) iRequestedSampleRate = 96000;
     else                                    iRequestedSampleRate = 192000;
+	recent.insert(strInFileName);
 }
 
 bool

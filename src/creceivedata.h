@@ -33,14 +33,6 @@
 #include "sound/soundinterface.h"
 #include "util/Utilities.h"
 #include "spectrumanalyser.h"
-#ifdef QT_MULTIMEDIA_LIB
-# include <QAudioInput>
-# include <QIODevice>
-#else
-# ifdef QT_CORE_LIB
-  class QIODevice;
-# endif
-#endif
 
   /* Length of vector for input spectrum. We use approx. 0.2 sec
      of sampled data for spectrum calculation, this is 2^13 = 8192 to
@@ -61,8 +53,6 @@
 /* The RSI output needs 400ms with a 50% overlap, so this needs more space
    I think the RSCI spec is slightly wrong - using 150 windows consumes just over 400ms, 149 would be exact */
 #define INPUT_DATA_VECTOR_SIZE (NUM_AV_BLOCKS_PSD_RSI * (LEN_PSD_AV_EACH_BLOCK_RSI-PSD_OVERLAP_RSI)+PSD_OVERLAP_RSI)
-
-class CTuner;
 
 enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_SUB_CHAN, CS_IQ_POS,
                    CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_IQ_POS_SPLIT, CS_IQ_NEG_SPLIT
@@ -92,15 +82,11 @@ public:
         mutexInpData.Unlock();
     }
 
-    void SetSoundInterface(std::string);
-    std::string GetSoundInterface() { return soundDevice; }
-    void Enumerate(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultInput);
+    void SetSoundInterface(CSoundInInterface* device );
+    CSoundInInterface* GetSoundInterface() { return pSound; }
+
     void Stop();
-#ifdef QT_MULTIMEDIA_LIB
-    std::string GetSoundInterfaceVersion() { return "QtMultimedia"; }
-#else
-    std::string GetSoundInterfaceVersion() { return pSound->GetVersion(); }
-#endif
+
     void SetInChanSel(const EInChanSel eNS) {
         eInChanSelection = eNS;
     }
@@ -113,15 +99,10 @@ public:
                      const int iNumAvBlocksPSD = NUM_AV_BLOCKS_PSD,
                      const int iPSDOverlap = 0);
 
-    CTuner *GetTuner(void);
-
 protected:
     CSignalLevelMeter		SignalLevelMeter;
 
-#ifdef QT_MULTIMEDIA_LIB
-    QAudioInput*            pAudioInput;
-    QIODevice*              pIODevice;
-#endif
+
     CSoundInInterface*		pSound;
     CVector<_SAMPLE>		vecsSoundBuffer;
     std::string             soundDevice;

@@ -31,11 +31,12 @@
 \******************************************************************************/
 
 #include "PacketSocket.h"
-#include "PacketSocketHTTP.h"
 #include "RSISubscriber.h"
 #include "../DrmReceiver.h"
 #include "TagPacketGenerator.h"
-
+#ifndef NO_QT
+#include "PacketSocketHTTP.h"
+#endif
 
 CRSISubscriber::CRSISubscriber(CPacketSink *pSink) : pPacketSink(pSink),
 	cProfile(0), bNeedPft(false), fragment_size(0), pDRMReceiver(0),
@@ -121,8 +122,13 @@ bool CRSISubscriberSocket::SetDestination(const string& dest)
 
     if (dest.substr(0,5)=="http:" || dest.substr(0,6)=="https:")
     {
-        cout<<"instantiating HTTP socket"<<endl;
+#ifdef NO_QT
+		cout << "HTTP not available in pure console. Try building with qtconsole" << endl;
+	    pSocket = new CPacketSocketNative;	
+#else
+        cout << "instantiating HTTP socket" << endl;
         pSocket = new CPacketSocketHTTP;
+#endif
     }
     else
     {

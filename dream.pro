@@ -22,6 +22,7 @@ console {
     UI_MESSAGE = console mode
     VERSION_MESSAGE = No Qt
     SOURCES += src/main.cpp
+	DEFINES += NO_QT
 	unix:!cross_compile {
 		HEADERS += src/linux/ConsoleIO.h
 		SOURCES += src/linux/ConsoleIO.cpp
@@ -204,20 +205,14 @@ unix {
 unix:!cross_compile {
     DEFINES += HAVE_LIBPCAP
     LIBS += -lpcap
-    !sound {
-         # check for pulseaudio before portaudio
-         exists(/usr/include/pulse/pulseaudio.h) | \
-         exists(/usr/local/include/pulse/pulseaudio.h) {
-         #packagesExist(libpulse)
-          CONFIG += pulseaudio sound
-         }
-         else {
-           exists(/usr/include/portaudio.h) | \
-           exists(/usr/local/include/portaudio.h) {
-           #packagesExist(portaudio-2.0)
-              CONFIG += portaudio sound
-           }
-        }
+    packagesExist(libpulse) {
+        CONFIG += pulseaudio sound
+    }
+    packagesExist(portaudio-2.0) {
+        CONFIG += portaudio sound
+    }
+    packagesExist(jack) {
+        CONFIG += jack sound
     }
     qt5|contains(QT_VERSION, ^4\\.8.*) {
       packagesExist(sndfile) {
@@ -259,7 +254,7 @@ unix:!cross_compile {
       }
     }
 }
-exists(/usr/include/SoapySDR) | exists(/usr/local/include/SoapySDR) | exists(include/SoapySDR) {
+packagesExist(soapysdr) | exists(include/SoapySDR) {
        CONFIG += soapysdr
 }
 win32:cross_compile {
@@ -393,7 +388,7 @@ alsa {
     DEFINES += USE_ALSA
     HEADERS += src/linux/alsain.h src/linux/alsaout.h src/linux/alsacommon.h
     SOURCES += src/linux/alsain.cpp src/linux/alsaout.cpp src/linux/alsacommon.cpp
-    LIBS += -lasound
+    PKG_CONFIG += alsa
     message("with alsa")
 }
 portaudio {
@@ -423,6 +418,13 @@ pulseaudio {
         LIBS += -lpulse
     }
     message("with pulseaudio")
+}
+jack {
+    DEFINES += USE_JACK
+    PKG_CONFIG += jack
+    HEADERS += src/linux/jack.h
+    SOURCES += src/linux/jack.cpp
+    message("with jack")
 }
 soapysdr {
     DEFINES += USE_SOAPYSDR
@@ -564,8 +566,8 @@ HEADERS += \
     src/sourcedecoders/reverb.h \
     src/sourcedecoders/caudioreverb.h \
     src/tuner.h \
-    src/sound/soundinterfacefactory.h \
-    src/MDI/PacketSocketHTTP.h
+    src/sound/soundfactory.h
+
 SOURCES += \
     src/AMDemodulation.cpp \
     src/AMSSDemodulation.cpp \
@@ -670,8 +672,6 @@ SOURCES += \
     src/Version.cpp \
     src/sound/soundnull.cpp \
     src/DrmTransceiver.cpp \
-    src/sound/soundinterface.cpp \
-    src/sound/selectioninterface.cpp \
     src/MSC/logicalframe.cpp \
     src/MSC/audiosuperframe.cpp \
     src/MSC/aacsuperframe.cpp \
@@ -683,8 +683,7 @@ SOURCES += \
     src/sourcedecoders/reverb.cpp \
     src/sourcedecoders/caudioreverb.cpp \
     src/tuner.cpp \
-    src/sound/soundinterfacefactory.cpp \
-    src/MDI/PacketSocketHTTP.cpp
+    src/sound/soundfactory.cpp
 
 contains(QT,core) {
     HEADERS += \
@@ -694,7 +693,8 @@ contains(QT,core) {
         src/util-QT/Util.h \
         src/main-Qt/ctrx.h \
         src/main-Qt/crx.h \
-        src/main-Qt/ctx.h
+        src/main-Qt/ctx.h \
+		src/MDI/PacketSocketHTTP.h
 
     SOURCES += \
         src/GUI-QT/Logging.cpp \
@@ -703,7 +703,8 @@ contains(QT,core) {
         src/util-QT/Util.cpp \
         src/main-Qt/ctrx.cpp \
         src/main-Qt/crx.cpp \
-        src/main-Qt/ctx.cpp
+        src/main-Qt/ctx.cpp \
+		src/MDI/PacketSocketHTTP.cpp
 }
 !sound {
     error("no usable audio interface found - install pulseaudio or portaudio dev package")

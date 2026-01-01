@@ -1,4 +1,5 @@
 #include "crx.h"
+#include "qeventloop.h"
 #ifdef USE_CONSOLEIO
 # include "../linux/ConsoleIO.h"
 #endif
@@ -16,6 +17,7 @@ CRx::~CRx()
 void
 CRx::run()
 {
+    QEventLoop eventLoop;
     qDebug("Working thread started");
     try
     {
@@ -50,6 +52,7 @@ CRx::run()
             {
                 rx.updatePosition();
                 rx.process();
+                eventLoop.processEvents();
 		if (rx.GetNewReceiverMode() != rxMode && rx.GetNewReceiverMode() != RM_NONE)
 		  eRunState = RESTART;
 

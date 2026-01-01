@@ -16,7 +16,9 @@
 #include "../util/Settings.h"
 
 // Constructor(s)
-CSoapySDRIn::CSoapySDRIn() : currentDev(""), iSampleRate(96000), iBufferSize(0), iFrequency(0), pDevice(nullptr), pStream(nullptr)
+CSoapySDRIn::CSoapySDRIn() :
+  CSoundInInterface(), CTuner(),
+  currentDev(""), iSampleRate(96000), iBufferSize(0), iFrequency(0), pDevice(nullptr), pStream(nullptr)
 {
     //pFile = fopen("raw_input.iq", "w");
 }
@@ -35,7 +37,7 @@ bool CSoapySDRIn::Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking
     std::vector<std::string> names;
     std::vector<std::string> descriptions;
     std::string defaultDevice;
-    Enumerate(names, descriptions, defaultDevice);
+    //Enumerate(names, descriptions, defaultDevice);
 
     unsigned int deviceIndex= 0;
     for (unsigned int i=0; i<names.size(); i++)
@@ -198,13 +200,13 @@ void CSoapySDRIn::Enumerate(std::vector<std::string>& names, std::vector<std::st
     defaultDevice = names[0];
 }
 
-std::string	CSoapySDRIn::GetDev()
+std::string	CSoapySDRIn::GetItemName()
 {
     return currentDev;
 
 }
 
-void CSoapySDRIn::SetDev(std::string sNewDev)
+void CSoapySDRIn::SetItem(std::string sNewDev)
 {
     currentDev = sNewDev;
 }
