@@ -809,7 +809,7 @@ bool CSoundInPulse::Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocki
         return false;
     }
 #endif
-
+    cerr << "init pulse " << sCurrentDevice << " " << iNewSampleRate << endl;
     /* Save blocking mode */
     bBlockingRec = bNewBlocking;
 

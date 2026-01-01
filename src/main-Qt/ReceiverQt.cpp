@@ -104,8 +104,8 @@ void CReceiverQt::SetReverberationEffect(bool b) {
   return AudioSourceDecoder.SetReverbEffect(b);
 }
 
-void CReceiverQt::SetReceiverMode(ERecMode e) {
-  CDRMReceiver::SetReceiverMode(e);
+void CReceiverQt::SetReceiverMode(int e) {
+    CDRMReceiver::SetReceiverMode((ERecMode)e);
 }
 
 void CReceiverQt::SetAMDemodulationType(EDemodType e) {

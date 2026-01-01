@@ -45,10 +45,12 @@ CAudioFileIn::CAudioFileIn(): CSoundInInterface(), eFmt(fmt_other),
     iFileSampleRate(0), iFileChannels(0), pacer(nullptr),
     ResampleObjL(nullptr), ResampleObjR(nullptr), buffer(nullptr)
 {
+    cerr << "audiofilein" << endl;
 }
 
 CAudioFileIn::~CAudioFileIn()
 {
+    cerr << "~audiofilein" << endl;
     Close();
 }
 
@@ -69,6 +71,7 @@ CAudioFileIn::Enumerate(std::vector<std::string>& names, std::vector<std::string
 void
 CAudioFileIn::SetItem(string strFileName)
 {
+    cerr << "audiofilein setitem " << strFileName << endl;
     strInFileName = strFileName;
     string ext;
     size_t p = strInFileName.rfind('.');
@@ -187,7 +190,7 @@ CAudioFileIn::SetItem(string strFileName)
 bool
 CAudioFileIn::Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking)
 {
-	//qDebug("CAudioFileIn::Init() iNewSampleRate=%i iNewBufferSize=%i bNewBlocking=%i", iNewSampleRate, iNewBufferSize, bNewBlocking);
+    cerr << "CAudioFileIn::Init() " << strInFileName << " " << iNewBufferSize << endl;;
 
     if (pacer)
     {

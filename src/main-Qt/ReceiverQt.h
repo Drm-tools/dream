@@ -29,7 +29,7 @@ public slots:
     virtual void SetConsiderInterferer(bool);
     virtual void MuteAudio(bool);
     virtual void SetReverberationEffect(bool);
-    virtual void SetReceiverMode(ERecMode);
+    virtual void SetReceiverMode(int);
     virtual void SetAMDemodulationType(EDemodType);
     virtual void SetAMFilterBW(int);
     virtual void SetAMAGCType(EAmAgcType);

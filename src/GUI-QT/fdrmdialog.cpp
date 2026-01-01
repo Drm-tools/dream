@@ -141,7 +141,7 @@ FDRMDialog::FDRMDialog(CTRx* pRx, CSettings& Settings, QWidget* parent)
 
     connect(actionAM, SIGNAL(triggered()), this, SLOT(OnSwitchToAM()));
     connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
-    connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnNewAcquisition()));
+    connect(actionDRM, SIGNAL(triggered()), &rx, SLOT(StartNewAcquisition()));
 
     connect(actionDisplayColor, SIGNAL(triggered()), this, SLOT(OnMenuSetDisplayColor()));
 
@@ -240,7 +240,7 @@ FDRMDialog::FDRMDialog(CTRx* pRx, CSettings& Settings, QWidget* parent)
     connect(pFMDlg, SIGNAL(ViewStationsDlg()), pStationsDlg, SLOT(show()));
     connect(pFMDlg, SIGNAL(ViewLiveScheduleDlg()), pLiveScheduleDlg, SLOT(show()));
 
-    connect(this, SIGNAL(SwitchMode(int)), &rx, SLOT(SetReceiverMode(int)));
+    // connect(this, SIGNAL(SwitchMode(int)), &rx, SLOT(SetReceiverMode(int)));
 
     connect(&Timer, SIGNAL(timeout()), this, SLOT(OnTimer()));
 
