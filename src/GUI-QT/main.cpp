@@ -142,7 +142,7 @@ void consoletx(CSettings &Settings, QCoreApplication &app) {
       eRunState = RUNNING;
 
       /* Start the transmitter run routine */
-      DRMTransmitter.Run();
+      do { DRMTransmitter.process(); } while(true);
     } while (eRunState == RESTART);
 
     /* Closing the sound interfaces */
@@ -181,7 +181,7 @@ int main(int argc, char **argv) {
   try {
     string gui;
     {
-   CSettings *CSettings 
+   CSettings *CSettings;
    QCoreApplication app(argc, argv);
      Settings.Load(argc, argv); 
  gui = Settings.Get("command", "gui", string());
