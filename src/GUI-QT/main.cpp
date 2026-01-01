@@ -28,12 +28,12 @@
  *
 \******************************************************************************/
 
+#include <iostream>
 #include <QTranslator>
 #include <QThread>
 #include <QApplication>
+#include <QCoreApplication>
 #include <QMessageBox>
-#include <csignal>
-#include <iostream>
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
@@ -42,137 +42,207 @@
 #include "TransmDlg.h"
 #include "DialogUtil.h"
 
+usingusing namespace std;
+
 #ifdef HAVE_LIBHAMLIB
-# include "../util-QT/Rig.h"
+#include "../util-QT/Rig.h"
 #endif
 #ifdef USE_OPENSL
-# include <SLES/OpenSLES.h>
-  SLObjectItf engineObject = nullptr;
+#include <SLES/OpenSLES.h>
+SLObjectItf engineObject = nullptr;
 #endif
 
 #include "../main-Qt/crx.h"
 #include "../main-Qt/ctx.h"
 
-int
-main(int argc, char **argv)
-{
-    QApplication app(argc, argv);
+void guirx(CSettings &Settings, QApplication &app) {
+  CDRMReceiver DRMReceiver(&Settings);
+
+  /* First, initialize the working thread. This should be done in an extra
+     routine since we cannot 100% assume that the working thread is
+     ready before the GUI thread */
+
+#ifdef HAVE_LIBHAMLIB
+  CRig rig(DRMReceiver.GetParameters());
+  rig.LoadSettings(Settings); // must be before DRMReceiver for G313
+#endif
+  CRx rx(DRMReceiver);
+
+#ifdef HAVE_LIBHAMLIB
+  DRMReceiver.SetTuner(&rig);
+
+  if (DRMReceiver.GetDownstreamRSCIOutEnabled()) {
+    rig.subscribe();
+  }
+  FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings, rig);
+#else
+  FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings);
+#endif
+  (void)pMainDlg;
+  rx.LoadSettings(); // load settings after GUI initialised so LoadSettings
+                     // signals get captured
+
+  /* Start working thread */
+  rx.start();
+
+  /* Set main window */
+  app.exec();
+
+#ifdef HAVE_LIBHAMLIB
+  if (DRMReceiver.GetDownstreamRSCIOutEnabled()) {
+    rig.unsubscribe();
+  }
+  rig.SaveSettings(Settings);
+#endif
+  rx.SaveSettings();
+}
+
+void guitx(CSettings &Settings, QApplication &app) {
+  CDRMTransmitter DRMTransmitter(&Settings);
+  CTx tx(DRMTransmitter);
+  TransmDialog *pMainDlg = new TransmDialog(tx);
+
+  tx.LoadSettings(); // load settings after GUI initialised so LoadSettings
+                     // signals get captured
+                     /* Show dialog */
+  pMainDlg->show();
+  tx.start();
+  app.exec();
+  tx.SaveSettings();
+}
+
+void consolerx(CSettings &Settings, QCoreApplication &app) {
+  CDRMSimulation DRMSimulation;
+  CDRMReceiver DRMReceiver(&Settings);
+
+  DRMSimulation.SimScript();
+  DRMReceiver.LoadSettings();
+
+  CRx rx(DRMReceiver);
+
+  QObject::connect(&rx, SIGNAL(finished()), &app, SLOT(quit()),
+                   Qt::QueuedConnection);
+
+  rx.start();
+  return app.exec();
+}
+
+void consoletx(CSettings &Settings, QCoreApplication &app) {
+  CDRMTransmitter DRMTransmitter(&Settings);
+  DRMTransmitter.LoadSettings();
+  try {
+    /* Set restart flag */
+    ERunState eRunState = RESTART;
+    do {
+      /* Initialization of the modules */
+      DRMTransmitter.Init();
+
+      /* Set run flag */
+      eRunState = RUNNING;
+
+      /* Start the transmitter run routine */
+      DRMTransmitter.Run();
+    } while (eRunState == RESTART);
+
+    /* Closing the sound interfaces */
+    DRMTransmitter.Close();
+  } catch (CGenErr GenErr) {
+    cerr << GenErr.strError << endl;
+  } catch (string strError) {
+    cerr << strError << endl;
+  }
+}
+
+int main(int argc, char **argv) {
 
 #ifdef USE_OPENSL
-    (void)slCreateEngine(&engineObject, 0, nullptr, 0, nullptr, nullptr);
-    (void)(*engineObject)->Realize(engineObject, SLbool_false);
+  (void)slCreateEngine(&engineObject, 0, nullptr, 0, nullptr, nullptr);
+  (void)(*engineObject)->Realize(engineObject, SLbool_false);
 #endif
 #if defined(__unix__) && !defined(__APPLE__)
-	/* Prevent signal interaction with popen */
-	sigset_t sigset;
-	sigemptyset(&sigset);
-	sigaddset(&sigset, SIGPIPE);
-	sigaddset(&sigset, SIGCHLD);
-	pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
+  /* Prevent signal interaction with popen */
+  sigset_t sigset;
+  sigemptyset(&sigset);
+  sigaddset(&sigset, SIGPIPE);
+  sigaddset(&sigset, SIGCHLD);
+  pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
 #endif
 
-
-#if defined(__APPLE__)
-	/* find plugins on MacOs when deployed in a bundle */
-	app.addLibraryPath(app.applicationDirPath()+"../PlugIns");
-#endif
 #ifdef _WIN32
-	/* Initialize Winsock */
-	WSADATA wsaData;
-	(void)WSAStartup(MAKEWORD(2,2), &wsaData);
+  /* Initialize Winsock */
+  WSADATA wsaData;
+  (void)WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif
 
-	/* Load and install multi-language support (if available) */
-    QTranslator translator(nullptr);
-	if (translator.load("dreamtr"))
-		app.installTranslator(&translator);
+  /* Load and install multi-language support (if available) */
+  QTranslator translator(nullptr);
 
-	CSettings Settings;
-	/* Parse arguments and load settings from init-file */
-	Settings.Load(argc, argv);
-
-	try
-	{
-		string mode = Settings.Get("command", "mode", string());
-		if (mode == "receive")
-		{
-			CDRMReceiver DRMReceiver(&Settings);
-
-			/* First, initialize the working thread. This should be done in an extra
-			   routine since we cannot 100% assume that the working thread is
-			   ready before the GUI thread */
-
-#ifdef HAVE_LIBHAMLIB
-			CRig rig(DRMReceiver.GetParameters());
-			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
+  try {
+    string gui = Settings.Get("command", "gui", string());
+    if (gui == "true") {
+      QApplication app(argc, argv);
+#if defined(__APPLE__)
+      /* find plugins on MacOs when deployed in a bundle */
+      app.addLibraryPath(app.applicationDirPath() + "../PlugIns");
 #endif
-            CRx rx(DRMReceiver);
+      if (translator.load("dreamtr"))
+        app.installTranslator(&translator);
 
-#ifdef HAVE_LIBHAMLIB
-            DRMReceiver.SetTuner(&rig);
-
-			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
-			{
-				rig.subscribe();
-			}
-            FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings, rig);
-#else
-			FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings);
+      CSettings Settings;
+      /* Parse arguments and load settings from init-file */
+      Settings.Load(argc, argv);
+      string mode = Settings.Get("command", "mode", string());
+      if (mode == "receive") {
+        guirx(Settings, app);
+      } else if (mode == "transmit") {
+        guitx(Settings, app);
+      } else {
+        CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]);
+        app.exec();
+        exit(0);
+      }
+    } else {
+      QCoreApplication app(argc, argv);
+#if defined(__APPLE__)
+      /* find plugins on MacOs when deployed in a bundle */
+      app.addLibraryPath(app.applicationDirPath() + "../PlugIns");
 #endif
-			(void)pMainDlg;
-            rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
+      if (translator.load("dreamtr"))
+        app.installTranslator(&translator);
 
-			/* Start working thread */
-            rx.start();
-
-			/* Set main window */
-			app.exec();
-
-#ifdef HAVE_LIBHAMLIB
-			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
-			{
-				rig.unsubscribe();
-			}
-			rig.SaveSettings(Settings);
-#endif
-            rx.SaveSettings();
-		}
-		else if(mode == "transmit")
-		{
-            CDRMTransmitter DRMTransmitter(&Settings);
-            CTx tx(DRMTransmitter);
-            TransmDialog* pMainDlg = new TransmDialog(tx);
-
-            tx.LoadSettings(); // load settings after GUI initialised so LoadSettings signals get captured
-            /* Show dialog */
-			pMainDlg->show();
-            tx.start();
-			app.exec();
-            tx.SaveSettings();
+      CSettings Settings;
+      /* Parse arguments and load settings from init-file */
+      Settings.Load(argc, argv);
+      string mode = Settings.Get("command", "mode", string());
+      if (mode == "receive") {
+        consolerx(Settings, app);
+      } else if (mode == "transmit") {
+        consoletx(Settings, app);
+      } else {
+        string usage(Settings.UsageArguments());
+        for (;;) {
+          size_t pos = usage.find("$EXECNAME");
+          if (pos == string::npos)
+            break;
+          usage.replace(pos, sizeof("$EXECNAME") - 1, argv[0]);
         }
-		else
-		{
-			CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]);
-			app.exec();
-			exit(0);
-		}
-	}
+        cerr << usage << endl << endl;
+        exit(0);
+      }
+    }
 
-	catch(CGenErr GenErr)
-	{
-        qDebug("%s", GenErr.strError.c_str());
-	}
-	catch(string strError)
-	{
-        qDebug("%s", strError.c_str());
-	}
-	catch(char *Error)
-	{
-        qDebug("%s", Error);
-	}
+  }
 
-	/* Save settings to init-file */
-	Settings.Save();
+  catch (CGenErr GenErr) {
+    qDebug("%s", GenErr.strError.c_str());
+  } catch (string strError) {
+    qDebug("%s", strError.c_str());
+  } catch (char *Error) {
+    qDebug("%s", Error);
+  }
 
-	return 0;
+  /* Save settings to init-file */
+  Settings.Save();
+
+  return 0;
 }
