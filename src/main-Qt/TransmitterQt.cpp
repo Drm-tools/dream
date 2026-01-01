@@ -19,7 +19,7 @@ void CTransmitterQt::EnumerateInputs(QStringList &names,
   defaultInput = "";
   vector<string> n, d;
   string def;
-  CDRMTransceiver::EnumerateInputs(n, d, def);
+  CDRMTransceiver::EnumerateSoundInputs(n, d, def);
 
   for (size_t i = 0; i < n.size(); i++) {
     names.append(QString::fromStdString(n[i]));
@@ -36,7 +36,7 @@ void CTransmitterQt::EnumerateOutputs(QStringList &names,
   defaultOutput = "";
   vector<string> n, d;
   string def;
-  CDRMTransceiver::EnumerateInputs(n, d, def);
+  CDRMTransceiver::EnumerateSoundInputs(n, d, def);
 
   for (size_t i = 0; i < n.size(); i++) {
     names.append(QString::fromStdString(n[i]));

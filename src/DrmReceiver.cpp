@@ -1456,7 +1456,7 @@ CDRMReceiver::LoadSettings()
             str = s.Get("Receiver", "snddevin", string());
             if(str == "") {
                 vector<string> vn,vd;
-                EnumerateInputs(vn, vd, str);
+                EnumerateSoundInputs(vn, vd, str);
             }
         }
     }
@@ -1514,7 +1514,7 @@ CDRMReceiver::LoadSettings()
     str = s.Get("Receiver", "snddevout", string());
     if(str == "") {
         vector<string> vn,vd;
-        EnumerateOutputs(vn, vd, str);
+        EnumerateSoundOutputs(vn, vd, str);
     }
     SetOutputDevice(str);
 

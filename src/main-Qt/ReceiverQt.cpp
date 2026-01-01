@@ -12,7 +12,7 @@ void CReceiverQt::EnumerateInputs(QStringList& names, QStringList& descriptions,
     defaultInput = "";
     vector<string> n, d;
     string def;
-    CDRMTransceiver::EnumerateInputs(n, d, def);
+    CDRMTransceiver::EnumerateSoundInputs(n, d, def);
 
     for(size_t i=0; i<n.size(); i++)
     {
@@ -29,7 +29,7 @@ void CReceiverQt::EnumerateOutputs(QStringList& names, QStringList& descriptions
     defaultOutput = "";
     vector<string> n, d;
     string def;
-    CDRMTransceiver::EnumerateInputs(n, d, def);
+    CDRMTransceiver::EnumerateSoundInputs(n, d, def);
 
     for(size_t i=0; i<n.size(); i++)
     {

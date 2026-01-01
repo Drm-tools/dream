@@ -97,17 +97,17 @@ main(int argc, char **argv)
 		string mode = Settings.Get("command", "mode", string());
 		if (mode == "receive")
 		{
-			CDRMReceiver DRMReceiver(&Settings);
+            CReceiverQt rx;
+            rx.SetSettings(&Settings);
 
 			/* First, initialize the working thread. This should be done in an extra
 			   routine since we cannot 100% assume that the working thread is
 			   ready before the GUI thread */
 
 #ifdef HAVE_LIBHAMLIB
-			CRig rig(DRMReceiver.GetParameters());
+            CRig rig(rx.GetParameters());
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
-            CReceiverQt rx;
 
 #ifdef HAVE_LIBHAMLIB
             rx.SetTuner(&rig);
@@ -124,7 +124,6 @@ main(int argc, char **argv)
             rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
 
             CReceiverWorker workerThread(&rx);
-
 			/* Start working thread */
             rx.moveToThread(&workerThread);
 
@@ -135,7 +134,7 @@ main(int argc, char **argv)
             workerThread.quit();
             workerThread.wait();
 #ifdef HAVE_LIBHAMLIB
-			if(DRMReceiver.GetDownstreamRSCIOutEnabled())
+            if(rx.GetDownstreamRSCIOutEnabled())
 			{
 				rig.unsubscribe();
 			}

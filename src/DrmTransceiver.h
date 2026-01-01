@@ -55,12 +55,12 @@ public:
   virtual void SetOutputDevice(std::string name) {
     soundoutfactory.SetItem(name);
   };
-  virtual void EnumerateInputs(std::vector<std::string> &names,
+  virtual void EnumerateSoundInputs(std::vector<std::string> &names,
                                std::vector<std::string> &descriptions,
                                std::string &defaultInput) {
     return soundinfactory.Enumerate(names, descriptions, defaultInput);
   };
-  virtual void EnumerateOutputs(std::vector<std::string> &names,
+  virtual void EnumerateSoundOutputs(std::vector<std::string> &names,
                                 std::vector<std::string> &descriptions,
                                 std::string &defaultOutput) {
     return soundoutfactory.Enumerate(names, descriptions, defaultOutput);
