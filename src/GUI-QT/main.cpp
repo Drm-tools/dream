@@ -177,11 +177,11 @@ int main(int argc, char **argv) {
 
   /* Load and install multi-language support (if available) */
   QTranslator translator(nullptr);
-
+  CSettings Settings;
+  
   try {
     string gui;
     {
-   CSettings *CSettings;
    QCoreApplication app(argc, argv);
      Settings.Load(argc, argv); 
  gui = Settings.Get("command", "gui", string());
@@ -195,7 +195,6 @@ int main(int argc, char **argv) {
       if (translator.load("dreamtr"))
         app.installTranslator(&translator);
 
-      CSettings Settings;
       /* Parse arguments and load settings from init-file */
       Settings.Load(argc, argv);
       string mode = Settings.Get("command", "mode", string());
@@ -217,7 +216,6 @@ int main(int argc, char **argv) {
       if (translator.load("dreamtr"))
         app.installTranslator(&translator);
 
-      CSettings Settings;
       /* Parse arguments and load settings from init-file */
       Settings.Load(argc, argv);
       string mode = Settings.Get("command", "mode", string());
