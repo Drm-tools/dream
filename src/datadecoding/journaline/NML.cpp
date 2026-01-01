@@ -53,7 +53,7 @@
 /// handling of NML (news markup language for Journaline) data
 ///
 /// @file       NML.cpp
-/// @author     Michael Reichenb‰cher <rbr@iis.fraunhofer.de>
+/// @author     Michael Reichenb√§cher <rbr@iis.fraunhofer.de>
 ///
 /// $Id: NML.cpp,v 1.9 2012/09/30 10:33:58 jcable Exp $
 ///
@@ -257,10 +257,10 @@ std::string NML::Dump(void) const
 //returns 0 on error
 unsigned char* NMLFactory::getNextSection( const unsigned char*& p, unsigned short& plen, unsigned short& reslen )
 {
-    unsigned short i = 0;
-    unsigned short j = 0;
-    int dslen;
-    unsigned char* res = static_cast<unsigned char*>(malloc( plen + 1 ));
+	int i = 0;
+	int j = 0;
+	int dslen;
+	unsigned char* res = (unsigned char*)malloc( plen + 1 );
 
 	// we will loop through the entire data until a break case is met
 	while( i < plen )
