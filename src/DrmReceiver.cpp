@@ -201,7 +201,8 @@ CDRMReceiver::SetInputDevice(string s)
 void
 CDRMReceiver::SetOutputDevice(string device)
 {
-   CDRMTransceiver::SetOutputDevice(device);
+    soundoutfactory.SetItem(device);
+    WriteData.SetSoundInterface(soundoutfactory.GetItem());
     WriteData.Init(Parameters);
 }
 
