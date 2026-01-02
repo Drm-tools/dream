@@ -9,11 +9,11 @@
 #include <cstring>
 #include "../sound/soundinterface.h"
 
-class CJackSoundIn : public CSoundInInterface
+class CSoundInJack : public CSoundInInterface
 {
 public:
-    CJackSoundIn();
-    virtual ~CJackSoundIn();
+    CSoundInJack();
+    virtual ~CSoundInJack();
 
     // CSelectionInterface
     virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) override;
@@ -43,11 +43,11 @@ private:
 };
 
 // JACK Output Implementation
-class CJackSoundOut : public CSoundOutInterface
+class CSoundOutJack : public CSoundOutInterface
 {
 public:
-    CJackSoundOut();
-    virtual ~CJackSoundOut();
+    CSoundOutJack();
+    virtual ~CSoundOutJack();
 
     // CSelectionInterface
     virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) override;

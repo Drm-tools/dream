@@ -5,10 +5,10 @@
 #include "jack.h"
 
 // ============================================================================
-// CJackSoundIn Implementation
+// CSoundInJack Implementation
 // ============================================================================
 
-CJackSoundIn::CJackSoundIn()
+CSoundInJack::CSoundInJack()
     : client_(nullptr)
     , input_port_(nullptr)
     , device_name_("default")
@@ -18,12 +18,12 @@ CJackSoundIn::CJackSoundIn()
 {
 }
 
-CJackSoundIn::~CJackSoundIn()
+CSoundInJack::~CSoundInJack()
 {
     Close();
 }
 
-void CJackSoundIn::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+void CSoundInJack::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
 {
     names.clear();
     descriptions.clear();
@@ -80,12 +80,12 @@ void CJackSoundIn::Enumerate(std::vector<std::string>& names, std::vector<std::s
     jack_client_close(temp_client);
 }
 
-std::string CJackSoundIn::GetItemName()
+std::string CSoundInJack::GetItemName()
 {
     return device_name_;
 }
 
-void CJackSoundIn::SetItem(std::string sNewDev)
+void CSoundInJack::SetItem(std::string sNewDev)
 {
     if (!initialized_ || !client_ || !input_port_) {
         device_name_ = sNewDev;
@@ -111,7 +111,7 @@ void CJackSoundIn::SetItem(std::string sNewDev)
     }
 }
 
-bool CJackSoundIn::Init(int iSampleRate, int iNewBufferSize, bool)
+bool CSoundInJack::Init(int iSampleRate, int iNewBufferSize, bool)
 {
     if (initialized_) {
         Close();
@@ -165,14 +165,14 @@ bool CJackSoundIn::Init(int iSampleRate, int iNewBufferSize, bool)
     return true;
 }
 
-int CJackSoundIn::process_callback(jack_nframes_t nframes, void* arg)
+int CSoundInJack::process_callback(jack_nframes_t nframes, void* arg)
 {
-    CJackSoundIn* self = static_cast<CJackSoundIn*>(arg);
+    CSoundInJack* self = static_cast<CSoundInJack*>(arg);
     self->ProcessAudio(nframes);
     return 0;
 }
 
-void CJackSoundIn::ProcessAudio(jack_nframes_t nframes)
+void CSoundInJack::ProcessAudio(jack_nframes_t nframes)
 {
     jack_default_audio_sample_t* in = (jack_default_audio_sample_t*)jack_port_get_buffer(input_port_, nframes);
     
@@ -195,7 +195,7 @@ void CJackSoundIn::ProcessAudio(jack_nframes_t nframes)
     }
 }
 
-bool CJackSoundIn::Read(CVector<short>& data, CParameter&)
+bool CSoundInJack::Read(CVector<short>& data, CParameter&)
 {
     std::lock_guard<std::mutex> lock(queue_mutex_);
     
@@ -212,7 +212,7 @@ bool CJackSoundIn::Read(CVector<short>& data, CParameter&)
     return true;
 }
 
-void CJackSoundIn::Close()
+void CSoundInJack::Close()
 {
     if (client_) {
         jack_deactivate(client_);
@@ -229,7 +229,7 @@ void CJackSoundIn::Close()
     initialized_ = false;
 }
 
-std::string CJackSoundIn::GetVersion()
+std::string CSoundInJack::GetVersion()
 {
     jack_client_t* temp_client = nullptr;
     jack_status_t status;
@@ -252,10 +252,10 @@ std::string CJackSoundIn::GetVersion()
 }
 
 // ============================================================================
-// CJackSoundOut Implementation
+// CSoundOutJack Implementation
 // ============================================================================
 
-CJackSoundOut::CJackSoundOut()
+CSoundOutJack::CSoundOutJack()
     : client_(nullptr)
     , output_port_(nullptr)
     , device_name_("default")
@@ -265,12 +265,12 @@ CJackSoundOut::CJackSoundOut()
 {
 }
 
-CJackSoundOut::~CJackSoundOut()
+CSoundOutJack::~CSoundOutJack()
 {
     Close();
 }
 
-void CJackSoundOut::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
+void CSoundOutJack::Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice)
 {
     names.clear();
     descriptions.clear();
@@ -327,12 +327,12 @@ void CJackSoundOut::Enumerate(std::vector<std::string>& names, std::vector<std::
     jack_client_close(temp_client);
 }
 
-std::string CJackSoundOut::GetItemName()
+std::string CSoundOutJack::GetItemName()
 {
     return device_name_;
 }
 
-void CJackSoundOut::SetItem(std::string sNewDev)
+void CSoundOutJack::SetItem(std::string sNewDev)
 {
     if (!initialized_ || !client_ || !output_port_) {
         device_name_ = sNewDev;
@@ -358,7 +358,7 @@ void CJackSoundOut::SetItem(std::string sNewDev)
     }
 }
 
-bool CJackSoundOut::Init(int sampleRate, int bufferSize, bool)
+bool CSoundOutJack::Init(int sampleRate, int bufferSize, bool)
 {
     if (initialized_) {
         Close();
@@ -406,14 +406,14 @@ bool CJackSoundOut::Init(int sampleRate, int bufferSize, bool)
     return true;
 }
 
-int CJackSoundOut::process_callback(jack_nframes_t nframes, void* arg)
+int CSoundOutJack::process_callback(jack_nframes_t nframes, void* arg)
 {
-    CJackSoundOut* self = static_cast<CJackSoundOut*>(arg);
+    CSoundOutJack* self = static_cast<CSoundOutJack*>(arg);
     self->ProcessAudio(nframes);
     return 0;
 }
 
-void CJackSoundOut::ProcessAudio(jack_nframes_t nframes)
+void CSoundOutJack::ProcessAudio(jack_nframes_t nframes)
 {
     jack_default_audio_sample_t* out = (jack_default_audio_sample_t*)jack_port_get_buffer(output_port_, nframes);
     
@@ -441,7 +441,7 @@ void CJackSoundOut::ProcessAudio(jack_nframes_t nframes)
     audio_queue_.pop();
 }
 
-bool CJackSoundOut::Write(CVector<short>& data)
+bool CSoundOutJack::Write(CVector<short>& data)
 {
     std::vector<int16_t> buffer(data.size());
     std::memcpy(buffer.data(), data.data(), data.size() * sizeof(int16_t));
@@ -457,7 +457,7 @@ bool CJackSoundOut::Write(CVector<short>& data)
     return true;
 }
 
-void CJackSoundOut::Close()
+void CSoundOutJack::Close()
 {
     if (client_) {
         jack_deactivate(client_);
@@ -474,7 +474,7 @@ void CJackSoundOut::Close()
     initialized_ = false;
 }
 
-std::string CJackSoundOut::GetVersion()
+std::string CSoundOutJack::GetVersion()
 {
     jack_client_t* temp_client = nullptr;
     jack_status_t status;

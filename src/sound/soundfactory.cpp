@@ -135,7 +135,7 @@ CSoundFactoryIn::CSoundFactoryIn():CSoundFactory<CSoundInInterface>()
 #endif
 
 #ifdef USE_JACK
-    drivers.push_back(new CJackSoundIn());
+    drivers.push_back(new CSoundInJack());
 #endif
 
 #ifdef USE_PULSEAUDIO
@@ -168,7 +168,7 @@ CSoundFactoryOut::CSoundFactoryOut():CSoundFactory<CSoundOutInterface>()
 #endif
 
 #ifdef USE_JACK
-  drivers.push_back(new CJackSoundOut());
+  drivers.push_back(new CSoundOutJack());
 #endif
 
 #ifdef USE_PULSEAUDIO
