@@ -1,80 +1,99 @@
-#ifndef JACK_AUDIO_1_H
-#define JACK_AUDIO_1_H
+/******************************************************************************\
+ * British Broadcasting Corporation
+ * Copyright (c) 2007
+ *
+ * Author(s):
+ *	Julian Cable
+ *
+ * Description:
+ *	Jack sound classes
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
 
-#include <jack/jack.h>
-#include <vector>
-#include <string>
-#include <queue>
-#include <mutex>
-#include <cstring>
+#ifndef _JACK_H
+#define _JACK_H
+
 #include "../sound/soundinterface.h"
+#include <jack/jack.h>
+#include <jack/ringbuffer.h>
+#include <map>
+#include <utility>
 
-class CJackSoundIn : public CSoundInInterface
+/* Classes ********************************************************************/
+
+struct instance_data_t
 {
-public:
-    CJackSoundIn();
-    virtual ~CJackSoundIn();
-
-    // CSelectionInterface
-    virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) override;
-    virtual std::string GetItemName() override;
-    virtual void SetItem(std::string sNewDev) override;
-
-    // CSoundInInterface
-    virtual bool Init(int iSampleRate, int iNewBufferSize, bool) override;
-    virtual bool Read(CVector<short>& psData, CParameter&) override;
-    virtual void Close() override;
-    virtual std::string GetVersion() override;
-    virtual CSoundInInterface* GetItem() override { return this; }
-
-private:
-    static int process_callback(jack_nframes_t nframes, void* arg);
-    void ProcessAudio(jack_nframes_t nframes);
-
-    jack_client_t* client_;
-    jack_port_t* input_port_;
-    std::string device_name_;
-    size_t buffer_size_;
-    int sample_rate_;
-    
-    std::queue<std::vector<int16_t>> audio_queue_;
-    std::mutex queue_mutex_;
-    bool initialized_;
+    instance_data_t();
+    ~instance_data_t();
+    int num_channels;
+    jack_port_t *left;
+    jack_port_t *right;
+    jack_ringbuffer_t* buff;
+    int underruns;
+    int overruns;
+    std::string peer_left, peer_right;
 };
 
-// JACK Output Implementation
-class CJackSoundOut : public CSoundOutInterface
+class CSoundInJack : public CSoundInInterface
 {
 public:
-    CJackSoundOut();
-    virtual ~CJackSoundOut();
+    CSoundInJack();
+    virtual ~CSoundInJack();
+    CSoundInJack(const CSoundInJack& e);
+    CSoundInJack& operator=(const CSoundInJack& e);
 
-    // CSelectionInterface
-    virtual void Enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice) override;
-    virtual std::string GetItemName() override;
-    virtual void SetItem(std::string sNewDev) override;
-
-    // CSoundOutInterface
-    virtual bool Init(int sampleRate, int bufferSize, bool) override;
-    virtual bool Write(CVector<short>& psData) override;
-    virtual void Close() override;
-    virtual std::string GetVersion() override;
-    virtual CSoundOutInterface* GetItem() override { return this; }
-
-private:
-    static int process_callback(jack_nframes_t nframes, void* arg);
-    void ProcessAudio(jack_nframes_t nframes);
-
-    jack_client_t* client_;
-    jack_port_t* output_port_;
-    std::string device_name_;
-    size_t buffer_size_;
-    int sample_rate_;
-    
-    std::queue<std::vector<int16_t>> audio_queue_;
-    std::mutex queue_mutex_;
-    bool initialized_;
+    virtual void	    Init(int iNewBufferSize, bool bNewBlocking = true);
+    virtual bool	    Read(CVector<short>& psData);
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
+    virtual std::string	GetItemName();
+    virtual void		SetItem(std::string sNewDev);
+    virtual void		Close();
+	virtual std::string	GetVersion();
+protected:
+    int iBufferSize;
+    bool bBlocking;
+    bool device_changed;
+    instance_data_t capture_data;
+    std::string dev;
 };
 
+class CSoundOutJack : public CSoundOutInterface
+{
+public:
+    CSoundOutJack();
+    virtual ~CSoundOutJack();
+    CSoundOutJack(const CSoundOutJack& e);
+    CSoundOutJack& operator=(const CSoundOutJack& e);
 
-#endif // JACK_AUDIO_H
+    virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
+    virtual bool	    Write(CVector<short>& psData);
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
+    virtual std::string	GetItemName();
+    virtual void		SetItem(std::string);
+    virtual void		Close();
+	virtual std::string	GetVersion();
+protected:
+    int iBufferSize;
+    bool bBlocking;
+    bool device_changed;
+    instance_data_t play_data;
+    std::string dev;
+};
+
+#endif
