@@ -27,11 +27,8 @@
 
 #include <ctime>
 #include "jack.h"
-#include <sstream>
 #include <iostream>
 #include <cstdlib>
-#include <map>
-#include <utility>
 
 using namespace std;
 
