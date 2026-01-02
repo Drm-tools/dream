@@ -304,10 +304,11 @@ std::string CSoundInJack::GetVersion() {
   return std::string(jack_get_version_string());
 }
 
-bool CSoundInJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking) {
+bool CSoundInJack::Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking) {
   if (device_changed == false)
-    return;
+    return false;
 
+  iSampleRate = iNewSampleRate;
   iBufferSize = iNewBufferSize;
   bBlocking = bNewBlocking;
 
@@ -338,9 +339,9 @@ bool CSoundInJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking) 
   return false;
 }
 
-bool CSoundInJack::Read(CVector<short> &psData) {
+bool CSoundInJack::Read(CVector<short> &psData, CParameter&) {
   if (device_changed)
-    Init(iBufferSize, bBlocking);
+    Init(iSampleRate, iBufferSize, bBlocking);
 
   size_t bytes = iBufferSize * sizeof(short);
   const int delay_ms = 100;
@@ -509,10 +510,11 @@ std::string CSoundOutJack::GetVersion() {
   return std::string(jack_get_version_string());
 }
 
-bool CSoundOutJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking) {
+bool CSoundOutJack::Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking) {
   if (device_changed == false)
     return false;
 
+  iSampleRate = iNewSampleRate;
   iBufferSize = iNewBufferSize;
   bBlocking = bNewBlocking;
 
@@ -542,7 +544,7 @@ bool CSoundOutJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking)
 
 bool CSoundOutJack::Write(CVector<short> &psData) {
   if (device_changed)
-    Init(iBufferSize, bBlocking);
+    Init(iSampleRate, iBufferSize, bBlocking);
 
   size_t bytes = psData.Size() * sizeof(short);
   if (jack_ringbuffer_write(play_data.buff, (char *)&psData[0], bytes) <

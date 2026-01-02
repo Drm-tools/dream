@@ -67,6 +67,7 @@ public:
     virtual void		Close() override;
 	virtual std::string	GetVersion() override;
 protected:
+    int iSampleRate;
     int iBufferSize;
     bool bBlocking;
     bool device_changed;
@@ -91,6 +92,7 @@ public:
     virtual void		Close() override;
 	virtual std::string	GetVersion() override;
 protected:
+    int iSampleRate;
     int iBufferSize;
     bool bBlocking;
     bool device_changed;
