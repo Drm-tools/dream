@@ -304,7 +304,7 @@ std::string CSoundInJack::GetVersion() {
   return std::string(jack_get_version_string());
 }
 
-void CSoundInJack::Init(int iNewBufferSize, bool bNewBlocking) {
+bool CSoundInJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking {
   if (device_changed == false)
     return;
 
@@ -508,7 +508,7 @@ std::string CSoundOutJack::GetVersion() {
   return std::string(jack_get_version_string());
 }
 
-void CSoundOutJack::Init(int iNewBufferSize, bool bNewBlocking) {
+bool CSoundOutJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking {
   if (device_changed == false)
     return;
 

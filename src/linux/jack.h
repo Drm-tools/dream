@@ -58,13 +58,14 @@ public:
     CSoundInJack(const CSoundInJack& e);
     CSoundInJack& operator=(const CSoundInJack& e);
 
-    virtual void	    Init(int iNewBufferSize, bool bNewBlocking = true);
-    virtual bool	    Read(CVector<short>& psData);
-    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
-    virtual std::string	GetItemName();
-    virtual void		SetItem(std::string sNewDev);
-    virtual void		Close();
-	virtual std::string	GetVersion();
+    virtual bool        Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking) override;
+    virtual bool	    Read(CVector<short>& psData, CParameter&) override;
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) override;
+    virtual std::string	GetItemName() override;
+    virtual CSoundInInterface* GetItem() override { return dynamic_cast<CSoundInInterface*>(this); }
+    virtual void		SetItem(std::string sNewDev) override;
+    virtual void		Close() override;
+	virtual std::string	GetVersion() override;
 protected:
     int iBufferSize;
     bool bBlocking;
@@ -81,13 +82,13 @@ public:
     CSoundOutJack(const CSoundOutJack& e);
     CSoundOutJack& operator=(const CSoundOutJack& e);
 
-    virtual void		Init(int iNewBufferSize, bool bNewBlocking = true);
-    virtual bool	    Write(CVector<short>& psData);
-    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&);
-    virtual std::string	GetItemName();
-    virtual void		SetItem(std::string);
-    virtual void		Close();
-	virtual std::string	GetVersion();
+    virtual bool        Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking) override;
+    virtual bool	    Write(CVector<short>& psData) override;
+    virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) override;
+    virtual std::string	GetItemName() override;
+    virtual void		SetItem(std::string) override;
+    virtual void		Close() override;
+	virtual std::string	GetVersion() override;
 protected:
     int iBufferSize;
     bool bBlocking;
