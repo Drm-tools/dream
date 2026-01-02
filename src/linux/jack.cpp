@@ -32,7 +32,6 @@
 #include <cstdlib>
 #include <map>
 #include <utility>
-#include <winspool.h>
 
 using namespace std;
 
