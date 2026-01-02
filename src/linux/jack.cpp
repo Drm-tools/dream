@@ -32,6 +32,7 @@
 #include <cstdlib>
 #include <map>
 #include <utility>
+#include <winspool.h>
 
 using namespace std;
 
@@ -226,12 +227,12 @@ CSoundInJack::~CSoundInJack() {
     return;
 
   if (common_data.is_active && jack_deactivate(common_data.client)) {
-    throw "Jack: cannot deactivate client";
+    cerr << "Jack: cannot deactivate client" << endl;
   }
   common_data.is_active = false;
   common_data.capture_data = NULL;
   if (jack_activate(common_data.client)) {
-    throw "Jack: cannot activate client";
+    cerr << "Jack: cannot activate client" << endl;
   }
   common_data.is_active = true;
 }
@@ -248,7 +249,12 @@ void CSoundInJack::Enumerate(std::vector<std::string> &names,
 
   if (ports) {
     for (int i = 0; ports[i] != nullptr; i++) {
-      names.push_back(ports[i]);
+      if (port_name.ends_with("_2")) {
+        continue; // skip right channels to avoid duplicates
+      }
+      port_name.pop_back(); // remove trailing "_1"
+      port_name.pop_back();
+      names.push_back(port_name);
 
       // Try to get port alias as friendly name
       jack_port_t *port = jack_port_by_name(common_data.client, ports[i]);
@@ -258,12 +264,17 @@ void CSoundInJack::Enumerate(std::vector<std::string> &names,
         aliases[1] = new char[jack_port_name_size()];
         int num_aliases = jack_port_get_aliases(port, aliases);
         if (num_aliases > 0) {
-          descriptions.push_back(aliases[0]);
+          auto alias = std::string(aliases[0]);
+          if (alias.ends_with("_1")) {
+            alias.pop_back();
+            alias.pop_back();
+          }
+          descriptions.push_back(alias);
         } else {
-          descriptions.push_back(ports[i]);
+          descriptions.push_back("");
         }
       } else {
-        descriptions.push_back(ports[i]);
+        descriptions.push_back("");
       }
     }
     jack_free(ports);
@@ -313,17 +324,17 @@ void CSoundInJack::Init(int iNewBufferSize, bool bNewBlocking) {
   if (r)
     free(r);
 
-  int err = jack_connect(data.client, source.first.c_str(),
+  int err = jack_connect(common_data.client, (dev+"_1").c_str(),
                          jack_port_name(capture_data.left));
   if (err) {
-    cout << "err " << err << " can't connect " << source.first << " to "
+    cout << "err " << err << " can't connect " << (dev+"_1") << " to "
          << jack_port_name(capture_data.left) << endl;
   }
 
-  err = jack_connect(common_data.client, source.second.c_str(),
+  err = jack_connect(common_data.client, (dev+"_2").c_str(),
                      jack_port_name(capture_data.right));
   if (err) {
-    cout << "err " << err << " can't connect " << source.second << " to "
+    cout << "err " << err << " can't connect " << (dev+"_2") << " to "
          << jack_port_name(capture_data.right) << endl;
   }
   device_changed = false;
@@ -398,7 +409,6 @@ CSoundOutJack::CSoundOutJack()
   }
 
   common_data.play_data = &play_data;
-  ports.load(common_data.client, JackPortIsInput);
 
   if (jack_activate(common_data.client)) {
     throw "Jack: cannot activate client";
@@ -409,12 +419,12 @@ CSoundOutJack::CSoundOutJack()
 CSoundOutJack::~CSoundOutJack() {
   Close();
   if (common_data.is_active && jack_deactivate(common_data.client)) {
-    throw "Jack: cannot deactivate client";
+    cerr << "Jack: cannot deactivate client" << endl;
   }
   common_data.is_active = false;
   common_data.capture_data = NULL;
   if (jack_activate(common_data.client)) {
-    throw "Jack: cannot activate client";
+    cerr << "Jack: cannot activate client" << endl;
   }
   common_data.is_active = true;
 }
@@ -442,7 +452,13 @@ void CSoundOutJack::Enumerate(std::vector<std::string> &names,
 
   if (ports) {
     for (int i = 0; ports[i] != nullptr; i++) {
-      names.push_back(ports[i]);
+      auto port_name = std::string(ports[i]);
+      if (port_name.ends_with("_2")) {
+        continue; // skip right channels to avoid duplicates
+      }
+      port_name.pop_back(); // remove trailing "_1"
+      port_name.pop_back();
+      names.push_back(port_name);
 
       // Try to get port alias as friendly name
       jack_port_t *port = jack_port_by_name(common_data.client, ports[i]);
@@ -452,12 +468,17 @@ void CSoundOutJack::Enumerate(std::vector<std::string> &names,
         aliases[1] = new char[jack_port_name_size()];
         int num_aliases = jack_port_get_aliases(port, aliases);
         if (num_aliases > 0) {
-          descriptions.push_back(std::string(aliases[0]));
+          auto alias = std::string(aliases[0]);
+          if (alias.ends_with("_1")) {
+            alias.pop_back();
+            alias.pop_back();
+          }
+          descriptions.push_back(std::string(alias));
         } else {
-          descriptions.push_back(std::string(ports[i]));
+          descriptions.push_back("");
         }
       } else {
-        descriptions.push_back(std::string(ports[i]));
+        descriptions.push_back("");
       }
     }
     jack_free(ports);
@@ -505,19 +526,17 @@ void CSoundOutJack::Init(int iNewBufferSize, bool bNewBlocking) {
   if (l)
     free(l);
 
-  pair<string, string> sink = ports.get_ports(dev);
-
-  int err = jack_connect(data.client, jack_port_name(play_data.left),
-                         sink.first.c_str());
+  int err = jack_connect(common_data.client, jack_port_name(play_data.left),
+                         (dev + "_1").c_str());
   if (err) {
     cout << "err " << err << " can't connect " << jack_port_name(play_data.left)
-         << " to " << sink.first << endl;
+         << " to " << dev << "_1" << endl;
   }
-  err = jack_connect(data.client, jack_port_name(play_data.right),
-                     sink.second.c_str());
+  err = jack_connect(common_data.client, jack_port_name(play_data.right),
+                     (dev + "_2").c_str());
   if (err) {
     cout << "err " << err << " can't connect "
-         << jack_port_name(play_data.right) << " to " << sink.second << endl;
+         << jack_port_name(play_data.right) << " to " << dev << "_2" << endl;
   }
   device_changed = false;
 }
