@@ -304,7 +304,7 @@ std::string CSoundInJack::GetVersion() {
   return std::string(jack_get_version_string());
 }
 
-bool CSoundInJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking {
+bool CSoundInJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking) {
   if (device_changed == false)
     return;
 
@@ -335,6 +335,7 @@ bool CSoundInJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking {
          << jack_port_name(capture_data.right) << endl;
   }
   device_changed = false;
+  return false;
 }
 
 bool CSoundInJack::Read(CVector<short> &psData) {
@@ -508,9 +509,9 @@ std::string CSoundOutJack::GetVersion() {
   return std::string(jack_get_version_string());
 }
 
-bool CSoundOutJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking {
+bool CSoundOutJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking) {
   if (device_changed == false)
-    return;
+    return false;
 
   iBufferSize = iNewBufferSize;
   bBlocking = bNewBlocking;
@@ -536,6 +537,7 @@ bool CSoundOutJack::Init(int iSampleRate, int iNewBufferSize, bool bNewBlocking 
          << jack_port_name(play_data.right) << " to " << dev << "_2" << endl;
   }
   device_changed = false;
+  return false;
 }
 
 bool CSoundOutJack::Write(CVector<short> &psData) {
