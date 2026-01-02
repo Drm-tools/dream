@@ -34,6 +34,7 @@
 #include <QApplication>
 #include <QCoreApplication>
 #include <QMessageBox>
+#include <string>
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
 #include "../DrmTransmitter.h"
@@ -98,25 +99,12 @@ void guirx(CSettings &Settings, QApplication &app) {
   rx.SaveSettings();
 }
 
-void guitx(CSettings &Settings, QApplication &app) {
-  CDRMTransmitter DRMTransmitter(&Settings);
-  CTx tx(DRMTransmitter);
-  TransmDialog *pMainDlg = new TransmDialog(tx);
-
-  tx.LoadSettings(); // load settings after GUI initialised so LoadSettings
-                     // signals get captured
-                     /* Show dialog */
-  pMainDlg->show();
-  tx.start();
-  app.exec();
-  tx.SaveSettings();
-}
-
 void consolerx(CSettings &Settings, QCoreApplication &app) {
-  CDRMSimulation DRMSimulation;
-  CDRMReceiver DRMReceiver(&Settings);
 
+  CDRMSimulation DRMSimulation;
   DRMSimulation.SimScript();
+
+  CDRMReceiver DRMReceiver(&Settings);
   DRMReceiver.LoadSettings();
 
   CRx rx(DRMReceiver);
@@ -125,37 +113,38 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
                    Qt::QueuedConnection);
 
   rx.start();
-  app.exec();
+  app.exec(); 
+  rx.SaveSettings();
 }
 
-void consoletx(CSettings &Settings, QCoreApplication &app) {
+void tx(CSettings &Settings, QCoreApplication &app, bool gui = true)
+{
   CDRMTransmitter DRMTransmitter(&Settings);
-  DRMTransmitter.LoadSettings();
-  try {
-    /* Set restart flag */
-    ERunState eRunState = RESTART;
-    do {
-      /* Initialization of the modules */
-      DRMTransmitter.Init();
-
-      /* Set run flag */
-      eRunState = RUNNING;
-
-      /* Start the transmitter run routine */
-      do { DRMTransmitter.process(); } while(true);
-    } while (eRunState == RESTART);
-
-    /* Closing the sound interfaces */
-    DRMTransmitter.Close();
-  } catch (CGenErr GenErr) {
-    cerr << GenErr.strError << endl;
-  } catch (string strError) {
-    cerr << strError << endl;
+  CTx tx(DRMTransmitter);
+  QObject::connect(&tx, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
+  if (gui) {
+    TransmDialog *pMainDlg = new TransmDialog(tx);
+    tx.LoadSettings(); // load settings after GUI initialised so LoadSettings
+                       // signals get captured
+    pMainDlg->show();
+  } else {
+    tx.LoadSettings();
   }
+  tx.start();
+  app.exec();
+  tx.SaveSettings();
 }
 
-int main(int argc, char **argv) {
-
+void platform_init(QCoreApplication &app) {
+#ifdef _WIN32
+  /* Initialize Winsock */
+  WSADATA wsaData;
+  (void)WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+#if defined(__APPLE__)
+  /* find plugins on MacOs when deployed in a bundle */
+  app.addLibraryPath(app.applicationDirPath() + "../PlugIns");
+#endif
 #ifdef USE_OPENSL
   (void)slCreateEngine(&engineObject, 0, nullptr, 0, nullptr, nullptr);
   (void)(*engineObject)->Realize(engineObject, SLbool_false);
@@ -168,40 +157,31 @@ int main(int argc, char **argv) {
   sigaddset(&sigset, SIGCHLD);
   pthread_sigmask(SIG_BLOCK, &sigset, nullptr);
 #endif
+}
 
-#ifdef _WIN32
-  /* Initialize Winsock */
-  WSADATA wsaData;
-  (void)WSAStartup(MAKEWORD(2, 2), &wsaData);
-#endif
+int main(int argc, char **argv) {
 
   /* Load and install multi-language support (if available) */
   QTranslator translator(nullptr);
   CSettings Settings;
-  
+
   try {
-    string gui;
-    {
-   QCoreApplication app(argc, argv);
-     Settings.Load(argc, argv); 
- gui = Settings.Get("command", "gui", string());
-    }
-    if (gui == "true") {
+
+    Settings.Load(argc, argv);
+    bool gui = (Settings.Get("command", "gui", string()) == "true");
+    string mode = Settings.Get("command", "mode", string());
+
+    if (gui) {
       QApplication app(argc, argv);
-#if defined(__APPLE__)
-      /* find plugins on MacOs when deployed in a bundle */
-      app.addLibraryPath(app.applicationDirPath() + "../PlugIns");
-#endif
+      platform_init(app);
+
       if (translator.load("dreamtr"))
         app.installTranslator(&translator);
 
-      /* Parse arguments and load settings from init-file */
-      Settings.Load(argc, argv);
-      string mode = Settings.Get("command", "mode", string());
       if (mode == "receive") {
         guirx(Settings, app);
       } else if (mode == "transmit") {
-        guitx(Settings, app);
+        tx(Settings, app);
       } else {
         CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]);
         app.exec();
@@ -209,20 +189,15 @@ int main(int argc, char **argv) {
       }
     } else {
       QCoreApplication app(argc, argv);
-#if defined(__APPLE__)
-      /* find plugins on MacOs when deployed in a bundle */
-      app.addLibraryPath(app.applicationDirPath() + "../PlugIns");
-#endif
+      platform_init(app);
+
       if (translator.load("dreamtr"))
         app.installTranslator(&translator);
 
-      /* Parse arguments and load settings from init-file */
-      Settings.Load(argc, argv);
-      string mode = Settings.Get("command", "mode", string());
       if (mode == "receive") {
         consolerx(Settings, app);
       } else if (mode == "transmit") {
-        consoletx(Settings, app);
+        tx(Settings, app);
       } else {
         string usage(Settings.UsageArguments());
         for (;;) {
@@ -235,9 +210,7 @@ int main(int argc, char **argv) {
         exit(0);
       }
     }
-
   }
-
   catch (CGenErr GenErr) {
     qDebug("%s", GenErr.strError.c_str());
   } catch (string strError) {
