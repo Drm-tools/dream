@@ -86,6 +86,7 @@ public:
     virtual bool	    Write(CVector<short>& psData) override;
     virtual void		Enumerate(std::vector<std::string>&, std::vector<std::string>&, std::string&) override;
     virtual std::string	GetItemName() override;
+    virtual CSoundOutInterface* GetItem() override { return dynamic_cast<CSoundOutInterface*>(this); }
     virtual void		SetItem(std::string) override;
     virtual void		Close() override;
 	virtual std::string	GetVersion() override;
