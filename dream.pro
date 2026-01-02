@@ -254,7 +254,7 @@ unix:!cross_compile {
       }
     }
 }
-packagesExist(soapysdr) | exists(include/SoapySDR) {
+packagesExist(SoapySDR) | exists(include/SoapySDR) {
        CONFIG += soapysdr
 }
 win32:cross_compile {
