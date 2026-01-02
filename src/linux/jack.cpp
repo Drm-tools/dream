@@ -245,7 +245,8 @@ void CSoundInJack::Enumerate(std::vector<std::string> &names,
 
   if (ports) {
     for (int i = 0; ports[i] != nullptr; i++) {
-      if (port_name.ends_with("_2")) {
+      auto port_name = std::string(ports[i]);
+      if (port_name.rfind("_2") != std::string::npos) {
         continue; // skip right channels to avoid duplicates
       }
       port_name.pop_back(); // remove trailing "_1"
@@ -261,7 +262,7 @@ void CSoundInJack::Enumerate(std::vector<std::string> &names,
         int num_aliases = jack_port_get_aliases(port, aliases);
         if (num_aliases > 0) {
           auto alias = std::string(aliases[0]);
-          if (alias.ends_with("_1")) {
+          if (alias.rfind("_1") != std::string::npos) {
             alias.pop_back();
             alias.pop_back();
           }
