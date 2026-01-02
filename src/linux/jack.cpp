@@ -236,7 +236,7 @@ CSoundInJack::~CSoundInJack() {
   common_data.is_active = true;
 }
 
-void CJackSoundIn::Enumerate(std::vector<std::string> &names,
+void CSoundInJack::Enumerate(std::vector<std::string> &names,
                              std::vector<std::string> &descriptions,
                              std::string &defaultDevice) {
   names.clear();
@@ -244,7 +244,7 @@ void CJackSoundIn::Enumerate(std::vector<std::string> &names,
 
   // Get all capture ports (physical outputs that we can capture from)
   const char **ports = jack_get_ports(
-      data.client, nullptr, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput);
+      common_data.client, nullptr, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput);
 
   if (ports) {
     for (int i = 0; ports[i] != nullptr; i++) {
@@ -292,7 +292,7 @@ void CSoundInJack::SetItem(string sNewDevice) {
   }
 }
 
-std::string CJackSoundIn::GetVersion() {
+std::string CSoundInJack::GetVersion() {
   return std::string(jack_get_version_string());
 }
 
@@ -313,8 +313,6 @@ void CSoundInJack::Init(int iNewBufferSize, bool bNewBlocking) {
   if (r)
     free(r);
 
-  pair<string, string> source = ports.get_ports(dev);
-
   int err = jack_connect(data.client, source.first.c_str(),
                          jack_port_name(capture_data.left));
   if (err) {
@@ -322,7 +320,7 @@ void CSoundInJack::Init(int iNewBufferSize, bool bNewBlocking) {
          << jack_port_name(capture_data.left) << endl;
   }
 
-  err = jack_connect(data.client, source.second.c_str(),
+  err = jack_connect(common_data.client, source.second.c_str(),
                      jack_port_name(capture_data.right));
   if (err) {
     cout << "err " << err << " can't connect " << source.second << " to "
@@ -432,7 +430,7 @@ CSoundOutJack &CSoundOutJack::operator=(const CSoundOutJack &e) {
   return *this;
 }
 
-void CJackSoundOut::Enumerate(std::vector<std::string> &names,
+void CSoundOutJack::Enumerate(std::vector<std::string> &names,
                               std::vector<std::string> &descriptions,
                               std::string &defaultDevice) {
   names.clear();
@@ -488,7 +486,7 @@ void CSoundOutJack::SetItem(string sNewDevice) {
   }
 }
 
-std::string CJackSoundOut::GetVersion() {
+std::string CSoundOutJack::GetVersion() {
   return std::string(jack_get_version_string());
 }
 
