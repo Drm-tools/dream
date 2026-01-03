@@ -70,7 +70,13 @@ void guirx(CSettings &Settings, QApplication &app) {
   rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
   CRx rx(DRMReceiver);
-  rx.moveToThread(&rx);
+  class Worker: public QThread
+  {
+    public:
+    void run() override { rx.run(); }
+  };
+  Worker worker;
+  worker.moveToThread(&rx);
 
 #ifdef HAVE_LIBHAMLIB
   DRMReceiver.SetTuner(&rig);
@@ -87,7 +93,7 @@ void guirx(CSettings &Settings, QApplication &app) {
                      // signals get captured
 
   /* Start working thread */
-  rx.start();
+  worker.start();
 
   /* Set main window */
   app.exec();
@@ -110,12 +116,18 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
   DRMReceiver.LoadSettings();
 
   CRx rx(DRMReceiver);
-  rx.moveToThread(&rx);
+  class Worker: public QThread
+  {
+    public:
+    void run() override { rx.run(); }
+  };
+  Worker worker;
+  worker.moveToThread(&rx);
 
   QObject::connect(&rx, SIGNAL(finished()), &app, SLOT(quit()),
                    Qt::QueuedConnection);
 
-  rx.start();
+  worker.start();
   app.exec(); 
   rx.SaveSettings();
 }
@@ -124,7 +136,13 @@ void tx(CSettings &Settings, QCoreApplication &app, bool gui = true)
 {
   CDRMTransmitter DRMTransmitter(&Settings);
   CTx tx(DRMTransmitter);
-  tx.moveToThread(&tx);
+  class Worker: public QThread
+  {
+    public:
+    void run() override { tx.run(); }
+  };
+  Worker worker;
+  worker.moveToThread(&rx);
   QObject::connect(&tx, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
   if (gui) {
     TransmDialog *pMainDlg = new TransmDialog(tx);
@@ -134,7 +152,7 @@ void tx(CSettings &Settings, QCoreApplication &app, bool gui = true)
   } else {
     tx.LoadSettings();
   }
-  tx.start();
+  worker.start();
   app.exec();
   tx.SaveSettings();
 }
