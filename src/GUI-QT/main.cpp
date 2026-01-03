@@ -69,14 +69,14 @@ void guirx(CSettings &Settings, QApplication &app) {
   CRig rig(DRMReceiver.GetParameters());
   rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
-  CRx rx(DRMReceiver);
+  CRx* rx = new CRx(DRMReceiver);
   class Worker: public QThread
   {
     public:
-    void run() override { rx.run(); }
+    void run() override { rx->run(); }
   };
   Worker worker;
-  worker.moveToThread(&rx);
+  rx->moveToThread(&worker);
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
 
 #ifdef HAVE_LIBHAMLIB
@@ -90,7 +90,7 @@ void guirx(CSettings &Settings, QApplication &app) {
   FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings);
 #endif
   (void)pMainDlg;
-  rx.LoadSettings(); // load settings after GUI initialised so LoadSettings
+  rx->LoadSettings(); // load settings after GUI initialised so LoadSettings
                      // signals get captured
 
   /* Start working thread */
@@ -105,7 +105,7 @@ void guirx(CSettings &Settings, QApplication &app) {
   }
   rig.SaveSettings(Settings);
 #endif
-  rx.SaveSettings();
+  rx->SaveSettings();
 }
 
 void consolerx(CSettings &Settings, QCoreApplication &app) {
@@ -116,45 +116,45 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
   CDRMReceiver DRMReceiver(&Settings);
   DRMReceiver.LoadSettings();
 
-  CRx rx(DRMReceiver);
+  CRx* rx = new CRx(DRMReceiver);
   class Worker: public QThread
   {
     public:
-    void run() override { rx.run(); }
+    void run() override { rx->run(); }
   };
   Worker worker;
-  worker.moveToThread(&rx);
+  rx->moveToThread(&worker);
 
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
 
   worker.start();
   app.exec(); 
-  rx.SaveSettings();
+  rx->SaveSettings();
 }
 
-void tx(CSettings &Settings, QCoreApplication &app, bool gui = true)
+void txgc(CSettings &Settings, QCoreApplication &app, bool gui = true)
 {
   CDRMTransmitter DRMTransmitter(&Settings);
-  CTx tx(DRMTransmitter);
+  CTx* tx = new CTx(DRMTransmitter);
   class Worker: public QThread
   {
     public:
-    void run() override { tx.run(); }
+    void run() override { tx->run(); }
   };
   Worker worker;
-  worker.moveToThread(&rx);
+  tx->moveToThread(&worker);
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
   if (gui) {
     TransmDialog *pMainDlg = new TransmDialog(tx);
-    tx.LoadSettings(); // load settings after GUI initialised so LoadSettings
+    tx->LoadSettings(); // load settings after GUI initialised so LoadSettings
                        // signals get captured
     pMainDlg->show();
   } else {
-    tx.LoadSettings();
+    tx->LoadSettings();
   }
   worker.start();
   app.exec();
-  tx.SaveSettings();
+  tx->SaveSettings();
 }
 
 void platform_init(QCoreApplication &app) {
@@ -203,7 +203,7 @@ int main(int argc, char **argv) {
       if (mode == "receive") {
         guirx(Settings, app);
       } else if (mode == "transmit") {
-        tx(Settings, app);
+        txgc(Settings, app);
       } else {
         CHelpUsage HelpUsage(Settings.UsageArguments(), argv[0]);
         app.exec();
