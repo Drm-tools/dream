@@ -30,17 +30,6 @@ console {
 		message("with terminal user interface")
 	}
 }
-qtconsole {
-    QT -= gui
-    QT += xml network
-    UI_MESSAGE = console mode
-    SOURCES += src/main-Qt/main.cpp
-	unix:!cross_compile {
-		HEADERS += src/linux/ConsoleIO.h
-		SOURCES += src/linux/ConsoleIO.cpp
-		message("with terminal user interface")
-	}
-}
 contains(QT,gui) {
     UI_MESSAGE = GUI mode
     RESOURCES = src/GUI-QT/res/icons.qrc
@@ -695,6 +684,7 @@ contains(QT,core) {
         src/main-Qt/crx.h \
         src/main-Qt/ctx.h \
 		src/MDI/PacketSocketHTTP.h
+    unix!macx:HEADERS += src/linux/ConsoleIO.h
 
     SOURCES += \
         src/GUI-QT/Logging.cpp \
@@ -705,6 +695,7 @@ contains(QT,core) {
         src/main-Qt/crx.cpp \
         src/main-Qt/ctx.cpp \
 		src/MDI/PacketSocketHTTP.cpp
+	unix!macx:SOURCES += src/linux/ConsoleIO.cpp
 }
 !sound {
     error("no usable audio interface found - install pulseaudio or portaudio dev package")
