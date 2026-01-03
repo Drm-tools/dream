@@ -652,7 +652,7 @@ void TransmDialog::OnButtonStartStop()
 				}
 			}
 
-            tx.Start();
+            tx.ReStart();
 
 			ButtonStartStop->setText(tr("&Stop"));
 			if (pActionStartStop)
