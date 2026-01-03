@@ -58,8 +58,16 @@ SLObjectItf engineObject = nullptr;
 #include "../main-Qt/crx.h"
 #include "../main-Qt/ctx.h"
 
-CRx *rx;
-CTx *tx;
+CTRx *trx;
+
+class Worker: public QThread
+{
+    public:
+    Worker(CTRx* ntrx):trx(ntrx) {}
+    void run() override { trx->run(); }
+    private:
+    CTRx* trx;
+};
 
 void guirx(CSettings &Settings, QApplication &app) {
   CDRMReceiver DRMReceiver(&Settings);
@@ -72,14 +80,9 @@ void guirx(CSettings &Settings, QApplication &app) {
   CRig rig(DRMReceiver.GetParameters());
   rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
-  rx = new CRx(DRMReceiver);
-  class Worker: public QThread
-  {
-    public:
-    void run() override { rx->run(); }
-  };
+  trx = new CRx(DRMReceiver);
   Worker worker;
-  rx->moveToThread(&worker);
+  trx->moveToThread(&worker);
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
 
 #ifdef HAVE_LIBHAMLIB
@@ -88,12 +91,12 @@ void guirx(CSettings &Settings, QApplication &app) {
   if (DRMReceiver.GetDownstreamRSCIOutEnabled()) {
     rig.subscribe();
   }
-  FDRMDialog *pMainDlg = new FDRMDialog(rx, Settings, rig);
+  FDRMDialog *pMainDlg = new FDRMDialog(trx, Settings, rig);
 #else
-  FDRMDialog *pMainDlg = new FDRMDialog(rx, Settings);
+  FDRMDialog *pMainDlg = new FDRMDialog(trx, Settings);
 #endif
   (void)pMainDlg;
-  rx->LoadSettings(); // load settings after GUI initialised so LoadSettings
+  trx->LoadSettings(); // load settings after GUI initialised so LoadSettings
                      // signals get captured
 
   /* Start working thread */
@@ -108,7 +111,7 @@ void guirx(CSettings &Settings, QApplication &app) {
   }
   rig.SaveSettings(Settings);
 #endif
-  rx->SaveSettings();
+  trx->SaveSettings();
 }
 
 void consolerx(CSettings &Settings, QCoreApplication &app) {
@@ -119,12 +122,7 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
   CDRMReceiver DRMReceiver(&Settings);
   DRMReceiver.LoadSettings();
 
-  rx = new CRx(DRMReceiver);
-  class Worker: public QThread
-  {
-    public:
-    void run() override { rx->run(); }
-  };
+  trx = new CRx(DRMReceiver);
   Worker worker;
   rx->moveToThread(&worker);
 
@@ -132,32 +130,27 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
 
   worker.start();
   app.exec(); 
-  rx->SaveSettings();
+  trx->SaveSettings();
 }
 
 void txgc(CSettings &Settings, QCoreApplication &app, bool gui = true)
 {
   CDRMTransmitter DRMTransmitter(&Settings);
-  tx = new CTx(DRMTransmitter);
-  class Worker: public QThread
-  {
-    public:
-    void run() override { tx->run(); }
-  };
+  trx = new CTx(DRMTransmitter);
   Worker worker;
-  tx->moveToThread(&worker);
+  trx->moveToThread(&worker);
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
   if (gui) {
-    TransmDialog *pMainDlg = new TransmDialog(*tx);
-    tx->LoadSettings(); // load settings after GUI initialised so LoadSettings
+    TransmDialog *pMainDlg = new TransmDialog(*trx);
+    trx->LoadSettings(); // load settings after GUI initialised so LoadSettings
                        // signals get captured
     pMainDlg->show();
   } else {
-    tx->LoadSettings();
+    trx->LoadSettings();
   }
   worker.start();
   app.exec();
-  tx->SaveSettings();
+  trx->SaveSettings();
 }
 
 void platform_init(QCoreApplication &app) {
