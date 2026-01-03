@@ -69,6 +69,7 @@ void guirx(CSettings &Settings, QApplication &app) {
   rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
   CRx rx(DRMReceiver);
+  rx.moveToThread(&rx);
 
 #ifdef HAVE_LIBHAMLIB
   DRMReceiver.SetTuner(&rig);
@@ -108,6 +109,7 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
   DRMReceiver.LoadSettings();
 
   CRx rx(DRMReceiver);
+  rx.moveToThread(&rx);
 
   QObject::connect(&rx, SIGNAL(finished()), &app, SLOT(quit()),
                    Qt::QueuedConnection);
@@ -121,6 +123,7 @@ void tx(CSettings &Settings, QCoreApplication &app, bool gui = true)
 {
   CDRMTransmitter DRMTransmitter(&Settings);
   CTx tx(DRMTransmitter);
+  tx.moveToThread(&tx);
   QObject::connect(&tx, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
   if (gui) {
     TransmDialog *pMainDlg = new TransmDialog(tx);
