@@ -58,6 +58,9 @@ SLObjectItf engineObject = nullptr;
 #include "../main-Qt/crx.h"
 #include "../main-Qt/ctx.h"
 
+CRx *rx;
+CTx *tx;
+
 void guirx(CSettings &Settings, QApplication &app) {
   CDRMReceiver DRMReceiver(&Settings);
 
@@ -69,7 +72,7 @@ void guirx(CSettings &Settings, QApplication &app) {
   CRig rig(DRMReceiver.GetParameters());
   rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
-  CRx* rx = new CRx(DRMReceiver);
+  rx = new CRx(DRMReceiver);
   class Worker: public QThread
   {
     public:
@@ -116,7 +119,7 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
   CDRMReceiver DRMReceiver(&Settings);
   DRMReceiver.LoadSettings();
 
-  CRx* rx = new CRx(DRMReceiver);
+  rx = new CRx(DRMReceiver);
   class Worker: public QThread
   {
     public:
@@ -135,7 +138,7 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
 void txgc(CSettings &Settings, QCoreApplication &app, bool gui = true)
 {
   CDRMTransmitter DRMTransmitter(&Settings);
-  CTx* tx = new CTx(DRMTransmitter);
+  tx = new CTx(DRMTransmitter);
   class Worker: public QThread
   {
     public:
