@@ -63,7 +63,9 @@ CTRx *trx;
 class Worker: public QThread
 {
     public:
-    Worker(CTRx* ntrx):trx(ntrx) {}
+    Worker(CTRx* ntrx):trx(ntrx) {
+      trx->moveToThread(this);
+    }
     void run() override { trx->run(); }
     private:
     CTRx* trx;
@@ -81,8 +83,7 @@ void guirx(CSettings &Settings, QApplication &app) {
   rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
   trx = new CRx(DRMReceiver);
-  Worker worker;
-  trx->moveToThread(&worker);
+  Worker worker(trx);
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
 
 #ifdef HAVE_LIBHAMLIB
@@ -91,9 +92,9 @@ void guirx(CSettings &Settings, QApplication &app) {
   if (DRMReceiver.GetDownstreamRSCIOutEnabled()) {
     rig.subscribe();
   }
-  FDRMDialog *pMainDlg = new FDRMDialog(trx, Settings, rig);
+  FDRMDialog *pMainDlg = new FDRMDialog(dynamic_cast<CRx*>(trx), Settings, rig);
 #else
-  FDRMDialog *pMainDlg = new FDRMDialog(trx, Settings);
+  FDRMDialog *pMainDlg = new FDRMDialog(dynamic_cast<CRx*>(trx), Settings);
 #endif
   (void)pMainDlg;
   trx->LoadSettings(); // load settings after GUI initialised so LoadSettings
@@ -123,8 +124,7 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
   DRMReceiver.LoadSettings();
 
   trx = new CRx(DRMReceiver);
-  Worker worker;
-  rx->moveToThread(&worker);
+  Worker worker(trx);
 
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
 
@@ -137,11 +137,10 @@ void txgc(CSettings &Settings, QCoreApplication &app, bool gui = true)
 {
   CDRMTransmitter DRMTransmitter(&Settings);
   trx = new CTx(DRMTransmitter);
-  Worker worker;
-  trx->moveToThread(&worker);
+  Worker worker(trx);
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
   if (gui) {
-    TransmDialog *pMainDlg = new TransmDialog(*trx);
+    TransmDialog *pMainDlg = new TransmDialog(*dynamic_cast<CTx*>(trx));
     trx->LoadSettings(); // load settings after GUI initialised so LoadSettings
                        // signals get captured
     pMainDlg->show();
