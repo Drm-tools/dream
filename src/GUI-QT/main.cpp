@@ -107,6 +107,7 @@ main(int argc, char **argv)
 			rig.LoadSettings(Settings); // must be before DRMReceiver for G313
 #endif
             CRx rx(DRMReceiver);
+            rx.moveToThread(&rx);
 
 #ifdef HAVE_LIBHAMLIB
             DRMReceiver.SetTuner(&rig);
