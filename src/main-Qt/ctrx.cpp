@@ -1,7 +1,7 @@
 #include "ctrx.h"
 #include "../GlobalDefinitions.h"
 
-CTRx::CTRx(QThread *parent) : QThread(parent)
+CTRx::CTRx(QObject *parent) : QObject(parent)
 {
 
 }
