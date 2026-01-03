@@ -110,6 +110,7 @@ void CSoundFactory<T>::SetItem(std::string sNewDevice)
       pDevice->SetItem(sNewDevice);
       return;
     }
+    pDevice->Close();
   }
   for (size_t i = 0; i < drivers.size(); i++) {
     if (i != currentDriver) { // already checked
