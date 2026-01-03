@@ -85,9 +85,9 @@ void guirx(CSettings &Settings, QApplication &app) {
   if (DRMReceiver.GetDownstreamRSCIOutEnabled()) {
     rig.subscribe();
   }
-  FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings, rig);
+  FDRMDialog *pMainDlg = new FDRMDialog(rx, Settings, rig);
 #else
-  FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings);
+  FDRMDialog *pMainDlg = new FDRMDialog(rx, Settings);
 #endif
   (void)pMainDlg;
   rx->LoadSettings(); // load settings after GUI initialised so LoadSettings
@@ -145,7 +145,7 @@ void txgc(CSettings &Settings, QCoreApplication &app, bool gui = true)
   tx->moveToThread(&worker);
   QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
   if (gui) {
-    TransmDialog *pMainDlg = new TransmDialog(tx);
+    TransmDialog *pMainDlg = new TransmDialog(*tx);
     tx->LoadSettings(); // load settings after GUI initialised so LoadSettings
                        // signals get captured
     pMainDlg->show();
@@ -219,7 +219,7 @@ int main(int argc, char **argv) {
       if (mode == "receive") {
         consolerx(Settings, app);
       } else if (mode == "transmit") {
-        tx(Settings, app);
+        txgc(Settings, app);
       } else {
         string usage(Settings.UsageArguments());
         for (;;) {
