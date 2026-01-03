@@ -28,6 +28,7 @@
  *
 \******************************************************************************/
 
+#include <csignal>
 #include <iostream>
 #include <QTranslator>
 #include <QThread>
