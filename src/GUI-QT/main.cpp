@@ -77,6 +77,7 @@ void guirx(CSettings &Settings, QApplication &app) {
   };
   Worker worker;
   worker.moveToThread(&rx);
+  QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
 
 #ifdef HAVE_LIBHAMLIB
   DRMReceiver.SetTuner(&rig);
@@ -124,8 +125,7 @@ void consolerx(CSettings &Settings, QCoreApplication &app) {
   Worker worker;
   worker.moveToThread(&rx);
 
-  QObject::connect(&rx, SIGNAL(finished()), &app, SLOT(quit()),
-                   Qt::QueuedConnection);
+  QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
 
   worker.start();
   app.exec(); 
@@ -143,7 +143,7 @@ void tx(CSettings &Settings, QCoreApplication &app, bool gui = true)
   };
   Worker worker;
   worker.moveToThread(&rx);
-  QObject::connect(&tx, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
+  QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
   if (gui) {
     TransmDialog *pMainDlg = new TransmDialog(tx);
     tx.LoadSettings(); // load settings after GUI initialised so LoadSettings
