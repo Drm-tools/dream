@@ -49,6 +49,11 @@ struct CJackCommon {
   instance_data_t *play_data;
   void initialise();
   void terminate();
+  void enumerate(std::vector<std::string> &names,
+            std::vector<std::string> &descriptions,
+            std::string &defaultDevice,
+            unsigned long flags
+                 );
 };
 
 static CJackCommon common_data;
@@ -174,6 +179,69 @@ void CJackCommon::terminate() {
   client = NULL;
 }
 
+void CJackCommon::enumerate(std::vector<std::string> &names,
+                             std::vector<std::string> &descriptions,
+                             std::string &defaultDevice,
+                            unsigned long flags
+                            ) {
+    names.clear();
+    descriptions.clear();
+
+    // Get all capture ports (physical outputs that we can capture from)
+    const char **ports = jack_get_ports(client, nullptr, JACK_DEFAULT_AUDIO_TYPE, flags);
+
+    if (ports) {
+        const char * client_name = jack_get_client_name(client);
+        for (int i = 0; ports[i] != nullptr; i++) {
+            auto port_name = std::string(ports[i]);
+            cerr << "enum " << client_name << " " << port_name << " " << port_name.find(client_name) << endl;
+            if (port_name.find(client_name) == 0) {
+                continue; // don't report our own
+            }
+            if (port_name.rfind("_1") == std::string::npos) {
+                continue; // only want first channel to avoid duplicates, only support common names
+            }
+            port_name.pop_back(); // remove trailing "_1"
+            port_name.pop_back();
+            names.push_back(port_name);
+
+            // Try to get port alias as friendly name
+            jack_port_t *port = jack_port_by_name(client, ports[i]);
+            if (port) {
+                char *aliases[2];
+                aliases[0] = new char[jack_port_name_size()];
+                aliases[1] = new char[jack_port_name_size()];
+                int num_aliases = jack_port_get_aliases(port, aliases);
+                if (num_aliases > 0) {
+                    auto alias = std::string(aliases[0]);
+                    if (alias.rfind("_1") != std::string::npos) {
+                        alias.pop_back();
+                        alias.pop_back();
+                    }
+                    descriptions.push_back(alias);
+                } else {
+                    descriptions.push_back("");
+                }
+            } else {
+                descriptions.push_back("");
+            }
+        }
+        jack_free(ports);
+    }
+
+    // Set default to first physical capture port if available
+    const char **physical_ports =
+        jack_get_ports(client, nullptr, JACK_DEFAULT_AUDIO_TYPE, JackPortIsPhysical | flags);
+    if (physical_ports && physical_ports[0]) {
+        defaultDevice = physical_ports[0];
+        jack_free(physical_ports);
+    } else if (!names.empty()) {
+        defaultDevice = names[0];
+    } else {
+        defaultDevice = "";
+    }
+}
+
 CSoundInJack::CSoundInJack()
     : iBufferSize(0), bBlocking(true), capture_data(), dev("") {
   if (common_data.client == NULL)
@@ -236,59 +304,7 @@ CSoundInJack::~CSoundInJack() {
 void CSoundInJack::Enumerate(std::vector<std::string> &names,
                              std::vector<std::string> &descriptions,
                              std::string &defaultDevice) {
-  names.clear();
-  descriptions.clear();
-
-  // Get all capture ports (physical outputs that we can capture from)
-  const char **ports = jack_get_ports(
-      common_data.client, nullptr, JACK_DEFAULT_AUDIO_TYPE, JackPortIsOutput);
-
-  if (ports) {
-    for (int i = 0; ports[i] != nullptr; i++) {
-      auto port_name = std::string(ports[i]);
-      if (port_name.rfind("_1") == std::string::npos) {
-        continue; // only want first channel to avoid duplicates, only support common names
-      }
-      port_name.pop_back(); // remove trailing "_1"
-      port_name.pop_back();
-      names.push_back(port_name);
-
-      // Try to get port alias as friendly name
-      jack_port_t *port = jack_port_by_name(common_data.client, ports[i]);
-      if (port) {
-        char *aliases[2];
-        aliases[0] = new char[jack_port_name_size()];
-        aliases[1] = new char[jack_port_name_size()];
-        int num_aliases = jack_port_get_aliases(port, aliases);
-        if (num_aliases > 0) {
-          auto alias = std::string(aliases[0]);
-          if (alias.rfind("_1") != std::string::npos) {
-            alias.pop_back();
-            alias.pop_back();
-          }
-          descriptions.push_back(alias);
-        } else {
-          descriptions.push_back("");
-        }
-      } else {
-        descriptions.push_back("");
-      }
-    }
-    jack_free(ports);
-  }
-
-  // Set default to first physical capture port if available
-  const char **physical_ports =
-      jack_get_ports(common_data.client, nullptr, JACK_DEFAULT_AUDIO_TYPE,
-                     JackPortIsPhysical | JackPortIsOutput);
-  if (physical_ports && physical_ports[0]) {
-    defaultDevice = physical_ports[0];
-    jack_free(physical_ports);
-  } else if (!names.empty()) {
-    defaultDevice = names[0];
-  } else {
-    defaultDevice = "";
-  }
+  common_data.enumerate(names, descriptions, defaultDevice, JackPortIsOutput);
 }
 
 string CSoundInJack::GetItemName() { return dev; }
@@ -442,59 +458,7 @@ CSoundOutJack &CSoundOutJack::operator=(const CSoundOutJack &e) {
 void CSoundOutJack::Enumerate(std::vector<std::string> &names,
                               std::vector<std::string> &descriptions,
                               std::string &defaultDevice) {
-  names.clear();
-  descriptions.clear();
-
-  // Get all playback ports (physical inputs that we can send to)
-  const char **ports = jack_get_ports(common_data.client, nullptr,
-                                      JACK_DEFAULT_AUDIO_TYPE, JackPortIsInput);
-
-  if (ports) {
-    for (int i = 0; ports[i] != nullptr; i++) {
-      auto port_name = std::string(ports[i]);
-      if (port_name.rfind("_1") == std::string::npos) {
-        continue; // only want first channel to avoid duplicates, only support common names
-      }
-      port_name.pop_back(); // remove trailing "_1"
-      port_name.pop_back();
-      names.push_back(port_name);
-
-      // Try to get port alias as friendly name
-      jack_port_t *port = jack_port_by_name(common_data.client, ports[i]);
-      if (port) {
-        char *aliases[2];
-        aliases[0] = new char[jack_port_name_size()];
-        aliases[1] = new char[jack_port_name_size()];
-        int num_aliases = jack_port_get_aliases(port, aliases);
-        if (num_aliases > 0) {
-          auto alias = std::string(aliases[0]);
-          if (alias.rfind("_1") != std::string::npos) {
-            alias.pop_back();
-            alias.pop_back();
-          }
-          descriptions.push_back(std::string(alias));
-        } else {
-          descriptions.push_back("");
-        }
-      } else {
-        descriptions.push_back("");
-      }
-    }
-    jack_free(ports);
-  }
-
-  // Set default to first physical playback port if available
-  const char **physical_ports =
-      jack_get_ports(common_data.client, nullptr, JACK_DEFAULT_AUDIO_TYPE,
-                     JackPortIsPhysical | JackPortIsInput);
-  if (physical_ports && physical_ports[0]) {
-    defaultDevice = physical_ports[0];
-    jack_free(physical_ports);
-  } else if (!names.empty()) {
-    defaultDevice = names[0];
-  } else {
-    defaultDevice = "";
-  }
+    common_data.enumerate(names, descriptions, defaultDevice, JackPortIsInput);
 }
 
 string CSoundOutJack::GetItemName() { return dev; }
