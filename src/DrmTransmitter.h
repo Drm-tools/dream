@@ -88,8 +88,6 @@ public:
         TransmitData.Stop();
     }
     bool CanSoftStopExit();
-    bool isRunning() { return true; } // TODO
-    void Start() {} // TODO
 
 protected:
     void InitSoftStop() { iSoftStopSymbolCount = 0; }
