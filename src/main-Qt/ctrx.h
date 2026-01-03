@@ -4,7 +4,7 @@
 #include "../DrmTransceiver.h"
 #include <QObject>
 
-class CTRx : public QObject, public CDRMTransceiver
+class CTRx : public QObject, public CDRMTransceiverInterface
 {
     Q_OBJECT
 public:
