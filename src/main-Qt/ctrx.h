@@ -3,9 +3,8 @@
 
 #include <QThread>
 #include "../DrmTransceiver.h"
-#include <vector>
 
-class CTRx : public QThread, public CDRMTransceiver
+class CTRx : public QThread, public CDRMTransceiverInterface
 {
     Q_OBJECT
 public:

@@ -36,43 +36,59 @@ class CSettings;
 class CParameter;
 enum ERunState { STOPPED, RUNNING, STOP_REQUESTED, RESTART };
 
-class CDRMTransceiver {
+class CDRMTransceiverInterface {
 public:
-  CDRMTransceiver(CSettings *pSettings = nullptr);
-  virtual ~CDRMTransceiver();
-
   virtual void LoadSettings() = 0;
   virtual void SaveSettings() = 0;
-  std::string GetInputDevice() {
-    return soundinfactory.GetItemName();
-  };
-  virtual void SetInputDevice(std::string name) {
-    soundinfactory.SetItem(name);
-  };
-  std::string GetOutputDevice() {
-    return soundoutfactory.GetItemName();
-  };
-  virtual void SetOutputDevice(std::string name) {
-    soundoutfactory.SetItem(name);
-  };
+  virtual std::string GetInputDevice() = 0;
+  virtual void SetInputDevice(std::string) = 0;
+  virtual std::string GetOutputDevice() = 0;
+  virtual void SetOutputDevice(std::string name) = 0;
   virtual void EnumerateInputs(std::vector<std::string> &names,
                                std::vector<std::string> &descriptions,
-                               std::string &defaultInput) {
-    return soundinfactory.Enumerate(names, descriptions, defaultInput);
-  };
+                               std::string &defaultInput) = 0;
   virtual void EnumerateOutputs(std::vector<std::string> &names,
                                 std::vector<std::string> &descriptions,
-                                std::string &defaultOutput) {
-    return soundoutfactory.Enumerate(names, descriptions, defaultOutput);
-  };
-  virtual CSettings *GetSettings() { return pSettings; };
-  virtual void SetSettings(CSettings *pNewSettings) {
-    pSettings = pNewSettings;
-  };
-  virtual CParameter *GetParameters() { return &Parameters; };
+                                std::string &defaultOutput) = 0;
+  virtual CSettings *GetSettings() = 0;
+  virtual void SetSettings(CSettings *pNewSettings) = 0;
+  virtual CParameter *GetParameters() = 0;
   virtual bool IsReceiver() const = 0;
   virtual bool IsTransmitter() const = 0;
+};
 
+class CDRMTransceiver: public CDRMTransceiverInterface
+{
+public:
+    CDRMTransceiver(CSettings *pSettings = nullptr);
+    virtual ~CDRMTransceiver();
+    std::string GetInputDevice() {
+        return soundinfactory.GetItemName();
+    };
+    virtual void SetInputDevice(std::string name) {
+        soundinfactory.SetItem(name);
+    };
+    std::string GetOutputDevice() {
+        return soundoutfactory.GetItemName();
+    };
+    virtual void SetOutputDevice(std::string name) {
+        soundoutfactory.SetItem(name);
+    };
+    virtual void EnumerateInputs(std::vector<std::string> &names,
+                                 std::vector<std::string> &descriptions,
+                                 std::string &defaultInput) {
+        return soundinfactory.Enumerate(names, descriptions, defaultInput);
+    };
+    virtual void EnumerateOutputs(std::vector<std::string> &names,
+                                  std::vector<std::string> &descriptions,
+                                  std::string &defaultOutput) {
+        return soundoutfactory.Enumerate(names, descriptions, defaultOutput);
+    };
+    virtual CSettings *GetSettings() { return pSettings; };
+    virtual void SetSettings(CSettings *pNewSettings) {
+        pSettings = pNewSettings;
+    };
+    virtual CParameter *GetParameters() { return &Parameters; };
 protected:
   CParameter &Parameters;
   CSettings *pSettings;
