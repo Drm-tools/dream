@@ -12,7 +12,6 @@ on:
 jobs:
   build-windows:
     runs-on: windows-latest
-    if: false
     env:
       USERNAME: ${{ github.actor }}
       VCPKG_EXE: C:/vcpkg/vcpkg
@@ -55,7 +54,6 @@ jobs:
     - name: Install dependencies with vcpkg
       run: |
         ren vcpkg.json.win vcpkg.json
-        vcpkg x-update-baseline --add-initial-baseline
         vcpkg --triplet x64-windows install
 
     - name: Download hamlib
@@ -68,6 +66,7 @@ jobs:
 
     - name: Move library files where dream.pro expects
       run: |
+        mkdir include
         robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/include include
         robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib lib
         robocopy /s hamlib-w64-4.6.5/include include
