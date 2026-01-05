@@ -75,7 +75,7 @@ jobs:
 
     - name: Build
       run: |
-        dir C:/vcpkg/installed/x64-windows/bin
+        Get-ChildItem -Path C:/vcpkg -Filter qmake.exe -Recurse -ErrorAction SilentlyContinue -Force
         C:/vcpkg/installed/x64-windows/bin/qmake "CONFIG+=console"
         nmake
         copy release/dream.exe cdream.exe
