@@ -75,7 +75,7 @@ jobs:
 
     - name: Build
       run: |
-        Get-ChildItem -Path C:/vcpkg -Filter qmake.exe -Recurse -ErrorAction SilentlyContinue -Force
+        Get-ChildItem -Path C:/vcpkg -Filter win32-msvc -Recurse -ErrorAction SilentlyContinue -Force
         C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base/bin/qmake "CONFIG+=console"
         nmake
         copy release/dream.exe cdream.exe
