@@ -76,11 +76,11 @@ jobs:
     - name: Build
       run: |
         Get-ChildItem -Path C:/vcpkg -Filter qmake.exe -Recurse -ErrorAction SilentlyContinue -Force
-        C:\vcpkg\packages\qt5-base_x64-windows\tools\qt5\debug\binC:\vcpkg\packages\qt5-base_x64-windows\tools\qt5\debug\bin\qmake "CONFIG+=console"
+        C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base/bin/qmake "CONFIG+=console"
         nmake
         copy release/dream.exe cdream.exe
         nmake clean
-        C:\vcpkg\packages\qt5-base_x64-windows\tools\qt5\bin\qmake
+        C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base/bin/qmake
         nmake
         windeployqt -opengl -printsupport release
         copy cdream.exe release
