@@ -53,6 +53,7 @@ jobs:
 
     - name: Install dependencies with vcpkg
       run: |
+        ren vcpkg.json.win vcpkg.json
         vcpkg --triplet x64-windows install
 
     - name: Download hamlib
