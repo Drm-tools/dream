@@ -34,11 +34,6 @@ jobs:
       shell: pwsh
       run: C:/vcpkg/bootstrap-vcpkg.bat
 
-    - name: Install Qt
-      uses: jurplel/install-qt-action@v4
-      with:
-        version: '5.12.4'
-
     - name: Checkout code
       uses: actions/checkout@v4
 
@@ -58,7 +53,7 @@ jobs:
 
     - name: Install dependencies with vcpkg
       run: |
-        vcpkg --triplet x64-windows install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp soapysdr
+        vcpkg --triplet x64-windows install
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
@@ -68,31 +63,12 @@ jobs:
         fileName: 'hamlib-w64-4.6.5.zip'
         extract: true
 
-    - name: Download qwt src
-      uses: robinraju/release-downloader@v1
-      with:
-        repository: 'buaabyl/qwt_windows'
-        latest: true
-        zipBall: true
-        extract: true
-
-    - name: Download qwt bin
-      uses: robinraju/release-downloader@v1
-      with:
-        repository: 'buaabyl/qwt_windows'
-        tag: 'qtcreator-4.9-plugins'
-        fileName: 'qt-5.12.4-msvc2017_amd64.zip'
-        extract: true
-
     - name: Move library files where dream.pro expects
       run: |
         robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/include include
         robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib lib
         robocopy /s hamlib-w64-4.6.5/include include
         lib /def:hamlib-w64-4.6.5/lib/msvc/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
-        mkdir include/qwt
-        copy buaabyl-qwt_windows-d0644a6/src/*.h include/qwt
-        copy qt-5.12.4-msvc2017_amd64/* lib
 
     - name: Build
       run: |
