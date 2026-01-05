@@ -75,12 +75,12 @@ jobs:
 
     - name: Build
       run: |
-        dir $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin
-        $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/qmake "CONFIG+=console"
+        dir C:/vcpkg/installed/x64-windows/bin
+        C:/vcpkg/installed/x64-windows/bin/qmake "CONFIG+=console"
         nmake
         copy release/dream.exe cdream.exe
         nmake clean
-        $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/qmake
+        C:/vcpkg/installed/x64-windows/bin/qmake
         nmake
         windeployqt -opengl -printsupport release
         copy cdream.exe release
