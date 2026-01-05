@@ -1,0 +1,29 @@
+{
+  "name": "dream",
+  "version": "2.4.0",
+  "builtin-baseline": "af752f21c9d79ba3df9cb0250ce2233933f58486",
+  "dependencies": [
+    "dlfcn-win32",
+    {
+      "name": "fdk-aac",
+      "features": [
+        "he-aac"
+      ]
+    },
+    "fftw3",
+    "libsndfile",
+    "opus",
+    "pthreads",
+    "soapysdr",
+    "speexdsp",
+    "winpcap",
+    "zlib",
+    "qwt"
+  ],
+  "overrides": [
+    {
+      "name": "qwt",
+      "version": "6.2.0#2"
+    }
+  ]
+}
