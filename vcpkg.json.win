@@ -17,8 +17,7 @@
     "speexdsp",
     "winpcap",
     "zlib",
-    "qwt",
-    "qt5-tools"
+    "qwt"
   ],
   "builtin-baseline": "2b6a882f61eaa764ec3cf816e2265fe804a44cd0",
   "overrides": [
