@@ -54,6 +54,7 @@ jobs:
     - name: Install dependencies with vcpkg
       run: |
         ren vcpkg.json.win vcpkg.json
+        vcpkg x-update-baseline --add-initial-baseline
         vcpkg --triplet x64-windows install
 
     - name: Download hamlib
