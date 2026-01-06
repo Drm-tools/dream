@@ -67,9 +67,13 @@ jobs:
         done
         echo $p
         echo PKG_CONFIG_PATH=$p >> $GITHUB_ENV
+        mkdir bin
+        echo Path=./bin;$Path >> $GITHUB_ENV
+        cp ${{env.PKGCONF}} bin/pkg-config.exe
 
     - name: check
       run: |
+        pkg-config --cflags fftw3
         dir C:\\vcpkg\\packages\\pkgconf_x64-windows\\tools
         ${{ env.PKGCONF }} --cflags fftw3
         dir C:/vcpkg/packages/fftw3_x64-windows/include
