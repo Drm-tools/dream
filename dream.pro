@@ -263,6 +263,7 @@ packagesExist(soapysdr) {
    message("found SoapySDR using pkgconf")
 }
 packagesExist(fftw3) {
+   PKGCONFIG += fftw3
    PKG_CONFIG += fftw3
    message("found fftw3 using pkgconf")
 }
