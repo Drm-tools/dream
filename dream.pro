@@ -254,8 +254,13 @@ unix:!cross_compile {
       }
     }
 }
-packagesExist(soapysdr) | exists(include/SoapySDR) {
-       CONFIG += soapysdr
+packagesExist(soapysdr) {
+   CONFIG += soapysdr
+   message("found SoapySDR using pkgconf")
+}
+packagesExist(fftw3) {
+   PKG_CONFIG += wpcap zlib fftw3 dl qwt
+   message("found fftw3 using pkgconf")
 }
 win32:cross_compile {
   message(win32 cross compile)
@@ -266,7 +271,7 @@ win32:cross_compile {
 }
 win32 {
   CONFIG += link_pkgconfig fdk-aac
-  PKG_CONFIG += wpcap zlib fftw3 dl qwt
+  PKG_CONFIG += wpcap zlib dl qwt
   LIBS += -lmincore -lsetupapi
   DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
   SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
