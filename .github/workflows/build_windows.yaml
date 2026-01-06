@@ -19,7 +19,6 @@ jobs:
       FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
       QTDIR: C:\\vcpkg\\packages\\qt5-base_x64-windows\\tools\\qt5
-      PKGCONF: C:/vcpkg/packages/pkgconf_x64-windows/tools/pkgconf/pkgconf.exe
     steps:
     # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
     # for Binary Caching.
@@ -70,7 +69,7 @@ jobs:
         do
           cp -r $l/* lib
         done
-        echo Path=$Path;$QTDIR/bin;$VCPKG_INSTALLATION_ROOT/packages/qt5-tools_x64-windows/tools/qt5-tools/bin >> $GITHUB_ENV
+        echo Path=$Path\;$QTDIR/bin\;$VCPKG_INSTALLATION_ROOT/packages/qt5-tools_x64-windows/tools/qt5-tools/bin >> $GITHUB_ENV
   
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
