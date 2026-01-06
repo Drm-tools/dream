@@ -74,6 +74,10 @@ jobs:
         robocopy /s hamlib-w64-4.6.5/include include
         lib /def:hamlib-w64-4.6.5/lib/msvc/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
 
+    - name: check
+      shell: bash
+      run: env
+  
     - name: Build
       run: |
         C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base/bin/qmake -version
