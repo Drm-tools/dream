@@ -75,7 +75,7 @@ jobs:
       shell: bash
       run: |
         echo QTDIR $QTDIR
-        find $QTDIR
+        find $QTDIR -name \*.pc
   
     - name: Build
       run: |
