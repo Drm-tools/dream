@@ -65,10 +65,12 @@ jobs:
         do
           export p=$p\;$d
         done
+        mkdir -p include
         for i in `find $VCPKG_INSTALLATION_ROOT/packages -name include -a -print`
         do
           cp -r $i/* include
         done
+        mkdir -p lib
         for l in `find $VCPKG_INSTALLATION_ROOT/packages -name lib -a -print`
         do
           cp $l/* lib
@@ -94,8 +96,8 @@ jobs:
 
     - name: Move hamlib files where dream.pro expects
       run: |
-        mkdir include
-        mkdir lib
+        # mkdir include
+        # mkdir lib
         robocopy /s hamlib-w64-4.6.5/include include
         lib /def:hamlib-w64-4.6.5/lib/msvc/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
 
