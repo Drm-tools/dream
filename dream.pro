@@ -265,7 +265,7 @@ win32:cross_compile {
   message($$target.path)
 }
 win32 {
-  CONFIG += fdk-aac
+  CONFIG += link_pkgconfig fdk-aac
   PKG_CONFIG += wpcap zlib fftw3 dl qwt
   LIBS += -lmincore -lsetupapi
   DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
