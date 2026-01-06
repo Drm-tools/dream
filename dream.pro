@@ -4,7 +4,6 @@ TARGET = dream
 OBJECTS_DIR = obj
 DEFINES += EXECUTABLE_NAME=$$TARGET
 LIBS += -L$$PWD/lib
-CONFIG += link_pkgconfig
 INCLUDEPATH += $$PWD/include
 contains(QT_VERSION, ^4\\..*) {
     VERSION_MESSAGE = Qt 4
@@ -53,11 +52,7 @@ contains(QT,gui) {
         RC_INCLUDEPATH = $$PWD/src/GUI-QT/res
     }
     macx:RC_FILE = src/GUI-QT/res/macicons.icns
-	packagesExist(qwt) {
-		CONFIG += qwt
-		PKG_CONFIG += qwt
-		message("found qwt using pkgconf")
-	}
+    CONFIG += qwt
     UI_DIR = ui
     MOC_DIR = moc
     contains(QT,webenginewidgets) {
@@ -259,20 +254,19 @@ unix:!cross_compile {
       }
     }
 }
-packagesExist(soapysdr) {
-   CONFIG += soapysdr
-   message("found SoapySDR using pkgconf")
+packagesExist(soapysdr) | exists(include/SoapySDR) {
+       CONFIG += soapysdr
 }
-packagesExist(fftw3) {
-   PKG_CONFIG += fftw3
-   message("found fftw3 using pkgconf")
+win32:cross_compile {
+  message(win32 cross compile)
+  CONFIG += mxe
+  target.path = $$absolute_path(../..)/usr/$$replace(QMAKE_CC,-gcc,)/bin
+  INSTALLS += target
+  message($$target.path)
 }
 win32 {
-  CONFIG += link_pkgconfig fdk-aac
-  PKG_CONFIG += wpcap
-  PKG_CONFIG += zlib
-  PKG_CONFIG += dl
-  LIBS += -lmincore -lsetupapi
+  CONFIG += fdk-aac
+  LIBS += -lwpcap -lpacket -lmincore -lzlib -lfftw3 -lsetupapi -ldl
   DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
   SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
   HEADERS += src/windows/platform_util.h
