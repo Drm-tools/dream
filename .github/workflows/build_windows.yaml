@@ -60,11 +60,6 @@ jobs:
     - name: Prep
       shell: bash
       run: |
-        export p=.
-        for d in `find $VCPKG_INSTALLATION_ROOT/packages -name pkgconfig -a -print`
-        do
-          export p=$p\;$d
-        done
         mkdir -p include
         for i in `find $VCPKG_INSTALLATION_ROOT/packages -name include -a -print`
         do
@@ -75,17 +70,7 @@ jobs:
         do
           cp -r $l/* lib
         done
-        echo PKG_CONFIG_PATH=$p >> $GITHUB_ENV
-        echo looking for windeployqt
-        find $VCPKG_INSTALLATION_ROOT/packages -name windeployqt -a -print
-        ls -R $VCPKG_INSTALLATION_ROOT/packages/qt5-tools_x64-windows
-
-    - name: check
-      run: |
-        pkg-config --cflags fftw3
-        dir C:\\vcpkg\\packages\\pkgconf_x64-windows\\tools
-        ${{ env.PKGCONF }} --cflags fftw3
-        dir C:/vcpkg/packages/fftw3_x64-windows/include
+        echo Path=$Path;$QTDIR/bin;$VCPKG_INSTALLATION_ROOT/packages/qt5-tools_x64-windows/tools/qt5-tools/bin >> $GITHUB_ENV
   
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
@@ -104,13 +89,13 @@ jobs:
 
     - name: Build
       run: |
-        ${{ env.QTDIR }}/bin/qmake "CONFIG+=console"
+        qmake "CONFIG+=console"
         nmake
         copy release/dream.exe cdream.exe
         nmake clean
-        ${{ env.QTDIR }}/bin/qmake
+        qmake
         nmake
-        C:/vcpkg/packages/qt5-tools_x64-windows/tools/qt5-tools/bin/windeployqt -opengl -printsupport release
+        windeployqt -opengl -printsupport release
         copy cdream.exe release
 
     - name: Copy DLLs to release folder
