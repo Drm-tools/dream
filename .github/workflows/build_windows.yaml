@@ -76,6 +76,7 @@ jobs:
 
     - name: Build
       run: |
+        C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base/bin/qmake -version
         Get-ChildItem -Path C:/vcpkg -Filter win32-msvc -Recurse -ErrorAction SilentlyContinue -Force
         C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base/bin/qmake "CONFIG+=console"
         nmake
