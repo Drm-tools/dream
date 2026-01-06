@@ -77,18 +77,15 @@ jobs:
       shell: bash
       run: |
         echo QTDIR $QTDIR
-        ls $QTDIR
         cat $QTDIR/qt_release.conf
-        ls $QTDIR/bin
-        ls $QTDIR/mkspecs
   
     - name: Build
       run: |
-        C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base/bin/qmake "CONFIG+=console"
+        $Env:QTDIR/bin/qmake "CONFIG+=console"
         nmake
         copy release/dream.exe cdream.exe
         nmake clean
-        C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base/bin/qmake
+        $Env:QTDIR/bin/qmake
         nmake
         windeployqt -opengl -printsupport release
         copy cdream.exe release
