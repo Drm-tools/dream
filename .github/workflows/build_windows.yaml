@@ -64,19 +64,19 @@ jobs:
         fileName: 'hamlib-w64-4.6.5.zip'
         extract: true
 
-    - name: Move library files where dream.pro expects
+    - name: Move hamlib files where dream.pro expects
       run: |
         mkdir include
         mkdir lib
         robocopy /s hamlib-w64-4.6.5/include include
         lib /def:hamlib-w64-4.6.5/lib/msvc/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
 
-    - name: check
+    - name: Prep
       shell: bash
       run: |
-        echo QTDIR $QTDIR
-        find $VCPKG_INSTALLATION_ROOT -name \*.pc
-        ls $VCPKG_INSTALLATION_ROOT/packages
+        mkdir lib/pkgconfig
+        find $VCPKG_INSTALLATION_ROOT -name \*.pc -a -exec cp ${} lib/pkgconfig
+        ls lib/pkgconfig
   
     - name: Build
       run: |
