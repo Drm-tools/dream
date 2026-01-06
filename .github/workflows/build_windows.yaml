@@ -76,8 +76,7 @@ jobs:
           cp -r $l/* lib
         done
         echo PKG_CONFIG_PATH=$p >> $GITHUB_ENV
-        ls include
-        ls lib
+        find $VCPKG_INSTALLATION_ROOT/packages -name windeployqt
 
     - name: check
       run: |
