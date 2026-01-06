@@ -76,6 +76,7 @@ jobs:
       run: |
         echo QTDIR $QTDIR
         find $QTDIR -name \*.pc
+        ls $QTDIR/packages
   
     - name: Build
       run: |
