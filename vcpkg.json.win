@@ -2,7 +2,7 @@
   "name": "dream",
   "version": "2.4.0",
   "dependencies": [
-    "pkgconfig",
+    "pkgconf",
     "dlfcn-win32",
     {
       "name": "fdk-aac",
