@@ -63,7 +63,9 @@ jobs:
         export p=.
         for d in `find $VCPKG_INSTALLATION_ROOT/packages -name pkgconfig -a -print`
         do
-          export p=$p\;$d     
+          export p=$p\;$d
+          cp -r $d/../../include/* include
+          cp $d/,,/,,/lib/* lib
         done
         echo $p
         echo PKG_CONFIG_PATH=$p >> $GITHUB_ENV
