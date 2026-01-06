@@ -71,6 +71,7 @@ jobs:
       run: |
         dir C:\\vcpkg\\packages\\pkgconf_x64-windows\\tools
         ${{ env.PKGCONF }} --cflags fftw3
+        dir C:/vcpkg/packages/fftw3_x64-windows/include
   
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
