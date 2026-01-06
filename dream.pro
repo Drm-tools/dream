@@ -52,7 +52,11 @@ contains(QT,gui) {
         RC_INCLUDEPATH = $$PWD/src/GUI-QT/res
     }
     macx:RC_FILE = src/GUI-QT/res/macicons.icns
-    CONFIG += qwt
+	packagesExist(qwt) {
+		CONFIG += qwt
+		PKG_CONFIG += qwt
+		message("found qwt using pkgconf")
+	}
     UI_DIR = ui
     MOC_DIR = moc
     contains(QT,webenginewidgets) {
@@ -259,19 +263,14 @@ packagesExist(soapysdr) {
    message("found SoapySDR using pkgconf")
 }
 packagesExist(fftw3) {
-   PKG_CONFIG += wpcap zlib fftw3 dl qwt
+   PKG_CONFIG += fftw3
    message("found fftw3 using pkgconf")
-}
-win32:cross_compile {
-  message(win32 cross compile)
-  CONFIG += mxe
-  target.path = $$absolute_path(../..)/usr/$$replace(QMAKE_CC,-gcc,)/bin
-  INSTALLS += target
-  message($$target.path)
 }
 win32 {
   CONFIG += link_pkgconfig fdk-aac
-  PKG_CONFIG += wpcap zlib dl qwt
+  PKG_CONFIG += wpcap
+  PKG_CONFIG += zlib
+  PKG_CONFIG += dl
   LIBS += -lmincore -lsetupapi
   DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
   SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
