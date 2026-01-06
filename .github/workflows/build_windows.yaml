@@ -66,9 +66,12 @@ jobs:
         done
         echo $p
         echo PKG_CONFIG_PATH=$p >> $GITHUB_ENV
+        find $VCPKG_INSTALLATION_ROOT/packages -name pkgconf.exe
 
     - name: check
-      run: ${{ env.PKGCONF }} --cflags fftw3
+      run: |
+        dir C:\\vcpkg\\packages\\pkgconf_x64-windows\\tools
+        ${{ env.PKGCONF }} --cflags fftw3
   
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
