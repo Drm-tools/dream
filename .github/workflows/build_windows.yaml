@@ -81,11 +81,11 @@ jobs:
   
     - name: Build
       run: |
-        $Env:QTDIR/bin/qmake "CONFIG+=console"
+        ${{ env.QTDIR }}/bin/qmake "CONFIG+=console"
         nmake
         copy release/dream.exe cdream.exe
         nmake clean
-        $Env:QTDIR/bin/qmake
+        ${{ env.QTDIR }}/bin/qmake
         nmake
         windeployqt -opengl -printsupport release
         copy cdream.exe release
