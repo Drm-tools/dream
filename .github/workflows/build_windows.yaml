@@ -76,7 +76,7 @@ jobs:
       run: |
         for d in `ls $VCPKG_INSTALLATION_ROOT/packages`
         do
-          export p=$p:$d/lib/pkgconfig        
+          export p=$p;$VCPKG_INSTALLATION_ROOT/packages/$d/lib/pkgconfig        
         done
         echo $p
         echo PKG_CONFIG_PATH=$p >> $GITHUB_ENV
