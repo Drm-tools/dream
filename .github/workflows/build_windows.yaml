@@ -69,8 +69,9 @@ jobs:
         do
           cp -r $l/* lib
         done
-        echo Path=$Path\;$QTDIR/bin\;$VCPKG_INSTALLATION_ROOT/packages/qt5-tools_x64-windows/tools/qt5-tools/bin >> $GITHUB_ENV
-  
+        echo $QTDIR/bin >> $GITHUB_PATH
+        echo $VCPKG_INSTALLATION_ROOT/packages/qt5-tools_x64-windows/tools/qt5-tools/bin >> "$GITHUB_PATH"
+
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
       with:
