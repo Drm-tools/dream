@@ -19,7 +19,6 @@ jobs:
       FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
       QTDIR: C:\\vcpkg\\packages\\qt5-base_x64-windows\\tools\\qt5
-      PKG_CONFIG_PATH: lib/pkgconfig 
     steps:
     # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
     # for Binary Caching.
@@ -75,10 +74,13 @@ jobs:
     - name: Prep
       shell: bash
       run: |
-        mkdir lib/pkgconfig
-        find $VCPKG_INSTALLATION_ROOT -name \*.pc -a -exec cp '{}' lib/pkgconfig \;
-        cat lib/pkgconfig/fftw3.pc
-  
+        for d in `$VCPKG_INSTALLATION_ROOT/packages`
+        do
+          export p=$p:$d/lib/pkgconfig        
+        done
+        echo $p
+        echo PKG_CONFIG_PATH=$p >> $GITHUBENV
+
     - name: Build
       run: |
         ${{ env.QTDIR }}/bin/qmake "CONFIG+=console"
