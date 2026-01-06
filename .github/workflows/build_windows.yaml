@@ -60,7 +60,8 @@ jobs:
     - name: Prep
       shell: bash
       run: |
-        for d in `ls $VCPKG_INSTALLATION_ROOT/packages`
+        export p=.
+        for d in `find $VCPKG_INSTALLATION_ROOT/packages -name pkgconfig -a -print`
         do
           export p=$p\;$VCPKG_INSTALLATION_ROOT/packages/$d/lib/pkgconfig        
         done
