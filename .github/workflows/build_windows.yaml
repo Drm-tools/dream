@@ -64,8 +64,6 @@ jobs:
         for d in `find $VCPKG_INSTALLATION_ROOT/packages -name pkgconfig -a -print`
         do
           export p=$p\;$d
-          cp -r $d/../../include/* include
-          cp $d/,,/,,/lib/* lib
         done
         for i in `find $VCPKG_INSTALLATION_ROOT/packages -name include -a -print`
         do
