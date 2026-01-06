@@ -74,12 +74,12 @@ jobs:
     - name: Prep
       shell: bash
       run: |
-        for d in `$VCPKG_INSTALLATION_ROOT/packages`
+        for d in `ls $VCPKG_INSTALLATION_ROOT/packages`
         do
           export p=$p:$d/lib/pkgconfig        
         done
         echo $p
-        echo PKG_CONFIG_PATH=$p >> $GITHUBENV
+        echo PKG_CONFIG_PATH=$p >> $GITHUB_ENV
 
     - name: Build
       run: |
