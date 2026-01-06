@@ -78,6 +78,8 @@ jobs:
       run: |
         echo QTDIR $QTDIR
         ls $QTDIR
+        cat $QTDIR/qt_release.conf
+        ls $QTDIR/bin
         ls $QTDIR/mkspecs
   
     - name: Build
