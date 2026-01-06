@@ -18,7 +18,7 @@ jobs:
       VCPKG_INSTALLATION_ROOT: C:/vcpkg
       FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
-      QTDIR: C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5-base
+      QTDIR: C:/vcpkg/packages/qt5-base_x64-windows
 
     steps:
     # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
