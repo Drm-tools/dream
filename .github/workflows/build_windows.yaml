@@ -67,11 +67,17 @@ jobs:
           cp -r $d/../../include/* include
           cp $d/,,/,,/lib/* lib
         done
-        echo $p
+        for i in `find $VCPKG_INSTALLATION_ROOT/packages -name include -a -print`
+        do
+          cp -r $i/* include
+        done
+        for l in `find $VCPKG_INSTALLATION_ROOT/packages -name lib -a -print`
+        do
+          cp $l/* lib
+        done
         echo PKG_CONFIG_PATH=$p >> $GITHUB_ENV
-        mkdir bin
-        echo Path=./bin;$Path >> $GITHUB_ENV
-        cp ${{env.PKGCONF}} bin/pkg-config.exe
+        ls include
+        ls lib
 
     - name: check
       run: |
