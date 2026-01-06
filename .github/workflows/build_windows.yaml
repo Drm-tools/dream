@@ -110,7 +110,7 @@ jobs:
         nmake clean
         ${{ env.QTDIR }}/bin/qmake
         nmake
-        ${{ env.QTDIR }}/bin/windeployqt -opengl -printsupport release
+        C:/vcpkg/packages/qt5-tools_x64-windows/tools/qt5-tools/bin/windeployqt -opengl -printsupport release
         copy cdream.exe release
 
     - name: Copy DLLs to release folder
