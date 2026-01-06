@@ -4,6 +4,7 @@ TARGET = dream
 OBJECTS_DIR = obj
 DEFINES += EXECUTABLE_NAME=$$TARGET
 LIBS += -L$$PWD/lib
+CONFIG += link_pkgconfig
 INCLUDEPATH += $$PWD/include
 contains(QT_VERSION, ^4\\..*) {
     VERSION_MESSAGE = Qt 4
@@ -263,7 +264,6 @@ packagesExist(soapysdr) {
    message("found SoapySDR using pkgconf")
 }
 packagesExist(fftw3) {
-   PKGCONFIG += fftw3
    PKG_CONFIG += fftw3
    message("found fftw3 using pkgconf")
 }
