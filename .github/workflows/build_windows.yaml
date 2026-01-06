@@ -87,16 +87,16 @@ jobs:
         robocopy /s hamlib-w64-4.6.5/include include
         lib /def:hamlib-w64-4.6.5/lib/msvc/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
 
-    - name: Build
+    - name: Build Gui
       run: |
-        qmake "CONFIG+=console"
-        nmake
-        copy release/dream.exe cdream.exe
-        nmake clean
+        # qmake "CONFIG+=console"
+        # nmake
+        # copy release/dream.exe cdream.exe
+        # nmake clean
         qmake
         nmake
         windeployqt -opengl -printsupport release
-        copy cdream.exe release
+        # copy cdream.exe release
 
     - name: Copy DLLs to release folder
       run: |
