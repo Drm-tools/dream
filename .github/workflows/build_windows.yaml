@@ -68,8 +68,6 @@ jobs:
       run: |
         mkdir include
         mkdir lib
-        robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/include include
-        robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib lib
         robocopy /s hamlib-w64-4.6.5/include include
         lib /def:hamlib-w64-4.6.5/lib/msvc/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
 
@@ -77,7 +75,7 @@ jobs:
       shell: bash
       run: |
         echo QTDIR $QTDIR
-        cat $QTDIR/qt_release.conf
+        find $QTDIR
   
     - name: Build
       run: |
