@@ -245,9 +245,16 @@ CSettings::ParseArguments(int argc, char **argv)
 
 	const char* ReceiverTransmitter = bIsReceiver ? "Receiver" : "Transmitter";
 	Put("command", "mode", bIsReceiver ? string("receive") : string("transmit"));
+	Put("command", "gui", string("true"));
 
 	for (int i = 1; i < argc; i++)
 	{
+		/* Console mode flag ---------------------------------------- */
+		if (GetFlagArgument(argc, argv, i, "-n", "--console")) {
+			Put("command", "gui", string("false"));
+			continue;
+		}
+
 		/* DRM transmitter mode flag ---------------------------------------- */
 		if (GetFlagArgument(argc, argv, i, "-t", "--transmitter"))
 			continue;
@@ -657,6 +664,7 @@ CSettings::UsageArguments()
 		"Usage: $EXECNAME [option [argument]] | [input file]\n"
 		"\n"
 		"Recognized options:\n"
+		"  -n, --console                console mode (no GUI)\n"
 		"  -t, --transmitter            DRM transmitter mode\n"
 		"  -p <b>, --flipspectrum <b>   flip input spectrum (0: off; 1: on)\n"
 		"  -i <n>, --mlciter <n>        number of MLC iterations (allowed range: 0...4 default: 1)\n"
