@@ -90,6 +90,7 @@ jobs:
     - name: Build Gui
       run: |
         qmake
+        type Makefile.release
         nmake
         windeployqt -opengl -printsupport release
 
