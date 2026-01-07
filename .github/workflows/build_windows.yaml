@@ -17,7 +17,7 @@ jobs:
       VCPKG_INSTALLATION_ROOT: C:/vcpkg
       FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
-      QTDIR: C:\\vcpkg\\packages\\qt5-base_x64-windows\\tools\\qt5
+      QTDIR: C:/vcpkg/packages/qt5-base_x64-windows/tools/qt5
     steps:
     # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
     # for Binary Caching.
@@ -68,12 +68,15 @@ jobs:
         do
           cp -r $l/* lib
         done
+        echo 'vcpkg:'
+        find C:/ -name vcpkg.exe -a -print
         echo 'uic['
+        find $VCPKG_INSTALLATION_ROOT -name qmake.exe -a -print
         find $VCPKG_INSTALLATION_ROOT -name uic.exe -a -print
+        find $VCPKG_INSTALLATION_ROOT -name moc.exe -a -print
+        find $VCPKG_INSTALLATION_ROOT -name windeployqt.exe -a -print
         echo ']uic'
         echo $QTDIR/bin >> $GITHUB_PATH
-        echo $VCPKG_INSTALLATION_ROOT/packages/qt5-tools_x64-windows/tools/qt5-tools/bin >> "$GITHUB_PATH"
-
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
       with:
