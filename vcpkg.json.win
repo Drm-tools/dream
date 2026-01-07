@@ -6,14 +6,12 @@
       "name" : "qt5", 
       "features" : ["imageformats", "svg", "tools"]
     },
-    "pkgconf",
-    "dlfcn-win32",
     {
       "name": "fdk-aac",
-      "features": [
-        "he-aac"
-      ]
+      "features": ["he-aac"]
     },
+    "dlfcn-win32",
+    "zstd",
     "fftw3",
     "libsndfile",
     "opus",
