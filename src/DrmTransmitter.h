@@ -81,15 +81,15 @@ public:
     virtual bool IsReceiver() const { return false; }
     virtual bool IsTransmitter() const { return true; }
 
-    void Run();
+    void process();
     void Close()
     {
         ReadData.Stop();
         TransmitData.Stop();
     }
+    bool CanSoftStopExit();
 
 protected:
-    bool CanSoftStopExit();
     void InitSoftStop() { iSoftStopSymbolCount = 0; }
 
     std::string indev;

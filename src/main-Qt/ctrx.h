@@ -1,16 +1,16 @@
 #ifndef CTRX_H
 #define CTRX_H
 
-#include <QThread>
 #include "../DrmTransceiver.h"
-#include <vector>
+#include <QObject>
 
-class CTRx : public QThread, public CDRMTransceiver
+class CTRx : public QObject, public CDRMTransceiverInterface
 {
     Q_OBJECT
 public:
-    explicit CTRx(QThread *parent = nullptr);
+    explicit CTRx(QObject *parent = nullptr);
     virtual int GetFrequency()=0;
+    virtual void run() = 0;
 
 signals:
     void InputDeviceChanged(const std::string&);

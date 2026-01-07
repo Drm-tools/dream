@@ -117,14 +117,21 @@ void CRx::SetInputDevice(string s)
     emit soundFileChanged(id); // TODO only send if it is a file!!!
 }
 
+std::string CRx::GetInputDevice() {
+    return rx.GetInputDevice();
+};
+
 void CRx::SetOutputDevice(QString s)
 {
     SetOutputDevice(s.toStdString());
 }
 
+std::string CRx::GetOutputDevice() {
+    return rx.GetOutputDevice();
+};
+
 void CRx::SetOutputDevice(string s)
 {
-    cerr << "CRx::SetOutputDevice " << s << endl;
     rx.SetOutputDevice(s);
     emit OutputDeviceChanged(QString::fromStdString(rx.GetOutputDevice()));
 }

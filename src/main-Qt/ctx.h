@@ -13,6 +13,7 @@ public:
     explicit CTx(CDRMTransmitter& nRx, CTRx *parent = nullptr);
     virtual ~CTx() override;
     void run() override;
+    bool isRunning() { return eRunState != STOPPED; }
 
     virtual std::string GetInputDevice();
     virtual std::string GetOutputDevice();
