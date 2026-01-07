@@ -3,13 +3,10 @@
   "version": "2.4.0",
   "dependencies": [
     {
-      "name" : "qt5", 
-      "features" : ["tools"]
-    },
-    {
       "name": "fdk-aac",
       "features": ["he-aac"]
     },
+    "qt5",
     "dlfcn-win32",
     "zstd",
     "fftw3",
