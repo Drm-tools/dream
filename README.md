@@ -8,7 +8,7 @@
  
 Originally written by Volker Fischer and Alexander Kurpiers
  
-Additional contributions by Stephane Fillod, Andrea Russo, Julian Cable, Andrew Murphy, Oliver Haffenden, Tomi Manninen, Robert Kesterson
+Additional contributions by Stephane Fillod, Andrea Russo, Julian Cable, Mark J Fine, David Flamand, Andrew Murphy, Oliver Haffenden, Tomi Manninen, Robert Kesterson
    
 Introduction
 ------------

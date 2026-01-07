@@ -1,5 +1,5 @@
+#include <QEventLoop>
 #include "ctx.h"
-
 #include "../DrmTransmitter.h"
 
 CTx::CTx(CDRMTransmitter& nTx, CTRx *parent): CTRx(parent), tx(nTx), eRunState(STOPPED)
@@ -15,6 +15,7 @@ CTx::~CTx()
 void
 CTx::run()
 {
+    QEventLoop eventLoop;
     qDebug("Working thread started");
     try
     {
@@ -28,7 +29,11 @@ CTx::run()
             eRunState = RUNNING;
 
             /* Start the transmitter run routine */
-            tx.Run();
+            do
+            {
+                tx.process();
+                eventLoop.processEvents();
+            } while (eRunState == RUNNING && !tx.CanSoftStopExit());
         }
         while (eRunState == RESTART);
 
