@@ -93,7 +93,7 @@ jobs:
         nmake
         windeployqt -opengl -printsupport release
 
-  - name: Build Console 
+    - name: Build Console 
       if: false
       run: |
         qmake "CONFIG+=console"
