@@ -2,8 +2,7 @@
   "name": "dream",
   "version": "2.4.0",
   "dependencies": [
-    "qt5-tools",
-    "qt5[svg]",
+    "qt5[svg, tools]",
     "pkgconf",
     "dlfcn-win32",
     {
