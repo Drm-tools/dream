@@ -71,7 +71,7 @@ jobs:
         done
         echo $QTDIR/bin >> $GITHUB_PATH
         echo libpng16
-        find $QTDIR -name libpng16.lib -a -print
+        find $QTDIR -name libpng\* -a -print
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
