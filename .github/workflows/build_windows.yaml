@@ -14,6 +14,7 @@ jobs:
     runs-on: windows-latest
     env:
       USERNAME: ${{ github.actor }}
+      FYI: C:/Program Files/Microsoft Visual Studio/2022/Enterprise/VC/vcpkg
       VCPKG_INSTALLATION_ROOT: C:/vcpkg
       FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
       VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
@@ -68,15 +69,8 @@ jobs:
         do
           cp -r $l/* lib
         done
-        echo 'vcpkg:'
-        find C:/ -name vcpkg.exe -a -print
-        echo 'uic['
-        find $VCPKG_INSTALLATION_ROOT -name qmake.exe -a -print
-        find $VCPKG_INSTALLATION_ROOT -name uic.exe -a -print
-        find $VCPKG_INSTALLATION_ROOT -name moc.exe -a -print
-        find $VCPKG_INSTALLATION_ROOT -name windeployqt.exe -a -print
-        echo ']uic'
         echo $QTDIR/bin >> $GITHUB_PATH
+
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
       with:
@@ -95,21 +89,19 @@ jobs:
     - name: Build Gui
       run: |
         qmake
-        type Makefile.release
         nmake
         windeployqt -opengl -printsupport release
 
     - name: Build Console 
-      if: false
       run: |
-        qmake "CONFIG+=console"
+        mkdir console
+        cd console
+        qmake "CONFIG+=console" ../dream.pro
         nmake
-        copy release/dream.exe cdream.exe
 
-    - name: Copy DLLs to release folder
+    - name: Copy console exe and hamlib DLLs to release folder
       run: |
-        copy lib/*.dll release
-        copy $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/bin/*.dll release
+        copy console/release/dream.exe release/cdream.exe
         copy hamlib-w64-4.6.5/bin/*.dll release
 
     - name: Upload artifact
