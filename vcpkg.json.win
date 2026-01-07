@@ -4,7 +4,7 @@
   "dependencies": [
     {
       "name" : "qt5", 
-      "features" : ["imageformats", "svg", "tools"]
+      "features" : ["svg", "tools"]
     },
     {
       "name": "fdk-aac",
