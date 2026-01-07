@@ -4,7 +4,7 @@
   "dependencies": [
     {
       "name" : "qt5", 
-      "features" : ["svg", "tools"]
+      "features" : ["imageformats", "svg", "tools"]
     },
     "pkgconf",
     "dlfcn-win32",
