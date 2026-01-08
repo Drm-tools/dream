@@ -60,7 +60,7 @@ jobs:
 
     - name: Package
       run: |
-        tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
+        tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog INSTALL NEWS README TODO dream.pro linux src
         mkdir build
         cp -r debian build
         cd build
