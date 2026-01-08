@@ -50,7 +50,7 @@ jobs:
         truncate -s 0 debian/changelog
         for r in `gh release list --exclude-drafts --json tagName --jq '.[].tagName'`
         do
-          echo "dream ($r) unstable; urgency=medium" >> debian/changelog
+          echo "dream ($r-0) unstable; urgency=medium" >> debian/changelog
           echo >> debian/changelog
           git log -1 --format='  * %s' $r -- >> debian/changelog
           echo >> debian/changelog
