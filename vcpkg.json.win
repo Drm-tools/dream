@@ -8,7 +8,6 @@
     },
     "qt5",
     "dlfcn-win32",
-    "zstd",
     "fftw3",
     "libsndfile",
     "opus",
