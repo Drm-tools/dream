@@ -73,7 +73,7 @@ jobs:
 
     - name: Make Source Package
       run: |
-        tar zcf dream_${RELEASE_TAG}$-{{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README dream.pro linux src
+        tar zcf dream_${RELEASE_TAG}-${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README dream.pro linux src
         mkdir build
         cp -r debian build
         cd build
