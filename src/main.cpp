@@ -30,7 +30,7 @@
 #include <csignal>
 #endif
 #ifdef _WIN32
- # include <windows.h>
+// # include <windows.h> // this seems needed for a local build and breaks a GitHub actions build
 #else
 #ifdef USE_CONSOLEIO
 #include "linux/ConsoleIO.h"
@@ -46,96 +46,96 @@
 int main(int argc, char **argv) 
 {
   cout << "dream" << endl;
-//   try {
-//     CSettings Settings;
-//     Settings.Load(argc, argv);
+  try {
+    CSettings Settings;
+    Settings.Load(argc, argv);
 
-//     string mode = Settings.Get("command", "mode", string());
-//     if (mode == "receive") {
-//       CDRMSimulation DRMSimulation;
-//       CDRMReceiver DRMReceiver(&Settings);
+    string mode = Settings.Get("command", "mode", string());
+    if (mode == "receive") {
+      CDRMSimulation DRMSimulation;
+      CDRMReceiver DRMReceiver(&Settings);
 
-//       DRMSimulation.SimScript();
-//       DRMReceiver.LoadSettings();
+      DRMSimulation.SimScript();
+      DRMReceiver.LoadSettings();
 
-// #ifdef _WIN32
-//       WSADATA wsaData;
-//       (void)WSAStartup(MAKEWORD(2, 2), &wsaData);
-// #endif
-//       try {
-//         // set the frequency from the command line or ini file
-//         int iFreqkHz = DRMReceiver.GetParameters()->GetFrequency();
-//         if (iFreqkHz != -1)
-//           DRMReceiver.SetFrequency(iFreqkHz);
+#ifdef _WIN32
+      WSADATA wsaData;
+      (void)WSAStartup(MAKEWORD(2, 2), &wsaData);
+#endif
+      try {
+        // set the frequency from the command line or ini file
+        int iFreqkHz = DRMReceiver.GetParameters()->GetFrequency();
+        if (iFreqkHz != -1)
+          DRMReceiver.SetFrequency(iFreqkHz);
 
-// #ifdef USE_CONSOLEIO
-//         CConsoleIO::Enter(&DRMReceiver);
-// #endif
-//         ERunState eRunState = RESTART;
-//         do {
-//           DRMReceiver.InitReceiverMode();
-//           DRMReceiver.SetInStartMode();
-//           eRunState = RUNNING;
-//           do {
-//             DRMReceiver.updatePosition();
-//             DRMReceiver.process();
-// #ifdef USE_CONSOLEIO
-//             eRunState = CConsoleIO::Update();
-// #endif
-//           } while (eRunState == RUNNING);
-//         } while (eRunState == RESTART);
-//         DRMReceiver.CloseSoundInterfaces();
-// #ifdef USE_CONSOLEIO
-//         CConsoleIO::Leave();
-// #endif
-//       } catch (CGenErr GenErr) {
-//         perror(GenErr.strError.c_str());
-//       } catch (string strError) {
-//         perror(strError.c_str());
-//       }
-//     }
+#ifdef USE_CONSOLEIO
+        CConsoleIO::Enter(&DRMReceiver);
+#endif
+        ERunState eRunState = RESTART;
+        do {
+          DRMReceiver.InitReceiverMode();
+          DRMReceiver.SetInStartMode();
+          eRunState = RUNNING;
+          do {
+            DRMReceiver.updatePosition();
+            DRMReceiver.process();
+#ifdef USE_CONSOLEIO
+            eRunState = CConsoleIO::Update();
+#endif
+          } while (eRunState == RUNNING);
+        } while (eRunState == RESTART);
+        DRMReceiver.CloseSoundInterfaces();
+#ifdef USE_CONSOLEIO
+        CConsoleIO::Leave();
+#endif
+      } catch (CGenErr GenErr) {
+        perror(GenErr.strError.c_str());
+      } catch (string strError) {
+        perror(strError.c_str());
+      }
+    }
 
-//     else if (mode == "transmit") {
-//       CDRMTransmitter DRMTransmitter(&Settings);
-//       DRMTransmitter.LoadSettings();
-//       try {
-//         /* Set restart flag */
-//         ERunState eRunState = RESTART;
-//         do {
-//           /* Initialization of the modules */
-//           DRMTransmitter.Init();
+    else if (mode == "transmit") {
+      CDRMTransmitter DRMTransmitter(&Settings);
+      DRMTransmitter.LoadSettings();
+      try {
+        /* Set restart flag */
+        ERunState eRunState = RESTART;
+        do {
+          /* Initialization of the modules */
+          DRMTransmitter.Init();
 
-//           /* Set run flag */
-//           eRunState = RUNNING;
+          /* Set run flag */
+          eRunState = RUNNING;
 
-//           /* Start the transmitter run routine */
-//           do {
-//             DRMTransmitter.process();
-//           } while (eRunState == RUNNING && !DRMTransmitter.CanSoftStopExit());
+          /* Start the transmitter run routine */
+          do {
+            DRMTransmitter.process();
+          } while (eRunState == RUNNING && !DRMTransmitter.CanSoftStopExit());
 
-//         } while (eRunState == RESTART);
+        } while (eRunState == RESTART);
 
-//         /* Closing the sound interfaces */
-//         DRMTransmitter.Close();
-//       } catch (CGenErr GenErr) {
-//         perror(GenErr.strError.c_str());
-//       } catch (string strError) {
-//         perror(strError.c_str());
-//       }
-//     } else {
-//       string usage(Settings.UsageArguments());
-//       for (;;) {
-//         size_t pos = usage.find("$EXECNAME");
-//         if (pos == string::npos)
-//           break;
-//         usage.replace(pos, sizeof("$EXECNAME") - 1, argv[0]);
-//       }
-//       cerr << usage << endl << endl;
-//       exit(0);
-//     }
-//   } catch (CGenErr GenErr) {
-//     perror(GenErr.strError.c_str());
-//   }
+        /* Closing the sound interfaces */
+        DRMTransmitter.Close();
+      } catch (CGenErr GenErr) {
+        perror(GenErr.strError.c_str());
+      } catch (string strError) {
+        perror(strError.c_str());
+      }
+    } else {
+      string usage(Settings.UsageArguments());
+      for (;;) {
+        size_t pos = usage.find("$EXECNAME");
+        if (pos == string::npos)
+          break;
+        usage.replace(pos, sizeof("$EXECNAME") - 1, argv[0]);
+      }
+      cerr << usage << endl << endl;
+      exit(0);
+    }
+  } catch (CGenErr GenErr) {
+    perror(GenErr.strError.c_str());
+  }
 
   return 0;
 }

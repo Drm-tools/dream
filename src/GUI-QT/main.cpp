@@ -44,7 +44,7 @@
 #include "TransmDlg.h"
 #include "DialogUtil.h"
 #ifdef _WIN32
-#include "winsock2.h"
+// #include "winsock2.h" // this seems needed for a local build and breaks a GitHub actions build
 #endif
 
 using namespace std;
