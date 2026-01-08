@@ -58,7 +58,7 @@ jobs:
 
     - name: Install dependencies with vcpkg
       run: |
-        unset VCPKG_ROOT
+        Remove-Item Env:VCPKG_ROOT
         ${{ env.VCPKG_EXE }} --triplet x64-windows install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp soapysdr
 
     - name: Download hamlib
