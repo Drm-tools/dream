@@ -77,9 +77,12 @@ jobs:
         mkdir build
         cp -r debian build
         cd build
+        tar xf dream_${RELEASE_TAG}.orig.tar.gz
         dpkg-buildpackage -S
+        echo ============
         ls
-
+        echo ============
+        ls ..
     - name: Upload artifact
       if: ${{ github.event_name == 'push' }}
       uses: actions/upload-artifact@v4
