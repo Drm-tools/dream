@@ -28,7 +28,6 @@
  *
 \******************************************************************************/
 
-#include <csignal>
 #include <iostream>
 #include <QTranslator>
 #include <QThread>
@@ -44,9 +43,11 @@
 #include "fdrmdialog.h"
 #include "TransmDlg.h"
 #include "DialogUtil.h"
+#ifdef _WIN32
+#include "winsock2.h"
+#endif
 
 using namespace std;
-
 #ifdef HAVE_LIBHAMLIB
 #include "../util-QT/Rig.h"
 #endif

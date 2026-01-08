@@ -5,6 +5,14 @@ OBJECTS_DIR = obj
 DEFINES += EXECUTABLE_NAME=$$TARGET
 LIBS += -L$$PWD/lib
 INCLUDEPATH += $$PWD/include
+exists($$(VCPKG_ROOT)/installed) {
+    message('vcpkg classic mode')
+    LIBS += -L$$(VCPKG_ROOT)/installed/x64-windows/lib
+    INCLUDEPATH += $$(VCPKG_ROOT)/installed/x64-windows/include
+}
+exists($$(VCPKG_ROOT)/packages) {
+    message('vcpkg manifest mode TODO')
+}
 contains(QT_VERSION, ^4\\..*) {
     VERSION_MESSAGE = Qt 4
 }
@@ -246,29 +254,14 @@ unix:!cross_compile {
 packagesExist(SoapySDR) | exists(include/SoapySDR) {
        CONFIG += soapysdr
 }
-win32:cross_compile {
-  message(win32 cross compile)
-  CONFIG += mxe
-  target.path = $$absolute_path(../..)/usr/$$replace(QMAKE_CC,-gcc,)/bin
-  INSTALLS += target
-  message($$target.path)
-}
 win32 {
   CONFIG += fdk-aac
-  LIBS += -lwpcap -lpacket -lmincore -lzlib -lfftw3 -lsetupapi -ldl
-  DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
-  SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
-  HEADERS += src/windows/platform_util.h
-  contains(QT,multimedia) {
-	CONFIG += sound
-  }
-  else {
-    HEADERS += src/windows/Sound.h
-    SOURCES += src/windows/Sound.cpp
-    LIBS += -lwinmm
-    message("with mmsystem")
-	CONFIG += sound
-  }
+  CONFIG += sound
+  LIBS += -lmincore -lzlib -lfftw3 -lsetupapi -ldl -lwinmm
+  DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_STDINT_H
+  SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp src/windows/Sound.cpp
+  HEADERS += src/windows/platform_util.h src/windows/Sound.h
+  message("with mmsystem")
   win32-g++ {
 	LIBS += -lz
   }
@@ -277,6 +270,13 @@ win32 {
 	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmt.lib
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmt.lib
+  }
+  exists($$(VCPKG_ROOT)/installed/x64-windows/include/speex) {
+    CONFIG += speexdsp
+  }
+  exists($$(VCPKG_ROOT)/installed/x64-windows/include/pcap.h) {
+    LIBS += -lwpcap -lpacket
+    DEINES += HAVE_LIBPCAP
   }
   exists($$PWD/include/speex/speex_preprocess.h) {
     CONFIG += speexdsp
