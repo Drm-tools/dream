@@ -6,6 +6,7 @@
       "name": "fdk-aac",
       "features": ["he-aac"]
     },
+    "qwt",
     "qt5",
     "dlfcn-win32",
     "fftw3",
