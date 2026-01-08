@@ -30,7 +30,9 @@
 #include <csignal>
 #endif
 #ifdef _WIN32
-// # include <windows.h> // this seems needed for a local build and breaks a GitHub actions build
+# ifndef _WINSOCK2API_
+#  include "winsock2.h" // this seems needed for a local build and breaks a GitHub actions build
+# endif
 #else
 #ifdef USE_CONSOLEIO
 #include "linux/ConsoleIO.h"
