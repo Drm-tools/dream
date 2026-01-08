@@ -57,8 +57,8 @@ jobs:
           echo >> debian/changelog
           git log -1 --format=' -- %an <%ae>  %aD' $r -- >> debian/changelog
         done
-        export EMAIL=`git log -1 --format='%ae' ${RELEASE_TAG}`
-        echo $EMAIL
+        export USERNAME="github-actions[bot]"
+        export EMAIL="${{github.run_id}}+github-actions[bot]@users.noreply.github.com"
         dch -R packaging 
         python3 -c "print('ARCH='+{'x64': 'amd64'}['${{matrix.arch}}'])" >> $GITHUB_ENV
 
@@ -89,6 +89,7 @@ jobs:
     - name: Upload to ppa
       run: |
         dput ppa:drm-tools/ppa dream_${RELEASE_TAG}-build1_source.changes
+
     - name: Upload artifact
       if: ${{ github.event_name == 'push' }}
       uses: actions/upload-artifact@v4
