@@ -79,9 +79,7 @@ jobs:
         cd build
         tar xf ../dream_${RELEASE_TAG}-${{ github.run_id }}.orig.tar.gz
         dpkg-buildpackage -S
-        echo ============
-        ls
-        echo ============
+        echo =============
         ls ..
     - name: Upload artifact
       if: ${{ github.event_name == 'push' }}
