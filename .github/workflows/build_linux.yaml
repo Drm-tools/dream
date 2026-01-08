@@ -58,7 +58,7 @@ jobs:
         done
         python3 -c "print('ARCH='+{'x64': 'amd64'}['${{matrix.arch}}'])" >> $GITHUB_ENV
 
-    - name: Make Package
+    - name: Make Binary Package
       if: false
       run: |
         tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
@@ -78,7 +78,7 @@ jobs:
         cp -r debian build
         cd build
         tar xf ../dream_${{ github.run_id }}.orig.tar.gz
-        debuild -S
+        dpkg-buildpackage -S
         ls
 
     - name: Upload artifact
