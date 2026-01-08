@@ -11,11 +11,11 @@ on:
 
 jobs:
   build:
-    if: false
-    runs-on: ${{ matrix.os }}
+    if: true
+    runs-on: ${{ matrix.os }}-latest
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        os: [ubuntu]
         arch: [x64]
 
     steps:
@@ -25,7 +25,7 @@ jobs:
         fetch-depth: 0
   
     - name: Install dependencies (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
+      if: matrix.os == 'ubuntu'
       run: |
         sudo apt-get update
 
@@ -38,7 +38,6 @@ jobs:
           libjack-jackd2-dev libasound2-dev
 
     - name: Install dependencies (vcpkg)
-      if: matrix.arch == 'x64'
       run: |
        vcpkg install --triplet ${{ matrix.arch }}-linux fdk-aac[he-aac]
        echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.arch }}-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
@@ -59,7 +58,8 @@ jobs:
         done
         python3 -c "print('ARCH='+{'x64': 'amd64'}['${{matrix.arch}}'])" >> $GITHUB_ENV
 
-    - name: Package
+    - name: Make Package
+      if: false
       run: |
         tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux macx src windows
         mkdir build
@@ -70,6 +70,16 @@ jobs:
         cd ..
         mkdir artifacts
         mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
+
+    - name: Make Source Package
+      run: |
+        tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README dream.pro linux src
+        mkdir build
+        cp -r debian build
+        cd build
+        tar xf ../dream_${{ github.run_id }}.orig.tar.gz
+        debuild -S
+        ls
 
     - name: Upload artifact
       if: ${{ github.event_name == 'push' }}
