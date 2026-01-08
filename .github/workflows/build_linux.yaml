@@ -77,7 +77,7 @@ jobs:
         mkdir build
         cp -r debian build
         cd build
-        tar xf dream_${RELEASE_TAG}.orig.tar.gz
+        tar xf ../dream_${RELEASE_TAG}.orig.tar.gz
         dpkg-buildpackage -S
         echo ============
         ls
