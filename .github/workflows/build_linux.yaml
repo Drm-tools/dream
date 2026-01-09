@@ -83,23 +83,19 @@ jobs:
 
     - name: Make Source Package
       run: |
-        echo '#!/bin/sh' > batchsign
-        echo gpg --batch --passphrase="${{ secrets.GPG_SIGNING_PASSPHRASE }}" '$@' >> batchsign
-        chmod +x batchsign
-        cat batchsign
         tar zcf dream_${RELEASE_TAG}.orig.tar.gz AUTHORS COPYING ChangeLog INSTALL NEWS README dream.pro linux src
         mkdir build
         cp -r debian build
         cd build
         tar xf ../dream_${RELEASE_TAG}.orig.tar.gz
-        dpkg-buildpackage -S --force-sign -p../batchsign
-        echo =============
-        cd ..
-        rm batchsign
-        ls
+        dpkg-buildpackage -S
 
     - name: Upload to ppa
       run: |
+        echo '#!/bin/sh' > batchsign
+        echo gpg --batch --passphrase="${{ secrets.GPG_SIGNING_PASSPHRASE }}" '$@' >> batchsign
+        chmod +x batchsign
+        debsign dream_${RELEASE_TAG}-build1_source.changes
         dput ppa:drm-tools/ppa dream_${RELEASE_TAG}-build1_source.changes
 
     - name: Upload artifact
