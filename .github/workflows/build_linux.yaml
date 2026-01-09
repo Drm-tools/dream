@@ -42,9 +42,17 @@ jobs:
        vcpkg install --triplet ${{ matrix.arch }}-linux fdk-aac[he-aac]
        echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.arch }}-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
 
-    - name: changelog
+    - name: Import GPG Key
+      uses: crazy-max/ghaction-import-gpg@v6
+      with:
+         gpg_private_key: ${{ secrets.GPG_SIGNING_KEY }}
+         passphrase: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+
+    - name: create changelog
       env:
         GH_TOKEN: ${{ github.token }}
+        USERNAME: ${{ steps.import-gpg-key.outputs.name }}
+        EMAIL: ${{ steps.import-gpg-key.outputs.email }}
       run: |
         export RELEASE_TAG=`gh release list --limit 1 --exclude-drafts --json tagName --jq '.[].tagName'`
         echo RELEASE_TAG=${RELEASE_TAG} >> $GITHUB_ENV
@@ -57,8 +65,6 @@ jobs:
           echo >> debian/changelog
           git log -1 --format=' -- %an <%ae>  %aD' $r -- >> debian/changelog
         done
-        export USERNAME="github-actions[bot]"
-        export EMAIL="${{github.run_id}}+github-actions[bot]@users.noreply.github.com"
         dch -R packaging 
         python3 -c "print('ARCH='+{'x64': 'amd64'}['${{matrix.arch}}'])" >> $GITHUB_ENV
 
@@ -74,13 +80,6 @@ jobs:
         cd ..
         mkdir artifacts
         mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
-
-    - name: Import GPG Key
-      uses: crazy-max/ghaction-import-gpg@v6
-      with:
-         gpg_private_key: ${{ secrets.GPG_SIGNING_KEY }}
-         passphrase: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
-         git_user_signingkey: true
 
     - name: List keys
       run: gpg -K
