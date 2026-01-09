@@ -28,7 +28,7 @@ jobs:
       id: import-gpg-key
       run: |
          printf "%s" "${{ secrets.GPG_SIGNING_KEY }}" > private.key
-         gpg --import private.key
+         gpg --passphrase "${{ secrets.GPG_SIGNING_PASSPHRASE }}" --import private.key
          gpg -K
     - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu'
@@ -50,7 +50,6 @@ jobs:
          
     - name: create changelog
       env:
-        PP: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
         GH_TOKEN: ${{ github.token }}
         USERNAME: Julian Cable
         EMAIL: julian.cable@yahoo.com
