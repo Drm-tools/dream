@@ -75,6 +75,17 @@ jobs:
         mkdir artifacts
         mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
 
+    - name: Import GPG Key
+      uses: crazy-max/ghaction-import-gpg@v6
+      with:
+         gpg_private_key: ${{ secrets.GPG_SIGNING_KEY }}
+         passphrase: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
+         git_user_signingkey: true
+
+    - name: List keys
+        run: gpg -K
+
+    - name: Package
     - name: Make Source Package
       run: |
         tar zcf dream_${RELEASE_TAG}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README dream.pro linux src
