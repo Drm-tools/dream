@@ -28,7 +28,7 @@ jobs:
       id: import-gpg-key
       run: |
          printf "%s" "${{ secrets.GPG_SIGNING_KEY }}" > private.key
-         gpg --passphrase "${{ secrets.GPG_SIGNING_PASSPHRASE }}" --import private.key
+         gpg --batch --passphrase "${{ secrets.GPG_SIGNING_PASSPHRASE }}" --import private.key
          gpg -K
     - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu'
