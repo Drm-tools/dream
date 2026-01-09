@@ -83,9 +83,8 @@ jobs:
          git_user_signingkey: true
 
     - name: List keys
-        run: gpg -K
+      run: gpg -K
 
-    - name: Package
     - name: Make Source Package
       run: |
         tar zcf dream_${RELEASE_TAG}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README dream.pro linux src
