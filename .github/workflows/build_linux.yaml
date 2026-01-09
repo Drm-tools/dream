@@ -25,12 +25,13 @@ jobs:
         fetch-depth: 0
         
     - name: Import GPG Key
-      id: import-gpg-key
       run: |
          printf "%s" "${{ secrets.GPG_SIGNING_KEY }}" > private.key
          gpg --batch --passphrase "${{ secrets.GPG_SIGNING_PASSPHRASE }}" --import private.key
-         echo NAME=`gpg --list-secret-keys|awk -F'[\]<>]' '{print $2}'` >> $GITHUB_ENV
-         echo DEBEMAIL=`gpg --list-secret-keys|awk -F'[\]<>]' '{print $3}'` >> $GITHUB_ENV
+         rm private.key
+         echo NAME=`gpg --list-keys|awk -F'[\]<>]' '/uid/ {print $2}'` >> $GITHUB_ENV
+         echo DEBEMAIL=`gpg --list-keys|awk -F'[\]<>]' '/uid/ {print $3}'` >> $GITHUB_ENV
+
     - name: Install dependencies (Ubuntu)
       if: matrix.os == 'ubuntu'
       run: |
@@ -41,9 +42,7 @@ jobs:
           zlib1g-dev libspeexdsp-dev libgps-dev libpcap-dev libsoapysdr-dev \
           libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5 \
           qtbase5-dev qtbase5-dev-tools qt5-qmake build-essential \
-          debhelper devscripts qtchooser fakeroot git2cl \
-          libjack-jackd2-dev libasound2-dev
-
+          debhelper devscripts qtchooser fakeroot git2cl
     - name: Install dependencies (vcpkg)
       run: |
        vcpkg install --triplet ${{ matrix.arch }}-linux fdk-aac[he-aac]
@@ -82,9 +81,6 @@ jobs:
         mkdir artifacts
         mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
 
-    - name: List keys
-      run: gpg -K
-
     - name: Make Source Package
       run: |
         tar zcf dream_${RELEASE_TAG}.orig.tar.gz AUTHORS COPYING ChangeLog INSTALL NEWS README dream.pro linux src
@@ -92,7 +88,10 @@ jobs:
         cp -r debian build
         cd build
         tar xf ../dream_${RELEASE_TAG}.orig.tar.gz
-        dpkg-buildpackage -S --force-sign -p'gpg --batch --passphrase ${{ secrets.GPG_SIGNING_PASSPHRASE }}'
+        echo gpg --batch --passphrase ${{ secrets.GPG_SIGNING_PASSPHRASE }} > batchsign
+        chmod +x batchsign
+        dpkg-buildpackage -S --force-sign -p./batchsign
+        rm batchsign
         echo =============
         ls ..
 
