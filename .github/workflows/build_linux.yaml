@@ -93,8 +93,10 @@ jobs:
     - name: Upload to ppa
       run: |
         echo '#!/bin/sh' > batchsign
+        echo '$@'
         echo gpg --batch --passphrase="${{ secrets.GPG_SIGNING_PASSPHRASE }}" '$@' >> batchsign
         chmod +x batchsign
+        echo DEBSIGN_PROGRAM=./batchsign > ~/.devscripts
         debsign dream_${RELEASE_TAG}-build1_source.changes
         dput ppa:drm-tools/ppa dream_${RELEASE_TAG}-build1_source.changes
 
