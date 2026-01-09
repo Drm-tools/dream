@@ -3,8 +3,8 @@ CONFIG += warn_on
 TARGET = dream
 OBJECTS_DIR = obj
 DEFINES += EXECUTABLE_NAME=$$TARGET
-LIBS += -L$$PWD/lib
-INCLUDEPATH += $$PWD/include
+LIBS += -L$$(PWD)/lib
+INCLUDEPATH += $$(PWD)/include
 contains(QT_VERSION, ^4\\..*) {
     VERSION_MESSAGE = Qt 4
 }
@@ -38,7 +38,7 @@ contains(QT,gui) {
     VPATH += src/GUI-QT
     win32 {
         RC_FILE = windows/dream.rc
-        RC_INCLUDEPATH = $$PWD/src/GUI-QT/res
+        RC_INCLUDEPATH = $$(PWD)/src/GUI-QT/res
     }
     macx:RC_FILE = src/GUI-QT/res/macicons.icns
     CONFIG += qwt
@@ -271,16 +271,16 @@ win32 {
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
 	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmt.lib
   }
-  exists($$PWD/include/speex/speex_preprocess.h) {
+  exists($$(PWD)/include/speex/speex_preprocess.h) {
     CONFIG += speexdsp
   }
-  exists($$PWD/include/hamlib/rig.h) {
+  exists($$(PWD)/include/hamlib/rig.h) {
     CONFIG += hamlib
   }
-  exists($$PWD/include/sndfile.h) {
+  exists($$(PWD)/include/sndfile.h) {
     CONFIG += sndfile
   }
-  exists($$PWD/include/opus/opus.h) {
+  exists($$(PWD)/include/opus/opus.h) {
     CONFIG += opus
   }
 }
@@ -344,7 +344,7 @@ qwt {
         LIBS += -framework qwt
     }
     win32 {
-        INCLUDEPATH += $$PWD/include/qwt
+        INCLUDEPATH += $$(PWD)/include/qwt
         CONFIG(debug, debug|release) {
             LIBS += -lqwtd
         }
