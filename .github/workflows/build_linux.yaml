@@ -44,16 +44,17 @@ jobs:
 
     - name: Import GPG Key
       id: import-gpg-key
-      uses: crazy-max/ghaction-import-gpg@v6
-      with:
-         gpg_private_key: ${{ secrets.GPG_SIGNING_KEY }}
-         passphrase: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
-
+      run: |
+         echo ${{ secrets.GPG_SIGNING_KEY }} > private.key
+         gpg --import private.key
+         gpg -K
+         
     - name: create changelog
       env:
+        PP: ${{ secrets.GPG_SIGNING_PASSPHRASE }}
         GH_TOKEN: ${{ github.token }}
-        USERNAME: ${{ steps.import-gpg-key.outputs.name }}
-        EMAIL: ${{ steps.import-gpg-key.outputs.email }}
+        USERNAME: Julian Cable
+        EMAIL: julian.cable@yahoo.com
       run: |
         export RELEASE_TAG=`gh release list --limit 1 --exclude-drafts --json tagName --jq '.[].tagName'`
         echo RELEASE_TAG=${RELEASE_TAG} >> $GITHUB_ENV
