@@ -19,10 +19,10 @@ public:
     virtual std::string GetOutputDevice();
     virtual void EnumerateInputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultInput);
     virtual void EnumerateOutputs(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultOutput);
-    virtual CSettings*				GetSettings() override;
-    virtual CParameter*				GetParameters() override;
-    virtual bool				IsReceiver() const override { return false;}
-    virtual bool				IsTransmitter() const override { return true;}
+    virtual CSettings* GetSettings() override;
+    virtual CParameter*	GetParameters() override;
+    virtual bool IsReceiver() const override { return false;}
+    virtual bool IsTransmitter() const override { return true;}
     virtual int GetIQOutput();
     virtual bool isHighQualityIQ();
     virtual bool isOutputAmplified();
@@ -37,6 +37,8 @@ public slots:
     virtual void SaveSettings() override;
     virtual void SetInputDevice(std::string) override;
     virtual void SetOutputDevice(std::string) override;
+    virtual void SetInputDevice(QString);
+    virtual void SetOutputDevice(QString);
     virtual void Restart();
     virtual void Stop();
     virtual void SetSettings(CSettings* pNewSettings) override;
@@ -53,7 +55,8 @@ public slots:
 private:
     CDRMTransmitter& tx;
     ERunState eRunState;
-
+signals:
+    void OutputDeviceChanged(QString);
 };
 
 

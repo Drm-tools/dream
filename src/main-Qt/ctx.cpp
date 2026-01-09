@@ -54,6 +54,7 @@ CTx::run()
 void CTx::LoadSettings()
 {
     tx.LoadSettings();
+    emit OutputDeviceChanged(QString::fromStdString(tx.GetOutputDevice()));
 }
 
 void CTx::SaveSettings()
@@ -61,9 +62,20 @@ void CTx::SaveSettings()
     tx.SaveSettings();
 }
 
+void CTx::SetInputDevice(QString s)
+{
+    SetInputDevice(s.toStdString());
+}
+
+void CTx::SetOutputDevice(QString s)
+{
+    SetOutputDevice(s.toStdString());
+}
+
 void CTx::SetInputDevice(string s)
 {
     tx.SetInputDevice(s);
+    emit OutputDeviceChanged(QString::fromStdString(tx.GetOutputDevice()));
 }
 
 void CTx::SetOutputDevice(string s)
