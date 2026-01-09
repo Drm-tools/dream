@@ -84,7 +84,7 @@ void guirx(CSettings &Settings, QApplication &app) {
 #endif
   trx = new CRx(DRMReceiver);
   Worker worker(trx);
-  QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(quit()), Qt::QueuedConnection);
+  QObject::connect(&worker, SIGNAL(finished()), &app, SLOT(OnWorkingThreadFinished()), Qt::QueuedConnection);
 
 #ifdef HAVE_LIBHAMLIB
   DRMReceiver.SetTuner(&rig);

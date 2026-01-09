@@ -197,7 +197,9 @@ void CSoapySDRIn::Enumerate(std::vector<std::string>& names, std::vector<std::st
         }
         descriptions.push_back(ss.str());
     }
-    defaultDevice = names[0];
+    if (names.size()>0) {
+        defaultDevice = names[0];
+    }
 }
 
 std::string	CSoapySDRIn::GetItemName()
