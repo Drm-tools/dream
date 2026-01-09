@@ -90,7 +90,7 @@ jobs:
         cp -r debian build
         cd build
         tar xf ../dream_${RELEASE_TAG}.orig.tar.gz
-        dpkg-buildpackage -S --force-sign -p./batchsign
+        dpkg-buildpackage -S --force-sign -p../batchsign
         echo =============
         cd ..
         rm batchsign
