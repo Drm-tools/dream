@@ -97,7 +97,7 @@ jobs:
         echo gpg --batch --passphrase="${{ secrets.GPG_SIGNING_PASSPHRASE }}" '$@' >> batchsign
         chmod +x batchsign
         echo DEBSIGN_PROGRAM=./batchsign > ~/.devscripts
-        debsign dream_${RELEASE_TAG}-build1_source.changes
+        debsign -v dream_${RELEASE_TAG}-build1_source.changes
         dput ppa:drm-tools/ppa dream_${RELEASE_TAG}-build1_source.changes
 
     - name: Upload artifact
