@@ -83,17 +83,18 @@ jobs:
 
     - name: Make Source Package
       run: |
+        echo gpg --batch --passphrase ${{ secrets.GPG_SIGNING_PASSPHRASE }} > batchsign
+        chmod +x batchsign
         tar zcf dream_${RELEASE_TAG}.orig.tar.gz AUTHORS COPYING ChangeLog INSTALL NEWS README dream.pro linux src
         mkdir build
         cp -r debian build
         cd build
         tar xf ../dream_${RELEASE_TAG}.orig.tar.gz
-        echo gpg --batch --passphrase ${{ secrets.GPG_SIGNING_PASSPHRASE }} > batchsign
-        chmod +x batchsign
         dpkg-buildpackage -S --force-sign -p./batchsign
-        rm batchsign
         echo =============
-        ls ..
+        cd ..
+        rm batchsign
+        ls
 
     - name: Upload to ppa
       run: |
