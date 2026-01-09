@@ -49,7 +49,11 @@
 # include <SLES/OpenSLES.h>
   SLObjectItf engineObject = nullptr;
 #endif
-
+#ifdef _WIN32
+#ifndef _WINSOCK2API_
+#include <winsock2.h>
+#endif
+#endif
 #include "../main-Qt/crx.h"
 #include "../main-Qt/ctx.h"
 

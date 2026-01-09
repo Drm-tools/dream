@@ -31,7 +31,9 @@
 \******************************************************************************/
 
 #include "PacketSocket.h"
+#ifdef QT_VERSION
 #include "PacketSocketHTTP.h"
+#endif
 #include "RSISubscriber.h"
 #include "../DrmReceiver.h"
 #include "TagPacketGenerator.h"
@@ -121,8 +123,13 @@ bool CRSISubscriberSocket::SetDestination(const string& dest)
 
     if (dest.substr(0,5)=="http:" || dest.substr(0,6)=="https:")
     {
+#ifdef QT_VERSION
         cout<<"instantiating HTTP socket"<<endl;
         pSocket = new CPacketSocketHTTP;
+#else
+        cout<<"HTTP sockets not supported without Qt"<<endl;
+        pSocket = new CPacketSocketNative;
+#endif
     }
     else
     {

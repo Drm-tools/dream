@@ -1,0 +1,14 @@
+.qmake.stash
+Makefile
+Makefile.Debug
+*.obj
+console/*
+include/*
+lib/*
+obj/*
+moc/*
+ui/*
+Makefile.*
+.vscode/launch.json
+debug/*
+release/*

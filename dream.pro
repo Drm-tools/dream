@@ -3,8 +3,10 @@ CONFIG += warn_on
 TARGET = dream
 OBJECTS_DIR = obj
 DEFINES += EXECUTABLE_NAME=$$TARGET
-LIBS += -L$$PWD/lib
-INCLUDEPATH += $$PWD/include
+LIBS += -L$$(VCPKG_ROOT)/installed/x64-windows/lib
+LIBS += -L$$(PWD)/lib
+INCLUDEPATH += $$(PWD)/include
+INCLUDEPATH += $$(VCPKG_ROOT)/installed/x64-windows/include
 contains(QT_VERSION, ^4\\..*) {
     VERSION_MESSAGE = Qt 4
 }
@@ -270,9 +272,9 @@ win32:cross_compile {
   message($$target.path)
 }
 win32 {
-  CONFIG += fdk-aac
-  LIBS += -lwpcap -lpacket -lmincore -lzlib -lfftw3 -lsetupapi -ldl
-  DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
+  CONFIG += fdk-aac speexdsp
+  LIBS += -lmincore -lzlib -lfftw3 -lsetupapi -ldl
+  DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_STDINT_H
   SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
   HEADERS += src/windows/platform_util.h
   contains(QT,multimedia) {
@@ -564,8 +566,7 @@ HEADERS += \
     src/sourcedecoders/reverb.h \
     src/sourcedecoders/caudioreverb.h \
     src/tuner.h \
-    src/sound/soundinterfacefactory.h \
-    src/MDI/PacketSocketHTTP.h
+    src/sound/soundinterfacefactory.h 
 SOURCES += \
     src/AMDemodulation.cpp \
     src/AMSSDemodulation.cpp \
@@ -683,8 +684,7 @@ SOURCES += \
     src/sourcedecoders/reverb.cpp \
     src/sourcedecoders/caudioreverb.cpp \
     src/tuner.cpp \
-    src/sound/soundinterfacefactory.cpp \
-    src/MDI/PacketSocketHTTP.cpp
+    src/sound/soundinterfacefactory.cpp
 
 contains(QT,core) {
     HEADERS += \
@@ -694,7 +694,8 @@ contains(QT,core) {
         src/util-QT/Util.h \
         src/main-Qt/ctrx.h \
         src/main-Qt/crx.h \
-        src/main-Qt/ctx.h
+        src/main-Qt/ctx.h \
+        src/MDI/PacketSocketHTTP.h
 
     SOURCES += \
         src/GUI-QT/Logging.cpp \
@@ -703,7 +704,9 @@ contains(QT,core) {
         src/util-QT/Util.cpp \
         src/main-Qt/ctrx.cpp \
         src/main-Qt/crx.cpp \
-        src/main-Qt/ctx.cpp
+        src/main-Qt/ctx.cpp \
+        src/MDI/PacketSocketHTTP.cpp
+
 }
 !sound {
     error("no usable audio interface found - install pulseaudio or portaudio dev package")
