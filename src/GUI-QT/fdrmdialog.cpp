@@ -81,7 +81,7 @@ FDRMDialog::FDRMDialog(CTRx* pRx, CSettings& Settings, QWidget* parent)
     pSoundCardMenu = new CSoundCardSelMenu(rx, pFileMenu, this);
     menu_Settings->addMenu(pSoundCardMenu);
     connect(&rx, SIGNAL(soundFileChanged(QString)), this, SLOT(OnSoundFileChanged(QString)));
-    connect(&rx, SIGNAL(finished()), this, SLOT(OnWorkingThreadFinished()));
+    // connect(&rx, SIGNAL(finished()), this, SLOT(OnWorkingThreadFinished()));
 
     /* Analog demodulation window */
     pAnalogDemDlg = new AnalogDemDlg(rx, Settings, pFileMenu, pSoundCardMenu);
