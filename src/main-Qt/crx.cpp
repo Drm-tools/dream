@@ -83,6 +83,7 @@ CRx::run()
         qDebug("%s", strError.c_str());
     }
     qDebug("Receiver working thread complete");
+    emit finished();
 }
 
 void CRx::LoadSettings()
