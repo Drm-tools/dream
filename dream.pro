@@ -246,13 +246,6 @@ unix:!cross_compile {
 packagesExist(SoapySDR) | exists(include/SoapySDR) {
        CONFIG += soapysdr
 }
-win32:cross_compile {
-  message(win32 cross compile)
-  CONFIG += mxe
-  target.path = $$absolute_path(../..)/usr/$$replace(QMAKE_CC,-gcc,)/bin
-  INSTALLS += target
-  message($$target.path)
-}
 win32 {
   CONFIG += fdk-aac
   LIBS += -lwpcap -lpacket -lmincore -lzlib -lfftw3 -lsetupapi -ldl
@@ -346,7 +339,6 @@ hamlib {
 }
 qwt {
     message("with Qwt")
-    QT += svg
     macx {
         INCLUDEPATH += /Library/Frameworks/qwt.framework/Headers
         LIBS += -framework qwt
