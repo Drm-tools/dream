@@ -45,7 +45,7 @@ jobs:
     - name: Import GPG Key
       id: import-gpg-key
       run: |
-         echo ${{ secrets.GPG_SIGNING_KEY }} > private.key
+         printf "${{ secrets.GPG_SIGNING_KEY }}" > private.key
          gpg --import private.key
          gpg -K
          
