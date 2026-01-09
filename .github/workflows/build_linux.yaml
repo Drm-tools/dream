@@ -43,6 +43,7 @@ jobs:
        echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.arch }}-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
 
     - name: Import GPG Key
+      id: import-gpg-key
       uses: crazy-max/ghaction-import-gpg@v6
       with:
          gpg_private_key: ${{ secrets.GPG_SIGNING_KEY }}
