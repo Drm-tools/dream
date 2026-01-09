@@ -92,7 +92,7 @@ jobs:
         cp -r debian build
         cd build
         tar xf ../dream_${RELEASE_TAG}.orig.tar.gz
-        dpkg-buildpackage -S
+        dpkg-buildpackage -S --force-sign to override
         echo =============
         ls ..
 
