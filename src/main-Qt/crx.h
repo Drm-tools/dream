@@ -159,6 +159,7 @@ signals:
     void drmModeStarted();
     void amModeStarted();
     void fmModeStarted();
+    void finished();
 };
 
 #endif // CRX_H
