@@ -54,9 +54,6 @@ TransmDialog::TransmDialog(CTx& ntx, QWidget* parent)
     ProgrInputLevel->setScalePosition(QwtThermo::LeadingScale);
 #endif
 
-	/* Load transmitter settings */
-    tx.LoadSettings();
-
 	/* Set help text for the controls */
 	AddWhatsThisHelp();
 

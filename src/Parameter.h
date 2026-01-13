@@ -948,7 +948,7 @@ public:
         sr = (sr + 12) / 25 * 25; // <- ok for DRM mode
         iNewAudSampleRate = sr;
     }
-    void SetNewSoundcardSigSampleRate(int sr)
+    void SetNewSigSampleRate(int sr)
     {
         /* Set to the nearest supported sample rate */
         if      (sr < 36000)  sr = 24000;

@@ -298,7 +298,7 @@ void CDRMTransmitter::LoadSettings() {
       s.Get(Transmitter, "samplerateaud", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
 
   /* Sound card signal sample rate */
-  Parameters.SetNewSoundcardSigSampleRate(
+  Parameters.SetNewSigSampleRate(
       s.Get(Transmitter, "sampleratesig", int(DEFAULT_SOUNDCRD_SAMPLE_RATE)));
 
   /* Fetch new sample rate if any */
