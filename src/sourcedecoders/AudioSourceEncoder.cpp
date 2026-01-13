@@ -79,7 +79,6 @@ CAudioSourceEncoderImplementation::ProcessDataInternal(CParameter& Parameters,
 
         if (AudioParam.bParamChanged)
         {
-cerr<<"Audio param changed"<<endl;
             AudioParam.bParamChanged = false;
             codec->EncUpdate(AudioParam);
         }
@@ -195,7 +194,6 @@ cerr<<"Audio param changed"<<endl;
                 /* If encoder produced too many bits, we have to drop them */
                 if (iCurNumBytes < iAudioPayloadLen)
                     (*pvecOutputData).Enqueue(audio_frame[j][i], 8);
-else cerr<<" Dropping byte because iCurNumBytes "<<iCurNumBytes<<">= iAudioPayloadLen "<<iAudioPayloadLen<<endl;
 
                 iCurNumBytes++;
             }
@@ -328,11 +326,13 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
             case CAudioParam::AS_12KHZ:
                 iTimeEachAudBloMS = 80;	/* ms */
                 iNumAudioFrames = 5;
+                lEncSamprate = 12000; // used later to get ratio
                 break;
 
             case CAudioParam::AS_24KHZ:
                 iTimeEachAudBloMS = 40;	/* ms */
                 iNumAudioFrames = 10;
+                lEncSamprate = 24000; // used later to get ratio
                 break;
             }
 
