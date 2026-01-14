@@ -374,6 +374,7 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         return;
 
     Parameters.Lock();
+    Parameters.FetchNewSampleRate();
     /* We define iOutputBlockSize as half the iSymbolBlockSize because
        if a positive frequency offset is present in drm signal,
        after some time a buffer overflow occur in the output buffer of
@@ -384,7 +385,7 @@ void CReceiveData::InitInternal(CParameter& Parameters)
     /* Get signal sample rate */
     iSampleRate = Parameters.GetSigSampleRate();
     iUpscaleRatio = Parameters.GetSigUpscaleRatio();
-    iDownscaleRatio = 2; // TODO read from params
+    iDownscaleRatio = Parameters.GetSigDownscaleRatio();
     Parameters.Unlock();
 
     const int iOutputBlockAlignment = iOutputBlockSize & 3;
@@ -397,7 +398,6 @@ void CReceiveData::InitInternal(CParameter& Parameters)
 
         bool bChanged = false;
         int wantedBufferSize = iOutputBlockSize * 2 * iDownscaleRatio / iUpscaleRatio; // samples
-
 
         bChanged = (pSound==nullptr)?true:pSound->Init(iSampleRate * iDownscaleRatio / iUpscaleRatio, wantedBufferSize, true);
         /* Clear input data buffer on change samplerate change */

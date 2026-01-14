@@ -513,7 +513,21 @@ void CRx::onSoundOutChannelChanged(EOutChanSel e)
     emit OutputChannelChanged(int(e));
 }
 
-void  CRx::onSoundSampleRateChanged(int n)
+void  CRx::onSoundSampleRateChanged(int n) // This shouldn't be called and will be removed in a future commit
+{
+    rx.GetParameters()->SetNewAudSampleRate(n);
+    Restart();
+    emit outputSampleRateChanged(n);
+}
+
+void  CRx::onSoundInSampleRateChanged(int n)
+{
+    rx.GetParameters()->SetNewSoundcardSigSampleRate(n);
+    Restart();
+    emit inputSampleRateChanged(n);
+}
+
+void  CRx::onSoundOutSampleRateChanged(int n)
 {
     rx.GetParameters()->SetNewAudSampleRate(n);
     Restart();
