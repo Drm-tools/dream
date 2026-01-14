@@ -108,7 +108,8 @@ public slots:
     virtual void EnableAutoFrequenctAcquisition(bool);
     virtual void onSoundInChannelChanged(int);
     virtual void onSoundOutChannelChanged(EOutChanSel);
-    virtual void onSoundSampleRateChanged(int);
+    virtual void onSoundInSampleRateChanged(int);
+    virtual void onSoundOutSampleRateChanged(int);
     virtual void SetSoundSignalUpscale(int) override;
 
 private:
