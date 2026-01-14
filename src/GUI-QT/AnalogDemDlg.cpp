@@ -77,7 +77,8 @@ AnalogDemDlg::AnalogDemDlg(CRx& nrx, CSettings& Settings,
 	connect(actionFM, SIGNAL(triggered()), this, SLOT(OnSwitchToFM()));
 	connect(actionDRM, SIGNAL(triggered()), this, SLOT(OnSwitchToDRM()));
     connect(pFileMenu, SIGNAL(soundFileChanged(QString)), this, SLOT(OnSoundFileChanged(QString)));
-    connect(pSoundCardMenu, SIGNAL(soundSampleRateChanged(int)), this, SLOT(OnSampleRateChanged(int)));
+    connect(pSoundCardMenu, SIGNAL(soundInSampleRateChanged(int)), this, SLOT(OnSampleRateInChanged(int)));
+    connect(pSoundCardMenu, SIGNAL(soundOutSampleRateChanged(int)), this, SLOT(OnSampleRateOutChanged(int)));
 	connect(actionAbout_Dream, SIGNAL(triggered()), this, SLOT(OnHelpAbout()));
 	connect(actionWhats_This, SIGNAL(triggered()), this, SLOT(OnWhatsThis()));
 	SliderBandwidth->setTickPosition(QSlider::TicksBothSides);
@@ -375,7 +376,12 @@ void AnalogDemDlg::UpdatePlotStyle(int iPlotstyle)
 		MainPlot->SetPlotStyle(iPlotstyle);
 }
 
-void AnalogDemDlg::OnSampleRateChanged(int)
+void AnalogDemDlg::OnSampleRateInChanged(int)
+{
+	UpdateSliderBandwidth();
+}
+
+void AnalogDemDlg::OnSampleRateOutChanged(int)
 {
 	UpdateSliderBandwidth();
 }

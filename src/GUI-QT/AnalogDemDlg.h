@@ -104,7 +104,8 @@ protected:
 
 public slots:
 	void UpdatePlotStyle(int);
-    void OnSampleRateChanged(int);
+    void OnSampleRateInChanged(int);
+    void OnSampleRateOutChanged(int);
     void OnSoundFileChanged(QString);
 	void OnTimer();
 	void OnTimerPLLPhaseDial();

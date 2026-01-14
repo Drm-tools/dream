@@ -129,7 +129,6 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
         actionUpscale = menuSigInput->addAction(tr("2:1 upscale"));
         connect(actionUpscale, SIGNAL(toggled(bool)), this, SLOT(OnSoundSignalUpscale(bool)));
         connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
-        connect(this, SIGNAL(soundSampleRateChanged(int)), &trx, SLOT(onSoundSampleRateChanged(int)));
         connect(this, SIGNAL(soundInSampleRateChanged(int)), &trx, SLOT(onSoundInSampleRateChanged(int)));
         connect(this, SIGNAL(soundOutSampleRateChanged(int)), &trx, SLOT(onSoundOutSampleRateChanged(int)));
         connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
@@ -160,8 +159,8 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
         QMenu* menuSignal = addMenu(tr("Signal Output"));
         menuOutputDev = menuSignal->addMenu(tr("Device"));
 
-        connect(InitSampleRate(menuAudio, tr("Sample Rate"), AudioSampleRateTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundSampleRate(QAction*)));
-        connect(InitSampleRate(menuSignal, tr("Sample Rate"), SignalSampleRateTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundSampleRate(QAction*)));
+        connect(InitSampleRate(menuAudio, tr("Sample Rate"), AudioSampleRateTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInSampleRate(QAction*)));
+        connect(InitSampleRate(menuSignal, tr("Sample Rate"), SignalSampleRateTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutSampleRate(QAction*)));
     }
 
     connect(menuOutputDev, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutDevice(QAction*)));
@@ -189,11 +188,6 @@ void CSoundCardSelMenu::OnSoundInChannel(QAction* action)
 void CSoundCardSelMenu::OnSoundOutChannel(QAction* action)
 {
     emit soundOutChannelChanged(EOutChanSel(action->data().toInt()));
-}
-
-void CSoundCardSelMenu::OnSoundSampleRate(QAction* action) // TODO work out what to do for Tx
-{
-    emit soundSampleRateChanged(EOutChanSel(action->data().toInt()));
 }
 
 void CSoundCardSelMenu::OnSoundInputSampleRate(QAction* action)
