@@ -132,11 +132,14 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
 
         connect(menuInputChannel, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInChannel(QAction*)));
         connect(menuOutputChannel, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutChannel(QAction*)));
-        actionUpscale = menuInput->addAction(tr("2:1 upscale"));
+        connect(menuInputSampleRate, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInputSampleRate(QAction*)));
+        menuOutputSampleRate = InitSampleRate(menuAudOutput, tr("Sample Rate"), AudioSampleRateTable);
+        connect(menuOutputSampleRate, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutputSampleRate(QAction*)));
+        actionUpscale = menuSigInput->addAction(tr("2:1 upscale"));
         connect(actionUpscale, SIGNAL(toggled(bool)), this, SLOT(OnSoundSignalUpscale(bool)));
         connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
-        connect(this, SIGNAL(soundInSampleRateChanged(int)), &trx, SLOT(onInSoundSampleRateChanged(int)));
-        connect(this, SIGNAL(soundOutSampleRateChanged(int)), &trx, SLOT(onOutSoundSampleRateChanged(int)));
+        connect(this, SIGNAL(soundInSampleRateChanged(int)), &trx, SLOT(onSoundInSampleRateChanged(int)));
+        connect(this, SIGNAL(soundOutSampleRateChanged(int)), &trx, SLOT(onSoundOutSampleRateChanged(int)));
         connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
         connect(this, SIGNAL(soundInChannelChanged(int)), &trx, SLOT(onSoundInChannelChanged(int)));
         connect(this, SIGNAL(soundOutChannelChanged(EOutChanSel)), &trx, SLOT(onSoundOutChannelChanged(EOutChanSel)));
@@ -153,8 +156,11 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
         connect(&trx, SIGNAL(soundUpscaleRatioChanged(int)), this, SLOT(OnSoundUpscaleRatioChanged(int)));
     }
 
-    if (pFileMenu != nullptr) {
-        connect(pFileMenu, SIGNAL(soundFileChanged(QString)), this, SLOT(OnSoundFileChanged(QString)));
+        QMenu* menuSignal = addMenu(tr("Signal Output"));
+        menuOutputDev = menuSignal->addMenu(tr("Device"));
+
+        connect(InitSampleRate(menuAudio, tr("Sample Rate"), AudioSampleRateTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInSampleRate(QAction*)));
+        connect(InitSampleRate(menuSignal, tr("Sample Rate"), SignalSampleRateTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutSampleRate(QAction*)));
     }
 
     connect(menuInputDev, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInDevice(QAction*)));
@@ -193,12 +199,12 @@ void CSoundCardSelMenu::OnSoundOutChannel(QAction* action)
     emit soundOutChannelChanged(EOutChanSel(action->data().toInt()));
 }
 
-void CSoundCardSelMenu::OnSoundInSampleRate(QAction* action)
+void CSoundCardSelMenu::OnSoundInputSampleRate(QAction* action)
 {
     emit soundInSampleRateChanged(EOutChanSel(action->data().toInt()));
 }
 
-void CSoundCardSelMenu::OnSoundOutSampleRate(QAction* action)
+void CSoundCardSelMenu::OnSoundOutputSampleRate(QAction* action)
 {
     emit soundOutSampleRateChanged(EOutChanSel(action->data().toInt()));
 }
