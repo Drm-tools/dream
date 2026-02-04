@@ -57,6 +57,7 @@ private:
     ERunState eRunState;
 signals:
     void OutputDeviceChanged(QString);
+    void InputDeviceChanged(QString);
 };
 
 

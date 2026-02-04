@@ -28,11 +28,15 @@ void SpeexResampler::Free()
 /* this function is only called when the input and output sample rates are different */
 void SpeexResampler::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
 {    
+    if (vecfOutput.size() == 0) {
+      cerr << "SpeexResampler::Resample(): zero size output buffer, doing nothing" << endl;
+    }
     size_t iOutputBlockSize = vecfOutput.size();
     if ((rOutput.Size() != int(iOutputBlockSize)) || (GetFreeInputSize()<rInput.size())) {
         cerr << "SpeexResampler::Resample(): initialisation needed" << endl;
         iOutputBlockSize = size_t(rOutput.Size());
         Init(rInput.size(), _REAL(rOutput.Size())/_REAL(rInput.size()));
+        iOutputBlockSize = size_t(rOutput.Size());
     }
 
     for (size_t i = 0; i < GetFreeInputSize(); i++)
@@ -59,12 +63,15 @@ void SpeexResampler::Resample(CVector<_REAL>& rInput, CVector<_REAL>& rOutput)
     }
 
     if (output_frames_gen != iOutputBlockSize)
-        cerr << "SpeexResampler::Resample(): output_frames_gen(" << output_frames_gen << ") != iOutputBlockSize(" << iOutputBlockSize << ")" << endl;
 
     for (size_t i = 0; i < iOutputBlockSize; i++)
         rOutput[int(i)] = _REAL(vecfOutput[i]);
 
     iInputBuffered = input_frames - input_frames_used;
+    if(iInputBuffered>1000000) {
+ 	cerr << "too many input frames" << endl;
+        return;
+    }
     if(iInputBuffered>0) {
         cerr << "resampling buffered " << iInputBuffered << " frames" << endl;
         if(vecfInput.size()<iInputBuffered) {

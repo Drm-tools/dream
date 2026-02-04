@@ -137,7 +137,7 @@ void CTransmitData::FlushData()
 		cerr << "problem writing to sound card" << endl;
 	}
 #else
-        pSound->Write(vecsDataOut);
+        if (pSound) pSound->Write(vecsDataOut);
 #endif
     }
     else

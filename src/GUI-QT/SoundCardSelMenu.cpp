@@ -100,26 +100,35 @@ static const int SignalSampleRateTable[] =
 CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
     CFileMenu* pFileMenu, QWidget* parent) : QMenu(parent),
     trx(ntrx),
-    menuSigInput(nullptr), menuInputDev(nullptr),
-    menuInputSampleRate(nullptr),menuOutputSampleRate(nullptr),
-    menuOutputDev(nullptr),
+    menuInput(nullptr), menuInputDev(nullptr), menuInputSampleRate(nullptr),
+    menuOutput(nullptr), menuOutputDev(nullptr), menuOutputSampleRate(nullptr),
     bReceiver(trx.IsReceiver())
 {
     setTitle(tr("Sound Card"));
 
+    const int *inputSampleRates, *outputSampleRates;
 
-    if (bReceiver)
-    {   /* Receiver */
-        menuSigInput = addMenu(tr("Signal Input"));
-        menuInputDev = menuSigInput->addMenu(tr("Device"));
-        connect(menuInputDev, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInDevice(QAction*)));
+    if (bReceiver) {   /* Receiver */
+        menuInput = addMenu(tr("Signal Input"));
+        menuOutput = addMenu(tr("Audio Output"));
+	inputSampleRates = SignalSampleRateTable;
+	outputSampleRates = AudioSampleRateTable;
+    } else {
+        menuInput = addMenu(tr("Audio Input"));
+        menuOutput = addMenu(tr("Signal Output"));
+	inputSampleRates = AudioSampleRateTable;
+	outputSampleRates = SignalSampleRateTable;
+    }
 
-        QMenu* menuAudOutput = addMenu(tr("Audio Output"));
-        menuOutputDev = menuAudOutput->addMenu(tr("Device"));
+    menuInputDev = menuInput->addMenu(tr("Device"));
+    menuOutputDev = menuOutput->addMenu(tr("Device"));
 
-        menuInputChannel = InitChannel(menuSigInput, tr("Channel"), InputChannelTable);
-        menuOutputChannel = InitChannel(menuAudOutput, tr("Channel"), OutputChannelTable);
-        menuInputSampleRate = InitSampleRate(menuSigInput, tr("Sample Rate"), SignalSampleRateTable);
+    menuInputSampleRate = InitSampleRate(menuInput, tr("Sample Rate"), inputSampleRates);
+    menuOutputSampleRate = InitSampleRate(menuOutput, tr("Sample Rate"), outputSampleRates);
+
+    if (bReceiver) {   /* Receiver */
+        menuInputChannel = InitChannel(menuInput, tr("Channel"), InputChannelTable);
+        menuOutputChannel = InitChannel(menuOutput, tr("Channel"), OutputChannelTable);
 
         connect(menuInputChannel, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInChannel(QAction*)));
         connect(menuOutputChannel, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutChannel(QAction*)));
@@ -145,16 +154,7 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
         connect(&trx, SIGNAL(outputSampleRateChanged(int)), this, SLOT(OnSoundOutSampleRateChanged(int)));
 
         connect(&trx, SIGNAL(soundUpscaleRatioChanged(int)), this, SLOT(OnSoundUpscaleRatioChanged(int)));
-
-        if (pFileMenu != nullptr) {
-            connect(pFileMenu, SIGNAL(soundFileChanged(QString)), this, SLOT(OnSoundFileChanged(QString)));
-        }
     }
-    else
-    {   /* Transmitter */    
-        QMenu* menuAudio = addMenu(tr("Audio Input"));
-        menuInputDev = menuAudio->addMenu(tr("Device"));
-        connect(menuInputDev, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInDevice(QAction*)));
 
         QMenu* menuSignal = addMenu(tr("Signal Output"));
         menuOutputDev = menuSignal->addMenu(tr("Device"));
@@ -163,9 +163,18 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
         connect(InitSampleRate(menuSignal, tr("Sample Rate"), SignalSampleRateTable), SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutSampleRate(QAction*)));
     }
 
+    connect(menuInputDev, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInDevice(QAction*)));
+
     connect(menuOutputDev, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutDevice(QAction*)));
+
+    connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
     connect(this, SIGNAL(soundOutDeviceChanged(QString)), &trx, SLOT(SetOutputDevice(QString)));
+
+    connect(&trx, SIGNAL(InputDeviceChanged(QString)), this, SLOT(OnSoundInDeviceChanged(QString)));
     connect(&trx, SIGNAL(OutputDeviceChanged(QString)), this, SLOT(OnSoundOutDeviceChanged(QString)));
+
+    connect(menuInputSampleRate, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundInSampleRate(QAction*)));
+    connect(menuOutputSampleRate, SIGNAL(triggered(QAction*)), this, SLOT(OnSoundOutSampleRate(QAction*)));
 }
 
 void CSoundCardSelMenu::OnSoundInDevice(QAction* action)
@@ -341,7 +350,7 @@ void CSoundCardSelMenu::OnSoundUpscaleRatioChanged(int upscaleRatio)
 void CSoundCardSelMenu::OnSoundFileChanged(QString filename)
 {
     if(filename == "") {
-        menuSigInput->setEnabled(true);
+        menuInput->setEnabled(true);
         menuInputDev->setEnabled(true);
         menuInputSampleRate->setEnabled(true);
     }
@@ -349,7 +358,7 @@ void CSoundCardSelMenu::OnSoundFileChanged(QString filename)
         FileTyper::type t = FileTyper::resolve(filename.toStdString());
         switch(t) {
         case FileTyper::unrecognised:
-            menuSigInput->setEnabled(true);
+            menuInput->setEnabled(true);
             menuInputDev->setEnabled(true);
             menuInputSampleRate->setEnabled(true);
             break;
@@ -358,7 +367,7 @@ void CSoundCardSelMenu::OnSoundFileChanged(QString filename)
         case FileTyper::raw_af:
         case FileTyper::raw_pft:
         case FileTyper::pcm:
-            // menuSigInput->setEnabled(false);
+            // menuInput->setEnabled(false);
             // menuInputDev->setEnabled(false);
             menuInputSampleRate->setEnabled(false);
         }

@@ -55,15 +55,16 @@ public:
 
 protected:
     CTRx&               trx;
-    QMenu*				menuSigInput;
-    QMenu*				menuInputDev;
-    QMenu*				menuInputSampleRate;
-    QMenu*				menuOutputSampleRate;
-    QMenu*				menuOutputDev;
+    QMenu*		menuInput;
+    QMenu*		menuInputDev;
+    QMenu*		menuInputSampleRate;
     QMenu*              menuInputChannel;
+    QMenu*		menuOutput;
+    QMenu*		menuOutputDev;
+    QMenu*		menuOutputSampleRate;
     QMenu*              menuOutputChannel;
 
-    const bool			bReceiver;
+    const bool		bReceiver;
     QAction*            actionUpscale;
 
     QMenu* InitChannel(QMenu* parent, const QString& text, const CHANSEL* ChanSel);
