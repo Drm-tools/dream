@@ -76,7 +76,8 @@ public slots:
     void OnSoundOutChannel(QAction*);
     void OnSoundInDevice(QAction*);
     void OnSoundOutDevice(QAction*);
-    void OnSoundSampleRate(QAction*);
+    void OnSoundInputSampleRate(QAction*);
+    void OnSoundOutputSampleRate(QAction*);
     void OnSoundSignalUpscale(bool);
     void OnSoundFileChanged(QString);
     // slots connected to signals from receiver
@@ -89,7 +90,8 @@ public slots:
     void OnSoundOutChannelChanged(int chan);
 
 signals:
-    void soundSampleRateChanged(int);
+    void soundInSampleRateChanged(int);
+    void soundOutSampleRateChanged(int);
     void soundInDeviceChanged(QString);
     void soundOutDeviceChanged(QString);
     void soundInChannelChanged(int);
