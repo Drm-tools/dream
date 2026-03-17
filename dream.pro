@@ -4,10 +4,12 @@ TARGET = dream
 OBJECTS_DIR = obj
 DEFINES += EXECUTABLE_NAME=$$TARGET
 LIBS += -L$$PWD/lib
-DEFINES += QT_DISABLE_DEPRECATED_UP_TO=0x060700
 INCLUDEPATH += $$PWD/include
-contains(QT_VERSION, ^6\\..*) {
-    VERSION_MESSAGE = Qt 6
+contains(QT_VERSION, ^4\\..*) {
+    VERSION_MESSAGE = Qt 4
+}
+contains(QT_VERSION, ^5\\..*) {
+    VERSION_MESSAGE = Qt 5
 }
 CONFIG(debug, debug|release) {
     DEBUG_MESSAGE = debug
@@ -20,6 +22,7 @@ console {
     UI_MESSAGE = console mode
     VERSION_MESSAGE = No Qt
     SOURCES += src/main.cpp
+	DEFINES += NO_QT
 	unix:!cross_compile {
 		HEADERS += src/linux/ConsoleIO.h
 		SOURCES += src/linux/ConsoleIO.cpp
@@ -27,23 +30,17 @@ console {
 		message("with terminal user interface")
 	}
 }
-qtconsole {
-    QT -= gui
-    QT += xml network core5compat
-    UI_MESSAGE = console mode
-    SOURCES += src/main-Qt/main.cpp
-	unix:!cross_compile {
-		HEADERS += src/linux/ConsoleIO.h
-		SOURCES += src/linux/ConsoleIO.cpp
-		message("with terminal user interface")
-	}
-}
 contains(QT,gui) {
     UI_MESSAGE = GUI mode
     RESOURCES = src/GUI-QT/res/icons.qrc
-    QT += network xml widgets core5compat
+    QT += network xml widgets
     INCLUDEPATH += src/GUI-QT
     VPATH += src/GUI-QT
+    win32 {
+        RC_FILE = windows/dream.rc
+        RC_INCLUDEPATH = $$PWD/src/GUI-QT/res
+    }
+    macx:RC_FILE = src/GUI-QT/res/macicons.icns
     CONFIG += qwt
     UI_DIR = ui
     MOC_DIR = moc
@@ -128,10 +125,48 @@ unix {
     message(building on $$UNAME for this platform)
   }
 }
+macx {
+    contains(QT, core) {
+        QT += webenginewidgets
+        !sound {
+            QT += multimedia
+            CONFIG += sound
+        }
+    }
+    QT_CONFIG -= no-pkg-config
+    PKG_CONFIG = /usr/local/bin/pkg-config
+    INCLUDEPATH += /usr/local/include
+    LIBS += -L/usr/local/lib
+    QMAKE_LFLAGS += -F/usr/local/lib
+    LIBS += -framework CoreFoundation -framework CoreServices -lpcap
+    LIBS += -framework CoreAudio -framework AudioToolbox -framework AudioUnit
+    DEFINES += HAVE_LIBPCAP
+    packagesExist(sndfile) {
+        CONFIG += sndfile
+    }
+    packagesExist(hamlib) {
+        CONFIG += hamlib
+    }
+    packagesExist(speex) {
+        CONFIG += libspeexdsp
+    }
+    packagesExist(libgps) {
+        CONFIG += gps
+    }
+    packagesExist(fdk-aac) {
+        CONFIG += fdk-aac
+    }
+}
 linux-* {
   LIBS += -ldl -lrt
 }
-
+android {
+    CONFIG += sound fdk-aac
+    SOURCES += src/android/platform_util.cpp src/android/soundin.cpp src/android/soundout.cpp
+    HEADERS += src/android/platform_util.h src/android/soundin.h src/android/soundout.h
+    QT -= webkitwidgets
+    QT += svg multimedia
+}
 unix {
     target.path = /usr/bin
     documentation.path = /usr/share/man/man1
@@ -139,6 +174,7 @@ unix {
     INSTALLS += documentation
     INSTALLS += target
     CONFIG += link_pkgconfig fdk-aac
+    PKGCONFIG += fdk-aac
     LIBS += -lfftw3 -lz
     SOURCES += src/linux/Pacer.cpp
     DEFINES += HAVE_DLFCN_H \
@@ -158,20 +194,14 @@ unix {
 unix:!cross_compile {
     DEFINES += HAVE_LIBPCAP
     LIBS += -lpcap
-    !sound {
-         # check for pulseaudio before portaudio
-         exists(/usr/include/pulse/pulseaudio.h) | \
-         exists(/usr/local/include/pulse/pulseaudio.h) {
-         #packagesExist(libpulse)
-          CONFIG += pulseaudio sound
-         }
-         else {
-           exists(/usr/include/portaudio.h) | \
-           exists(/usr/local/include/portaudio.h) {
-           #packagesExist(portaudio-2.0)
-              CONFIG += portaudio sound
-           }
-        }
+    packagesExist(libpulse) {
+        CONFIG += pulseaudio sound
+    }
+    packagesExist(portaudio-2.0) {
+        CONFIG += portaudio sound
+    }
+    packagesExist(jack) {
+        CONFIG += jack sound
     }
     qt5|contains(QT_VERSION, ^4\\.8.*) {
       packagesExist(sndfile) {
@@ -181,9 +211,6 @@ unix:!cross_compile {
         CONFIG += hamlib
       }
       packagesExist(libgps) {
-        CONFIG += gps
-      }
-      packagesExist(gpsd) {
         CONFIG += gps
       }
       packagesExist(opus) {
@@ -215,13 +242,51 @@ unix:!cross_compile {
        CONFIG += speexdsp
       }
     }
-
 }
-
+packagesExist(SoapySDR) | exists(include/SoapySDR) {
+       CONFIG += soapysdr
+}
+win32 {
+  CONFIG += fdk-aac
+  LIBS += -lwpcap -lpacket -lmincore -lzlib -lfftw3 -lsetupapi -ldl
+  DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
+  SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
+  HEADERS += src/windows/platform_util.h
+  contains(QT,multimedia) {
+	CONFIG += sound
+  }
+  else {
+    HEADERS += src/windows/Sound.h
+    SOURCES += src/windows/Sound.cpp
+    LIBS += -lwinmm
+    message("with mmsystem")
+	CONFIG += sound
+  }
+  win32-g++ {
+	LIBS += -lz
+  }
+  else {
+	DEFINES += NOMINMAX
+	QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmt.lib
+	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
+	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmt.lib
+  }
+  exists($$PWD/include/speex/speex_preprocess.h) {
+    CONFIG += speexdsp
+  }
+  exists($$PWD/include/hamlib/rig.h) {
+    CONFIG += hamlib
+  }
+  exists($$PWD/include/sndfile.h) {
+    CONFIG += sndfile
+  }
+  exists($$PWD/include/opus/opus.h) {
+    CONFIG += opus
+  }
+}
 fdk-aac {
      DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
      LIBS += -lfdk-aac
-     LIBS += -L/usr/lib64/fdk-aac -lfdk-aac
      HEADERS += src/sourcedecoders/fdk_aac_codec.h
      SOURCES += src/sourcedecoders/fdk_aac_codec.cpp
      message("with fdk-aac")
@@ -229,11 +294,20 @@ fdk-aac {
 opus {
     DEFINES += HAVE_LIBOPUS USE_OPUS_LIBRARY
     unix:LIBS += -lopus
+    win32 {
+        CONFIG(debug, debug|release) {
+            LIBS += -lopusd
+        }
+        CONFIG(release, debug|release) {
+            LIBS += -lopus
+        }
+    }
      message("with opus")
 }
 sndfile {
      DEFINES += HAVE_LIBSNDFILE
-     unix:LIBS += -lsndfile1
+     LIBS += -lsndfile
+     win32:LIBS += -lvorbisenc -lvorbis -lFLAC -logg
      message("with libsndfile")
 }
 speexdsp {
@@ -248,7 +322,8 @@ gps {
 }
 hamlib {
      DEFINES += HAVE_LIBHAMLIB
-     unix:LIBS += -lhamlib
+     macx:LIBS += -framework IOKit
+     !macx:LIBS += -lhamlib
      HEADERS += src/util/Hamlib.h
      SOURCES += src/util/Hamlib.cpp
      contains(QT,core) {
@@ -264,7 +339,19 @@ hamlib {
 }
 qwt {
     message("with Qwt")
-    QT += svg
+    macx {
+        INCLUDEPATH += /Library/Frameworks/qwt.framework/Headers
+        LIBS += -framework qwt
+    }
+    win32 {
+        INCLUDEPATH += $$PWD/include/qwt
+        CONFIG(debug, debug|release) {
+            LIBS += -lqwtd
+        }
+        CONFIG(release, debug|release) {
+            LIBS += -lqwt
+        }
+    }
     unix!macx {
         # unix | win release
         LIBS += -lqwt-qt5
@@ -282,7 +369,7 @@ alsa {
     DEFINES += USE_ALSA
     HEADERS += src/linux/alsain.h src/linux/alsaout.h src/linux/alsacommon.h
     SOURCES += src/linux/alsain.cpp src/linux/alsaout.cpp src/linux/alsacommon.cpp
-    LIBS += -lasound
+    PKG_CONFIG += alsa
     message("with alsa")
 }
 portaudio {
@@ -300,14 +387,33 @@ pulseaudio {
     HEADERS += src/sound/drm_pulseaudio.h
     SOURCES += src/sound/drm_pulseaudio.cpp
     unix {
-        PKGCONFIG += libpulse
+        macx {
+            INCLUDEPATH += /usr/local/Cellar/pulseaudio/12.2/include
+            LIBS += -L/usr/local/Cellar/pulseaudio/12.2/lib -lpulse
+        }
+        else {
+            PKGCONFIG += libpulse
+        }
     }
     else {
         LIBS += -lpulse
     }
     message("with pulseaudio")
 }
-
+jack {
+    DEFINES += USE_JACK
+    PKG_CONFIG += jack
+    HEADERS += src/linux/jack.h
+    SOURCES += src/linux/jack.cpp
+    message("with jack")
+}
+soapysdr {
+    DEFINES += USE_SOAPYSDR
+	HEADERS += src/sound/drm_soapySDR.h
+	SOURCES += src/sound/drm_soapySDR.cpp
+    LIBS += -lSoapySDR
+    message("with SoapySDR")
+}
 
 HEADERS += \
     src/AMDemodulation.h \
@@ -441,8 +547,8 @@ HEADERS += \
     src/sourcedecoders/reverb.h \
     src/sourcedecoders/caudioreverb.h \
     src/tuner.h \
-    src/sound/soundinterfacefactory.h \
-    src/MDI/PacketSocketHTTP.h
+    src/sound/soundfactory.h
+
 SOURCES += \
     src/AMDemodulation.cpp \
     src/AMSSDemodulation.cpp \
@@ -547,8 +653,6 @@ SOURCES += \
     src/Version.cpp \
     src/sound/soundnull.cpp \
     src/DrmTransceiver.cpp \
-    src/sound/soundinterface.cpp \
-    src/sound/selectioninterface.cpp \
     src/MSC/logicalframe.cpp \
     src/MSC/audiosuperframe.cpp \
     src/MSC/aacsuperframe.cpp \
@@ -560,8 +664,7 @@ SOURCES += \
     src/sourcedecoders/reverb.cpp \
     src/sourcedecoders/caudioreverb.cpp \
     src/tuner.cpp \
-    src/sound/soundinterfacefactory.cpp \
-    src/MDI/PacketSocketHTTP.cpp
+    src/sound/soundfactory.cpp
 
 contains(QT,core) {
     HEADERS += \
@@ -571,7 +674,9 @@ contains(QT,core) {
         src/util-QT/Util.h \
         src/main-Qt/ctrx.h \
         src/main-Qt/crx.h \
-        src/main-Qt/ctx.h
+        src/main-Qt/ctx.h \
+		src/MDI/PacketSocketHTTP.h
+    unix!macx:HEADERS += src/linux/ConsoleIO.h
 
     SOURCES += \
         src/GUI-QT/Logging.cpp \
@@ -580,13 +685,99 @@ contains(QT,core) {
         src/util-QT/Util.cpp \
         src/main-Qt/ctrx.cpp \
         src/main-Qt/crx.cpp \
-        src/main-Qt/ctx.cpp
+        src/main-Qt/ctx.cpp \
+		src/MDI/PacketSocketHTTP.cpp
+	unix!macx:SOURCES += src/linux/ConsoleIO.cpp
 }
 !sound {
     error("no usable audio interface found - install pulseaudio or portaudio dev package")
 }
 
 OTHER_FILES += \
-
+    android/AndroidManifest.xml \
+    android/res/layout/splash.xml \
+    android/res/values/libs.xml \
+    android/res/values/strings.xml \
+    android/res/values-de/strings.xml \
+    android/res/values-el/strings.xml \
+    android/res/values-es/strings.xml \
+    android/res/values-et/strings.xml \
+    android/res/values-fa/strings.xml \
+    android/res/values-fr/strings.xml \
+    android/res/values-id/strings.xml \
+    android/res/values-it/strings.xml \
+    android/res/values-ja/strings.xml \
+    android/res/values-ms/strings.xml \
+    android/res/values-nb/strings.xml \
+    android/res/values-nl/strings.xml \
+    android/res/values-pl/strings.xml \
+    android/res/values-pt-rBR/strings.xml \
+    android/res/values-ro/strings.xml \
+    android/res/values-rs/strings.xml \
+    android/res/values-ru/strings.xml \
+    android/res/values-zh-rCN/strings.xml \
+    android/res/values-zh-rTW/strings.xml \
+    android/src/org/kde/necessitas/ministro/IMinistro.aidl \
+    android/src/org/kde/necessitas/ministro/IMinistroCallback.aidl \
+    android/src/org/qtproject/qt5/android/bindings/QtActivity.java \
+    android/src/org/qtproject/qt5/android/bindings/QtApplication.java \
+    android/version.xml \
+    android/AndroidManifest.xml \
+    android/res/layout/splash.xml \
+    android/res/values/libs.xml \
+    android/res/values/strings.xml \
+    android/res/values-de/strings.xml \
+    android/res/values-el/strings.xml \
+    android/res/values-es/strings.xml \
+    android/res/values-et/strings.xml \
+    android/res/values-fa/strings.xml \
+    android/res/values-fr/strings.xml \
+    android/res/values-id/strings.xml \
+    android/res/values-it/strings.xml \
+    android/res/values-ja/strings.xml \
+    android/res/values-ms/strings.xml \
+    android/res/values-nb/strings.xml \
+    android/res/values-nl/strings.xml \
+    android/res/values-pl/strings.xml \
+    android/res/values-pt-rBR/strings.xml \
+    android/res/values-ro/strings.xml \
+    android/res/values-rs/strings.xml \
+    android/res/values-ru/strings.xml \
+    android/res/values-zh-rCN/strings.xml \
+    android/res/values-zh-rTW/strings.xml \
+    android/src/org/kde/necessitas/ministro/IMinistro.aidl \
+    android/src/org/kde/necessitas/ministro/IMinistroCallback.aidl \
+    android/src/org/qtproject/qt5/android/bindings/QtActivity.java \
+    android/src/org/qtproject/qt5/android/bindings/QtApplication.java \
+    android/version.xml \
+    android/src/org/kde/necessitas/ministro/IMinistro.aidl \
+    android/src/org/kde/necessitas/ministro/IMinistroCallback.aidl \
+    android/src/org/qtproject/qt5/android/bindings/QtActivity.java \
+    android/src/org/qtproject/qt5/android/bindings/QtApplication.java \
+    android/version.xml \
+    android/res/values-es/strings.xml \
+    android/res/values-id/strings.xml \
+    android/res/values-ja/strings.xml \
+    android/res/values-nl/strings.xml \
+    android/res/values-rs/strings.xml \
+    android/res/values-de/strings.xml \
+    android/res/values-pt-rBR/strings.xml \
+    android/res/values-et/strings.xml \
+    android/res/layout/splash.xml \
+    android/res/values-it/strings.xml \
+    android/res/values-nb/strings.xml \
+    android/res/values-ro/strings.xml \
+    android/res/values-zh-rCN/strings.xml \
+    android/res/values-zh-rTW/strings.xml \
+    android/res/values-ru/strings.xml \
+    android/res/values-fa/strings.xml \
+    android/res/values-fr/strings.xml \
+    android/res/values-ms/strings.xml \
+    android/res/values-el/strings.xml \
+    android/res/values/libs.xml \
+    android/res/values/strings.xml \
+    android/res/values-pl/strings.xml \
+    android/AndroidManifest.xml \
+    windows/dream.iss
 
 message('Qt modules $$QT')

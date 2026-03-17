@@ -16,6 +16,7 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         arch: [x64]
+        qt: [5,6]
 
     steps:
     - name: Checkout code
@@ -31,10 +32,21 @@ jobs:
         sudo apt-get install -y \
           libhamlib-dev libpulse-dev libfftw3-dev libopus-dev libsndfile-dev \
           zlib1g-dev libspeexdsp-dev libgps-dev libpcap-dev libsoapysdr-dev \
-          libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5 \
-          qtbase5-dev qtbase5-dev-tools qt5-qmake build-essential \
           debhelper qtchooser fakeroot git2cl \
-          libjack-jackd2-dev libasound2-dev
+          libjack-jackd2-dev libasound2-dev build-essential 
+
+    - name: Install dependencies (Qt)
+      run: |
+        if [ ${{ matrix.qt }} -eq 5 ]; then
+          sudo apt-get install -y \
+          libqwt-qt5-dev libqt5svg5-dev libqt5opengl5-dev libqt5gui5 libqt5widgets5 \
+          qtbase5-dev qtbase5-dev-tools qt5-qmake 
+          
+        else
+          sudo apt-get install -y \
+          libqwt-qt6-dev libqt6svg6-dev libqt6opengl6-dev libqt6gui6-dev libqt6widgets6-dev \
+          qtbase6-dev qtbase6-dev-tools qt6-qmake 
+        fi
 
     - name: Install dependencies (vcpkg)
       if: matrix.arch == 'x64'
@@ -67,21 +79,6 @@ jobs:
         tar xf ../dream_${{ github.run_id }}.orig.tar.gz
         dpkg-buildpackage -us -uc -b
         cd ..
-        mkdir artifacts
-        mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
+        mkdir artifacts_${{ matrix.qt }} }}
+        mv dream_${RELEASE_TAG}_${ARCH}.deb artifacts_${{ matrix.qt }}/dream_${{ github.run_id }}_${ARCH}_${{ matrix.os }}.deb
 
-    - name: Upload artifact
-      if: ${{ github.event_name == 'push' }}
-      uses: actions/upload-artifact@v4
-      with:
-        name: dream_${{ env.ARCH}}_${{ matrix.os }}
-        path: artifacts
-    
-    - name: Upload release binaries
-      if: ${{ github.event_name == 'release' }}
-      uses: svenstaro/upload-release-action@v2
-      with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        file: artifacts/*
-        file_glob: true
-        tag: ${{ github.ref }}
