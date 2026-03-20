@@ -6,6 +6,7 @@ DEFINES += EXECUTABLE_NAME=$$TARGET
 LIBS += -L$$PWD/lib
 DEFINES += QT_DISABLE_DEPRECATED_UP_TO=0x060700
 INCLUDEPATH += $$PWD/include
+INCLUDEPATH += $$PWD/src
 contains(QT_VERSION, ^6\\..*) {
     VERSION_MESSAGE = Qt 6
 }
@@ -45,7 +46,7 @@ contains(QT,gui) {
     UI_MESSAGE = GUI mode
     RESOURCES = src/GUI-QT/res/icons.qrc
     QT += network xml widgets
-     greaterThan(QT_MAJOR_VERSION, 5) {
+    greaterThan(QT_MAJOR_VERSION, 5) {
         QT += core5compat         
     }
    INCLUDEPATH += src/GUI-QT

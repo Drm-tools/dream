@@ -55,17 +55,15 @@
 # include <qwt_global.h>
 #endif
 #ifdef USE_OPUS_LIBRARY
-# include "../sourcedecoders/opus_codec.h"
+# include "sourcedecoders/opus_codec.h"
 #endif
 #ifdef USE_FAAD2_LIBRARY
 # include <neaacdec.h>
 #else
-# include "../sourcedecoders/neaacdec_dll.h"
+# include "sourcedecoders/neaacdec_dll.h"
 #endif
 #ifdef HAVE_LIBFDK_AAC
-//for CMake:
 # include "sourcedecoders/fdk_aac_codec.h"
-//#include "src/sourcedecoders/fdk_aac_codec.h"
 #endif
 #ifdef USE_ALSA
 # include <alsa/version.h>
