@@ -5,11 +5,12 @@ OBJECTS_DIR = obj
 DEFINES += EXECUTABLE_NAME=$$TARGET
 LIBS += -L$$PWD/lib
 INCLUDEPATH += $$PWD/include
-contains(QT_VERSION, ^4\\..*) {
-    VERSION_MESSAGE = Qt 4
-}
+INCLUDEPATH += $$PWD/src
 contains(QT_VERSION, ^5\\..*) {
     VERSION_MESSAGE = Qt 5
+INCLUDEPATH += $$PWD/src
+contains(QT_VERSION, ^6\\..*) {
+    VERSION_MESSAGE = Qt 6
 }
 CONFIG(debug, debug|release) {
     DEBUG_MESSAGE = debug
@@ -30,11 +31,28 @@ console {
 		message("with terminal user interface")
 	}
 }
+qtconsole {
+    QT -= gui
+    QT += xml network
+    greaterThan(QT_MAJOR_VERSION, 5) {
+        QT += core5compat         
+    }
+    UI_MESSAGE = console mode
+    SOURCES += src/main-Qt/main.cpp
+	unix:!cross_compile {
+		HEADERS += src/linux/ConsoleIO.h
+		SOURCES += src/linux/ConsoleIO.cpp
+		message("with terminal user interface")
+	}
+}
 contains(QT,gui) {
     UI_MESSAGE = GUI mode
     RESOURCES = src/GUI-QT/res/icons.qrc
     QT += network xml widgets
-    INCLUDEPATH += src/GUI-QT
+    greaterThan(QT_MAJOR_VERSION, 5) {
+        QT += core5compat         
+    }
+   INCLUDEPATH += src/GUI-QT
     VPATH += src/GUI-QT
     win32 {
         RC_FILE = windows/dream.rc
