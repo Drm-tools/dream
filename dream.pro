@@ -29,7 +29,10 @@ console {
 }
 qtconsole {
     QT -= gui
-    QT += xml network core5compat
+    QT += xml network
+    greaterThan(QT_MAJOR_VERSION, 5) {
+        QT += core5compat         
+    }
     UI_MESSAGE = console mode
     SOURCES += src/main-Qt/main.cpp
 	unix:!cross_compile {
@@ -41,8 +44,11 @@ qtconsole {
 contains(QT,gui) {
     UI_MESSAGE = GUI mode
     RESOURCES = src/GUI-QT/res/icons.qrc
-    QT += network xml widgets core5compat
-    INCLUDEPATH += src/GUI-QT
+    QT += network xml widgets
+     greaterThan(QT_MAJOR_VERSION, 5) {
+        QT += core5compat         
+    }
+   INCLUDEPATH += src/GUI-QT
     VPATH += src/GUI-QT
     CONFIG += qwt
     UI_DIR = ui
