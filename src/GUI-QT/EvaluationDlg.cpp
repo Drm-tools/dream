@@ -762,7 +762,7 @@ void systemevalDlg::UpdateGPS(CParameter& Parameters)
         #else
                 check_gps_status = gps.status;
         #endif
-        if (check_gps_status == STATUS_NO_FIX)
+        if (check_gps_status == STATUS_UNK)
             LEDGPS->SetLight(CMultColorLED::RL_YELLOW);
         else
             LEDGPS->SetLight(CMultColorLED::RL_GREEN);

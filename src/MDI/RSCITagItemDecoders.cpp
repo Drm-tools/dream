@@ -173,7 +173,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     case 1:
         gps_data.set=STATUS_SET;
         #if defined(GPSD_API_MAJOR_VERSION) && GPSD_API_MAJOR_VERSION >= 10
-                gps_data.fix.status = STATUS_FIX;
+                gps_data.fix.status = STATUS_GPS;
         #else
                 gps_data.status = 1;
         #endif
@@ -181,7 +181,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     case 2:
         gps_data.set=STATUS_SET;
         #if defined(GPSD_API_MAJOR_VERSION) && GPSD_API_MAJOR_VERSION >= 10
-                gps_data.fix.status = STATUS_DGPS_FIX;
+                gps_data.fix.status = STATUS_DGPS;
         #else
                 gps_data.status = 2;
         #endif
@@ -189,7 +189,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     case 3:
         gps_data.set=STATUS_SET;
         #if defined(GPSD_API_MAJOR_VERSION) && GPSD_API_MAJOR_VERSION >= 10
-                gps_data.fix.status = STATUS_NO_FIX;
+                gps_data.fix.status = STATUS_UNK;
         #else
                 gps_data.status = 0;
         #endif
@@ -197,7 +197,7 @@ void CTagItemDecoderRgps::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)
     case 0xff:
         gps_data.set=0;
         #if defined(GPSD_API_MAJOR_VERSION) && GPSD_API_MAJOR_VERSION >= 10
-                gps_data.fix.status = STATUS_NO_FIX;
+                gps_data.fix.status = STATUS_UNK;
         #else
                 gps_data.status = 0;
         #endif

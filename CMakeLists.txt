@@ -110,17 +110,27 @@ if(UNIX)
                             HAVE_INTTYPES_H HAVE_SYS_STAT_H HAVE_SYS_TYPES_H HAVE_UNISTD_H
                             HAVE_LIBZ)
     list(APPEND CMAKE_REQUIRED_LIBRARIES dl rt)
-    	find_package(FFTW3 REQUIRED)
+	# find_package(FFTW3) doesn't work on Debian 13 (Devuan 6)
+	# pkg_check_modules(FFTW3) doesn't work on Fedora 43
+    find_package(FFTW3 QUIET)
 	if(FFTW3_FOUND)
-    list(APPEND INCLUDE_DIRS ${FFTW3_INCLUDE_DIRS})
-    list(APPEND EXTRA_LIBS ${FFTW3_LIBRARIES})
+		message(STATUS "FFTW3 via find_package")
+		list(APPEND INCLUDE_DIRS ${FFTW3_INCLUDE_DIRS})
+		list(APPEND EXTRA_LIBS ${FFTW3_LIBRARIES})
+    		#this should be list(APPEND EXTRA_LIBS FFTW3::fftw3) but it doesn't work on Fedora 43
+	else()
+		message(STATUS "FFTW3 via pkg-config")
+		pkg_check_modules(FFTW REQUIRED fftw3)
+		list(APPEND INCLUDE_DIRS ${FFTW_INCLUDE_DIRS})
+		list(APPEND EXTRA_LIBS ${FFTW_LIBRARIES})
+		#list(APPEND EXTRA_LIBS PkgConfig::FFTW)
 	endif()
 	find_package(ZLIB REQUIRED)
     list(APPEND EXTRA_LIBS ZLIB::ZLIB)
 endif()
 
 if(${CMAKE_SYSTEM_NAME} MATCHES "Linux" OR ${CMAKE_SYSTEM_NAME} MATCHES "linux")
-    list(APPEND EXTRA_LIBS "-ldl" "-lrt")
+    list(APPEND EXTRA_LIBS dl rt)
 endif()
 
 
@@ -307,10 +317,11 @@ if(ENABLE_GPS)
     message(STATUS "with gps")
 endif()
 
-
-include_directories(${INCLUDE_DIRS})
+# might not needed
+#include_directories(${INCLUDE_DIRS})
+#include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR})
-include_directories(${CMAKE_SOURCE_DIR}/include)
+
 
 set(ALL_SOURCES ${SOURCE_FILES})
 
