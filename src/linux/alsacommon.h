@@ -82,6 +82,8 @@ public:
 };
 #endif
 
+bool pipewirePresent();
+
 void enumerate(std::vector<std::string>& names, std::vector<std::string>& descriptions, std::string& defaultDevice, snd_pcm_stream_t direction);
 std::string checkName(std::vector<std::string> names, std::string sCurrentDevice);
 snd_pcm_t* Init_hw(snd_pcm_uframes_t period_size, int iSampleRate, std::string name, snd_pcm_stream_t direction);

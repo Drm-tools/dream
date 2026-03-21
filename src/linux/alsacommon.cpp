@@ -76,7 +76,7 @@ snd_pcm_t* Init_hw(snd_pcm_uframes_t period_size, int iSampleRate, string name, 
     snd_pcm_uframes_t buffer_size;
     snd_pcm_t* handle;
 
-    std::string devName = pipewirePresent() ? "default" : name;
+    std::string devName = pipewirePresent() ? "pipewire" : name;
     std::cerr << "Init_hw: using ALSA device '" << devName << "'\n";
 
     err = snd_pcm_open(&handle, devName.c_str(), direction, 0);

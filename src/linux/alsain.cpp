@@ -221,7 +221,10 @@ void CSoundInAlsa::Init_HW() {
         if(names[i] == sCurrentDevice) found = true;
     }
     if(!found) sCurrentDevice = names[names.size()-1];
-    err = snd_pcm_open( &handle, sCurrentDevice.c_str(), SND_PCM_STREAM_CAPTURE, 0 );
+    
+    std::string devName = pipewirePresent() ? "pipewire" : sCurrentDevice;
+    qDebug("Opening ALSA device: %s", devName.c_str());
+    err = snd_pcm_open( &handle, devName.c_str(), SND_PCM_STREAM_CAPTURE, 0 );
     if ( err != 0)
     {
         qDebug("open error: %s", snd_strerror(err));
