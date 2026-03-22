@@ -96,7 +96,7 @@ jobs:
 
     - name: Build
       run: |
-        cmake .
+        cmake . -DCMAKE_TOOLCHAIN_FILE=$Env:VCPKG_INSTALLATION_ROOT\scripts\buildsystems\vcpkg.cmake
         nmake
         qmake "CONFIG+=console"
         nmake
