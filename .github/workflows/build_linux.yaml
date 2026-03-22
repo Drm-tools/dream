@@ -41,6 +41,7 @@ jobs:
       run: |
        vcpkg install --triplet ${{ matrix.arch }}-linux fdk-aac[he-aac]
        echo "PKG_CONFIG_PATH=$VCPKG_INSTALLATION_ROOT/installed/${{ matrix.arch }}-linux/lib/pkgconfig:$PKG_CONFIG_PATH" >> $GITHUB_ENV
+       ls $VCPKG_INSTALLATION_ROOT/installed/${{ matrix.arch }}-linux/lib/pkgconfig
        pkg-config --cflags fdk-aac
 
     - name: changelog
