@@ -57,11 +57,6 @@
 #ifdef USE_OPUS_LIBRARY
 # include "sourcedecoders/opus_codec.h"
 #endif
-#ifdef USE_FAAD2_LIBRARY
-# include <neaacdec.h>
-#else
-# include "sourcedecoders/neaacdec_dll.h"
-#endif
 #ifdef HAVE_LIBFDK_AAC
 # include "sourcedecoders/fdk_aac_codec.h"
 #endif
@@ -185,13 +180,6 @@ CAboutDlg::CAboutDlg(QWidget* parent):
 #endif
 #ifdef HAVE_LIBFDK_AAC
 		"<li><b>fdk-aac decoder</b> (" + fdk.DecGetVersion().c_str() + ") <i>https://www.iis.fraunhofer.de/en/ff/amm/impl.html</i></li>"
-#endif
-#if USE_FAAD2_LIBRARY
-		"<li><b>FAAD2</b> (" + QString(FAAD2_VERSION) + ") <i>AAC/HE-AAC/HE-AACv2/DRM decoder "
-		"(c) Ahead Software, www.nero.com (http://faac.sf.net)</i></li>"
-#endif
-#ifdef USE_FAAC_LIBRARY
-		"<li><b>FAAC</b> <i>http://faac.sourceforge.net</i></li>"
 #endif
 #ifdef USE_OPUS_LIBRARY
 		"<li><b>" + QString(OPUS_DESCRIPTION) + "</b> (" + QString(opusGetVersion()) + ") <i>" + QString(OPUS_WEBSITE_LINK) + "</i></li>"

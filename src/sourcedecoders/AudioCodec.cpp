@@ -28,7 +28,6 @@
 
 #include "AudioCodec.h"
 #include "null_codec.h"
-#include "aac_codec.h"
 #include "opus_codec.h"
 #ifdef HAVE_LIBFDK_AAC
 # include "fdk_aac_codec.h"
@@ -64,7 +63,6 @@ CAudioCodec::InitCodecList()
 cerr<<"Adding FDK codec"<<endl;
         CodecList.push_back(new FdkAacCodec);
 #endif
-        CodecList.push_back(new AacCodec);
 
 		/* Opus */
 		CodecList.push_back(new OpusCodec);

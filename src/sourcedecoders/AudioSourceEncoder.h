@@ -67,10 +67,12 @@ public:
         switch (eAudCod)
         {
         case CAudioParam::AC_NONE: return true;
-        case CAudioParam::AC_AAC:  return bCanEncodeAAC;
+        case CAudioParam::AC_AAC:  
+        bCanEncodeAAC = true;
+        return true;
         case CAudioParam::AC_OPUS: return bCanEncodeOPUS;
-        case CAudioParam::AC_MPEGAAC: return bCanEncodeAAC; /* test: probably needed for SBR */
-        case CAudioParam::AC_xHE_AAC: return false; /*xHE-AAC encoding isn't supported by FDK-aac or FAAC*/
+        case CAudioParam::AC_MPEGAAC: return false;
+        case CAudioParam::AC_xHE_AAC: return false; /*xHE-AAC encoding isn't supported by FDK AAC*/
         case CAudioParam::AC_RESERVED: return false;
         }
         return false;
