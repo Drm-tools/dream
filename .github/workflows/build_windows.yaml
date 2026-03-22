@@ -37,7 +37,7 @@ jobs:
     - name: Install Qt
       uses: jurplel/install-qt-action@v4
       with:
-        version: '5.12.4'
+        version: '6.2.4'
 
     - name: Checkout code
       uses: actions/checkout@v4
@@ -96,6 +96,8 @@ jobs:
 
     - name: Build
       run: |
+        cmake
+        nmake
         qmake "CONFIG+=console"
         nmake
         copy release/dream.exe cdream.exe
