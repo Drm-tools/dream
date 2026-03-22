@@ -35,7 +35,7 @@ function(dream_enable_portaudio target)
 endfunction()
 
 function(dream_enable_pulseaudio target)
-    pkg_check_modules(PULSE REQUIRED libpulse)
+    find_package(PULSEAUDIO REQUIRED)
 
     target_compile_definitions(${target} PRIVATE USE_PULSEAUDIO)
 
