@@ -61,7 +61,7 @@ jobs:
     - name: Package
       run: |
         pkg-config --cflags fdk-aac
-        ls /usr/local/share/vcpkg/installed/x64-linux/lib/pkgconfig/../../include
+        ls /usr/local/share/vcpkg/installed/x64-linux/lib/pkgconfig/../../include/fdk-aac
         tar zcf dream_${{ github.run_id }}.orig.tar.gz AUTHORS COPYING ChangeLog DreamTests INSTALL NEWS README TODO dream.pro libs linux src
         mkdir build
         cp -r debian build
