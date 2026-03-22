@@ -100,7 +100,7 @@ function(dream_configure_backend target)
     endif()
 
     # Safety check
-if(NOT ENABLE_ALSA AND NOT ENABLE_PORTAUDIO AND
+if(UNIX AND NOT ENABLE_ALSA AND NOT ENABLE_PORTAUDIO AND
    NOT ENABLE_PULSEAUDIO AND NOT ENABLE_SOAPYSDR AND
    NOT ENABLE_JACK)
     message(FATAL_ERROR "No audio backend enabled")
