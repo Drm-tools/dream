@@ -96,7 +96,7 @@ jobs:
 
     - name: Build
       run: |
-        cmake
+        cmake .
         nmake
         qmake "CONFIG+=console"
         nmake
