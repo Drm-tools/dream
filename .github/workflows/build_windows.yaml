@@ -58,7 +58,7 @@ jobs:
 
     - name: Install dependencies with vcpkg
       run: |
-        vcpkg --triplet x64-windows install pkgconfig fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp soapysdr
+        vcpkg --triplet x64-windows install pkgconf fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp soapysdr
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
