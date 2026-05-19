@@ -10,21 +10,18 @@ Currently this program is tested on Fedora 43, Debian 13 and Arch Linux.
 
 Debian and RPM packages are in the works, I'll probably release a pre-alpha in the near future (transmitter part is broken without patched codecs)
 # Prerequisites (Qt6)
-## Debian 13: 
+## Debian Unstable (sid): 
 > [!IMPORTANT]
-> Enable the experimental repo: https://wiki.debian.org/DebianExperimental \
 > Enable the contrib and non-free repos: https://wiki.debian.org/SourcesList#debian.sources 
 
 ### Install the following packages:
 ```sh
-sudo apt-get install git build-essential cmake cmake-qt-gui qt6-base-dev qt6-base-dev-tools qt6-networkauth-dev qt6-declarative-dev qt6-declarative-dev-tools libqt6network6 qt6-webengine-dev libgps-dev libsndfile-dev libpcap-dev libfftw3-dev libfaad-dev libfaac-dev libpulse-dev libhamlib-dev libfdk-aac-dev libspeexdsp-dev speex libspeexdsp1 libsoapysdr-dev portaudio19-dev gpsd pipewire-alsa
+sudo apt-get install git build-essential cmake cmake-qt-gui qt6-base-dev qt6-base-dev-tools qt6-networkauth-dev qt6-declarative-dev qt6-declarative-dev-tools libqt6network6 qt6-webengine-dev libgps-dev libsndfile-dev libpcap-dev libfftw3-dev libfaad-dev libfaac-dev libpulse-dev libhamlib-dev libfdk-aac-dev libspeexdsp-dev speex libspeexdsp1 libsoapysdr-dev portaudio19-dev gpsd pipewire-alsa libqwt-qt6-dev
 ```
 ```sh
 sudo apt-get install libqt6svg6*
 ```
-```sh
-sudo apt -t experimental install libqwt-qt6-dev
-```
+
 ## Fedora 42/43: 
 > [!IMPORTANT]
 > Enable RPM Fusion at https://rpmfusion.org/Configuration \
@@ -37,12 +34,11 @@ sudo dnf in g++ opus-devel libsndfile-devel portaudio-devel qmake fdk-aac-devel 
 ## Arch Linux: 
 ### Install the following packages:
 ```sh
-sudo pacman -S libsndfile portaudio fdkaac libpcap qt6-base qwt hamlib gpsd qt6-svg qt6-webengine fftw speex speexdsp qt6-tools cmake alsa-lib glibc libfdk-aac libgcc libstdc++
+sudo pacman -S libsndfile portaudio fdkaac libpcap qt6-base qwt hamlib gpsd qt6-svg qt6-webengine fftw speex speexdsp qt6-tools cmake alsa-lib glibc libfdk-aac libgcc libstdc++ 
 ```
-### Install the following AUR package:
-```sh
-yay -S qwt-qt6
-```
+> [!CAUTION]
+> Due to Arch Linux merging qwt-qt6 into qwt, Dream no longer compiles as of 19 May 2026.
+
 > [!TIP]
 > If you use PipeWire:
 >```sh
@@ -84,10 +80,15 @@ qmake6 CONFIG+=alsa CONFIG+=sound
 make -j8
 ```
 # Transmitter AAC fix 
+
 > [!CAUTION]
 > This method uses an older release of the FAAD and FAAC libraries, expect incompatibilities and vulnerabilities!
 
-> [!TIP]
+> [!IMPORTANT]
+> FAAC/FAAD is deprecated, Dream will use an alternative encoder in the future (see: [#48](https://github.com/Drm-tools/dream/issues/48) ) 
+
+
+> [!IMPORTANT]
 > Remove all libfaad,libfaac and related packages (don't remove faad2 itself) 
 
 ## Build and install FAAD2 library
