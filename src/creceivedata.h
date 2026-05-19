@@ -58,7 +58,7 @@ enum EInChanSel {CS_LEFT_CHAN, CS_RIGHT_CHAN, CS_MIX_CHAN, CS_SUB_CHAN, CS_IQ_PO
                    CS_IQ_NEG, CS_IQ_POS_ZERO, CS_IQ_NEG_ZERO, CS_IQ_POS_SPLIT, CS_IQ_NEG_SPLIT
                   };
 
-class CReceiveData : public CReceiverModul<_REAL, _REAL>
+class CReceiveData : public CReceiverModul<_REAL, _COMPLEX>
 {
 public:
     CReceiveData();
@@ -78,7 +78,7 @@ public:
 
     void ClearInputData() {
         mutexInpData.Lock();
-        vecrInpData.Init(INPUT_DATA_VECTOR_SIZE, 0.0);
+        veccInpData.Init(INPUT_DATA_VECTOR_SIZE, 0.0);
         mutexInpData.Unlock();
     }
 
@@ -108,7 +108,7 @@ protected:
     std::string             soundDevice;
 
     /* Access to vecrInpData buffer must be done inside a mutex */
-    CShiftRegister<_REAL>	vecrInpData;
+    CShiftRegister<_COMPLEX>	veccInpData;
     CMutex                  mutexInpData;
 
     int                     iSampleRate;

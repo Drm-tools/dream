@@ -242,7 +242,7 @@ protected:
 };
 
 /* Takes an input buffer and splits it 2 ways */
-class CSplit: public CReceiverModul<_REAL, _REAL>
+class CSplit: public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 protected:
     virtual void InitInternal(CParameter& Parameters)

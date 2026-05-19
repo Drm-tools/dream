@@ -219,11 +219,12 @@ CDRMReceiver::DemodulateDRM(bool& bEnoughData)
         bEnoughData = true;
     }
 
+	// TODO: fix
     /* Frequency synchronization acquisition -------------------- */
-    if (FreqSyncAcq.ProcessData(Parameters, InpResBuf, FreqSyncAcqBuf))
-    {
-        bEnoughData = true;
-    }
+    //if (FreqSyncAcq.ProcessData(Parameters, InpResBuf, FreqSyncAcqBuf))
+    //{
+    //    bEnoughData = true;
+    //}
 
     /* Time synchronization ------------------------------------- */
     if (TimeSync.ProcessData(Parameters, FreqSyncAcqBuf, TimeSyncBuf))
@@ -403,11 +404,12 @@ CDRMReceiver::DemodulateAM(bool& bEnoughData)
 void
 CDRMReceiver::DecodeAM(bool& bEnoughData)
 {
+    // TODO: put back
     /* AMSS resampling */
-    if (InputResample.ProcessData(Parameters, AMSSPhaseBuf, AMSSResPhaseBuf))
-    {
-        bEnoughData = true;
-    }
+    //if (InputResample.ProcessData(Parameters, AMSSPhaseBuf, AMSSResPhaseBuf))
+    //{
+    //    bEnoughData = true;
+    //}
 
     /* AMSS bit extraction */
     if (AMSSExtractBits.
@@ -931,10 +933,11 @@ CDRMReceiver::process()
         // Write output I/Q file
         if (WriteIQFile.IsRecording())
         {
-            if (WriteIQFile.WriteData(Parameters, IQRecordDataBuf))
-            {
-                bEnoughData = true;
-            }
+		// TODO: put back
+            //if (WriteIQFile.WriteData(Parameters, IQRecordDataBuf))
+            //{
+            //    bEnoughData = true;
+            //}
         }
 
         switch (eReceiverMode)
@@ -1791,7 +1794,7 @@ void CConvertAudio::ProcessDataInternal(CParameter& Parameters)
     (void)Parameters;
     for (int i = 0; i < this->iInputBlockSize; i++)
     {
-        (*this->pvecOutputData)[2*i] = _SAMPLE((*this->pvecInputData)[i]);
-        (*this->pvecOutputData)[2*i+1] = _SAMPLE((*this->pvecInputData)[i]);
+        (*this->pvecOutputData)[2*i] = _SAMPLE(real((*this->pvecInputData)[i]));
+        (*this->pvecOutputData)[2*i+1] = _SAMPLE(imag((*this->pvecInputData)[i]));
     }
 }

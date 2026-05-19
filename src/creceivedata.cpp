@@ -45,7 +45,7 @@ inline _REAL sample2real(_SAMPLE s) {
 
 CReceiveData::CReceiveData():
     pSound(nullptr),
-    vecrInpData(INPUT_DATA_VECTOR_SIZE, 0.0),
+    veccInpData(INPUT_DATA_VECTOR_SIZE, 0.0),
     bFippedSpectrum(false), eInChanSelection(CS_MIX_CHAN), iPhase(0),spectrumAnalyser()
 {}
 
@@ -154,14 +154,16 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
         case CS_IQ_POS:
             for (i = 0; i < iOutputBlockSize; i++)
             {
-                (*pvecOutputData)[i] = HilbertFilt(_REAL(vecf_YL[unsigned(i)]), _REAL(vecf_YR[unsigned(i)]));
+                _COMPLEX cCurSig = _COMPLEX(_REAL(vecf_YL[unsigned(i)]), _REAL(vecf_YR[unsigned(i)]));
+                (*pvecOutputData)[i] = cCurSig;
             }
             break;
 
         case CS_IQ_NEG:
             for (i = 0; i < iOutputBlockSize; i++)
             {
-                (*pvecOutputData)[i] = HilbertFilt(_REAL(vecf_YR[unsigned(i)]), _REAL(vecf_YL[unsigned(i)]));
+                _COMPLEX cCurSig = _COMPLEX(_REAL(vecf_YR[unsigned(i)]), _REAL(vecf_YL[unsigned(i)]));
+                (*pvecOutputData)[i] = cCurSig;
             }
             break;
 
@@ -178,8 +180,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
                    with precalculated rotation vector cExpStep */
                 cCurExp *= cExpStep;
 
-                (*pvecOutputData)[i] =
-                    HilbertFilt(cCurSig.real(), cCurSig.imag());
+                (*pvecOutputData)[i] = cCurSig;
             }
             break;
 
@@ -196,12 +197,11 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
                    with precalculated rotation vector cExpStep */
                 cCurExp *= cExpStep;
 
-                (*pvecOutputData)[i] =
-                    HilbertFilt(cCurSig.real(), cCurSig.imag());
+                (*pvecOutputData)[i] = cCurSig;
             }
             break;
 
-        case CS_IQ_POS_SPLIT:
+        case CS_IQ_POS_SPLIT: // TODO: work out what these two are!
             for (i = 0; i < iOutputBlockSize; i += 4)
             {
                 (*pvecOutputData)[i + 0] =  _REAL(vecf_YL[unsigned(i + 0)]);
@@ -353,7 +353,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
 
     /* Copy data in buffer for spectrum calculation */
     mutexInpData.Lock();
-    vecrInpData.AddEnd((*pvecOutputData), iOutputBlockSize);
+    veccInpData.AddEnd((*pvecOutputData), iOutputBlockSize);
     mutexInpData.Unlock();
 
     /* Update level meter */
@@ -631,7 +631,7 @@ void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrSc
     spectrumAnalyser.setNegativeFrequency(eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT);
     spectrumAnalyser.setOffsetFrequency((eInChanSelection == CS_IQ_POS_ZERO) || (eInChanSelection == CS_IQ_NEG_ZERO));
     mutexInpData.Lock();
-    spectrumAnalyser.CalculateSpectrum(vecrInpData, NUM_SMPLS_4_INPUT_SPECTRUM);
+    spectrumAnalyser.CalculateSpectrum(veccInpData, NUM_SMPLS_4_INPUT_SPECTRUM);
     mutexInpData.Unlock();
     /* The calibration factor of 18.49 was determined experimentaly,
        give 0 dB for a full scale sine wave input (0 dBFS) */
@@ -648,7 +648,7 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrSca
     spectrumAnalyser.setNegativeFrequency(eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT);
     spectrumAnalyser.setOffsetFrequency((eInChanSelection == CS_IQ_POS_ZERO) || (eInChanSelection == CS_IQ_NEG_ZERO));
     mutexInpData.Lock();
-    spectrumAnalyser.CalculateLinearPSD(vecrInpData, iLenPSDAvEachBlock, iNumAvBlocksPSD, iPSDOverlap);
+    spectrumAnalyser.CalculateLinearPSD(veccInpData, iLenPSDAvEachBlock, iNumAvBlocksPSD, iPSDOverlap);
     mutexInpData.Unlock();
 
     const _REAL rNormData =  pow(_REAL(_MAXSHORT) * _REAL(iLenPSDAvEachBlock), 2) * _REAL(iNumAvBlocksPSD) * PSDWindowGain;
@@ -662,7 +662,7 @@ void CReceiveData::emitRSCIData(CParameter& Parameters)
     spectrumAnalyser.setNegativeFrequency(eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT);
     spectrumAnalyser.setOffsetFrequency((eInChanSelection == CS_IQ_POS_ZERO) || (eInChanSelection == CS_IQ_NEG_ZERO));
     mutexInpData.Lock();
-    spectrumAnalyser.CalculateLinearPSD(vecrInpData, LEN_PSD_AV_EACH_BLOCK_RSI, NUM_AV_BLOCKS_PSD_RSI, PSD_OVERLAP_RSI);
+    spectrumAnalyser.CalculateLinearPSD(veccInpData, LEN_PSD_AV_EACH_BLOCK_RSI, NUM_AV_BLOCKS_PSD_RSI, PSD_OVERLAP_RSI);
     mutexInpData.Unlock();
 
 

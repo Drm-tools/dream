@@ -42,12 +42,12 @@ CResample::~CResample()
 }
 
 /* Implementation *************************************************************/
-int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
+int CResample::Resample(CVector<_COMPLEX>* pcInput, CVector<_COMPLEX>* pcOutput,
                         _REAL rRatio)
 {
 	/* Move old data from the end to the history part of the buffer and
 	   add new data (shift register) */
-	vecrIntBuff.AddEnd((*prInput), iInputBlockSize);
+	veccIntBuff.AddEnd((*pcInput), iInputBlockSize);
 
 	/* Sample-interval of new sample frequency in relation to interpolated
 	   sample-interval */
@@ -73,19 +73,19 @@ int CResample::Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput,
 		const int in2 = (int) ((ik + 1) / INTERP_DECIM_I_D);
 
 		/* Convolution */
-		_REAL ry1 = (_REAL) 0.0;
-		_REAL ry2 = (_REAL) 0.0;
+		_COMPLEX ry1 = (_COMPLEX) 0.0;
+		_COMPLEX ry2 = (_COMPLEX) 0.0;
 		for (int i = 0; i < RES_FILT_NUM_TAPS_PER_PHASE; i++)
 		{
-			ry1 += fResTaps1To1[ip1][i] * vecrIntBuff[in1 - i];
-			ry2 += fResTaps1To1[ip2][i] * vecrIntBuff[in2 - i];
+			ry1 += double(fResTaps1To1[ip1][i]) * veccIntBuff[in1 - i];
+			ry2 += double(fResTaps1To1[ip2][i]) * veccIntBuff[in2 - i];
 		}
 
 
 		/* Linear interpolation --------------------------------------------- */
 		/* Get numbers after the comma */
 		const _REAL rxInt = rtOut - (int) rtOut;
-		(*prOutput)[im] = (ry2 - ry1) * rxInt + ry1;
+		(*pcOutput)[im] = (ry2 - ry1) * rxInt + ry1;
 
 
 		/* Increase output counter */
@@ -115,7 +115,7 @@ void CResample::Init(const int iNewInputBlockSize)
 		(iInputBlockSize + RES_FILT_NUM_TAPS_PER_PHASE) * INTERP_DECIM_I_D;
 
 	/* Allocate memory for internal buffer, clear sample history */
-	vecrIntBuff.Init(iInputBlockSize + iHistorySize, (_REAL) 0.0);
+	veccIntBuff.Init(iInputBlockSize + iHistorySize, (_REAL) 0.0);
 
 	/* Init absolute time for output stream (at the end of the history part) */
 	rtOut = (_REAL) RES_FILT_NUM_TAPS_PER_PHASE * INTERP_DECIM_I_D;

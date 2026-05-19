@@ -116,7 +116,7 @@ protected:
 
 
 /* AMSS phase demodulation module --------------------------------------------------- */
-class CAMSSPhaseDemod : public CReceiverModul<_REAL, _REAL>
+class CAMSSPhaseDemod : public CReceiverModul<_COMPLEX, _REAL>
 {
 public:
     CAMSSPhaseDemod() :

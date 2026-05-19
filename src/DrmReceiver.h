@@ -130,7 +130,7 @@ protected:
     }
 };
 
-class CConvertAudio : public CReceiverModul<_REAL, _SAMPLE>
+class CConvertAudio : public CReceiverModul<_COMPLEX, _SAMPLE>
 {
 protected:
     virtual void InitInternal(CParameter &);
@@ -394,17 +394,17 @@ protected:
     CDownstreamDI downstreamRSCI;
 
     /* Buffers */
-    CSingleBuffer<_REAL> AMDataBuf;
-    CSingleBuffer<_REAL> AMSSDataBuf;
+    CSingleBuffer<_COMPLEX> AMDataBuf;
+    CSingleBuffer<_COMPLEX> AMSSDataBuf;
     CSingleBuffer<_REAL> AMSSPhaseBuf;
     CCyclicBuffer<_REAL> AMSSResPhaseBuf;
     CCyclicBuffer<_BINARY> AMSSBitsBuf;
 
-    CCyclicBuffer<_REAL> DemodDataBuf;
-    CSingleBuffer<_REAL> IQRecordDataBuf;
+    CCyclicBuffer<_COMPLEX> DemodDataBuf;
+    CSingleBuffer<_COMPLEX> IQRecordDataBuf;
 
-    CCyclicBuffer<_REAL> RecDataBuf;
-    CCyclicBuffer<_REAL> InpResBuf;
+    CCyclicBuffer<_COMPLEX> RecDataBuf;
+    CCyclicBuffer<_COMPLEX> InpResBuf;
     CCyclicBuffer<_COMPLEX> FreqSyncAcqBuf;
     CSingleBuffer<_COMPLEX> TimeSyncBuf;
     CSingleBuffer<_COMPLEX> OFDMDemodBuf;

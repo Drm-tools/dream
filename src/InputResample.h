@@ -39,7 +39,7 @@
 
 
 /* Classes ********************************************************************/
-class CInputResample : public CReceiverModul<_REAL, _REAL>
+class CInputResample : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
     CInputResample() : bSyncInput(false) {}

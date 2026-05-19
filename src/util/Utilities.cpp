@@ -83,12 +83,12 @@ CSignalLevelMeter::Update(const _REAL rVal)
 }
 
 void
-CSignalLevelMeter::Update(const CVector < _REAL > vecrVal)
+CSignalLevelMeter::Update(const CVector < _COMPLEX > veccVal)
 {
 	/* Do the update for entire vector */
-	const int iVecSize = vecrVal.Size();
+	const int iVecSize = veccVal.Size();
 	for (int i = 0; i < iVecSize; i++)
-		Update(vecrVal[i]);
+		Update(std::abs(veccVal[i]));
 }
 
 void

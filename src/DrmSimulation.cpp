@@ -191,7 +191,8 @@ void CDRMSimulation::Run()
             DataConvChanResam.ProcessData(Parameters, RecDataBuf, ChanResInBuf);
 
             /* Resample input DRM-stream */
-            InputResample.ProcessData(Parameters, ChanResInBuf, InpResBuf);
+		// TODO: put back
+            // InputResample.ProcessData(Parameters, ChanResInBuf, InpResBuf);
 
             /* Frequency synchronization acquisition */
             FreqSyncAcq.ProcessData(Parameters, InpResBuf, FreqSyncAcqBuf);
@@ -255,7 +256,8 @@ void CDRMSimulation::Init()
 
     /* Receiver modules */
     /* The order of modules are important! */
-    InputResample.Init(Parameters, InpResBuf);
+	// TODO: put back
+    // InputResample.Init(Parameters, InpResBuf);
     FreqSyncAcq.Init(Parameters, FreqSyncAcqBuf);
     TimeSync.Init(Parameters, TimeSyncBuf);
     SyncUsingPil.Init(Parameters, SyncUsingPilBuf);

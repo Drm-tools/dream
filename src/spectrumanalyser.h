@@ -14,8 +14,8 @@ public:
     }
     void setNegativeFrequency(bool b) { bNegativeFreq = b; }
     void setOffsetFrequency(bool b) { bOffsetFreq = b; }
-    void CalculateSpectrum(const CShiftRegister<_REAL>& vecrInpData, int n);
-    void CalculateLinearPSD(const CShiftRegister<_REAL>& vecrInpData,
+    void CalculateSpectrum(const CShiftRegister<_COMPLEX>& veccInpData, int n);
+    void CalculateLinearPSD(const CShiftRegister<_COMPLEX>& veccInpData,
                              int iLenPSDAvEachBlock, int iNumAvBlocksPSD,
                              int iPSDOverlap);
     void CalculateSigStrengthCorrection(CParameter &Parameters, CVector<_REAL> &vecrPSD);

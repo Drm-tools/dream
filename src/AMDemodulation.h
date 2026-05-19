@@ -252,7 +252,7 @@ protected:
 };
 
 /* AM demodulation module --------------------------------------------------- */
-class CAMDemodulation : public CReceiverModul<_REAL, _SAMPLE>
+class CAMDemodulation : public CReceiverModul<_COMPLEX, _SAMPLE>
 {
 public:
     CAMDemodulation();
@@ -337,7 +337,8 @@ protected:
     CComplexVector				cvecBAMAfterDem;
     CRealVector					rvecZAMAfterDem;
 
-    CRealVector					rvecInpTmp;
+    CComplexVector				cvecInpTmp;
+    CRealVector					rvecDemod;
     CComplexVector				cvecHilbert;
     int							iHilFiltBlLen;
     CFftPlans					FftPlansHilFilt;

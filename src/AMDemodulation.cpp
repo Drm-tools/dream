@@ -34,7 +34,7 @@
 
 CAMDemodulation::CAMDemodulation() :
     cvecBReal(), cvecBImag(), rvecZReal(), rvecZImag(),
-    cvecBAMAfterDem(), rvecZAMAfterDem(), rvecInpTmp(),
+    cvecBAMAfterDem(), rvecZAMAfterDem(), cvecInpTmp(),
     cvecHilbert(),
     iHilFiltBlLen(0),
     FftPlansHilFilt(),
@@ -66,57 +66,57 @@ void CAMDemodulation::ProcessDataInternal(CParameter& Parameters)
 
 
     /* Frequency offset estimation if requested */
-    if (FreqOffsAcq.Run(*pvecInputData))
-        SetNormCurMixFreqOffs(FreqOffsAcq.GetCurResult());
+    //if (FreqOffsAcq.Run(*pvecInputData))
+    //    SetNormCurMixFreqOffs(FreqOffsAcq.GetCurResult());
 
 
     /* Band-pass filter and mixer ------------------------------------------- */
     /* Copy CVector data in CMatlibVector */
     for (i = 0; i < iInputBlockSize; i++)
-        rvecInpTmp[i] = (*pvecInputData)[i];
+        cvecInpTmp[i] = (*pvecInputData)[i];
+
+    /* Mix it down to zero frequency */
+    Mixer.Process(cvecInpTmp);
 
     /* Cut out a spectrum part of desired bandwidth */
     cvecHilbert = CComplexVector(
-                      FftFilt(cvecBReal, rvecInpTmp, rvecZReal, FftPlansHilFilt),
-                      FftFilt(cvecBImag, rvecInpTmp, rvecZImag, FftPlansHilFilt));
-
-    /* Mix it down to zero frequency */
-    Mixer.Process(cvecHilbert);
+                      FftFilt(cvecBReal, Real(cvecInpTmp), rvecZReal, FftPlansHilFilt),
+                      FftFilt(cvecBReal, Imag(cvecInpTmp), rvecZImag, FftPlansHilFilt));
 
 
     /* Phase lock loop (PLL) ------------------------------------------------ */
     if (bPLLIsEnabled)
     {
-        PLL.Process(rvecInpTmp);
+        //PLL.Process(rvecInpTmp);
 
         /* Update mixer frequency with tracking result from PLL. Special case
            here since we change the mixer frequency but do not update the
            band-pass filter. We can do this because the frequency changes by the
            PLL are usually small */
-        Mixer.SetMixFreq(PLL.GetCurNormFreqOffs());
-        rNormCurMixFreqOffs = PLL.GetCurNormFreqOffs(); /* For GUI */
+        //Mixer.SetMixFreq(PLL.GetCurNormFreqOffs());
+        //rNormCurMixFreqOffs = PLL.GetCurNormFreqOffs(); /* For GUI */
     }
 
 
     /* Analog demodulation -------------------------------------------------- */
-    /* Actual demodulation. Reuse temp buffer "rvecInpTmp" for output
+    /* Actual demodulation. use temp buffer "rvecDemod" for output
        signal */
     switch (eDemodType)
     {
     case DT_AM:
         /* Use envelope of signal and apply low-pass filter */
-        rvecInpTmp = FftFilt(cvecBAMAfterDem, Abs(cvecHilbert),
+        rvecDemod = FftFilt(cvecBAMAfterDem, Abs(cvecHilbert),
                              rvecZAMAfterDem, FftPlansHilFilt);
 
         /* Apply DC filter (high-pass filter) */
-        rvecInpTmp = Filter(rvecBDC, rvecADC, rvecInpTmp, rvecZAM);
+        rvecDemod = Filter(rvecBDC, rvecADC, rvecDemod, rvecZAM);
         break;
 
     case DT_LSB:
     case DT_USB:
     case DT_CW:
         /* Make signal real and compensate for removed spectrum part */
-        rvecInpTmp = Real(cvecHilbert) * (CReal) 2.0;
+        rvecDemod = Real(cvecHilbert) * (CReal) 2.0;
         break;
 
     case DT_FM:
@@ -126,7 +126,7 @@ void CAMDemodulation::ProcessDataInternal(CParameter& Parameters)
             /* Back-rotate new input sample by old value to get
                differentiation operation, get angle of complex signal and
                amplify result */
-            rvecInpTmp[i] = Angle(cvecHilbert[i] * Conj(cOldVal)) *
+            rvecDemod[i] = Angle(cvecHilbert[i] * Conj(cOldVal)) *
                             _MAXSHORT / ((CReal) 4.0 * crPi);
 
             /* Store old value */
@@ -134,23 +134,23 @@ void CAMDemodulation::ProcessDataInternal(CParameter& Parameters)
         }
 
         /* Low-pass filter */
-        rvecInpTmp = Filter(rvecBFM, rvecAFM, rvecInpTmp, rvecZFM);
+        rvecDemod = Filter(rvecBFM, rvecAFM, rvecDemod, rvecZFM);
     }
 
 
     /* Noise reduction -------------------------------------------------- */
     if (eNoiRedType != NR_OFF)
-        NoiseReduction.Process(rvecInpTmp);
+        NoiseReduction.Process(rvecDemod);
 
 
     /* AGC -------------------------------------------------------------- */
-    AGC.Process(rvecInpTmp);
+    AGC.Process(rvecDemod);
 
 
     /* Resampling audio ------------------------------------------------- */
     /* Change type of data (short -> real) */
     for (i = 0; i < iSymbolBlockSize; i++)
-        vecTempResBufIn[i] = rvecInpTmp[i];
+        vecTempResBufIn[i] = rvecDemod[i];
 
     /* Resample data */
     ResampleObj.Resample(vecTempResBufIn, vecTempResBufOut);
@@ -176,7 +176,7 @@ void CAMDemodulation::InitInternal(CParameter& Parameters)
     rBPNormBW = (CReal) iBandwidth / iSigSampleRate;
 
     /* Init temporary vector for filter input and output */
-    rvecInpTmp.Init(iSymbolBlockSize);
+    cvecInpTmp.Init(iSymbolBlockSize);
     cvecHilbert.Init(iSymbolBlockSize);
 
     /* Init old value needed for differentiation */
@@ -345,7 +345,7 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 
     /* Actual band-pass filter offset is the demodulation frequency plus the
        additional offset for the demodulation type */
-    rBPNormCentOffsTot = rNewNormFreqOffset + rBPNormFreqOffset;
+    rBPNormCentOffsTot = 0.0; // Filtering done at DC after frequency shifting the input. TODO: fix SSB and CW modes later by shifting back up and taking real part
 
 
     /* Set filter coefficients ---------------------------------------------- */

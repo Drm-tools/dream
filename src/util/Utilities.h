@@ -76,7 +76,7 @@ public:
 
 	void Init(_REAL rStartVal) {rCurLevel = Abs(rStartVal);}
 	void Update(const _REAL rVal);
-	void Update(const CVector<_REAL> vecrVal);
+	void Update(const CVector<_COMPLEX> veccVal);
 	void Update(const CVector<_SAMPLE> vecsVal);
 	_REAL Level();
 

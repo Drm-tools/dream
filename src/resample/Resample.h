@@ -41,14 +41,14 @@ public:
     virtual ~CResample();
 
 	void Init(const int iNewInputBlockSize);
-    int Resample(CVector<_REAL>* prInput, CVector<_REAL>* prOutput, _REAL rRatio);
+    int Resample(CVector<_COMPLEX>* prInput, CVector<_COMPLEX>* prOutput, _REAL rRatio);
 
 protected:
 	_REAL					rTStep;
 	_REAL					rtOut;
 	_REAL					rBlockDuration;
 
-	CShiftRegister<_REAL>	vecrIntBuff;
+	CShiftRegister<_COMPLEX>	veccIntBuff;
 	int						iHistorySize;
 
 	int						iInputBlockSize;

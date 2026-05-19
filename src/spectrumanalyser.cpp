@@ -12,38 +12,35 @@ SpectrumAnalyser::SpectrumAnalyser():iSampleRate(48000),bNegativeFreq(false),bOf
 
 }
 
-void SpectrumAnalyser::CalculateSpectrum(const CShiftRegister<_REAL>& vecrInpData, int n)
+void SpectrumAnalyser::CalculateSpectrum(const CShiftRegister<_COMPLEX>& veccInpData, int n)
 {
     /* Length of spectrum vector including Nyquist frequency */
     const int iLenSpecWithNyFreq = n / 2 + 1;
 
     /* Copy data from shift register to Matlib vector */
-    CRealVector vecrFFTInput(n);
+    CComplexVector veccFFTInput(n);
     for (int i = 0; i < n; i++) {
-        vecrFFTInput[i] = vecrInpData[i];
+        veccFFTInput[i] = veccInpData[i];
     }
 
     /* Get squared magnitude of spectrum */
-    vecrSqMagSpect.Init(iLenSpecWithNyFreq);
+    vecrSqMagSpect.Init(n);
     CFftPlans FftPlans;
-    vecrSqMagSpect = SqMag(rfft(vecrFFTInput * Hann(n), FftPlans));
+    vecrSqMagSpect = SqMag(Fft(veccFFTInput * Hann(n), FftPlans));
 }
 
-void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_REAL>& vecrInpData,
+void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_COMPLEX>& veccInpData,
                                  int iLenPSDAvEachBlock, int iNumAvBlocksPSD,
                                 int iPSDOverlap)
 {
-    /* Length of spectrum vector including Nyquist frequency */
-    const int iLenSpecWithNyFreq = iLenPSDAvEachBlock / 2 + 1;
-
     /* Init intermediate vectors */
-    CRealVector vecrFFTInput(iLenPSDAvEachBlock);
+    CComplexVector veccFFTInput(iLenPSDAvEachBlock);
 
     /* Init Hamming window */
     CRealVector vecrHammWin(Hamming(iLenPSDAvEachBlock));
 
     /* Init instance vector */
-    vecrSqMagSpect.Init(iLenSpecWithNyFreq, 0.0);
+    vecrSqMagSpect.Init(iLenPSDAvEachBlock, 0.0);
 
     /* Calculate FFT of each small block and average results (estimation of PSD of input signal) */
     CFftPlans FftPlans;
@@ -52,14 +49,14 @@ void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_REAL>& vecrInpDa
     {
         /* Copy data from shift register in Matlib vector */
         for (int j = 0; j < iLenPSDAvEachBlock; j++) {
-            vecrFFTInput[j] = vecrInpData[j + i * (iLenPSDAvEachBlock - iPSDOverlap)];
+            veccFFTInput[j] = veccInpData[j + i * (iLenPSDAvEachBlock - iPSDOverlap)];
         }
 
         /* Apply Hamming window */
-        vecrFFTInput *= vecrHammWin;
+        veccFFTInput *= vecrHammWin;
 
         /* Calculate squared magnitude of spectrum and average results */
-        vecrSqMagSpect += SqMag(rfft(vecrFFTInput, FftPlans));
+        vecrSqMagSpect += SqMag(Fft(veccFFTInput, FftPlans));
     }
 }
 

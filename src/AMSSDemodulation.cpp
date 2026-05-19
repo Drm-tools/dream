@@ -39,13 +39,15 @@ void CAMSSPhaseDemod::ProcessDataInternal(CParameter&)
     int i;
 
     /* Frequency offset estimation */
-    if (FreqOffsAcq.Run(*pvecInputData))
-        SetNormCurMixFreqOffs(FreqOffsAcq.GetCurResult());
+    // Reinstate
+    //if (FreqOffsAcq.Run(*pvecInputData))
+    //    SetNormCurMixFreqOffs(FreqOffsAcq.GetCurResult());
 
     /* Band-pass filter and mixer ------------------------------------------- */
     /* Copy CVector data in CMatlibVector */
-    for (i = 0; i < iInputBlockSize; i++)
-        rvecInpTmp[i] = (*pvecInputData)[i];
+    // TODO: do the same as in AM Demod
+    //for (i = 0; i < iInputBlockSize; i++)
+    //    rvecInpTmp[i] = (*pvecInputData)[i];
 
     /* Cut out a spectrum part of desired bandwidth */
     cvecHilbert = CComplexVector(
