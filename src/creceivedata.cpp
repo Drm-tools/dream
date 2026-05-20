@@ -117,7 +117,16 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
         DecimFIR_2X(2, &vecsSoundBuffer[0], vecf_ZL, vecf_YL, vecf_B);
         DecimFIR_2X(2, &vecsSoundBuffer[1], vecf_ZR, vecf_YR, vecf_B);
     }
-    if (iUpscaleRatio > 1 || iDownscaleRatio >1)
+    else
+    {
+        for (i = 0; i < iOutputBlockSize; i++)
+        {
+            vecf_YL[unsigned(i)] = vecsSoundBuffer[2*i];
+            vecf_YR[unsigned(i)] = vecsSoundBuffer[2*i+1];
+        }
+    }
+
+    // Use same code now whether up/downsampling or not
     {
 
         /* Write data to output buffer. Do not set the switch command inside
@@ -218,121 +227,6 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
                 (*pvecOutputData)[i + 1] = _REAL(-vecf_YL[unsigned(i + 1)]);
                 (*pvecOutputData)[i + 2] = _REAL(-vecf_YR[unsigned(i + 2)]);
                 (*pvecOutputData)[i + 3] =  _REAL(vecf_YL[unsigned(i + 3)]);
-            }
-            break;
-        }
-    }
-
-    /* Upscale ratio equal to one */
-    else {
-        /* Write data to output buffer. Do not set the switch command inside
-           the for-loop for efficiency reasons */
-        switch (eInChanSelection)
-        {
-        case CS_LEFT_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-                (*pvecOutputData)[i] = sample2real(vecsSoundBuffer[2 * i]);
-            break;
-
-        case CS_RIGHT_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-                (*pvecOutputData)[i] = sample2real(vecsSoundBuffer[2 * i + 1]);
-            break;
-
-        case CS_MIX_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Mix left and right channel together */
-                const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
-                const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
-                (*pvecOutputData)[i] = (rLeftChan + rRightChan) / 2;
-            }
-            break;
-
-        case CS_SUB_CHAN:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Subtract right channel from left */
-                const _REAL rLeftChan = sample2real(vecsSoundBuffer[2 * i]);
-                const _REAL rRightChan = sample2real(vecsSoundBuffer[2 * i + 1]);
-                (*pvecOutputData)[i] = (rLeftChan - rRightChan) / 2;
-            }
-            break;
-
-        /* I / Q input */
-        case CS_IQ_POS:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                (*pvecOutputData)[i] =
-                    HilbertFilt(sample2real(vecsSoundBuffer[2 * i]),
-                                sample2real(vecsSoundBuffer[2 * i + 1]));
-            }
-            break;
-
-        case CS_IQ_NEG:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                (*pvecOutputData)[i] =
-                    HilbertFilt(sample2real(vecsSoundBuffer[2 * i + 1]),
-                                sample2real(vecsSoundBuffer[2 * i]));
-            }
-            break;
-
-        case CS_IQ_POS_ZERO:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Shift signal to vitual intermediate frequency before applying
-                   the Hilbert filtering */
-                _COMPLEX cCurSig = _COMPLEX(sample2real(vecsSoundBuffer[2 * i]),
-                                            sample2real(vecsSoundBuffer[2 * i + 1]));
-
-                cCurSig *= cCurExp;
-
-                /* Rotate exp-pointer on step further by complex multiplication
-                   with precalculated rotation vector cExpStep */
-                cCurExp *= cExpStep;
-
-                (*pvecOutputData)[i] =
-                    HilbertFilt(cCurSig.real(), cCurSig.imag());
-            }
-            break;
-
-        case CS_IQ_NEG_ZERO:
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                /* Shift signal to vitual intermediate frequency before applying
-                   the Hilbert filtering */
-                _COMPLEX cCurSig = _COMPLEX(sample2real(vecsSoundBuffer[2 * i + 1]),
-                                            sample2real(vecsSoundBuffer[2 * i]));
-
-                cCurSig *= cCurExp;
-
-                /* Rotate exp-pointer on step further by complex multiplication
-                   with precalculated rotation vector cExpStep */
-                cCurExp *= cExpStep;
-
-                (*pvecOutputData)[i] =
-                    HilbertFilt(cCurSig.real(), cCurSig.imag());
-            }
-            break;
-
-        case CS_IQ_POS_SPLIT: /* Require twice the bandwidth */
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                iPhase = (iPhase + 1) & 3;
-                _REAL rValue = vecsSoundBuffer[2 * i]     * /*COS*/SineTable[iPhase + 1] -
-                               vecsSoundBuffer[2 * i + 1] * /*SIN*/SineTable[iPhase];
-                (*pvecOutputData)[i] = rValue;
-            }
-            break;
-
-        case CS_IQ_NEG_SPLIT: /* Require twice the bandwidth */
-            for (i = 0; i < iOutputBlockSize; i++)
-            {
-                iPhase = (iPhase + 1) & 3;
-                _REAL rValue = vecsSoundBuffer[2 * i + 1] * /*COS*/SineTable[iPhase + 1] -
-                               vecsSoundBuffer[2 * i]     * /*SIN*/SineTable[iPhase];
-                (*pvecOutputData)[i] = rValue;
             }
             break;
         }
@@ -440,8 +334,8 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         else
         {
             vecf_B.resize(0);
-            vecf_YL.resize(0);
-            vecf_YR.resize(0);
+            vecf_YL.resize(unsigned(iOutputBlockSize));
+            vecf_YR.resize(unsigned(iOutputBlockSize));
             vecf_ZL.resize(0);
             vecf_ZR.resize(0);
         }
