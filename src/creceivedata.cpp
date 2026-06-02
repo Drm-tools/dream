@@ -104,29 +104,10 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
     if(bBad)
         return;
 
-    /* Upscale if ratio greater than one */
-    if (iUpscaleRatio > 1)
-    {
-        /* The actual upscaling, currently only 2X is supported */
-        InterpFIR_2X(2, &vecsSoundBuffer[0], vecf_ZL, vecf_YL, vecf_B);
-        InterpFIR_2X(2, &vecsSoundBuffer[1], vecf_ZR, vecf_YR, vecf_B);
-    }
-    else if (iDownscaleRatio > 1)
-    {
-        /* The actual downscaling, currently only 2X is supported */
-        DecimFIR_2X(2, &vecsSoundBuffer[0], vecf_ZL, vecf_YL, vecf_B);
-        DecimFIR_2X(2, &vecsSoundBuffer[1], vecf_ZR, vecf_YR, vecf_B);
-    }
-    else
-    {
-        for (i = 0; i < iOutputBlockSize; i++)
-        {
-            vecf_YL[unsigned(i)] = vecsSoundBuffer[2*i];
-            vecf_YR[unsigned(i)] = vecsSoundBuffer[2*i+1];
-        }
-    }
+    // Up/down-scaling if applicable
+    upDownSample_L.ProcessData(2, &vecsSoundBuffer[0], vecf_YL);
+    upDownSample_R.ProcessData(2, &vecsSoundBuffer[1], vecf_YR);
 
-    // Use same code now whether up/downsampling or not
     {
 
         /* Write data to output buffer. Do not set the switch command inside
@@ -298,47 +279,12 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         if (bChanged)
             ClearInputData();
 
-        /* Init 2X upscaler if enabled */
-        if (iUpscaleRatio > 1)
-        {
-            const int taps = (NUM_TAPS_UPSAMPLE_FILT + 3) & ~3;
-            vecf_B.resize(taps, 0.0f);
-            for (unsigned i = 0; i < NUM_TAPS_UPSAMPLE_FILT; i++)
-                vecf_B[i] = float(dUpsampleFilt[i] * iUpscaleRatio);
-            if (bChanged)
-            {
-                vecf_ZL.resize(0);
-                vecf_ZR.resize(0);
-            }
-            vecf_ZL.resize(unsigned(iOutputBlockSize + taps) / 2, 0.0f);
-            vecf_ZR.resize(unsigned(iOutputBlockSize + taps) / 2, 0.0f);
-            vecf_YL.resize(unsigned(iOutputBlockSize));
-            vecf_YR.resize(unsigned(iOutputBlockSize));
-        }
-        else if (iDownscaleRatio > 1)
-        {
-            const int taps = (NUM_TAPS_DOWNSAMPLE_FILT + 3) & ~3;
-            vecf_B.resize(taps, 0.0f);
-            for (unsigned i = 0; i < NUM_TAPS_DOWNSAMPLE_FILT; i++)
-                vecf_B[i] = float(dDownsampleFilt[i] / iDownscaleRatio);
-            if (bChanged)
-            {
-                vecf_ZL.resize(0);
-                vecf_ZR.resize(0);
-            }
-            vecf_ZL.resize(unsigned(iOutputBlockSize * 2 + taps), 0.0f);
-            vecf_ZR.resize(unsigned(iOutputBlockSize *2 + taps), 0.0f);
-            vecf_YL.resize(unsigned(iOutputBlockSize));
-            vecf_YR.resize(unsigned(iOutputBlockSize));
-        }
-        else
-        {
-            vecf_B.resize(0);
-            vecf_YL.resize(unsigned(iOutputBlockSize));
-            vecf_YR.resize(unsigned(iOutputBlockSize));
-            vecf_ZL.resize(0);
-            vecf_ZR.resize(0);
-        }
+        /* Init 2X up/downscaler */
+	upDownSample_L.Init(iOutputBlockSize, iUpscaleRatio, iDownscaleRatio);
+	upDownSample_R.Init(iOutputBlockSize, iUpscaleRatio, iDownscaleRatio);
+
+        vecf_YL.resize(unsigned(iOutputBlockSize));
+        vecf_YR.resize(unsigned(iOutputBlockSize));
 
         /* Init buffer size for taking stereo input */
         vecsSoundBuffer.Init(iOutputBlockSize * 2 * iDownscaleRatio / iUpscaleRatio);
@@ -401,105 +347,6 @@ _REAL CReceiveData::HilbertFilt(const _REAL rRe, const _REAL rIm)
         rSum += _REAL(fHilFiltIQ[i]) * vecrImHist[int(i)];
 
     return (rSum + vecrReHist[IQ_INP_HIL_FILT_DELAY]) / 2;
-}
-
-void CReceiveData::InterpFIR_2X(const int channels, _SAMPLE* X, vector<float>& Z, vector<float>& Y, vector<float>& B)
-{
-    /*
-        2X interpolating filter. When combined with CS_IQ_POS_SPLIT or CS_IQ_NEG_SPLIT
-        input data mode, convert I/Q input to full bandwidth, code by David Flamand
-    */
-    int i, j;
-    const int B_len = int(B.size());
-    const int Z_len = int(Z.size());
-    const int Y_len = int(Y.size());
-    const int Y_len_2 = Y_len / 2;
-    float *B_beg_ptr = &B[0];
-    float *Z_beg_ptr = &Z[0];
-    float *Y_ptr = &Y[0];
-    float *B_end_ptr, *B_ptr, *Z_ptr;
-    float y0, y1, y2, y3;
-
-    /* Check for size and alignment requirement */
-    if ((B_len & 3) || (Z_len != (B_len/2 + Y_len_2)) || (Y_len & 1))
-        return;
-
-    /* Copy the old history at the end */
-    for (i = B_len/2-1; i >= 0; i--)
-        Z_beg_ptr[Y_len_2 + i] = Z_beg_ptr[i];
-
-    /* Copy the new sample at the beginning of the history */
-    for (i = 0, j = 0; i < Y_len_2; i++, j+=channels)
-        Z_beg_ptr[Y_len_2 - i - 1] = X[j];
-
-    /* The actual lowpass filtering using FIR */
-    for (i = Y_len_2-1; i >= 0; i--)
-    {
-        B_end_ptr  = B_beg_ptr + B_len;
-        B_ptr      = B_beg_ptr;
-        Z_ptr      = Z_beg_ptr + i;
-        y0 = y1 = y2 = y3 = 0.0f;
-        while (B_ptr != B_end_ptr)
-        {
-            y0 = y0 + B_ptr[0] * Z_ptr[0];
-            y1 = y1 + B_ptr[1] * Z_ptr[0];
-            y2 = y2 + B_ptr[2] * Z_ptr[1];
-            y3 = y3 + B_ptr[3] * Z_ptr[1];
-            B_ptr += 4;
-            Z_ptr += 2;
-        }
-        *Y_ptr++ = y0 + y2;
-        *Y_ptr++ = y1 + y3;
-    }
-}
-
-void CReceiveData::DecimFIR_2X(const int channels, _SAMPLE* X, vector<float>& Z, vector<float>& Y, vector<float>& B)
-{
-    /*
-        2X decimating filter.
-    */
-    int i, j;
-    const int B_len = int(B.size());
-    const int Z_len = int(Z.size());
-    const int Y_len = int(Y.size());
-    const int Y_len_2 = Y_len * 2;
-    float *B_beg_ptr = &B[0];
-    float *Z_beg_ptr = &Z[0];
-    float *Y_ptr = &Y[0];
-    float *B_end_ptr, *B_ptr, *Z_ptr;
-    float y0, y1, y2, y3;
-
-    /* Check for size and alignment requirement */
-    if ((B_len & 3) || Z_len != (B_len + Y_len_2))
-        return;
-
-    /* Copy the old history at the end */
-    for (i = B_len-1; i >= 0; i--)
-        Z_beg_ptr[Y_len_2 + i] = Z_beg_ptr[i];
-
-    /* Copy the new sample at the beginning of the history */
-    for (i = 0, j = 0; i < Y_len_2; i++, j+=channels)
-        Z_beg_ptr[Y_len_2 - i - 1] = X[j];
-
-    /* The actual lowpass filtering using FIR */
-    for (i = Y_len_2-2; i >= 0; i-=2)
-    {
-        B_end_ptr  = B_beg_ptr + B_len;
-        B_ptr      = B_beg_ptr;
-        Z_ptr      = Z_beg_ptr + i;
-        y0 = y1 = y2 = y3 = 0.0f;
-        while (B_ptr != B_end_ptr)
-        {
-            y0 = y0 + B_ptr[0] * Z_ptr[0];
-            y1 = y1 + B_ptr[1] * Z_ptr[1];
-            y2 = y2 + B_ptr[2] * Z_ptr[2];
-            y3 = y3 + B_ptr[3] * Z_ptr[3];
-
-            B_ptr += 4;
-            Z_ptr += 4;
-        }
-        *Y_ptr++ = y0 + y1 + y2 + y3;
-    }
 }
 
 /*

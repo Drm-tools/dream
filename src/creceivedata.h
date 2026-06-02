@@ -33,6 +33,7 @@
 #include "sound/soundinterface.h"
 #include "util/Utilities.h"
 #include "spectrumanalyser.h"
+#include "resample/UpDownSample.h"
 
   /* Length of vector for input spectrum. We use approx. 0.2 sec
      of sampled data for spectrum calculation, this is 2^13 = 8192 to
@@ -116,7 +117,8 @@ protected:
 
     int                     iUpscaleRatio;
     int                     iDownscaleRatio;
-    std::vector<float>		vecf_B, vecf_YL, vecf_YR, vecf_ZL, vecf_ZR;
+    std::vector<float>		vecf_YL, vecf_YR;
+    CUpDownSample           upDownSample_L, upDownSample_R;
 
     EInChanSel			eInChanSelection;
 
@@ -136,8 +138,6 @@ protected:
     virtual void InitInternal(CParameter& Parameters);
     virtual void ProcessDataInternal(CParameter& Parameters);
 
-    void InterpFIR_2X(const int channels, _SAMPLE* X, std::vector<float>& Z, std::vector<float>& Y, std::vector<float>& B);
-    void DecimFIR_2X(const int channels, _SAMPLE* X, std::vector<float>& Z, std::vector<float>& Y, std::vector<float>& B);
     void emitRSCIData(CParameter& Parameters);
 };
 

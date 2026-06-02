@@ -494,6 +494,7 @@ HEADERS += \
     src/ReceptLog.h \
     src/resample/ResampleFilter.h \
     src/resample/Resample.h \
+    src/resample/UpDownSample.h \
     src/Scheduler.h \
     src/SDC/SDC.h \
     src/SDC/audioparam.h \
@@ -544,6 +545,7 @@ HEADERS += \
     src/resample/speexresampler.h \
     src/resample/cspectrumresample.h \
     src/resample/caudioresample.h \
+    src/resample/UpDownSample.h \
     src/sourcedecoders/reverb.h \
     src/sourcedecoders/caudioreverb.h \
     src/tuner.h \
@@ -621,6 +623,7 @@ SOURCES += \
     src/ReceptLog.cpp \
     src/resample/Resample.cpp \
     src/resample/ResampleFilter.cpp \
+    src/resample/UpDownSample.cpp \
     src/Scheduler.cpp \
     src/SDC/SDCReceive.cpp \
     src/SDC/SDCTransmit.cpp \

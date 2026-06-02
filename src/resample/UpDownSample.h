@@ -1,0 +1,55 @@
+/******************************************************************************\
+ * BBC and Technische Universitaet Darmstadt, Institut fuer Nachrichtentechnik
+ * Copyright (c) 2001-2019
+ *
+ * Author(s):
+ * Volker Fischer, Julian Cable
+ *
+ * Description:
+ *
+ *
+ ******************************************************************************
+ *
+ * This program is free software; you can redistribute it and/or modify it under
+ * the terms of the GNU General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option) any later
+ * version.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+ * FOR A PARTICULAR PURPOSE. See the GNU General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU General Public License along with
+ * this program; if not, write to the Free Software Foundation, Inc.,
+ * 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+ *
+\******************************************************************************/
+
+#ifndef CUPDOWNSAMPLE_H
+#define UPDOWNSAMPLE_H
+
+#include "../util/Utilities.h"
+
+class CUpDownSample 
+{
+public:
+    CUpDownSample();
+    virtual ~CUpDownSample();
+    void Init(int iNewOutputBlockSize, int iNewUpscaleRatio, int iNewDownscaleRatio);
+    void ProcessData(int iStride, float *x, std::vector<float>& y);
+
+protected:
+
+
+    int                     iUpscaleRatio;
+    int                     iDownscaleRatio;
+    int iOutputBlockSize;
+    std::vector<float>		vecf_B, vecf_Z;
+
+    void InterpFIR_2X(const int channels, float* X, std::vector<float>& Y);
+    void DecimFIR_2X(const int channels, float* X, std::vector<float>& Y);
+};
+
+
+#endif // CUPDOWNSAMPLE_H
