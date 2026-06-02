@@ -40,7 +40,7 @@ CUpDownSample::~CUpDownSample()
 {
 }
 
-void CUpDownSample::ProcessData(int iStride, float *x, std::vector<float>& y)
+void CUpDownSample::ProcessData(int iStride, _REAL *x, _REAL *y)
 {
 
     /* Upscale if ratio greater than one */
@@ -79,7 +79,7 @@ void CUpDownSample::Init(int iNewOutputBlockSize, int iNewUpscaleRatio, int iNew
             const int taps = (NUM_TAPS_DOWNSAMPLE_FILT + 3) & ~3;
             vecf_B.resize(taps, 0.0f);
             for (unsigned i = 0; i < NUM_TAPS_DOWNSAMPLE_FILT; i++)
-                vecf_B[i] = float(dDownsampleFilt[i] / iDownscaleRatio);
+                vecf_B[i] = _REAL(dDownsampleFilt[i] / iDownscaleRatio);
             vecf_Z.resize(unsigned(iOutputBlockSize * 2 + taps), 0.0f);
         }
         else
@@ -89,7 +89,7 @@ void CUpDownSample::Init(int iNewOutputBlockSize, int iNewUpscaleRatio, int iNew
         }
 }
 
-void CUpDownSample::InterpFIR_2X(const int channels, float* X, vector<float>& Y)
+void CUpDownSample::InterpFIR_2X(const int channels, _REAL* X, _REAL* Y)
 {
     /*
         2X interpolating filter. When combined with CS_IQ_POS_SPLIT or CS_IQ_NEG_SPLIT
@@ -98,13 +98,13 @@ void CUpDownSample::InterpFIR_2X(const int channels, float* X, vector<float>& Y)
     int i, j;
     const int B_len = int(vecf_B.size());
     const int Z_len = int(vecf_Z.size());
-    const int Y_len = int(Y.size());
+    const int Y_len = iOutputBlockSize;
     const int Y_len_2 = Y_len / 2;
-    float *B_beg_ptr = &vecf_B[0];
-    float *Z_beg_ptr = &vecf_Z[0];
-    float *Y_ptr = &Y[0];
-    float *B_end_ptr, *B_ptr, *Z_ptr;
-    float y0, y1, y2, y3;
+    _REAL *B_beg_ptr = &vecf_B[0];
+    _REAL *Z_beg_ptr = &vecf_Z[0];
+    _REAL *Y_ptr = &Y[0];
+    _REAL *B_end_ptr, *B_ptr, *Z_ptr;
+    _REAL y0, y1, y2, y3;
 
     /* Check for size and alignment requirement */
     if ((B_len & 3) || (Z_len != (B_len/2 + Y_len_2)) || (Y_len & 1))
@@ -139,7 +139,7 @@ void CUpDownSample::InterpFIR_2X(const int channels, float* X, vector<float>& Y)
     }
 }
 
-void CUpDownSample::DecimFIR_2X(const int channels, float* X, vector<float>& Y)
+void CUpDownSample::DecimFIR_2X(const int channels, _REAL* X, _REAL* Y)
 {
     /*
         2X decimating filter.
@@ -147,13 +147,13 @@ void CUpDownSample::DecimFIR_2X(const int channels, float* X, vector<float>& Y)
     int i, j;
     const int B_len = int(vecf_B.size());
     const int Z_len = int(vecf_Z.size());
-    const int Y_len = int(Y.size());
+    const int Y_len = iOutputBlockSize;
     const int Y_len_2 = Y_len * 2;
-    float *B_beg_ptr = &vecf_B[0];
-    float *Z_beg_ptr = &vecf_Z[0];
-    float *Y_ptr = &Y[0];
-    float *B_end_ptr, *B_ptr, *Z_ptr;
-    float y0, y1, y2, y3;
+    _REAL *B_beg_ptr = &vecf_B[0];
+    _REAL *Z_beg_ptr = &vecf_Z[0];
+    _REAL *Y_ptr = &Y[0];
+    _REAL *B_end_ptr, *B_ptr, *Z_ptr;
+    _REAL y0, y1, y2, y3;
 
     /* Check for size and alignment requirement */
     if ((B_len & 3) || Z_len != (B_len + Y_len_2))

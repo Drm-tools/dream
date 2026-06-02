@@ -37,7 +37,7 @@ public:
     CUpDownSample();
     virtual ~CUpDownSample();
     void Init(int iNewOutputBlockSize, int iNewUpscaleRatio, int iNewDownscaleRatio);
-    void ProcessData(int iStride, float *x, std::vector<float>& y);
+    void ProcessData(int iStride, _REAL *x, _REAL *y);
 
 protected:
 
@@ -45,10 +45,10 @@ protected:
     int                     iUpscaleRatio;
     int                     iDownscaleRatio;
     int iOutputBlockSize;
-    std::vector<float>		vecf_B, vecf_Z;
+    std::vector<_REAL>		vecf_B, vecf_Z;
 
-    void InterpFIR_2X(const int channels, float* X, std::vector<float>& Y);
-    void DecimFIR_2X(const int channels, float* X, std::vector<float>& Y);
+    void InterpFIR_2X(const int channels, _REAL* X, _REAL* Y);
+    void DecimFIR_2X(const int channels, _REAL* X, _REAL* Y);
 };
 
 

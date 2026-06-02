@@ -117,7 +117,8 @@ protected:
 
     int                     iUpscaleRatio;
     int                     iDownscaleRatio;
-    std::vector<float>		vecf_YL, vecf_YR;
+    CVector<_REAL>          vecf_X_re, vecf_X_im;
+    CVector<_REAL>          vecf_Y_re, vecf_Y_im;
     CUpDownSample           upDownSample_L, upDownSample_R;
 
     EInChanSel			eInChanSelection;
