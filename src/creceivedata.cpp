@@ -308,6 +308,7 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         /* Init 2X up/downscaler */
 	upDownSample_L.Init(iOutputBlockSize, iUpscaleRatio, iDownscaleRatio);
 	upDownSample_R.Init(iOutputBlockSize, iUpscaleRatio, iDownscaleRatio);
+fprintf(stderr, "Resizing X_re and X_im to %d and Y_re and Y_im to %d\n", iInputBufferSize, iOutputBlockSize);
 
         vecf_X_re.resize(unsigned(iInputBufferSize));
         vecf_X_im.resize(unsigned(iInputBufferSize));
