@@ -25,8 +25,7 @@ void SpectrumAnalyser::CalculateSpectrum(const CShiftRegister<_COMPLEX>& veccInp
 
     /* Get squared magnitude of spectrum */
     vecrSqMagSpect.Init(n);
-    CFftPlans FftPlans;
-    vecrSqMagSpect = SqMag(Fft(veccFFTInput * Hann(n), FftPlans));
+    vecrSqMagSpect = SqMag(Fft(veccFFTInput * Hann(n), fftPlansSpectrum));
 }
 
 void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_COMPLEX>& veccInpData,
@@ -43,7 +42,6 @@ void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_COMPLEX>& veccIn
     vecrSqMagSpect.Init(iLenPSDAvEachBlock, 0.0);
 
     /* Calculate FFT of each small block and average results (estimation of PSD of input signal) */
-    CFftPlans FftPlans;
 
     for (int i = 0; i < iNumAvBlocksPSD; i++)
     {
@@ -56,7 +54,7 @@ void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_COMPLEX>& veccIn
         veccFFTInput *= vecrHammWin;
 
         /* Calculate squared magnitude of spectrum and average results */
-        vecrSqMagSpect += SqMag(Fft(veccFFTInput, FftPlans));
+        vecrSqMagSpect += SqMag(Fft(veccFFTInput, fftPlansPSD));
     }
 }
 

@@ -245,9 +245,11 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
     }
 
     /* Copy data in buffer for spectrum calculation */
-    mutexInpData.Lock();
+    CVector<_COMPLEX> veccData(iInputBufferSize);
     for (int i=0; i<iInputBufferSize; i++)
-      veccInpData.AddEnd(_COMPLEX(vecf_X_re[i], vecf_X_im[i]));
+      veccData[i] = _COMPLEX(vecf_X_re[i], vecf_X_im[i]);
+    mutexInpData.Lock();
+    veccInpData.AddEnd(veccData, iInputBufferSize);
     mutexInpData.Unlock();
 
     // Up/down-scaling if applicable
@@ -308,7 +310,6 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         /* Init 2X up/downscaler */
 	upDownSample_L.Init(iOutputBlockSize, iUpscaleRatio, iDownscaleRatio);
 	upDownSample_R.Init(iOutputBlockSize, iUpscaleRatio, iDownscaleRatio);
-fprintf(stderr, "Resizing X_re and X_im to %d and Y_re and Y_im to %d\n", iInputBufferSize, iOutputBlockSize);
 
         vecf_X_re.resize(unsigned(iInputBufferSize));
         vecf_X_im.resize(unsigned(iInputBufferSize));

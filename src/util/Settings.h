@@ -56,7 +56,7 @@
 #define MAX_FREQ_AQC_SE_WIN_CT		(+1e6)
 
 /* Maximum carrier frequency  */
-# define MAX_RF_FREQ				30000 /* kHz */
+# define MAX_RF_FREQ				110000 /* kHz */
 
 #ifdef QT_CORE_LIB
 /* Maximum minutes for delayed log file start */

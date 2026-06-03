@@ -2,6 +2,7 @@
 #define INPUTPSD_H
 #include "util/Vector.h"
 #include "matlib/Matlib.h"
+#include "matlib/MatlibStdToolbox.h"
 
 class CParameter;
 
@@ -30,6 +31,8 @@ private:
     bool bNegativeFreq;
     bool bOffsetFreq;
     CRealVector vecrSqMagSpect;
+    CFftPlans fftPlansSpectrum;
+    CFftPlans fftPlansPSD;
 };
 
 #endif // INPUTPSD_H
