@@ -311,7 +311,7 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 
     /* Actual prototype filter design */
     CRealVector vecrFilter(iHilFiltBlLen);
-    vecrFilter = FirLP(rBPNormBW, Nuttallwin(iHilFiltBlLen));
+    vecrFilter = FirLP(rBPNormBW==0.0 ? 1.0 : rBPNormBW, Nuttallwin(iHilFiltBlLen));
 
     /* Adjust center of filter for respective demodulation types */
     CReal rBPNormFreqOffset = (CReal) 0.0;

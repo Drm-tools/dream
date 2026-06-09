@@ -296,6 +296,8 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         fprintf(stderr, "CReceiveData::InitInternal(): iOutputBlockAlignment = %i\n", iOutputBlockAlignment);
     }
 
+    spectrumAnalyser.SetSampleRate(iSampleRate);
+
     try {
 
 
@@ -400,7 +402,7 @@ _REAL CReceiveData::ConvertFrequency(_REAL rFrequency, bool bInvert) const
 
 void CReceiveData::GetInputSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
-    spectrumAnalyser.setNegativeFrequency(eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT);
+    spectrumAnalyser.setNegativeFrequency(eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT || eInChanSelection == CS_IQ_POS_ZERO || eInChanSelection == CS_IQ_NEG_ZERO || eInChanSelection == CS_IQ_POS || eInChanSelection == CS_IQ_NEG);
     spectrumAnalyser.setOffsetFrequency((eInChanSelection == CS_IQ_POS_ZERO) || (eInChanSelection == CS_IQ_NEG_ZERO));
     mutexInpData.Lock();
     spectrumAnalyser.CalculateSpectrum(veccInpData, NUM_SMPLS_4_INPUT_SPECTRUM);

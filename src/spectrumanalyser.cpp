@@ -60,20 +60,23 @@ void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_COMPLEX>& veccIn
 
 void SpectrumAnalyser::PSD2LogPSD(_REAL rNormData, CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
-    const int iLenSpec = vecrSqMagSpect.GetSize();
+    const int n = vecrSqMagSpect.GetSize();
+    const int iLenSpec = bNegativeFreq ? n : n/2;
 
-    const int iOffsetScale = bNegativeFreq ? (iLenSpec / 2) : (bOffsetFreq ? (iLenSpec * int(VIRTUAL_INTERMED_FREQ) / (iSampleRate / 2)) : 0);
+    const int iOffsetScale = bNegativeFreq ? (n / 2) : (bOffsetFreq ? (iLenSpec * int(VIRTUAL_INTERMED_FREQ) / (iSampleRate / 2)) : 0);
 
-    const _REAL rFactorScale = _REAL(iSampleRate) / _REAL(iLenSpec) / 2000.0;
+    const _REAL rFactorScale = _REAL(iSampleRate) / _REAL(n) / 1000.0;
 
     /* Init output vectors */
     vecrData.Init(iLenSpec, 0.0);
     vecrScale.Init(iLenSpec, 0.0);
 
     /* Log power spectrum data */
-    for (int i = 0; i <iLenSpec; i++)
+    if (bNegativeFreq)
     {
-        const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
+      for (int i = 0; i <iLenSpec / 2; i++)
+      {
+        const _REAL rNormSqMag = vecrSqMagSpect[i + iLenSpec / 2] / rNormData;
 
         if (rNormSqMag > 0)
             vecrData[i] = 10.0 * log10(rNormSqMag);
@@ -81,6 +84,32 @@ void SpectrumAnalyser::PSD2LogPSD(_REAL rNormData, CVector<_REAL>& vecrData, CVe
             vecrData[i] = RET_VAL_LOG_0;
 
         vecrScale[i] = _REAL(i - iOffsetScale) * rFactorScale;
+      }
+      for (int i = iLenSpec / 2; i < iLenSpec; i++)
+      {
+        const _REAL rNormSqMag = vecrSqMagSpect[i - iLenSpec / 2] / rNormData;
+
+        if (rNormSqMag > 0)
+            vecrData[i] = 10.0 * log10(rNormSqMag);
+        else
+            vecrData[i] = RET_VAL_LOG_0;
+
+        vecrScale[i] = _REAL(i - iOffsetScale) * rFactorScale;
+      }
+    }
+    else
+    {
+      for (int i = 0; i <iLenSpec; i++)
+      {
+          const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
+  
+          if (rNormSqMag > 0)
+              vecrData[i] = 10.0 * log10(rNormSqMag);
+          else
+              vecrData[i] = RET_VAL_LOG_0;
+
+          vecrScale[i] = _REAL(i - iOffsetScale) * rFactorScale;
+      }
     }
 }
 

@@ -1082,7 +1082,7 @@ void CDRMPlot::SetupInpSpec()
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input Spectrum [dB]"));
 
 	/* Fixed scale */
-    const double dXScaleMin = pDRMRec->ConvertFrequency((_REAL) 0.0) / 1000;
+    const double dXScaleMin = pDRMRec->ConvertFrequency(-(_REAL) iSigSampleRate / 2) / 1000;
     const double dXScaleMax = pDRMRec->ConvertFrequency((_REAL) iSigSampleRate / 2) / 1000;
 	plot->setAxisScale(QwtPlot::xBottom, dXScaleMin, dXScaleMax);
 
@@ -1126,7 +1126,7 @@ void CDRMPlot::SetupInpPSD(bool bAnalog)
 	plot->setAxisTitle(QwtPlot::yLeft, tr("Input PSD [dB]"));
 
 	/* Fixed scale */
-    const double dXScaleMin = pDRMRec->ConvertFrequency((_REAL) 0.0) / 1000;
+    const double dXScaleMin = pDRMRec->ConvertFrequency(-(_REAL) iSigSampleRate / 2) / 1000;
     const double dXScaleMax = pDRMRec->ConvertFrequency((_REAL) iSigSampleRate / 2) / 1000;
 	plot->setAxisScale(QwtPlot::xBottom, dXScaleMin, dXScaleMax);
 
