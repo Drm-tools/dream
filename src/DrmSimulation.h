@@ -135,10 +135,10 @@ protected:
     CSingleBuffer<_COMPLEX>				ChanEstInBufSim;
     CSingleBuffer<CChanSimDataDemod>	ChanEstOutBufChan;
     CSingleBuffer<CChanSimDataMod>		RecDataBuf;
-    CSingleBuffer<_REAL>				ChanResInBuf;
+    CSingleBuffer<_COMPLEX>				ChanResInBuf;
 
     /* Receiver buffers */
-    CCyclicBuffer<_REAL>				InpResBuf;
+    CCyclicBuffer<_COMPLEX>				InpResBuf;
     CSingleBuffer<_COMPLEX>				FreqSyncAcqBuf;
     CSingleBuffer<_COMPLEX>				TimeSyncBuf;
     CSingleBuffer<_COMPLEX>				OFDMDemodBuf;

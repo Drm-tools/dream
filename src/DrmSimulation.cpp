@@ -191,8 +191,7 @@ void CDRMSimulation::Run()
             DataConvChanResam.ProcessData(Parameters, RecDataBuf, ChanResInBuf);
 
             /* Resample input DRM-stream */
-		// TODO: put back
-            // InputResample.ProcessData(Parameters, ChanResInBuf, InpResBuf);
+            InputResample.ProcessData(Parameters, ChanResInBuf, InpResBuf);
 
             /* Frequency synchronization acquisition */
             FreqSyncAcq.ProcessData(Parameters, InpResBuf, FreqSyncAcqBuf);

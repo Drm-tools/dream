@@ -296,7 +296,7 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         fprintf(stderr, "CReceiveData::InitInternal(): iOutputBlockAlignment = %i\n", iOutputBlockAlignment);
     }
 
-    spectrumAnalyser.SetSampleRate(iSampleRate);
+    spectrumAnalyser.SetSampleRate(iSampleRate * iDownscaleRatio / iUpscaleRatio);
 
     try {
 
@@ -419,7 +419,7 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrSca
                  const int iNumAvBlocksPSD,
                  const int iPSDOverlap)
 {
-    spectrumAnalyser.setNegativeFrequency(eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT);
+    spectrumAnalyser.setNegativeFrequency(eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT || eInChanSelection == CS_IQ_POS_ZERO || eInChanSelection == CS_IQ_NEG_ZERO || eInChanSelection == CS_IQ_POS || eInChanSelection == CS_IQ_NEG);
     spectrumAnalyser.setOffsetFrequency((eInChanSelection == CS_IQ_POS_ZERO) || (eInChanSelection == CS_IQ_NEG_ZERO));
     mutexInpData.Lock();
     spectrumAnalyser.CalculateLinearPSD(veccInpData, iLenPSDAvEachBlock, iNumAvBlocksPSD, iPSDOverlap);

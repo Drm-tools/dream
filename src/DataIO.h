@@ -226,7 +226,7 @@ protected:
 * Data type conversion classes needed for simulation and AMSS decoding         *
 \******************************************************************************/
 /* Conversion from channel output to resample module input */
-class CDataConvChanResam : public CReceiverModul<CChanSimDataMod, _REAL>
+class CDataConvChanResam : public CReceiverModul<CChanSimDataMod, _COMPLEX>
 {
 protected:
     virtual void InitInternal(CParameter& Parameters)

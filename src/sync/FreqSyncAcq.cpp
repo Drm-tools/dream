@@ -62,7 +62,7 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& Parameters)
 		iOutputBlockSize = 0;
 
 		/* Add new symbol in history (shift register) */
-		vecrFFTHistory.AddEnd((*pvecInputData), iInputBlockSize);
+		veccFFTHistory.AddEnd((*pvecInputData), iInputBlockSize);
 
 
 		/* Start algorithm when history memory is filled -------------------- */
@@ -79,17 +79,25 @@ void CFreqSyncAcq::ProcessDataInternal(CParameter& Parameters)
 			/* Copy vector to matlib vector and calculate real-valued FFT */
 			const int iStartIdx = iHistBufSize - iFrAcFFTSize;
 			for (i = 0; i < iFrAcFFTSize; i++)
-				vecrFFTInput[i] = vecrFFTHistory[i + iStartIdx];
+				veccFFTInput[i] = veccFFTHistory[i + iStartIdx];
 
-			static CMatlibVector<CReal> vecRet;
-			vecRet.Init(vecrFFTInput.GetSize(), VTY_TEMP);
+			static CMatlibVector<CComplex> vecRet;
+			vecRet.Init(veccFFTInput.GetSize()); //, VTY_TEMP);
 
-			for (int k = 0; k < vecrFFTInput.GetSize(); k++)
-				vecRet[k] = vecrFFTInput[k] * vecrHammingWin[k];
+			for (int k = 0; k < veccFFTInput.GetSize(); k++)
+				vecRet[k] = veccFFTInput[k] * vecrHammingWin[k];
 
 			/* Calculate power spectrum (X = real(F)^2 + imag(F)^2) */
 			vecrSqMagFFTOut =
-				SqMag(rfft(vecRet, FftPlan));
+				SqMag(Fft(vecRet, FftPlan));
+
+			/* Sideband swap (fftshift) in place. Could add to Matlib */
+			for (int i = 0; i< iFrAcFFTSize / 2; i++)
+			{
+			  double rTmp = vecrSqMagFFTOut[i];
+			  vecrSqMagFFTOut[i] = vecrSqMagFFTOut[i + iFrAcFFTSize / 2];
+			  vecrSqMagFFTOut[i + iFrAcFFTSize / 2] = rTmp;
+			}
 
 			/* Calculate moving average for better estimate of PSD */
 			vvrPSDMovAv.Add(vecrSqMagFFTOut);
@@ -122,16 +130,16 @@ const int iStartFilt = 0; // <- no offset right now
 
 				/* From the left edge to the right edge */
 				vecrFiltResLR[iStartFilt] = vecrPSD[iStartFilt];
-				for (i = iStartFilt + 1; i < iHalfBuffer; i++)
+				for (i = iStartFilt + 1; i < iFrAcFFTSize; i++)
 				{
 					vecrFiltResLR[i] = (vecrFiltResLR[i - 1] - vecrPSD[i]) *
 						LAMBDA_FREQ_IIR_FILT + vecrPSD[i];
 				}
 
 				/* From the right edge to the left edge */
-				vecrFiltResRL[iHalfBuffer - 1] =
-					vecrPSD[iHalfBuffer - 1];
-				for (i = iHalfBuffer - 2; i >= iStartFilt; i--)
+				vecrFiltResRL[iFrAcFFTSize - 1] =
+					vecrPSD[iFrAcFFTSize - 1];
+				for (i = iFrAcFFTSize - 2; i >= iStartFilt; i--)
 				{
 					vecrFiltResRL[i] = (vecrFiltResRL[i + 1] - vecrPSD[i]) *
 						LAMBDA_FREQ_IIR_FILT + vecrPSD[i];
@@ -144,14 +152,14 @@ const int iStartFilt = 0; // <- no offset right now
 #if 0
 /* Stores curves for PSD estimation and filtering */
 FILE* pFile2 = fopen("test/freqacqFilt.dat", "w");
-for (i = 0; i < iHalfBuffer; i++)
+for (i = 0; i < iFrAcFFTSize; i++)
 	fprintf(pFile2, "%e %e\n", vecrPSD[i], vecrFiltRes[i]);
 fclose(pFile2);
 #endif
 #endif
 
 				/* Equalize PSD by "noise floor estimate" */
-				for (i = 0; i < iHalfBuffer; i++)
+				for (i = 0; i < iFrAcFFTSize; i++)
 				{
 					/* Make sure we do not devide by zero */
 					if (vecrFiltRes[i] != 0.0)
@@ -305,7 +313,7 @@ fclose(pFile1);
 							for (i = 0; i < iHistBufSize; i++)
 							{
 								/* Multiply with exp(j omega t) */
-								(*pvecOutputData)[i] = vecrFFTHistory[i] *
+								(*pvecOutputData)[i] = veccFFTHistory[i] *
 									_COMPLEX(Cos(i * rNormCurFreqOffsFst),
 									Sin(-i * rNormCurFreqOffsFst));
 							}
@@ -404,16 +412,16 @@ void CFreqSyncAcq::InitInternal(CParameter& Parameters)
 	/* Length of the half of the spectrum of real input signal (the other half
 	   is the same because of the real input signal). We have to consider the
 	   Nyquist frequency ("iFrAcFFTSize" is always even!) */
-	iHalfBuffer = iFrAcFFTSize / 2 + 1;
+	//iHalfBuffer = iFrAcFFTSize / 2 + 1; // INPUT IS NOW COMPLEX!
 
 	/* Search window is smaller than haft-buffer size because of correlation
 	   with pilot positions */
-	iSearchWinSize = iHalfBuffer - veciTableFreqPilots[2];
+	iSearchWinSize = iFrAcFFTSize - veciTableFreqPilots[2];
 
 	/* Calculate actual indices of start and end of search window */
 	iStartDCSearch =
-		(int) Floor((rNormDesPos - rNormHalfWinSize) * iHalfBuffer);
-	iEndDCSearch = (int) Ceil((rNormDesPos + rNormHalfWinSize) * iHalfBuffer);
+		(int) Floor((rNormDesPos - rNormHalfWinSize) * iFrAcFFTSize);
+	iEndDCSearch = (int) Ceil((rNormDesPos + rNormHalfWinSize) * iFrAcFFTSize);
 
 	/* Check range. If out of range -> correct */
 	if (!((iStartDCSearch > 0) && (iStartDCSearch < iSearchWinSize)))
@@ -424,7 +432,8 @@ void CFreqSyncAcq::InitInternal(CParameter& Parameters)
 
 	/* Set bound for ratio between filtered signal to signal. Use a lower bound
 	   if the search window is smaller */
-	if (((_REAL) iEndDCSearch - iStartDCSearch) / iHalfBuffer < (_REAL) 0.042)
+// TODO work out what this should be
+	if (((_REAL) iEndDCSearch - iStartDCSearch) / iFrAcFFTSize < (_REAL) 0.042)
 		rPeakBoundFiltToSig = PEAK_BOUND_FILT2SIGNAL_0_042;
 	else
 		rPeakBoundFiltToSig = PEAK_BOUND_FILT2SIGNAL_1;
@@ -433,20 +442,20 @@ void CFreqSyncAcq::InitInternal(CParameter& Parameters)
 	/* Init vectors and FFT-plan -------------------------------------------- */
 	/* Allocate memory for FFT-histories and init with zeros */
 	iHistBufSize = iFrAcFFTSize * NUM_BLOCKS_USED_FOR_AV;
-	vecrFFTHistory.Init(iHistBufSize, (_REAL) 0.0);
-	vecrFFTInput.Init(iFrAcFFTSize);
-	vecrSqMagFFTOut.Init(iHalfBuffer);
+	veccFFTHistory.Init(iHistBufSize, (_REAL) 0.0);
+	veccFFTInput.Init(iFrAcFFTSize);
+	vecrSqMagFFTOut.Init(iFrAcFFTSize);
 
 	/* Allocate memory for PSD after pilot correlation */
-	vecrPSDPilCor.Init(iHalfBuffer);
+	vecrPSDPilCor.Init(iFrAcFFTSize);
 
 	/* Init vectors for filtering in frequency direction */
-	vecrFiltResLR.Init(iHalfBuffer);
-	vecrFiltResRL.Init(iHalfBuffer);
-	vecrFiltRes.Init(iHalfBuffer);
+	vecrFiltResLR.Init(iFrAcFFTSize);
+	vecrFiltResRL.Init(iFrAcFFTSize);
+	vecrFiltRes.Init(iFrAcFFTSize);
 
 	/* Index memory for detected peaks (assume worst case with the size) */
-	veciPeakIndex.Init(iHalfBuffer);
+	veciPeakIndex.Init(iFrAcFFTSize);
 
 	/* Init plans for FFT (faster processing of Fft and Ifft commands) */
 	FftPlan.Init(iFrAcFFTSize);
@@ -456,7 +465,7 @@ void CFreqSyncAcq::InitInternal(CParameter& Parameters)
 	vecrHammingWin = Hamming(iFrAcFFTSize);
 
 	/* Init moving average class for SqMag FFT results */
-	vvrPSDMovAv.InitVec(NUM_FFT_RES_AV_BLOCKS, iHalfBuffer);
+	vvrPSDMovAv.InitVec(NUM_FFT_RES_AV_BLOCKS, iFrAcFFTSize);
 
 
 	/* Frequency correction */
@@ -509,7 +518,7 @@ void CFreqSyncAcq::StartAcquisition()
 	iAverageCounter = NUM_FFT_RES_AV_BLOCKS;
 
 	/* Reset FFT-history */
-	vecrFFTHistory.Reset((_REAL) 0.0);
+	veccFFTHistory.Reset((_COMPLEX) 0.0);
 }
 
 bool CFreqSyncAcq::GetUnlockedFrameBoundary()

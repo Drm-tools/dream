@@ -69,7 +69,7 @@
 
 
 /* Classes ********************************************************************/
-class CFreqSyncAcq : public CReceiverModul<_REAL, _COMPLEX>
+class CFreqSyncAcq : public CReceiverModul<_COMPLEX, _COMPLEX>
 {
 public:
 	CFreqSyncAcq() : 
@@ -95,10 +95,10 @@ public:
 
 protected:
 	CVector<int>				veciTableFreqPilots;
-	CShiftRegister<_REAL>		vecrFFTHistory;
+	CShiftRegister<_COMPLEX>		veccFFTHistory;
 
 	CFftPlans					FftPlan;
-	CRealVector					vecrFFTInput;
+	CComplexVector					veccFFTInput;
 	CRealVector					vecrSqMagFFTOut;
 	CRealVector					vecrHammingWin;
 	CMovingAv<CRealVector>		vvrPSDMovAv;

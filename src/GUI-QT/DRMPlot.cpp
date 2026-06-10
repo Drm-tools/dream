@@ -201,7 +201,7 @@ void CDRMPlot::OnTimerChart() // TODO make sure timer stopped when receiver not 
 	ECodScheme eMSCCodingScheme = Parameters.eMSCCodingScheme;
 	bool bAudioDecoder = !Parameters.audiodecoder.empty();
 	iAudSampleRate = Parameters.GetAudSampleRate();
-	iSigSampleRate = Parameters.GetSigSampleRate();
+	iSigSampleRate = Parameters.GetSigSampleRate() / Parameters.GetSigUpscaleRatio() * Parameters.GetSigDownscaleRatio();
     int iChanMode = pDRMRec->GetInChanSel();
 	Parameters.Unlock();
 
@@ -1027,7 +1027,7 @@ void CDRMPlot::SetupPSD()
 
 	/* Fixed scale */
 	plot->setAxisScale(QwtPlot::xBottom,
-		(double) 0.0, (double) iSigSampleRate / 2000);
+		(double) -iSigSampleRate / 2000, (double) iSigSampleRate / 2000);
 
 	plot->setAxisScale(QwtPlot::yLeft, MIN_VAL_SHIF_PSD_Y_AXIS_DB,
 		MAX_VAL_SHIF_PSD_Y_AXIS_DB);
