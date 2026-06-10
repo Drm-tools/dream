@@ -583,6 +583,7 @@ void AnalogDemDlg::OnCheckSaveAudioWAV()
 void AnalogDemDlg::OnChartxAxisValSet(double dVal)
 {
 	/* Perform range check */
+        dVal = dVal / rx.GetParameters()->GetSigUpscaleRatio() * rx.GetParameters()->GetSigDownscaleRatio();
 	if (dVal < 0.0)
 		dVal = 0.0;
 	else if (dVal > 1.0)
