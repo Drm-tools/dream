@@ -26,6 +26,17 @@ void SpectrumAnalyser::CalculateSpectrum(const CShiftRegister<_COMPLEX>& veccInp
     /* Get squared magnitude of spectrum */
     vecrSqMagSpect.Init(n);
     vecrSqMagSpect = SqMag(Fft(veccFFTInput * Hann(n), fftPlansSpectrum));
+
+    // Sideband Swap if negative frequencies used
+    if (bNegativeFreq)
+    {
+        for (int i = 0; i< n/2; i++)
+        {
+          _REAL tmp = vecrSqMagSpect[i];
+          vecrSqMagSpect[i] = vecrSqMagSpect[i + n/2];
+          vecrSqMagSpect[i + n/2] = tmp;
+        }
+    }
 }
 
 void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_COMPLEX>& veccInpData,
@@ -56,6 +67,17 @@ void SpectrumAnalyser::CalculateLinearPSD(const CShiftRegister<_COMPLEX>& veccIn
         /* Calculate squared magnitude of spectrum and average results */
         vecrSqMagSpect += SqMag(Fft(veccFFTInput, fftPlansPSD));
     }
+
+    // Sideband Swap if negative frequencies used
+    if (bNegativeFreq)
+    {
+        for (int i = 0; i< iLenPSDAvEachBlock/2; i++)
+        {
+          _REAL tmp = vecrSqMagSpect[i];
+          vecrSqMagSpect[i] = vecrSqMagSpect[i + iLenPSDAvEachBlock/2];
+          vecrSqMagSpect[i + iLenPSDAvEachBlock/2] = tmp;
+        }
+    }
 }
 
 void SpectrumAnalyser::PSD2LogPSD(_REAL rNormData, CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
@@ -72,44 +94,16 @@ void SpectrumAnalyser::PSD2LogPSD(_REAL rNormData, CVector<_REAL>& vecrData, CVe
     vecrScale.Init(iLenSpec, 0.0);
 
     /* Log power spectrum data */
-    if (bNegativeFreq)
+    for (int i = 0; i <iLenSpec; i++)
     {
-      for (int i = 0; i <iLenSpec / 2; i++)
-      {
-        const _REAL rNormSqMag = vecrSqMagSpect[i + iLenSpec / 2] / rNormData;
-
-        if (rNormSqMag > 0)
-            vecrData[i] = 10.0 * log10(rNormSqMag);
-        else
-            vecrData[i] = RET_VAL_LOG_0;
-
-        vecrScale[i] = _REAL(i - iOffsetScale) * rFactorScale;
-      }
-      for (int i = iLenSpec / 2; i < iLenSpec; i++)
-      {
-        const _REAL rNormSqMag = vecrSqMagSpect[i - iLenSpec / 2] / rNormData;
-
-        if (rNormSqMag > 0)
-            vecrData[i] = 10.0 * log10(rNormSqMag);
-        else
-            vecrData[i] = RET_VAL_LOG_0;
-
-        vecrScale[i] = _REAL(i - iOffsetScale) * rFactorScale;
-      }
-    }
-    else
-    {
-      for (int i = 0; i <iLenSpec; i++)
-      {
-          const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
+        const _REAL rNormSqMag = vecrSqMagSpect[i] / rNormData;
   
-          if (rNormSqMag > 0)
-              vecrData[i] = 10.0 * log10(rNormSqMag);
-          else
-              vecrData[i] = RET_VAL_LOG_0;
+        if (rNormSqMag > 0)
+            vecrData[i] = 10.0 * log10(rNormSqMag);
+        else
+            vecrData[i] = RET_VAL_LOG_0;
 
-          vecrScale[i] = _REAL(i - iOffsetScale) * rFactorScale;
-      }
+        vecrScale[i] = _REAL(i - iOffsetScale) * rFactorScale;
     }
 }
 
@@ -234,7 +228,10 @@ void SpectrumAnalyser::CalculatePSDInterferenceTag(CParameter &Parameters, CVect
 
 int SpectrumAnalyser::FreqToBin(_REAL rFreq)
 {
-    return int(rFreq/iSampleRate * LEN_PSD_AV_EACH_BLOCK_RSI);
+    if (bNegativeFreq)
+      return int((rFreq/iSampleRate + 0.5) * LEN_PSD_AV_EACH_BLOCK_RSI);
+    else
+      return int(rFreq/iSampleRate * LEN_PSD_AV_EACH_BLOCK_RSI);
 }
 
 _REAL SpectrumAnalyser::CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin)
