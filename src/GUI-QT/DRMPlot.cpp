@@ -1160,13 +1160,15 @@ void CDRMPlot::SetupInpPSD(bool bAnalog)
 void CDRMPlot::SetBWMarker(const _REAL rBWCenter, const _REAL rBWWidth)
 {
 	double	dX[2], dY[2];
+	CParameter& Parameters = *pDRMRec->GetParameters();
+	int iDemodSigSampleRate = Parameters.GetSigSampleRate();
 	/* Insert marker for filter bandwidth if required */
 	if (rBWWidth != (_REAL) 0.0)
 	{
         dX[0] = pDRMRec->ConvertFrequency(
-			(rBWCenter - rBWWidth / 2) * (double)iSigSampleRate) / 1000.0;
+			(rBWCenter - rBWWidth / 2) * (double)iDemodSigSampleRate) / 1000.0;
         dX[1] = pDRMRec->ConvertFrequency(
-			(rBWCenter + rBWWidth / 2) * (double)iSigSampleRate) / 1000.0;
+			(rBWCenter + rBWWidth / 2) * (double)iDemodSigSampleRate) / 1000.0;
 
 		/* Take the min-max values from scale to get vertical line */
 		dY[0] = MAX_VAL_INP_SPEC_Y_AXIS_DB;//MIN_VAL_INP_SPEC_Y_AXIS_DB;

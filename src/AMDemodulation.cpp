@@ -345,13 +345,15 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
 
     /* Actual band-pass filter offset is the demodulation frequency plus the
        additional offset for the demodulation type */
-    rBPNormCentOffsTot = 0.0; // Filtering done at DC after frequency shifting the input. TODO: fix SSB and CW modes later by shifting back up and taking real part
+    // This is used for display only. Filtering is done at DC after frequency shifting the input. 
+    // TODO: check SSB and CW modes
+    rBPNormCentOffsTot = rNewNormFreqOffset + rBPNormFreqOffset;
 
 
     /* Set filter coefficients ---------------------------------------------- */
     /* Make sure that the phase in the middle of the filter is always the same
        to avaoid clicks when the filter coefficients are changed */
-    const CReal rStartPhase = (CReal) iHilFiltBlLen * crPi * rBPNormCentOffsTot;
+    const CReal rStartPhase = (CReal) iHilFiltBlLen * crPi * rBPNormFreqOffset;
 
     /* Copy actual filter coefficients. It is important to initialize the
        vectors with zeros because we also do a zero-padding */
@@ -360,10 +362,10 @@ void CAMDemodulation::SetBPFilter(const CReal rNewBPNormBW,
     for (int i = 0; i < iHilFiltBlLen; i++)
     {
         rvecBReal[i] = vecrFilter[i] *
-                       Cos((CReal) 2.0 * crPi * rBPNormCentOffsTot * i - rStartPhase);
+                       Cos((CReal) 2.0 * crPi * rBPNormFreqOffset * i - rStartPhase);
 
         rvecBImag[i] = vecrFilter[i] *
-                       Sin((CReal) 2.0 * crPi * rBPNormCentOffsTot * i - rStartPhase);
+                       Sin((CReal) 2.0 * crPi * rBPNormFreqOffset * i - rStartPhase);
     }
 
     /* Transformation in frequency domain for fft filter */
