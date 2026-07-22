@@ -229,9 +229,9 @@ void SpectrumAnalyser::CalculatePSDInterferenceTag(CParameter &Parameters, CVect
 int SpectrumAnalyser::FreqToBin(_REAL rFreq)
 {
     if (bNegativeFreq)
-      return int((rFreq/iSampleRate + 0.5) * LEN_PSD_AV_EACH_BLOCK_RSI);
+      return int((rFreq/iSampleRate + 0.5) * LEN_PSD_AV_EACH_BLOCK_RSI * iSampleRate / 48000.0);
     else
-      return int(rFreq/iSampleRate * LEN_PSD_AV_EACH_BLOCK_RSI);
+      return int(rFreq/iSampleRate * LEN_PSD_AV_EACH_BLOCK_RSI * iSampleRate / 48000.0);
 }
 
 _REAL SpectrumAnalyser::CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin)

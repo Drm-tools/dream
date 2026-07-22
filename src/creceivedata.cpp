@@ -307,7 +307,12 @@ void CReceiveData::InitInternal(CParameter& Parameters)
         bChanged = (pSound==nullptr)?true:pSound->Init(iSampleRate * iDownscaleRatio / iUpscaleRatio, iInputBufferSize * 2, true);
         /* Clear input data buffer on change samplerate change */
         if (bChanged)
+        {
             ClearInputData();
+            int iNewInputDataVectorSize = iSampleRate / 48000 * INPUT_DATA_VECTOR_SIZE * iDownscaleRatio / iUpscaleRatio;
+            fprintf(stderr, "reinitialising veccInpData to size %d\n", iNewInputDataVectorSize);
+	    veccInpData.Init(iNewInputDataVectorSize,0.0);
+        }
 
         /* Init 2X up/downscaler */
 	upDownSample_L.Init(iOutputBlockSize, iUpscaleRatio, iDownscaleRatio);
@@ -433,14 +438,17 @@ void CReceiveData::GetInputPSD(CVector<_REAL>& vecrData, CVector<_REAL>& vecrSca
 void CReceiveData::emitRSCIData(CParameter& Parameters)
 {
     /* Init the constants for scale and normalization */
-    spectrumAnalyser.setNegativeFrequency(eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT);
+    bool bNegativeFrequency = (eInChanSelection == CS_IQ_POS_SPLIT || eInChanSelection == CS_IQ_NEG_SPLIT || eInChanSelection == CS_IQ_POS_ZERO || eInChanSelection == CS_IQ_NEG_ZERO || eInChanSelection == CS_IQ_POS || eInChanSelection == CS_IQ_NEG);
+    int iInputSampleRate = iSampleRate * iDownscaleRatio / iUpscaleRatio; // TODO have two variables throughout; input and output sample rate
+    int N = iInputSampleRate / 48000 * LEN_PSD_AV_EACH_BLOCK_RSI; // Constant is scaled for 48kHz sampling // TODO define as 187.5Hz resolution instead
+    spectrumAnalyser.setNegativeFrequency(bNegativeFrequency);
     spectrumAnalyser.setOffsetFrequency((eInChanSelection == CS_IQ_POS_ZERO) || (eInChanSelection == CS_IQ_NEG_ZERO));
     mutexInpData.Lock();
-    spectrumAnalyser.CalculateLinearPSD(veccInpData, LEN_PSD_AV_EACH_BLOCK_RSI, NUM_AV_BLOCKS_PSD_RSI, PSD_OVERLAP_RSI);
+    spectrumAnalyser.CalculateLinearPSD(veccInpData, N, NUM_AV_BLOCKS_PSD_RSI, iInputSampleRate / 48000 * PSD_OVERLAP_RSI);
     mutexInpData.Unlock();
 
 
-    const _REAL rNormData =  pow(_REAL(_MAXSHORT) * _REAL(LEN_PSD_AV_EACH_BLOCK_RSI), 2) * _REAL(NUM_AV_BLOCKS_PSD_RSI) * PSDWindowGain;
+    const _REAL rNormData =  pow(_REAL(_MAXSHORT) * _REAL(N), 2) * _REAL(NUM_AV_BLOCKS_PSD_RSI) * PSDWindowGain;
 
     CVector<_REAL>		vecrData;
     CVector<_REAL>		vecrScale;
@@ -470,6 +478,14 @@ void CReceiveData::emitRSCIData(CParameter& Parameters)
     }
     /* Line up the the middle of the vector with the quarter-Nyquist bin of FFT */
     int iStartIndex = iStartBin - (LEN_PSD_AV_EACH_BLOCK_RSI/4) + (iVecSize-1)/2;
+
+
+    /* use positive frequencies if negative ones are present */
+    if (bNegativeFrequency)
+    {
+        iStartBin += N/2;
+        iEndBin += N/2;
+    }
 
     /* Fill with zeros to start with */
     Parameters.vecrPSD.Init(iVecSize, 0.0);
