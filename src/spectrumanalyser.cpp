@@ -237,8 +237,8 @@ int SpectrumAnalyser::FreqToBin(_REAL rFreq)
 _REAL SpectrumAnalyser::CalcTotalPower(CVector<_REAL> &vecrData, int iStartBin, int iEndBin)
 {
     if (iStartBin < 0) iStartBin = 0;
-    if (iEndBin > LEN_PSD_AV_EACH_BLOCK_RSI/2)
-        iEndBin = LEN_PSD_AV_EACH_BLOCK_RSI/2;
+    if (iEndBin > iSampleRate / 48000 * LEN_PSD_AV_EACH_BLOCK_RSI)
+        iEndBin = iSampleRate / 48000 * LEN_PSD_AV_EACH_BLOCK_RSI;
 
     _REAL rSigPower = _REAL(0.0);
     for (int i=iStartBin; i<=iEndBin; i++)
