@@ -212,7 +212,7 @@ std::string NML::Dump(void) const
   {
     if (isMenu())
     {
-      sprintf(buf,
+      snprintf(buf, sizeof(buf),
               "Link #%d [%04x] %s\n",
               i,
               GetLinkId(i),
@@ -220,14 +220,14 @@ std::string NML::Dump(void) const
     }
     else
     {
-      sprintf(buf, "Item #%d is\n", i);
+      snprintf(buf, sizeof(buf), "Item #%d is\n", i);
     }
     items += buf;
     items += HexDump(GetItemText(i).c_str(),
                      GetItemText(i).size());
   }
 
-  sprintf(buf,
+  snprintf(buf, sizeof(buf),
           "object_id=%04x, object_type: %s(%d), static_flag=%1x,\n"
           "revision=%d,extended_header_len=%d,nr_of_items=%d\n",
           GetObjectId(),
@@ -330,7 +330,7 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 	// at least header needs to be present
 	if( rno.nml_len < 4 )
 	{
-		sprintf( error, "Error: NML has only %u bytes", rno.nml_len );
+        sprintf( error, "Error: NML has only %u bytes", rno.nml_len );
 		n->SetErrorDump( 0x0815, rno, error );
 		return n;
 	}
@@ -341,7 +341,7 @@ NML* NMLFactory::CreateNML( const NML::RawNewsObject_t& rno, const NMLEscapeCode
 	// check for reserved object types
 	if( ( ( rno.nml[2] >> 5 ) == 0 ) || ( ( rno.nml[2] >> 5 ) > NML::LIST ) )
 	{
-		sprintf( error, "Error: NML has illegal object type 0x%02x", rno.nml[2] >> 5 );
+        sprintf( error, "Error: NML has illegal object type 0x%02x", rno.nml[2] >> 5 );
 		n->SetErrorDump( n->_news.object_id, rno, error );
 		return n;
 	}
