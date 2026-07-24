@@ -212,7 +212,7 @@ AacCodec::DecOpen(const CAudioParam& AudioParam, int& iAudioSampleRate)
 CAudioCodec::EDecError
 AacCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVector<_REAL>& left, CVector<_REAL>& right)
 {
-    EDecError eDecError;
+    EDecError eDecError = CAudioCodec::DECODER_ERROR_OK;
     bool bCurBlockOK = true;
     _SAMPLE* psDecOutSampleBuf = nullptr;
     NeAACDecFrameInfo DecFrameInfo;
