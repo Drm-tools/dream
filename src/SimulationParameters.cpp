@@ -647,6 +647,9 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
     case RM_ROBUSTNESS_MODE_D:
         strFileName += "D";
         break;
+    case RM_ROBUSTNESS_MODE_E:
+        strFileName += "E";
+        break;
     case RM_NO_MODE_DETECTED:
         break;
     }
