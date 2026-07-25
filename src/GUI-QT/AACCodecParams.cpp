@@ -33,12 +33,12 @@
 #include <QButtonGroup>
 #include <QLayout>
 #include "AACCodecParams.h"
-#include "DialogUtil.h"
+/*#include "DialogUtil.h"*/
 #include "../util-QT/Util.h"
-#include "../DrmTransmitter.h"
-#ifdef HAVE_LIBFDK_AAC
+/*#include "../DrmTransmitter.h"*/
+/*#ifdef HAVE_LIBFDK_AAC
 # include "../sourcedecoders/fdk_aac_codec.h"
-#endif
+#endif*/
 
 AACCodecParams::AACCodecParams(CSettings& Settings, CParameter& Parameters,
 	int iShortID, QWidget* parent)
@@ -85,6 +85,13 @@ AACCodecParams::AACCodecParams(CSettings& Settings, CParameter& Parameters,
     case CAudioParam::AS_24KHZ:
         RadioButton24kHz->setChecked(true);
 		break;
+    case CAudioParam::AS_9_6KHZ:
+    case CAudioParam::AS_16KHZ:
+    case CAudioParam::AS_19_2KHZ:
+    case CAudioParam::AS_32KHZ:
+    case CAudioParam::AS_38_4KHZ:
+    case CAudioParam::AS_48KHZ:
+        break;
 	}
     /* options */
     CheckBoxSBR->setCheckState(Parameters.Service[iShortID].AudioParam.eSBRFlag?Qt::Checked:Qt::Unchecked);
