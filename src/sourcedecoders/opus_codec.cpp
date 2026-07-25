@@ -593,7 +593,7 @@ OpusCodec::DecOpen(const CAudioParam& AudioParam, int& iAudioSampleRate)
 CAudioCodec::EDecError
 OpusCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVector<_REAL>& left, CVector<_REAL>& right)
 {
-    EDecError eDecError = CAudioCodec::DECODER_ERROR_OK;
+    EDecError eDecError;
     int iDecChannels;
     bool bCurBlockOK = true;
     /* Prepare data vector with CRC at the beginning (the definition with faad2 DRM interface) */
