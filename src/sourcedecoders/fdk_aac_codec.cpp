@@ -29,7 +29,7 @@
 #include "fdk_aac_codec.h"
 #include <fdk-aac/aacenc_lib.h>
 #include <fdk-aac/FDK_audio.h>
-#include "src/SDC/SDC.h"
+/*#include "src/SDC/SDC.h"*/
 #include <cstring>
 
 FdkAacCodec::FdkAacCodec() :
@@ -220,7 +220,7 @@ static void logFlags(const CStreamInfo& info) {
     }
 }
 
-static void logNumbers(const CStreamInfo& info) {
+/*static void logNumbers(const CStreamInfo& info) {
     cerr << " channels coded " << info.aacNumChannels
          << " coded sample rate " << info.aacSampleRate
          << " channels " << info.numChannels
@@ -233,7 +233,7 @@ static void logNumbers(const CStreamInfo& info) {
     cerr << " channel 0 type " << int(info.pChannelType[0]) << " index " << int(info.pChannelIndices[0]);
     if(info.numChannels==2)
         cerr << " channel 1 type " << int(info.pChannelType[1]) << " index " << int(info.pChannelIndices[1]);
-}
+}*/
 
 /*      FROM AACCodec:
     In case of SBR, AAC sample rate is half the total sample rate. Length of output is doubled if SBR is used
@@ -388,8 +388,8 @@ CAudioCodec::EDecError FdkAacCodec::Decode(const vector<uint8_t>& audio_frame, u
     err = aacDecoder_DecodeFrame(hDecoder, decode_buf, int(output_size), 0);
 
     if(err == AAC_DEC_OK) {
-        double d = 0.0;
-        for(size_t i=0; i<output_size; i++) d += double(decode_buf[i]);
+        //double d = 0.0;
+        //for(size_t i=0; i<output_size; i++) d += double(decode_buf[i]);
         //cerr << "energy in good frame " << (d/output_size) << endl;
     }
     else if(err == AAC_DEC_PARSE_ERROR) {
