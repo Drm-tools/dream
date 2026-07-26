@@ -192,6 +192,8 @@ AacCodec::DecOpen(const CAudioParam& AudioParam, int& iAudioSampleRate)
             else
                 iDRMchanMode = DRMCH_STEREO;
             break;
+        case CAudioParam::AM_RESERVED:
+            break;
         }
         NeAACDecInitDRM(&hFaadDecoder, iAACSampleRate,
                         (unsigned char)iDRMchanMode);
@@ -213,7 +215,7 @@ CAudioCodec::EDecError
 AacCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVector<_REAL>& left, CVector<_REAL>& right)
 {
     EDecError eDecError;
-    bool bCurBlockOK = true;
+    //bool bCurBlockOK = true;
     _SAMPLE* psDecOutSampleBuf = nullptr;
     NeAACDecFrameInfo DecFrameInfo;
     DecFrameInfo.channels = 1;
@@ -392,6 +394,8 @@ AacCodec::fileName(const CParameter& Parameters) const
 
     case CAudioParam::AM_STEREO:
         ss << "stereo";
+        break;
+    case CAudioParam::AM_RESERVED:
         break;
     }
 
