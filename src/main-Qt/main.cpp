@@ -43,9 +43,9 @@
 #include "../util/Settings.h"
 #include <iostream>
 
-#ifdef HAVE_LIBHAMLIB
+/*#ifdef HAVE_LIBHAMLIB
 # include "../util-QT/Rig.h"
-#endif
+#endif*/
 #include <QCoreApplication>
 #include <QTranslator>
 #include <QThread>

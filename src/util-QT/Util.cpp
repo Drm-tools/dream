@@ -27,13 +27,13 @@
 \******************************************************************************/
 
 #include "Util.h"
-#include "../DrmTransceiver.h"
+/*#include "../DrmTransceiver.h"*/
 #include <QRegExp>
 #include <QUrl>
 #include <QDir>
 #include <QFileInfo>
 #include <QCoreApplication>
-#include "../Parameter.h"
+/*#include "../Parameter.h"*/
 
 /* Ensure that the given filename is secure */
 QString VerifyFilename(QString filename)

@@ -25,7 +25,7 @@
 \******************************************************************************/
 
 #include "StationsDlg.h"
-#include "../tables/TableStations.h"
+/*#include "../tables/TableStations.h"*/
 #include "DialogUtil.h"
 #ifdef HAVE_LIBHAMLIB
 # include "../util-QT/Rig.h"
@@ -39,7 +39,7 @@
 #include <QDateTime>
 #include <QMessageBox>
 #include <QFileInfo>
-#include <cmath>
+/*#include <cmath>*/
 
 /* Implementation *************************************************************/
 #ifdef HAVE_LIBHAMLIB

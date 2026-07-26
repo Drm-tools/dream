@@ -28,9 +28,9 @@
 
 #include "fmdialog.h"
 #include "DialogUtil.h"
-#ifdef HAVE_LIBHAMLIB
+/*#ifdef HAVE_LIBHAMLIB
 # include "../util-QT/Rig.h"
-#endif
+#endif*/
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QWhatsThis>

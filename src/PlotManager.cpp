@@ -31,7 +31,7 @@
 
 #include "PlotManager.h"
 #include "DrmReceiver.h"
-#include <iostream>
+/*#include <iostream>*/
 
 CPlotManager::CPlotManager() :
         pReceiver(0),

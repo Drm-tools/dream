@@ -26,7 +26,7 @@
  *
 \******************************************************************************/
 #include "Version.h"
-#include "GlobalDefinitions.h"
+/*#include "GlobalDefinitions.h"*/
 
 const char dream_manufacturer[] = "drea";
 #ifdef QT_CORE_LIB
