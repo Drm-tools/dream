@@ -26,13 +26,13 @@
  *
 \******************************************************************************/
 #include "../Parameter.h"
-#include "../DataIO.h"
-#include "../DrmReceiver.h"
-#include "../DrmTransmitter.h"
+/*#include "../DataIO.h"*/
+/*#include "../DrmReceiver.h"*/
+/*#include "../DrmTransmitter.h"*/
 #include "SoundCardSelMenu.h"
-#include "DialogUtil.h"
+/*#include "DialogUtil.h"*/
 #include <QFileDialog>
-#include "../util-QT/Util.h"
+/*#include "../util-QT/Util.h"*/
 #include "../util/FileTyper.h"
 #include "../main-Qt/crx.h"
 

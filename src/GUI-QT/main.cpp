@@ -38,7 +38,7 @@
 #else
 # include <csignal>
 #endif
-#include <iostream>
+/*#include <iostream>*/
 
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"

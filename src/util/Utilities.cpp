@@ -26,7 +26,7 @@
 \******************************************************************************/
 
 #include "Utilities.h"
-#include <sstream>
+/*#include <sstream>*/
 #include <cstring>
 #if defined(_WIN32)
 # ifdef HAVE_SETUPAPI

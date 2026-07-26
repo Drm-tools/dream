@@ -34,9 +34,11 @@
 
 #include "DrmReceiver.h"
 #include "util/Settings.h"
-#include "util/Utilities.h"
+/*#include "util/Utilities.h"*/
 #include "util/FileTyper.h"
-#include "darkmode.h"
+#ifdef _WIN32
+  #include "darkmode.h"
+#endif
 #include "tuner.h"
 
 #ifdef QT_MULTIMEDIA_LIB
@@ -44,7 +46,7 @@
 #endif
 #ifdef HAVE_LIBHAMLIB
 # ifdef QT_CORE_LIB // TODO should not have dependency to qt here
-#  include "util-QT/Rig.h"
+/*#  include "util-QT/Rig.h"*/
 # endif
 #endif
 #if 0

@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "fdrmdialog.h"
-#include <iostream>
+/*#include <iostream>*/
 #include <QFileInfo>
 #include <QWhatsThis>
 #include <QHideEvent>

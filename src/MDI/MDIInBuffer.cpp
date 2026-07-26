@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "MDIInBuffer.h"
-#include <iostream>
+/*#include <iostream>*/
 using namespace std;
 
 /* write the received packet to the buffer, if the previous one was not read yet
