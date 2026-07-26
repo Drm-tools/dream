@@ -35,7 +35,7 @@
 # include <QSet>
 #endif
 //#include "sound/sound.h"
-#include "sound/soundinterfacefactory.h"
+/*#include "sound/soundinterfacefactory.h"*/
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -417,6 +417,7 @@ void CWriteData::InitInternal(CParameter& Parameters)
 #ifdef QT_MULTIMEDIA_LIB
     if(pAudioOutput != nullptr) {
 
+        pAudioOutput->stop();
         pAudioOutput->setBufferSize(2 * 2 * 2 * iAudFrameSize); // room for two frames * bytes per sample * stereo
         pIODevice = pAudioOutput->start();
         cerr << "buffer size " << pAudioOutput->bufferSize() << endl;
