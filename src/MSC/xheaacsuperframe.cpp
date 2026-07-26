@@ -221,5 +221,6 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
 void
 XHEAACSuperFrame::getFrame(std::vector<uint8_t>& frame, uint8_t& crc, unsigned i)
 {
+    (void) crc;
     frame = audioFrame[i];
 }

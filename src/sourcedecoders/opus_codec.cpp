@@ -695,6 +695,7 @@ OpusCodec::CanEncode(CAudioParam::EAudCod eAudioCoding)
 bool
 OpusCodec::EncOpen(const CAudioParam& AudioParam, unsigned long& lNumSampEncIn, unsigned long& lMaxBytesEncOut)
 {
+    (void) AudioParam;
     unsigned long iSampleRate = 48000;
     unsigned iChannels = 1;
 	hOpusEncoder = opusEncOpen(iSampleRate, iChannels,
