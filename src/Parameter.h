@@ -1117,6 +1117,12 @@ public:
     _REAL rPIREnd;
 
     /* std::vector to hold the PSD values for the rpsd tag. */
+    CVector <_REAL> vecrPSDWide;
+
+    int iPSDWideStartFrequency;
+    int iPSDWideEndFrequency;
+
+    /* std::vector to hold the PSD values for the rpsd tag. */
     CVector <_REAL> vecrPSD;
 
     // std::vector to hold impulse response values for (proposed) rpir tag

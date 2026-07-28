@@ -344,6 +344,15 @@ protected:
 	virtual std::string GetProfiles(); // Return a std::string containing the set of profiles for this tag
 };
 
+class CTagItemGeneratorPowerSpectralDensityWide : public CTagItemGeneratorWithProfiles /* Bpsw */
+{
+public:
+	void GenTag(CParameter& Parameter);
+protected:
+	virtual std::string GetTagName();
+	virtual std::string GetProfiles(); // Return a std::string containing the set of profiles for this tag
+};
+
 class CTagItemGeneratorPowerImpulseResponse : public CTagItemGeneratorWithProfiles /* rpir */
 {
 public:

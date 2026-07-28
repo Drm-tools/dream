@@ -125,6 +125,7 @@ void CDownstreamDI::SendLockedFrame(CParameter& Parameter,
 	TagItemGeneratorRxFrequency.GenTag(true, Parameter.GetFrequency()); /* rfre */
 	TagItemGeneratorRxActivated.GenTag(true); /* ract */
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+	TagItemGeneratorPowerSpectralDensityWide.GenTag(Parameter);
 	TagItemGeneratorPowerImpulseResponse.GenTag(Parameter);
 	TagItemGeneratorPilots.GenTag(Parameter);
 
@@ -163,6 +164,8 @@ void CDownstreamDI::SendUnlockedFrame(CParameter& Parameter)
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+
+	TagItemGeneratorPowerSpectralDensityWide.GenTag(Parameter);
 
 	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
 
@@ -209,6 +212,8 @@ void CDownstreamDI::SendAMFrame(CParameter& Parameter, CSingleBuffer<_BINARY>& C
 	TagItemGeneratorReceiverStatus.GenTag(Parameter);
 
 	TagItemGeneratorPowerSpectralDensity.GenTag(Parameter);
+
+	TagItemGeneratorPowerSpectralDensityWide.GenTag(Parameter);
 
 	TagItemGeneratorPowerImpulseResponse.GenEmptyTag();
 
@@ -310,6 +315,7 @@ void CDownstreamDI::GenDIPacket()
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorReceiverStatus);
 
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerSpectralDensity);
+	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerSpectralDensityWide);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPowerImpulseResponse);
 	TagPacketGenerator.AddTagItem(&TagItemGeneratorPilots);
 
@@ -346,6 +352,7 @@ void CDownstreamDI::ResetTags()
 	TagItemGeneratorGPS.Reset();	/* rgps */
 
 	TagItemGeneratorPowerSpectralDensity.Reset();
+	TagItemGeneratorPowerSpectralDensityWide.Reset();
     TagItemGeneratorPowerImpulseResponse.Reset();
 	TagItemGeneratorPilots.Reset();
 

@@ -1241,6 +1241,33 @@ CTagItemGeneratorPowerSpectralDensity::GetProfiles()
 }
 
 void
+CTagItemGeneratorPowerSpectralDensityWide::GenTag(CParameter & Parameter)
+{
+	PrepareTag(Parameter.vecrPSDWide.Size() * SIZEOF__BYTE + 8 * SIZEOF__BYTE);
+
+	Enqueue((uint32_t)Parameter.iPSDWideStartFrequency, 4*SIZEOF__BYTE);
+	Enqueue((uint32_t)Parameter.iPSDWideEndFrequency, 4*SIZEOF__BYTE);
+
+	for (int i = 0; i < Parameter.vecrPSDWide.Size(); i++)
+	{
+		uint32_t p = uint8_t(Parameter.vecrPSDWide[i] * _REAL(-2.0));
+		Enqueue((uint32_t) p, SIZEOF__BYTE);
+	}
+
+}
+
+string
+CTagItemGeneratorPowerSpectralDensityWide::GetTagName()
+{
+	return "Bpsw";
+}
+
+string
+CTagItemGeneratorPowerSpectralDensityWide::GetProfiles()
+{
+	return "AD";
+}
+void
 CTagItemGeneratorPowerImpulseResponse::GenTag(CParameter & Parameter)
 {
 	int samples = Parameter.vecrPIR.Size();

@@ -185,7 +185,8 @@ protected:
 
 	CTagItemGeneratorGPS TagItemGeneratorGPS; /* rgps */
 	CTagItemGeneratorPowerSpectralDensity TagItemGeneratorPowerSpectralDensity; /* rpsd */
-    CTagItemGeneratorPowerImpulseResponse TagItemGeneratorPowerImpulseResponse; /* rpir */
+	CTagItemGeneratorPowerSpectralDensityWide TagItemGeneratorPowerSpectralDensityWide; /* Bpsw */
+    	CTagItemGeneratorPowerImpulseResponse TagItemGeneratorPowerImpulseResponse; /* rpir */
 	CTagItemGeneratorPilots TagItemGeneratorPilots; /* rpil */
 
 	CVector<CTagItemGeneratorStr>	vecTagItemGeneratorStr; /* strx tag */

@@ -493,6 +493,16 @@ void CReceiveData::emitRSCIData(CParameter& Parameters)
     for (int i=iStartIndex, j=iStartBin; j<=iEndBin; i++,j++)
         Parameters.vecrPSD[i] = vecrData[j];
 
+    // Wide spectrum tag 
+    /* Fill with zeros to start with */
+    Parameters.vecrPSDWide.Init(N, 0.0);
+
+    for (int i=0; i<N; i++)
+        Parameters.vecrPSDWide[i] = vecrData[i];
+
+    Parameters.iPSDWideStartFrequency = -Parameters.FrontEndParameters.rIFCentreFreq - (bNegativeFrequency ? N/2 : 0) * 187.5;
+    Parameters.iPSDWideEndFrequency = Parameters.iPSDWideStartFrequency + 187.5 * (N-1);
+
     spectrumAnalyser.CalculateSigStrengthCorrection(Parameters, vecrData);
 
     spectrumAnalyser.CalculatePSDInterferenceTag(Parameters, vecrData);
