@@ -226,7 +226,7 @@ CHamlib::GetPortList(map < string, string > &ports)
                              CFSTR(kIOSerialBSDRS232Type));
 
 	}
-    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);
+    kernResult = IOServiceGetMatchingServices(kIOMainPortDefault, classesToMatch, &serialPortIterator);
     if (KERN_SUCCESS != kernResult)
     {
         fprintf(stderr, "IOServiceGetMatchingServices returned %d\n", kernResult);
