@@ -140,7 +140,7 @@ CReceiveData::SetSoundInterface(string device)
             pIODevice->close();
 //            pIODevice = nullptr;
         }
-       if(pAudioInput != nullptr) {
+        if(pAudioInput != nullptr) {
             pAudioInput->stop();
 //            delete pAudioInput;
 //            pAudioInput = nullptr;
@@ -159,34 +159,33 @@ CReceiveData::SetSoundInterface(string device)
         format.setCodec("audio/pcm");
         foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
         {
-            if(device == di.deviceName().toStdString()) {
+             if(device == di.deviceName().toStdString()) {
                 QAudioFormat nearestFormat = di.nearestFormat(format);
                 pAudioInput = new QAudioInput(di, nearestFormat);
                 //AudioInterfaceCreate(di,format);
                 //AudioInterfaceStart();
                 /* section moved here from DateIO.cpp by mjf to prevent crashing when changing inputs */
                 pIODevice = pAudioInput->start();
-
                 if(pAudioInput->error()==QAudio::NoError)
                 {
-                    if(pIODevice->open(QIODevice::ReadOnly)) {
-                    qDebug("audio input open");
+                    if(pIODevice->open(QIODevice::ReadOnly))
+                    {
+                        qDebug("creceivedata: audio input open");
                     }
                     else {
-                        qDebug("audio input open failed");
+                        qDebug("creceivedata: audio input open failed");
                     }
                 }
                 else
                 {
-                    qDebug("Can't open audio input");
+                    qDebug("creceivedata: Can't open audio input");
                 }
                 /* section added by mjf to prevent crashing when changing inputs */
-
                 break;
             }
         }
         if(pAudioInput == nullptr) {
-            qDebug("can't find audio input %s", device.c_str());
+            qDebug("creceivedata: can't find audio input %s", device.c_str());
         }
 #else
         pSound = CSoundInterfaceFactory::CreateSoundInInterface();

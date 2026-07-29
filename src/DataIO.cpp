@@ -143,15 +143,15 @@ CReadData::SetSoundInterface(string device)
             {
                 if(pIODevice->open(QIODevice::ReadOnly))
                 {
-                    qDebug("audio input open");
+                    qDebug("DataIO: audio input open");
                 }
                 else {
-                    qDebug("audio input open");
+                    qDebug("DataIO: audio input open");
                 }
             }
             else
             {
-                qDebug("Can't open audio input");
+                qDebug("DataIO: Can't open audio input");
             }
         }
         break;
