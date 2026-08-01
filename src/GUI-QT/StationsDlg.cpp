@@ -258,7 +258,9 @@ void StationsDlg::LoadSchedule()
 
 void StationsDlg::eventClose(QCloseEvent*)
 {
-	/* Save settings */
+    CSchedule::ESchedMode eSchedM = schedule.GetSchedMode();
+    ColumnParamToStr((eSchedM == CSchedule::SM_DRM)?strColumnParamdrm:strColumnParamanalog);
+    /* Save settings */
 	SaveSettings();
 }
 
@@ -281,22 +283,22 @@ void StationsDlg::eventShow(QShowEvent*)
     CSchedule::ESchedMode eSchedM = schedule.GetSchedMode();
     ERecMode eRecM = rx.GetReceiverMode();
     bool bIsDRM = eRecM == RM_DRM;
-    if (
-        (eSchedM == CSchedule::SM_DRM && !bIsDRM)
-    ||
-        (eSchedM == CSchedule::SM_ANALOG && bIsDRM)
-    )
+    if ((eSchedM == CSchedule::SM_DRM && !bIsDRM) ||
+       (eSchedM == CSchedule::SM_ANALOG && bIsDRM))
     {
         /* Store previous columns settings */
         if (eSchedM != CSchedule::SM_NONE)
         {
-            ColumnParamToStr(bIsDRM?strColumnParamdrm:strColumnParamanalog);
+            ColumnParamToStr((eSchedM == CSchedule::SM_DRM)?strColumnParamdrm:strColumnParamanalog);
         }
+
         // change mode
         schedule.SetSchedMode(bIsDRM?CSchedule::SM_DRM:CSchedule::SM_ANALOG);
-        /* Restore columns settings */
-        ColumnParamFromStr(bIsDRM?strColumnParamdrm:strColumnParamanalog);
     }
+
+    /* Restore columns settings */
+    ColumnParamFromStr(bIsDRM?strColumnParamdrm:strColumnParamanalog);
+
     if(schedule.GetNumberOfStations()==0)
 	{
         QString s = "";
@@ -635,7 +637,7 @@ void StationsDlg::ColumnParamFromStr(const QString& strColumnParam)
 			for (int i = 0; i < c; i++)
 			{
 				int v = values[i].toInt();
-				if (!j) /* width*/
+                if (!j) /* width */
 					ListViewStations->header()->resizeSection(i, v);
 				else /* position */
 					ListViewStations->header()->moveSection(ListViewStations->header()->visualIndex(i), v);
