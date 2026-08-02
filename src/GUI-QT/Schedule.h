@@ -32,6 +32,9 @@
 #include <QNetworkAccessManager>
 #include <QUrl>
 #include <QTreeWidgetItem>
+
+#include <QTextStream>
+
 #include "../util/Vector.h"
 
 /* Definitions ****************************************************************/
@@ -144,8 +147,9 @@ public:
 	enum ESchedMode {SM_NONE, SM_DRM, SM_ANALOG};
 
 	void ReadINIFile(FILE* pFile);
-	void ReadCSVFile(FILE* pFile);
-	ESchedMode GetSchedMode() {return eSchedMode;}
+//	void ReadCSVFile(FILE* pFile);
+    void ReadCSVFile(QTextStream*);
+    ESchedMode GetSchedMode() {return eSchedMode;}
 	void SetSchedMode(const ESchedMode);
 
 	int GetNumberOfStations() {return StationsTable.size();}

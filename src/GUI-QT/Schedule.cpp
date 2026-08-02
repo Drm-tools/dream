@@ -35,6 +35,10 @@
 #include <QDateTime>
 #include <QMessageBox>
 #include <QFileInfo>
+
+#include <QFile>
+#include <QTextCodec>
+
 #include <ctime>
 #ifdef _WIN32
 #include "../windows/platform_util.h"
@@ -115,15 +119,35 @@ void CSchedule::LoadSchedule()
 	ListCountries = QStringList("");
 	ListLanguages = QStringList("");
 	StationsTable.clear();
-	FILE* pFile = fopen(filename.c_str(), "r");
-	if(pFile)
-	{
-		if(schedFileName.contains("ini"))
-			ReadINIFile(pFile);
-		else
-			ReadCSVFile(pFile);
-		fclose(pFile);
-	}
+    //FILE* pFile = fopen(filename.c_str(), "r");
+    //if(pFile)
+    //{
+    //	if(schedFileName.contains("ini"))
+    //		ReadINIFile(pFile);
+    //	else
+    //		ReadCSVFile(pFile);
+    //	fclose(pFile);
+    //}
+    if (schedFileName.contains("ini")) {
+        FILE* pFile = fopen(filename.c_str(), "r");
+        if (pFile) {
+            ReadINIFile(pFile);
+            fclose(pFile);
+        }
+    } else {
+        QFile eibifile(schedFileName);
+        if (eibifile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QTextStream inSked(&eibifile);
+            QTextCodec *wincodec = QTextCodec::codecForName("Windows-1250");
+            if (wincodec) {
+                inSked.setCodec(wincodec);
+                ReadCSVFile(&inSked);
+            }
+            eibifile.close();
+        }
+
+    }
+
     ListStations.sort();
     ListTargets.sort();
 	ListCountries.sort();
@@ -238,24 +262,30 @@ void CSchedule::ReadINIFile(FILE* pFile)
 	(void)r; (void)n;
 }
 
-void CSchedule::ReadCSVFile(FILE* pFile)
+//void CSchedule::ReadCSVFile(FILE* pFile)
+void CSchedule::ReadCSVFile(QTextStream* inSked)
 {
-	const int	iMaxLenRow = 1024;
-	char		cRow[iMaxLenRow];
+    //const int	iMaxLenRow = 1024;
+    //char		cRow[iMaxLenRow];
 	CStationData data;
 
-    char* r = fgets(cRow, iMaxLenRow, pFile); (void)r; //skip header line
-	do {
+    QString cRow = inSked->readLine();
+
+    //char* r = fgets(cRow, iMaxLenRow, pFile); (void)r; //skip header line
+    //do {
+    while (!inSked->atEnd()) {
 		CStationsItem StationsItem;
 
-        r = fgets(cRow, iMaxLenRow, pFile); (void)r;
-		QStringList fields;
-		stringstream ss(cRow);
-		do {
-			string s;
-			getline(ss, s, ';');
-			fields.push_back(s.c_str());
-		} while(!ss.eof());
+        //r = fgets(cRow, iMaxLenRow, pFile); (void)r;
+        cRow = inSked->readLine();
+        //QStringList fields;
+        //stringstream ss(cRow);
+        //do {
+        //	string s;
+        //	getline(ss, s, ';');
+        //	fields.push_back(s.c_str());
+        //} while(!ss.eof());
+        QStringList fields = cRow.split(";");
 
 		StationsItem.iFreq = floor(fields[0].toFloat());
 
@@ -440,7 +470,7 @@ void CSchedule::ReadCSVFile(FILE* pFile)
 
 		UpdateStringListForFilter(StationsItem);
 
-	} while(!feof(pFile));
+    } //while(!feof(pFile));
 }
 
 Station::EState CSchedule::GetState(const int iPos)
