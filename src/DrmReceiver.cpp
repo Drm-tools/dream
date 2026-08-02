@@ -1326,10 +1326,10 @@ CDRMReceiver::InitsForDataParam()
     DataDecoder.SetInitFlag();
 }
 
-void CDRMReceiver::SetFrequency(int iNewFreqkHz)
+void CDRMReceiver::SetFrequency(int iNewFreqkHz, bool useOffset)
 {
     Parameters.Lock();
-    Parameters.SetFrequency(iNewFreqkHz);
+    Parameters.SetFrequency(iNewFreqkHz, useOffset);
     /* clear out AMSS data and re-initialise AMSS acquisition */
     if (Parameters.eReceiverMode == RM_AM)
         Parameters.ResetServicesStreams();
@@ -1337,11 +1337,11 @@ void CDRMReceiver::SetFrequency(int iNewFreqkHz)
 
     if (pUpstreamRSCI->GetOutEnabled())
     {
-        pUpstreamRSCI->SetFrequency(iNewFreqkHz);
+        pUpstreamRSCI->SetFrequency(iNewFreqkHz, useOffset);
     }
 
     if(pTuner)
-        pTuner->SetFrequency(iNewFreqkHz + int(Parameters.FrontEndParameters.rTunerFrequencyOffset));
+        pTuner->SetFrequency(iNewFreqkHz + int(Parameters.FrontEndParameters.rTunerFrequencyOffset), useOffset);
 #if 0
     {
         FCD_MODE_ENUM fme;
@@ -1608,7 +1608,7 @@ CDRMReceiver::LoadSettings()
     SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
 
     /* Tuned Frequency */
-    Parameters.SetFrequency(s.Get("Receiver", "frequency", 0));
+    Parameters.SetFrequency(s.Get("Receiver", "frequency", 0), GetReceiverMode() == RM_DRM);
 
     /* Front-end - combine into Hamlib? */
     CFrontEndParameters& FrontEndParameters = Parameters.FrontEndParameters;

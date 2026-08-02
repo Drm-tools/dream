@@ -115,11 +115,9 @@ void CRig::SaveSettings(CSettings& s)
 #endif
 }
 
-void CRig::SetFrequency(int f)
+void CRig::SetFrequency(int f, bool useOffset)
 {
 #ifdef HAVE_LIBHAMLIB
-    Hamlib.SetFrequency(f);
-#else
-    (void)f;
+    Hamlib.SetFrequency(f, useOffset);
 #endif
 }

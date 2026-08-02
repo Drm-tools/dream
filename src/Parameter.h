@@ -886,7 +886,8 @@ public:
         return eRobustnessMode;
     }
 
-    void SetFrequency(int iNewFrequency) {
+    void SetFrequency(int iNewFrequency, bool useOffset) {
+        (void)useOffset;
         iFrequency = iNewFrequency;
     }
     int GetFrequency() {
