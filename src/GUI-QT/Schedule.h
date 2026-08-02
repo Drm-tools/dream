@@ -158,12 +158,13 @@ public:
 	void UpdateStringListForFilter(const CStationsItem& StationsItem);
 	void LoadSchedule();
 
-	QStringList		ListTargets;
+    QStringList		ListStations;
+    QStringList		ListTargets;
 	QStringList		ListCountries;
 	QStringList		ListLanguages;
 
-	QString			countryFilterdrm, targetFilterdrm, languageFilterdrm;
-	QString			countryFilteranalog, targetFilteranalog, languageFilteranalog;
+    QString			stationFilterdrm, countryFilterdrm, targetFilterdrm, languageFilterdrm;
+    QString			stationFilteranalog, countryFilteranalog, targetFilteranalog, languageFilteranalog;
 	QString			schedFileName;
 	QUrl			qurldrm, qurlanalog;
 
