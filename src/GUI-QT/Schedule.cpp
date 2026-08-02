@@ -239,10 +239,11 @@ void CSchedule::ReadCSVFile(FILE* pFile)
 	char		cRow[iMaxLenRow];
 	CStationData data;
 
+    char* r = fgets(cRow, iMaxLenRow, pFile); (void)r; //skip header line
 	do {
 		CStationsItem StationsItem;
 
-		char* r = fgets(cRow, iMaxLenRow, pFile); (void)r;
+        r = fgets(cRow, iMaxLenRow, pFile); (void)r;
 		QStringList fields;
 		stringstream ss(cRow);
 		do {
@@ -347,7 +348,7 @@ void CSchedule::ReadCSVFile(FILE* pFile)
 		}
 
 		if(fieldcount>4)
-			StationsItem.strName = fields[4];
+            StationsItem.strName = fields[4];
 
 		if(fieldcount>5)
 		{
