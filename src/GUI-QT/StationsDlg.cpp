@@ -178,6 +178,15 @@ void StationsDlg::OnShowPreviewMenu(int iID)
     UpdateTransmissionStatus();
 }
 
+void StationsDlg::on_ComboBoxFilterStation_activated(const QString& s)
+{
+    if (schedule.GetSchedMode() == CSchedule::SM_DRM)
+        schedule.stationFilterdrm = s;
+    else
+        schedule.stationFilteranalog = s;
+    UpdateTransmissionStatus();
+}
+
 void StationsDlg::on_ComboBoxFilterTarget_activated(const QString& s)
 {
 	if (schedule.GetSchedMode() == CSchedule::SM_DRM)
@@ -411,10 +420,12 @@ void StationsDlg::LoadSettings()
 	strColumnParamanalog = getSetting("columnparamanalog", QString());
 
 	schedule.qurldrm = QUrl(getSetting("DRM URL", QString(DRM_SCHEDULE_URL)));
-	schedule.targetFilterdrm = getSetting("targetfilterdrm", QString());
+    schedule.stationFilterdrm = getSetting("stationfilterdrm", QString());
+    schedule.targetFilterdrm = getSetting("targetfilterdrm", QString());
 	schedule.countryFilterdrm = getSetting("countryfilterdrm", QString());
 	schedule.languageFilterdrm = getSetting("languagefilterdrm", QString());
-	schedule.targetFilteranalog = getSetting("targetfilteranalog", QString());
+    schedule.stationFilteranalog = getSetting("stationfilteranalog", QString());
+    schedule.targetFilteranalog = getSetting("targetfilteranalog", QString());
 	schedule.countryFilteranalog = getSetting("countryfilteranalog", QString());
 	schedule.languageFilteranalog = getSetting("languagefilteranalog", QString());
 }
@@ -431,10 +442,12 @@ void StationsDlg::SaveSettings()
 	putSetting("sortcolumnanalog", iSortColumnanalog);
 	putSetting("sortascendinganalog", bCurrentSortAscendinganalog);
 	putSetting("columnparamanalog", strColumnParamanalog);
-	putSetting("targetfilterdrm", schedule.targetFilterdrm);
+    putSetting("stationfilterdrm", schedule.stationFilterdrm);
+    putSetting("targetfilterdrm", schedule.targetFilterdrm);
 	putSetting("countryfilterdrm", schedule.countryFilterdrm);
 	putSetting("languagefilterdrm", schedule.languageFilterdrm);
-	putSetting("targetfilteranalog", schedule.targetFilteranalog);
+    putSetting("stationfilteranalog", schedule.stationFilteranalog);
+    putSetting("targetfilteranalog", schedule.targetFilteranalog);
 	putSetting("countryfilteranalog", schedule.countryFilteranalog);
 	putSetting("languagefilteranalog", schedule.languageFilteranalog);
 
@@ -444,27 +457,32 @@ void StationsDlg::SaveSettings()
 
 void StationsDlg::LoadFilters()
 {
-	ComboBoxFilterTarget->clear();
+    ComboBoxFilterStation->clear();
+    ComboBoxFilterTarget->clear();
 	ComboBoxFilterCountry->clear();
 	ComboBoxFilterLanguage->clear();
-	ComboBoxFilterTarget->addItems(schedule.ListTargets);
+    ComboBoxFilterStation->addItems(schedule.ListStations);
+    ComboBoxFilterTarget->addItems(schedule.ListTargets);
 	ComboBoxFilterCountry->addItems(schedule.ListCountries);
 	ComboBoxFilterLanguage->addItems(schedule.ListLanguages);
 
-	QString targetFilter,countryFilter,languageFilter;
+    QString stationFilter,targetFilter,countryFilter,languageFilter;
 	if(schedule.GetSchedMode()==CSchedule::SM_DRM)
 	{
-		targetFilter=schedule.targetFilterdrm;
+        stationFilter=schedule.stationFilterdrm;
+        targetFilter=schedule.targetFilterdrm;
 		countryFilter=schedule.countryFilterdrm;
 		languageFilter=schedule.languageFilterdrm;
 	}
 	else
 	{
-		targetFilter=schedule.targetFilteranalog;
+        stationFilter=schedule.stationFilteranalog;
+        targetFilter=schedule.targetFilteranalog;
 		countryFilter=schedule.countryFilteranalog;
 		languageFilter=schedule.languageFilteranalog;
 	}
-	ComboBoxFilterTarget->setCurrentIndex(ComboBoxFilterTarget->findText(targetFilter));
+    ComboBoxFilterStation->setCurrentIndex(ComboBoxFilterStation->findText(stationFilter));
+    ComboBoxFilterTarget->setCurrentIndex(ComboBoxFilterTarget->findText(targetFilter));
 	ComboBoxFilterCountry->setCurrentIndex(ComboBoxFilterCountry->findText(countryFilter));
 	ComboBoxFilterLanguage->setCurrentIndex(ComboBoxFilterLanguage->findText(languageFilter));
 }

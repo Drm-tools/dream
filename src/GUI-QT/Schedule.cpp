@@ -47,7 +47,7 @@ using namespace std;
 /* Implementation *************************************************************/
 
 CSchedule::CSchedule():
-ListTargets(), ListCountries(), ListLanguages(),
+ListStations(), ListTargets(), ListCountries(), ListLanguages(),
 StationsTable(),eSchedMode(SM_NONE),iSecondsPreviewdrm(0),iSecondsPreviewanalog(0)
 {
 	SetAnalogUrl();
@@ -93,7 +93,10 @@ void CSchedule::SetSchedMode(const ESchedMode eNewSchM)
 
 void CSchedule::UpdateStringListForFilter(const CStationsItem& StationsItem)
 {
-	if (!ListTargets.contains(StationsItem.strTarget))
+    if (!ListStations.contains(StationsItem.strName))
+        ListStations.append(StationsItem.strName);
+
+    if (!ListTargets.contains(StationsItem.strTarget))
 		ListTargets.append(StationsItem.strTarget);
 
 	if (!ListCountries.contains(StationsItem.strCountry))
@@ -107,7 +110,8 @@ void CSchedule::LoadSchedule()
 {
 	string filename(schedFileName.toUtf8().constData());
 	QApplication::setOverrideCursor(Qt::BusyCursor);
-	ListTargets = QStringList("");
+    ListStations = QStringList("");
+    ListTargets = QStringList("");
 	ListCountries = QStringList("");
 	ListLanguages = QStringList("");
 	StationsTable.clear();
@@ -120,7 +124,8 @@ void CSchedule::LoadSchedule()
 			ReadCSVFile(pFile);
 		fclose(pFile);
 	}
-	ListTargets.sort();
+    ListStations.sort();
+    ListTargets.sort();
 	ListCountries.sort();
 	ListLanguages.sort();
 	QApplication::restoreOverrideCursor();
@@ -446,13 +451,17 @@ Station::EState CSchedule::GetState(const int iPos)
 bool CSchedule::CheckFilter(const int iPos)
 {
 	const CStationsItem& station = StationsTable[iPos];
-	if(eSchedMode==SM_DRM && targetFilterdrm != "" && targetFilterdrm != station.strTarget)
+    if(eSchedMode==SM_DRM && stationFilterdrm != "" && stationFilterdrm != station.strName)
+        return false;
+    if(eSchedMode==SM_DRM && targetFilterdrm != "" && targetFilterdrm != station.strTarget)
 		return false;
 	if(eSchedMode==SM_DRM && countryFilterdrm != "" && countryFilterdrm != station.strCountry)
 		return false;
 	if(eSchedMode==SM_DRM && languageFilterdrm != "" && languageFilterdrm != station.strLanguage)
 		return false;
-	if(eSchedMode==SM_ANALOG && targetFilteranalog != "" && targetFilteranalog != station.strTarget)
+    if(eSchedMode==SM_ANALOG && stationFilteranalog != "" && stationFilteranalog != station.strName)
+        return false;
+    if(eSchedMode==SM_ANALOG && targetFilteranalog != "" && targetFilteranalog != station.strTarget)
 		return false;
 	if(eSchedMode==SM_ANALOG && countryFilteranalog != "" && countryFilteranalog != station.strCountry)
 		return false;
