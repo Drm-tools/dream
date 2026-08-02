@@ -70,7 +70,7 @@ public:
 		bool		bIsSpecRig;
 	};
 
-	bool		SetFrequency(const int iFreqkHz);
+    bool            SetFrequency(const int iFreqkHz, bool useOffset);
 	ESMeterState	GetSMeter(_REAL& rCurSigStr);
 
 	/* backend selection */
@@ -82,6 +82,10 @@ public:
 	void			GetPortList(std::map<std::string,std::string>&);
 	void			SetComPort(const std::string&);
 	std::string		GetComPort() const;
+
+    /* freq offset selection */
+    void			SetFreqOffset(const int);
+    int             GetFreqOffset() const {return iFreqOffset;}
 
 	void			SetEnableModRigSettings(const bool bNSM);
 	bool			GetEnableModRigSettings() const {return bModRigSettings;}

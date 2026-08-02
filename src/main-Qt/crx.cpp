@@ -22,7 +22,7 @@ CRx::run()
         // set the frequency from the command line or ini file
         int iFreqkHz = rx.GetParameters()->GetFrequency();
         if (iFreqkHz != -1)
-            rx.SetFrequency(iFreqkHz);
+            rx.SetFrequency(iFreqkHz,rx.GetReceiverMode() == RM_DRM);
 
 #ifdef USE_CONSOLEIO
         CConsoleIO::Enter(&rx);
@@ -469,7 +469,7 @@ void CRx::SetAMNoiseReductionLevel(int n)
 
 void CRx::SetFrequency(int n)
 {
-    rx.SetFrequency(n);
+    rx.SetFrequency(n, rx.GetReceiverMode() == RM_DRM);
 }
 
 void CRx::SetAMDemodAcq(_REAL r)

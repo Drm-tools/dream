@@ -191,7 +191,7 @@ public:
         pRig=p;
     }
 
-    void	 				SetFrequency(int);
+    void	 				SetFrequency(int, bool);
     int		 				GetFrequency() {
         return Parameters.GetFrequency();
     }

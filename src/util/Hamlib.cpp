@@ -340,6 +340,12 @@ string CHamlib::GetComPort() const
 	return m->second;
 }
 
+void
+CHamlib::SetFreqOffset(const int f)
+{
+    iFreqOffset = f;
+}
+
 int
 CHamlib::PrintHamlibModelList(const struct rig_caps *caps, void *data)
 {
@@ -457,7 +463,7 @@ CHamlib::SaveSettings(CSettings & s)
 }
 
 bool
-CHamlib::SetFrequency(const int iFreqkHz)
+CHamlib::SetFrequency(const int iFreqkHz, bool useOffset)
 {
 	bool bSucceeded = false;
 
@@ -466,7 +472,7 @@ CHamlib::SetFrequency(const int iFreqkHz)
 	{
 		/* Set frequency (consider frequency offset and conversion
 		   from kHz to Hz by " * 1000 ") */
-		if (rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + iFreqOffset) * 1000)
+        if (rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + (iFreqOffset * (useOffset?1:0))) * 1000)
 			== RIG_OK)
 		{
 			bSucceeded = true;
