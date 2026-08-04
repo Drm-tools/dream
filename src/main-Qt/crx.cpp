@@ -1,4 +1,5 @@
 #include "crx.h"
+#include "../util/FileTyper.h"
 #ifdef USE_CONSOLEIO
 # include "../linux/ConsoleIO.h"
 #endif
@@ -83,11 +84,13 @@ void CRx::LoadSettings()
 {
     rx.LoadSettings();
     QString s = QString::fromStdString(rx.GetInputDevice());
-    emit InputDeviceChanged(s);
-    emit soundFileChanged(s); // TODO only send if it is a file!!!
+    if (FileTyper::resolve(rx.GetInputDevice()) != FileTyper::unrecognised)
+        emit soundFileChanged(s); // TODO only send if it is a file!!!
+    else
+        emit InputDeviceChanged(s);
+    emit inputSampleRateChanged(rx.GetParameters()->GetSigSampleRate());
     s = QString::fromStdString(rx.GetOutputDevice());
     emit OutputDeviceChanged(s);
-    emit inputSampleRateChanged(rx.GetParameters()->GetSigSampleRate());
     emit outputSampleRateChanged(rx.GetParameters()->GetAudSampleRate());
     emit soundUpscaleRatioChanged(rx.GetParameters()->GetSigUpscaleRatio());
 }
@@ -107,8 +110,10 @@ void CRx::SetInputDevice(string s)
     rx.SetInputDevice(s);
     eRunState = RESTART;
     QString id = QString::fromStdString(rx.GetInputDevice());
-    emit InputDeviceChanged(id);
-    emit soundFileChanged(id); // TODO only send if it is a file!!!
+    if (FileTyper::resolve(rx.GetInputDevice()) != FileTyper::unrecognised)
+        emit soundFileChanged(id); // TODO only send if it is a file!!!
+    else
+        emit InputDeviceChanged(id);
 }
 
 void CRx::SetOutputDevice(QString s)
