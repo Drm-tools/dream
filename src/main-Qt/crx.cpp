@@ -382,7 +382,7 @@ EAcqStat CRx::GetAcquisitionState()
 
 void CRx::GetTunedFrequency(int& freq)
 {
-    rx.GetTunedFrequency(freq);
+    rx.GetTunedFrequency(freq, rx.GetReceiverMode() == RM_DRM);
 }
 
 int CRx::GetFrequency()

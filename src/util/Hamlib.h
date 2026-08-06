@@ -70,7 +70,7 @@ public:
 		bool		bIsSpecRig;
 	};
 
-    int             GetTunedFrequency();
+    int             GetTunedFrequency(bool useOffset);
     bool            SetFrequency(const int iFreqkHz, bool useOffset);
 	ESMeterState	GetSMeter(_REAL& rCurSigStr);
 
