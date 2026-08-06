@@ -25,7 +25,7 @@ public:
     virtual void		SetDev(std::string sNewDev);
 
     // CTuner methods
-    virtual void GetTunedFrequency(int &freq);
+    virtual void GetTunedFrequency(int &freq, bool);
     virtual void SetFrequency(int, bool);
     virtual void LoadSettings(CSettings&);
     virtual void SaveSettings(CSettings&);

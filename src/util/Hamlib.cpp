@@ -484,7 +484,7 @@ CHamlib::SetFrequency(const int iFreqkHz, bool useOffset)
 
 /* returns a positive frequency in kHz if successful, -1 if not */
 int
-CHamlib::GetTunedFrequency()
+CHamlib::GetTunedFrequency(bool useOffset)
 {
     freq_t  rFreq = -1;
     int     iFreqkHz = -1;
@@ -495,8 +495,11 @@ CHamlib::GetTunedFrequency()
          rig_get_freq(pRig, RIG_VFO_CURR, &rFreq);
     }
 
-    if (rFreq > 0)
+    if (rFreq > 0) {
         iFreqkHz = rFreq / 1000;
+        if (useOffset)
+            iFreqkHz -= iFreqOffset;
+    }
 
     return iFreqkHz;
 }

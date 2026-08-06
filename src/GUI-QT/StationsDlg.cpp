@@ -615,9 +615,6 @@ void StationsDlg::OnSyncRigFreq()
     //if valid, find frequency in list
     if (iFreqkHz > 0) {
 
-        if (rx.GetReceiverMode() == RM_DRM)
-            iFreqkHz += 5;  //TODO: Use actual offset
-
         sFreqkHz = QString().setNum(iFreqkHz);
         QAbstractItemModel *model = ListViewStations->model();
 

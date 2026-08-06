@@ -1326,10 +1326,10 @@ CDRMReceiver::InitsForDataParam()
     DataDecoder.SetInitFlag();
 }
 
-void CDRMReceiver::GetTunedFrequency(int& freq)
+void CDRMReceiver::GetTunedFrequency(int& freq, bool useOffset)
 {
     if (pTuner != nullptr)
-         pTuner->GetTunedFrequency(freq);
+        pTuner->GetTunedFrequency(freq, useOffset);
 }
 
 void CDRMReceiver::SetFrequency(int iNewFreqkHz, bool useOffset)
