@@ -84,10 +84,11 @@ void CRx::LoadSettings()
 {
     rx.LoadSettings();
     QString s = QString::fromStdString(rx.GetInputDevice());
-    if (FileTyper::resolve(rx.GetInputDevice()) != FileTyper::unrecognised)
-        emit soundFileChanged(s); // TODO only send if it is a file!!!
-    else
-        emit InputDeviceChanged(s);
+    SetInputDevice(s);
+    //if (FileTyper::resolve(rx.GetInputDevice()) != FileTyper::unrecognised)
+    //    emit soundFileChanged(s); // TODO only send if it is a file!!!
+    //else
+    //    emit InputDeviceChanged(s);
     emit inputSampleRateChanged(rx.GetParameters()->GetSigSampleRate());
     s = QString::fromStdString(rx.GetOutputDevice());
     emit OutputDeviceChanged(s);
