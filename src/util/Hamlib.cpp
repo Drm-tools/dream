@@ -482,6 +482,25 @@ CHamlib::SetFrequency(const int iFreqkHz, bool useOffset)
 	return bSucceeded;
 }
 
+/* returns a positive frequency in kHz if successful, -1 if not */
+int
+CHamlib::GetTunedFrequency()
+{
+    freq_t  rFreq = -1;
+    int     iFreqkHz = -1;
+
+    /* Check if rig was opend properly */
+    if (pRig != nullptr)
+    {
+         rig_get_freq(pRig, RIG_VFO_CURR, &rFreq);
+    }
+
+    if (rFreq > 0)
+        iFreqkHz = rFreq / 1000;
+
+    return iFreqkHz;
+}
+
 CHamlib::ESMeterState CHamlib::GetSMeter(_REAL & rCurSigStr)
 {
 	ESMeterState

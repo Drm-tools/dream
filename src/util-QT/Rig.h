@@ -44,6 +44,7 @@ public:
     virtual void LoadSettings(CSettings&);
     virtual void SaveSettings(CSettings&);
     virtual void SetFrequency(int, bool);
+    virtual void GetTunedFrequency(int &freq);
 #ifdef HAVE_LIBHAMLIB
     void GetRigList(map<rig_model_t,CHamlib::SDrRigCaps>& r) { Hamlib.GetRigList(r); }
     rig_model_t GetHamlibModelID() { return Hamlib.GetHamlibModelID(); }

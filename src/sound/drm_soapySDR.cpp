@@ -235,6 +235,16 @@ void CSoapySDRIn::SetDev(std::string sNewDev)
     currentDev = sNewDev;
 }
 
+void CSoapySDRIn::GetTunedFrequency(int &freq)
+{
+    double  dFreqkHz = -1000.0;
+
+    if (pDevice)
+        dFreqkHz = pDevice->getFrequency(SOAPY_SDR_RX, 0);
+
+    freq = int(dFreqkHz / 1000);
+}
+
 void CSoapySDRIn::SetFrequency(int freq, bool useOffset)
 {
     (void)useOffset;

@@ -112,7 +112,8 @@ public slots:
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);
 	void OnFreqCntNewValue(double dVal);
-	void OnHeaderClicked(int c);
+    void OnSyncRigFreq();
+    void OnHeaderClicked(int c);
 	void on_actionGetUpdate_triggered();
 	void on_ListViewStations_itemSelectionChanged();
     void on_ComboBoxFilterStation_activated(const QString&);
