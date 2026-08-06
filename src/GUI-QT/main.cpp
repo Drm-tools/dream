@@ -124,11 +124,12 @@ main(int argc, char **argv)
 #else
 			FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings);
 #endif
-			(void)pMainDlg;
+            (void)pMainDlg;
             rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
 
 			/* Start working thread */
             rx.start();
+            rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
 
 			/* Set main window */
 			app.exec();
