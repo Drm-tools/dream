@@ -212,6 +212,7 @@ void AnalogDemDlg::eventUpdate()
 
 void AnalogDemDlg::eventShow(QShowEvent*)
 {
+    rx.SetReceiverMode(RM_AM);
 	OnTimer();
 	OnTimerPLLPhaseDial();
 	/* Set correct schedule */
@@ -351,6 +352,7 @@ void AnalogDemDlg::UpdateControls()
 #ifdef HAVE_SPEEX
 	/* Set speex spinbox enable state */
 	SpinBoxNoiRedLevel->setEnabled(RadioButtonNoiRedSpeex->isChecked());
+    SpinBoxNoiRedLevel->setValue(rx.GetAMNoiseReductionLevel());
 #endif
 
 	/* Set filter bandwidth */
