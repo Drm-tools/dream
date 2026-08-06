@@ -135,6 +135,8 @@ bReInitOnFrequencyChange(false)
 # ifdef HAVE_LIBHAMLIB
 	RigDlg *pRigDlg = new RigDlg(Rig, this);
 	connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
+    connect(actionSyncRigFreq, SIGNAL(triggered()), this, SLOT(OnSyncRigFreq()));
+    connect(syncBtn, SIGNAL(clicked()), this, SLOT(OnSyncRigFreq()));
 # else
 	actionChooseRig->setEnabled(false);
 # endif
@@ -599,6 +601,50 @@ void StationsDlg::OnFreqCntNewValue(double dVal)
 
 	if(newFreq != iFrequency) // avoid double tuning via RSCI
         rx.SetFrequency(int(dVal));
+}
+
+void StationsDlg::OnSyncRigFreq()
+{
+    int     fRow = -1;
+    int     iFreqkHz = -1;
+    QString sFreqkHz;
+
+    //Poll rig for frequency
+    rx.GetTunedFrequency(iFreqkHz);
+
+    //if valid, find frequency in list
+    if (iFreqkHz > 0) {
+
+        if (rx.GetReceiverMode() == RM_DRM)
+            iFreqkHz += 5;  //TODO: Use actual offset
+
+        sFreqkHz = QString().setNum(iFreqkHz);
+        QAbstractItemModel *model = ListViewStations->model();
+
+        for (int row = 0; row < model->rowCount(); ++row) {
+
+            QModelIndex index = model->index(row, 3);
+            QString text = model->data(index, Qt::DisplayRole).toString();
+            QTreeWidgetItem* item = ListViewStations->topLevelItem(row);
+
+            //if frequency found, select that row in the list
+            if ((text == sFreqkHz) && (!item->isHidden())) {
+                fRow = row;
+                break;
+            }
+        }
+        if (fRow > 0) {
+
+            QModelIndex fIndex = ListViewStations->model()->index(fRow,3);
+            QString fText = ListViewStations->model()->data(fIndex, Qt::DisplayRole).toString();
+
+            if (fIndex.isValid()) {
+                SetFrequencyFromGUI(fText.toInt());
+                ListViewStations->setCurrentIndex(fIndex);
+                ListViewStations->scrollTo(fIndex, QAbstractItemView::EnsureVisible);
+            }
+        }
+    }
 }
 
 void StationsDlg::OnHeaderClicked(int c)

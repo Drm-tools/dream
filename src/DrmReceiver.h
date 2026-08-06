@@ -192,6 +192,7 @@ public:
     }
 
     void	 				SetFrequency(int, bool);
+    void                    GetTunedFrequency(int& freq);
     int		 				GetFrequency() {
         return Parameters.GetFrequency();
     }

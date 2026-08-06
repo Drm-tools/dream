@@ -121,3 +121,10 @@ void CRig::SetFrequency(int f, bool useOffset)
     Hamlib.SetFrequency(f, useOffset);
 #endif
 }
+
+void CRig::GetTunedFrequency(int &freq)
+{
+#ifdef HAVE_LIBHAMLIB
+    freq = Hamlib.GetTunedFrequency();
+#endif
+}

@@ -380,6 +380,11 @@ EAcqStat CRx::GetAcquisitionState()
     return rx.GetAcquiState();
 }
 
+void CRx::GetTunedFrequency(int& freq)
+{
+    rx.GetTunedFrequency(freq);
+}
+
 int CRx::GetFrequency()
 {
     return rx.GetFrequency();
