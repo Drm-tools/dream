@@ -198,13 +198,13 @@ CDRMReceiver::SetInputDevice(string s)
         CTuner *pSoundInTuner = ReceiveData.GetTuner();
         fprintf(stderr, "Read pTuner = %lu\n", ulong(pSoundInTuner));
         if (pSoundInTuner) // sound in interface can be tuned (i.e. it's an SDR)
-                pTuner = pSoundInTuner;
+            pTuner = pSoundInTuner;
         else // sound-in interface can't be tuned. Send frequency changes to Hamlib instead (if present)
-                pTuner = pRig;
+            pTuner = pRig;
 
         if (pTuner)
         {
-                pTuner->LoadSettings(*pSettings);
+            pTuner->LoadSettings(*pSettings);
         }
         break;
     }
