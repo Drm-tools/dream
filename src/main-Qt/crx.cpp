@@ -21,9 +21,10 @@ CRx::run()
     try
     {
         // set the frequency from the command line or ini file
-        int iFreqkHz = rx.GetParameters()->GetFrequency();
-        if (iFreqkHz != -1)
-            rx.SetFrequency(iFreqkHz,rx.GetReceiverMode() == RM_DRM);
+        // mjf - removed this because was causing startup problems 7 aug 26
+        //int iFreqkHz = rx.GetParameters()->GetFrequency();
+        //if (iFreqkHz != -1)
+        //    rx.SetFrequency(iFreqkHz,rx.GetReceiverMode() == RM_DRM);
 
 #ifdef USE_CONSOLEIO
         CConsoleIO::Enter(&rx);
@@ -58,6 +59,7 @@ CRx::run()
             while (eRunState == RUNNING);
 
             /* Restore some parameter previously set by SetInput() */
+
         }
         while (eRunState == RESTART);
 
