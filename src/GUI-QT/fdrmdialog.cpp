@@ -80,6 +80,7 @@ FDRMDialog::FDRMDialog(CTRx* pRx, CSettings& Settings, QWidget* parent)
     pFileMenu = new CFileMenu(rx, this, menu_View);
     pSoundCardMenu = new CSoundCardSelMenu(rx, pFileMenu, this);
     menu_Settings->addMenu(pSoundCardMenu);
+    connect(pFileMenu, SIGNAL(soundFileChanged(QString)), this, SLOT(OnSoundFileChanged(QString)));
     connect(&rx, SIGNAL(soundFileChanged(QString)), this, SLOT(OnSoundFileChanged(QString)));
     connect(&rx, SIGNAL(finished()), this, SLOT(OnWorkingThreadFinished()));
 
@@ -896,12 +897,13 @@ void FDRMDialog::OnSoundFileChanged(QString s)
 
 void FDRMDialog::UpdateWindowTitle(QString filename)
 {
-    QFileInfo fi(filename);
-    if(fi.exists()) {
-
-        setWindowTitle(QString("Dream") + " - " + fi.baseName());
-        pAnalogDemDlg->setWindowTitle(tr("Analog Demodulation") + " - " + fi.baseName());
-        pFMDlg->setWindowTitle(tr("FM Receiver") + " - " + fi.baseName());
+    if (!filename.isEmpty()) {
+        QFileInfo fi(filename);
+        if (fi.exists()) {
+            setWindowTitle(QString("Dream") + " - " + fi.baseName());
+            pAnalogDemDlg->setWindowTitle(tr("Analog Demodulation") + " - " + fi.baseName());
+            pFMDlg->setWindowTitle(tr("FM Receiver") + " - " + fi.baseName());
+        }
     }
     else {
         setWindowTitle("Dream");
