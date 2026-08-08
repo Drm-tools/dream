@@ -110,6 +110,7 @@ void CRx::SetInputDevice(QString s)
 
 void CRx::SetInputDevice(string s)
 {
+    cerr << "CRx::SetInputDevice " << s << endl;
     rx.SetInputDevice(s);
     eRunState = RESTART;
     QString id = QString::fromStdString(rx.GetInputDevice());
@@ -191,7 +192,6 @@ void    CRx::GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
     rx.GetWriteData()->GetAudioSpec(vecrData, vecrScale);
 }
-
 
 ERecMode CRx::GetReceiverMode()
 {
