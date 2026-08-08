@@ -80,7 +80,7 @@ void CReceiveData::Stop()
     if(pAudioInput != nullptr) {
         pAudioInput->stop();
 //        delete pAudioInput;
-//        pAudioInput = nullptr;
+        pAudioInput = nullptr;
     }
 #endif
     if(pSound!=nullptr) {
@@ -143,7 +143,7 @@ CReceiveData::SetSoundInterface(string device)
         if(pAudioInput != nullptr) {
             pAudioInput->stop();
 //            delete pAudioInput;
-//            pAudioInput = nullptr;
+            pAudioInput = nullptr;
         }
 #endif
     }
@@ -159,7 +159,7 @@ CReceiveData::SetSoundInterface(string device)
         format.setCodec("audio/pcm");
         foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
         {
-             if(device == di.deviceName().toStdString()) {
+            if(device == di.deviceName().toStdString()) {
                 QAudioFormat nearestFormat = di.nearestFormat(format);
                 pAudioInput = new QAudioInput(di, nearestFormat);
                 //AudioInterfaceCreate(di,format);
@@ -630,7 +630,7 @@ void CReceiveData::InitInternal(CParameter& Parameters)
                 vecf_ZR.resize(0);
             }
             vecf_ZL.resize(unsigned(iOutputBlockSize * 2 + taps), 0.0f);
-            vecf_ZR.resize(unsigned(iOutputBlockSize *2 + taps), 0.0f);
+            vecf_ZR.resize(unsigned(iOutputBlockSize * 2 + taps), 0.0f);
             vecf_YL.resize(unsigned(iOutputBlockSize));
             vecf_YR.resize(unsigned(iOutputBlockSize));
         }
