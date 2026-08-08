@@ -129,8 +129,8 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
         actionUpscale = menuSigInput->addAction(tr("2:1 upscale"));
         connect(actionUpscale, SIGNAL(toggled(bool)), this, SLOT(OnSoundSignalUpscale(bool)));
         connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
+        //connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString))); //duplicate
         connect(this, SIGNAL(soundSampleRateChanged(int)), &trx, SLOT(onSoundSampleRateChanged(int)));
-        connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
         connect(this, SIGNAL(soundInChannelChanged(int)), &trx, SLOT(onSoundInChannelChanged(int)));
         connect(this, SIGNAL(soundOutChannelChanged(EOutChanSel)), &trx, SLOT(onSoundOutChannelChanged(EOutChanSel)));
         connect(this, SIGNAL(soundSignalUpscaleChanged(int)), &trx, SLOT(SetSoundSignalUpscale(int)));
@@ -169,7 +169,9 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
 
 void CSoundCardSelMenu::OnSoundInDevice(QAction* action)
 {
-    emit soundInDeviceChanged(action->data().toString());
+    QString dev = action->data().toString();
+    cerr << "OnSoundInDevice " << dev.toStdString() << endl;
+    emit soundInDeviceChanged(dev);
 }
 
 void CSoundCardSelMenu::OnSoundOutDevice(QAction* action)
@@ -201,6 +203,7 @@ void CSoundCardSelMenu::OnSoundSignalUpscale(bool bChecked)
 
 void CSoundCardSelMenu::OnSoundInDeviceChanged(QString s)
 {
+    cerr << "CSoundCardSelMenu::OnSoundInDeviceChanged " << s.toStdString() << endl;
     vector<string> names;
     vector<string> descriptions;
     string def;
