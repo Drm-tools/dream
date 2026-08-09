@@ -130,8 +130,6 @@ bReInitOnFrequencyChange(false)
 	connect(action30minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
 	connect(previewMapper, SIGNAL(mapped(int)), this, SLOT(OnShowPreviewMenu(int)));
 	connect(ListViewStations->header(), SIGNAL(sectionClicked(int)), this, SLOT(OnHeaderClicked(int)));
-    connect(ListViewStations->header(), SIGNAL(sectionResized(int,int,int)), this, SLOT(OnColumnAltered()));
-    connect(ListViewStations->header(), SIGNAL(sectionMoved(int,int,int)), this, SLOT(OnColumnAltered()));
 
 	//connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
 # ifdef HAVE_LIBHAMLIB
@@ -287,7 +285,12 @@ void StationsDlg::eventHide(QHideEvent*)
 
 void StationsDlg::eventShow(QShowEvent*)
 {
-    bIsShowing = true;
+    // if app starts in Analog and switches to DRM,
+    // something's crushed the settings so reload them
+    // TODO: Find out where this is happeneing and fix that instead
+    // of using this workaround
+    if (strColumnParamdrm.left(3) == "100")
+        LoadSettings();
     QwtCounterFrequency->setValue(rx.GetFrequency());
 	bool ensmeter = false;
 	ensmeter = actionEnable_S_Meter->isChecked();
@@ -336,7 +339,6 @@ void StationsDlg::eventShow(QShowEvent*)
     /* Activate real-time timer when window is shown */
     Timer.start(500 /* twice a second - nyquist for catching minute boundaries */);
     QTimer::singleShot(1000, this, SLOT(OnTimer()));
-    bIsShowing = false;
 }
 
 void StationsDlg::OnTimer()
@@ -372,7 +374,7 @@ void StationsDlg::OnTimer()
 
 void StationsDlg::LoadSettings()
 {
-	/* S-meter settings */
+    /* S-meter settings */
 	bool ensmeter = Settings.Get("Hamlib", "ensmeter", false);
 
 	actionEnable_S_Meter->setChecked(ensmeter);
@@ -439,7 +441,7 @@ void StationsDlg::LoadSettings()
 
 void StationsDlg::SaveSettings()
 {
-	Settings.Put("Hamlib", "ensmeter", actionEnable_S_Meter->isChecked());
+    Settings.Put("Hamlib", "ensmeter", actionEnable_S_Meter->isChecked());
 	putSetting("showall", actionShowAllStations->isChecked());
 	putSetting("DRM URL", schedule.qurldrm.toString());
 	putSetting("ANALOG URL", schedule.qurlanalog.toString());
@@ -661,19 +663,6 @@ void StationsDlg::OnHeaderClicked(int c)
 		iSortColumndrm = c;
 	else
 		iSortColumnanalog = c;
-}
-
-void StationsDlg::OnColumnAltered()
-{
-    //don't do this on initial restoring of columns, only after a manual column resize or move
-    if (!bIsShowing) {
-        qDebug("saving settings");
-        ColumnParamToStr(schedule.GetSchedMode() == CSchedule::SM_DRM?strColumnParamdrm:strColumnParamanalog);
-        if (schedule.GetSchedMode() == CSchedule::SM_DRM)
-            putSetting("columnparamdrm", strColumnParamdrm);
-        else
-            putSetting("columnparamanalog", strColumnParamanalog);
-    }
 }
 
 int StationsDlg::currentSortColumn()
