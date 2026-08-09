@@ -130,6 +130,8 @@ bReInitOnFrequencyChange(false)
 	connect(action30minutes, SIGNAL(triggered()), previewMapper, SLOT(map()));
 	connect(previewMapper, SIGNAL(mapped(int)), this, SLOT(OnShowPreviewMenu(int)));
 	connect(ListViewStations->header(), SIGNAL(sectionClicked(int)), this, SLOT(OnHeaderClicked(int)));
+    connect(ListViewStations->header(), SIGNAL(sectionResized(int,int,int)), this, SLOT(OnColumnAltered()));
+    connect(ListViewStations->header(), SIGNAL(sectionMoved(int,int,int)), this, SLOT(OnColumnAltered()));
 
 	//connect(actionGetUpdate, SIGNAL(triggered()), this, SLOT(OnGetUpdate()));
 # ifdef HAVE_LIBHAMLIB
@@ -273,6 +275,7 @@ void StationsDlg::eventClose(QCloseEvent*)
     ColumnParamToStr((eSchedM == CSchedule::SM_DRM)?strColumnParamdrm:strColumnParamanalog);
     /* Save settings */
 	SaveSettings();
+    Settings.Save();
 }
 
 void StationsDlg::eventHide(QHideEvent*)
@@ -284,6 +287,7 @@ void StationsDlg::eventHide(QHideEvent*)
 
 void StationsDlg::eventShow(QShowEvent*)
 {
+    bIsShowing = true;
     QwtCounterFrequency->setValue(rx.GetFrequency());
 	bool ensmeter = false;
 	ensmeter = actionEnable_S_Meter->isChecked();
@@ -332,6 +336,7 @@ void StationsDlg::eventShow(QShowEvent*)
     /* Activate real-time timer when window is shown */
     Timer.start(500 /* twice a second - nyquist for catching minute boundaries */);
     QTimer::singleShot(1000, this, SLOT(OnTimer()));
+    bIsShowing = false;
 }
 
 void StationsDlg::OnTimer()
@@ -656,6 +661,19 @@ void StationsDlg::OnHeaderClicked(int c)
 		iSortColumndrm = c;
 	else
 		iSortColumnanalog = c;
+}
+
+void StationsDlg::OnColumnAltered()
+{
+    //don't do this on initial restoring of columns, only after a manual column resize or move
+    if (!bIsShowing) {
+        qDebug("saving settings");
+        ColumnParamToStr(schedule.GetSchedMode() == CSchedule::SM_DRM?strColumnParamdrm:strColumnParamanalog);
+        if (schedule.GetSchedMode() == CSchedule::SM_DRM)
+            putSetting("columnparamdrm", strColumnParamdrm);
+        else
+            putSetting("columnparamanalog", strColumnParamanalog);
+    }
 }
 
 int StationsDlg::currentSortColumn()
