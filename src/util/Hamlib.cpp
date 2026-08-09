@@ -55,6 +55,8 @@ bModRigSettings(false), iHamlibModelID(0),
 strHamlibConf(""), strSettings(""), iFreqOffset(0),
 modes(), levels(), functions(), parameters(), config()
 {
+    rig_set_debug(RIG_DEBUG_WARN);
+
 #ifdef RIG_MODEL_DWT
 	/* Digital World Traveller */
 	RigSpecialParameters(RIG_MODEL_DWT, "", 0, "");
