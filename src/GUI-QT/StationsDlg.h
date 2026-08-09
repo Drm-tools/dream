@@ -94,7 +94,8 @@ protected:
 	QActionGroup*	showGroup;
 	QNetworkAccessManager *manager;
 	QTimer			Timer;
-	bool		bReInitOnFrequencyChange;
+    bool            bReInitOnFrequencyChange;
+    bool            bIsShowing;
 
 	QMutex			ListItemsMutex;
 
@@ -113,6 +114,7 @@ public slots:
 	void OnShowPreviewMenu(int iID);
 	void OnFreqCntNewValue(double dVal);
     void OnSyncRigFreq();
+    void OnColumnAltered();
     void OnHeaderClicked(int c);
 	void on_actionGetUpdate_triggered();
 	void on_ListViewStations_itemSelectionChanged();
