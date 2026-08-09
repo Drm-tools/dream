@@ -954,6 +954,7 @@ void FDRMDialog::eventUpdate()
 
 void FDRMDialog::eventShow(QShowEvent*)
 {
+    rx.LoadSettings();
     /* Set timer for real-time controls */
     OnTimer();
     Timer.start(GUI_CONTROL_UPDATE_TIME);
