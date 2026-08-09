@@ -102,9 +102,9 @@ protected:
 	{
 	public:
 		CSpecDRMRig() : strDRMSetMod(""), strDRMSetNoMod(""), iFreqOffs(0) {}
-		CSpecDRMRig(const CSpecDRMRig& nSpec) :
-			strDRMSetMod(nSpec.strDRMSetMod),
-			strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
+        //CSpecDRMRig(const CSpecDRMRig& nSpec) :
+        //	strDRMSetMod(nSpec.strDRMSetMod),
+        //	strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
 		CSpecDRMRig(std::string sSet, int iNFrOff, std::string sModSet) :
 			strDRMSetMod(sModSet), strDRMSetNoMod(sSet), iFreqOffs(iNFrOff) {}
 
