@@ -124,8 +124,7 @@ main(int argc, char **argv)
 #else
 			FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings);
 #endif
-            if (pMainDlg)
-                rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
+            rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
 
 			/* Start working thread */
             rx.start();
@@ -141,6 +140,7 @@ main(int argc, char **argv)
 			rig.SaveSettings(Settings);
 #endif
             rx.SaveSettings();
+            delete pMainDlg; //added to satisfy compiler warning regarding leaked memory mjf 10 aug 26
 		}
 		else if(mode == "transmit")
 		{
