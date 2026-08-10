@@ -949,12 +949,12 @@ void FDRMDialog::eventUpdate()
     /* Put (re)initialization code here for the settings that might have
        be changed by another top level window. Called on mode switch */
     //pFileMenu->UpdateMenu();
+    cerr << "DRMDialog eventUpdate" << endl;
     SetDisplayColor(CRGBConversion::int2RGB(getSetting("colorscheme", 0xff0000, true)));
 }
 
 void FDRMDialog::eventShow(QShowEvent*)
 {
-    rx.LoadSettings();
     /* Set timer for real-time controls */
     OnTimer();
     Timer.start(GUI_CONTROL_UPDATE_TIME);

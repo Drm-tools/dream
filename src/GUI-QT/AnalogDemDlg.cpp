@@ -213,8 +213,7 @@ void AnalogDemDlg::eventUpdate()
 
 void AnalogDemDlg::eventShow(QShowEvent*)
 {
-    rx.SetReceiverMode(RM_AM);
-	OnTimer();
+    OnTimer();
 	OnTimerPLLPhaseDial();
 	/* Set correct schedule */
 
