@@ -403,7 +403,7 @@ void FMDialog::eventUpdate()
 
 void FMDialog::eventShow(QShowEvent*)
 {
-	/* Set timer for real-time controls */
+    /* Set timer for real-time controls */
 	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
