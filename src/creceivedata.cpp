@@ -73,7 +73,7 @@ void CReceiveData::Stop()
 {
 #ifdef QT_MULTIMEDIA_LIB
 //    AudioInterfaceStop();
-    if(pIODevice!=nullptr) {
+    if(pIODevice != nullptr) {
         pIODevice->close();
 //        pIODevice = nullptr;
     }
@@ -83,7 +83,7 @@ void CReceiveData::Stop()
         pAudioInput = nullptr;
     }
 #endif
-    if(pSound!=nullptr) {
+    if(pSound != nullptr) {
         pSound->Close();
         pSound = nullptr;
     }
@@ -130,13 +130,12 @@ CReceiveData::SetSoundInterface(string device)
         int sr = pAudioFileIn->GetSampleRate();
         if(iSampleRate!=sr) {
             // TODO
-            cerr << "file sample rate is " << sr << endl;
             iSampleRate = sr;
         }
         pSound = pAudioFileIn;
 #ifdef QT_MULTIMEDIA_LIB
 //        AudioInterfaceStop();
-        if(pIODevice!=nullptr) {
+        if(pIODevice != nullptr) {
             pIODevice->close();
 //            pIODevice = nullptr;
         }
