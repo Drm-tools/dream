@@ -60,30 +60,48 @@ void CTransmitData::Stop()
 void CTransmitData::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultOutput)
 {
 #ifdef QT_MULTIMEDIA_LIB
-    QSet<QString> s;
+    //QSet<QString> s;
+    QList<QString> l;
     QString def = QAudioDeviceInfo::defaultOutputDevice().deviceName();
     defaultOutput = def.toStdString();
-cerr << "default output device is " << defaultOutput << endl;
+
+    l.clear();
+    //s.clear();
     foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
     {
-        s.insert(di.deviceName());
+        //s.insert(di.deviceName());
+        l.append(di.deviceName());
     }
-    names.clear(); descriptions.clear();
-    foreach(const QString n, s) {
-cerr << "have output device " << n.toStdString() << endl;
-        names.push_back(n.toStdString());
-        if(n == def) {
+    std::sort(l.begin(), l.end());
+    //          [](const QString &a, const QString &b) {
+    //              return a > b;
+    //          });
+    //if (l.count() > 0) {
+    //    for (int i = 0; i < l.count(); i++) {
+    //        qDebug("Inserting %s",l.at(i).toStdString().c_str());
+    //        s.insert(l.at(i));
+    //    }
+    //}
+    //l.clear();
+
+    names.clear();
+    descriptions.clear();
+    //foreach(const QString n, s) {
+    for (int i = 0; i < l.count(); i++) {
+        //names.push_back(n.toStdString());
+        names.push_back(l.at(i).toStdString());
+        //if (n == def) {
+        if (l.at(i) == def) {
             descriptions.push_back("default");
-        }
-        else {
+        } else {
             descriptions.push_back("");
         }
     }
+    l.clear();
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
     pSound->Enumerate(names, descriptions, defaultOutput);    
 #endif
-    cout << "default output is " << defaultOutput << endl;
 }
 
 void CTransmitData::SetSoundInterface(string device)
