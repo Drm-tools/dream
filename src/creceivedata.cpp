@@ -73,14 +73,17 @@ void CReceiveData::Stop()
 {
 #ifdef QT_MULTIMEDIA_LIB
 //    AudioInterfaceStop();
-    if(pIODevice != nullptr) {
-        pIODevice->close();
-//        pIODevice = nullptr;
-    }
-    if(pAudioInput != nullptr) {
+    if (pAudioInput != nullptr) {
         pAudioInput->stop();
-//        delete pAudioInput;
-        pAudioInput = nullptr;
+        if (pIODevice != nullptr) {
+            if (pIODevice->isOpen())
+                pIODevice->close();
+//            pIODevice = nullptr;
+        }
+        if (pAudioInput->state() == QAudio::StoppedState) {
+//            delete pAudioInput;
+            pAudioInput = nullptr;
+        }
     }
 #endif
     if(pSound != nullptr) {
@@ -92,23 +95,44 @@ void CReceiveData::Stop()
 void CReceiveData::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultInput)
 {
 #ifdef QT_MULTIMEDIA_LIB
-    QSet<QString> s;
+    //QSet<QString> s;
+    QList<QString> l;
     QString def = QAudioDeviceInfo::defaultInputDevice().deviceName();
     defaultInput = def.toStdString();
+
+    l.clear();
+    //s.clear();
     foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
     {
-        s.insert(di.deviceName());
+        //s.insert(di.deviceName());
+        l.append(di.deviceName());
     }
-    names.clear(); descriptions.clear();
-    foreach(const QString n, s) {
-        names.push_back(n.toStdString());
-        if(n == def) {
+    std::sort(l.begin(), l.end());
+    //          [](const QString &a, const QString &b) {
+    //              return a > b;
+    //          });
+    //if (l.count() > 0) {
+    //    for (int i = 0; i < l.count(); i++) {
+    //        qDebug("Inserting %s",l.at(i).toStdString().c_str());
+    //        s.insert(l.at(i));
+    //    }
+    //}
+    //l.clear();
+
+    names.clear();
+    descriptions.clear();
+    //foreach(const QString n, s) {
+    for (int i = 0; i < l.count(); i++) {
+        //names.push_back(n.toStdString());
+        names.push_back(l.at(i).toStdString());
+        //if (n == def) {
+        if (l.at(i) == def) {
             descriptions.push_back("default");
-        }
-        else {
+        } else {
             descriptions.push_back("");
         }
     }
+    l.clear();
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundInInterface();
     pSound->Enumerate(names, descriptions, defaultInput);
@@ -135,14 +159,17 @@ CReceiveData::SetSoundInterface(string device)
         pSound = pAudioFileIn;
 #ifdef QT_MULTIMEDIA_LIB
 //        AudioInterfaceStop();
-        if(pIODevice != nullptr) {
-            pIODevice->close();
-//            pIODevice = nullptr;
-        }
-        if(pAudioInput != nullptr) {
+        if (pAudioInput != nullptr) {
             pAudioInput->stop();
-//            delete pAudioInput;
-            pAudioInput = nullptr;
+            if (pIODevice != nullptr) {
+                if (pIODevice->isOpen())
+                    pIODevice->close();
+//                pIODevice = nullptr;
+            }
+            if (pAudioInput->state() == QAudio::StoppedState) {
+//                delete pAudioInput;
+                pAudioInput = nullptr;
+            }
         }
 #endif
     }
