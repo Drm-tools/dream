@@ -230,12 +230,12 @@ void CSoundCardSelMenu::UpdateDeviceMenu(QMenu* menu, const vector<string>& name
     cerr << "UpdateDeviceMenu " << menu->title().toStdString() << " selected (" << selected << ")" << endl;
     for (int i = 0; i < int(names.size()); i++)
     {
-      cerr << "enum " << names[i] << " desc " <<  descriptions[i] << endl;
+        cerr << "enum " << names[i] << " desc " <<  descriptions[i] << endl;
         QString name(QString::fromStdString(names[i]));
         QString desc(QString::fromStdString(descriptions[i]));
         if(name.size()==0) {
-		name = tr("[default]");
-	}
+            name = tr("[default]");
+        }
         QString t = name;
         if(desc.size()>0) t += " [" + desc + "]";
         QAction* m = menu->addAction(t);
