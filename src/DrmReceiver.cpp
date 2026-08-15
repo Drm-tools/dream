@@ -1000,7 +1000,7 @@ CDRMReceiver::process()
             {
                 downstreamRSCI.SendLockedFrame(Parameters, FACSendBuf, SDCSendBuf, MSCSendBuf);
                 iUnlockedCount = 0;
-                bFrameToSend = false;
+                //bFrameToSend = false;
             }
             break;
         case RM_AM:
@@ -1025,10 +1025,11 @@ CDRMReceiver::process()
     /* Play and/or save the audio */
     if (iAudioStreamID != STREAM_ID_NOT_USED || (eReceiverMode == RM_AM) || (eReceiverMode == RM_FM))
     {
-        if (WriteData.WriteData(Parameters, AudSoDecBuf))
-        {
-            bEnoughData = true;
-        }
+        //if (WriteData.WriteData(Parameters, AudSoDecBuf))
+        WriteData.WriteData(Parameters, AudSoDecBuf);
+        //{
+            //bEnoughData = true;
+        //}
     }
 }
 
@@ -1398,6 +1399,10 @@ CDRMReceiver::saveSDCtoFile()
 
     if (pFile == nullptr)
         pFile = fopen("test/altfreq.dat", "w");
+
+    if (pFile == NULL) {
+        return;
+    }
 
     Parameters.Lock();
     size_t inum = Parameters.AltFreqSign.vecMultiplexes.size();
