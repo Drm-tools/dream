@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "Rig.h"
+#include <iostream>
 
 CRig::CRig(CParameter* np):
 #ifdef HAVE_LIBHAMLIB
