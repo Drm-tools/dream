@@ -33,9 +33,10 @@
 # include <QAudioOutput>
 # include <QAudioInput>
 # include <QSet>
+#else
+#include "sound/soundinterfacefactory.h"
 #endif
 //#include "sound/sound.h"
-/*#include "sound/soundinterfacefactory.h"*/
 
 /* Implementation *************************************************************/
 /******************************************************************************\
