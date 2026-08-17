@@ -45,7 +45,7 @@
 #include <time.h>
 #include "ServiceInformation.h"
 #include <map>
-#include <iostream>
+/*#include <iostream>*/
 #ifdef HAVE_LIBGPS
 # include <gps.h>
 #else
