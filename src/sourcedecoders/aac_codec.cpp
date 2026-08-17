@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "aac_codec.h"
+#include <iostream>
 #if !defined(USE_FAAD2_LIBRARY) || !defined(USE_FAAC_LIBRARY)
 # include "../util/LibraryLoader.h"
 #endif
@@ -125,8 +126,8 @@ AacCodec::AacCodec() :
 }
 AacCodec::~AacCodec()
 {
-    DecClose();
-    EncClose();
+    //DecClose();
+    //EncClose();
 }
 
 /******************************************************************************/
