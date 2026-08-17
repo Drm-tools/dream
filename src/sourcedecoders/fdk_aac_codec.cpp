@@ -31,6 +31,7 @@
 #include <fdk-aac/FDK_audio.h>
 /*#include "src/SDC/SDC.h"*/
 #include <cstring>
+#include <iostream>
 
 FdkAacCodec::FdkAacCodec() :
     hDecoder(nullptr), hEncoder(nullptr),bUsac(false),decode_buf()
@@ -40,8 +41,8 @@ FdkAacCodec::FdkAacCodec() :
 
 FdkAacCodec::~FdkAacCodec()
 {
-	DecClose();
-	EncClose();
+    //DecClose();
+    //EncClose();
 }
 
 static void aacinfo(LIB_INFO& inf) {
