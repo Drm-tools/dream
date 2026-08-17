@@ -1337,9 +1337,11 @@ void FDRMDialog::SetDisplayColor(const QColor newColor)
         if (vecpWidgets[i] != TextTextMessage)
         {
             CurPal.setColor(QPalette::Active, QPalette::Text, newColor);
-            CurPal.setColor(QPalette::Active, QPalette::Foreground, newColor);
+            //CurPal.setColor(QPalette::Active, QPalette::Foreground, newColor);
+            CurPal.setColor(QPalette::Active, QPalette::WindowText, newColor);
             CurPal.setColor(QPalette::Inactive, QPalette::Text, newColor);
-            CurPal.setColor(QPalette::Inactive, QPalette::Foreground, newColor);
+            //CurPal.setColor(QPalette::Inactive, QPalette::Foreground, newColor);
+            CurPal.setColor(QPalette::Inactive, QPalette::WindowText, newColor);
         }
         CurPal.setColor(QPalette::Active, QPalette::Button, newColor);
         CurPal.setColor(QPalette::Active, QPalette::Light, newColor);
