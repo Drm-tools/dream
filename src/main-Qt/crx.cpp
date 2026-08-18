@@ -12,6 +12,9 @@ CRx::CRx(CDRMReceiver& nRx, CTRx *trx): CTRx(trx), rx(nRx), eRunState(STOPPED)
 
 CRx::~CRx()
 {
+#if defined __linux__
+    eRunState = ERunState::STOP_REQUESTED;
+#endif
 }
 
 void
