@@ -111,7 +111,9 @@ void CReadData::Enumerate(std::vector<std::string>& names, std::vector<std::stri
     foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
     {
         //s.insert(di.deviceName());
-        l.append(di.deviceName());
+        //append only if it doesn't already exist
+        if (!l.contains(di.deviceName()))
+            l.append(di.deviceName());
     }
     std::sort(l.begin(), l.end());
     //          [](const QString &a, const QString &b) {
@@ -230,7 +232,9 @@ void CWriteData::Enumerate(std::vector<std::string>& names, std::vector<std::str
     foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
     {
         //s.insert(di.deviceName());
-        l.append(di.deviceName());
+        //append only if it doesn't already exist
+        if (!l.contains(di.deviceName()))
+            l.append(di.deviceName());
     }
     std::sort(l.begin(), l.end());
     //          [](const QString &a, const QString &b) {
