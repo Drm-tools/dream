@@ -250,7 +250,11 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
 
 #ifdef QT_MULTIMEDIA_LIB
     bool bBad = false;
+#if defined __linux__
     if (pIODevice)
+#else
+    if (pIODevice && pIODevice->isOpen())
+#endif
     {
 #if 0
 
@@ -283,7 +287,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
 #if defined __linux__
             if (pIODevice)
 #else
-            if (pIODevice->isOpen())
+            if (pIODevice && pIODevice->isOpen())
 #endif
                 r = pIODevice->read(p, n);
             if (r > 0) {
@@ -293,15 +297,19 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
             else {
                 QThread::msleep(mwait);
             }
+#if defined __linux__
         } while ((n > 0) && (pIODevice));
+#else
+        } while ((n > 0) && (pIODevice && pIODevice->isOpen()));
 #endif
-    }
-    else if (pSound != nullptr) { // for audio files
+#endif
+    } else if (pSound != nullptr) { // for audio files
         bBad = pSound->Read(vecsSoundBuffer, Parameters);
     }
     else {
-      bBad = true;
+        bBad = true;
     }
+
 #else
     bool bBad = true;
     if (pSound != nullptr)
