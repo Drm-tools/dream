@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>692</width>
+    <width>718</width>
     <height>427</height>
    </rect>
   </property>
@@ -30,6 +30,9 @@
       <property name="uniformRowHeights">
        <bool>true</bool>
       </property>
+      <attribute name="headerMinimumSectionSize">
+       <number>30</number>
+      </attribute>
       <column>
        <property name="text">
         <string/>
@@ -341,8 +344,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>692</width>
-     <height>39</height>
+     <width>718</width>
+     <height>33</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuView">
