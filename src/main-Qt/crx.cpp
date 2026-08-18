@@ -114,6 +114,11 @@ void CRx::SetInputDevice(QString s)
 void CRx::SetInputDevice(string s)
 {
     cerr << "CRx::SetInputDevice " << s << endl;
+
+    //try getting from Settings instead of default after closing audio file
+    if (s == "")
+        s = GetSettings()->GetIniSetting("Receiver","snddevin","");
+
     rx.SetInputDevice(s);
     eRunState = RESTART;
     QString id = QString::fromStdString(rx.GetInputDevice());
