@@ -76,9 +76,12 @@ void CReceiveData::Stop()
     if (pAudioInput != nullptr) {
         pAudioInput->stop();
         if (pIODevice != nullptr) {
+#if defined __linux__
+            pIODevice = nullptr;
+#else
             if (pIODevice->isOpen())
                 pIODevice->close();
-//            pIODevice = nullptr;
+#endif
         }
         if (pAudioInput->state() == QAudio::StoppedState) {
 //            delete pAudioInput;
