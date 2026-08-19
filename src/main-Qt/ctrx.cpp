@@ -5,3 +5,7 @@ CTRx::CTRx(QThread *parent) : QThread(parent)
 {
 
 }
+
+CTRx::~CTRx()
+{
+}
