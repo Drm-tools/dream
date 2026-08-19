@@ -150,7 +150,7 @@ CReceiveData::SetSoundInterface(string device)
     soundDevice = device;
     if(pSound != nullptr) {
         pSound->Close();
-        delete pSound;
+//        delete pSound;
         pSound = nullptr;
     }
     if(FileTyper::resolve(device) != FileTyper::unrecognised) {
@@ -167,9 +167,12 @@ CReceiveData::SetSoundInterface(string device)
         if (pAudioInput != nullptr) {
             pAudioInput->stop();
             if (pIODevice != nullptr) {
+#if defined __linux__
+                pIODevice = nullptr;
+#else
                 if (pIODevice->isOpen())
                     pIODevice->close();
-//                pIODevice = nullptr;
+#endif
             }
             if (pAudioInput->state() == QAudio::StoppedState) {
 //                delete pAudioInput;
