@@ -150,7 +150,9 @@ CReceiveData::SetSoundInterface(string device)
     soundDevice = device;
     if(pSound != nullptr) {
         pSound->Close();
-//        delete pSound;
+#ifdef _WIN32
+        delete pSound;
+#endif
         pSound = nullptr;
     }
     if(FileTyper::resolve(device) != FileTyper::unrecognised) {
