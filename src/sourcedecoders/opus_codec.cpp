@@ -32,6 +32,7 @@
 #include "opus_codec.h"
 #ifndef USE_OPUS_LIBRARY
 # include "../util/LibraryLoader.h"
+# include <iostream>
 #endif
 
 #undef EPRINTF
@@ -533,8 +534,8 @@ OpusCodec::OpusCodec() :
 }
 OpusCodec::~OpusCodec()
 {
-	DecClose();
-	EncClose();
+    //DecClose();
+    //EncClose();
 }
 
 /******************************************************************************/
