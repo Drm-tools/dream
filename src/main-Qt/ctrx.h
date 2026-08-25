@@ -4,18 +4,18 @@
 #include <QThread>
 #include "../DrmTransceiver.h"
 #include <vector>
-#include <QString>
 
 class CTRx : public QThread, public CDRMTransceiver
 {
     Q_OBJECT
 public:
     explicit CTRx(QThread *parent = nullptr);
+    ~CTRx();
     virtual int GetFrequency()=0;
 
 signals:
-    void InputDeviceChanged(const QString &device);
-    void OutputDeviceChanged(const QString &device);
+    void InputDeviceChanged(const std::string&);
+    void OutputDeviceChanged(const std::string&);
     void soundUpscaleRatioChanged(int);
 
 public slots:
@@ -24,3 +24,4 @@ public slots:
 };
 
 #endif // CTRX_H
+
