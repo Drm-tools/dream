@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "audiofilein.h"
+#include "src/tables/TableDRMGlobal.h"
 #ifdef _WIN32
 # include <windows.h>
 #endif
@@ -49,7 +50,7 @@ CAudioFileIn::CAudioFileIn(): CSoundInInterface(), eFmt(fmt_other),
 
 CAudioFileIn::~CAudioFileIn()
 {
-    Close();
+    //Close();
 }
 
 void

@@ -29,13 +29,14 @@
 #ifndef __SCHEDULE_H
 #define __SCHEDULE_H
 
+#include "src/GlobalDefinitions.h"
 #include <QNetworkAccessManager>
 #include <QUrl>
 #include <QTreeWidgetItem>
 
 #include <QTextStream>
 
-#include "../util/Vector.h"
+/*#include "../util/Vector.h"*/
 
 /* Definitions ****************************************************************/
 
@@ -65,7 +66,7 @@
 #define FLAG_STR_IRREGULAR_TRANSM		"0000000"
 #define CHR_ACTIVE_DAY_MARKER			'1'
 
-#include <iostream>
+/*#include <iostream>*/
 
 namespace Station {
 	enum EState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
@@ -152,7 +153,7 @@ public:
     ESchedMode GetSchedMode() {return eSchedMode;}
 	void SetSchedMode(const ESchedMode);
 
-	int GetNumberOfStations() {return StationsTable.size();}
+    int GetNumberOfStations() {return StationsTable.size();}
 	CStationsItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	Station::EState GetState(const int iPos);
 	bool CheckFilter(const int iPos);

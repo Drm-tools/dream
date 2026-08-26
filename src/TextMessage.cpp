@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "TextMessage.h"
+#include "src/tables/TableDRMGlobal.h"
 using namespace std;
 
 /* Implementation *************************************************************/

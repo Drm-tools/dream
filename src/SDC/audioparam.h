@@ -2,6 +2,7 @@
 #define AUDIOPARAM_H
 
 #include "../util/Vector.h"
+#include "src/tables/TableDRMGlobal.h"
 
 class CAudioParam
 {
