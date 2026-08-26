@@ -75,7 +75,7 @@ void CReceiveData::Stop()
     if (pAudioInput != nullptr) {
         pAudioInput->stop();
         if (pIODevice != nullptr) {
-#if defined __linux__
+#if defined __linux__ || defined _WIN32
             pIODevice = nullptr;
 #else
             if (pIODevice->isOpen())
@@ -171,7 +171,7 @@ CReceiveData::SetSoundInterface(string device)
         if (pAudioInput != nullptr) {
             pAudioInput->stop();
             if (pIODevice != nullptr) {
-#if defined __linux__
+#if defined __linux__ || defined _WIN32
                 pIODevice = nullptr;
 #else
                 if (pIODevice->isOpen())
@@ -188,8 +188,12 @@ CReceiveData::SetSoundInterface(string device)
     else {
 #ifdef QT_MULTIMEDIA_LIB
         QAudioFormat format;
+#ifdef _WIN32
+        iSampleRate = 48000; //TODO
+#else
         if((iSampleRate < 12000) || (iSampleRate > 360000))
             iSampleRate = 48000; // TODO get order of initialisation correct
+#endif
         format.setSampleRate(iSampleRate);
         format.setSampleSize(16);
         format.setSampleType(QAudioFormat::SignedInt);
@@ -257,7 +261,7 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
 
 #ifdef QT_MULTIMEDIA_LIB
     bool bBad = false;
-#if defined __linux__
+#if defined __linux__ || defined _WIN32
     if (pIODevice)
 #else
     if (pIODevice && pIODevice->isOpen())
@@ -286,25 +290,25 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
         }
 
 #else
-        qint64 n = 2*vecsSoundBuffer.Size();
+        qint64 n = 2 * vecsSoundBuffer.Size();
         qint64 mwait = trunc(n / (2 * iSampleRate/1000));
         char *p = reinterpret_cast<char*>(&vecsSoundBuffer[0]);
         do {
             qint64 r = -1;
-#if defined __linux__
+#if defined __linux__ || defined _WIN32
             if (pIODevice)
 #else
             if (pIODevice && pIODevice->isOpen())
 #endif
                 r = pIODevice->read(p, n);
-            if (r > 0) {
+            if (r >= 0) {
                 p += r;
                 n -= r;
             }
             else {
                 QThread::msleep(mwait);
             }
-#if defined __linux__
+#if defined __linux__ || defined _WIN32
         } while ((n > 0) && (pIODevice));
 #else
         } while ((n > 0) && (pIODevice && pIODevice->isOpen()));

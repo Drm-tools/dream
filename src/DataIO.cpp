@@ -153,8 +153,12 @@ CReadData::SetSoundInterface(string device)
     soundDevice = device;
 #ifdef QT_MULTIMEDIA_LIB
     QAudioFormat format;
+#ifdef _WIN32
+    iSampleRate = 48000; // TODO
+#else
     if((iSampleRate < 12000) || (iSampleRate > 360000))
         iSampleRate = 48000; // TODO get order of initialisation correct
+#endif
     format.setSampleRate(iSampleRate);
     format.setSampleSize(16);
     format.setSampleType(QAudioFormat::SignedInt);
