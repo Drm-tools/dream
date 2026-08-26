@@ -42,7 +42,6 @@
 #include "UpsampleFilter.h"
 /*#include "matlib/MatlibSigProToolbox.h"*/
 #include "tuner.h"
-//#include "AudioInputFactory.h"
 
 using namespace std;
 
@@ -91,6 +90,9 @@ void CReceiveData::Stop()
 #endif
     if(pSound != nullptr) {
         pSound->Close();
+#ifdef _WIN32
+        delete pSound;
+#endif
         pSound = nullptr;
     }
 }
