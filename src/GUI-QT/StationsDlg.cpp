@@ -139,6 +139,8 @@ bReInitOnFrequencyChange(false)
     connect(syncBtn, SIGNAL(clicked()), this, SLOT(OnSyncRigFreq()));
 # else
 	actionChooseRig->setEnabled(false);
+    actionSyncRigFreq->setEnabled(false);
+    syncBtn->setEnabled(false);
 # endif
 	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 	connect(actionEnable_S_Meter, SIGNAL(triggered()), this, SLOT(OnSMeterMenu()));
