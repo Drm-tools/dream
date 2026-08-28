@@ -28,7 +28,7 @@
 #include "Hamlib.h"
 #include <iostream>
 #include <sstream>
-#include <cstring>
+/*#include <cstring>*/
 #include <cstdlib>
 #if defined(_WIN32)
 # ifdef HAVE_SETUPAPI
