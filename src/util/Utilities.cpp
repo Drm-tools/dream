@@ -27,7 +27,7 @@
 
 #include "Utilities.h"
 /*#include <sstream>*/
-#include <cstring>
+/*#include <cstring>*/
 #if defined(_WIN32)
 # ifdef HAVE_SETUPAPI
 #  ifndef INITGUID
