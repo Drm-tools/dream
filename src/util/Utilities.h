@@ -38,7 +38,7 @@
 #include "Vector.h"
 #include "../matlib/MatlibStdToolbox.h"
 #include <map>
-#include <iostream>
+/*#include <iostream>*/
 
 #ifdef HAVE_LIBHAMLIB
 # include <hamlib/rig.h>
