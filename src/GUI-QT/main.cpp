@@ -34,6 +34,8 @@
 #include <QMessageBox>
 
 #ifdef _WIN32
+# define WIN32_LEAN_AND_MEAN
+# include <winsock2.h>
 # include <windows.h>
 #else
 # include <csignal>
@@ -84,7 +86,12 @@ main(int argc, char **argv)
 #endif
 #ifdef _WIN32
 	WSADATA wsaData;
-	(void)WSAStartup(MAKEWORD(2,2), &wsaData);
+    int wsaresult = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (wsaresult != 0) {
+        qDebug("WSAStasrtup failed %d\n", wsaresult);
+    } else {
+        qDebug("Winsock2 initiated successfully!\n");
+    }
 #endif
 
 	/* Load and install multi-language support (if available) */

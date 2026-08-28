@@ -42,7 +42,8 @@
 #include "../util-QT/Util.h"
 #include "DialogUtil.h"
 #ifdef HAVE_LIBHAMLIB
-# include "../util-QT/Rig.h"
+/*# include "../util-QT/Rig.h"*/
+# include <hamlib/rig.h>
 #endif
 
 #ifdef HAVE_LIBSNDFILE
@@ -167,7 +168,11 @@ CAboutDlg::CAboutDlg(QWidget* parent):
         "project (http://qwt.sf.net).</i></li>"
 #endif
 #ifdef HAVE_LIBHAMLIB
+#ifndef _WIN32
         "<li><b>Hamlib</b> (" + QString(hamlib_version) + ") <i>http://hamlib.sourceforge.net</i></li>"
+#else
+        "<li><b>Hamlib</b> (latest version) <i>http://hamlib.sourceforge.net</i></li>"
+#endif
 #endif
         "<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
         "Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
