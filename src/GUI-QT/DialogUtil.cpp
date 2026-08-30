@@ -86,55 +86,6 @@
 # include <fftw3.h>
 #endif
 
-#ifdef _WIN32
-#ifdef HAVE_LIBHAMLIB
-//TODO - mjf
-//There's an issue with just referencing exported variables from the Hamlib dll
-//in Windows for some reason. The compiler says it's not a recognised export.
-//
-//In this case, we have to get it manually: In order to do that you have to
-//first find it using the full pathname, then see if it's already loaded.
-//Otherwise you need to load it and free it later. Then and only then can you
-//use the module handle to get the variable using GetProcAddress().
-//
-//There may be a much more elegant way to do this.
-//What a trip Windows is... never simple.
-QString GetHamlibVariableFromDLL(LPCSTR inVar)
-{
-    QString result = "";
-    HMODULE hDll = NULL;
-    bool need_to_load = false;
-    char curPath[MAX_PATH];
-    wchar_t* dllPath = NULL;
-    wchar_t fileName[17] = L"\\libhamlib-4.dll";
-
-    DWORD pathLen = GetCurrentDirectoryA(MAX_PATH, curPath);
-    if (pathLen > 0) {
-        int wPathLen = MultiByteToWideChar(CP_ACP, 0, curPath, -1, NULL, 0);
-        int filenameLen = (int)wcslen(fileName);
-        dllPath = new wchar_t[pathLen + filenameLen];
-        MultiByteToWideChar(CP_ACP, 0, curPath, -1, dllPath, wPathLen);
-        wcscat_s( dllPath, wPathLen + filenameLen, fileName);
-        DWORD attributes = GetFileAttributes(dllPath);
-        if ((attributes != INVALID_FILE_ATTRIBUTES) && !(attributes & FILE_ATTRIBUTE_DIRECTORY)) {
-            hDll = GetModuleHandle(dllPath);
-            if (hDll == NULL) {
-                need_to_load = true;
-                hDll = LoadLibrary(dllPath);
-            }
-        }
-        delete[] dllPath;
-        if (hDll != NULL) {
-            result = QString((char*)GetProcAddress(hDll, inVar));
-            if (need_to_load)
-                FreeLibrary(hDll);
-        }
-    }
-    return result;
-}
-#endif
-#endif
-
 QString VersionString(QWidget* parent)
 {
     QString strVersionText;
@@ -218,11 +169,7 @@ CAboutDlg::CAboutDlg(QWidget* parent):
         "project (http://qwt.sf.net).</i></li>"
 #endif
 #ifdef HAVE_LIBHAMLIB
-#ifndef _WIN32
         "<li><b>Hamlib</b> (" + QString(hamlib_version) + ") <i>http://hamlib.sourceforge.net</i></li>"
-#else
-        "<li><b>Hamlib</b> (" + GetHamlibVariableFromDLL(LPCSTR("hamlib_version")) + ") <i>http://hamlib.sourceforge.net</i></li>"
-#endif
 #endif
         "<li><b>FhG IIS Journaline Decoder</b> <i>Features NewsService "
         "Journaline(R) decoder technology by Fraunhofer IIS, Erlangen, "
