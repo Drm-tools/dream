@@ -271,11 +271,10 @@ void StationsDlg::LoadSchedule()
 
 void StationsDlg::eventClose(QCloseEvent*)
 {
+    //Save settings on hide or close
     CSchedule::ESchedMode eSchedM = schedule.GetSchedMode();
     ColumnParamToStr((eSchedM == CSchedule::SM_DRM)?strColumnParamdrm:strColumnParamanalog);
-    /* Save settings */
-	SaveSettings();
-    Settings.Save();
+    SaveSettings();
 }
 
 void StationsDlg::eventHide(QHideEvent*)
@@ -283,16 +282,16 @@ void StationsDlg::eventHide(QHideEvent*)
 	/* Deactivate real-time timers */
 	Timer.stop();
 	DisableSMeter();
+    //Save settings on hide or close
+    CSchedule::ESchedMode eSchedM = schedule.GetSchedMode();
+    ColumnParamToStr((eSchedM == CSchedule::SM_DRM)?strColumnParamdrm:strColumnParamanalog);
+    SaveSettings();
 }
 
 void StationsDlg::eventShow(QShowEvent*)
 {
-    // if app starts in Analog and switches to DRM,
-    // something's crushed the settings so reload them
-    // TODO: Find out where this is happeneing and fix that instead
-    // of using this workaround
-    if (strColumnParamdrm.left(3) == "100")
-        LoadSettings();
+    //Load dialog settings on create or show
+    LoadSettings();
     QwtCounterFrequency->setValue(rx.GetFrequency());
 	bool ensmeter = false;
 	ensmeter = actionEnable_S_Meter->isChecked();
