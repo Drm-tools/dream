@@ -51,8 +51,10 @@
 # undef NOMINMAX
 # define NOMINMAX 1
 
-//# define DLL_EXPORT 1
-//# undef DLL_EXPORT 1
+# undef DLL_EXPORT
+# ifdef HAVE_LIBHAMLIB
+#  define DLL_EXPORT 1
+# endif
 
 #endif /* _WIN32 */
 
