@@ -75,6 +75,7 @@ public slots:
     virtual void LoadSettings() override;
     virtual void SaveSettings() override;
     virtual void SetInputDevice(std::string) override;
+    virtual void OkToSetInputDevice();
     virtual void SetOutputDevice(std::string) override;
     virtual void SetInputDevice(QString);
     virtual void SetOutputDevice(QString);
@@ -113,6 +114,8 @@ public slots:
 private:
     CDRMReceiver& rx;
     ERunState eRunState;
+    string newInputName;
+    bool bEmitWasSent;
 
 signals:
     void inputSampleRateChanged(int);
@@ -158,6 +161,7 @@ signals:
     void drmModeStarted();
     void amModeStarted();
     void fmModeStarted();
+    void okToChangeInput();
 };
 
 #endif // CRX_H

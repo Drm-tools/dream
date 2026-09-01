@@ -8,13 +8,11 @@
 
 CRx::CRx(CDRMReceiver& nRx, CTRx *trx): CTRx(trx), rx(nRx), eRunState(STOPPED)
 {
+    connect(this, SIGNAL(okToChangeInput()), this, SLOT(OkToSetInputDevice()));
 }
 
 CRx::~CRx()
 {
-//#if defined __linux__
-//    eRunState = ERunState::STOP_REQUESTED;
-//#endif
 }
 
 void
@@ -50,16 +48,25 @@ CRx::run()
 
             /* Set run flag so that the thread can work */
             eRunState = RUNNING;
+            bEmitWasSent = false;
             do
             {
-                rx.updatePosition();
-                rx.process();
+                if (eRunState != PAUSED) {
+                    rx.updatePosition();
+                    rx.process();
+                } else {
+                    //send the signal to continue changing the input
+                    if (!bEmitWasSent)
+                        emit okToChangeInput();
+                    //but ensure it's only sent once
+                    bEmitWasSent = true;
+                }
 
 #ifdef USE_CONSOLEIO
                 eRunState = CConsoleIO::Update();
 #endif
             }
-            while (eRunState == RUNNING);
+                while ((eRunState == RUNNING) || (eRunState == PAUSED));
 
             /* Restore some parameter previously set by SetInput() */
 
@@ -91,7 +98,7 @@ void CRx::LoadSettings()
     QString s = QString::fromStdString(rx.GetInputDevice());
     //SetInputDevice(s);
     if (FileTyper::resolve(rx.GetInputDevice()) != FileTyper::unrecognised)
-        emit soundFileChanged(s); // TODO only send if it is a file!!!
+        emit soundFileChanged(s);
     else
         emit InputDeviceChanged(s);
     emit inputSampleRateChanged(rx.GetParameters()->GetSigSampleRate());
@@ -115,6 +122,17 @@ void CRx::SetInputDevice(string s)
 {
     cerr << "CRx::SetInputDevice " << s << endl;
 
+    //store the intended new device name
+    newInputName = s;
+    //set the running loop to pause processing
+    eRunState = PAUSED;
+}
+
+void CRx::OkToSetInputDevice()
+{
+    //hopefully process() is no longer running so the change can occur safely
+    string s = newInputName;
+
     //try getting from Settings instead of default after closing audio file
     if (s == "")
         s = GetSettings()->GetIniSetting("Receiver","snddevin","");
@@ -123,7 +141,7 @@ void CRx::SetInputDevice(string s)
     eRunState = RESTART;
     QString id = QString::fromStdString(rx.GetInputDevice());
     if (FileTyper::resolve(rx.GetInputDevice()) != FileTyper::unrecognised)
-        emit soundFileChanged(id); // TODO only send if it is a file!!!
+        emit soundFileChanged(id);
     else
         emit InputDeviceChanged(id);
 }
