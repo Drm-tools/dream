@@ -8,7 +8,6 @@
 
 CRx::CRx(CDRMReceiver& nRx, CTRx *trx): CTRx(trx), rx(nRx), eRunState(STOPPED)
 {
-    connect(this, SIGNAL(okToChangeInput()), this, SLOT(OkToSetInputDevice()));
 }
 
 CRx::~CRx()
@@ -19,6 +18,7 @@ void
 CRx::run()
 {
     qDebug("Working thread started");
+    bool bOkToSetDevice = false;
     try
     {
         // set the frequency from the command line or ini file
@@ -48,18 +48,16 @@ CRx::run()
 
             /* Set run flag so that the thread can work */
             eRunState = RUNNING;
-            bEmitWasSent = false;
+            bOkToSetDevice = false;
             do
             {
                 if (eRunState != PAUSED) {
                     rx.updatePosition();
                     rx.process();
                 } else {
-                    //send the signal to continue changing the input
-                    if (!bEmitWasSent)
-                        emit okToChangeInput();
-                    //but ensure it's only sent once
-                    bEmitWasSent = true;
+                    if (!bOkToSetDevice)
+                        OkToSetInputDevice();
+                    bOkToSetDevice = true;
                 }
 
 #ifdef USE_CONSOLEIO
@@ -121,16 +119,12 @@ void CRx::SetInputDevice(QString s)
 void CRx::SetInputDevice(string s)
 {
     cerr << "CRx::SetInputDevice " << s << endl;
-
-    //store the intended new device name
     newInputName = s;
-    //set the running loop to pause processing
     eRunState = PAUSED;
 }
 
 void CRx::OkToSetInputDevice()
 {
-    //hopefully process() is no longer running so the change can occur safely
     string s = newInputName;
 
     //try getting from Settings instead of default after closing audio file

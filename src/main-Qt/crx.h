@@ -115,7 +115,6 @@ private:
     CDRMReceiver& rx;
     ERunState eRunState;
     string newInputName;
-    bool bEmitWasSent;
 
 signals:
     void inputSampleRateChanged(int);
@@ -161,7 +160,6 @@ signals:
     void drmModeStarted();
     void amModeStarted();
     void fmModeStarted();
-    void okToChangeInput();
 };
 
 #endif // CRX_H
