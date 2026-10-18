@@ -6,7 +6,7 @@ An experimental Qt6 port of the Dream AM/DRM Receiver program for GNU/Linux.
 Original starting point: https://sourceforge.net/p/drm/code/HEAD/tree/branches/dream-ollie-deployed/ \
 Starting point of this branch: https://github.com/Drm-tools/dream-legacy/tree/dream-ollie-deployed 
 
-Currently this program is tested on Fedora 43, Debian 13 and Arch Linux.
+Currently this program is tested on Fedora 44 and Arch Linux.
 
 Debian and RPM packages are in the works, I'll probably release a pre-alpha in the near future (transmitter part is broken without patched codecs)
 # Prerequisites (Qt6)
@@ -36,14 +36,22 @@ sudo dnf in g++ opus-devel libsndfile-devel portaudio-devel qmake fdk-aac-devel 
 ```sh
 sudo pacman -S libsndfile portaudio fdkaac libpcap qt6-base qwt hamlib gpsd qt6-svg qt6-webengine fftw speex speexdsp qt6-tools cmake alsa-lib glibc libfdk-aac libgcc libstdc++ 
 ```
-> [!CAUTION]
-> Due to Arch Linux merging qwt-qt6 into qwt, Dream no longer compiles as of 19 May 2026.
 
 > [!TIP]
 > If you use PipeWire:
 >```sh
 >sudo pacman -S pipewire-pulse pipewire-alsa
 >```
+
+> [!IMPORTANT]
+> ## Compiling on Arch Linux:
+> ```sh
+>cmake -S . -B build -DUSE_QT=ON -DENABLE_SNDFILE=ON -DENABLE_SPEEXDSP=ON -DENABLE_ALSA=ON -DENABLE_QWT=ON -DENABLE_GPS=ON -DENABLE_FDK_AAC=ON -DENABLE_OPUS=ON -DENABLE_HAMLIB=ON -DCMAKE_BUILD_TYPE=Release -DQWT_LIB=/usr/lib/libqwt.so
+>cmake --build build -- -j8
+>cd build
+>```
+
+
 # Compiling with CMake (this is an example)
 ### Dream with GUI
 ```sh
