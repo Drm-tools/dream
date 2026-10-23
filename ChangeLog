@@ -1,3 +1,25 @@
+2.4 - in progress
+ - added a tuning offset for DRM mode
+ - added a station name filter to the Stations dialog
+ - added a synchronisation feature that finds the currently tuned frequency in the Stations dialog
+ - fixed lockups when xHE-AAC drops out and restarts
+ - fixed incorrect processing of input audio at startup
+ - fixed crashing when closing app in AM mode
+ - fixed display of the correct Speex user-defined setting at startup
+ - fixed character set used by Eibi data in the Stations dialog
+ - fixed display of user-defined column widths and position in Stations dialog
+ - fixed opening of audio test files from the menu.
+ - fixed resetting of device and title bar when closing an audio test file
+ - fixed crashing when closing or opening a new audio test file in Linux and Windows
+ - fixed the character set display in the Stations dialog when using EiBi
+ - fixed out of date Eibi lookup data using 21 July 26 data
+ - fixed data initialisation issues at startup
+ - fixed randomly ordered display of audio inputs and outputs in the Settings menu
+ - fixed inability to change input or output sources from the menu without crashing in Windows.
+ - fixed ability to build with and use Hamlib in Windows.
+2.3
+ - support for opus
+ - improved xHE-AAC support
 2.2
  - support for modern compilers
  - support for fdk-aac v2 for HE-AACv2
