@@ -1,1 +1,15 @@
-lots of things
+Goals for this version (2.4 (mjf))
+
+Fixes:
+11. The current source for the DRM schedule data is very dated and hasn't been kept up.
+
+13. CONTINUING Look at existing TODOs within the code.
+
+New features:
+4. Add a quick enable/disable Hamlib to allow for using an alternate tuning application, such as Smart Gnome Control that may be using the same receiver/port.
+
+5. Investigate adding TDFCast, which is used instead of Journaline MM on TDF feeds.
+
+Other:
+1. Port to Qt6, since Qt5 was EOL in May 2025.
+
