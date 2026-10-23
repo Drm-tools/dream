@@ -43,7 +43,7 @@
 
 
 #include "TagPacketGenerator.h"
-#include <iostream>
+/*#include <iostream>*/
 
 CTagPacketGenerator::CTagPacketGenerator() : vecTagItemGenerators(0) 
 {

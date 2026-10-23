@@ -26,7 +26,7 @@
  *
 \******************************************************************************/
 #include "Version.h"
-#include "GlobalDefinitions.h"
+/*#include "GlobalDefinitions.h"*/
 
 const char dream_manufacturer[] = "drea";
 #ifdef QT_CORE_LIB
@@ -42,6 +42,6 @@ const char dream_implementation[] = "CL";
 #endif
 const int dream_version_major = 2;
 const int dream_version_minor = 3;
-const int dream_version_patch = 0;
-const char dream_version_build[] = "";
+const int dream_version_patch = 1;
+const char dream_version_build[] = " (mjf)";
 

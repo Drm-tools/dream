@@ -70,7 +70,8 @@ public:
 		bool		bIsSpecRig;
 	};
 
-	bool		SetFrequency(const int iFreqkHz);
+    int             GetTunedFrequency(bool useOffset);
+    bool            SetFrequency(const int iFreqkHz, bool useOffset);
 	ESMeterState	GetSMeter(_REAL& rCurSigStr);
 
 	/* backend selection */
@@ -82,6 +83,10 @@ public:
 	void			GetPortList(std::map<std::string,std::string>&);
 	void			SetComPort(const std::string&);
 	std::string		GetComPort() const;
+
+    /* freq offset selection */
+    void			SetFreqOffset(const int);
+    int             GetFreqOffset() const {return iFreqOffset;}
 
 	void			SetEnableModRigSettings(const bool bNSM);
 	bool			GetEnableModRigSettings() const {return bModRigSettings;}
@@ -97,9 +102,9 @@ protected:
 	{
 	public:
 		CSpecDRMRig() : strDRMSetMod(""), strDRMSetNoMod(""), iFreqOffs(0) {}
-		CSpecDRMRig(const CSpecDRMRig& nSpec) :
-			strDRMSetMod(nSpec.strDRMSetMod),
-			strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
+        //CSpecDRMRig(const CSpecDRMRig& nSpec) :
+        //	strDRMSetMod(nSpec.strDRMSetMod),
+        //	strDRMSetNoMod(nSpec.strDRMSetNoMod), iFreqOffs(nSpec.iFreqOffs) {}
 		CSpecDRMRig(std::string sSet, int iNFrOff, std::string sModSet) :
 			strDRMSetMod(sModSet), strDRMSetNoMod(sSet), iFreqOffs(iNFrOff) {}
 

@@ -43,9 +43,9 @@
 #include "../util/Settings.h"
 #include <iostream>
 
-#ifdef HAVE_LIBHAMLIB
+/*#ifdef HAVE_LIBHAMLIB
 # include "../util-QT/Rig.h"
-#endif
+#endif*/
 #include <QCoreApplication>
 #include <QTranslator>
 #include <QThread>
@@ -53,7 +53,6 @@
 
 #include "../main-Qt/crx.h"
 #include "../main-Qt/ctx.h"
-//#include "../AudioInputFactory.h"
 
 int
 main(int argc, char **argv)
@@ -74,8 +73,6 @@ main(int argc, char **argv)
         {            
             CDRMSimulation DRMSimulation;
             CDRMReceiver DRMReceiver(&Settings);
-
-            //CAudioInputFactory AudioInputFactory(DRMReceiver.ReceiveData);
 
             DRMSimulation.SimScript();
             DRMReceiver.LoadSettings();

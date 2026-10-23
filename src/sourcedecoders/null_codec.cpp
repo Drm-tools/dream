@@ -86,6 +86,10 @@ bool NullCodec::DecOpen(const CAudioParam& AudioParam, int& iAudioSampleRate)
 
 CAudioCodec::EDecError NullCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVector<_REAL>& left, CVector<_REAL>& right)
 {
+    (void) audio_frame;
+    (void) aac_crc_bits;
+    (void) left;
+    (void) right;
     return DECODER_ERROR_UNKNOWN;
 }
 

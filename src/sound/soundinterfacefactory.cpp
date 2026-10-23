@@ -88,7 +88,7 @@ CSoundInInterface * CSoundInterfaceFactory::CreateSoundInInterface()
     pSoundInInterfaceComposite->AddInterface(new CSoapySDRIn());
 #endif
 
-#if defined(WIN32) && !defined(USE_PORTAUDIO) && !defined(USE_JACK) && !defined(QT_MULTIMEDIA_LIB)
+#if defined(_WIN32) && !defined(USE_PORTAUDIO) && !defined(USE_JACK) && !defined(QT_MULTIMEDIA_LIB)
 /* mmsystem sound interface */
     pSoundInInterfaceComposite->AddInterface(new CSoundInMMSystem());
 #elif defined(USE_ALSA)
@@ -113,7 +113,7 @@ CSoundInInterface * CSoundInterfaceFactory::CreateSoundInInterface()
 
 CSoundOutInterface * CSoundInterfaceFactory::CreateSoundOutInterface()
 {
-#if defined(WIN32) && !defined(USE_PORTAUDIO) && !defined(USE_JACK) && !defined(QT_MULTIMEDIA_LIB)
+#if defined(_WIN32) && !defined(USE_PORTAUDIO) && !defined(USE_JACK) && !defined(QT_MULTIMEDIA_LIB)
 /* mmsystem sound interface */
     return new CSoundOutMMSystem();
 #elif defined(USE_ALSA)

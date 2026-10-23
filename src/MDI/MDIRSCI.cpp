@@ -598,8 +598,9 @@ bool CUpstreamDI::GetDestination(string& str)
 	return sink.GetDestination(str);
 }
 
-void CUpstreamDI::SetFrequency(int iNewFreqkHz)
+void CUpstreamDI::SetFrequency(int iNewFreqkHz, bool useOffset)
 {
+    (void)useOffset;
 	if(bMDIOutEnabled==false)
 		return;
 	TagPacketGenerator.Reset();

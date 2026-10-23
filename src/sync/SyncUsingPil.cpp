@@ -305,7 +305,7 @@ fflush(pFile);
 void CSyncUsingPil::InitInternal(CParameter& Parameters)
 {
 	int			i;
-	_COMPLEX	cPhaseCorTermDivi;
+    //_COMPLEX	cPhaseCorTermDivi;
 
 	Parameters.Lock(); 
 

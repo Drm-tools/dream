@@ -32,6 +32,7 @@
 #include "opus_codec.h"
 #ifndef USE_OPUS_LIBRARY
 # include "../util/LibraryLoader.h"
+# include <iostream>
 #endif
 
 #undef EPRINTF
@@ -533,8 +534,8 @@ OpusCodec::OpusCodec() :
 }
 OpusCodec::~OpusCodec()
 {
-	DecClose();
-	EncClose();
+    //DecClose();
+    //EncClose();
 }
 
 /******************************************************************************/
@@ -595,7 +596,7 @@ OpusCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVec
 {
     EDecError eDecError;
     int iDecChannels;
-    bool bCurBlockOK = true;
+    //bool bCurBlockOK = true;
     /* Prepare data vector with CRC at the beginning (the definition with faad2 DRM interface) */
     CVector<uint8_t> vecbyPrepAudioFrame(int(audio_frame.size()+1));
     vecbyPrepAudioFrame[0] = aac_crc_bits;
@@ -611,25 +612,26 @@ OpusCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVec
             &vecbyPrepAudioFrame[0],
             vecbyPrepAudioFrame.size()
                 );
-	}
+    } else
+        eDecError = CAudioCodec::DECODER_ERROR_OK;
 
     //========= TODO
-    int bUseReverbEffect;
-    int bCurBlockFaulty;
-    int iLenDecOutPerChan;
+    int bUseReverbEffect = false; //initialised as false mjf 10 aug 26
+    //int bCurBlockFaulty;
+    int iLenDecOutPerChan = 1024; //arbitrary mjf 10 aug 26
     //========= END TODO
 
     if (!(eDecError == CAudioCodec::DECODER_ERROR_CRC && bUseReverbEffect == false) && eDecError != CAudioCodec::DECODER_ERROR_OK)
     {
         //cerr << "Opus decode error" << endl;
-        bCurBlockOK = false;	/* Set error flag */
+        //bCurBlockOK = false;	/* Set error flag */
     }
     else
     {
-        bCurBlockOK = true;
+        //bCurBlockOK = true;
         /* Opus can have FEC embeded, thus the audio frame is always OK */
-        if (eDecError != CAudioCodec::DECODER_ERROR_OK)
-            bCurBlockFaulty = true;
+        //if (eDecError != CAudioCodec::DECODER_ERROR_OK)
+            //bCurBlockFaulty = true;
 
         if(psDecOutSampleBuf) // might be dummy decoder
         {
@@ -695,6 +697,7 @@ OpusCodec::CanEncode(CAudioParam::EAudCod eAudioCoding)
 bool
 OpusCodec::EncOpen(const CAudioParam& AudioParam, unsigned long& lNumSampEncIn, unsigned long& lMaxBytesEncOut)
 {
+    (void) AudioParam;
     unsigned long iSampleRate = 48000;
     unsigned iChannels = 1;
 	hOpusEncoder = opusEncOpen(iSampleRate, iChannels,

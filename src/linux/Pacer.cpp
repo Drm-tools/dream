@@ -5,7 +5,7 @@
 #include <csignal>
 #include <unistd.h>
 #include <cstdio>
-#include <iostream>
+/*#include <iostream>*/
 
 CPacer::CPacer(uint64_t ns)
 {

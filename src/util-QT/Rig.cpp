@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "Rig.h"
+#include <iostream>
 
 CRig::CRig(CParameter* np):
 #ifdef HAVE_LIBHAMLIB
@@ -115,11 +116,16 @@ void CRig::SaveSettings(CSettings& s)
 #endif
 }
 
-void CRig::SetFrequency(int f)
+void CRig::SetFrequency(int f, bool useOffset)
 {
 #ifdef HAVE_LIBHAMLIB
-    Hamlib.SetFrequency(f);
-#else
-    (void)f;
+    Hamlib.SetFrequency(f, useOffset);
+#endif
+}
+
+void CRig::GetTunedFrequency(int &freq, bool useOffset)
+{
+#ifdef HAVE_LIBHAMLIB
+    freq = Hamlib.GetTunedFrequency(useOffset);
 #endif
 }

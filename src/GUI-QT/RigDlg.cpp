@@ -37,7 +37,7 @@
 
 RigDlg::RigDlg(CRig& nrig, QWidget* parent) :
     QDialog(parent),
-    rig(nrig), rigmap(), bComboBoxPortMutex(false)
+    rig(nrig), rigmap(), bComboBoxPortMutex(false), bSpinOffsetMutex(false)
 {
     setAttribute(Qt::WA_QuitOnClose, false);
     setupUi(this);
@@ -95,10 +95,12 @@ void RigDlg::showEvent(QShowEvent*)
 {
 	/* Port selection */
 	bComboBoxPortMutex = true;
-	map<string,string> ports;
+    bSpinOffsetMutex = true;
+    map<string,string> ports;
 	rig.GetPortList(ports);
 	comboBoxPort->clear();
 	prev_port = rig.GetComPort();
+    prev_offset = rig.GetFreqOffset();
 	int index = -1;
 	for (map<string,string>::const_iterator i=ports.begin(); i!=ports.end(); i++)
 	{
@@ -116,6 +118,8 @@ void RigDlg::showEvent(QShowEvent*)
 		comboBoxPort->setCurrentIndex(comboBoxPort->findText(prev_port.c_str()));
 	}
 	bComboBoxPortMutex = false;
+    offsetBox->setValue(prev_offset);
+    bSpinOffsetMutex = false;
 
 	/* Rig model selection */
     prev_rig_model = rig.GetHamlibModelID();
@@ -175,6 +179,7 @@ RigDlg::on_buttonBox_accepted()
 {
 	rig.SetComPort(getComboBoxComPort().toStdString());
 	rig.SetHamlibModelID(rigTypes->currentItem()->data(0, Qt::UserRole).toInt());
+    rig.SetFreqOffset(offsetBox->value());
 	rig.unsubscribe();
 	close();
 }
@@ -184,7 +189,8 @@ RigDlg::on_buttonBox_rejected()
 {
 	rig.SetComPort(prev_port);
 	rig.SetHamlibModelID(prev_rig_model);
-	rig.unsubscribe();
+    rig.SetFreqOffset(prev_offset);
+    rig.unsubscribe();
 	close();
 }
 

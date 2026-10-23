@@ -26,13 +26,13 @@
  *
 \******************************************************************************/
 #include "../Parameter.h"
-#include "../DataIO.h"
-#include "../DrmReceiver.h"
-#include "../DrmTransmitter.h"
+/*#include "../DataIO.h"*/
+/*#include "../DrmReceiver.h"*/
+/*#include "../DrmTransmitter.h"*/
 #include "SoundCardSelMenu.h"
-#include "DialogUtil.h"
+/*#include "DialogUtil.h"*/
 #include <QFileDialog>
-#include "../util-QT/Util.h"
+/*#include "../util-QT/Util.h"*/
 #include "../util/FileTyper.h"
 #include "../main-Qt/crx.h"
 
@@ -130,7 +130,6 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
         connect(actionUpscale, SIGNAL(toggled(bool)), this, SLOT(OnSoundSignalUpscale(bool)));
         connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
         connect(this, SIGNAL(soundSampleRateChanged(int)), &trx, SLOT(onSoundSampleRateChanged(int)));
-        connect(this, SIGNAL(soundInDeviceChanged(QString)), &trx, SLOT(SetInputDevice(QString)));
         connect(this, SIGNAL(soundInChannelChanged(int)), &trx, SLOT(onSoundInChannelChanged(int)));
         connect(this, SIGNAL(soundOutChannelChanged(EOutChanSel)), &trx, SLOT(onSoundOutChannelChanged(EOutChanSel)));
         connect(this, SIGNAL(soundSignalUpscaleChanged(int)), &trx, SLOT(SetSoundSignalUpscale(int)));
@@ -169,7 +168,9 @@ CSoundCardSelMenu::CSoundCardSelMenu(CTRx& ntrx,
 
 void CSoundCardSelMenu::OnSoundInDevice(QAction* action)
 {
-    emit soundInDeviceChanged(action->data().toString());
+    QString dev = action->data().toString();
+    cerr << "OnSoundInDevice " << dev.toStdString() << endl;
+    emit soundInDeviceChanged(dev);
 }
 
 void CSoundCardSelMenu::OnSoundOutDevice(QAction* action)
@@ -201,6 +202,7 @@ void CSoundCardSelMenu::OnSoundSignalUpscale(bool bChecked)
 
 void CSoundCardSelMenu::OnSoundInDeviceChanged(QString s)
 {
+    cerr << "CSoundCardSelMenu::OnSoundInDeviceChanged " << s.toStdString() << endl;
     vector<string> names;
     vector<string> descriptions;
     string def;
@@ -227,12 +229,12 @@ void CSoundCardSelMenu::UpdateDeviceMenu(QMenu* menu, const vector<string>& name
     cerr << "UpdateDeviceMenu " << menu->title().toStdString() << " selected (" << selected << ")" << endl;
     for (int i = 0; i < int(names.size()); i++)
     {
-      cerr << "enum " << names[i] << " desc " <<  descriptions[i] << endl;
+        cerr << "enum " << names[i] << " desc " <<  descriptions[i] << endl;
         QString name(QString::fromStdString(names[i]));
         QString desc(QString::fromStdString(descriptions[i]));
         if(name.size()==0) {
-		name = tr("[default]");
-	}
+            name = tr("[default]");
+        }
         QString t = name;
         if(desc.size()>0) t += " [" + desc + "]";
         QAction* m = menu->addAction(t);

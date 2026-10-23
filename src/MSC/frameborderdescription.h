@@ -6,9 +6,9 @@ class FrameBorderDescription
 {
 public:
     FrameBorderDescription();
-private:
-    int frameBorderIndex;
-    int frameBorderCount;
+//private:
+//    int frameBorderIndex;
+//    int frameBorderCount;
 };
 
 #endif // FRAMEBORDERDESCRIPTION_H

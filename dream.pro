@@ -10,10 +10,14 @@ contains(QT_VERSION, ^4\\..*) {
 }
 contains(QT_VERSION, ^5\\..*) {
     VERSION_MESSAGE = Qt 5
+    MMPATH = /usr/include/qt5/QtMultimedia/qaudioinput.h
+    MMPATH2 = $$[QT_INSTALL_BINS]\Qt5Multimedia.dll
 }
 contains(QT_VERSION, ^6\\..*) {
     VERSION_MESSAGE = Qt 6
     QT += core5compat
+    MMPATH = /usr/include/qt6/QtMultimedia/qaudioinput.h
+    MMPATH2 = $$[QT_INSTALL_BINS]\Qt6Multimedia.dll
 }
 unix:!cross_compile {
     message (QMAKE_HOST is $$QMAKE_HOST.arch)
@@ -34,23 +38,29 @@ console {
     UI_MESSAGE = console mode
     VERSION_MESSAGE = No Qt
     SOURCES += src/main.cpp
-	unix:!cross_compile {
-		HEADERS += src/linux/ConsoleIO.h
-		SOURCES += src/linux/ConsoleIO.cpp
-		LIBS += -lpthread
-		message("with terminal user interface")
-	}
+    unix:!cross_compile {
+        HEADERS += src/linux/ConsoleIO.h
+        SOURCES += src/linux/ConsoleIO.cpp
+        LIBS += -lpthread
+        message("with terminal user interface")
+    }
+}
+else {
+    message("Not Console")
 }
 qtconsole {
     QT -= gui
     QT += xml network
     UI_MESSAGE = console mode
     SOURCES += src/main-Qt/main.cpp
-	unix:!cross_compile {
-		HEADERS += src/linux/ConsoleIO.h
-		SOURCES += src/linux/ConsoleIO.cpp
-		message("with terminal user interface")
-	}
+    unix:!cross_compile {
+        HEADERS += src/linux/ConsoleIO.h
+        SOURCES += src/linux/ConsoleIO.cpp
+        message("with terminal user interface")
+    }
+}
+else {
+    message("Not QtConsole")
 }
 contains(QT,gui) {
     UI_MESSAGE = GUI mode
@@ -148,6 +158,14 @@ unix {
   }
 }
 macx {
+    QMAKE_MACOSX_DEPLOYMENT_TARGET = 15.0
+    VERSION="2.3.1 (mjf)"
+    BUILD_NUMBER="(231)"
+    LONG_VERSION="$$VERSION"
+    plist.input = $$PWD/macx/Info.plist.in
+    plist.output = $$PWD/macx/Info.plist
+    QMAKE_SUBSTITUTES += plist
+    QMAKE_INFO_PLIST = $$PWD/macx/Info.plist
     contains(QT, core) {
 #        QT += webenginewidgets
         !sound {
@@ -218,18 +236,23 @@ unix:!cross_compile {
     DEFINES += HAVE_LIBPCAP
     LIBS += -lpcap
     !sound {
-         # check for pulseaudio before portaudio
-         exists(/usr/include/pulse/pulseaudio.h) | \
-         exists($$PREFIX/include/pulse/pulseaudio.h) {
-         #packagesExist(libpulse)
-          CONFIG += pulseaudio sound
-         }
-         else {
-           exists(/usr/include/portaudio.h) | \
-           exists($$PREFIX/include/portaudio.h) {
-           #packagesExist(portaudio-2.0)
-              CONFIG += portaudio sound
-           }
+        #check for multimedia before portaudio
+        exists($$MMPATH) {
+            QT += multimedia
+            CONFIG += sound
+        } else {
+            # check for pulseaudio before portaudio
+            exists(/usr/include/pulse/pulseaudio.h) | \
+            exists($$PREFIX/include/pulse/pulseaudio.h) {
+            #packagesExist(libpulse)
+            CONFIG += pulseaudio sound
+            } else {
+                exists(/usr/include/portaudio.h) | \
+                exists($$PREFIX/include/portaudio.h) {
+                #packagesExist(portaudio-2.0)
+                CONFIG += portaudio sound
+                }
+            }
         }
     }
     qt5|contains(QT_VERSION, ^4\\.8.*) {
@@ -285,21 +308,25 @@ win32:cross_compile {
   message($$target.path)
 }
 win32 {
-  CONFIG += fdk-aac
+  CONFIG += fdk-aac no_batch
   LIBS += -lwpcap -lpacket -lmincore
   DEFINES += HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP
   SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
   HEADERS += src/windows/platform_util.h
+  SOURCES -= src/main.cpp
+  SOURCES -= src/main-Qt/main.cpp
   LIBS += -lsetupapi
-  contains(QT,multimedia) {
-	CONFIG += sound
+  #contains(QT,multimedia) {
+  exists ($$MMPATH2) {
+    QT += multimedia
+    CONFIG += sound
   }
   else {
     HEADERS += src/windows/Sound.h
     SOURCES += src/windows/Sound.cpp
     LIBS += -lwinmm
     message("with mmsystem")
-	CONFIG += sound
+    CONFIG += sound
   }
   win32-g++ {
 	DEFINES += HAVE_STDINT_H
@@ -307,9 +334,12 @@ win32 {
   }
   else {
 	DEFINES += NOMINMAX
+        QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:msvcrtd.lib
+        QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmt.lib
         QMAKE_LFLAGS_RELEASE += /NODEFAULTLIB:libcmtd.lib
-	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
-	QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmt.lib
+        QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:msvcrt.lib
+        QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmt.lib
+        QMAKE_LFLAGS_DEBUG += /NODEFAULTLIB:libcmtd.lib
         LIBS += -lzlib1 -llibfftw3-3
   }
   mxe {
@@ -390,7 +420,8 @@ hamlib {
      unix:LIBS += -lhamlib
      win32 {
        msvc* {
-         LIBS += -llibhamlib-2
+         #LIBS += -llibhamlib-2
+         LIBS += -llibhamlib-4
        }
        else {
          LIBS += -lhamlib -lusb-1.0
@@ -619,8 +650,7 @@ HEADERS += \
     src/sound/drm_soapySDR.h \
     src/tuner.h \
     src/sound/soundinterfacefactory.h \
-    src/sound/SoundInInterfaceComposite.h #\
-#    src/AudioInputFactory.h
+    src/sound/SoundInInterfaceComposite.h
 SOURCES += \
     src/AMDemodulation.cpp \
     src/AMSSDemodulation.cpp \
@@ -741,8 +771,7 @@ SOURCES += \
     src/sound/drm_soapySDR.cpp \
     src/tuner.cpp \
     src/sound/soundinterfacefactory.cpp \
-    src/sound/SoundInInterfaceComposite.cpp #\
-#    src/AudioInputFactory.cpp
+    src/sound/SoundInInterfaceComposite.cpp
 
 contains(QT,core) {
     HEADERS += \

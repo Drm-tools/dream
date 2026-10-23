@@ -64,9 +64,10 @@ public:
     virtual CDataDecoder* GetDataDecoder();
     virtual bool GetReverbEffect();
     virtual EAcqStat GetAcquisitionState();
+    virtual void GetTunedFrequency(int& freq);
     virtual int GetFrequency() override;
-    virtual void EnumerateInputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultInput);
-    virtual void EnumerateOutputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultOutput);
+    virtual void EnumerateInputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultInput) override;
+    virtual void EnumerateOutputs(std::vector<string>& names, std::vector<string>& descriptions, std::string& defaultOutput) override;
     virtual CSettings* GetSettings() override;
     virtual CParameter*	GetParameters() override;
 
@@ -74,6 +75,7 @@ public slots:
     virtual void LoadSettings() override;
     virtual void SaveSettings() override;
     virtual void SetInputDevice(std::string) override;
+    virtual void OkToSetInputDevice();
     virtual void SetOutputDevice(std::string) override;
     virtual void SetInputDevice(QString);
     virtual void SetOutputDevice(QString);
@@ -112,6 +114,7 @@ public slots:
 private:
     CDRMReceiver& rx;
     ERunState eRunState;
+    string newInputName;
 
 signals:
     void inputSampleRateChanged(int);

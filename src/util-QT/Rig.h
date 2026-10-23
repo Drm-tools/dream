@@ -41,9 +41,10 @@ class CRig :
 	Q_OBJECT
 public:
 	CRig(CParameter* np);
-        virtual void LoadSettings(CSettings&);
-        virtual void SaveSettings(CSettings&);
-    virtual void SetFrequency(int);
+    virtual void LoadSettings(CSettings&);
+    virtual void SaveSettings(CSettings&);
+    virtual void SetFrequency(int, bool);
+    virtual void GetTunedFrequency(int &freq, bool);
 #ifdef HAVE_LIBHAMLIB
     void GetRigList(map<rig_model_t,CHamlib::SDrRigCaps>& r) { Hamlib.GetRigList(r); }
     rig_model_t GetHamlibModelID() { return Hamlib.GetHamlibModelID(); }
@@ -52,6 +53,8 @@ public:
 	void GetPortList(map<std::string,std::string>& ports) { Hamlib.GetPortList(ports); }
 	std::string GetComPort() { return Hamlib.GetComPort(); }
 	void SetComPort(const std::string& s) { Hamlib.SetComPort(s); }
+    int GetFreqOffset() { return Hamlib.GetFreqOffset(); }
+    void SetFreqOffset(int f) { Hamlib.SetFreqOffset(f); }
 	bool GetEnableModRigSettings() { return Hamlib.GetEnableModRigSettings(); }
 	CHamlib::ESMeterState GetSMeter(_REAL& r) { return Hamlib.GetSMeter(r); }
 	CHamlib* GetRig() { return &Hamlib; }

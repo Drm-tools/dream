@@ -33,9 +33,10 @@
 # include <QAudioOutput>
 # include <QAudioInput>
 # include <QSet>
+#else
+#include "sound/soundinterfacefactory.h"
 #endif
 //#include "sound/sound.h"
-#include "sound/soundinterfacefactory.h"
 
 /* Implementation *************************************************************/
 /******************************************************************************\
@@ -102,22 +103,48 @@ void CReadData::Enumerate(std::vector<std::string>& names, std::vector<std::stri
 #ifdef QT_MULTIMEDIA_LIB
     QString def = QAudioDeviceInfo::defaultInputDevice().deviceName();
     defaultInput = def.toStdString();
-    QSet<QString> s;
+    //QSet<QString> s;
+    QList<QString> l;
+
+    l.clear();
+    //s.clear();
     foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
     {
-        s.insert(di.deviceName());
+        //s.insert(di.deviceName());
+        //append only if it doesn't already exist
+        if (!l.contains(di.deviceName()))
+            l.append(di.deviceName());
     }
+    std::sort(l.begin(), l.end());
+    //          [](const QString &a, const QString &b) {
+    //              return a > b;
+    //          });
+    //if (l.count() > 0) {
+    //    for (int i = 0; i < l.count(); i++) {
+    //        qDebug("Inserting %s",l.at(i).toStdString().c_str());
+    //        s.insert(l.at(i));
+    //    }
+    //}
+    //l.clear();
+
     names.clear();
     descriptions.clear();
-    foreach(const QString n, s) {
-        names.push_back(n.toStdString());
-        descriptions.push_back("");
+    //foreach(const QString n, s) {
+    for (int i = 0; i < l.count(); i++) {
+        //names.push_back(n.toStdString());
+        names.push_back(l.at(i).toStdString());
+        //if (n == def) {
+        if (l.at(i) == def) {
+            descriptions.push_back("default");
+        } else {
+            descriptions.push_back("");
+        }
     }
+    l.clear();
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundInInterface();
     pSound->Enumerate(names, descriptions, defaultInput);
 #endif
-    cout << "default input is " << defaultInput << endl;
 }
 
 void
@@ -126,7 +153,12 @@ CReadData::SetSoundInterface(string device)
     soundDevice = device;
 #ifdef QT_MULTIMEDIA_LIB
     QAudioFormat format;
-    if(iSampleRate==0) iSampleRate = 48000; // TODO get order of initialisation correct
+#ifdef _WIN32
+    iSampleRate = 48000; // TODO
+#else
+    if((iSampleRate < 12000) || (iSampleRate > 360000))
+        iSampleRate = 48000; // TODO get order of initialisation correct
+#endif
     format.setSampleRate(iSampleRate);
     format.setSampleSize(16);
     format.setSampleType(QAudioFormat::SignedInt);
@@ -143,15 +175,15 @@ CReadData::SetSoundInterface(string device)
             {
                 if(pIODevice->open(QIODevice::ReadOnly))
                 {
-                    qDebug("audio input open");
+                    qDebug("DataIO: audio input open");
                 }
                 else {
-                    qDebug("audio input open");
+                    qDebug("DataIO: audio input open");
                 }
             }
             else
             {
-                qDebug("Can't open audio input");
+                qDebug("DataIO: Can't open audio input");
             }
         }
         break;
@@ -196,17 +228,44 @@ void CWriteData::Enumerate(std::vector<std::string>& names, std::vector<std::str
 #ifdef QT_MULTIMEDIA_LIB
     QString def = QAudioDeviceInfo::defaultOutputDevice().deviceName();
     defaultOutput = def.toStdString();
-    QSet<QString> s;
+    //QSet<QString> s;
+    QList<QString> l;
+
+    l.clear();
+    //s.clear();
     foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
     {
-        s.insert(di.deviceName());
+        //s.insert(di.deviceName());
+        //append only if it doesn't already exist
+        if (!l.contains(di.deviceName()))
+            l.append(di.deviceName());
     }
+    std::sort(l.begin(), l.end());
+    //          [](const QString &a, const QString &b) {
+    //              return a > b;
+    //          });
+    //if (l.count() > 0) {
+    //    for (int i = 0; i < l.count(); i++) {
+    //        qDebug("Inserting %s",l.at(i).toStdString().c_str());
+    //        s.insert(l.at(i));
+    //    }
+    //}
+    //l.clear();
+
     names.clear();
     descriptions.clear();
-    foreach(const QString n, s) {
-        names.push_back(n.toStdString());
-        descriptions.push_back("");
+    //foreach(const QString n, s) {
+    for (int i = 0; i < l.count(); i++) {
+        //names.push_back(n.toStdString());
+        names.push_back(l.at(i).toStdString());
+        //if (n == def) {
+        if (l.at(i) == def) {
+            descriptions.push_back("default");
+        } else {
+            descriptions.push_back("");
+        }
     }
+    l.clear();
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundOutInterface();
     pSound->Enumerate(names, descriptions, defaultOutput);
@@ -417,6 +476,7 @@ void CWriteData::InitInternal(CParameter& Parameters)
 #ifdef QT_MULTIMEDIA_LIB
     if(pAudioOutput != nullptr) {
 
+        pAudioOutput->stop();
         pAudioOutput->setBufferSize(2 * 2 * 2 * iAudFrameSize); // room for two frames * bytes per sample * stereo
         pIODevice = pAudioOutput->start();
         cerr << "buffer size " << pAudioOutput->bufferSize() << endl;

@@ -262,9 +262,9 @@ class CBitReassembler:public CReassembler
     CBitReassembler ():CReassembler ()
     {
     }
-    CBitReassembler (const CBitReassembler & r):CReassembler (r)
-    {
-    }
+    //CBitReassembler (const CBitReassembler & r):CReassembler (r)
+    //{
+    //}
 
   protected:
     virtual void copyin (CVector < _BYTE > &vecDataIn, size_t iSegNum,

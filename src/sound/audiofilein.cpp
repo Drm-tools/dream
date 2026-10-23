@@ -27,10 +27,11 @@
 \******************************************************************************/
 
 #include "audiofilein.h"
+#include "src/tables/TableDRMGlobal.h"
 #ifdef _WIN32
 # include <windows.h>
 #endif
-#include <iostream>
+/*#include <iostream>*/
 #ifdef HAVE_LIBSNDFILE
 # include <sndfile.h>
 #endif
@@ -49,7 +50,7 @@ CAudioFileIn::CAudioFileIn(): CSoundInInterface(), eFmt(fmt_other),
 
 CAudioFileIn::~CAudioFileIn()
 {
-    Close();
+    //Close();
 }
 
 void
@@ -238,6 +239,8 @@ CAudioFileIn::Init(int iNewSampleRate, int iNewBufferSize, bool bNewBlocking)
 bool
 CAudioFileIn::Read(CVector<short>& psData, CParameter &Parameters)
 {
+    (void) Parameters;
+
     if (pacer)
         pacer->wait();
 

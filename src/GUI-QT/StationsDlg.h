@@ -94,7 +94,7 @@ protected:
 	QActionGroup*	showGroup;
 	QNetworkAccessManager *manager;
 	QTimer			Timer;
-	bool		bReInitOnFrequencyChange;
+    bool            bReInitOnFrequencyChange;
 
 	QMutex			ListItemsMutex;
 
@@ -112,10 +112,12 @@ public slots:
 	void OnShowStationsMenu(int iID);
 	void OnShowPreviewMenu(int iID);
 	void OnFreqCntNewValue(double dVal);
-	void OnHeaderClicked(int c);
+    void OnSyncRigFreq();
+    void OnHeaderClicked(int c);
 	void on_actionGetUpdate_triggered();
 	void on_ListViewStations_itemSelectionChanged();
-	void on_ComboBoxFilterTarget_activated(const QString&);
+    void on_ComboBoxFilterStation_activated(const QString&);
+    void on_ComboBoxFilterTarget_activated(const QString&);
 	void on_ComboBoxFilterCountry_activated(const QString&);
 	void on_ComboBoxFilterLanguage_activated(const QString&);
 };

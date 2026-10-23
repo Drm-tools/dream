@@ -34,7 +34,7 @@
 
 class CSettings;
 class CParameter;
-enum ERunState { STOPPED, RUNNING, STOP_REQUESTED, RESTART };
+enum ERunState { STOPPED, RUNNING, PAUSED, STOP_REQUESTED, RESTART };
 
 class CDRMTransceiver
 {

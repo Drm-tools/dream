@@ -1,7 +1,7 @@
 #include "xheaacsuperframe.h"
 #include "../util/CRC.h"
 
-XHEAACSuperFrame::XHEAACSuperFrame():AudioSuperFrame (),numChannels(0),superFrameSize(0),payload(),borders(),frameSize()
+XHEAACSuperFrame::XHEAACSuperFrame():AudioSuperFrame (),numChannels(0),superFrameSize(0),payload(),frameSize(),borders()
 {    
 }
 
@@ -171,9 +171,9 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
         return ok;
     }
 
-    size_t bytesInFrames = 0;
-    for (size_t i=0; i < frameSize.size(); i++) bytesInFrames += frameSize[i];
-    size_t next = payload.size() - bytesInFrames;
+    //size_t bytesInFrames = 0;
+    //for (size_t i=0; i < frameSize.size(); i++) bytesInFrames += frameSize[i];
+    //size_t next = payload.size() - bytesInFrames;
     //cerr << "payload is " << payload.size() << " bytes of which " << bytesInFrames << " are for this superframe and " << next << " are for the next superframe" << endl;
 
     //printf("xHE payload=%zu bytesInFrames=%zu next=%zu\n", payload.size(), bytesInFrames, next);
@@ -221,5 +221,6 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
 void
 XHEAACSuperFrame::getFrame(std::vector<uint8_t>& frame, uint8_t& crc, unsigned i)
 {
+    (void) crc;
     frame = audioFrame[i];
 }

@@ -32,7 +32,7 @@
 #include <iostream>
 #include <sstream>
 #include "epgdec.h"
-#include "../datadecoding/DABMOT.h"
+/*#include "../datadecoding/DABMOT.h"*/
 #include "../util/Utilities.h"
 
 static QDomElement element(QDomDocument& doc, const tag_length_value& tlv);
@@ -608,7 +608,7 @@ static void attribute(map<string,string>& out, _BYTE element_tag, tag_length_val
     if(tab.decode == enum_attr) {
 		/* needed for 64 bit compatibility */
 		ptrdiff_t index = tlv.value[0];
-		ptrdiff_t num_vals = (tab.vals[0] - (const char*)0);
+        ptrdiff_t num_vals = (uintptr_t(tab.vals[0]) - uintptr_t((const char*)0)); //pointer subtraction warning mjf 10 aug 26
 		if(index<=num_vals && index>0)
 			value = tab.vals[index];
 		else

@@ -27,7 +27,7 @@
 \******************************************************************************/
 
 #include "AudioSourceEncoder.h"
-#include <iostream>
+/*#include <iostream>*/
 
 
 /* Implementation *************************************************************/
@@ -321,6 +321,13 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
                 iTimeEachAudBloMS = 40;	/* ms */
                 iNumAudioFrames = 10;
                 break;
+            case CAudioParam::AS_9_6KHZ:
+            case CAudioParam::AS_16KHZ:
+            case CAudioParam::AS_19_2KHZ:
+            case CAudioParam::AS_32KHZ:
+            case CAudioParam::AS_38_4KHZ:
+            case CAudioParam::AS_48KHZ:
+                break;
             }
 
             /* Number of borders, the border of the last frame is not included because
@@ -501,6 +508,13 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
         case CAudioParam::AS_24KHZ:
             iTimeEachAudBloMS = 40;	/* ms */
             iNumAudioFrames = 10;
+            break;
+        case CAudioParam::AS_9_6KHZ:
+        case CAudioParam::AS_16KHZ:
+        case CAudioParam::AS_19_2KHZ:
+        case CAudioParam::AS_32KHZ:
+        case CAudioParam::AS_38_4KHZ:
+        case CAudioParam::AS_48KHZ:
             break;
         }
 

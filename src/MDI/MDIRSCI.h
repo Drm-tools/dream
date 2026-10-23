@@ -61,7 +61,7 @@ public:
 	bool SetDestination(const std::string& strArgument);
 	bool GetOutEnabled() {return bMDIOutEnabled;}
 	void SetAFPktCRC(const bool bNAFPktCRC) {bUseAFCRC=bNAFPktCRC;}
-	void SetFrequency(int iNewFreqkHz);
+    void SetFrequency(int iNewFreqkHz, bool useOffset);
 	void SetReceiverMode(ERecMode eNewMode);
 
 	/* CPacketSink */

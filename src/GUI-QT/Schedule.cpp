@@ -35,6 +35,10 @@
 #include <QDateTime>
 #include <QMessageBox>
 #include <QFileInfo>
+
+#include <QFile>
+#include <QTextCodec>
+
 #include <ctime>
 #ifdef _WIN32
 #include "../windows/platform_util.h"
@@ -47,7 +51,7 @@ using namespace std;
 /* Implementation *************************************************************/
 
 CSchedule::CSchedule():
-ListTargets(), ListCountries(), ListLanguages(),
+ListStations(), ListTargets(), ListCountries(), ListLanguages(),
 StationsTable(),eSchedMode(SM_NONE),iSecondsPreviewdrm(0),iSecondsPreviewanalog(0)
 {
 	SetAnalogUrl();
@@ -93,7 +97,10 @@ void CSchedule::SetSchedMode(const ESchedMode eNewSchM)
 
 void CSchedule::UpdateStringListForFilter(const CStationsItem& StationsItem)
 {
-	if (!ListTargets.contains(StationsItem.strTarget))
+    if (!ListStations.contains(StationsItem.strName))
+        ListStations.append(StationsItem.strName);
+
+    if (!ListTargets.contains(StationsItem.strTarget))
 		ListTargets.append(StationsItem.strTarget);
 
 	if (!ListCountries.contains(StationsItem.strCountry))
@@ -107,20 +114,42 @@ void CSchedule::LoadSchedule()
 {
 	string filename(schedFileName.toUtf8().constData());
 	QApplication::setOverrideCursor(Qt::BusyCursor);
-	ListTargets = QStringList("");
+    ListStations = QStringList("");
+    ListTargets = QStringList("");
 	ListCountries = QStringList("");
 	ListLanguages = QStringList("");
 	StationsTable.clear();
-	FILE* pFile = fopen(filename.c_str(), "r");
-	if(pFile)
-	{
-		if(schedFileName.contains("ini"))
-			ReadINIFile(pFile);
-		else
-			ReadCSVFile(pFile);
-		fclose(pFile);
-	}
-	ListTargets.sort();
+    //FILE* pFile = fopen(filename.c_str(), "r");
+    //if(pFile)
+    //{
+    //	if(schedFileName.contains("ini"))
+    //		ReadINIFile(pFile);
+    //	else
+    //		ReadCSVFile(pFile);
+    //	fclose(pFile);
+    //}
+    if (schedFileName.contains("ini")) {
+        FILE* pFile = fopen(filename.c_str(), "r");
+        if (pFile) {
+            ReadINIFile(pFile);
+            fclose(pFile);
+        }
+    } else {
+        QFile eibifile(schedFileName);
+        if (eibifile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+            QTextStream inSked(&eibifile);
+            QTextCodec *wincodec = QTextCodec::codecForName("Windows-1250");
+            if (wincodec) {
+                inSked.setCodec(wincodec);
+                ReadCSVFile(&inSked);
+            }
+            eibifile.close();
+        }
+
+    }
+
+    ListStations.sort();
+    ListTargets.sort();
 	ListCountries.sort();
 	ListLanguages.sort();
 	QApplication::restoreOverrideCursor();
@@ -233,23 +262,30 @@ void CSchedule::ReadINIFile(FILE* pFile)
 	(void)r; (void)n;
 }
 
-void CSchedule::ReadCSVFile(FILE* pFile)
+//void CSchedule::ReadCSVFile(FILE* pFile)
+void CSchedule::ReadCSVFile(QTextStream* inSked)
 {
-	const int	iMaxLenRow = 1024;
-	char		cRow[iMaxLenRow];
+    //const int	iMaxLenRow = 1024;
+    //char		cRow[iMaxLenRow];
 	CStationData data;
 
-	do {
+    QString cRow = inSked->readLine();
+
+    //char* r = fgets(cRow, iMaxLenRow, pFile); (void)r; //skip header line
+    //do {
+    while (!inSked->atEnd()) {
 		CStationsItem StationsItem;
 
-		char* r = fgets(cRow, iMaxLenRow, pFile); (void)r;
-		QStringList fields;
-		stringstream ss(cRow);
-		do {
-			string s;
-			getline(ss, s, ';');
-			fields.push_back(s.c_str());
-		} while(!ss.eof());
+        //r = fgets(cRow, iMaxLenRow, pFile); (void)r;
+        cRow = inSked->readLine();
+        //QStringList fields;
+        //stringstream ss(cRow);
+        //do {
+        //	string s;
+        //	getline(ss, s, ';');
+        //	fields.push_back(s.c_str());
+        //} while(!ss.eof());
+        QStringList fields = cRow.split(";");
 
 		StationsItem.iFreq = floor(fields[0].toFloat());
 
@@ -347,7 +383,7 @@ void CSchedule::ReadCSVFile(FILE* pFile)
 		}
 
 		if(fieldcount>4)
-			StationsItem.strName = fields[4];
+            StationsItem.strName = fields[4];
 
 		if(fieldcount>5)
 		{
@@ -434,7 +470,7 @@ void CSchedule::ReadCSVFile(FILE* pFile)
 
 		UpdateStringListForFilter(StationsItem);
 
-	} while(!feof(pFile));
+    } //while(!feof(pFile));
 }
 
 Station::EState CSchedule::GetState(const int iPos)
@@ -445,13 +481,17 @@ Station::EState CSchedule::GetState(const int iPos)
 bool CSchedule::CheckFilter(const int iPos)
 {
 	const CStationsItem& station = StationsTable[iPos];
-	if(eSchedMode==SM_DRM && targetFilterdrm != "" && targetFilterdrm != station.strTarget)
+    if(eSchedMode==SM_DRM && stationFilterdrm != "" && stationFilterdrm != station.strName)
+        return false;
+    if(eSchedMode==SM_DRM && targetFilterdrm != "" && targetFilterdrm != station.strTarget)
 		return false;
 	if(eSchedMode==SM_DRM && countryFilterdrm != "" && countryFilterdrm != station.strCountry)
 		return false;
 	if(eSchedMode==SM_DRM && languageFilterdrm != "" && languageFilterdrm != station.strLanguage)
 		return false;
-	if(eSchedMode==SM_ANALOG && targetFilteranalog != "" && targetFilteranalog != station.strTarget)
+    if(eSchedMode==SM_ANALOG && stationFilteranalog != "" && stationFilteranalog != station.strName)
+        return false;
+    if(eSchedMode==SM_ANALOG && targetFilteranalog != "" && targetFilteranalog != station.strTarget)
 		return false;
 	if(eSchedMode==SM_ANALOG && countryFilteranalog != "" && countryFilteranalog != station.strCountry)
 		return false;

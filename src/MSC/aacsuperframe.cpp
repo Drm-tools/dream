@@ -7,7 +7,7 @@ AACSuperFrame::AACSuperFrame():AudioSuperFrame (),
 
 void AACSuperFrame::init(const CAudioParam &audioParam, ERobMode eRobMode, unsigned int lengthPartA, unsigned int lengthPartB)
 {
-    size_t numFrames;
+    size_t numFrames = 1;
     switch(eRobMode) {
     case ERobMode::RM_ROBUSTNESS_MODE_A:
     case ERobMode::RM_ROBUSTNESS_MODE_B:

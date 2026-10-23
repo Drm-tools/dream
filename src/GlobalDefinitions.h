@@ -31,10 +31,10 @@
 
 #include <complex>
 #include <string>
-#include <cstdio>
+/*#include <cstdio>*/
 #include <limits>
-#include <cmath>
-#include "tables/TableDRMGlobal.h"
+/*#include <cmath>*/
+/*#include "tables/TableDRMGlobal.h"*/
 #ifndef M_PI
 # define M_PI (3.14159265358979323846)
 #endif
@@ -51,8 +51,10 @@
 # undef NOMINMAX
 # define NOMINMAX 1
 
-//# define DLL_EXPORT 1
-//# undef DLL_EXPORT 1
+# undef DLL_EXPORT
+# ifdef HAVE_LIBHAMLIB
+#  define DLL_EXPORT 1
+# endif
 
 #endif /* _WIN32 */
 
