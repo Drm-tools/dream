@@ -212,8 +212,6 @@ AacCodec::DecOpen(const CAudioParam& AudioParam, int& iAudioSampleRate)
 CAudioCodec::EDecError
 AacCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVector<_REAL>& left, CVector<_REAL>& right)
 {
-    EDecError eDecError;
-    bool bCurBlockOK = true;
     _SAMPLE* psDecOutSampleBuf = nullptr;
     NeAACDecFrameInfo DecFrameInfo;
     DecFrameInfo.channels = 1;
@@ -236,35 +234,50 @@ AacCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVect
         return CAudioCodec::DECODER_ERROR_UNKNOWN;
     }
 
-    int iLenDecOutPerChan = AUD_DEC_TRANSFROM_LENGTH;
+    /* Take the length from the decoder, not from the nominal frame length.
+       faad2 reports a successful decode with samples == 0 for the first SBR
+       frame of a stream, and reading AUD_DEC_TRANSFROM_LENGTH samples out of
+       its buffer anyway walks off the end of it. */
+    const int iChannels = DecFrameInfo.channels > 0 ? int(DecFrameInfo.channels) : 1;
+    int iLenDecOutPerChan = int(DecFrameInfo.samples) / iChannels;
+    const int iCapacity = left.Size() < right.Size() ? left.Size() : right.Size();
+    if (iLenDecOutPerChan > iCapacity)
+        iLenDecOutPerChan = iCapacity;
 
     if(psDecOutSampleBuf) // might be dummy decoder
     {
         /* Conversion from _SAMPLE vector to _REAL vector for
            resampling. ATTENTION: We use a vector which was
            allocated inside the decoder! */
-        if (DecFrameInfo.channels == 1)
+        int i = 0;
+        if (iChannels == 1)
         {
-            //cerr << "resample " << iLenDecOutPerChan << " mono samples" << endl;
             /* Change type of data (short -> real) */
-            for (size_t i = 0; i < size_t(iLenDecOutPerChan); i++) {
-                left[int(i)] = psDecOutSampleBuf[i];
-                right[int(i)] = psDecOutSampleBuf[i];
+            for (; i < iLenDecOutPerChan; i++)
+            {
+                left[i] = psDecOutSampleBuf[i];
+                right[i] = psDecOutSampleBuf[i];
             }
-
         }
         else
         {
             /* Stereo */
-            //cerr << "resample " << iLenDecOutPerChan << " stereo samples" << endl;
-            for (size_t i = 0; i < size_t(iLenDecOutPerChan); i++)
+            for (; i < iLenDecOutPerChan; i++)
             {
                 left[i] = psDecOutSampleBuf[i * 2];
                 right[i] = psDecOutSampleBuf[i * 2 + 1];
             }
         }
+        /* A short frame leaves the tail of the block from the previous one. */
+        for (; i < iCapacity; i++)
+        {
+            left[i] = 0.0;
+            right[i] = 0.0;
+        }
     }
-    return eDecError;
+
+    return iLenDecOutPerChan > 0 ? CAudioCodec::DECODER_ERROR_OK
+                                 : CAudioCodec::DECODER_ERROR_UNKNOWN;
 }
 
 void
