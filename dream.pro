@@ -257,7 +257,12 @@ packagesExist(SoapySDR) | exists(include/SoapySDR) {
        CONFIG += soapysdr
 }
 win32 {
-  CONFIG += fdk-aac
+  vendored-fdk {
+    include(libs/fdk-aac/fdk-aac.pri)
+    CONFIG += fdk-aac fdk-xhe-aac
+  } else {
+    CONFIG += fdk-aac
+  }
   LIBS += -lwpcap -lpacket -lmincore -lzlib -lfftw3 -lsetupapi -ldl
   DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
   SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp

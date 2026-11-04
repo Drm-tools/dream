@@ -59,7 +59,7 @@ jobs:
 
     - name: Install dependencies with vcpkg
       run: |
-        vcpkg --triplet x64-windows install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp soapysdr
+        vcpkg --triplet x64-windows install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile opus speexdsp soapysdr
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
@@ -97,11 +97,11 @@ jobs:
 
     - name: Build
       run: |
-        qmake "CONFIG+=console"
+        qmake "CONFIG+=console" "CONFIG+=vendored-fdk"
         nmake
         copy release/dream.exe cdream.exe
         nmake clean
-        qmake
+        qmake "CONFIG+=vendored-fdk"
         nmake
         windeployqt -opengl -printsupport release
         copy cdream.exe release

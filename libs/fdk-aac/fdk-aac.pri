@@ -11,12 +11,24 @@ FDKV_DIR = $$PWD
 FDKV_BUILD = $$OUT_PWD/fdk-aac-build
 FDKV_PREFIX = $$FDKV_BUILD/prefix
 
-!exists($$FDKV_PREFIX/lib/libfdk-aac.a)|!exists($$FDKV_PREFIX/lib/libfdk-xhe-aac.a) {
+win32 {
+    FDKV_LIB1 = $$FDKV_PREFIX/lib/fdk-aac.lib
+    FDKV_LIB2 = $$FDKV_PREFIX/lib/fdk-xhe-aac.lib
+    FDKV_NULL = NUL
+    FDKV_CONFIG = --config Release
+} else {
+    FDKV_LIB1 = $$FDKV_PREFIX/lib/libfdk-aac.a
+    FDKV_LIB2 = $$FDKV_PREFIX/lib/libfdk-xhe-aac.a
+    FDKV_NULL = /dev/null
+    FDKV_CONFIG =
+}
+
+!exists($$FDKV_LIB1)|!exists($$FDKV_LIB2) {
     message("building the vendored fdk-aac with cmake")
-    !system(cmake -S $$shell_quote($$FDKV_DIR) -B $$shell_quote($$FDKV_BUILD) -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DFDK_AAC_INSTALL_CMAKE_CONFIG_MODULE=OFF -DCMAKE_INSTALL_PREFIX=$$shell_quote($$FDKV_PREFIX) > /dev/null) {
+    !system(cmake -S $$shell_quote($$FDKV_DIR) -B $$shell_quote($$FDKV_BUILD) -DBUILD_SHARED_LIBS=OFF -DCMAKE_BUILD_TYPE=Release -DCMAKE_POSITION_INDEPENDENT_CODE=ON -DFDK_AAC_INSTALL_CMAKE_CONFIG_MODULE=OFF -DCMAKE_INSTALL_PREFIX=$$shell_quote($$FDKV_PREFIX) > $$FDKV_NULL) {
         error("cmake could not configure libs/fdk-aac")
     }
-    !system(cmake --build $$shell_quote($$FDKV_BUILD) -j4 > /dev/null && cmake --install $$shell_quote($$FDKV_BUILD) > /dev/null) {
+    !system(cmake --build $$shell_quote($$FDKV_BUILD) $$FDKV_CONFIG -j4 > $$FDKV_NULL && cmake --install $$shell_quote($$FDKV_BUILD) $$FDKV_CONFIG > $$FDKV_NULL) {
         error("cmake could not build libs/fdk-aac")
     }
 }
