@@ -89,7 +89,7 @@ bool CSoundOutStdout::Write(CVector<short>& psData)
     if (bMono) {
         vector<short> tmp(size_t(psData.Size() / 2));
         for (size_t i = 0; i < tmp.size(); i++)
-            tmp[i] = psData[int(2 * i)];
+            tmp[i] = short((int(psData[int(2 * i)]) + int(psData[int(2 * i + 1)])) / 2); /* downmix, not just the left channel */
         fwrite(tmp.data(), sizeof(short), tmp.size(), stdout);
     }
     else
