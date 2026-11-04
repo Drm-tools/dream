@@ -104,7 +104,7 @@ void CSDCTransmit::CommitFlush()
     // TODO: nicer solution
     /* Copy all bit of vecbiData to pbiData if enough room */
     int iSize = vecbiData.Size();
-    if (iNumUsedBits + iSize < iMaxNumBitsDataBlocks)
+    if (iNumUsedBits + iSize <= iMaxNumBitsDataBlocks)
     {
         iNumUsedBits += iSize;
         vecbiData.ResetBitAccess();

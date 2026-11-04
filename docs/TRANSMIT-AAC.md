@@ -47,6 +47,7 @@ stereo, HE-AAC v2. Unit tests: `DreamTests/XheAacTests.pro` (12),
   at the lowest rates has not been assessed.
 - Narrow bandwidths (4.5 / 5 kHz): the SDC with 4-QAM (`sdc=CS_1_SM`, the default) is too small for
   the xHE-AAC audio entity (type 9) and for the service label, which are then dropped (a warning is
-  printed): set `sdc=CS_2_SM`. With it xHE-AAC mono decodes at mode B, 5 kHz, 16-QAM, protection 1
-  (6 kbit/s). The 4.5 kHz modes have less than 6 kbit/s for audio, which the open xHE-AAC encoder
-  cannot do (it rejects 4 kbit/s); use HE-AAC there.
+  printed): set `sdc=CS_2_SM`. With it xHE-AAC mono decodes at mode B, 5 kHz and 4.5 kHz, 16-QAM,
+  protection 0 and 1, and mode A 4.5 kHz, at 4-6 kbit/s. Below 6 kbit/s needs the vendored fdk-aac
+  (the stock open-source xHE-AAC encoder fails to open under 6 kbit/s because the SBR tuning table
+  starts there); audio quality at 4 kbit/s is not assessed.
