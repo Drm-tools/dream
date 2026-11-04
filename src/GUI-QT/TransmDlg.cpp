@@ -321,9 +321,22 @@ TransmDialog::TransmDialog(CTx& ntx, QWidget* parent)
 		ShowButtonCodec(true, 1);
 		break;
 
+	case CAudioParam::AC_xHE_AAC:
+		RadioButtonXHEAAC->setChecked(true);
+		CheckBoxXHEStereo->setEnabled(true);
+		CheckBoxXHEStereo->setChecked(Service.AudioParam.eAudioMode != CAudioParam::AM_MONO);
+		ShowButtonCodec(false, 1);
+		break;
+
 	default:
         ShowButtonCodec(false, 1);
 		break;
+	}
+    if (!tx.CanEncode(CAudioParam::AC_xHE_AAC)) {
+		RadioButtonXHEAAC->setText(tr("No xHE-AAC Codec"));
+		RadioButtonXHEAAC->setToolTip(tr("needs the fdk-xhe-aac library"));
+		RadioButtonXHEAAC->setEnabled(false);
+		CheckBoxXHEStereo->setEnabled(false);
 	}
     if (!tx.CanEncode(CAudioParam::AC_AAC)) {
 		RadioButtonAAC->setText(tr("No DRM capable AAC Codec"));
@@ -1337,7 +1350,13 @@ void TransmDialog::OnRadioCodec(int iID)
 		eNewAudioCoding = CAudioParam::AC_OPUS;
 		ShowButtonCodec(true, 1);
 		break;
+
+	case 2:
+		eNewAudioCoding = CAudioParam::AC_xHE_AAC;
+		ShowButtonCodec(false, 1);
+		break;
 	}
+	CheckBoxXHEStereo->setEnabled(eNewAudioCoding == CAudioParam::AC_xHE_AAC);
 
     CParameter& Parameters = *tx.GetParameters();
 
@@ -1345,7 +1364,21 @@ void TransmDialog::OnRadioCodec(int iID)
 
 	/* Set new audio codec */
 	Parameters.Service[0].AudioParam.eAudioCoding = eNewAudioCoding;
+	if (eNewAudioCoding == CAudioParam::AC_xHE_AAC)
+		Parameters.Service[0].AudioParam.eAudioMode = CheckBoxXHEStereo->isChecked()
+			? CAudioParam::AM_STEREO : CAudioParam::AM_MONO;
 
+	Parameters.Unlock();
+}
+
+void TransmDialog::OnCheckBoxXHEStereo(bool bChecked)
+{
+	CParameter& Parameters = *tx.GetParameters();
+
+	Parameters.Lock();
+	if (Parameters.Service[0].AudioParam.eAudioCoding == CAudioParam::AC_xHE_AAC)
+		Parameters.Service[0].AudioParam.eAudioMode =
+			bChecked ? CAudioParam::AM_STEREO : CAudioParam::AM_MONO;
 	Parameters.Unlock();
 }
 

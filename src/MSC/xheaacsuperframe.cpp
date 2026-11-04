@@ -197,6 +197,13 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
             }
         #endif
 
+        if (frameSize[i] == 0) {
+            /* A border at index 0 right after a complete frame: nothing to complete */
+            i++;
+            if (i >= audioFrame.size()) break;
+            audioFrame[i].resize(0);
+            continue;
+        }
         if (payload.empty()) {
             printf("DRM xHE-AAC payload UNDERRUN\n");
             return false;
@@ -209,6 +216,10 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
             audioFrame[i].resize(0);
         }
     }
+
+    /* drop the empty first frame, if any */
+    if (!audioFrame.empty() && audioFrame[0].empty())
+        audioFrame.erase(audioFrame.begin());
 
     //cerr << "remaining payload is " << payload.size() << " bytes" << endl;
     //size_t allocated = 2 + 2*frameBorderCount; // bytes of the superframe for the header and directory

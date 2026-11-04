@@ -33,7 +33,7 @@
 /* Implementation *************************************************************/
 
 CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
-    : bUsingTextMessage(false), codec(nullptr)
+    : bUsingTextMessage(false), codec(nullptr), bXheReady(false)
 {
     /* Initialize Audio Codec List */
     CAudioCodec::InitCodecList();
@@ -45,6 +45,7 @@ CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
     /* Needed by TransmDlg.cpp to report available codec */
     bCanEncodeAAC  = CAudioCodec::GetEncoder(CAudioParam::AC_AAC,  true) != nullptr;
     bCanEncodeOPUS = CAudioCodec::GetEncoder(CAudioParam::AC_OPUS, true) != nullptr;
+    bCanEncodeXHE  = CAudioCodec::GetEncoder(CAudioParam::AC_xHE_AAC, true) != nullptr;
 }
 
 CAudioSourceEncoderImplementation::~CAudioSourceEncoderImplementation()
@@ -104,6 +105,12 @@ cerr<<"Audio param changed"<<endl;
         for (int i = 0; i < iNumChannels; i++)
             ResampleObj[i].Resample(vecTempResBufIn[i], vecTempResBufOut[i]);
 
+        if (eAudioCoding == CAudioParam::AC_xHE_AAC)
+        {
+            ProcessXheSuperFrame(pvecOutputData);
+        }
+        else
+        {
         /* Split data in individual audio blocks */
         for (int j = 0; j < iNumAudioFrames; j++)
         {
@@ -202,6 +209,8 @@ else cerr<<" Dropping byte because iCurNumBytes "<<iCurNumBytes<<">= iAudioPaylo
         }
         if (!bDrmSf)
           iOutputBlockSize = iCurNumBytes * 8;
+
+        } /* not xHE-AAC */
 
 #ifdef _DEBUG_
         /* Save number of bits actually used by audio encoder */
@@ -398,6 +407,39 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
         }
             break;
 
+        case CAudioParam::AC_xHE_AAC:
+        {
+            CAudioParam& AudioParam = Parameters.Service[iCurSelServ].AudioParam;
+            iNumChannels = (AudioParam.eAudioMode == CAudioParam::AM_MONO) ? 1 : 2;
+            iNumAudioFrames = 1;
+            iNumBorders = 0;
+            iNumHeaderBytes = 0;
+            lEncSamprate = codec->EncStreamingSampleRate();
+            if (lEncSamprate == 0)
+                lEncSamprate = 48000;
+            AudioParam.eAudioSamplRate = CAudioParam::AS_48KHZ;
+            AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
+
+            /* The super frame is the whole stream: xHE-AAC must use equal error protection */
+            iAudioPayloadLen = iTotAudFraSizeBits / SIZEOF__BYTE;
+
+            codec->EncOpen(AudioParam, lNumSampEncIn, lMaxBytesEncOut);
+            std::vector<uint8_t> config;
+            bXheReady = codec->EncStartStreaming(AudioParam, iAudioPayloadLen, config);
+            if (bXheReady)
+            {
+                AudioParam.xHE_AAC_config = config;
+                xheMux.init(unsigned(iAudioPayloadLen));
+            }
+            else
+                std::cerr << "xHE-AAC encoder could not be started, sending silence" << std::endl;
+
+            /* 400 ms of audio at the encoder rate per super frame */
+            lNumSampEncIn = lEncSamprate * 4 / 10;
+            lMaxBytesEncOut = 1;
+        }
+            break;
+
         default:
             /* Unsupported encoder, parameters must be safe */
             lEncSamprate = 12000;
@@ -418,6 +460,8 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
         veciFrameLength.Init(iNumAudioFrames);
 
         _REAL rRatio = _REAL(lEncSamprate) / _REAL(Parameters.GetAudSampleRate()) * _REAL(lNumSampEncIn) / _REAL(AUD_DEC_TRANSFROM_LENGTH);
+        if (eAudioCoding == CAudioParam::AC_xHE_AAC)
+            rRatio = _REAL(lEncSamprate) / _REAL(Parameters.GetAudSampleRate());
 
         for (int i = 0; i < iNumChannels; i++)
         {
@@ -651,6 +695,32 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
     iOutputBlockSize = iTotNumBitsForUsage;
     iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
     Parameters.Unlock();
+}
+
+void
+CAudioSourceEncoderImplementation::ProcessXheSuperFrame(CVectorEx<_BINARY>* pvecOutputData)
+{
+    const size_t n = lNumSampEncIn; /* samples per channel in 400 ms */
+    std::vector<uint8_t> superFrame;
+
+    if (bXheReady)
+    {
+        for (size_t k = 0; k < n; k++)
+            for (int i = 0; i < iNumChannels; i++)
+                vecsEncInData[int(k) * iNumChannels + i] = Real2Sample(vecTempResBufOut[i][int(k)]);
+
+        std::vector<std::vector<uint8_t> > frames;
+        codec->EncProcess(&vecsEncInData[0], n * size_t(iNumChannels), frames);
+        for (size_t i = 0; i < frames.size(); i++)
+            xheMux.push(frames[i]);
+        xheMux.build(superFrame);
+    }
+    else
+        superFrame.assign(size_t(iAudioPayloadLen), 0);
+
+    (*pvecOutputData).ResetBitAccess();
+    for (size_t i = 0; i < superFrame.size(); i++)
+        (*pvecOutputData).Enqueue(superFrame[i], 8);
 }
 
 void

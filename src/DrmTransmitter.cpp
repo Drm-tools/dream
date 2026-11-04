@@ -438,6 +438,8 @@ void CDRMTransmitter::LoadSettings() {
       Service.AudioParam.eAudioCoding = CAudioParam::AC_AAC;
     } else if (value == "Opus") {
       Service.AudioParam.eAudioCoding = CAudioParam::AC_OPUS;
+    } else if (value == "xHE-AAC") {
+      Service.AudioParam.eAudioCoding = CAudioParam::AC_xHE_AAC;
     }
 
     /* Opus Codec Channels */
@@ -682,6 +684,9 @@ void CDRMTransmitter::SaveSettings() {
       break;
     case CAudioParam::AC_OPUS:
       value = "Opus";
+      break;
+    case CAudioParam::AC_xHE_AAC:
+      value = "xHE-AAC";
       break;
     default:
       value = "";

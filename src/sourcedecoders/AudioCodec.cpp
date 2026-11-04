@@ -35,6 +35,9 @@
 #include <iostream>
 using namespace std;
 #endif
+#ifdef HAVE_LIBFDK_XHE_AAC
+# include "xhe_aac_codec.h"
+#endif
 
 CAudioCodec::CAudioCodec():pFile(nullptr)
 {
@@ -65,6 +68,11 @@ cerr<<"Adding FDK codec"<<endl;
         CodecList.push_back(new FdkAacCodec);
 #endif
         CodecList.push_back(new AacCodec);
+
+        /* xHE-AAC encoder */
+#ifdef HAVE_LIBFDK_XHE_AAC
+        CodecList.push_back(new XheAacCodec);
+#endif
 
 		/* Opus */
 		CodecList.push_back(new OpusCodec);

@@ -175,6 +175,10 @@ unix {
     INSTALLS += target
     CONFIG += link_pkgconfig fdk-aac
     PKGCONFIG += fdk-aac
+    packagesExist(fdk-xhe-aac) {
+        CONFIG += fdk-xhe-aac
+        PKGCONFIG += fdk-xhe-aac
+    }
     LIBS += -lfftw3 -lz
     SOURCES += src/linux/Pacer.cpp
     DEFINES += HAVE_DLFCN_H \
@@ -283,6 +287,10 @@ win32 {
   exists($$PWD/include/opus/opus.h) {
     CONFIG += opus
   }
+}
+fdk-xhe-aac {
+     DEFINES += HAVE_LIBFDK_XHE_AAC
+     message("with fdk-xhe-aac (xHE-AAC encoder)")
 }
 fdk-aac {
      DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
@@ -540,6 +548,8 @@ HEADERS += \
     src/MSC/audiosuperframe.h \
     src/MSC/aacsuperframe.h \
     src/MSC/xheaacsuperframe.h \
+    src/MSC/xheaacsuperframeenc.h \
+    src/sourcedecoders/xhe_aac_codec.h \
     src/MSC/frameborderdescription.h \
     src/resample/speexresampler.h \
     src/resample/cspectrumresample.h \
@@ -657,6 +667,8 @@ SOURCES += \
     src/MSC/audiosuperframe.cpp \
     src/MSC/aacsuperframe.cpp \
     src/MSC/xheaacsuperframe.cpp \
+    src/MSC/xheaacsuperframeenc.cpp \
+    src/sourcedecoders/xhe_aac_codec.cpp \
     src/MSC/frameborderdescription.cpp \
     src/resample/speexresampler.cpp \
     src/resample/cspectrumresample.cpp \
