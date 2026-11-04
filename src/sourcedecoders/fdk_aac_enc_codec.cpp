@@ -58,6 +58,8 @@ bool FdkAacEncCodec::InitEncoder(int iBitRate)
     SETP(AACENC_SAMPLERATE, iSampleRate);
     SETP(AACENC_CHANNELMODE, iChannels == 1 ? MODE_1 : MODE_2);
     SETP(AACENC_BITRATE, iBitRate);
+    /* A DRM super frame has a fixed payload: no frame may be larger than the average */
+    SETP(AACENC_PEAK_BITRATE, iBitRate);
     SETP(AACENC_TRANSMUX, TT_MP4_RAW);
     e = aacEncEncode(hEncoder, nullptr, nullptr, nullptr, nullptr);
     if (e != AACENC_OK) {

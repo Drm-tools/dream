@@ -147,6 +147,32 @@ cerr<<"Audio param changed"<<endl;
             }
         }
 
+        /* The encoder cannot go below a minimum frame size (with SBR about 8 kbit/s
+           mono at 12 kHz). If the frames do not fit the payload, drop whole frames
+           from the end: cutting bytes would also corrupt the frames after the cut
+           because the borders in the header would not match */
+        {
+            int iTotal = 0;
+            for (int j = 0; j < iNumAudioFrames; j++)
+                iTotal += veciFrameLength[j];
+            if (iTotal > iAudioPayloadLen)
+            {
+                static bool bWarned = false;
+                if (!bWarned)
+                {
+                    bWarned = true;
+                    cerr << "AAC encoder: " << iTotal << " bytes of audio do not fit the " << iAudioPayloadLen
+                         << " byte payload, the bit rate is below what the encoder can do (HE-AAC needs about 8 kbit/s mono):"
+                         << " frames are being dropped. Use a wider channel, a higher protection level / QAM or no SBR." << endl;
+                }
+                for (int j = iNumAudioFrames - 1; j >= 0 && iTotal > iAudioPayloadLen; j--)
+                {
+                    iTotal -= veciFrameLength[j];
+                    veciFrameLength[j] = 0;
+                }
+            }
+        }
+
         /* Write data to output vector */
         /* First init buffer with zeros */
         for (int i = 0; i < iOutputBlockSize; i++)

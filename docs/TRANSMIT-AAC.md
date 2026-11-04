@@ -40,4 +40,9 @@ stereo, HE-AAC v2. Unit tests: `DreamTests/XheAacTests.pro` (12),
 - xHE-AAC: independent frames about 0.85 s apart; at most 15 frames per audio
   super frame; ASF limited to 4096 bytes; minimum about 8 kbit/s mono.
 - HE-AAC uses long blocks only.
+- AAC / HE-AAC frame size: the encoder is capped at the payload rate (AACENC_PEAK_BITRATE). If the
+  encoder still cannot fit the payload (plain AAC below about 3 kbit/s, HE-AAC below the SBR table
+  minimum, 4 kbit/s mono at 12 kHz core in the vendored fdk), whole frames are dropped and a warning
+  is printed. Tested down to 4.8 kbit/s mono HE-AAC (mode B, 4.5 kHz, 16-QAM, protection 0); quality
+  at the lowest rates has not been assessed.
 - Narrow-bandwidth OFDM (SO_0/SO_1) with xHE-AAC does not decode yet.
