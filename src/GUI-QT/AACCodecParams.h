@@ -50,6 +50,7 @@ protected:
 	int				iLastYPosition;
 	bool			bLastPositionValid;
 	void			GetDialogPosition(void);
+	void			ApplyConstraints(void);
 	virtual void	reject();
 
 public slots:

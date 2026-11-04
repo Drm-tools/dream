@@ -4,6 +4,7 @@ permissions:
   packages: write
 
 on:
+  workflow_dispatch:
   push:
     branches: [ '*' ]
   release:
@@ -11,13 +12,13 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       USERNAME: ${{ github.actor }}
       VCPKG_EXE: C:/vcpkg/vcpkg
       VCPKG_INSTALLATION_ROOT: C:/vcpkg
-      FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
+      FEED_URL: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json,readwrite"
     
     steps:
     # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
@@ -58,7 +59,7 @@ jobs:
 
     - name: Install dependencies with vcpkg
       run: |
-        vcpkg --triplet x64-windows install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile fdk-aac[he-aac] opus speexdsp soapysdr
+        vcpkg --triplet x64-windows install fftw3 zlib dlfcn-win32 winpcap pthreads libsndfile opus speexdsp soapysdr
 
     - name: Download hamlib
       uses: robinraju/release-downloader@v1
@@ -88,6 +89,7 @@ jobs:
       run: |
         robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/include include
         robocopy /s $Env:VCPKG_INSTALLATION_ROOT/installed/x64-windows/lib lib
+        copy lib/z.lib lib/zlib.lib
         robocopy /s hamlib-w64-4.6.5/include include
         lib /def:hamlib-w64-4.6.5/lib/msvc/libhamlib-4.def /machine:x64 /out:lib/hamlib.lib
         mkdir include/qwt
@@ -96,11 +98,11 @@ jobs:
 
     - name: Build
       run: |
-        qmake "CONFIG+=console"
+        qmake "CONFIG+=console" "CONFIG+=vendored-fdk"
         nmake
         copy release/dream.exe cdream.exe
         nmake clean
-        qmake
+        qmake "CONFIG+=vendored-fdk"
         nmake
         windeployqt -opengl -printsupport release
         copy cdream.exe release

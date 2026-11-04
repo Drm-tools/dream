@@ -1,7 +1,7 @@
 #include "xheaacsuperframe.h"
 #include "../util/CRC.h"
 
-XHEAACSuperFrame::XHEAACSuperFrame():AudioSuperFrame (),numChannels(0),superFrameSize(0),payload(),borders(),frameSize()
+XHEAACSuperFrame::XHEAACSuperFrame():AudioSuperFrame (),numChannels(0),superFrameSize(0),synced(false),payload(),borders(),frameSize()
 {    
 }
 
@@ -10,8 +10,11 @@ XHEAACSuperFrame::init(const CAudioParam& audioParam, unsigned frameSize)
 {
     numChannels = audioParam.AM_MONO?1:2;
     superFrameSize = frameSize;
-    payload.resize(0);
+    payload.clear();
     borders.resize(0);
+    this->frameSize.resize(0);
+    audioFrame.resize(0);
+    synced = false;
 }
 
 unsigned XHEAACSuperFrame::getSuperFrameDurationMilliseconds()
@@ -55,6 +58,13 @@ unsigned XHEAACSuperFrame::getSuperFrameDurationMilliseconds()
     The following definitions apply:
     4 bits. 4 bits. 8 bits
     * */
+void XHEAACSuperFrame::lostSync()
+{
+    audioFrame.resize(0);
+    payload.clear();
+    synced = false;
+}
+
 bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
 {
     bool ok = true;
@@ -64,14 +74,18 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
     CRCObject.Reset(8);
     CRCObject.AddByte((frameBorderCount << 4) | bitReservoirLevel);
 
-    if(CRCObject.CheckCRC(asf.Separate(8))) {
-        //cerr << endl << "superframe crc ok" << endl;
-    }
-    else {
-        //cerr << endl << "superframe crc bad but will hope the frameBorderCount is OK" << endl;
+    if(!CRCObject.CheckCRC(asf.Separate(8))) {
+        /* The border count cannot be trusted, and without it the frame
+           boundaries of this and the following super frames are lost */
+        lostSync();
+        return false;
     }
     // TODO handle reservoir
 //    unsigned bitResLevel = (bitReservoirLevel+1) * 384 * numChannels;
+    if (superFrameSize < 2 + 2*frameBorderCount) {
+        lostSync();
+        return false;
+    }
     unsigned directory_offset = superFrameSize - 2*frameBorderCount;
     size_t start = payload.size();
     //cerr << start << " bytes left from previous superframe" << endl;
@@ -81,6 +95,7 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
     for (size_t i=2; i < directory_offset; i++) {
         if (asf.Size() == 0) {
             printf("DRM xHE-AAC asf UNDERRUN 1\n");
+            lostSync();
             return false;
         }
         payload.push_back(asf.Separate(8));
@@ -95,6 +110,7 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
         for (int i = int(frameBorderCount-1); i >= 0; i--) {
             if (asf.Size() == 0) {
                 printf("DRM xHE-AAC asf UNDERRUN 2\n");
+                lostSync();
                 return false;
             }
             unsigned frameBorderIndex = asf.Separate(12);
@@ -109,6 +125,7 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
         //printf("\n");
         if (!ok) {
             //printf("xHE-FBC-repeat-BAD! ");
+            lostSync();
             return false;
         }
 
@@ -119,6 +136,7 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
                 //cerr << "first frame has two bytes in previous superframe" << endl;
                 if (start < 2) {
                     //printf("xHE-0xffe! ");
+                    lostSync();
                     return false;
                 }
                 borders[0] = start-2;
@@ -129,6 +147,7 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
                 //cerr << "first frame has one byte in previous superframe" << endl;
                 if (start < 1) {
                     //printf("xHE-0xfff! ");
+                    lostSync();
                     return false;
                 }
                 borders[0] = start-1;
@@ -168,7 +187,21 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
         // frameBorderCount == 0: spans entire ASF payload or bad data in header
         //printf("xHE-fullspan\n");
         audioFrame.resize(0);
+        if (payload.size() > 64*1024) lostSync(); // never ends, nothing to be gained
         return ok;
+    }
+
+    /* Corrupted directory entries: the borders must be in order and inside the
+       payload we have, otherwise the frame sizes underflow */
+    for (size_t i=0; i < borders.size(); i++) {
+        if (borders[i] > payload.size() || (i > 0 && borders[i] < borders[i-1])) {
+            lostSync();
+            return false;
+        }
+    }
+    if (frameSize[0] > payload.size()) {
+        lostSync();
+        return false;
     }
 
     size_t bytesInFrames = 0;
@@ -197,8 +230,16 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
             }
         #endif
 
+        if (frameSize[i] == 0) {
+            /* A border at index 0 right after a complete frame: nothing to complete */
+            i++;
+            if (i >= audioFrame.size()) break;
+            audioFrame[i].resize(0);
+            continue;
+        }
         if (payload.empty()) {
             printf("DRM xHE-AAC payload UNDERRUN\n");
+            lostSync();
             return false;
         }
         audioFrame[i].push_back(payload.front());
@@ -208,6 +249,34 @@ bool XHEAACSuperFrame::parse(CVectorEx<_BINARY>& asf)
             if (i >= audioFrame.size()) break;
             audioFrame[i].resize(0);
         }
+    }
+
+    /* After a loss of sync the first frame is the tail of a frame we never had */
+    /* drop the empty first frame, if any */
+    if (!audioFrame.empty() && audioFrame[0].empty())
+        audioFrame.erase(audioFrame.begin());
+    else if (!synced && !audioFrame.empty())
+        audioFrame.erase(audioFrame.begin());
+    synced = true;
+
+    /* Audio frame content CRC (5.3.1.2): the 16 bits after the USAC access unit.
+       A frame that fails it is passed on empty, so the decoder conceals it instead
+       of trying to decode corrupted data */
+    for (size_t f = 0; f < audioFrame.size(); f++) {
+        std::vector<uint8_t>& fr = audioFrame[f];
+        bool good = fr.size() > 2;
+        if (good) {
+            CCRC crc;
+            crc.Reset(16);
+            for (size_t k = 0; k + 2 < fr.size(); k++)
+                crc.AddByte(fr[k]);
+            const uint32_t c = crc.GetCRC();
+            good = fr[fr.size()-2] == uint8_t(c >> 8) && fr[fr.size()-1] == uint8_t(c & 0xff);
+        }
+        if (good)
+            fr.resize(fr.size() - 2);
+        else
+            fr.clear();
     }
 
     //cerr << "remaining payload is " << payload.size() << " bytes" << endl;

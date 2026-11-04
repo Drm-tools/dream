@@ -70,6 +70,7 @@ public:
     }
     void SetSoundInterface(CSoundInInterface* device) { pSound = device; }
     void Stop() { if (pSound != nullptr) pSound->Close(); }
+    bool InputEnded() { return pSound != nullptr && pSound->IsEof(); }
     std::string GetSoundInterfaceVersion() {
         return pSound->GetVersion();
     }

@@ -84,6 +84,8 @@ public:
     }
 
     void FlushData();
+    /* number of complete DRM frames written so far */
+    int GetFramesWritten() const { return iFramesWritten; }
 
 protected:
     FILE*			pFileTransmitter;
@@ -91,6 +93,7 @@ protected:
     std::string     soundDevice;
     CVector<short>	vecsDataOut;
     int				iBlockCnt;
+    int				iFramesWritten = 0;
     int				iNumBlocks;
     EOutFormat		eOutputFormat;
 

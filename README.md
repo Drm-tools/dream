@@ -13,6 +13,8 @@ Additional contributions by Stephane Fillod, Andrea Russo, Julian Cable, Mark J 
 Introduction
 ------------
 
+AAC / HE-AAC / xHE-AAC transmit: see [docs/TRANSMIT-AAC.md](docs/TRANSMIT-AAC.md).
+
 Digital Radio Mondiale (DRM) is the digital radio standard for the long-,
 medium- and short-wave bands. The system is defined by ES 201 980 which
 is freely downloadable from the European Telecommunications Standards Insitute

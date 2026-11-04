@@ -121,6 +121,7 @@ public slots:
 	void OnRadioBandwidth(int iID);
 	void OnRadioOutput(int iID);
 	void OnRadioCodec(int iID);
+	void OnCheckBoxXHEStereo(bool bChecked);
 	void OnRadioCurrentTime(int iID);
 	void OnTextChangedServiceLabel(const QString& strLabel);
 	void OnTextChangedServiceID(const QString& strID);

@@ -39,6 +39,7 @@
 #include "../datadecoding/DataEncoder.h"
 #include "../util/Utilities.h"
 #include "AudioCodec.h"
+#include "../MSC/xheaacsuperframeenc.h"
 
 /* Definition */
 #define MAX_ENCODED_CHANNELS 2
@@ -69,7 +70,7 @@ public:
         case CAudioParam::AC_NONE: return true;
         case CAudioParam::AC_AAC:  return bCanEncodeAAC;
         case CAudioParam::AC_OPUS: return bCanEncodeOPUS;
-        case CAudioParam::AC_xHE_AAC: return false;
+        case CAudioParam::AC_xHE_AAC: return bCanEncodeXHE;
         case CAudioParam::AC_RESERVED: return false;
         }
         return false;
@@ -110,6 +111,12 @@ protected:
 
 	bool				bCanEncodeAAC;
 	bool				bCanEncodeOPUS;
+	bool				bCanEncodeXHE;
+
+	/* xHE-AAC */
+	XHEAACSuperFrameEncoder	xheMux;
+	bool				bXheReady;
+	void ProcessXheSuperFrame(CVectorEx<_BINARY>* pvecOutputData);
 
 public:
 	virtual void InitInternalTx(CParameter& Parameters, int &iInputBlockSize, int &iOutputBlockSize);

@@ -33,7 +33,7 @@
 /* Implementation *************************************************************/
 
 CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
-    : bUsingTextMessage(false), codec(nullptr)
+    : bUsingTextMessage(false), codec(nullptr), bXheReady(false)
 {
     /* Initialize Audio Codec List */
     CAudioCodec::InitCodecList();
@@ -45,6 +45,7 @@ CAudioSourceEncoderImplementation::CAudioSourceEncoderImplementation()
     /* Needed by TransmDlg.cpp to report available codec */
     bCanEncodeAAC  = CAudioCodec::GetEncoder(CAudioParam::AC_AAC,  true) != nullptr;
     bCanEncodeOPUS = CAudioCodec::GetEncoder(CAudioParam::AC_OPUS, true) != nullptr;
+    bCanEncodeXHE  = CAudioCodec::GetEncoder(CAudioParam::AC_xHE_AAC, true) != nullptr;
 }
 
 CAudioSourceEncoderImplementation::~CAudioSourceEncoderImplementation()
@@ -104,6 +105,12 @@ cerr<<"Audio param changed"<<endl;
         for (int i = 0; i < iNumChannels; i++)
             ResampleObj[i].Resample(vecTempResBufIn[i], vecTempResBufOut[i]);
 
+        if (eAudioCoding == CAudioParam::AC_xHE_AAC)
+        {
+            ProcessXheSuperFrame(pvecOutputData);
+        }
+        else
+        {
         /* Split data in individual audio blocks */
         for (int j = 0; j < iNumAudioFrames; j++)
         {
@@ -137,6 +144,32 @@ cerr<<"Audio param changed"<<endl;
                 /* Encoder is in initialization phase, reset CRC and length */
                 aac_crc_bits[j] = 0;
                 veciFrameLength[j] = 0;
+            }
+        }
+
+        /* The encoder cannot go below a minimum frame size (with SBR about 8 kbit/s
+           mono at 12 kHz). If the frames do not fit the payload, drop whole frames
+           from the end: cutting bytes would also corrupt the frames after the cut
+           because the borders in the header would not match */
+        {
+            int iTotal = 0;
+            for (int j = 0; j < iNumAudioFrames; j++)
+                iTotal += veciFrameLength[j];
+            if (iTotal > iAudioPayloadLen)
+            {
+                static bool bWarned = false;
+                if (!bWarned)
+                {
+                    bWarned = true;
+                    cerr << "AAC encoder: " << iTotal << " bytes of audio do not fit the " << iAudioPayloadLen
+                         << " byte payload, the bit rate is below what the encoder can do (HE-AAC needs about 8 kbit/s mono):"
+                         << " frames are being dropped. Use a wider channel, a higher protection level / QAM or no SBR." << endl;
+                }
+                for (int j = iNumAudioFrames - 1; j >= 0 && iTotal > iAudioPayloadLen; j--)
+                {
+                    iTotal -= veciFrameLength[j];
+                    veciFrameLength[j] = 0;
+                }
             }
         }
 
@@ -202,6 +235,8 @@ else cerr<<" Dropping byte because iCurNumBytes "<<iCurNumBytes<<">= iAudioPaylo
         }
         if (!bDrmSf)
           iOutputBlockSize = iCurNumBytes * 8;
+
+        } /* not xHE-AAC */
 
 #ifdef _DEBUG_
         /* Save number of bits actually used by audio encoder */
@@ -306,6 +341,10 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
         /* Get encoder instance */
         codec = CAudioCodec::GetEncoder(eAudioCoding);
 
+        /* The text message flag in the SDC must match what is reserved here, the
+           receiver takes the last bytes of the stream for it when the flag is set */
+        Parameters.Service[iCurSelServ].AudioParam.bTextflag = bUsingTextMessage;
+
         /* Total frame size is input block size minus the bytes for the text
            message (if text message is used) */
         int iTotAudFraSizeBits = iTotNumBitsForUsage;
@@ -328,11 +367,13 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
             case CAudioParam::AS_12KHZ:
                 iTimeEachAudBloMS = 80;	/* ms */
                 iNumAudioFrames = 5;
+                lEncSamprate = 12000;
                 break;
 
             case CAudioParam::AS_24KHZ:
                 iTimeEachAudBloMS = 40;	/* ms */
                 iNumAudioFrames = 10;
+                lEncSamprate = 24000;
                 break;
             }
 
@@ -351,12 +392,18 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
 
             const int iActEncOutBytes = iAudioPayloadLen / iNumAudioFrames;
 
+            /* Parametric stereo needs SBR, and stereo is 24 kHz only */
+            if (Parameters.Service[iCurSelServ].AudioParam.eAudioMode == CAudioParam::AM_P_STEREO)
+                Parameters.Service[iCurSelServ].AudioParam.eSBRFlag = CAudioParam::SB_USED;
+
             /* Open encoder instance */
             codec->EncOpen(Parameters.Service[iCurSelServ].AudioParam, lNumSampEncIn, lMaxBytesEncOut);
             lNumSampEncIn /= unsigned(iNumChannels);
 
-            /* Calculate bitrate, bit per second */
-            const int iBitRate = iActEncOutBytes * SIZEOF__BYTE * AUD_DEC_TRANSFROM_LENGTH / int(lNumSampEncIn) / iTimeEachAudBloMS * 1000;
+            /* Calculate bitrate, bit per second: the AAC frames of one super
+               frame take iTimeEachAudBloMS each (with SBR a frame holds twice
+               as many input samples, so the sample count cannot be used) */
+            const int iBitRate = iActEncOutBytes * SIZEOF__BYTE * 1000 / iTimeEachAudBloMS;
             codec->EncSetBitrate(iBitRate);
         }
             break;
@@ -398,6 +445,39 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
         }
             break;
 
+        case CAudioParam::AC_xHE_AAC:
+        {
+            CAudioParam& AudioParam = Parameters.Service[iCurSelServ].AudioParam;
+            iNumChannels = (AudioParam.eAudioMode == CAudioParam::AM_MONO) ? 1 : 2;
+            iNumAudioFrames = 1;
+            iNumBorders = 0;
+            iNumHeaderBytes = 0;
+            lEncSamprate = codec->EncStreamingSampleRate();
+            if (lEncSamprate == 0)
+                lEncSamprate = 48000;
+            AudioParam.eAudioSamplRate = CAudioParam::AS_48KHZ;
+            AudioParam.eSBRFlag = CAudioParam::SB_NOT_USED;
+
+            /* The super frame is the whole stream: xHE-AAC must use equal error protection */
+            iAudioPayloadLen = iTotAudFraSizeBits / SIZEOF__BYTE;
+
+            codec->EncOpen(AudioParam, lNumSampEncIn, lMaxBytesEncOut);
+            std::vector<uint8_t> config;
+            bXheReady = codec->EncStartStreaming(AudioParam, iAudioPayloadLen, config);
+            if (bXheReady)
+            {
+                AudioParam.xHE_AAC_config = config;
+                xheMux.init(unsigned(iAudioPayloadLen));
+            }
+            else
+                std::cerr << "xHE-AAC encoder could not be started, sending silence" << std::endl;
+
+            /* 400 ms of audio at the encoder rate per super frame */
+            lNumSampEncIn = lEncSamprate * 4 / 10;
+            lMaxBytesEncOut = 1;
+        }
+            break;
+
         default:
             /* Unsupported encoder, parameters must be safe */
             lEncSamprate = 12000;
@@ -407,9 +487,13 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
             iNumHeaderBytes = 0;
         }
 
-        /* Set parameter in global struct */
-        Parameters.Service[iCurSelServ].AudioParam.eAudioMode =
-                iNumChannels >= 2 ? CAudioParam::AM_STEREO : CAudioParam::AM_MONO;
+        /* Set parameter in global struct (parametric stereo stays what it is) */
+        if (iNumChannels >= 2) {
+            if (Parameters.Service[iCurSelServ].AudioParam.eAudioMode != CAudioParam::AM_P_STEREO)
+                Parameters.Service[iCurSelServ].AudioParam.eAudioMode = CAudioParam::AM_STEREO;
+        }
+        else
+            Parameters.Service[iCurSelServ].AudioParam.eAudioMode = CAudioParam::AM_MONO;
 
         /* Init storage for actual data, CRCs and frame lengths */
         audio_frame.Init(iNumAudioFrames, lMaxBytesEncOut);
@@ -418,6 +502,8 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
         veciFrameLength.Init(iNumAudioFrames);
 
         _REAL rRatio = _REAL(lEncSamprate) / _REAL(Parameters.GetAudSampleRate()) * _REAL(lNumSampEncIn) / _REAL(AUD_DEC_TRANSFROM_LENGTH);
+        if (eAudioCoding == CAudioParam::AC_xHE_AAC)
+            rRatio = _REAL(lEncSamprate) / _REAL(Parameters.GetAudSampleRate());
 
         for (int i = 0; i < iNumChannels; i++)
         {
@@ -651,6 +737,32 @@ CAudioSourceEncoderImplementation::InitInternalRx(CParameter& Parameters,
     iOutputBlockSize = iTotNumBitsForUsage;
     iInputBlockSize = iNumInSamplesMono * 2 /* stereo */ ;
     Parameters.Unlock();
+}
+
+void
+CAudioSourceEncoderImplementation::ProcessXheSuperFrame(CVectorEx<_BINARY>* pvecOutputData)
+{
+    const size_t n = lNumSampEncIn; /* samples per channel in 400 ms */
+    std::vector<uint8_t> superFrame;
+
+    if (bXheReady)
+    {
+        for (size_t k = 0; k < n; k++)
+            for (int i = 0; i < iNumChannels; i++)
+                vecsEncInData[int(k) * iNumChannels + i] = Real2Sample(vecTempResBufOut[i][int(k)]);
+
+        std::vector<std::vector<uint8_t> > frames;
+        codec->EncProcess(&vecsEncInData[0], n * size_t(iNumChannels), frames);
+        for (size_t i = 0; i < frames.size(); i++)
+            xheMux.push(frames[i]);
+        xheMux.build(superFrame);
+    }
+    else
+        superFrame.assign(size_t(iAudioPayloadLen), 0);
+
+    (*pvecOutputData).ResetBitAccess();
+    for (size_t i = 0; i < superFrame.size(); i++)
+        (*pvecOutputData).Enqueue(superFrame[i], 8);
 }
 
 void

@@ -67,6 +67,18 @@ public:
 	virtual void EncClose() = 0;
 	virtual void EncSetBitrate(int iBitRate) = 0;
 	virtual void EncUpdate(CAudioParam& AudioParam) = 0;
+    /* Streaming encoders (xHE-AAC): the encoder consumes PCM at its own pace and
+       emits audio frames of variable length, which the caller packs into audio
+       super frames. Encode()/EncSetBitrate() are not used for these. */
+    virtual bool EncIsStreaming() const { return false; }
+    /* Open the encoder so that one audio super frame of iSuperFrameBytes bytes is
+       filled at the long term. Returns the static config for SDC data entity type 9. */
+    virtual bool EncStartStreaming(const CAudioParam&, int /*iSuperFrameBytes*/,
+                                   std::vector<uint8_t>& /*staticConfig*/) { return false; }
+    /* PCM is interleaved, at the encoder sample rate (EncStreamingSampleRate()) */
+    virtual int EncStreamingSampleRate() const { return 0; }
+    virtual bool EncProcess(const _SAMPLE*, size_t /*iNumInterleaved*/,
+                            std::vector<std::vector<uint8_t> >& /*frames*/) { return false; }
 	/* Common */
 	static void InitCodecList();
 	static void UnrefCodecList();

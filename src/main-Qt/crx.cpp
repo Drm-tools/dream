@@ -5,6 +5,7 @@
 #endif
 
 #include "../DrmReceiver.h"
+#include "../util/Settings.h"
 
 CRx::CRx(CDRMReceiver& nRx, CTRx *trx): CTRx(trx), rx(nRx), eRunState(STOPPED)
 {
@@ -27,6 +28,8 @@ CRx::run()
             rx.SetFrequency(iFreqkHz);
 
 #ifdef USE_CONSOLEIO
+        if (rx.GetSettings() != nullptr)
+            CConsoleIO::SetStatusFile(rx.GetSettings()->Get("command", "statusfile", string()));
         CConsoleIO::Enter(&rx);
 #endif
         // emit any initial state needed by UI and not otherwise set

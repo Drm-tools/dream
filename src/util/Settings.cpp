@@ -362,6 +362,14 @@ CSettings::ParseArguments(int argc, char **argv)
 			continue;
 		}
 
+		/* Receiver status as JSON file (console receiver) ------------------ */
+		if (GetStringArgument(argc, argv, i, "--status-file", "--status-file",
+							  strArgument))
+		{
+			Put("command", "statusfile", strArgument);
+			continue;
+		}
+
 		/* Write output data to file as WAV --------------------------------- */
 		if (GetStringArgument(argc, argv, i, "-w", "--writewav",
 							  strArgument))
@@ -673,6 +681,7 @@ CSettings::UsageArguments()
 		"  -b <b>, --reverb <b>         audio reverberation on drop-out (0: off; 1: on)\n"
 		"  -f <s>, --fileio <s>         disable sound card, use file <s> instead\n"
 		"  -w <s>, --writewav <s>       write output to wave file\n"
+		"  --status-file <s>            console receiver: write the status as JSON to <s> once a second\n"
 		"  -S <r>, --fracwinsize <r>    freq. acqu. search window size [Hz] (-1.0: sample rate / 2 (default))\n"
 		"  -E <r>, --fracwincent <r>    freq. acqu. search window center [Hz] (-1.0: sample rate / 4 (default))\n"
 		"  -F <b>, --filter <b>         apply bandpass filter (0: off; 1: on)\n"

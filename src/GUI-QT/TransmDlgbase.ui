@@ -1273,7 +1273,7 @@ Institute for Communication Technology</string>
               <item>
                <widget class="QRadioButton" name="RadioButtonAAC">
                 <property name="text">
-                 <string>AAC</string>
+                 <string>AAC / HE-AAC</string>
                 </property>
                 <attribute name="buttonGroup">
                  <string notr="true">ButtonGroupCodec</string>
@@ -1288,6 +1288,26 @@ Institute for Communication Technology</string>
                 <attribute name="buttonGroup">
                  <string notr="true">ButtonGroupCodec</string>
                 </attribute>
+               </widget>
+              </item>
+              <item>
+               <widget class="QRadioButton" name="RadioButtonXHEAAC">
+                <property name="text">
+                 <string>xHE-AAC</string>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">ButtonGroupCodec</string>
+                </attribute>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="CheckBoxXHEStereo">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Stereo</string>
+                </property>
                </widget>
               </item>
               <item>

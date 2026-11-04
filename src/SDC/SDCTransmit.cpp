@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include "SDC.h"
+#include <iostream>
 
 CSDCTransmit::~CSDCTransmit()
 {
@@ -103,7 +104,7 @@ void CSDCTransmit::CommitFlush()
     // TODO: nicer solution
     /* Copy all bit of vecbiData to pbiData if enough room */
     int iSize = vecbiData.Size();
-    if (iNumUsedBits + iSize < iMaxNumBitsDataBlocks)
+    if (iNumUsedBits + iSize <= iMaxNumBitsDataBlocks)
     {
         iNumUsedBits += iSize;
         vecbiData.ResetBitAccess();
@@ -117,6 +118,18 @@ void CSDCTransmit::CommitFlush()
             size = 1 << bits;
             for (i = 0; i < numtrans; i++, iSize -= size)
                 (*pbiData).Enqueue(vecbiData.Separate(size), size);
+        }
+    }
+    else
+    {
+        /* Narrow channels have little SDC room: the entity is lost, for the audio
+           (type 9 / 5) that means no audio on the receiver, for the label no label */
+        static bool bWarned = false;
+        if (!bWarned)
+        {
+            bWarned = true;
+            std::cerr << "SDC: a data entity of " << iSize << " bits does not fit, " << (iMaxNumBitsDataBlocks - iNumUsedBits)
+                  << " bits left in the SDC block - use the 16-QAM SDC (sdc=CS_2_SM) for this mode and bandwidth" << std::endl;
         }
     }
 }

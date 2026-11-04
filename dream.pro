@@ -173,8 +173,18 @@ unix {
     documentation.files = linux/dream.1
     INSTALLS += documentation
     INSTALLS += target
-    CONFIG += link_pkgconfig fdk-aac
-    PKGCONFIG += fdk-aac
+    CONFIG += link_pkgconfig
+    vendored-fdk {
+        include(libs/fdk-aac/fdk-aac.pri)
+        CONFIG += fdk-aac fdk-xhe-aac
+    } else {
+        CONFIG += fdk-aac
+        PKGCONFIG += fdk-aac
+        packagesExist(fdk-xhe-aac) {
+            CONFIG += fdk-xhe-aac
+            PKGCONFIG += fdk-xhe-aac
+        }
+    }
     LIBS += -lfftw3 -lz
     SOURCES += src/linux/Pacer.cpp
     DEFINES += HAVE_DLFCN_H \
@@ -247,7 +257,12 @@ packagesExist(SoapySDR) | exists(include/SoapySDR) {
        CONFIG += soapysdr
 }
 win32 {
-  CONFIG += fdk-aac
+  vendored-fdk {
+    include(libs/fdk-aac/fdk-aac.pri)
+    CONFIG += fdk-aac fdk-xhe-aac
+  } else {
+    CONFIG += fdk-aac
+  }
   LIBS += -lwpcap -lpacket -lmincore -lzlib -lfftw3 -lsetupapi -ldl
   DEFINES += _USE_MATH_DEFINES HAVE_SETUPAPI HAVE_LIBZ _CRT_SECURE_NO_WARNINGS HAVE_LIBZ HAVE_LIBPCAP HAVE_STDINT_H
   SOURCES += src/windows/Pacer.cpp src/windows/platform_util.cpp
@@ -284,11 +299,15 @@ win32 {
     CONFIG += opus
   }
 }
+fdk-xhe-aac {
+     DEFINES += HAVE_LIBFDK_XHE_AAC
+     message("with fdk-xhe-aac (xHE-AAC encoder)")
+}
 fdk-aac {
      DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
      LIBS += -lfdk-aac
-     HEADERS += src/sourcedecoders/fdk_aac_codec.h
-     SOURCES += src/sourcedecoders/fdk_aac_codec.cpp
+     HEADERS += src/sourcedecoders/fdk_aac_codec.h src/sourcedecoders/fdk_aac_enc_codec.h
+     SOURCES += src/sourcedecoders/fdk_aac_codec.cpp src/sourcedecoders/fdk_aac_enc_codec.cpp
      message("with fdk-aac")
 }
 opus {
@@ -502,6 +521,7 @@ HEADERS += \
     src/sound/selectioninterface.h \
     src/sound/soundinterface.h \
     src/sound/soundnull.h \
+    src/sound/soundstdio.h \
     src/sourcedecoders/aac_codec.h \
     src/sourcedecoders/AudioCodec.h \
     src/sourcedecoders/AudioSourceDecoder.h \
@@ -540,6 +560,8 @@ HEADERS += \
     src/MSC/audiosuperframe.h \
     src/MSC/aacsuperframe.h \
     src/MSC/xheaacsuperframe.h \
+    src/MSC/xheaacsuperframeenc.h \
+    src/sourcedecoders/xhe_aac_codec.h \
     src/MSC/frameborderdescription.h \
     src/resample/speexresampler.h \
     src/resample/cspectrumresample.h \
@@ -652,11 +674,14 @@ SOURCES += \
     src/util/Utilities.cpp \
     src/Version.cpp \
     src/sound/soundnull.cpp \
+    src/sound/soundstdio.cpp \
     src/DrmTransceiver.cpp \
     src/MSC/logicalframe.cpp \
     src/MSC/audiosuperframe.cpp \
     src/MSC/aacsuperframe.cpp \
     src/MSC/xheaacsuperframe.cpp \
+    src/MSC/xheaacsuperframeenc.cpp \
+    src/sourcedecoders/xhe_aac_codec.cpp \
     src/MSC/frameborderdescription.cpp \
     src/resample/speexresampler.cpp \
     src/resample/cspectrumresample.cpp \

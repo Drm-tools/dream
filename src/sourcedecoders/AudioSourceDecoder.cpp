@@ -199,6 +199,12 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & Parameters)
         Parameters.AudioComponentStatus[unsigned(Parameters.GetCurSelAudioService())].SetStatus(status);
         Parameters.Unlock();
 
+        /* A corrupted xHE-AAC super frame can hold more frames than fit the output block */
+        if (iResOutBlockSize < 0 || iOutputBlockSize + iResOutBlockSize * 2 > iMaxOutputBlockSize)
+        {
+            break;
+        }
+
         /* Conversion from _REAL to _SAMPLE with special function */
         for (int i = 0; i < iResOutBlockSize; i++)
         {
@@ -379,6 +385,14 @@ CAudioSourceDecoder::InitInternal(CParameter & Parameters)
            now we do not correct and we could stay with a single buffer
            Maybe TODO: sample rate correction to avoid audio dropouts */
         iMaxOutputBlockSize = iMaxLenResamplerOutput;
+        if (eAudioCoding == CAudioParam::AC_xHE_AAC)
+        {
+            /* The number of audio frames per super frame varies (4 or 5 at 4096 samples
+               per frame) while the sound output takes fixed 400 ms blocks: the transfer
+               buffer between the two has to hold the remainder plus the largest super
+               frame, or audio is dropped (about 15% short at 5 kHz) */
+            iMaxOutputBlockSize *= 3;
+        }
     }
 
     catch(CInitErr CurErr)

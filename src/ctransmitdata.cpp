@@ -119,6 +119,7 @@ void CTransmitData::FlushData()
     }
 
     iBlockCnt = 0;
+    iFramesWritten++;
 
     if (bUseSoundcard)
     {

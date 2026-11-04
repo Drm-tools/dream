@@ -54,6 +54,9 @@ FileTyper::type FileTyper::resolve(const string& str)
         s = str;
     else
         s = str.substr(0, n);
+    /* raw audio on stdin, see sound/soundstdio.h */
+    if (s == "-" || s == "-mono")
+        return pcm;
 #ifdef HAVE_LIBSNDFILE
     SF_INFO info;
     info.format=0;
