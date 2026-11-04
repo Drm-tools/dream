@@ -34,5 +34,6 @@ win32 {
 }
 
 INCLUDEPATH += $$FDKV_PREFIX/include
-LIBS += -L$$FDKV_PREFIX/lib -lfdk-xhe-aac -lfdk-aac -lm
+LIBS += -L$$FDKV_PREFIX/lib -lfdk-xhe-aac -lfdk-aac
+unix:LIBS += -lm
 message("with the vendored fdk-aac (libs/fdk-aac)")
