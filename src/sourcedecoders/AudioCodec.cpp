@@ -38,7 +38,7 @@ using namespace std;
 #ifdef HAVE_LIBFDK_XHE_AAC
 # include "xhe_aac_codec.h"
 #endif
-#ifdef HAVE_FDK_AAC_ODR
+#ifdef HAVE_LIBFDK_AAC
 # include "fdk_aac_enc_codec.h"
 #endif
 
@@ -70,8 +70,8 @@ CAudioCodec::InitCodecList()
 cerr<<"Adding FDK codec"<<endl;
         CodecList.push_back(new FdkAacCodec);
 #endif
-#ifdef HAVE_FDK_AAC_ODR
-        /* DRM AAC / HE-AAC encoder, before the faac one */
+#ifdef HAVE_LIBFDK_AAC
+        /* DRM AAC / HE-AAC encoder (if the library has it), before the faac one */
         CodecList.push_back(new FdkAacEncCodec);
 #endif
         CodecList.push_back(new AacCodec);

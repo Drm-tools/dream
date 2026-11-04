@@ -1,14 +1,14 @@
 /******************************************************************************\
  * Description:
- *  DRM AAC encoder (AAC, HE-AAC, HE-AAC v2) using the vendored fdk-aac encoder
- *  in libs/fdk-aac-odr (see its README.dream.md). Encoder only: decoding is done
- *  by FdkAacCodec with the system fdk-aac.
+ *  DRM AAC encoder (AAC, HE-AAC, HE-AAC v2) using the DRM object types of
+ *  the encoder of rafael2k's fdk-aac (https://github.com/rafael2k/fdk-aac, vendored in
+ *  libs/fdk-aac, see its README.DRM.md). Decoding is done by FdkAacCodec.
+ *
+ *  CanEncode() asks the linked library whether it has those object types, so with a
+ *  stock fdk-aac there is simply no AAC encoder.
  *
  *  The frames are what AudioSourceEncoder expects from an AAC codec: one CRC byte
  *  followed by the frame, as the DRM super frame wants them.
- *
- *  This header must not be mixed with the system <fdk-aac/...> headers: the
- *  vendored library has its own, which are only used in the .cpp file.
  ******************************************************************************
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -22,6 +22,7 @@
 #include "AudioCodec.h"
 
 struct AACENCODER;
+typedef struct AACENCODER* FDK_AACENC_HANDLE;
 
 class FdkAacEncCodec : public CAudioCodec
 {
@@ -37,7 +38,7 @@ public:
     virtual void DecUpdate(CAudioParam&) {}
     /* Encoder */
     virtual std::string EncGetVersion();
-    virtual bool CanEncode(CAudioParam::EAudCod eAudioCoding) { return eAudioCoding == CAudioParam::AC_AAC; }
+    virtual bool CanEncode(CAudioParam::EAudCod eAudioCoding);
     virtual bool EncOpen(const CAudioParam& AudioParam, unsigned long& lNumSampEncIn, unsigned long& lMaxBytesEncOut);
     virtual int Encode(CVector<_SAMPLE>& vecsEncInData, unsigned long lNumSampEncIn, CVector<uint8_t>& vecsEncOutData, unsigned long lMaxBytesEncOut);
     virtual void EncClose();
@@ -47,7 +48,7 @@ public:
 
 private:
     bool InitEncoder(int iBitRate);
-    AACENCODER* hEncoder;
+    FDK_AACENC_HANDLE hEncoder;
     int iAot;
     int iSampleRate;
     int iChannels;

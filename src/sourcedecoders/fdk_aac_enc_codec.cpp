@@ -1,5 +1,5 @@
 /******************************************************************************\
- * DRM AAC encoder with the vendored fdk-aac encoder. See fdk_aac_enc_codec.h.
+ * DRM AAC encoder with the DRM object types of fdk-aac. See fdk_aac_enc_codec.h.
  *
  * This program is free software; you can redistribute it and/or modify it under
  * the terms of the GNU General Public License as published by the Free Software
@@ -7,12 +7,32 @@
  * version.
 \******************************************************************************/
 
-#include "odr_symbols.h"
 #include "fdk_aac_enc_codec.h"
-#include "aacenc_lib.h"
+#include <fdk-aac/aacenc_lib.h>
 #include <iostream>
 
 using namespace std;
+
+/* AOT_DRM_AAC, AOT_DRM_SBR and AOT_DRM_MPEG_PS of FDK_audio.h */
+enum { DRM_AAC = 143, DRM_SBR = 144, DRM_MPEG_PS = 145 };
+
+/* A stock fdk-aac refuses these object types, the one of the fork accepts them */
+bool FdkAacEncCodec::CanEncode(CAudioParam::EAudCod eAudioCoding)
+{
+    if (eAudioCoding != CAudioParam::AC_AAC)
+        return false;
+    static int iProbed = -1;
+    if (iProbed < 0) {
+        HANDLE_AACENCODER h = nullptr;
+        iProbed = 0;
+        if (aacEncOpen(&h, 0x01 | 0x02 | 0x04 | 0x08, 2) == AACENC_OK) {
+            iProbed = (aacEncoder_SetParam(h, AACENC_AOT, DRM_SBR) == AACENC_OK &&
+                       aacEncoder_SetParam(h, AACENC_AOT, DRM_MPEG_PS) == AACENC_OK) ? 1 : 0;
+            aacEncClose(&h);
+        }
+    }
+    return iProbed == 1;
+}
 
 FdkAacEncCodec::FdkAacEncCodec() :
     hEncoder(nullptr), iAot(0), iSampleRate(0), iChannels(1), iFrameLength(0), iInputChannels(1)
@@ -68,9 +88,9 @@ bool FdkAacEncCodec::EncOpen(const CAudioParam& AudioParam, unsigned long& lNumS
     iSampleRate = bSbr ? 2 * iCoreRate : iCoreRate;
     iChannels = (AudioParam.eAudioMode == CAudioParam::AM_MONO) ? 1 : 2;
     if (AudioParam.eAudioMode == CAudioParam::AM_P_STEREO)
-        iAot = AOT_DRM_MPEG_PS;
+        iAot = DRM_MPEG_PS;
     else
-        iAot = bSbr ? AOT_DRM_SBR : AOT_DRM_AAC;
+        iAot = bSbr ? DRM_SBR : DRM_AAC;
 
     /* The frame length does not depend on the bit rate, but the bit rate has to
        be one the encoder accepts to initialise: find one */

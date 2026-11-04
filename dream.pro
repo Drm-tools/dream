@@ -294,12 +294,6 @@ win32 {
     CONFIG += opus
   }
 }
-# DRM AAC / HE-AAC encoder from the vendored fdk-aac (libs/fdk-aac-odr), kept apart
-# from the system fdk-aac. Licence: libs/fdk-aac-odr/NOTICE. Enable with
-# qmake CONFIG+=fdk-aac-odr
-fdk-aac-odr {
-     include(libs/fdk-aac-odr/fdk-aac-odr.pri)
-}
 fdk-xhe-aac {
      DEFINES += HAVE_LIBFDK_XHE_AAC
      message("with fdk-xhe-aac (xHE-AAC encoder)")
@@ -307,8 +301,8 @@ fdk-xhe-aac {
 fdk-aac {
      DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
      LIBS += -lfdk-aac
-     HEADERS += src/sourcedecoders/fdk_aac_codec.h
-     SOURCES += src/sourcedecoders/fdk_aac_codec.cpp
+     HEADERS += src/sourcedecoders/fdk_aac_codec.h src/sourcedecoders/fdk_aac_enc_codec.h
+     SOURCES += src/sourcedecoders/fdk_aac_codec.cpp src/sourcedecoders/fdk_aac_enc_codec.cpp
      message("with fdk-aac")
 }
 opus {

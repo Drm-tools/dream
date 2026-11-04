@@ -1,5 +1,5 @@
 # Tests for the xHE-AAC transmit path. The encoder/decoder round trip is only run
-# when fdk-xhe-aac and fdk-aac are found by pkg-config.
+# with the vendored fdk-aac, or with the system one (CONFIG+=system-fdk).
 QT += testlib
 QT -= gui
 CONFIG += qt warn_on depend_includepath testcase console link_pkgconfig
@@ -8,15 +8,23 @@ TEMPLATE = app
 TARGET = tst_xheaac
 INCLUDEPATH += $$PWD/..
 unix:LIBS += -ldl
-packagesExist(fdk-aac) {
-    PKGCONFIG += fdk-aac
-    DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
-    SOURCES += ../src/sourcedecoders/fdk_aac_codec.cpp
-    HEADERS += ../src/sourcedecoders/fdk_aac_codec.h
+# vendored libs/fdk-aac by default, CONFIG+=system-fdk for the pkg-config one
+system-fdk {
+    packagesExist(fdk-aac) {
+        PKGCONFIG += fdk-aac
+        DEFINES += HAVE_LIBFDK_AAC HAVE_USAC
+    }
+    packagesExist(fdk-xhe-aac) {
+        PKGCONFIG += fdk-xhe-aac
+        DEFINES += HAVE_LIBFDK_XHE_AAC
+    }
+} else {
+    include(../libs/fdk-aac/fdk-aac.pri)
+    DEFINES += HAVE_LIBFDK_AAC HAVE_USAC HAVE_LIBFDK_XHE_AAC
 }
-packagesExist(fdk-xhe-aac) {
-    PKGCONFIG += fdk-xhe-aac
-    DEFINES += HAVE_LIBFDK_XHE_AAC
+contains(DEFINES, HAVE_LIBFDK_AAC) {
+    SOURCES += ../src/sourcedecoders/fdk_aac_codec.cpp ../src/sourcedecoders/fdk_aac_enc_codec.cpp
+    HEADERS += ../src/sourcedecoders/fdk_aac_codec.h ../src/sourcedecoders/fdk_aac_enc_codec.h
 }
 packagesExist(opus) {
     PKGCONFIG += opus
