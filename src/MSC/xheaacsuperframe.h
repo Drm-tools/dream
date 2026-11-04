@@ -15,8 +15,10 @@ public:
     virtual unsigned getSuperFrameDurationMilliseconds();
     virtual void getFrame(std::vector<uint8_t>& frame, uint8_t& crc, unsigned i);
 private:
+    void lostSync();
     unsigned numChannels;
     unsigned superFrameSize;
+    bool synced;
     deque<uint8_t> payload;
     std::vector<unsigned> frameSize;
     std::vector<unsigned> borders;

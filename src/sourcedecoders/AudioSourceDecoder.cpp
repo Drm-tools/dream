@@ -199,6 +199,12 @@ CAudioSourceDecoder::ProcessDataInternal(CParameter & Parameters)
         Parameters.AudioComponentStatus[unsigned(Parameters.GetCurSelAudioService())].SetStatus(status);
         Parameters.Unlock();
 
+        /* A corrupted xHE-AAC super frame can hold more frames than fit the output block */
+        if (iResOutBlockSize < 0 || iOutputBlockSize + iResOutBlockSize * 2 > iMaxOutputBlockSize)
+        {
+            break;
+        }
+
         /* Conversion from _REAL to _SAMPLE with special function */
         for (int i = 0; i < iResOutBlockSize; i++)
         {

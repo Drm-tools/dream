@@ -269,6 +269,8 @@ FdkAacCodec::DecOpen(const CAudioParam& AudioParam, int& iAudioSampleRate)
 
 CAudioCodec::EDecError FdkAacCodec::Decode(const vector<uint8_t>& audio_frame, uint8_t aac_crc_bits, CVector<_REAL>& left, CVector<_REAL>& right)
 {
+    if (hDecoder == nullptr || audio_frame.empty())
+        return CAudioCodec::DECODER_ERROR_UNKNOWN;
     writeFile(audio_frame);
     vector<uint8_t> data;
     uint8_t* pData;
@@ -297,7 +299,7 @@ CAudioCodec::EDecError FdkAacCodec::Decode(const vector<uint8_t>& audio_frame, u
     CStreamInfo *pinfo = aacDecoder_GetStreamInfo(hDecoder);
     if (pinfo==nullptr) {
         cerr << "No stream info" << endl;
-        //return nullptr; this breaks everything!
+        return CAudioCodec::DECODER_ERROR_UNKNOWN;
     }
 
     //cerr << "Decode";
@@ -328,6 +330,10 @@ CAudioCodec::EDecError FdkAacCodec::Decode(const vector<uint8_t>& audio_frame, u
         //return CAudioCodec::DECODER_ERROR_UNKNOWN;
     }
 
+    if(pinfo->frameSize < 0 || pinfo->numChannels < 0 || pinfo->numChannels > 2) {
+        cerr << "bad stream info" << endl;
+        return CAudioCodec::DECODER_ERROR_UNKNOWN;
+    }
     size_t output_size = unsigned(pinfo->frameSize * pinfo->numChannels);
     if(sizeof (decode_buf) < sizeof(int16_t)*output_size) {
         cerr << "can't fit output into decoder buffer" << endl;

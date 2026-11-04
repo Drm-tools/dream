@@ -41,6 +41,7 @@ private slots:
     void stripAccessUnit();
     void superFrameRoundTrip();
     void superFrameRoundTrip_data();
+    void corruptedSuperFrames();
     void encodeDecode();
     void encodeDecodeLowRate();
 };
@@ -161,19 +162,65 @@ void XheAacTest::superFrameRoundTrip()
     size_t padded = 0;
     for (size_t i = 0; i < n; i++) {
         const vector<uint8_t>& f = received[i];
-        QVERIFY2(f.size() >= pushed[i].size() + 2, qPrintable(QString("frame %1 too short").arg(i)));
-        /* the frame is the access unit, optional zero padding, and the CRC over both */
-        const size_t body = f.size() - 2;
+        QVERIFY2(f.size() >= pushed[i].size(), qPrintable(QString("frame %1 too short").arg(i)));
+        /* the parser checks and strips the CRC: the frame is the access unit and optional zero padding */
+        const size_t body = f.size();
         QVERIFY2(equal(pushed[i].begin(), pushed[i].end(), f.begin()), qPrintable(QString("frame %1 differs").arg(i)));
         for (size_t k = pushed[i].size(); k < body; k++)
             QCOMPARE(int(f[k]), 0);
         if (body != pushed[i].size()) padded++;
-        const uint16_t c = crc16(f.data(), body);
-        QCOMPARE(int(f[body]), int(c >> 8));
-        QCOMPARE(int(f[body + 1]), int(c & 0xff));
     }
     /* padding is only needed when the queue runs dry, it must not be the norm */
     QVERIFY(padded < n / 2 + 1);
+}
+
+/* What the receiver sees at low SNR: bit errors anywhere in the super frame must
+   never make the parser misbehave, and a frame that fails its CRC is passed on empty */
+void XheAacTest::corruptedSuperFrames()
+{
+    const int sfBytes = 1044;
+    XHEAACSuperFrameEncoder mux;
+    mux.init(unsigned(sfBytes));
+    CAudioParam ap;
+    ap.eAudioCoding = CAudioParam::AC_xHE_AAC;
+    XHEAACSuperFrame rx;
+    rx.init(ap, unsigned(sfBytes));
+    unsigned seed = 777;
+    auto next = [&seed]() { seed = seed * 1664525u + 1013904223u; return seed >> 8; };
+    size_t good = 0, empty = 0;
+    for (int sf = 0; sf < 2000; sf++) {
+        while (mux.queuedFrames() < 4) {
+            vector<uint8_t> au(size_t(90 + int(next() % 51)));
+            for (auto& b : au) b = uint8_t(next());
+            mux.push(au);
+        }
+        vector<uint8_t> asf;
+        mux.build(asf);
+        /* flip a few bits in most super frames, sometimes many */
+        if (next() % 4 != 0) {
+            const unsigned flips = 1 + next() % (next() % 8 == 0 ? 400 : 6);
+            for (unsigned k = 0; k < flips; k++)
+                asf[next() % asf.size()] ^= uint8_t(1u << (next() % 8));
+        }
+        CVectorEx<_BINARY> bits;
+        bits.Init(sfBytes * 8);
+        bits.ResetBitAccess();
+        for (auto c : asf) bits.Enqueue(c, 8);
+        bits.ResetBitAccess();
+        const bool ok = rx.parse(bits);
+        QVERIFY(rx.getNumFrames() <= 15);
+        if (!ok)
+            continue;
+        for (unsigned i = 0; i < rx.getNumFrames(); i++) {
+            vector<uint8_t> f;
+            uint8_t crc;
+            rx.getFrame(f, crc, i);
+            QVERIFY(f.size() < 2048);
+            if (f.empty()) empty++; else good++;
+        }
+    }
+    QVERIFY(good > 1000);
+    QVERIFY(empty > 0);
 }
 
 static void roundTrip(int ch, int T, bool& started)
