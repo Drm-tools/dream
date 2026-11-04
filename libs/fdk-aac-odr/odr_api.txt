@@ -1,0 +1,7 @@
+odr_aacEncOpen
+odr_aacEncClose
+odr_aacEncEncode
+odr_aacEncInfo
+odr_aacEncGetLibInfo
+odr_aacEncoder_SetParam
+odr_aacEncoder_GetParam

@@ -26,10 +26,24 @@ ODR_OBJDIR = $$OBJECTS_DIR
 isEmpty(ODR_OBJDIR): ODR_OBJDIR = .
 
 odr.input = ODR_SOURCES
-odr.output = $${ODR_OBJDIR}/${QMAKE_FILE_BASE}.o
+# not named .o, so that qmake does not link the single objects: only the isolated one is
+odr.output = $${ODR_OBJDIR}/${QMAKE_FILE_BASE}.odrobj
 odr.commands = $$QMAKE_CXX -c $(CXXFLAGS) $(INCPATH) $$ODR_INCLUDES -fno-exceptions -fno-rtti -fvisibility=hidden -include $$ODR_DIR/odr_symbols.h -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_NAME}
 odr.dependency_type = TYPE_C
-odr.variable_out = OBJECTS
+odr.variable_out = ODR_UNLINKED
 odr.name = fdk-aac-odr ${QMAKE_FILE_IN}
 QMAKE_EXTRA_COMPILERS += odr
+
+# partial link + symbol isolation of all those objects into one (odr_isolate.sh)
+for(src, ODR_SOURCES) {
+    obj = $$basename(src)
+    obj ~= s/\.cpp$/.odrobj/
+    ODR_OBJS += $${ODR_OBJDIR}/$$obj
+}
+ODR_ISOLATED_OBJ = $${ODR_OBJDIR}/odr_isolated.o
+odriso.target = $$ODR_ISOLATED_OBJ
+odriso.depends = $$ODR_OBJS
+odriso.commands = sh $$ODR_DIR/odr_isolate.sh $$QMAKE_CXX nm objcopy $$ODR_DIR/odr_api.txt $$ODR_ISOLATED_OBJ $$ODR_OBJS
+QMAKE_EXTRA_TARGETS += odriso
+OBJECTS += $$ODR_ISOLATED_OBJ
 message("with fdk-aac-odr (DRM AAC / HE-AAC encoder)")

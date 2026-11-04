@@ -25,11 +25,22 @@ whatever the multiplex leaves for the audio, as for any DRM AAC encoder.
 
 ## Symbol isolation
 
-The library is compiled with hidden symbols and its API renamed by `odr_symbols.h`
-(`aacEncOpen` -> `odr_aacEncOpen`, ...), so it can sit in the same executable as the
-system fdk-aac. Include `odr_symbols.h` first (or `-include`) in code that uses these
-headers and never mix them with the system `<fdk-aac/...>` headers in one translation
-unit (Dream's `fdk_aac_enc_codec.cpp` is the only user).
+The library has to live in the same executable as another copy of fdk-aac (the one
+used for decoding, shared or static). Hidden visibility is not enough for that: inline
+functions (fft_16, ...) are COMDAT groups, which the linker merges across libraries by
+name, local or not, leaving one library with a discarded function (null pointer, crash).
+So the objects are partially linked into one (`ld -r`), every defined symbol except the
+API is renamed with the prefix `odrint_` and all but the API is made local
+(`odr_isolate.sh` for qmake, `CMakeLists.txt` with `odr_rename_map.cmake` for CMake).
+The API is listed in `odr_api.txt`; `odr_symbols.h` renames it from the stock names
+(`aacEncOpen` -> `odr_aacEncOpen`, ...). Include `odr_symbols.h` first (or `-include`)
+in code that uses these headers and never mix them with the system `<fdk-aac/...>`
+headers in one translation unit (Dream's `fdk_aac_enc_codec.cpp` is the only user).
+
+`tests/run_isolation_test.sh <libdreamfdkenc.a> <include dir> <libfdk-aac.a>
+[libfdk-xhe-aac.a]` links this library with a static fdk-aac (and the xHE encoder) into
+one executable, in both link orders, and runs encode / decode round trips across them.
+A static fdk-aac has to be built with position independent code for a PIE link.
 
 ## What was added to the stock encoder
 
