@@ -102,6 +102,8 @@ amm-info@iis.fraunhofer.de
 
 #include <stdio.h>
 #include "bitenc.h"
+#include "aacenc_hcr.h"
+#include "FDK_crc.h"
 #include "bit_cnt.h"
 #include "dyn_bits.h"
 #include "qc_data.h"
@@ -245,7 +247,7 @@ static INT FDKaacEnc_encodeSectionData(SECTION_DATA *sectionData,
     INT sectLen;
     INT i;
     INT dbgVal = FDKgetValidBits(hBitStream);
-    INT sectCbBits = 4;
+    INT sectCbBits = useVCB11 ? 5 : 4;
 
     switch (sectionData->blockType) {
       case LONG_WINDOW:
@@ -263,6 +265,15 @@ static INT FDKaacEnc_encodeSectionData(SECTION_DATA *sectionData,
 
     for (i = 0; i < sectionData->noOfSections; i++) {
       INT codeBook = sectionData->huffsection[i].codeBook;
+
+      if (useVCB11 && (codeBook == 11 || codeBook >= 16)) {
+        /* VCB11: escape codebook sections are one sfb long, without length */
+        INT n;
+        for (n = 0; n < sectionData->huffsection[i].sfbCnt; n++) {
+          FDKwriteBits(hBitStream, codeBook, sectCbBits);
+        }
+        continue;
+      }
 
       FDKwriteBits(hBitStream, codeBook, sectCbBits);
 
@@ -928,6 +939,10 @@ AAC_ENCODER_ERROR FDKaacEnc_ChannelElementWrite(
   int i, ch, decision_bit;
   INT crcReg1 = -1, crcReg2 = -1;
   UCHAR numberOfChannels;
+  FDK_CRCINFO drmCrcInfo;
+  INT drmCrcRegion = 0, drmCrcBitPos = 0;
+  static HCR_ENC_DATA hcrData[2]; /* not reentrant, like aacenc_hcr.cpp */
+  INT hcrOk[2] = {0, 0};
 
   if (hTpEnc != NULL) {
     /* Get bitstream handle */
@@ -941,7 +956,9 @@ AAC_ENCODER_ERROR FDKaacEnc_ChannelElementWrite(
   }
 
   /* Get channel element sequence table */
-  list = getBitstreamElementList(aot, epConfig, numberOfChannels, 0, 0);
+  list = getBitstreamElementList(
+      (syntaxFlags & AC_DRM) ? AOT_DRM_AAC : aot, epConfig, numberOfChannels,
+      0, 0);
   if (list == NULL) {
     error = AAC_ENC_UNSUPPORTED_AOT;
     goto bail;
@@ -1103,12 +1120,36 @@ AAC_ENCODER_ERROR FDKaacEnc_ChannelElementWrite(
 
       case esc1_hcr:
         if (syntaxFlags & AC_ER_HCR) {
-          error = AAC_ENC_UNKNOWN;
+          /* length_of_reordered_spectral_data (14), length_of_longest_codeword (6) */
+          bitDemand += 20;
+          if (hBitStream != NULL && qcOutChannel != NULL) {
+            if (FDKaacEnc_HcrEncode(&hcrData[ch], psyOutChannel[ch]->sfbOffsets,
+                                    pChSectionData,
+                                    qcOutChannel[ch]->quantSpec) != 0) {
+              error = AAC_ENC_UNKNOWN;
+              hcrData[ch].lengthReordered = 0;
+              hcrData[ch].longestCodeword = 0;
+            } else {
+              hcrOk[ch] = 1;
+            }
+            FDKwriteBits(hBitStream, hcrData[ch].lengthReordered, 14);
+            FDKwriteBits(hBitStream, hcrData[ch].longestCodeword, 6);
+          }
         }
         break;
 
       case spectral_data:
-        if (hBitStream != NULL) {
+        if (hBitStream != NULL && (syntaxFlags & AC_ER_HCR)) {
+          INT b;
+          if (hcrOk[ch]) {
+            for (b = 0; b < hcrData[ch].lengthReordered; b++)
+              FDKwriteBits(hBitStream, hcrData[ch].bits[b], 1);
+          }
+          if (hcrData[ch].lengthReordered !=
+              qcOutChannel[ch]->sectionData.huffmanBits) {
+            return AAC_ENC_WRITE_SPEC_ERROR;
+          }
+        } else if (hBitStream != NULL) {
           INT spectralBits = 0;
 
           spectralBits = FDKaacEnc_encodeSpectralData(
@@ -1134,9 +1175,20 @@ AAC_ENCODER_ERROR FDKaacEnc_ChannelElementWrite(
         }
         break;
       case adtscrc_end_reg1:
-      case drmcrc_end_reg:
         if (hTpEnc != NULL) {
           transportEnc_CrcEndReg(hTpEnc, crcReg1);
+        }
+        break;
+      case drmcrc_end_reg:
+        if (hBitStream != NULL) {
+          /* CRC of the region goes into the byte in front of it */
+          FDK_BITSTREAM bsWriter;
+          FDKcrcEndReg(&drmCrcInfo, hBitStream, drmCrcRegion);
+          FDKinitBitStream(&bsWriter, hBitStream->hBitBuf.Buffer,
+                           hBitStream->hBitBuf.bufSize, 0, BS_WRITER);
+          FDKpushFor(&bsWriter, drmCrcBitPos);
+          FDKwriteBits(&bsWriter, FDKcrcGetCRC(&drmCrcInfo) ^ 0xFF, 8);
+          FDKsyncCache(&bsWriter);
         }
         break;
       case adtscrc_end_reg2:
@@ -1145,8 +1197,13 @@ AAC_ENCODER_ERROR FDKaacEnc_ChannelElementWrite(
         }
         break;
       case drmcrc_start_reg:
-        if (hTpEnc != NULL) {
-          crcReg1 = transportEnc_CrcStartReg(hTpEnc, 0);
+        /* 8 bit CRC in front of the protected region, filled in at the end */
+        bitDemand += 8;
+        if (hBitStream != NULL) {
+          drmCrcBitPos = (INT)FDKgetValidBits(hBitStream);
+          FDKwriteBits(hBitStream, 0, 8);
+          FDKcrcInit(&drmCrcInfo, 0x001d, 0xFFFF, 8);
+          drmCrcRegion = FDKcrcStartReg(&drmCrcInfo, hBitStream, 0);
         }
         break;
       case next_channel:
