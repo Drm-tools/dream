@@ -309,6 +309,10 @@ void CDRMTransmitter::LoadSettings() {
 
   /* Sound card output device id */
   soundoutfactory.SetItem(s.Get(Transmitter, "snddevout", string()));
+
+  /* Hand the selected devices to the modules which use them */
+  ReadData.SetSoundInterface(soundinfactory.GetItem());
+  TransmitData.SetSoundInterface(soundoutfactory.GetItem());
 #if 0 // TODO
     /* Sound clock drift adjustment */
     bool bEnabled = s.Get(Transmitter, "sndclkadj", int(0));
@@ -440,6 +444,14 @@ void CDRMTransmitter::LoadSettings() {
       Service.AudioParam.eAudioCoding = CAudioParam::AC_OPUS;
     } else if (value == "xHE-AAC") {
       Service.AudioParam.eAudioCoding = CAudioParam::AC_xHE_AAC;
+    }
+
+    /* Audio channels (AAC, xHE-AAC): mono or stereo */
+    value = s.Get(service, "audiomode", string("mono"));
+    if (value == "stereo") {
+      Service.AudioParam.eAudioMode = CAudioParam::AM_STEREO;
+    } else {
+      Service.AudioParam.eAudioMode = CAudioParam::AM_MONO;
     }
 
     /* Opus Codec Channels */
@@ -692,6 +704,10 @@ void CDRMTransmitter::SaveSettings() {
       value = "";
     }
     s.Put(service, "codec", value);
+
+    /* Audio channels */
+    s.Put(service, "audiomode",
+          Service.AudioParam.eAudioMode == CAudioParam::AM_MONO ? "mono" : "stereo");
 
     /* Opus Codec Channels */
     switch (Service.AudioParam.eOPUSChan) {

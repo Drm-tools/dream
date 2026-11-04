@@ -315,6 +315,10 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
         /* Get encoder instance */
         codec = CAudioCodec::GetEncoder(eAudioCoding);
 
+        /* The text message flag in the SDC must match what is reserved here, the
+           receiver takes the last bytes of the stream for it when the flag is set */
+        Parameters.Service[iCurSelServ].AudioParam.bTextflag = bUsingTextMessage;
+
         /* Total frame size is input block size minus the bytes for the text
            message (if text message is used) */
         int iTotAudFraSizeBits = iTotNumBitsForUsage;

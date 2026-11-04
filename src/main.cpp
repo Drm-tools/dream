@@ -107,9 +107,16 @@ int main(int argc, char **argv) {
           eRunState = RUNNING;
 
           /* Start the transmitter run routine */
+          /* A finite input (stdin) ends the transmission: keep going until the
+             audio still held in the interleaver has been sent as well */
+          int iStopAfterFrame = -1;
           do {
             DRMTransmitter.process();
-          } while (eRunState == RUNNING && !DRMTransmitter.CanSoftStopExit());
+            if (iStopAfterFrame < 0 && DRMTransmitter.GetReadData()->InputEnded())
+              iStopAfterFrame = DRMTransmitter.GetTransData()->GetFramesWritten() + 7;
+          } while (eRunState == RUNNING && !DRMTransmitter.CanSoftStopExit() &&
+                   (iStopAfterFrame < 0 ||
+                    DRMTransmitter.GetTransData()->GetFramesWritten() < iStopAfterFrame));
 
         } while (eRunState == RESTART);
 

@@ -510,6 +510,7 @@ HEADERS += \
     src/sound/selectioninterface.h \
     src/sound/soundinterface.h \
     src/sound/soundnull.h \
+    src/sound/soundstdio.h \
     src/sourcedecoders/aac_codec.h \
     src/sourcedecoders/AudioCodec.h \
     src/sourcedecoders/AudioSourceDecoder.h \
@@ -662,6 +663,7 @@ SOURCES += \
     src/util/Utilities.cpp \
     src/Version.cpp \
     src/sound/soundnull.cpp \
+    src/sound/soundstdio.cpp \
     src/DrmTransceiver.cpp \
     src/MSC/logicalframe.cpp \
     src/MSC/audiosuperframe.cpp \

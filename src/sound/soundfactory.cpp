@@ -61,6 +61,7 @@
 
 #include "audiofilein.h"
 #include "soundnull.h"
+#include "soundstdio.h"
 
 
 template <typename T>
@@ -154,6 +155,7 @@ CSoundFactoryIn::CSoundFactoryIn():CSoundFactory<CSoundInInterface>()
 #ifdef USE_SOAPYSDR
     drivers.push_back(new CSoapySDRIn());
 #endif
+    drivers.push_back(new CSoundInStdin());
     drivers.push_back(new CAudioFileIn());
     // drivers.push_back(new CSoundInNull());
 }
@@ -184,5 +186,6 @@ CSoundFactoryOut::CSoundFactoryOut():CSoundFactory<CSoundOutInterface>()
   drivers.push_back(new COpenSLESOut());
 #endif
 
+  drivers.push_back(new CSoundOutStdout());
   drivers.push_back(new CSoundOutNull());
 }

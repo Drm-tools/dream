@@ -46,6 +46,8 @@ public:
 	virtual std::string	GetVersion() = 0;
  	virtual CSoundInInterface* GetItem() = 0;
 
+	/* true once a finite source (stdin) is exhausted */
+	virtual bool IsEof() { return false; }
 };
 
 class CSoundOutInterface: public CSelectionInterface

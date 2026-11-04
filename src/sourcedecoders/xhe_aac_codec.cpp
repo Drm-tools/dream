@@ -319,6 +319,15 @@ bool XheAacCodec::EncStartStreaming(const CAudioParam& AudioParam, int iSuperFra
     vector<uint8_t> asc;
     unsigned ascBits = 0;
 
+    {
+        const int minRate = (iChannels == 1) ? 12000 : 16000;
+        if (iBitRate < minRate) {
+            cerr << "xHE-AAC: the stream carries about " << iBitRate / 1000.0 << " kbit/s, this encoder needs at least "
+                 << minRate / 1000 << " kbit/s for " << iChannels << " channel(s): use a wider spectrum occupancy,"
+                 << " a higher QAM or a lower protection level" << endl;
+            return false;
+        }
+    }
     bool settled = false;
     for (int attempt = 0; attempt < 4 && !settled; attempt++) {
         if (!OpenEncoder(iChannels, iBitRate, iFrameSamples, asc, ascBits))
