@@ -72,6 +72,7 @@ public:
 
 protected:
     bool OpenEncoder(int iChannels, int iBitRate, int& iFrameSamples, std::vector<uint8_t>& asc, unsigned& ascBits);
+    bool OpenEncoderAtOrBelow(int iChannels, int& iBitRate, int iStep, int& iFrameSamples, std::vector<uint8_t>& asc, unsigned& ascBits);
     xheaacenc_instance_handle* hEncoder;
     int iChannels;
     XheDrm::ConfigInfo info;

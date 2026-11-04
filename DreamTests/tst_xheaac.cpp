@@ -42,6 +42,7 @@ private slots:
     void superFrameRoundTrip();
     void superFrameRoundTrip_data();
     void encodeDecode();
+    void encodeDecodeLowRate();
 };
 
 /* ASCs as produced by fdk-xhe-aac (AOT 42, 48 kHz, CBR); the expected bytes are
@@ -175,11 +176,10 @@ void XheAacTest::superFrameRoundTrip()
     QVERIFY(padded < n / 2 + 1);
 }
 
-void XheAacTest::encodeDecode()
+static void roundTrip(int ch, int T, bool& started)
 {
 #if defined(HAVE_LIBFDK_XHE_AAC) && defined(HAVE_LIBFDK_AAC)
-    for (int ch = 1; ch <= 2; ch++) {
-        const int T = ch == 1 ? 900 : 1200;
+    {
         CAudioParam ap;
         ap.eAudioCoding = CAudioParam::AC_xHE_AAC;
         ap.eAudioMode = ch == 1 ? CAudioParam::AM_MONO : CAudioParam::AM_STEREO;
@@ -188,7 +188,9 @@ void XheAacTest::encodeDecode()
         unsigned long a, b;
         QVERIFY(enc.EncOpen(ap, a, b));
         vector<uint8_t> cfg;
-        QVERIFY(enc.EncStartStreaming(ap, T, cfg));
+        started = enc.EncStartStreaming(ap, T, cfg);
+        if (!started)
+            return;
         ap.xHE_AAC_config = cfg;
 
         /* the receiver gets the configuration through SDC data entity type 9 */
@@ -263,6 +265,33 @@ void XheAacTest::encodeDecode()
         QVERIFY2(amp(1250.0) > 150.0, "1250 Hz tone missing");
         QVERIFY2(amp(3000.0) < amp(440.0) / 5, "unexpected energy at 3 kHz");
     }
+#else
+    (void)ch; (void)T; started = false;
+#endif
+}
+
+
+void XheAacTest::encodeDecode()
+{
+#if defined(HAVE_LIBFDK_XHE_AAC) && defined(HAVE_LIBFDK_AAC)
+    for (int ch = 1; ch <= 2; ch++) {
+        bool started = false;
+        roundTrip(ch, ch == 1 ? 900 : 1200, started);
+        QVERIFY(started);
+    }
+#else
+    QSKIP("needs fdk-aac and fdk-xhe-aac");
+#endif
+}
+
+void XheAacTest::encodeDecodeLowRate()
+{
+#if defined(HAVE_LIBFDK_XHE_AAC) && defined(HAVE_LIBFDK_AAC)
+    /* about 8 kbit/s mono: only with libs/patches/fdk-xhe-aac-low-bitrate.patch applied */
+    bool started = false;
+    roundTrip(1, 500, started);
+    if (!started)
+        QSKIP("the fdk-xhe-aac library does not go below 12 kbit/s (low bit rate patch not applied)");
 #else
     QSKIP("needs fdk-aac and fdk-xhe-aac");
 #endif
