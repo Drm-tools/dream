@@ -27,6 +27,7 @@
 \******************************************************************************/
 
 #include <termios.h>
+#include <string>
 #include <signal.h>
 #include "../DrmReceiver.h"
 
@@ -35,9 +36,13 @@ class CConsoleIO
 public:
 	static void Enter(CDRMReceiver* pDRMReceiver);
 	static void Leave();
+	static void SetStatusFile(const std::string& path);
 	static ERunState Update();
 protected:
 	static char ETypeRxStatus2char(ETypeRxStatus eTypeRxStatus);
+	static void WriteStatusFile();
+	static std::string statusFile;
+	static unsigned long long statusTime;
 	static CDRMReceiver* pDRMReceiver;
 	static unsigned long long time;
 	static int mode;

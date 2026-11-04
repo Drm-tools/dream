@@ -40,6 +40,8 @@
 #include <fcntl.h>
 #include <signal.h>
 #include <cstdio>
+#include <cmath>
+#include <string>
 #include "ConsoleIO.h"
 using namespace std;
 
@@ -99,6 +101,199 @@ char* CConsoleIO::screen_ptr;
 int CConsoleIO::screen_size;
 sigset_t CConsoleIO::sigset;
 struct termios CConsoleIO::old_tio;
+std::string CConsoleIO::statusFile;
+unsigned long long CConsoleIO::statusTime;
+
+void
+CConsoleIO::SetStatusFile(const std::string& path)
+{
+	statusFile = path;
+	statusTime = 0;
+}
+
+static std::string jsonString(const std::string& in)
+{
+	std::string out = "\"";
+	for (size_t i = 0; i < in.size(); i++)
+	{
+		const unsigned char c = (unsigned char)in[i];
+		char b[8];
+		switch (c) {
+		case '"':  out += "\\\""; break;
+		case '\\': out += "\\\\"; break;
+		case '\n': out += "\\n"; break;
+		case '\r': out += "\\r"; break;
+		case '\t': out += "\\t"; break;
+		default:
+			if (c < 0x20) { snprintf(b, sizeof(b), "\\u%04x", c); out += b; }
+			else out += (char)c; /* UTF-8 passes through */
+		}
+	}
+	return out + "\"";
+}
+
+static std::string jsonNum(double v, const char* fmt = "%.2f")
+{
+	if (!std::isfinite(v))
+		return "null";
+	char b[32];
+	snprintf(b, sizeof(b), fmt, v);
+	return b;
+}
+
+/* The same data the console shows, as one JSON object. Written to <path>.tmp and
+   renamed so a reader never sees a partial file. */
+void
+CConsoleIO::WriteStatusFile()
+{
+	if (statusFile.empty())
+		return;
+	struct timespec ts;
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) == -1)
+		return;
+	unsigned long long curtime = (unsigned long long)ts.tv_sec*1000 + (unsigned long long)ts.tv_nsec/1000000;
+	if (statusTime != 0 && (curtime - statusTime) < GUI_CONTROL_UPDATE_TIME)
+		return;
+	statusTime = curtime;
+
+	CParameter& Parameters = *pDRMReceiver->GetParameters();
+	Parameters.Lock();
+	std::string j = "{";
+	auto st = [&](const char* name, ETypeRxStatus e) {
+		j += std::string("\"") + name + "\":\"" + ETypeRxStatus2char(e) + "\",";
+	};
+	ETypeRxStatus ci = Parameters.ReceiveStatus.InterfaceI.GetStatus();
+	ETypeRxStatus co = Parameters.ReceiveStatus.InterfaceO.GetStatus();
+	st("io", (co == NOT_PRESENT || (ci != NOT_PRESENT && ci != RX_OK)) ? ci : co);
+	st("time", Parameters.ReceiveStatus.TSync.GetStatus());
+	st("frame", Parameters.ReceiveStatus.FSync.GetStatus());
+	st("fac", Parameters.ReceiveStatus.FAC.GetStatus());
+	st("sdc", Parameters.ReceiveStatus.SDC.GetStatus());
+	st("msc", Parameters.ReceiveStatus.SLAudio.GetStatus());
+
+	_REAL rIF = Parameters.GetIFSignalLevel();
+	j += "\"if_level\":" + (rIF > MINIMUM_IF_LEVEL ? jsonNum(rIF, "%.1f") : std::string("null")) + ",";
+
+	const bool signal = pDRMReceiver->GetAcquiState() == AS_WITH_SIGNAL;
+	j += std::string("\"signal\":") + (signal ? "true" : "false") + ",";
+	if (signal)
+	{
+		j += "\"snr\":" + jsonNum(Parameters.GetSNR(), "%.1f") + ",";
+		j += "\"wmer\":" + jsonNum(Parameters.rWMERMSC, "%.1f") + ",";
+		j += "\"mer\":" + jsonNum(Parameters.rMER, "%.1f") + ",";
+		j += "\"dc_freq\":" + jsonNum(Parameters.GetDCFrequency()) + ",";
+		j += "\"sample_offset_hz\":" + jsonNum(Parameters.rResampleOffset) + ",";
+		const bool dop = Parameters.rSigmaEstimate >= 0.0;
+		j += "\"doppler_hz\":" + (dop ? jsonNum(Parameters.rSigmaEstimate) : std::string("null")) + ",";
+		j += "\"delay_ms\":" + (dop ? jsonNum(Parameters.rMinDelay) : std::string("null")) + ",";
+		const char *strRob;
+		switch (Parameters.GetWaveMode()) {
+		case RM_ROBUSTNESS_MODE_A: strRob = "A"; break;
+		case RM_ROBUSTNESS_MODE_B: strRob = "B"; break;
+		case RM_ROBUSTNESS_MODE_C: strRob = "C"; break;
+		case RM_ROBUSTNESS_MODE_D: strRob = "D"; break;
+		default:                   strRob = "?"; }
+		j += std::string("\"robustness\":\"") + strRob + "\",";
+		j += "\"spectrum\":" + std::to_string((int)Parameters.GetSpectrumOccup()) + ",";
+		const char *strInter;
+		switch (Parameters.eSymbolInterlMode) {
+		case CParameter::SI_LONG:  strInter = "long";  break;
+		case CParameter::SI_SHORT: strInter = "short"; break;
+		default:                   strInter = "?";     }
+		j += std::string("\"interleaver\":\"") + strInter + "\",";
+		const char *strSDC;
+		switch (Parameters.eSDCCodingScheme) {
+		case CS_1_SM: strSDC = "4-QAM";  break;
+		case CS_2_SM: strSDC = "16-QAM"; break;
+		default:      strSDC = "?";      }
+		const char *strMSC;
+		switch (Parameters.eMSCCodingScheme) {
+		case CS_2_SM:    strMSC = "16-QAM";        break;
+		case CS_3_SM:    strMSC = "64-QAM";        break;
+		case CS_3_HMSYM: strMSC = "HMsym 64-QAM";  break;
+		case CS_3_HMMIX: strMSC = "HMmix 64-QAM";  break;
+		default:         strMSC = "?";             }
+		j += std::string("\"sdc_mode\":\"") + strSDC + "\",\"msc_mode\":\"" + strMSC + "\",";
+		j += "\"protection_a\":" + std::to_string(Parameters.MSCPrLe.iPartA) + ",";
+		j += "\"protection_b\":" + std::to_string(Parameters.MSCPrLe.iPartB) + ",";
+		j += "\"audio_services\":" + std::to_string((int)Parameters.iNumAudioService) + ",";
+		j += "\"data_services\":" + std::to_string((int)Parameters.iNumDataService) + ",";
+
+		/* services */
+		j += "\"services\":[";
+		const int iCur = Parameters.GetCurSelAudioService();
+		const char* sep = "";
+		std::string text;
+		bool haveText = false;
+		for (int i = 0; i < MAX_NUM_SERVICES; i++)
+		{
+			const CService& service = Parameters.Service[i];
+			if (!service.IsActive())
+				continue;
+			const bool audio = service.eAudDataFlag == CService::SF_AUDIO;
+			const CAudioParam& ap = service.AudioParam;
+			std::string codec = "";
+			bool stereo = false;
+			if (audio)
+			{
+				switch (ap.eAudioCoding) {
+				case CAudioParam::AC_xHE_AAC: codec = "xHE-AAC"; break;
+				case CAudioParam::AC_OPUS:    codec = "Opus"; break;
+				case CAudioParam::AC_AAC:
+					codec = ap.eSBRFlag == CAudioParam::SB_USED
+						? (ap.eAudioMode == CAudioParam::AM_P_STEREO ? "HE-AAC v2" : "HE-AAC") : "AAC";
+					break;
+				default: codec = "";
+				}
+				stereo = ap.eAudioMode == CAudioParam::AM_STEREO || ap.eAudioMode == CAudioParam::AM_P_STEREO;
+			}
+			char id[16];
+			snprintf(id, sizeof(id), "%X", (unsigned)service.iServiceID);
+			j += sep;
+			sep = ",";
+			j += "{\"index\":" + std::to_string(i + 1) + ",\"id\":\"" + id + "\",\"label\":" + jsonString(service.strLabel);
+			j += std::string(",\"audio\":") + (audio ? "true" : "false");
+			j += ",\"codec\":" + jsonString(codec);
+			j += std::string(",\"stereo\":") + (stereo ? "true" : "false");
+			const _REAL rBitRate = Parameters.GetBitRateKbps(i, !audio);
+			j += ",\"bitrate\":" + (rBitRate > 0.0 ? jsonNum(rBitRate) : std::string("null"));
+			j += std::string(",\"selected\":") + (i == iCur ? "true" : "false") + "}";
+			if (i == iCur && !ap.strTextMessage.empty())
+			{
+				text = ap.strTextMessage;
+				haveText = true;
+			}
+		}
+		j += "]";
+		if (haveText)
+			j += ",\"text\":" + jsonString(text);
+		if (!(Parameters.iYear == 0 && Parameters.iMonth == 0 && Parameters.iDay == 0 &&
+			  Parameters.iUTCHour == 0 && Parameters.iUTCMin == 0))
+		{
+			char t[32];
+			snprintf(t, sizeof(t), "%04i-%02i-%02iT%02i:%02i", Parameters.iYear, Parameters.iMonth,
+					 Parameters.iDay, Parameters.iUTCHour, Parameters.iUTCMin);
+			j += std::string(",\"time_utc\":\"") + t + "\"";
+		}
+	}
+	else
+	{
+		j += "\"services\":[]";
+	}
+	j += "}\n";
+	Parameters.Unlock();
+
+	const std::string tmp = statusFile + ".tmp";
+	FILE* f = fopen(tmp.c_str(), "w");
+	if (f == nullptr)
+		return;
+	const bool ok = fwrite(j.data(), 1, j.size(), f) == j.size();
+	fclose(f);
+	if (ok)
+		rename(tmp.c_str(), statusFile.c_str());
+	else
+		remove(tmp.c_str());
+}
 
 
 void
@@ -164,6 +359,9 @@ CConsoleIO::Update()
 			return STOP_REQUESTED;
 		}
 	}
+
+	/* Status file, independent of the tty and of the display mode */
+	WriteStatusFile();
 
 	/* No TTY return */
 	if (tty < 0)

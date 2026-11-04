@@ -67,6 +67,7 @@ int main(int argc, char **argv) {
           DRMReceiver.SetFrequency(iFreqkHz);
 
 #ifdef USE_CONSOLEIO
+        CConsoleIO::SetStatusFile(Settings.Get("command", "statusfile", string()));
         CConsoleIO::Enter(&DRMReceiver);
 #endif
         ERunState eRunState = RESTART;
