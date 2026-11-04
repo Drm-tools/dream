@@ -12,7 +12,7 @@ on:
 
 jobs:
   build-windows:
-    runs-on: windows-latest
+    runs-on: windows-2022
     env:
       USERNAME: ${{ github.actor }}
       VCPKG_EXE: C:/vcpkg/vcpkg
