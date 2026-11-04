@@ -351,6 +351,7 @@ TransmDialog::TransmDialog(CTx& ntx, QWidget* parent)
 		//RadioButtonOPUS->hide();
 	}
     if (!tx.CanEncode(CAudioParam::AC_AAC)
+        && !tx.CanEncode(CAudioParam::AC_xHE_AAC)
         && !tx.CanEncode(CAudioParam::AC_OPUS)) {
 		/* Let this service be an data service */
 		CheckBoxEnableAudio->setChecked(false);

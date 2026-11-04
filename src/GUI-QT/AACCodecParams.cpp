@@ -56,8 +56,8 @@ AACCodecParams::AACCodecParams(CSettings& Settings, CParameter& Parameters,
 		move(s.iXPos, s.iYPos);
 
     QString strWebSite("https://www.iis.fraunhofer.de/en/ff/amm/prod/audiocodec/audiocodecs/heaac.html");
-    LabelInfoDescription->setText(tr("HE-AAC"));
-    LabelInfoVersion->setText("2.0.0");
+    LabelInfoDescription->setText(tr("AAC / HE-AAC / HE-AAC v2 (DRM)"));
+    LabelInfoVersion->setText("FDK AAC 2.0.3 (960 transform, DRM)");
 	LabelInfoWebSite->setText(Linkify(strWebSite));
 
 	Parameters.Lock();
@@ -102,6 +102,8 @@ AACCodecParams::AACCodecParams(CSettings& Settings, CParameter& Parameters,
 
     ButtonGroupSampleRate->addButton(RadioButton12kHz, CAudioParam::AS_12KHZ);
     ButtonGroupSampleRate->addButton(RadioButton24kHz, CAudioParam::AS_24KHZ);
+
+    ApplyConstraints();
 }
 
 AACCodecParams::~AACCodecParams()
@@ -135,6 +137,7 @@ void AACCodecParams::OnButtonGroupChannels(int iID)
     Parameters.Service[iShortID].AudioParam.eAudioMode = static_cast<CAudioParam::EAudioMode>(iID);
 	Parameters.Service[iShortID].AudioParam.bParamChanged = true;
 	Parameters.Unlock();
+    ApplyConstraints();
 }
 
 void AACCodecParams::OnButtonGroupSampleRate(int iID)
@@ -143,6 +146,7 @@ void AACCodecParams::OnButtonGroupSampleRate(int iID)
     Parameters.Service[iShortID].AudioParam.eAudioSamplRate =  static_cast<CAudioParam::EAudSamRat>(iID);
 	Parameters.Service[iShortID].AudioParam.bParamChanged = true;
 	Parameters.Unlock();
+    ApplyConstraints();
 }
 
 void AACCodecParams::OnCheckBoxSBR(bool checked)
@@ -151,6 +155,44 @@ void AACCodecParams::OnCheckBoxSBR(bool checked)
     Parameters.Service[iShortID].AudioParam.eSBRFlag = checked?CAudioParam::SB_USED:CAudioParam::SB_NOT_USED;
 	Parameters.Service[iShortID].AudioParam.bParamChanged = true;
 	Parameters.Unlock();
+    ApplyConstraints();
+}
+
+/* DRM rules (ETSI ES 201 980 5.4.1, 5.4.3): stereo needs the 24 kHz AAC sampling rate, and
+   parametric stereo is a tool of the SBR layer. Show what is possible and fix up the rest. */
+void AACCodecParams::ApplyConstraints(void)
+{
+    Parameters.Lock();
+    CAudioParam& ap = Parameters.Service[iShortID].AudioParam;
+    bool bChanged = false;
+    if (ap.eAudioMode == CAudioParam::AM_STEREO && ap.eAudioSamplRate != CAudioParam::AS_24KHZ)
+    {
+        ap.eAudioSamplRate = CAudioParam::AS_24KHZ;
+        bChanged = true;
+    }
+    if (ap.eAudioMode == CAudioParam::AM_P_STEREO && ap.eSBRFlag != CAudioParam::SB_USED)
+    {
+        ap.eSBRFlag = CAudioParam::SB_USED;
+        bChanged = true;
+    }
+    if (bChanged)
+        ap.bParamChanged = true;
+    const CAudioParam::EAudioMode eMode = ap.eAudioMode;
+    const CAudioParam::EAudSamRat eRate = ap.eAudioSamplRate;
+    const bool bSBR = ap.eSBRFlag == CAudioParam::SB_USED;
+    Parameters.Unlock();
+
+    const bool b12 = RadioButton12kHz->blockSignals(true);
+    const bool b24 = RadioButton24kHz->blockSignals(true);
+    const bool bS = CheckBoxSBR->blockSignals(true);
+    RadioButton12kHz->setChecked(eRate == CAudioParam::AS_12KHZ);
+    RadioButton24kHz->setChecked(eRate == CAudioParam::AS_24KHZ);
+    RadioButton12kHz->setEnabled(eMode != CAudioParam::AM_STEREO);
+    CheckBoxSBR->setChecked(bSBR);
+    CheckBoxSBR->setEnabled(eMode != CAudioParam::AM_P_STEREO);
+    RadioButton12kHz->blockSignals(b12);
+    RadioButton24kHz->blockSignals(b24);
+    CheckBoxSBR->blockSignals(bS);
 }
 
 void AACCodecParams::Toggle(void)

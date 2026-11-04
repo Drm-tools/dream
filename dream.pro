@@ -173,11 +173,17 @@ unix {
     documentation.files = linux/dream.1
     INSTALLS += documentation
     INSTALLS += target
-    CONFIG += link_pkgconfig fdk-aac
-    PKGCONFIG += fdk-aac
-    packagesExist(fdk-xhe-aac) {
-        CONFIG += fdk-xhe-aac
-        PKGCONFIG += fdk-xhe-aac
+    CONFIG += link_pkgconfig
+    vendored-fdk {
+        include(libs/fdk-aac/fdk-aac.pri)
+        CONFIG += fdk-aac fdk-xhe-aac
+    } else {
+        CONFIG += fdk-aac
+        PKGCONFIG += fdk-aac
+        packagesExist(fdk-xhe-aac) {
+            CONFIG += fdk-xhe-aac
+            PKGCONFIG += fdk-xhe-aac
+        }
     }
     LIBS += -lfftw3 -lz
     SOURCES += src/linux/Pacer.cpp
