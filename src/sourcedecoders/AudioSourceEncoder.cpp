@@ -341,11 +341,13 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
             case CAudioParam::AS_12KHZ:
                 iTimeEachAudBloMS = 80;	/* ms */
                 iNumAudioFrames = 5;
+                lEncSamprate = 12000;
                 break;
 
             case CAudioParam::AS_24KHZ:
                 iTimeEachAudBloMS = 40;	/* ms */
                 iNumAudioFrames = 10;
+                lEncSamprate = 24000;
                 break;
             }
 
@@ -364,12 +366,18 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
 
             const int iActEncOutBytes = iAudioPayloadLen / iNumAudioFrames;
 
+            /* Parametric stereo needs SBR, and stereo is 24 kHz only */
+            if (Parameters.Service[iCurSelServ].AudioParam.eAudioMode == CAudioParam::AM_P_STEREO)
+                Parameters.Service[iCurSelServ].AudioParam.eSBRFlag = CAudioParam::SB_USED;
+
             /* Open encoder instance */
             codec->EncOpen(Parameters.Service[iCurSelServ].AudioParam, lNumSampEncIn, lMaxBytesEncOut);
             lNumSampEncIn /= unsigned(iNumChannels);
 
-            /* Calculate bitrate, bit per second */
-            const int iBitRate = iActEncOutBytes * SIZEOF__BYTE * AUD_DEC_TRANSFROM_LENGTH / int(lNumSampEncIn) / iTimeEachAudBloMS * 1000;
+            /* Calculate bitrate, bit per second: the AAC frames of one super
+               frame take iTimeEachAudBloMS each (with SBR a frame holds twice
+               as many input samples, so the sample count cannot be used) */
+            const int iBitRate = iActEncOutBytes * SIZEOF__BYTE * 1000 / iTimeEachAudBloMS;
             codec->EncSetBitrate(iBitRate);
         }
             break;
@@ -453,9 +461,13 @@ CAudioSourceEncoderImplementation::InitInternalTx(CParameter & Parameters,
             iNumHeaderBytes = 0;
         }
 
-        /* Set parameter in global struct */
-        Parameters.Service[iCurSelServ].AudioParam.eAudioMode =
-                iNumChannels >= 2 ? CAudioParam::AM_STEREO : CAudioParam::AM_MONO;
+        /* Set parameter in global struct (parametric stereo stays what it is) */
+        if (iNumChannels >= 2) {
+            if (Parameters.Service[iCurSelServ].AudioParam.eAudioMode != CAudioParam::AM_P_STEREO)
+                Parameters.Service[iCurSelServ].AudioParam.eAudioMode = CAudioParam::AM_STEREO;
+        }
+        else
+            Parameters.Service[iCurSelServ].AudioParam.eAudioMode = CAudioParam::AM_MONO;
 
         /* Init storage for actual data, CRCs and frame lengths */
         audio_frame.Init(iNumAudioFrames, lMaxBytesEncOut);

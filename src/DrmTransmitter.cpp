@@ -446,13 +446,23 @@ void CDRMTransmitter::LoadSettings() {
       Service.AudioParam.eAudioCoding = CAudioParam::AC_xHE_AAC;
     }
 
-    /* Audio channels (AAC, xHE-AAC): mono or stereo */
+    /* Audio channels (AAC, xHE-AAC): mono, stereo or pstereo (parametric) */
     value = s.Get(service, "audiomode", string("mono"));
     if (value == "stereo") {
       Service.AudioParam.eAudioMode = CAudioParam::AM_STEREO;
+    } else if (value == "pstereo") {
+      Service.AudioParam.eAudioMode = CAudioParam::AM_P_STEREO;
     } else {
       Service.AudioParam.eAudioMode = CAudioParam::AM_MONO;
     }
+
+    /* AAC: SBR (HE-AAC) and the AAC sampling rate (12000 or 24000, the output
+       rate is twice that with SBR) */
+    Service.AudioParam.eSBRFlag =
+        s.Get(service, "sbr", int(0)) ? CAudioParam::SB_USED : CAudioParam::SB_NOT_USED;
+    Service.AudioParam.eAudioSamplRate =
+        (s.Get(service, "audiosamplerate", int(24000)) == 12000) ? CAudioParam::AS_12KHZ
+                                                                 : CAudioParam::AS_24KHZ;
 
     /* Opus Codec Channels */
     value = s.Get(service, "Opus_Channels", string("OC_STEREO"));
@@ -707,7 +717,12 @@ void CDRMTransmitter::SaveSettings() {
 
     /* Audio channels */
     s.Put(service, "audiomode",
-          Service.AudioParam.eAudioMode == CAudioParam::AM_MONO ? "mono" : "stereo");
+          Service.AudioParam.eAudioMode == CAudioParam::AM_MONO
+              ? "mono"
+              : (Service.AudioParam.eAudioMode == CAudioParam::AM_P_STEREO ? "pstereo" : "stereo"));
+    s.Put(service, "sbr", Service.AudioParam.eSBRFlag == CAudioParam::SB_USED ? 1 : 0);
+    s.Put(service, "audiosamplerate",
+          Service.AudioParam.eAudioSamplRate == CAudioParam::AS_12KHZ ? 12000 : 24000);
 
     /* Opus Codec Channels */
     switch (Service.AudioParam.eOPUSChan) {
