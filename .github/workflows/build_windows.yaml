@@ -17,8 +17,8 @@ jobs:
       USERNAME: ${{ github.actor }}
       VCPKG_EXE: C:/vcpkg/vcpkg
       VCPKG_INSTALLATION_ROOT: C:/vcpkg
-      FEED_URL: https://nuget.pkg.github.com/Drm-tools/index.json
-      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/Drm-tools/index.json,readwrite"
+      FEED_URL: https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json
+      VCPKG_BINARY_SOURCES: "clear;nuget,https://nuget.pkg.github.com/${{ github.repository_owner }}/index.json,readwrite"
     
     steps:
     # Set env vars needed for vcpkg to leverage the GitHub Action cache as a storage
