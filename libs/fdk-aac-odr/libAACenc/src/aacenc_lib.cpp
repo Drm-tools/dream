@@ -916,7 +916,14 @@ static AACENC_ERROR FDKaacEnc_AdjustEncSettings(HANDLE_AACENCODER hAacEncoder,
     hAacConfig->useIS = config->userIntensity;
   }
 
-  hAacConfig->audioObjectType = config->userAOT;
+  /* DRM AOTs run on the logic of the plain AOTs (see the switch below) */
+  hAacConfig->audioObjectType =
+      (config->userAOT == AOT_DRM_AAC)
+          ? AOT_AAC_LC
+          : ((config->userAOT == AOT_DRM_SBR)
+                 ? AOT_SBR
+                 : ((config->userAOT == AOT_DRM_MPEG_PS) ? AOT_PS
+                                                         : config->userAOT));
   hAacConfig->channelMode =
       GetCoreChannelMode(config->userChannelMode, hAacConfig->audioObjectType);
   hAacConfig->nChannels =

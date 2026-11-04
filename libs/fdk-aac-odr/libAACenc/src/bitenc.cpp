@@ -838,8 +838,22 @@ INT FDKaacEnc_writeExtensionData(HANDLE_TRANSPORTENC hTpEnc,
 
   if (syntaxFlags & (AC_SCALABLE | AC_ER)) {
     {
-      if ((syntaxFlags & AC_ELD) && ((pExtension->type == EXT_SBR_DATA) ||
-                                     (pExtension->type == EXT_SBR_DATA_CRC))) {
+      if ((syntaxFlags & AC_DRM) &&
+          ((pExtension->type == EXT_FILL_DATA) ||
+           (pExtension->type == EXT_FIL))) {
+        /* DRM: no extension payload syntax, the stuffing is plain zero bits */
+        if (hBitStream != NULL) {
+          INT writeBits = payloadBits;
+          while (writeBits > 0) {
+            INT n = (writeBits > 16) ? 16 : writeBits;
+            FDKwriteBits(hBitStream, 0, n);
+            writeBits -= n;
+          }
+        }
+        extBitsUsed += payloadBits;
+      } else if (((syntaxFlags & AC_ELD) || (syntaxFlags & AC_DRM)) &&
+                 ((pExtension->type == EXT_SBR_DATA) ||
+                  (pExtension->type == EXT_SBR_DATA_CRC))) {
         if (hBitStream != NULL) {
           int i, writeBits = payloadBits;
           UCHAR *extPayloadData = pExtension->pPayload;
@@ -1395,7 +1409,46 @@ AAC_ENCODER_ERROR FDKaacEnc_WriteBitstream(HANDLE_TRANSPORTENC hTpEnc,
     FDKwriteBits(hBs, ID_END, EL_ID_BITS);
   }
 
-  if (doByteAlign) {
+  if (syntaxFlags & AC_DRM) {
+    /* DRM AAC + SBR (ETSI ES 201 980 5.4.2): the SBR payload sits at the end
+       of the frame in reverse bit order, the first SBR bit is the last bit of
+       the frame. Everything before it is the AAC data and zero stuffing. */
+    INT sbrBits = 0, e, el;
+    for (el = 0; el < channelMapping->nElements; el++) {
+      for (e = 0; e < qcOut->qcElement[el]->nExtensions; e++) {
+        const QC_OUT_EXTENSION *ex = &qcOut->qcElement[el]->extension[e];
+        if (ex->type == EXT_SBR_DATA || ex->type == EXT_SBR_DATA_CRC)
+          sbrBits += ex->nPayloadBits;
+      }
+    }
+    if (((FDKgetValidBits(hBs) - alignAnchor + qcOut->alignBits + sbrBits) &
+         0x7) != 0) {
+      return AAC_ENC_WRITTEN_BITS_ERROR;
+    }
+    FDKaacEnc_ByteAlignment(hBs, qcOut->alignBits);
+    for (el = 0; el < channelMapping->nElements; el++) {
+      for (e = 0; e < qcOut->qcElement[el]->nExtensions; e++) {
+        const QC_OUT_EXTENSION *ex = &qcOut->qcElement[el]->extension[e];
+        if (ex->type == EXT_SBR_DATA || ex->type == EXT_SBR_DATA_CRC) {
+          INT b;
+          /* sbr_crc_bits (8, G8, start value all ones, inverted) over all the
+             SBR data behind them */
+          UINT crc = 0xFF;
+          for (b = 8; b < ex->nPayloadBits; b++) {
+            UINT bit = (ex->pPayload[b >> 3] >> (7 - (b & 7))) & 1;
+            UINT flag = ((crc >> 7) & 1) ^ bit;
+            crc = (crc << 1) & 0xFF;
+            if (flag) crc ^= 0x1d;
+          }
+          crc ^= 0xFF;
+          for (b = ex->nPayloadBits - 1; b >= 8; b--)
+            FDKwriteBits(hBs, (ex->pPayload[b >> 3] >> (7 - (b & 7))) & 1, 1);
+          for (b = 0; b < 8; b++)
+            FDKwriteBits(hBs, (crc >> b) & 1, 1);
+        }
+      }
+    }
+  } else if (doByteAlign) {
     /* Assure byte alignment*/
     if (((FDKgetValidBits(hBs) - alignAnchor + qcOut->alignBits) & 0x7) != 0) {
       return AAC_ENC_WRITTEN_BITS_ERROR;
