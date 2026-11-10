@@ -26,6 +26,18 @@ unix:!cross_compile {
     } else {
         PREFIX = /usr/local
     }
+    exists(/opt/homebrew/opt/qwt-qt5/lib/qwt.framework/Headers/qwt.h) {
+        QWT_PREFIX = /opt/homebrew/opt/qwt-qt5/lib
+    }
+    exists(/usr/local/qwt/lib/qwt.framework/Headers/qwt.h) {
+        QWT_PREFIX = /usr/local/qwt/lib
+    }
+    exists(/usr/local/qwt-6.3.0/lib/qwt.framework/Headers/qwt.h) {
+        QWT_PREFIX = /usr/local/qwt-6.3.0/lib
+    }
+    exists(/Library/Frameworks/qwt.framework/Headers/qwt.h) {
+        QWT_PREFIX = /Library/Frameworks
+    }
 }
 CONFIG(debug, debug|release) {
     DEBUG_MESSAGE = debug
@@ -296,6 +308,7 @@ unix:!cross_compile {
       }
     }
     exists(/usr/include/SoapySDR) | \
+    exists(/usr/local/include/SoapySDR) | \
     exists($$PREFIX/include/SoapySDR) {
        CONFIG += soapysdr
     }
@@ -441,13 +454,14 @@ hamlib {
      message("with hamlib")
 }
 qwt {
-    message("with Qwt")
+    message("with Qwt at "$$QWT_PREFIX)
     QT += svg concurrent
     macx {
-#        INCLUDEPATH += /Library/Frameworks/qwt.framework/Headers
-        INCLUDEPATH += $$PREFIX/opt/qwt-qt5/lib/qwt.framework/Headers
-        QMAKE_LFLAGS += -F$$PREFIX/opt/qwt-qt5/lib
+        INCLUDEPATH += $$QWT_PREFIX/qwt.framework/Headers
+        QMAKE_LFLAGS += -F$$QWT_PREFIX
         LIBS += -framework qwt
+        QWT_LIB = qwt.framework/Versions/6/qwt
+        QMAKE_POST_LINK = install_name_tool -change $$QWT_LIB $$QWT_PREFIX/$$QWT_LIB $(DESTDIR)$(TARGET)
     }
     win32 {
         INCLUDEPATH += $$PWD/include/qwt
