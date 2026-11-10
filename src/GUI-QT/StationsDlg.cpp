@@ -25,7 +25,7 @@
 \******************************************************************************/
 
 #include "StationsDlg.h"
-#include "../tables/TableStations.h"
+/*#include "../tables/TableStations.h"*/
 #include "DialogUtil.h"
 #ifdef HAVE_LIBHAMLIB
 # include "../util-QT/Rig.h"
@@ -39,7 +39,7 @@
 #include <QDateTime>
 #include <QMessageBox>
 #include <QFileInfo>
-#include <cmath>
+/*#include <cmath>*/
 
 /* Implementation *************************************************************/
 #ifdef HAVE_LIBHAMLIB
@@ -135,8 +135,12 @@ bReInitOnFrequencyChange(false)
 # ifdef HAVE_LIBHAMLIB
 	RigDlg *pRigDlg = new RigDlg(Rig, this);
 	connect(actionChooseRig, SIGNAL(triggered()), pRigDlg, SLOT(show()));
+    connect(actionSyncRigFreq, SIGNAL(triggered()), this, SLOT(OnSyncRigFreq()));
+    connect(syncBtn, SIGNAL(clicked()), this, SLOT(OnSyncRigFreq()));
 # else
 	actionChooseRig->setEnabled(false);
+    actionSyncRigFreq->setEnabled(false);
+    syncBtn->setEnabled(false);
 # endif
 	connect(buttonOk, SIGNAL(clicked()), this, SLOT(close()));
 	connect(actionEnable_S_Meter, SIGNAL(triggered()), this, SLOT(OnSMeterMenu()));
@@ -175,6 +179,15 @@ void StationsDlg::OnShowStationsMenu(int iID)
 void StationsDlg::OnShowPreviewMenu(int iID)
 {
 	schedule.SetSecondsPreview(iID);
+    UpdateTransmissionStatus();
+}
+
+void StationsDlg::on_ComboBoxFilterStation_activated(const QString& s)
+{
+    if (schedule.GetSchedMode() == CSchedule::SM_DRM)
+        schedule.stationFilterdrm = s;
+    else
+        schedule.stationFilteranalog = s;
     UpdateTransmissionStatus();
 }
 
@@ -258,8 +271,10 @@ void StationsDlg::LoadSchedule()
 
 void StationsDlg::eventClose(QCloseEvent*)
 {
-	/* Save settings */
-	SaveSettings();
+    //Save settings on hide or close
+    CSchedule::ESchedMode eSchedM = schedule.GetSchedMode();
+    ColumnParamToStr((eSchedM == CSchedule::SM_DRM)?strColumnParamdrm:strColumnParamanalog);
+    SaveSettings();
 }
 
 void StationsDlg::eventHide(QHideEvent*)
@@ -267,10 +282,16 @@ void StationsDlg::eventHide(QHideEvent*)
 	/* Deactivate real-time timers */
 	Timer.stop();
 	DisableSMeter();
+    //Save settings on hide or close
+    CSchedule::ESchedMode eSchedM = schedule.GetSchedMode();
+    ColumnParamToStr((eSchedM == CSchedule::SM_DRM)?strColumnParamdrm:strColumnParamanalog);
+    SaveSettings();
 }
 
 void StationsDlg::eventShow(QShowEvent*)
 {
+    //Load dialog settings on create or show
+    LoadSettings();
     QwtCounterFrequency->setValue(rx.GetFrequency());
 	bool ensmeter = false;
 	ensmeter = actionEnable_S_Meter->isChecked();
@@ -281,22 +302,22 @@ void StationsDlg::eventShow(QShowEvent*)
     CSchedule::ESchedMode eSchedM = schedule.GetSchedMode();
     ERecMode eRecM = rx.GetReceiverMode();
     bool bIsDRM = eRecM == RM_DRM;
-    if (
-        (eSchedM == CSchedule::SM_DRM && !bIsDRM)
-    ||
-        (eSchedM == CSchedule::SM_ANALOG && bIsDRM)
-    )
+    if ((eSchedM == CSchedule::SM_DRM && !bIsDRM) ||
+       (eSchedM == CSchedule::SM_ANALOG && bIsDRM))
     {
         /* Store previous columns settings */
         if (eSchedM != CSchedule::SM_NONE)
         {
-            ColumnParamToStr(bIsDRM?strColumnParamdrm:strColumnParamanalog);
+            ColumnParamToStr((eSchedM == CSchedule::SM_DRM)?strColumnParamdrm:strColumnParamanalog);
         }
+
         // change mode
         schedule.SetSchedMode(bIsDRM?CSchedule::SM_DRM:CSchedule::SM_ANALOG);
-        /* Restore columns settings */
-        ColumnParamFromStr(bIsDRM?strColumnParamdrm:strColumnParamanalog);
     }
+
+    /* Restore columns settings */
+    ColumnParamFromStr(bIsDRM?strColumnParamdrm:strColumnParamanalog);
+
     if(schedule.GetNumberOfStations()==0)
 	{
         QString s = "";
@@ -329,7 +350,7 @@ void StationsDlg::OnTimer()
 	struct tm* gmtCur = gmtime(&ltime);
 
 	/* Generate time in format "UTC 12:00" */
-	QString strUTCTime = QString().sprintf("%02d:%02d UTC",
+    QString strUTCTime = QString().asprintf("%02d:%02d UTC",
 		gmtCur->tm_hour, gmtCur->tm_min);
 
 	/* Only apply if time label does not show the correct time */
@@ -354,7 +375,7 @@ void StationsDlg::OnTimer()
 
 void StationsDlg::LoadSettings()
 {
-	/* S-meter settings */
+    /* S-meter settings */
 	bool ensmeter = Settings.Get("Hamlib", "ensmeter", false);
 
 	actionEnable_S_Meter->setChecked(ensmeter);
@@ -409,17 +430,19 @@ void StationsDlg::LoadSettings()
 	strColumnParamanalog = getSetting("columnparamanalog", QString());
 
 	schedule.qurldrm = QUrl(getSetting("DRM URL", QString(DRM_SCHEDULE_URL)));
-	schedule.targetFilterdrm = getSetting("targetfilterdrm", QString());
+    schedule.stationFilterdrm = getSetting("stationfilterdrm", QString());
+    schedule.targetFilterdrm = getSetting("targetfilterdrm", QString());
 	schedule.countryFilterdrm = getSetting("countryfilterdrm", QString());
 	schedule.languageFilterdrm = getSetting("languagefilterdrm", QString());
-	schedule.targetFilteranalog = getSetting("targetfilteranalog", QString());
+    schedule.stationFilteranalog = getSetting("stationfilteranalog", QString());
+    schedule.targetFilteranalog = getSetting("targetfilteranalog", QString());
 	schedule.countryFilteranalog = getSetting("countryfilteranalog", QString());
 	schedule.languageFilteranalog = getSetting("languagefilteranalog", QString());
 }
 
 void StationsDlg::SaveSettings()
 {
-	Settings.Put("Hamlib", "ensmeter", actionEnable_S_Meter->isChecked());
+    Settings.Put("Hamlib", "ensmeter", actionEnable_S_Meter->isChecked());
 	putSetting("showall", actionShowAllStations->isChecked());
 	putSetting("DRM URL", schedule.qurldrm.toString());
 	putSetting("ANALOG URL", schedule.qurlanalog.toString());
@@ -429,10 +452,12 @@ void StationsDlg::SaveSettings()
 	putSetting("sortcolumnanalog", iSortColumnanalog);
 	putSetting("sortascendinganalog", bCurrentSortAscendinganalog);
 	putSetting("columnparamanalog", strColumnParamanalog);
-	putSetting("targetfilterdrm", schedule.targetFilterdrm);
+    putSetting("stationfilterdrm", schedule.stationFilterdrm);
+    putSetting("targetfilterdrm", schedule.targetFilterdrm);
 	putSetting("countryfilterdrm", schedule.countryFilterdrm);
 	putSetting("languagefilterdrm", schedule.languageFilterdrm);
-	putSetting("targetfilteranalog", schedule.targetFilteranalog);
+    putSetting("stationfilteranalog", schedule.stationFilteranalog);
+    putSetting("targetfilteranalog", schedule.targetFilteranalog);
 	putSetting("countryfilteranalog", schedule.countryFilteranalog);
 	putSetting("languagefilteranalog", schedule.languageFilteranalog);
 
@@ -442,27 +467,32 @@ void StationsDlg::SaveSettings()
 
 void StationsDlg::LoadFilters()
 {
-	ComboBoxFilterTarget->clear();
+    ComboBoxFilterStation->clear();
+    ComboBoxFilterTarget->clear();
 	ComboBoxFilterCountry->clear();
 	ComboBoxFilterLanguage->clear();
-	ComboBoxFilterTarget->addItems(schedule.ListTargets);
+    ComboBoxFilterStation->addItems(schedule.ListStations);
+    ComboBoxFilterTarget->addItems(schedule.ListTargets);
 	ComboBoxFilterCountry->addItems(schedule.ListCountries);
 	ComboBoxFilterLanguage->addItems(schedule.ListLanguages);
 
-	QString targetFilter,countryFilter,languageFilter;
+    QString stationFilter,targetFilter,countryFilter,languageFilter;
 	if(schedule.GetSchedMode()==CSchedule::SM_DRM)
 	{
-		targetFilter=schedule.targetFilterdrm;
+        stationFilter=schedule.stationFilterdrm;
+        targetFilter=schedule.targetFilterdrm;
 		countryFilter=schedule.countryFilterdrm;
 		languageFilter=schedule.languageFilterdrm;
 	}
 	else
 	{
-		targetFilter=schedule.targetFilteranalog;
+        stationFilter=schedule.stationFilteranalog;
+        targetFilter=schedule.targetFilteranalog;
 		countryFilter=schedule.countryFilteranalog;
 		languageFilter=schedule.languageFilteranalog;
 	}
-	ComboBoxFilterTarget->setCurrentIndex(ComboBoxFilterTarget->findText(targetFilter));
+    ComboBoxFilterStation->setCurrentIndex(ComboBoxFilterStation->findText(stationFilter));
+    ComboBoxFilterTarget->setCurrentIndex(ComboBoxFilterTarget->findText(targetFilter));
 	ComboBoxFilterCountry->setCurrentIndex(ComboBoxFilterCountry->findText(countryFilter));
 	ComboBoxFilterLanguage->setCurrentIndex(ComboBoxFilterLanguage->findText(languageFilter));
 }
@@ -485,7 +515,7 @@ void StationsDlg::LoadScheduleView()
 		else
 			strPower.setNum(rPower);
 
-		QString strTimes = QString().sprintf("%04d-%04d", station.StartTime(), station.StopTime());
+        QString strTimes = QString().asprintf("%04d-%04d", station.StartTime(), station.StopTime());
 
 		/* Generate new list station with all necessary column entries */
 		QTreeWidgetItem* item = new CaseInsensitiveTreeWidgetItem(ListViewStations);
@@ -581,6 +611,47 @@ void StationsDlg::OnFreqCntNewValue(double dVal)
         rx.SetFrequency(int(dVal));
 }
 
+void StationsDlg::OnSyncRigFreq()
+{
+    int     fRow = -1;
+    int     iFreqkHz = -1;
+    QString sFreqkHz;
+
+    //Poll rig for frequency
+    rx.GetTunedFrequency(iFreqkHz);
+
+    //if valid, find frequency in list
+    if (iFreqkHz > 0) {
+
+        sFreqkHz = QString().setNum(iFreqkHz);
+        QAbstractItemModel *model = ListViewStations->model();
+
+        for (int row = 0; row < model->rowCount(); ++row) {
+
+            QModelIndex index = model->index(row, 3);
+            QString text = model->data(index, Qt::DisplayRole).toString();
+            QTreeWidgetItem* item = ListViewStations->topLevelItem(row);
+
+            //if frequency found, select that row in the list
+            if ((text == sFreqkHz) && (!item->isHidden())) {
+                fRow = row;
+                break;
+            }
+        }
+        if (fRow > 0) {
+
+            QModelIndex fIndex = ListViewStations->model()->index(fRow,3);
+            QString fText = ListViewStations->model()->data(fIndex, Qt::DisplayRole).toString();
+
+            if (fIndex.isValid()) {
+                SetFrequencyFromGUI(fText.toInt());
+                ListViewStations->setCurrentIndex(fIndex);
+                ListViewStations->scrollTo(fIndex, QAbstractItemView::EnsureVisible);
+            }
+        }
+    }
+}
+
 void StationsDlg::OnHeaderClicked(int c)
 {
 	/* Store the "direction" of sorting */
@@ -635,7 +706,7 @@ void StationsDlg::ColumnParamFromStr(const QString& strColumnParam)
 			for (int i = 0; i < c; i++)
 			{
 				int v = values[i].toInt();
-				if (!j) /* width*/
+                if (!j) /* width */
 					ListViewStations->header()->resizeSection(i, v);
 				else /* position */
 					ListViewStations->header()->moveSection(ListViewStations->header()->visualIndex(i), v);

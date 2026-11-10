@@ -51,7 +51,7 @@ using namespace std;
 #define PA_RECORD_MAXLENGTH uint32_t((double(NUM_CHANNELS * BYTES_PER_SAMPLE * iSampleRate) * RECORD_BUFFER_US / 1000000.0))
 #define PA_PLAYBACK_TLENGTH uint32_t((double(NUM_CHANNELS * BYTES_PER_SAMPLE * iSampleRate) * PLAYBACK_BUFFER_US  / 1000000.0))
 #define PA_PLAYBACK_PREBUF  uint32_t((double(NUM_CHANNELS * BYTES_PER_SAMPLE * iSampleRate) * PLAYBACK_LATENCY_US / 1000000.0))
-#define STREAM_FLAGS (PA_STREAM_ADJUST_LATENCY | PA_STREAM_DONT_MOVE)
+#define STREAM_FLAGS pa_stream_flags_t(PA_STREAM_ADJUST_LATENCY | PA_STREAM_DONT_MOVE)
 #define STREAM_NAME(io, blocking) (blocking ? "Signal " io : "Audio " io)
 #define APP_NAME(io, blocking) ((!io != !blocking) ? "Dream Transmitter" : "Dream Receiver")
 
@@ -535,19 +535,19 @@ void CSoundOutPulse::Init_HW()
     if (pa_s_sync(&pa_obj, pa_s, ret) != PA_OK)
         DEBUG_MSG("CSoundOutPulse::Init_HW pa_stream_connect_playback failed\n");
 
-        pa_stream_notify_cb_userdata_underflow.SoundOutPulse = this;
-        pa_stream_notify_cb_userdata_underflow.bOverflow = false;
-        pa_stream_set_underflow_callback(pa_s, &pa_stream_notify_cb, &pa_stream_notify_cb_userdata_underflow);
-        pa_stream_notify_cb_userdata_overflow.SoundOutPulse = this;
-        pa_stream_notify_cb_userdata_overflow.bOverflow = true;
-        pa_stream_set_overflow_callback(pa_s, &pa_stream_notify_cb, &pa_stream_notify_cb_userdata_overflow);
+    pa_stream_notify_cb_userdata_underflow.SoundOutPulse = this;
+    pa_stream_notify_cb_userdata_underflow.bOverflow = false;
+    pa_stream_set_underflow_callback(pa_s, &pa_stream_notify_cb, &pa_stream_notify_cb_userdata_underflow);
+    pa_stream_notify_cb_userdata_overflow.SoundOutPulse = this;
+    pa_stream_notify_cb_userdata_overflow.bOverflow = true;
+    pa_stream_set_overflow_callback(pa_s, &pa_stream_notify_cb, &pa_stream_notify_cb_userdata_overflow);
 
 #ifdef CLOCK_DRIFT_ADJ_ENABLED
-        X.Init(1);
-        A.Init(1, 1.0);
-        B.Init(NUM_TAPS_LATENCY_FILT);
-        for (int i = 0; i < NUM_TAPS_LATENCY_FILT; i++)
-B[i] = dLatFilt[i];
+    X.Init(1);
+    A.Init(1, 1.0);
+    B.Init(NUM_TAPS_LATENCY_FILT);
+    for (int i = 0; i < NUM_TAPS_LATENCY_FILT; i++)
+        B[i] = dLatFilt[i];
 #endif
 
 /* Clear mute error flag */

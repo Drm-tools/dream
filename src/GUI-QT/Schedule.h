@@ -29,10 +29,14 @@
 #ifndef __SCHEDULE_H
 #define __SCHEDULE_H
 
+#include "src/GlobalDefinitions.h"
 #include <QNetworkAccessManager>
 #include <QUrl>
 #include <QTreeWidgetItem>
-#include "../util/Vector.h"
+
+#include <QTextStream>
+
+/*#include "../util/Vector.h"*/
 
 /* Definitions ****************************************************************/
 
@@ -62,7 +66,7 @@
 #define FLAG_STR_IRREGULAR_TRANSM		"0000000"
 #define CHR_ACTIVE_DAY_MARKER			'1'
 
-#include <iostream>
+/*#include <iostream>*/
 
 namespace Station {
 	enum EState {IS_ACTIVE, IS_INACTIVE, IS_PREVIEW, IS_SOON_INACTIVE};
@@ -144,11 +148,12 @@ public:
 	enum ESchedMode {SM_NONE, SM_DRM, SM_ANALOG};
 
 	void ReadINIFile(FILE* pFile);
-	void ReadCSVFile(FILE* pFile);
-	ESchedMode GetSchedMode() {return eSchedMode;}
+//	void ReadCSVFile(FILE* pFile);
+    void ReadCSVFile(QTextStream*);
+    ESchedMode GetSchedMode() {return eSchedMode;}
 	void SetSchedMode(const ESchedMode);
 
-	int GetNumberOfStations() {return StationsTable.size();}
+    int GetNumberOfStations() {return StationsTable.size();}
 	CStationsItem& GetItem(const int iPos) {return StationsTable[iPos];}
 	Station::EState GetState(const int iPos);
 	bool CheckFilter(const int iPos);
@@ -158,12 +163,13 @@ public:
 	void UpdateStringListForFilter(const CStationsItem& StationsItem);
 	void LoadSchedule();
 
-	QStringList		ListTargets;
+    QStringList		ListStations;
+    QStringList		ListTargets;
 	QStringList		ListCountries;
 	QStringList		ListLanguages;
 
-	QString			countryFilterdrm, targetFilterdrm, languageFilterdrm;
-	QString			countryFilteranalog, targetFilteranalog, languageFilteranalog;
+    QString			stationFilterdrm, countryFilterdrm, targetFilterdrm, languageFilterdrm;
+    QString			stationFilteranalog, countryFilteranalog, targetFilteranalog, languageFilteranalog;
 	QString			schedFileName;
 	QUrl			qurldrm, qurlanalog;
 

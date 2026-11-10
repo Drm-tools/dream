@@ -110,6 +110,7 @@ bool CSoundInMMSystem::Read(CVector<short>& psData, CParameter& Parameters) // m
     int			i;
     bool	bError;
 
+    (void) Parameters;
     /* Check if device must be opened or reinitialized */
     if (bChangDev)
     {

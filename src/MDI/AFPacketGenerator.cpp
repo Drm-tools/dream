@@ -36,9 +36,9 @@
 
 #include "AFPacketGenerator.h"
 #include "TagPacketGenerator.h"
-#include <iostream>
+/*#include <iostream>*/
 
-#include "../util/LogPrint.h"
+/*#include "../util/LogPrint.h"*/
 // CAFPacketGenerator
 
 CVector<_BYTE> CAFPacketGenerator::GenAFPacket(const bool bUseAFCRC, CTagPacketGenerator& TagPacketGenerator)

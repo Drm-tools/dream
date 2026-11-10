@@ -32,7 +32,7 @@
 #include "DRMPlot.h"
 #include "../PlotManager.h"
 #include <cmath>
-#include <algorithm>
+/*#include <algorithm>*/
 #include "../matlib/MatlibSigProToolbox.h"
 
 /* Implementation *************************************************************/

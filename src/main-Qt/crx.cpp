@@ -1,4 +1,5 @@
 #include "crx.h"
+#include "../util/FileTyper.h"
 #ifdef USE_CONSOLEIO
 # include "../linux/ConsoleIO.h"
 #endif
@@ -17,12 +18,14 @@ void
 CRx::run()
 {
     qDebug("Working thread started");
+    bool bOkToSetDevice = false;
     try
     {
         // set the frequency from the command line or ini file
-        int iFreqkHz = rx.GetParameters()->GetFrequency();
-        if (iFreqkHz != -1)
-            rx.SetFrequency(iFreqkHz);
+        // mjf - removed this because was causing startup problems 7 aug 26
+        //int iFreqkHz = rx.GetParameters()->GetFrequency();
+        //if (iFreqkHz != -1)
+        //    rx.SetFrequency(iFreqkHz,rx.GetReceiverMode() == RM_DRM);
 
 #ifdef USE_CONSOLEIO
         CConsoleIO::Enter(&rx);
@@ -45,18 +48,26 @@ CRx::run()
 
             /* Set run flag so that the thread can work */
             eRunState = RUNNING;
+            bOkToSetDevice = false;
             do
             {
-                rx.updatePosition();
-                rx.process();
+                if (eRunState != PAUSED) {
+                    rx.updatePosition();
+                    rx.process();
+                } else {
+                    if (!bOkToSetDevice)
+                        OkToSetInputDevice();
+                    bOkToSetDevice = true;
+                }
 
 #ifdef USE_CONSOLEIO
                 eRunState = CConsoleIO::Update();
 #endif
             }
-            while (eRunState == RUNNING);
+                while ((eRunState == RUNNING) || (eRunState == PAUSED));
 
             /* Restore some parameter previously set by SetInput() */
+
         }
         while (eRunState == RESTART);
 
@@ -83,11 +94,14 @@ void CRx::LoadSettings()
 {
     rx.LoadSettings();
     QString s = QString::fromStdString(rx.GetInputDevice());
-    emit InputDeviceChanged(s);
-    emit soundFileChanged(s); // TODO only send if it is a file!!!
+    //SetInputDevice(s);
+    if (FileTyper::resolve(rx.GetInputDevice()) != FileTyper::unrecognised)
+        emit soundFileChanged(s);
+    else
+        emit InputDeviceChanged(s);
+    emit inputSampleRateChanged(rx.GetParameters()->GetSigSampleRate());
     s = QString::fromStdString(rx.GetOutputDevice());
     emit OutputDeviceChanged(s);
-    emit inputSampleRateChanged(rx.GetParameters()->GetSigSampleRate());
     emit outputSampleRateChanged(rx.GetParameters()->GetAudSampleRate());
     emit soundUpscaleRatioChanged(rx.GetParameters()->GetSigUpscaleRatio());
 }
@@ -104,11 +118,26 @@ void CRx::SetInputDevice(QString s)
 
 void CRx::SetInputDevice(string s)
 {
+    cerr << "CRx::SetInputDevice " << s << endl;
+    newInputName = s;
+    eRunState = PAUSED;
+}
+
+void CRx::OkToSetInputDevice()
+{
+    string s = newInputName;
+
+    //try getting from Settings instead of default after closing audio file
+    if (s == "")
+        s = GetSettings()->GetIniSetting("Receiver","snddevin","");
+
     rx.SetInputDevice(s);
     eRunState = RESTART;
     QString id = QString::fromStdString(rx.GetInputDevice());
-    emit InputDeviceChanged(id);
-    emit soundFileChanged(id); // TODO only send if it is a file!!!
+    if (FileTyper::resolve(rx.GetInputDevice()) != FileTyper::unrecognised)
+        emit soundFileChanged(id);
+    else
+        emit InputDeviceChanged(id);
 }
 
 void CRx::SetOutputDevice(QString s)
@@ -183,7 +212,6 @@ void    CRx::GetAudioSpec(CVector<_REAL>& vecrData, CVector<_REAL>& vecrScale)
 {
     rx.GetWriteData()->GetAudioSpec(vecrData, vecrScale);
 }
-
 
 ERecMode CRx::GetReceiverMode()
 {
@@ -375,6 +403,11 @@ EAcqStat CRx::GetAcquisitionState()
     return rx.GetAcquiState();
 }
 
+void CRx::GetTunedFrequency(int& freq)
+{
+    rx.GetTunedFrequency(freq, rx.GetReceiverMode() == RM_DRM);
+}
+
 int CRx::GetFrequency()
 {
     return rx.GetFrequency();
@@ -469,7 +502,7 @@ void CRx::SetAMNoiseReductionLevel(int n)
 
 void CRx::SetFrequency(int n)
 {
-    rx.SetFrequency(n);
+    rx.SetFrequency(n, rx.GetReceiverMode() == RM_DRM);
 }
 
 void CRx::SetAMDemodAcq(_REAL r)

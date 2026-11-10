@@ -41,6 +41,7 @@ public:
         return true;
     }
     virtual bool	Read(CVector<short>&, CParameter &Parameters) {
+        (void) Parameters;
         return false;
     }
     virtual void Enumerate(std::vector<std::string>&choices, std::vector<std::string>& desc, std::string&) {

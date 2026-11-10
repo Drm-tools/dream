@@ -29,7 +29,7 @@
 #include "jlbrowser.h"
 #include "../datadecoding/DataDecoder.h"
 #include "../datadecoding/Journaline.h"
-#include <iostream>
+/*#include <iostream>*/
 
 JLBrowser::JLBrowser(QWidget * parent)
     : QTextBrowser(parent),decoder(nullptr),strFhGIISText(),strJournalineHeadText(),

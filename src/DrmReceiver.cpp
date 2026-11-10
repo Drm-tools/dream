@@ -34,9 +34,11 @@
 
 #include "DrmReceiver.h"
 #include "util/Settings.h"
-#include "util/Utilities.h"
+/*#include "util/Utilities.h"*/
 #include "util/FileTyper.h"
-#include "darkmode.h"
+#ifdef _WIN32
+  #include "darkmode.h"
+#endif
 #include "tuner.h"
 
 #ifdef QT_MULTIMEDIA_LIB
@@ -44,7 +46,7 @@
 #endif
 #ifdef HAVE_LIBHAMLIB
 # ifdef QT_CORE_LIB // TODO should not have dependency to qt here
-#  include "util-QT/Rig.h"
+/*#  include "util-QT/Rig.h"*/
 # endif
 #endif
 #if 0
@@ -194,15 +196,19 @@ CDRMReceiver::SetInputDevice(string s)
         TimeSync.SetSyncInput(false);
         ReceiveData.SetSoundInterface(device); // audio input
         CTuner *pSoundInTuner = ReceiveData.GetTuner();
-        fprintf(stderr, "Read pTuner = %x\n", pSoundInTuner);
+#ifdef _WIN32
+        fprintf(stderr, "Read pTuner = %llu\n", uintptr_t(pSoundInTuner));
+#else
+        fprintf(stderr, "Read pTuner = %lu\n", ulong(pSoundInTuner));
+#endif
         if (pSoundInTuner) // sound in interface can be tuned (i.e. it's an SDR)
-                pTuner = pSoundInTuner;
+            pTuner = pSoundInTuner;
         else // sound-in interface can't be tuned. Send frequency changes to Hamlib instead (if present)
-                pTuner = pRig;
+            pTuner = pRig;
 
         if (pTuner)
         {
-                pTuner->LoadSettings(*pSettings);
+            pTuner->LoadSettings(*pSettings);
         }
         break;
     }
@@ -998,7 +1004,7 @@ CDRMReceiver::process()
             {
                 downstreamRSCI.SendLockedFrame(Parameters, FACSendBuf, SDCSendBuf, MSCSendBuf);
                 iUnlockedCount = 0;
-                bFrameToSend = false;
+                //bFrameToSend = false;
             }
             break;
         case RM_AM:
@@ -1023,10 +1029,11 @@ CDRMReceiver::process()
     /* Play and/or save the audio */
     if (iAudioStreamID != STREAM_ID_NOT_USED || (eReceiverMode == RM_AM) || (eReceiverMode == RM_FM))
     {
-        if (WriteData.WriteData(Parameters, AudSoDecBuf))
-        {
-            bEnoughData = true;
-        }
+        //if (WriteData.WriteData(Parameters, AudSoDecBuf))
+        WriteData.WriteData(Parameters, AudSoDecBuf);
+        //{
+            //bEnoughData = true;
+        //}
     }
 }
 
@@ -1324,10 +1331,16 @@ CDRMReceiver::InitsForDataParam()
     DataDecoder.SetInitFlag();
 }
 
-void CDRMReceiver::SetFrequency(int iNewFreqkHz)
+void CDRMReceiver::GetTunedFrequency(int& freq, bool useOffset)
+{
+    if (pTuner != nullptr)
+        pTuner->GetTunedFrequency(freq, useOffset);
+}
+
+void CDRMReceiver::SetFrequency(int iNewFreqkHz, bool useOffset)
 {
     Parameters.Lock();
-    Parameters.SetFrequency(iNewFreqkHz);
+    Parameters.SetFrequency(iNewFreqkHz, useOffset);
     /* clear out AMSS data and re-initialise AMSS acquisition */
     if (Parameters.eReceiverMode == RM_AM)
         Parameters.ResetServicesStreams();
@@ -1335,11 +1348,11 @@ void CDRMReceiver::SetFrequency(int iNewFreqkHz)
 
     if (pUpstreamRSCI->GetOutEnabled())
     {
-        pUpstreamRSCI->SetFrequency(iNewFreqkHz);
+        pUpstreamRSCI->SetFrequency(iNewFreqkHz, useOffset);
     }
 
     if(pTuner)
-        pTuner->SetFrequency(iNewFreqkHz + int(Parameters.FrontEndParameters.rTunerFrequencyOffset));
+        pTuner->SetFrequency(iNewFreqkHz + int(Parameters.FrontEndParameters.rTunerFrequencyOffset), useOffset);
 #if 0
     {
         FCD_MODE_ENUM fme;
@@ -1390,6 +1403,10 @@ CDRMReceiver::saveSDCtoFile()
 
     if (pFile == nullptr)
         pFile = fopen("test/altfreq.dat", "w");
+
+    if (pFile == NULL) {
+        return;
+    }
 
     Parameters.Lock();
     size_t inum = Parameters.AltFreqSign.vecMultiplexes.size();
@@ -1606,7 +1623,7 @@ CDRMReceiver::LoadSettings()
     SetReceiverMode(ERecMode(s.Get("Receiver", "mode", int(0))));
 
     /* Tuned Frequency */
-    Parameters.SetFrequency(s.Get("Receiver", "frequency", 0));
+    Parameters.SetFrequency(s.Get("Receiver", "frequency", 0), GetReceiverMode() == RM_DRM);
 
     /* Front-end - combine into Hamlib? */
     CFrontEndParameters& FrontEndParameters = Parameters.FrontEndParameters;

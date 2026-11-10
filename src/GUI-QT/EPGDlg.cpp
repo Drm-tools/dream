@@ -243,10 +243,10 @@ void EPGDlg::select()
         }
 
         char s[40];
-        sprintf(s, "%02d:%02d", bdt.tm_hour, bdt.tm_min);
+        snprintf(s, sizeof(s), "%02d:%02d", bdt.tm_hour, bdt.tm_min);
         s_start = s;
         int min = duration / 60;
-        sprintf(s, "%02d:%02d", int(min/60), min%60);
+        snprintf(s, sizeof(s), "%02d:%02d", int(min/60), min%60);
         s_duration = s;
         QString name, description, genre;
         if (p.name=="" && p.mainGenre.size()>0)

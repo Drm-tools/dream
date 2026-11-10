@@ -34,11 +34,13 @@
 #include <QMessageBox>
 
 #ifdef _WIN32
+# define WIN32_LEAN_AND_MEAN
+# include <winsock2.h>
 # include <windows.h>
 #else
 # include <csignal>
 #endif
-#include <iostream>
+/*#include <iostream>*/
 
 #include "../GlobalDefinitions.h"
 #include "../DrmReceiver.h"
@@ -84,7 +86,12 @@ main(int argc, char **argv)
 #endif
 #ifdef _WIN32
 	WSADATA wsaData;
-	(void)WSAStartup(MAKEWORD(2,2), &wsaData);
+    int wsaresult = WSAStartup(MAKEWORD(2,2), &wsaData);
+    if (wsaresult != 0) {
+        qDebug("WSAStasrtup failed %d\n", wsaresult);
+    } else {
+        qDebug("Winsock2 initiated successfully!\n");
+    }
 #endif
 
 	/* Load and install multi-language support (if available) */
@@ -124,7 +131,6 @@ main(int argc, char **argv)
 #else
 			FDRMDialog *pMainDlg = new FDRMDialog(&rx, Settings);
 #endif
-			(void)pMainDlg;
             rx.LoadSettings();  // load settings after GUI initialised so LoadSettings signals get captured
 
 			/* Start working thread */
@@ -141,6 +147,7 @@ main(int argc, char **argv)
 			rig.SaveSettings(Settings);
 #endif
             rx.SaveSettings();
+            delete pMainDlg; //added to satisfy compiler warning regarding leaked memory mjf 10 aug 26
 		}
 		else if(mode == "transmit")
 		{

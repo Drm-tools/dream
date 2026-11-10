@@ -10,6 +10,7 @@ class CTRx : public QThread, public CDRMTransceiver
     Q_OBJECT
 public:
     explicit CTRx(QThread *parent = nullptr);
+    ~CTRx();
     virtual int GetFrequency()=0;
 
 signals:

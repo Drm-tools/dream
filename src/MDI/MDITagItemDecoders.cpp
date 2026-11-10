@@ -38,7 +38,7 @@
 
 #include "MDITagItemDecoders.h"
 #include "../Parameter.h"
-#include <iostream>
+/*#include <iostream>*/
 
 string CTagItemDecoderProTy::GetTagName(void) {return "*ptr";}
 void CTagItemDecoderProTy::DecodeTag(CVector<_BINARY>& vecbiTag, const int iLen)

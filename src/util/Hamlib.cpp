@@ -28,7 +28,7 @@
 #include "Hamlib.h"
 #include <iostream>
 #include <sstream>
-#include <cstring>
+/*#include <cstring>*/
 #include <cstdlib>
 #if defined(_WIN32)
 # ifdef HAVE_SETUPAPI
@@ -55,6 +55,8 @@ bModRigSettings(false), iHamlibModelID(0),
 strHamlibConf(""), strSettings(""), iFreqOffset(0),
 modes(), levels(), functions(), parameters(), config()
 {
+    rig_set_debug(RIG_DEBUG_WARN);
+
 #ifdef RIG_MODEL_DWT
 	/* Digital World Traveller */
 	RigSpecialParameters(RIG_MODEL_DWT, "", 0, "");
@@ -226,7 +228,7 @@ CHamlib::GetPortList(map < string, string > &ports)
                              CFSTR(kIOSerialBSDRS232Type));
 
 	}
-    kernResult = IOServiceGetMatchingServices(kIOMasterPortDefault, classesToMatch, &serialPortIterator);
+    kernResult = IOServiceGetMatchingServices(kIOMainPortDefault, classesToMatch, &serialPortIterator);
     if (KERN_SUCCESS != kernResult)
     {
         fprintf(stderr, "IOServiceGetMatchingServices returned %d\n", kernResult);
@@ -338,6 +340,12 @@ string CHamlib::GetComPort() const
 	if (m == config.end())
 		return "";
 	return m->second;
+}
+
+void
+CHamlib::SetFreqOffset(const int f)
+{
+    iFreqOffset = f;
 }
 
 int
@@ -457,7 +465,7 @@ CHamlib::SaveSettings(CSettings & s)
 }
 
 bool
-CHamlib::SetFrequency(const int iFreqkHz)
+CHamlib::SetFrequency(const int iFreqkHz, bool useOffset)
 {
 	bool bSucceeded = false;
 
@@ -466,7 +474,7 @@ CHamlib::SetFrequency(const int iFreqkHz)
 	{
 		/* Set frequency (consider frequency offset and conversion
 		   from kHz to Hz by " * 1000 ") */
-		if (rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + iFreqOffset) * 1000)
+        if (rig_set_freq(pRig, RIG_VFO_CURR, (iFreqkHz + (iFreqOffset * (useOffset?1:0))) * 1000)
 			== RIG_OK)
 		{
 			bSucceeded = true;
@@ -474,6 +482,28 @@ CHamlib::SetFrequency(const int iFreqkHz)
 	}
 
 	return bSucceeded;
+}
+
+/* returns a positive frequency in kHz if successful, -1 if not */
+int
+CHamlib::GetTunedFrequency(bool useOffset)
+{
+    freq_t  rFreq = -1;
+    int     iFreqkHz = -1;
+
+    /* Check if rig was opend properly */
+    if (pRig != nullptr)
+    {
+         rig_get_freq(pRig, RIG_VFO_CURR, &rFreq);
+    }
+
+    if (rFreq > 0) {
+        iFreqkHz = rFreq / 1000;
+        if (useOffset)
+            iFreqkHz -= iFreqOffset;
+    }
+
+    return iFreqkHz;
 }
 
 CHamlib::ESMeterState CHamlib::GetSMeter(_REAL & rCurSigStr)

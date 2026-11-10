@@ -56,8 +56,10 @@ protected:
     CRig&		rig;
     rig_model_t		prev_rig_model;
     std::string		prev_port;
+    int             prev_offset;
     map<rig_model_t,std::string> rigmap;
     bool	bComboBoxPortMutex;
+    bool	bSpinOffsetMutex;
 
 public slots:
     void		on_rigTypes_itemSelectionChanged(); 

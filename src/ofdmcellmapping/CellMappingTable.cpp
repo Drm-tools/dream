@@ -34,6 +34,7 @@
 \******************************************************************************/
 
 #include "../GlobalDefinitions.h"
+#include "src/tables/TableDRMGlobal.h"
 #include "CellMappingTable.h"
 
 

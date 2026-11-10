@@ -39,13 +39,13 @@
 
 #include <time.h>
 #include "MDITagItems.h"
-#include <iostream>
-#include <fstream>
+/*#include <iostream>*/
+/*#include <fstream>*/
 #include <chrono>
 #include <ctime>
 using namespace std;
 
-#include "../util/LogPrint.h"
+/*#include "../util/LogPrint.h"*/
 #include "../matlib/MatlibStdToolbox.h"
 
 CTagItemGeneratorWithProfiles::CTagItemGeneratorWithProfiles()

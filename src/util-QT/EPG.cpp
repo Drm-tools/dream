@@ -34,7 +34,7 @@
 #include <QDir>
 #include <QTextStream>
 #include <QRegExp>
-#include <iostream>
+/*#include <iostream>*/
 #include <cstdlib>
 #include <sys/stat.h>
 #ifdef _WIN32

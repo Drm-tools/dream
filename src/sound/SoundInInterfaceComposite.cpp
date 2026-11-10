@@ -1,7 +1,7 @@
 #include "SoundInInterfaceComposite.h"
 
 #include <iostream>
-#include <cstdio>
+/*#include <cstdio>*/
 using namespace std;
 
 CSoundInInterfaceComposite::CSoundInInterfaceComposite():

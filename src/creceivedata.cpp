@@ -40,9 +40,8 @@
 #include "util/FileTyper.h"
 #include "IQInputFilter.h"
 #include "UpsampleFilter.h"
-#include "matlib/MatlibSigProToolbox.h"
+/*#include "matlib/MatlibSigProToolbox.h"*/
 #include "tuner.h"
-//#include "AudioInputFactory.h"
 
 using namespace std;
 
@@ -73,18 +72,27 @@ void CReceiveData::Stop()
 {
 #ifdef QT_MULTIMEDIA_LIB
 //    AudioInterfaceStop();
-    if(pIODevice!=nullptr) {
-        pIODevice->close();
-//        pIODevice = nullptr;
-    }
-    if(pAudioInput != nullptr) {
+    if (pAudioInput != nullptr) {
         pAudioInput->stop();
-//        delete pAudioInput;
-//        pAudioInput = nullptr;
+        if (pIODevice != nullptr) {
+#if defined __linux__ || defined _WIN32
+            pIODevice = nullptr;
+#else
+            if (pIODevice->isOpen())
+                pIODevice->close();
+#endif
+        }
+        if (pAudioInput->state() == QAudio::StoppedState) {
+//            delete pAudioInput;
+            pAudioInput = nullptr;
+        }
     }
 #endif
-    if(pSound!=nullptr) {
+    if(pSound != nullptr) {
         pSound->Close();
+#ifdef _WIN32
+        delete pSound;
+#endif
         pSound = nullptr;
     }
 }
@@ -92,23 +100,46 @@ void CReceiveData::Stop()
 void CReceiveData::Enumerate(vector<string>& names, vector<string>& descriptions, string& defaultInput)
 {
 #ifdef QT_MULTIMEDIA_LIB
-    QSet<QString> s;
+    //QSet<QString> s;
+    QList<QString> l;
     QString def = QAudioDeviceInfo::defaultInputDevice().deviceName();
     defaultInput = def.toStdString();
+
+    l.clear();
+    //s.clear();
     foreach(const QAudioDeviceInfo& di, QAudioDeviceInfo::availableDevices(QAudio::AudioInput))
     {
-        s.insert(di.deviceName());
+        //s.insert(di.deviceName());
+        //append only if it doesn't already exist
+        if (!l.contains(di.deviceName()))
+            l.append(di.deviceName());
     }
-    names.clear(); descriptions.clear();
-    foreach(const QString n, s) {
-        names.push_back(n.toStdString());
-        if(n == def) {
+    std::sort(l.begin(), l.end());
+    //          [](const QString &a, const QString &b) {
+    //              return a > b;
+    //          });
+    //if (l.count() > 0) {
+    //    for (int i = 0; i < l.count(); i++) {
+    //        qDebug("Inserting %s",l.at(i).toStdString().c_str());
+    //        s.insert(l.at(i));
+    //    }
+    //}
+    //l.clear();
+
+    names.clear();
+    descriptions.clear();
+    //foreach(const QString n, s) {
+    for (int i = 0; i < l.count(); i++) {
+        //names.push_back(n.toStdString());
+        names.push_back(l.at(i).toStdString());
+        //if (n == def) {
+        if (l.at(i) == def) {
             descriptions.push_back("default");
-        }
-        else {
+        } else {
             descriptions.push_back("");
         }
     }
+    l.clear();
 #else
     if(pSound==nullptr) pSound = CSoundInterfaceFactory::CreateSoundInInterface();
     pSound->Enumerate(names, descriptions, defaultInput);
@@ -121,7 +152,9 @@ CReceiveData::SetSoundInterface(string device)
     soundDevice = device;
     if(pSound != nullptr) {
         pSound->Close();
+#ifdef _WIN32
         delete pSound;
+#endif
         pSound = nullptr;
     }
     if(FileTyper::resolve(device) != FileTyper::unrecognised) {
@@ -130,27 +163,37 @@ CReceiveData::SetSoundInterface(string device)
         int sr = pAudioFileIn->GetSampleRate();
         if(iSampleRate!=sr) {
             // TODO
-            cerr << "file sample rate is " << sr << endl;
             iSampleRate = sr;
         }
         pSound = pAudioFileIn;
 #ifdef QT_MULTIMEDIA_LIB
 //        AudioInterfaceStop();
-        if(pIODevice!=nullptr) {
-            pIODevice->close();
-//            pIODevice = nullptr;
-        }
-       if(pAudioInput != nullptr) {
+        if (pAudioInput != nullptr) {
             pAudioInput->stop();
-//            delete pAudioInput;
-//            pAudioInput = nullptr;
+            if (pIODevice != nullptr) {
+#if defined __linux__ || defined _WIN32
+                pIODevice = nullptr;
+#else
+                if (pIODevice->isOpen())
+                    pIODevice->close();
+#endif
+            }
+            if (pAudioInput->state() == QAudio::StoppedState) {
+//                delete pAudioInput;
+                pAudioInput = nullptr;
+            }
         }
 #endif
     }
     else {
 #ifdef QT_MULTIMEDIA_LIB
         QAudioFormat format;
-        if(iSampleRate==0) iSampleRate = 48000; // TODO get order of initialisation correct
+#ifdef _WIN32
+        iSampleRate = 48000; //TODO
+#else
+        if((iSampleRate < 12000) || (iSampleRate > 360000))
+            iSampleRate = 48000; // TODO get order of initialisation correct
+#endif
         format.setSampleRate(iSampleRate);
         format.setSampleSize(16);
         format.setSampleType(QAudioFormat::SignedInt);
@@ -166,27 +209,26 @@ CReceiveData::SetSoundInterface(string device)
                 //AudioInterfaceStart();
                 /* section moved here from DateIO.cpp by mjf to prevent crashing when changing inputs */
                 pIODevice = pAudioInput->start();
-
                 if(pAudioInput->error()==QAudio::NoError)
                 {
-                    if(pIODevice->open(QIODevice::ReadOnly)) {
-                    qDebug("audio input open");
+                    if(pIODevice->open(QIODevice::ReadOnly))
+                    {
+                        qDebug("creceivedata: audio input open");
                     }
                     else {
-                        qDebug("audio input open failed");
+                        qDebug("creceivedata: audio input open failed");
                     }
                 }
                 else
                 {
-                    qDebug("Can't open audio input");
+                    qDebug("creceivedata: Can't open audio input");
                 }
                 /* section added by mjf to prevent crashing when changing inputs */
-
                 break;
             }
         }
         if(pAudioInput == nullptr) {
-            qDebug("can't find audio input %s", device.c_str());
+            qDebug("creceivedata: can't find audio input %s", device.c_str());
         }
 #else
         pSound = CSoundInterfaceFactory::CreateSoundInInterface();
@@ -219,7 +261,11 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
 
 #ifdef QT_MULTIMEDIA_LIB
     bool bBad = false;
-    if(pIODevice)
+#if defined __linux__ || defined _WIN32
+    if (pIODevice)
+#else
+    if (pIODevice && pIODevice->isOpen())
+#endif
     {
 #if 0
 
@@ -244,27 +290,37 @@ void CReceiveData::ProcessDataInternal(CParameter& Parameters)
         }
 
 #else
-        qint64 n = 2*vecsSoundBuffer.Size();
+        qint64 n = 2 * vecsSoundBuffer.Size();
         qint64 mwait = trunc(n / (2 * iSampleRate/1000));
         char *p = reinterpret_cast<char*>(&vecsSoundBuffer[0]);
         do {
-            qint64 r = pIODevice->read(p, n);
-            if(r>0) {
+            qint64 r = -1;
+#if defined __linux__ || defined _WIN32
+            if (pIODevice)
+#else
+            if (pIODevice && pIODevice->isOpen())
+#endif
+                r = pIODevice->read(p, n);
+            if (r >= 0) {
                 p += r;
                 n -= r;
             }
             else {
                 QThread::msleep(mwait);
             }
-        } while (n>0);
+#if defined __linux__ || defined _WIN32
+        } while ((n > 0) && (pIODevice));
+#else
+        } while ((n > 0) && (pIODevice && pIODevice->isOpen()));
 #endif
-    }
-    else if (pSound != nullptr) { // for audio files
+#endif
+    } else if (pSound != nullptr) { // for audio files
         bBad = pSound->Read(vecsSoundBuffer, Parameters);
     }
     else {
-      bBad = true;
+        bBad = true;
     }
+
 #else
     bool bBad = true;
     if (pSound != nullptr)
@@ -631,7 +687,7 @@ void CReceiveData::InitInternal(CParameter& Parameters)
                 vecf_ZR.resize(0);
             }
             vecf_ZL.resize(unsigned(iOutputBlockSize * 2 + taps), 0.0f);
-            vecf_ZR.resize(unsigned(iOutputBlockSize *2 + taps), 0.0f);
+            vecf_ZR.resize(unsigned(iOutputBlockSize * 2 + taps), 0.0f);
             vecf_YL.resize(unsigned(iOutputBlockSize));
             vecf_YR.resize(unsigned(iOutputBlockSize));
         }

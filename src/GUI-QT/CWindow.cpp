@@ -242,8 +242,11 @@ void CWindow::setVisible(bool visible)
 	QMainWindow::setVisible(visible);
 	if (visible)
 	{
+//These are not supported in Linux, but ok in macOS
+#ifndef __linux__
 		QMainWindow::raise();
 		QMainWindow::activateWindow();
+#endif
 	}
 }
 

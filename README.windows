@@ -1,0 +1,103 @@
+The following assumes having the following tools for building from source code:
+1. MS Visual Studio, including a minimum of Build Tools, Cmake, and the MSVC 2019 compiler
+2. Qt Creator
+3. Qt 5.15.x (not 6.x.x)
+
+These instructions call out the specifics of how to build and/or obtain and install the includes, build libraries, and dynamic runtime libraries for each package, in order to properly build and run Dream under Windows.
+
+There is an MSVC solution set for building an older version of Dream located in \windows. This older version requires faac and faad, which have long been replaced by fdk-aac below. Using the solution set may not result favourably.
+
+Some of the packages may have prebuilt dlls and lib files. These may not have been built to match your machine nor building architecture. These instructions also define the requirements for a Release build, which cannot be mixed with components that were pre-built for Debug, and may require the use of an incompatible MSVC runtime library. Do not use them directly for building/running Dream unless it is explicitly stated below.
+
+Required Dependencies:
+
+Qwt: Current is 6.3.0
+1. Download from https://sourceforge.net/projects/qwt/files/qwt/6.3.0/qwt-6.3.0.zip/download
+2. Build using Qt Creator using qwt.pro from the project's root directory, but make sure you change the build location to somewhere you want it beforehand. Otherwise it will create it in the root location of your hard disk by default. Also make sure you use MSVC2019_64bit as the compiler, to be compatible with MS Visual Studio. 
+3. After building, the resulting lib for linking and the dll for running Qwt will be in \build-qwt-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\lib
+4. Create a qwt directory under the 'include' directory in your Dream source tree. Copy all the .h files from Qwt's \src into there, including the \src\moc\moc_predefs.h
+5. Copy qwt.lib from step 3 to the 'lib' directory in your Dream source tree
+6. Copy qwt.dll from step 3 to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release)
+
+zlib: Current Windows version is an older v1.2.3
+1. Download from http://www.winimage.com/zLibDll/zlib123.zip
+2. Build using MS Visual Studio from the \projects\visualc6\zlib.dsw project file as DLL Release with x64 platform
+3. Building will create the lib for linking and the dll for running in \projects\visualc6\Win32_DLL_Release as zlib1.*
+4. Copy zlib.h and zconf.h from the root of the zlib source tree into the 'include' directory in your Dream source tree
+5. Copy zlib1.lib from step 3 to the 'lib' directory in your Dream source tree
+6. Copy zlib1.dll from step 3 to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release)
+
+wpcap: Current is 4.1.3
+1. Download from https://github.com/patmarion/winpcap. Click the Code button and download winpcap-master.zip using the Download Zip link
+2. First build Packet using MS Visual Studio from the \WpcapSrc_4_1_3\packetNtx\Dll\Project\Packet.sln project file as Release with x64 platform
+3. After building, the resulting lib for linking and dll for running with Packet will be in \WpcapSrc_4_1_3\packetNtx\Dll\Project\Release\x64
+4. Then build Wpcap using MS Visual Studio from \WpcapSrc_4_1_3\wpcap\PRJ\wpcap.sln project file as Release-No AirPcap with x64 platform
+5. After building, the resulting lib for linking and dll for running with wpcap will be in \WpcapSrc_4_1_3\wpcap\PRJ\Release No AirPcap\x64
+6. Note that you need both of these (Packet and wpcap) in Dream
+7. Copy everything in \Include (including the pcap subdirectory) into the 'include' directory in your Dream source tree
+8. Copy Packet.lib from step 3 and wpcap.lib from step 5 to the 'lib' directory in your Dream source tree
+9. Copy Packet.dll from step 3 and wpcap.dll from step 5 to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release)
+
+fftw: Currently built Windows version is 3.3.5
+1. Download from https://fftw.org/pub/fftw/fftw-3.3.5-dll64.zip
+2. You cannot easily build from sources, but the zip contains all of the requisite (and compatible) headers, dlls, and def files. You create the lib for linking from the corresponding def file by running the Visual Studio x64 Native Tools Command Prompt for VS 2019, changing to the directory where libfftw3-3.def resides, and then issuing:
+	lib /machine:x64 /def:libfftw3-3.def
+3. The lib for linking will then be created in the same directory
+4. Copy fftw3.h into the 'include' directory in your Dream source tree
+5. Copy libfftw3-3.lib to the 'lib' directory in your Dream source tree
+6. Copy libfftw3-3.dll to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release) 
+
+fdk-aac: Current is 3.2.0
+1. Download from https://github.com/mstorsjo/fdk-aac. Click the Code button and download fdk-aac-master.zip using the Download Zip link
+2. Create a directory called 'build' in the root directory of the package
+3. You then have to create the Visual Studio build files using VS's version of Cmake by running the Visual Studio x64 Native Tools Command Prompt for VS 2019, changing to the new build directory, then issuing:
+	cmake ..
+4. Then build fdk-aac using MS Visual Studio from \build\fdk-aac.sln project file as Release with x64 platform
+5. After building, the resulting lib for linking and dll for running will be in \build\Release
+6. Create a 'fdk-aac' directory under the 'include' directory in your Dream source tree. Copy the six .h files from fdk-aac's \include directory into there
+7. Copy fdk-aac.lib from step 5 to the 'lib' directory in your Dream source tree
+8. Copy fdk-aac.dll from step 5 to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release)
+
+Optional Dependencies:
+
+speexdsp (required if you want extra noise reduction in the non-DRM receivers): Current is 1.2.1
+1. Download from https://github.com/xiph/speexdsp. Click the Code button and download speexdsp-master.zip using the Download Zip link
+2. Build using MS Visual Studio from the \win32\VS2008\libspeexdsp.sln project file as Release_Dynamic_SSE with x64 platform
+3. Building should create both lib for linking and dll for running. If not, build again, but as Release_Static_SSE with x64 platform
+4. The dll will be found in \win32\VS2008\x64\Release and the lib will be placed in a newly created \lib directory at the top of the source tree
+5. Create a 'speex' directory under the 'include' directory in your Dream source tree. Copy the six .h files from speexdsp's \include\speex directory into there
+6. Copy libspeexdsp.lib from step 4 to the 'lib' directory in your Dream source tree
+7. Copy libspeexdsp.dll from step 4 to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release)
+
+sndfile (required if you want to test Dream using any of the audio test files on the site): Current is 1.2.2 (using 1.1.0) http://www.mega-nerd.com/libsndfile
+1. Download from https://github.com/libsndfile/libsndfile/releases/download/1.2.2/libsndfile-1.2.2-win64.zip
+2. The pre-built dlls and libs are good to use. sndfile.lib is in \lib, and sndfile.dll is in \bin
+3. Copy the two .h files from sndfile's \include directory into the 'include' directory in your Dream source tree
+4. Copy sndfile.lib from step 2 to the 'lib' directory in your Dream source tree
+5. Copy sndfile.dll from step 2 to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release)
+
+FLAC (also required if you want to test Dream using any of the audio test files): Current is 1.5.0
+1. Download from https://github.com/xiph/flac/archive/refs/tags/1.5.0.tar.gz
+2. Create a directory called 'build' in the root directory of the package
+3. You then have to create the Visual Studio build files using VS's version of Cmake by running the Visual Studio x64 Native Tools Command Prompt for VS 2019, changing to the new build directory, then issuing:
+	cmake .. -DBUILD_SHARED_LIBS=ON -DWITH_OGG=NO -DINSTALL_MANPAGES=NO
+4. Then build both libFLAC and libFLAC++ using MS Visual Studio from \build\FLAC.sln project file as Release with x64 platform
+5. After building, the resulting FLAC.lib and FLAC++.lib for linking will be in \build\src\libFLAC\Release and \build\src\libFLAC++\Release
+6. Likewise, the resulting FLAC.dll and FLAC++.dll for running will both be in \build\objs\Release
+7. Dream doesn't seem to need any includes for building with FLAC, so those can be left alone.
+8. Copy FLAC.lib and FLAC++.lib from step 5 to the 'lib' directory in your Dream source tree
+9. Copy FLAC.dll and FLAC++.dll from step 6 to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release)
+
+Hamlib (required for tuning receivers and SDR apps): Current is 4.7.3~rc
+1. Downloading and building Hamlib requires it be cross-compiled on a Linux machine or within some mingWin32 compatible environment in Windows.
+2. If you don't feel comfortable doing this a zipped version of the requisite files is provided in \windows\Hamlib. If you want to use this package skip to step 6.
+3. Instructions for doing so can be found by downloading the latest source tree from https://github.com/Hamlib/Hamlib and looking for the \scripts directory.
+4. The script for building Hamlib is in \scripts\build-w64.sh. Note that you must change BUILD_DIR on line 18 to the point to somewhere you want it to be built, otherwise it will go in your root directory under \builds.
+5. Once complete, there will be a file named something like hamlib-w64-4.7.3~rc.zip from which to create a local Hamlib source tree.
+6. Within the Hamlib source tree, navigate to \hamlib-w64-4.7.3~rc\lib\msvc. You create the lib for linking from the corresponding def file by running the Visual Studio x64 Native Tools Command Prompt for VS 2019 and then issuing:
+	lib /machine:x64 /def:libhamlib-4.def
+7. The lib for linking will then be created in the same directory. The dll for running will be found in hamlib-w64-4.7.3~rc\bin\libhamlib-4.dll
+8. Create a 'hamlib' directory under the 'include' directory in your Dream source tree. Copy everything under hamlib-w64-4.7.3~rc\include\hamlib into the 'include\hamlib' directory in your Dream source tree you jus created.
+9. Copy libhamlib-4.lib created in Step 7 to the 'lib' directory in your Dream source tree
+10. Copy libhamlib-4.dll found in Step 7 to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release)
+11. Hamib also requires two other dlls: libusb-1.0.dll and libwinpthread-1.dll, which also can be found in \windows\Hamlib. Copy both of these to the 'release' directory in your dream build tree (e.g., \build-dream-Desktop_Qt_5_15_2_MSVC2019_64bit-Release\release). You could build these yourself, however we've provided them here.

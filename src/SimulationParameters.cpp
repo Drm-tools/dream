@@ -623,11 +623,11 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
     /* In case of channels 8 / 10 also write Doppler frequency in file name */
     if ((SaveParam.iDRMChannelNum == 8) || (SaveParam.iDRMChannelNum == 10))
     {
-        sprintf(chNumTmpLong, "CH%d_%dHz_",
+        snprintf(chNumTmpLong, sizeof(chNumTmpLong), "CH%d_%dHz_",
                 SaveParam.iDRMChannelNum, SaveParam.iSpecChDoppler);
     }
     else
-        sprintf(chNumTmpLong, "CH%d_", SaveParam.iDRMChannelNum);
+        snprintf(chNumTmpLong, sizeof(chNumTmpLong), "CH%d_", SaveParam.iDRMChannelNum);
 
     strFileName += chNumTmpLong;
 
@@ -646,6 +646,9 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
         break;
     case RM_ROBUSTNESS_MODE_D:
         strFileName += "D";
+        break;
+    case RM_ROBUSTNESS_MODE_E:
+        strFileName += "E";
         break;
     case RM_NO_MODE_DETECTED:
         break;
@@ -708,12 +711,12 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
 
 
     /* Number of iterations in MLC decoder ---------------------------------- */
-    sprintf(chNumTmpLong, "It%d_", MSCMLCDecoder.GetInitNumIterations());
+    snprintf(chNumTmpLong, sizeof(chNumTmpLong), "It%d_", MSCMLCDecoder.GetInitNumIterations());
     strFileName += chNumTmpLong;
 
 
     /* Protection level part B ---------------------------------------------- */
-    sprintf(chNumTmpLong, "PL%d_", SaveParam.MSCPrLe.iPartB);
+    snprintf(chNumTmpLong, sizeof(chNumTmpLong), "PL%d_", SaveParam.MSCPrLe.iPartB);
     strFileName += chNumTmpLong;
 
 
@@ -767,7 +770,7 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
         }
     }
 
-    sprintf(chNumTmpLong, "%d", iCurNum);
+    snprintf(chNumTmpLong, sizeof(chNumTmpLong), "%d", iCurNum);
     strFileName += chNumTmpLong;
     strFileName += strMultPl;
 
@@ -776,11 +779,11 @@ string CDRMSimulation::SimFileName(CParameter& SaveParam, string strAddInf,
     if (bWithSNR)
     {
         strFileName += "SNR";
-        sprintf(chNumTmpLong, "%.1f-", rStartSNR);
+        snprintf(chNumTmpLong, sizeof(chNumTmpLong), "%.1f-", rStartSNR);
         strFileName += chNumTmpLong;
-        sprintf(chNumTmpLong, "%.1f-", rStepSNR);
+        snprintf(chNumTmpLong, sizeof(chNumTmpLong), "%.1f-", rStepSNR);
         strFileName += chNumTmpLong;
-        sprintf(chNumTmpLong, "%.1f_", rEndSNR);
+        snprintf(chNumTmpLong, sizeof(chNumTmpLong), "%.1f_", rEndSNR);
         strFileName += chNumTmpLong;
     }
 

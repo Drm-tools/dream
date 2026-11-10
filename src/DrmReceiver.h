@@ -33,12 +33,12 @@
 #define DRMRECEIVER_H
 
 #include "GlobalDefinitions.h"
-#include <iostream>
+/*#include <iostream>*/
 #include "MDI/MDIRSCI.h" /* OPH: need this near the top so winsock2 is included before winsock */
 #include "MDI/MDIDecode.h"
 #include "Parameter.h"
 #include "util/Buffer.h"
-#include "util/Utilities.h"
+/*#include "util/Utilities.h"*/
 #include "DataIO.h"
 #include "OFDM.h"
 #include "creceivedata.h"
@@ -191,7 +191,8 @@ public:
         pRig=p;
     }
 
-    void	 				SetFrequency(int);
+    void	 				SetFrequency(int, bool);
+    void                    GetTunedFrequency(int& freq, bool);
     int		 				GetFrequency() {
         return Parameters.GetFrequency();
     }

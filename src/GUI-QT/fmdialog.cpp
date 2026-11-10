@@ -28,9 +28,9 @@
 
 #include "fmdialog.h"
 #include "DialogUtil.h"
-#ifdef HAVE_LIBHAMLIB
+/*#ifdef HAVE_LIBHAMLIB
 # include "../util-QT/Rig.h"
-#endif
+#endif*/
 #include <QMessageBox>
 #include <QInputDialog>
 #include <QWhatsThis>
@@ -403,7 +403,7 @@ void FMDialog::eventUpdate()
 
 void FMDialog::eventShow(QShowEvent*)
 {
-	/* Set timer for real-time controls */
+    /* Set timer for real-time controls */
 	OnTimer();
  	Timer.start(GUI_CONTROL_UPDATE_TIME);
 }
@@ -620,13 +620,15 @@ void FMDialog::SetDisplayColor(const QColor newColor)
 		QPalette CurPal(vecpWidgets[i]->palette());
 
 		/* Change colors */
-		CurPal.setColor(QPalette::Active, QPalette::Foreground, newColor);
-		CurPal.setColor(QPalette::Active, QPalette::Button, newColor);
+        //CurPal.setColor(QPalette::Active, QPalette::Foreground, newColor);
+        CurPal.setColor(QPalette::Active, QPalette::WindowText, newColor);
+        CurPal.setColor(QPalette::Active, QPalette::Button, newColor);
 		CurPal.setColor(QPalette::Active, QPalette::Text, newColor);
 		CurPal.setColor(QPalette::Active, QPalette::Light, newColor);
 		CurPal.setColor(QPalette::Active, QPalette::Dark, newColor);
 
-		CurPal.setColor(QPalette::Inactive, QPalette::Foreground, newColor);
+        //CurPal.setColor(QPalette::Inactive, QPalette::Foreground, newColor);
+        CurPal.setColor(QPalette::Inactive, QPalette::WindowText, newColor);
 		CurPal.setColor(QPalette::Inactive, QPalette::Button, newColor);
 		CurPal.setColor(QPalette::Inactive, QPalette::Text, newColor);
 		CurPal.setColor(QPalette::Inactive, QPalette::Light, newColor);
